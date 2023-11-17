@@ -35,13 +35,37 @@ spec:
           spec:
             description: NfsVolumeSpec defines the desired state of NfsVolume
             properties:
-              foo:
-                description: Foo is an example field of NfsVolume. Edit nfsvolume_types.go
-                  to remove/update
+              capacity:
+                properties:
+                  storage:
+                    type: string
+                required:
+                - storage
+                type: object
+              reclaimPolicy:
                 type: string
+            required:
+            - capacity
+            - reclaimPolicy
             type: object
           status:
             description: NfsVolumeStatus defines the observed state of NfsVolume
+            properties:
+              error:
+                type: string
+              nfsCreationTimestamp:
+                format: date-time
+                type: string
+              nfsLastModifiedTimestamp:
+                format: date-time
+                type: string
+              phase:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            required:
+            - phase
             type: object
         type: object
     served: true

@@ -10,3 +10,6 @@ metadata:
   name: nfsvolume-sample
 spec:
   # TODO(user): Add fields here
+  capacity:
+    storage: 3Gi
+  reclaimPolicy: Retain

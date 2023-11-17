@@ -28,15 +28,39 @@ type NfsVolumeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of NfsVolume. Edit nfsvolume_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Capacity      Capacity      `json:"capacity"`
+	ReclaimPolicy ReclaimPolicy `json:"reclaimPolicy"`
 }
+
+type Capacity struct {
+	Storage string `json:"storage"`
+}
+
+type ReclaimPolicy string
+
+const (
+	ReclaimPolicyRetain  ReclaimPolicy = "Retain"
+	ReclaimPolicyRecycle ReclaimPolicy = "Recycle"
+)
 
 // NfsVolumeStatus defines the observed state of NfsVolume
 type NfsVolumeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Phase                    Phase       `json:"phase"`
+	Error                    string      `json:"error,omitempty"`
+	NfsCreationTimestamp     metav1.Time `json:"nfsCreationTimestamp,omitempty"`
+	NfsLastModifiedTimestamp metav1.Time `json:"nfsLastModifiedTimestamp,omitempty"`
 }
+
+type Phase string
+
+const (
+	PhaseCreating Phase = "Creating"
+	PhaseUpdating Phase = "Updating"
+	PhaseDeleting Phase = "Deleting"
+	PhaseReady    Phase = "Ready"
+)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
