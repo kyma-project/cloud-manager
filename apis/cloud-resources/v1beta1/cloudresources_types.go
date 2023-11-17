@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,17 +26,51 @@ import (
 
 // CloudResourcesSpec defines the desired state of CloudResources
 type CloudResourcesSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Aggregations *CloudResourcesAggregation `json:"aggregations,omitempty"`
+}
 
-	// Foo is an example field of CloudResources. Edit cloudresources_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+type SourceRef struct {
+	APIVersion string `json:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	Name       string `json:"name,omitempty"`
+}
+
+type CloudResourcesAggregation struct {
+	GcpVpcPeerings   []*GcpVpcPeeringInfo   `json:"gcpVpcPeerings,omitempty"`
+	AzureVpcPeerings []*AzureVpcPeeringInfo `json:"azureVpcPeerings,omitempty"`
+	AwsVpcPeerings   []*AwsVpcPeeringInfo   `json:"awsVpcPeerings,omitempty"`
+	NfsVolumes       []*NfsVolumeInfo       `json:"nfsVolumes,omitempty"`
+}
+
+type GcpVpcPeeringInfo struct {
+	Spec      GcpVpcPeeringSpec `json:"spec"`
+	SourceRef SourceRef         `json:"sourceRef"`
+}
+
+type AzureVpcPeeringInfo struct {
+	Spec      AzureVpcPeeringSpec `json:"spec"`
+	SourceRef SourceRef           `json:"sourceRef"`
+}
+
+type AwsVpcPeeringInfo struct {
+	Spec      AwsVpcPeeringSpec `json:"spec"`
+	SourceRef SourceRef         `json:"sourceRef"`
+}
+
+type NfsVolumeInfo struct {
+	Spec      NfsVolumeSpec `json:"spec"`
+	SourceRef SourceRef     `json:"sourceRef"`
 }
 
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	State State `json:"state,omitempty"`
+
+	// List of status conditions to indicate the status of a CloudResources.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -57,6 +92,34 @@ type CloudResourcesList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CloudResources `json:"items"`
+}
+
+func (cr *CloudResources) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
+	cr.Status.State = ReadyState
+
+	condition := metav1.Condition{
+		Type:               string(conditionType),
+		Status:             conditionStatus,
+		LastTransitionTime: metav1.Now(),
+		Reason:             string(reason),
+		Message:            message,
+	}
+	meta.RemoveStatusCondition(&cr.Status.Conditions, condition.Type)
+	meta.SetStatusCondition(&cr.Status.Conditions, condition)
+}
+
+func (cr *CloudResources) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, error error) {
+	cr.Status.State = ErrorState
+
+	condition := metav1.Condition{
+		Type:               string(conditionType),
+		Status:             conditionStatus,
+		LastTransitionTime: metav1.Now(),
+		Reason:             string(reason),
+		Message:            error.Error(),
+	}
+	meta.RemoveStatusCondition(&cr.Status.Conditions, condition.Type)
+	meta.SetStatusCondition(&cr.Status.Conditions, condition)
 }
 
 func init() {
