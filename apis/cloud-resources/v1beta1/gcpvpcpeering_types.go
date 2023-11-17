@@ -66,6 +66,7 @@ type GcpVpcPeeringStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // GcpVpcPeering is the Schema for the gcpvpcpeerings API
 type GcpVpcPeering struct {

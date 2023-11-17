@@ -40,6 +40,7 @@ type AwsVpcPeeringStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // AwsVpcPeering is the Schema for the awsvpcpeerings API
 type AwsVpcPeering struct {

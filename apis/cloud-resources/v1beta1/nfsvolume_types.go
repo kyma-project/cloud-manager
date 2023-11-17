@@ -40,6 +40,7 @@ type NfsVolumeStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // NfsVolume is the Schema for the nfsvolumes API
 type NfsVolume struct {
