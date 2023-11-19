@@ -135,10 +135,18 @@ spec:
                           description: NfsVolumeSpec defines the desired state of
                             NfsVolume
                           properties:
-                            foo:
-                              description: Foo is an example field of NfsVolume. Edit
-                                nfsvolume_types.go to remove/update
+                            capacity:
+                              properties:
+                                storage:
+                                  type: string
+                              required:
+                              - storage
+                              type: object
+                            reclaimPolicy:
                               type: string
+                          required:
+                          - capacity
+                          - reclaimPolicy
                           type: object
                       required:
                       - sourceRef
