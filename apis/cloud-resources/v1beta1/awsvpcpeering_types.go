@@ -60,6 +60,14 @@ type AwsVpcPeeringList struct {
 	Items           []AwsVpcPeering `json:"items"`
 }
 
+func (me *AwsVpcPeering) GetSourceInfo() SourceRef {
+	return SourceRef{
+		APIVersion: me.APIVersion,
+		Kind:       me.Kind,
+		Name:       me.Name,
+	}
+}
+
 func init() {
 	SchemeBuilder.Register(&AwsVpcPeering{}, &AwsVpcPeeringList{})
 }

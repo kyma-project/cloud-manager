@@ -114,6 +114,14 @@ func (peering *GcpVpcPeering) UpdateConditionForErrorState(conditionType Conditi
 	meta.SetStatusCondition(&peering.Status.Conditions, condition)
 }
 
+func (me *GcpVpcPeering) GetSourceInfo() SourceRef {
+	return SourceRef{
+		APIVersion: me.APIVersion,
+		Kind:       me.Kind,
+		Name:       me.Name,
+	}
+}
+
 func init() {
 	SchemeBuilder.Register(&GcpVpcPeering{}, &GcpVpcPeeringList{})
 }

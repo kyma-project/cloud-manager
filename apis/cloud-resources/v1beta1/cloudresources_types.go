@@ -21,12 +21,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	ServedTrue  = "True"
+	ServedFalse = "False"
+)
 
 // CloudResourcesSpec defines the desired state of CloudResources
 type CloudResourcesSpec struct {
 	Aggregations *CloudResourcesAggregation `json:"aggregations,omitempty"`
+}
+
+type SourceRefAccessor interface {
+	GetSourceInfo() SourceRef
 }
 
 type SourceRef struct {
@@ -64,7 +70,8 @@ type NfsVolumeInfo struct {
 
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
-	State State `json:"state,omitempty"`
+	State  State  `json:"state,omitempty"`
+	Served string `json:"served"`
 
 	// List of status conditions to indicate the status of a CloudResources.
 	// +optional

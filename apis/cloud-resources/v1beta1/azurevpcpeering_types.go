@@ -92,6 +92,14 @@ func (peering *AzureVpcPeering) UpdateConditionForErrorState(conditionType Condi
 	meta.SetStatusCondition(&peering.Status.Conditions, condition)
 }
 
+func (me *AzureVpcPeering) GetSourceInfo() SourceRef {
+	return SourceRef{
+		APIVersion: me.APIVersion,
+		Kind:       me.Kind,
+		Name:       me.Name,
+	}
+}
+
 func init() {
 	SchemeBuilder.Register(&AzureVpcPeering{}, &AzureVpcPeeringList{})
 }
