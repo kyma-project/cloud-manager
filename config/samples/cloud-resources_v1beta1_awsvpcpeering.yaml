@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsVpcPeering
+metadata:
+  labels:
+    app.kubernetes.io/name: awsvpcpeering
+    app.kubernetes.io/instance: awsvpcpeering-sample
+    app.kubernetes.io/part-of: cloud-resources-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-resources-manager
+  name: awsvpcpeering-sample
+spec:
+  # TODO(user): Add fields here
