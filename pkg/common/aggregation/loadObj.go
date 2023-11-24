@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func loadObj(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
+func LoadObj(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
 	state := state1.(*ReconcilingState)
 	err := state.Client.Get(ctx, state.NamespacedName, state.Obj)
 	if err != nil {

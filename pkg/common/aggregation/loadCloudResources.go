@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func loadCloudResources(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
+func LoadCloudResources(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
 	state := state1.(*ReconcilingState)
 	list := &v1beta1.CloudResourcesList{}
 	err := state.Client.List(ctx, list)

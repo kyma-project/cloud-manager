@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"

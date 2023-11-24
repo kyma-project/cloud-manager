@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func aggregate(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
+func Aggregate(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
 	state := state1.(*ReconcilingState)
 	if state.CloudResources == nil {
 		return nil, errors.New("unexpected empty CloudResources")

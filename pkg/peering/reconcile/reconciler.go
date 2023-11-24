@@ -2,6 +2,7 @@ package reconcile
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-resources-manager/pkg/common/aggregation"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,10 +19,10 @@ func NewReconciler(client client.Client, eventRecorder record.EventRecorder) Rec
 		eventRecorder: eventRecorder,
 		action: composed.ComposeActions(
 			"cloud-resources-manager",
-			loadObj,
-			loadCloudResources,
-			aggregate,
-			saveCloudResourcesSpec,
+			aggregation.LoadObj,
+			aggregation.LoadCloudResources,
+			aggregation.Aggregate,
+			aggregation.SaveCloudResourcesAggregations,
 		),
 	}
 }
@@ -42,7 +43,7 @@ func (r *reconciler) Run(
 	req ctrl.Request,
 	obj client.Object,
 ) (*ctrl.Result, error) {
-	state := &ReconcilingState{
+	state := &aggregation.ReconcilingState{
 		NamespacedName: req.NamespacedName,
 		Obj:            obj,
 		BaseState: composed.BaseState{

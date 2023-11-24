@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func saveCloudResourcesSpec(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
+func SaveCloudResourcesAggregations(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
 	state := state1.(*ReconcilingState)
 	err := state.Client.Patch(ctx, state.CloudResources, client.Apply, &client.PatchOptions{
 		Force:        pointer.Bool(true),

@@ -1,4 +1,4 @@
-package reconcile
+package aggregation
 
 import (
 	"github.com/elliotchance/pie/v2"
