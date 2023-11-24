@@ -38,121 +38,173 @@ spec:
               aggregations:
                 properties:
                   awsVpcPeerings:
-                    items:
-                      properties:
-                        sourceRef:
+                    properties:
+                      items:
+                        items:
                           properties:
-                            apiVersion:
-                              type: string
-                            kind:
-                              type: string
-                            name:
-                              type: string
-                          type: object
-                        spec:
-                          description: AwsVpcPeeringSpec defines the desired state
-                            of AwsVpcPeering
-                          properties:
-                            foo:
-                              description: Foo is an example field of AwsVpcPeering.
-                                Edit awsvpcpeering_types.go to remove/update
-                              type: string
-                          type: object
-                      required:
-                      - sourceRef
-                      - spec
-                      type: object
-                    type: array
-                  azureVpcPeerings:
-                    items:
-                      properties:
-                        sourceRef:
-                          properties:
-                            apiVersion:
-                              type: string
-                            kind:
-                              type: string
-                            name:
-                              type: string
-                          type: object
-                        spec:
-                          description: AzureVpcPeeringSpec defines the desired state
-                            of AzureVpcPeering
-                          properties:
-                            allowVnetAccess:
-                              type: boolean
-                            remoteResourceGroup:
-                              type: string
-                            remoteVnet:
-                              type: string
-                          type: object
-                      required:
-                      - sourceRef
-                      - spec
-                      type: object
-                    type: array
-                  gcpVpcPeerings:
-                    items:
-                      properties:
-                        sourceRef:
-                          properties:
-                            apiVersion:
-                              type: string
-                            kind:
-                              type: string
-                            name:
-                              type: string
-                          type: object
-                        spec:
-                          description: GcpVpcPeeringSpec defines the desired state
-                            of GcpVpcPeering
-                          properties:
-                            remoteProject:
-                              description: Foo is an example field of GcpVpcPeering.
-                                Edit gcpvpcpeering_types.go to remove/update
-                              type: string
-                            remoteVpc:
-                              type: string
-                          type: object
-                      required:
-                      - sourceRef
-                      - spec
-                      type: object
-                    type: array
-                  nfsVolumes:
-                    items:
-                      properties:
-                        sourceRef:
-                          properties:
-                            apiVersion:
-                              type: string
-                            kind:
-                              type: string
-                            name:
-                              type: string
-                          type: object
-                        spec:
-                          description: NfsVolumeSpec defines the desired state of
-                            NfsVolume
-                          properties:
-                            capacity:
+                            sourceRef:
                               properties:
-                                storage:
+                                apiVersion:
+                                  description: 'APIVersion defines the versioned schema
+                                    of this representation of an object. Servers should
+                                    convert recognized schemas to the latest internal
+                                    value, and may reject unrecognized values. More
+                                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                                  type: string
+                                kind:
+                                  description: 'Kind is a string value representing
+                                    the REST resource this object represents. Servers
+                                    may infer this from the endpoint the client submits
+                                    requests to. Cannot be updated. In CamelCase.
+                                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  type: string
+                              type: object
+                            spec:
+                              description: AwsVpcPeeringSpec defines the desired state
+                                of AwsVpcPeering
+                              properties:
+                                foo:
+                                  description: Foo is an example field of AwsVpcPeering.
+                                    Edit awsvpcpeering_types.go to remove/update
+                                  type: string
+                              type: object
+                          required:
+                          - sourceRef
+                          - spec
+                          type: object
+                        type: array
+                    type: object
+                  azureVpcPeerings:
+                    properties:
+                      items:
+                        items:
+                          properties:
+                            sourceRef:
+                              properties:
+                                apiVersion:
+                                  description: 'APIVersion defines the versioned schema
+                                    of this representation of an object. Servers should
+                                    convert recognized schemas to the latest internal
+                                    value, and may reject unrecognized values. More
+                                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                                  type: string
+                                kind:
+                                  description: 'Kind is a string value representing
+                                    the REST resource this object represents. Servers
+                                    may infer this from the endpoint the client submits
+                                    requests to. Cannot be updated. In CamelCase.
+                                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  type: string
+                              type: object
+                            spec:
+                              description: AzureVpcPeeringSpec defines the desired
+                                state of AzureVpcPeering
+                              properties:
+                                allowVnetAccess:
+                                  type: boolean
+                                remoteResourceGroup:
+                                  type: string
+                                remoteVnet:
+                                  type: string
+                              type: object
+                          required:
+                          - sourceRef
+                          - spec
+                          type: object
+                        type: array
+                    type: object
+                  gcpVpcPeerings:
+                    properties:
+                      items:
+                        items:
+                          properties:
+                            sourceRef:
+                              properties:
+                                apiVersion:
+                                  description: 'APIVersion defines the versioned schema
+                                    of this representation of an object. Servers should
+                                    convert recognized schemas to the latest internal
+                                    value, and may reject unrecognized values. More
+                                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                                  type: string
+                                kind:
+                                  description: 'Kind is a string value representing
+                                    the REST resource this object represents. Servers
+                                    may infer this from the endpoint the client submits
+                                    requests to. Cannot be updated. In CamelCase.
+                                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  type: string
+                              type: object
+                            spec:
+                              description: GcpVpcPeeringSpec defines the desired state
+                                of GcpVpcPeering
+                              properties:
+                                remoteProject:
+                                  description: Foo is an example field of GcpVpcPeering.
+                                    Edit gcpvpcpeering_types.go to remove/update
+                                  type: string
+                                remoteVpc:
+                                  type: string
+                              type: object
+                          required:
+                          - sourceRef
+                          - spec
+                          type: object
+                        type: array
+                    type: object
+                  nfsVolumes:
+                    properties:
+                      items:
+                        items:
+                          properties:
+                            sourceRef:
+                              properties:
+                                apiVersion:
+                                  description: 'APIVersion defines the versioned schema
+                                    of this representation of an object. Servers should
+                                    convert recognized schemas to the latest internal
+                                    value, and may reject unrecognized values. More
+                                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                                  type: string
+                                kind:
+                                  description: 'Kind is a string value representing
+                                    the REST resource this object represents. Servers
+                                    may infer this from the endpoint the client submits
+                                    requests to. Cannot be updated. In CamelCase.
+                                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  type: string
+                              type: object
+                            spec:
+                              description: NfsVolumeSpec defines the desired state
+                                of NfsVolume
+                              properties:
+                                capacity:
+                                  properties:
+                                    storage:
+                                      type: string
+                                  required:
+                                  - storage
+                                  type: object
+                                reclaimPolicy:
                                   type: string
                               required:
-                              - storage
+                              - capacity
+                              - reclaimPolicy
                               type: object
-                            reclaimPolicy:
-                              type: string
                           required:
-                          - capacity
-                          - reclaimPolicy
+                          - sourceRef
+                          - spec
                           type: object
-                      required:
-                      - sourceRef
-                      - spec
-                      type: object
-                    type: array
+                        type: array
+                    type: object
                 type: object
             type: object
           status:
@@ -231,8 +283,12 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              served:
+                type: string
               state:
                 type: string
+            required:
+            - served
             type: object
         type: object
     served: true

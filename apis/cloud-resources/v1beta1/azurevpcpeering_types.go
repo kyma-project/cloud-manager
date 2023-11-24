@@ -55,13 +55,18 @@ type AzureVpcPeering struct {
 	Status AzureVpcPeeringStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+func (peering *AzureVpcPeering) GetSpec() any {
+	return peering.Spec
+}
 
-// AzureVpcPeeringList contains a list of AzureVpcPeering
-type AzureVpcPeeringList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AzureVpcPeering `json:"items"`
+func (peering *AzureVpcPeering) GetSourceRef() SourceRef {
+	return SourceRef{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       peering.Kind,
+			APIVersion: peering.APIVersion,
+		},
+		Name: peering.Name,
+	}
 }
 
 func (peering *AzureVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
@@ -90,6 +95,15 @@ func (peering *AzureVpcPeering) UpdateConditionForErrorState(conditionType Condi
 	}
 	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
 	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+}
+
+//+kubebuilder:object:root=true
+
+// AzureVpcPeeringList contains a list of AzureVpcPeering
+type AzureVpcPeeringList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AzureVpcPeering `json:"items"`
 }
 
 func init() {

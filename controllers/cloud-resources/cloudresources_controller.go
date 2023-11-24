@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -30,7 +31,8 @@ import (
 // CloudResourcesReconciler reconciles a CloudResources object
 type CloudResourcesReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme     *runtime.Scheme
+	reconciler reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources,verbs=get;list;watch;create;update;patch;delete

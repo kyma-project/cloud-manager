@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,10 +28,19 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 )
 
+func NewAzureVpcPeeringReconciler(client1 client.Client, scheme *runtime.Scheme, reconciler reconcile.Reconciler) *AzureVpcPeeringReconciler {
+	return &AzureVpcPeeringReconciler{
+		Client:     client1,
+		Scheme:     scheme,
+		reconciler: reconciler,
+	}
+}
+
 // AzureVpcPeeringReconciler reconciles a AzureVpcPeering object
 type AzureVpcPeeringReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme     *runtime.Scheme
+	reconciler reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevpcpeerings,verbs=get;list;watch;create;update;patch;delete

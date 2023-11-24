@@ -21,8 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	ServedTrue  = "True"
+	ServedFalse = "False"
+)
 
 // CloudResourcesSpec defines the desired state of CloudResources
 type CloudResourcesSpec struct {
@@ -30,41 +32,109 @@ type CloudResourcesSpec struct {
 }
 
 type SourceRef struct {
-	APIVersion string `json:"apiVersion,omitempty"`
-	Kind       string `json:"kind,omitempty"`
-	Name       string `json:"name,omitempty"`
+	metav1.TypeMeta `json:",inline"`
+	Name            string `json:"name,omitempty"`
 }
 
-type CloudResourcesAggregation struct {
-	GcpVpcPeerings   []*GcpVpcPeeringInfo   `json:"gcpVpcPeerings,omitempty"`
-	AzureVpcPeerings []*AzureVpcPeeringInfo `json:"azureVpcPeerings,omitempty"`
-	AwsVpcPeerings   []*AwsVpcPeeringInfo   `json:"awsVpcPeerings,omitempty"`
-	NfsVolumes       []*NfsVolumeInfo       `json:"nfsVolumes,omitempty"`
+// ========================================================================
+
+type GcpVpcPeeringInfoList struct {
+	Items []*GcpVpcPeeringInfo `json:"items,omitempty"`
 }
+
+// ========================================================================
+
+type AzureVpcPeeringInfoList struct {
+	Items []*AzureVpcPeeringInfo `json:"items,omitempty"`
+}
+
+// ========================================================================
+
+type AwsVpcPeeringInfoList struct {
+	Items []*AwsVpcPeeringInfo `json:"items,omitempty"`
+}
+
+// ========================================================================
+
+type NfsVolumeInfoList struct {
+	Items []*NfsVolumeInfo `json:"items,omitempty"`
+}
+
+// ========================================================================
+
+type CloudResourcesAggregation struct {
+	GcpVpcPeerings   GcpVpcPeeringInfoList   `json:"gcpVpcPeerings,omitempty"`
+	AzureVpcPeerings AzureVpcPeeringInfoList `json:"azureVpcPeerings,omitempty"`
+	AwsVpcPeerings   AwsVpcPeeringInfoList   `json:"awsVpcPeerings,omitempty"`
+	NfsVolumes       NfsVolumeInfoList       `json:"nfsVolumes,omitempty"`
+}
+
+// ========================================================================
 
 type GcpVpcPeeringInfo struct {
 	Spec      GcpVpcPeeringSpec `json:"spec"`
 	SourceRef SourceRef         `json:"sourceRef"`
 }
 
+func (in *GcpVpcPeeringInfo) SetSpec(spec any) {
+	in.Spec = spec.(GcpVpcPeeringSpec)
+}
+
+func (in *GcpVpcPeeringInfo) GetSourceRef() SourceRef {
+	return in.SourceRef
+}
+
+// ========================================================================
+
 type AzureVpcPeeringInfo struct {
 	Spec      AzureVpcPeeringSpec `json:"spec"`
 	SourceRef SourceRef           `json:"sourceRef"`
 }
+
+func (in *AzureVpcPeeringInfo) SetSpec(spec any) {
+	in.Spec = spec.(AzureVpcPeeringSpec)
+}
+
+func (in *AzureVpcPeeringInfo) GetSourceRef() SourceRef {
+	return in.SourceRef
+}
+
+// ========================================================================
 
 type AwsVpcPeeringInfo struct {
 	Spec      AwsVpcPeeringSpec `json:"spec"`
 	SourceRef SourceRef         `json:"sourceRef"`
 }
 
+func (in *AwsVpcPeeringInfo) SetSpec(spec any) {
+	in.Spec = spec.(AwsVpcPeeringSpec)
+}
+
+func (in *AwsVpcPeeringInfo) GetSourceRef() SourceRef {
+	return in.SourceRef
+}
+
+// ========================================================================
+
 type NfsVolumeInfo struct {
 	Spec      NfsVolumeSpec `json:"spec"`
 	SourceRef SourceRef     `json:"sourceRef"`
 }
 
+func (in *NfsVolumeInfo) SetSpec(spec any) {
+	in.Spec = spec.(NfsVolumeSpec)
+}
+
+func (in *NfsVolumeInfo) GetSourceRef() SourceRef {
+	return in.SourceRef
+}
+
+// ========================================================================
+
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
-	State State `json:"state,omitempty"`
+	State  State  `json:"state,omitempty"`
+	Served string `json:"served"`
 
 	// List of status conditions to indicate the status of a CloudResources.
 	// +optional
@@ -84,15 +154,6 @@ type CloudResources struct {
 
 	Spec   CloudResourcesSpec   `json:"spec,omitempty"`
 	Status CloudResourcesStatus `json:"status,omitempty"`
-}
-
-//+kubebuilder:object:root=true
-
-// CloudResourcesList contains a list of CloudResources
-type CloudResourcesList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CloudResources `json:"items"`
 }
 
 func (cr *CloudResources) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
@@ -121,6 +182,15 @@ func (cr *CloudResources) UpdateConditionForErrorState(conditionType ConditionTy
 	}
 	meta.RemoveStatusCondition(&cr.Status.Conditions, condition.Type)
 	meta.SetStatusCondition(&cr.Status.Conditions, condition)
+}
+
+//+kubebuilder:object:root=true
+
+// CloudResourcesList contains a list of CloudResources
+type CloudResourcesList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []CloudResources `json:"items"`
 }
 
 func init() {

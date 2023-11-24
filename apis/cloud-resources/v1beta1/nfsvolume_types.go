@@ -75,6 +75,20 @@ type NfsVolume struct {
 	Status NfsVolumeStatus `json:"status,omitempty"`
 }
 
+func (in *NfsVolume) GetSpec() any {
+	return in.Spec
+}
+
+func (in *NfsVolume) GetSourceRef() SourceRef {
+	return SourceRef{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       in.Kind,
+			APIVersion: in.APIVersion,
+		},
+		Name: in.Name,
+	}
+}
+
 //+kubebuilder:object:root=true
 
 // NfsVolumeList contains a list of NfsVolume
