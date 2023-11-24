@@ -1,13 +1,15 @@
-package reconciler
+package reconcile
 
 import (
 	"github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ReconcilingState struct {
 	composed.BaseState
-	Obj            runtime.Object
+	NamespacedName types.NamespacedName
+	Obj            client.Object
 	CloudResources *v1beta1.CloudResources
 }

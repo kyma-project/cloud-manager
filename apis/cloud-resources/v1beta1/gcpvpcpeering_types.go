@@ -77,13 +77,18 @@ type GcpVpcPeering struct {
 	Status GcpVpcPeeringStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+func (peering *GcpVpcPeering) GetSpec() any {
+	return peering.Spec
+}
 
-// GcpVpcPeeringList contains a list of GcpVpcPeering
-type GcpVpcPeeringList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GcpVpcPeering `json:"items"`
+func (peering *GcpVpcPeering) GetSourceRef() SourceRef {
+	return SourceRef{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       peering.Kind,
+			APIVersion: peering.APIVersion,
+		},
+		Name: peering.Name,
+	}
 }
 
 func (peering *GcpVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
@@ -114,12 +119,13 @@ func (peering *GcpVpcPeering) UpdateConditionForErrorState(conditionType Conditi
 	meta.SetStatusCondition(&peering.Status.Conditions, condition)
 }
 
-func (me *GcpVpcPeering) GetSourceInfo() SourceRef {
-	return SourceRef{
-		APIVersion: me.APIVersion,
-		Kind:       me.Kind,
-		Name:       me.Name,
-	}
+//+kubebuilder:object:root=true
+
+// GcpVpcPeeringList contains a list of GcpVpcPeering
+type GcpVpcPeeringList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []GcpVpcPeering `json:"items"`
 }
 
 func init() {

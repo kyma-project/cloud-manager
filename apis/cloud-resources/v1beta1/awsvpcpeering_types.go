@@ -51,6 +51,20 @@ type AwsVpcPeering struct {
 	Status AwsVpcPeeringStatus `json:"status,omitempty"`
 }
 
+func (peering *AwsVpcPeering) GetSpec() any {
+	return peering.Spec
+}
+
+func (peering *AwsVpcPeering) GetSourceRef() SourceRef {
+	return SourceRef{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       peering.Kind,
+			APIVersion: peering.APIVersion,
+		},
+		Name: peering.Name,
+	}
+}
+
 //+kubebuilder:object:root=true
 
 // AwsVpcPeeringList contains a list of AwsVpcPeering
@@ -58,14 +72,6 @@ type AwsVpcPeeringList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AwsVpcPeering `json:"items"`
-}
-
-func (me *AwsVpcPeering) GetSourceInfo() SourceRef {
-	return SourceRef{
-		APIVersion: me.APIVersion,
-		Kind:       me.Kind,
-		Name:       me.Name,
-	}
 }
 
 func init() {

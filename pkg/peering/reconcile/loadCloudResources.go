@@ -1,4 +1,4 @@
-package reconciler
+package reconcile
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 func loadCloudResources(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
 	state := state1.(*ReconcilingState)
 	list := &v1beta1.CloudResourcesList{}
-	err := state.List(ctx, list)
+	err := state.Client.List(ctx, list)
 	if err != nil {
 		return &ctrl.Result{Requeue: true},
 			fmt.Errorf("error listing CloudResources: %w", err)
