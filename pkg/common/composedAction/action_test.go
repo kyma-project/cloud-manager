@@ -3,11 +3,12 @@ package composed
 import (
 	"context"
 	"errors"
+	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest/observer"
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/wojas/genericr"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
 	"time"
@@ -15,64 +16,64 @@ import (
 
 type composedActionSuite struct {
 	suite.Suite
+	ctx context.Context
 }
 
 type composedActionTestState struct {
-	BaseState
+	State
 	log []string
 }
 
-func buildTestAction(logName string, result *ctrl.Result, err error) Action {
-	return func(ctx context.Context, state LoggableState) (*ctrl.Result, error) {
+func buildTestAction(logName string, err error) Action {
+	return func(ctx context.Context, state State) error {
 		st := state.(*composedActionTestState)
 		st.log = append(st.log, logName)
-		return result, err
+		return err
 	}
 }
 
-func newComposedActionTestState(logger *zap.SugaredLogger) *composedActionTestState {
-	if logger == nil {
-		logger = zap.NewNop().Sugar()
-	}
+func newComposedActionTestState() *composedActionTestState {
 	return &composedActionTestState{
-		BaseState: BaseState{
-			logger: logger,
-		},
+		State: NewState(nil, nil, types.NamespacedName{}, nil),
 	}
+}
+
+func (me *composedActionSuite) SetupTest() {
+	me.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
 func (me *composedActionSuite) TestAllActionsAreRunInSequence() {
-	state := newComposedActionTestState(nil)
+	state := newComposedActionTestState()
 
 	a := ComposeActions(
 		"TestAllActionsAreRunInSequence",
-		buildTestAction("1", nil, nil),
-		buildTestAction("2", nil, nil),
-		buildTestAction("3", nil, nil),
+		buildTestAction("1", nil),
+		buildTestAction("2", nil),
+		buildTestAction("3", nil),
 	)
 
-	_, _ = a(context.Background(), state)
+	_ = a(me.ctx, state)
 	assert.Equal(me.T(), []string{"1", "2", "3"}, state.log)
 }
 
 func (me *composedActionSuite) TestBreaksOnFirstError() {
-	state := newComposedActionTestState(nil)
+	state := newComposedActionTestState()
 
 	e1 := errors.New("dummy")
 	a := ComposeActions(
 		"TestBreaksOnFirstError",
-		buildTestAction("1", nil, nil),
-		buildTestAction("2", nil, e1),
-		buildTestAction("3", nil, nil),
+		buildTestAction("1", nil),
+		buildTestAction("2", e1),
+		buildTestAction("3", nil),
 	)
 
-	_, err := a(context.Background(), state)
+	err := a(me.ctx, state)
 	assert.Equal(me.T(), []string{"1", "2"}, state.log)
 	assert.Equal(me.T(), e1, err)
 }
 
-func buildDelayedTestAction(logName string, delay time.Duration, result *ctrl.Result, err error) Action {
-	return func(ctx context.Context, state LoggableState) (*ctrl.Result, error) {
+func buildDelayedTestAction(logName string, delay time.Duration, err error) Action {
+	return func(ctx context.Context, state State) error {
 		st := state.(*composedActionTestState)
 		st.log = append(st.log, logName+".start")
 		select {
@@ -81,24 +82,24 @@ func buildDelayedTestAction(logName string, delay time.Duration, result *ctrl.Re
 		case <-time.After(delay):
 			st.log = append(st.log, logName+".end")
 		}
-		return result, err
+		return err
 	}
 }
 
 func (me *composedActionSuite) TestCanBeInterrupted() {
 	a := ComposeActions(
 		"TestCanBeInterrupted",
-		buildDelayedTestAction("1", time.Second, nil, nil),
-		buildDelayedTestAction("2", time.Second, nil, nil),
-		buildDelayedTestAction("3", time.Second, nil, nil),
+		buildDelayedTestAction("1", time.Second, nil),
+		buildDelayedTestAction("2", time.Second, nil),
+		buildDelayedTestAction("3", time.Second, nil),
 	)
 
-	state := newComposedActionTestState(nil)
-	ctx, cancel := context.WithCancel(context.Background())
+	state := newComposedActionTestState()
+	ctx, cancel := context.WithCancel(me.ctx)
 
 	hasReturned := false
 	go func() {
-		_, _ = a(ctx, state)
+		_ = a(ctx, state)
 		hasReturned = true
 	}()
 
@@ -125,44 +126,46 @@ loop:
 	assert.Equal(me.T(), "2.canceled", state.log[3])
 }
 
-func (me *composedActionSuite) TestLogsAllRunnedActions() {
-	myName := "TestLogsAllRunnedActions"
-	observedZapCore, observedLogs := observer.New(zap.InfoLevel)
-	observedLogger := zap.New(observedZapCore)
+func (me *composedActionSuite) TestLogsAllRunActions() {
+	myName := "TestLogsAllRunActions"
 
-	state := newComposedActionTestState(observedLogger.Sugar())
+	var allLogs []genericr.Entry
+	ctx := log.IntoContext(me.ctx, logr.New(genericr.New(func(e genericr.Entry) {
+		allLogs = append(allLogs, e)
+	})))
+
+	state := newComposedActionTestState()
 
 	a := ComposeActions(
 		myName,
-		buildTestAction("1", nil, nil),
-		buildTestAction("2", nil, nil),
-		buildTestAction("3", nil, nil),
+		buildTestAction("1", nil),
+		buildTestAction("2", nil),
+		buildTestAction("3", nil),
 	)
 
-	_, _ = a(context.Background(), state)
+	_ = a(ctx, state)
 
-	allLogs := observedLogs.All()
 	assert.Len(me.T(), allLogs, 4)
 
-	actionName := "github.com/kyma-project/redis-manager/pkg/composed.(*composedActionSuite).TestLogsAllRunnedActions.func"
+	actionName := "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction.(*composedActionSuite).TestLogsAllRunActions.func"
 
 	assert.Equal(me.T(), "Running action", allLogs[0].Message)
-	assert.Equal(me.T(), myName, allLogs[0].ContextMap()["action"])
-	assert.Equal(me.T(), actionName+"1", allLogs[0].ContextMap()["targetAction"])
+	assert.Equal(me.T(), myName, allLogs[0].FieldsMap()["action"])
+	assert.Equal(me.T(), actionName+"2", allLogs[0].FieldsMap()["targetAction"])
 
 	assert.Equal(me.T(), "Running action", allLogs[1].Message)
-	assert.Equal(me.T(), myName, allLogs[1].ContextMap()["action"])
-	assert.Equal(me.T(), actionName+"2", allLogs[1].ContextMap()["targetAction"])
+	assert.Equal(me.T(), myName, allLogs[1].FieldsMap()["action"])
+	assert.Equal(me.T(), actionName+"3", allLogs[1].FieldsMap()["targetAction"])
 
 	assert.Equal(me.T(), "Running action", allLogs[2].Message)
-	assert.Equal(me.T(), myName, allLogs[2].ContextMap()["action"])
-	assert.Equal(me.T(), actionName+"3", allLogs[2].ContextMap()["targetAction"])
+	assert.Equal(me.T(), myName, allLogs[2].FieldsMap()["action"])
+	assert.Equal(me.T(), actionName+"4", allLogs[2].FieldsMap()["targetAction"])
 
 	assert.Equal(me.T(), "Reconciliation finished", allLogs[3].Message)
-	assert.Equal(me.T(), myName, allLogs[3].ContextMap()["action"])
-	assert.Equal(me.T(), actionName+"3", allLogs[3].ContextMap()["lastAction"])
-	assert.Equal(me.T(), (*reconcile.Result)(nil), allLogs[3].ContextMap()["result"])
-	assert.Equal(me.T(), nil, allLogs[3].ContextMap()["err"])
+	assert.Equal(me.T(), myName, allLogs[3].FieldsMap()["action"])
+	assert.Equal(me.T(), actionName+"4", allLogs[3].FieldsMap()["lastAction"])
+	assert.Equal(me.T(), reconcile.Result{}, allLogs[3].FieldsMap()["result"])
+	assert.Equal(me.T(), nil, allLogs[3].FieldsMap()["err"])
 }
 
 func TestComposedAction(t *testing.T) {

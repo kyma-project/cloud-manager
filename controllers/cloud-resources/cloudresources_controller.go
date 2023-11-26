@@ -18,21 +18,23 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
+	"github.com/kyma-project/cloud-resources-manager/pkg/cloudresources/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 )
 
+func NewCloudResourcesReconciler(reconciler *reconcile.Reconciler) *CloudResourcesReconciler {
+	return &CloudResourcesReconciler{
+		reconciler: reconciler,
+	}
+}
+
 // CloudResourcesReconciler reconciles a CloudResources object
 type CloudResourcesReconciler struct {
-	client.Client
-	Scheme     *runtime.Scheme
-	reconciler reconcile.Reconciler
+	reconciler *reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources,verbs=get;list;watch;create;update;patch;delete
@@ -51,9 +53,7 @@ type CloudResourcesReconciler struct {
 func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Run(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -47,8 +47,9 @@ type AwsVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AwsVpcPeeringSpec   `json:"spec,omitempty"`
-	Status AwsVpcPeeringStatus `json:"status,omitempty"`
+	Spec    AwsVpcPeeringSpec   `json:"spec,omitempty"`
+	Status  AwsVpcPeeringStatus `json:"status,omitempty"`
+	Outcome *Outcome            `json:"outcome,omitempty"`
 }
 
 func (peering *AwsVpcPeering) GetSpec() any {
@@ -63,6 +64,10 @@ func (peering *AwsVpcPeering) GetSourceRef() SourceRef {
 		},
 		Name: peering.Name,
 	}
+}
+
+func (peering *AwsVpcPeering) GetOutcome() *Outcome {
+	return peering.Outcome
 }
 
 //+kubebuilder:object:root=true

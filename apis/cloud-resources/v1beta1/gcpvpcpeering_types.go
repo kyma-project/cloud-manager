@@ -24,23 +24,29 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-type State string
+type StatusState string
 
 const (
-	ReadyState State = "Ready"
-	ErrorState State = "Error"
+	ProcessingState StatusState = "Processing"
+	ReadyState      StatusState = "Ready"
+	ErrorState      StatusState = "Error"
 )
 
 type ConditionType string
 
 const (
-	ConditionTypeDummy ConditionType = "Dummy"
+	ConditionTypeReady      ConditionType = "Ready"
+	ConditionTypeProcessing ConditionType = "Processing"
+	ConditionTypeDeleted    ConditionType = "Deleted"
+	ConditionTypeError      ConditionType = "Error"
 )
 
 type ConditionReason string
 
 const (
-	ConditionReasonDummy ConditionReason = "Dummy"
+	ConditionReasonReady      ConditionReason = "Ready"
+	ConditionReasonProcessing ConditionReason = "Processing"
+	ConditionReasonError      ConditionReason = "Error"
 )
 
 // GcpVpcPeeringSpec defines the desired state of GcpVpcPeering
@@ -55,7 +61,7 @@ type GcpVpcPeeringSpec struct {
 
 // GcpVpcPeeringStatus defines the observed state of GcpVpcPeering
 type GcpVpcPeeringStatus struct {
-	State State `json:"state,omitempty"`
+	State StatusState `json:"state,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -73,8 +79,9 @@ type GcpVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GcpVpcPeeringSpec   `json:"spec,omitempty"`
-	Status GcpVpcPeeringStatus `json:"status,omitempty"`
+	Spec    GcpVpcPeeringSpec   `json:"spec,omitempty"`
+	Status  GcpVpcPeeringStatus `json:"status,omitempty"`
+	Outcome *Outcome            `json:"outcome,omitempty"`
 }
 
 func (peering *GcpVpcPeering) GetSpec() any {
@@ -91,8 +98,12 @@ func (peering *GcpVpcPeering) GetSourceRef() SourceRef {
 	}
 }
 
-func (peering *GcpVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
-	peering.Status.State = ReadyState
+func (peering *GcpVpcPeering) GetOutcome() *Outcome {
+	return peering.Outcome
+}
+
+func (peering *GcpVpcPeering) UpdateCondition(state StatusState, conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
+	peering.Status.State = state
 
 	condition := metav1.Condition{
 		Type:               string(conditionType),
@@ -105,18 +116,12 @@ func (peering *GcpVpcPeering) UpdateConditionForReadyState(conditionType Conditi
 	meta.SetStatusCondition(&peering.Status.Conditions, condition)
 }
 
-func (peering *GcpVpcPeering) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, error error) {
-	peering.Status.State = ErrorState
+func (peering *GcpVpcPeering) RemoveCondition(conditionType ConditionType) {
+	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
+}
 
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            error.Error(),
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *GcpVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
+	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
 }
 
 //+kubebuilder:object:root=true

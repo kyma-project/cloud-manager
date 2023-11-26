@@ -1,19 +1,12 @@
-package aggregation
+package genericActions
 
 import (
 	"context"
-	"errors"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func Aggregate(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result, error) {
-	state := state1.(*ReconcilingState)
-	if state.CloudResources == nil {
-		return nil, errors.New("unexpected empty CloudResources")
-	}
-
+func Aggregate(ctx context.Context, state1 composed.State) error {
 	return composed.BuildSwitchAction(
 		"Aggregate",
 		nil,
@@ -26,10 +19,9 @@ func Aggregate(ctx context.Context, state1 composed.LoggableState) (*ctrl.Result
 
 // ========================================================================
 
-func genericPredicate(state1 composed.LoggableState, kind string) bool {
-	state := state1.(*ReconcilingState)
-	return state.Obj.GetObjectKind().GroupVersionKind().GroupVersion().String() == cloudresourcesv1beta1.GroupVersion.String() &&
-		state.Obj.GetObjectKind().GroupVersionKind().Kind == kind
+func genericPredicate(state composed.State, kind string) bool {
+	return state.Obj().GetObjectKind().GroupVersionKind().GroupVersion().String() == cloudresourcesv1beta1.GroupVersion.String() &&
+		state.Obj().GetObjectKind().GroupVersionKind().Kind == kind
 }
 
 func genericAggregateAction(obj Aggregable, list AggregateInfoList) {
@@ -61,6 +53,7 @@ func genericAggregateAction(obj Aggregable, list AggregateInfoList) {
 		return
 	}
 
-	// it has not been aggregated, maybe log something ???
+	// TODO: it has not been aggregated, maybe log something ???
+
 	return
 }

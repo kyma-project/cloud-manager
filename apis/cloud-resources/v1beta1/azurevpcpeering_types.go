@@ -33,7 +33,7 @@ type AzureVpcPeeringSpec struct {
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
 type AzureVpcPeeringStatus struct {
-	State State `json:"state,omitempty"`
+	State StatusState `json:"state,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -51,8 +51,9 @@ type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AzureVpcPeeringSpec   `json:"spec,omitempty"`
-	Status AzureVpcPeeringStatus `json:"status,omitempty"`
+	Spec    AzureVpcPeeringSpec   `json:"spec,omitempty"`
+	Status  AzureVpcPeeringStatus `json:"status,omitempty"`
+	Outcome *Outcome              `json:"outcome,omitempty"`
 }
 
 func (peering *AzureVpcPeering) GetSpec() any {
@@ -67,6 +68,10 @@ func (peering *AzureVpcPeering) GetSourceRef() SourceRef {
 		},
 		Name: peering.Name,
 	}
+}
+
+func (peering *AzureVpcPeering) GetOutcome() *Outcome {
+	return peering.Outcome
 }
 
 func (peering *AzureVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {

@@ -1,4 +1,4 @@
-package aggregation
+package genericActions
 
 import (
 	"github.com/elliotchance/pie/v2"
@@ -22,6 +22,7 @@ type Aggregable interface {
 	GetDeletionTimestamp() *metav1.Time
 	GetSpec() any
 	GetSourceRef() cloudresourcesv1beta1.SourceRef
+	GetOutcome() *cloudresourcesv1beta1.Outcome
 }
 
 // ======================================================================
@@ -48,7 +49,7 @@ func (l *GcpVpcPeeringInfoListWrap) Append(sr cloudresourcesv1beta1.SourceRef, s
 }
 
 func (l *GcpVpcPeeringInfoListWrap) Remove(index int) {
-	pie.Delete(l.Items, index)
+	l.Items = pie.Delete(l.Items, index)
 }
 
 // ======================================================================

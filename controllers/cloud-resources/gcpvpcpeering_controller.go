@@ -19,28 +19,21 @@ package cloudresources
 import (
 	"context"
 	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
-
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 )
 
-func NewGcpVpcPeeringReconciler(client1 client.Client, scheme *runtime.Scheme, reconciler reconcile.Reconciler) *GcpVpcPeeringReconciler {
+func NewGcpVpcPeeringReconciler(reconciler *reconcile.Reconciler) *GcpVpcPeeringReconciler {
 	return &GcpVpcPeeringReconciler{
-		Client:     client1,
-		Scheme:     scheme,
 		reconciler: reconciler,
 	}
 }
 
 // GcpVpcPeeringReconciler reconciles a GcpVpcPeering object
 type GcpVpcPeeringReconciler struct {
-	client.Client
-	Scheme     *runtime.Scheme
-	reconciler reconcile.Reconciler
+	reconciler *reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpvpcpeerings,verbs=get;list;watch;create;update;patch;delete
@@ -57,11 +50,10 @@ type GcpVpcPeeringReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *GcpVpcPeeringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+	logger.Info("here")
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Run(ctx, req, &cloudresourcesv1beta1.GcpVpcPeering{})
 }
 
 // SetupWithManager sets up the controller with the Manager.

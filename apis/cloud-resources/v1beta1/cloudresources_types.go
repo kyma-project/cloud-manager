@@ -24,6 +24,8 @@ import (
 const (
 	ServedTrue  = "True"
 	ServedFalse = "False"
+
+	Finalizer = "cloud-resources.kyma-project.io/deletion-hook"
 )
 
 // CloudResourcesSpec defines the desired state of CloudResources
@@ -133,8 +135,8 @@ func (in *NfsVolumeInfo) GetSourceRef() SourceRef {
 
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
-	State  State  `json:"state,omitempty"`
-	Served string `json:"served"`
+	State  StatusState `json:"state,omitempty"`
+	Served string      `json:"served"`
 
 	// List of status conditions to indicate the status of a CloudResources.
 	// +optional

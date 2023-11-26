@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	cloudresourcesreconcile "github.com/kyma-project/cloud-resources-manager/pkg/cloudresources/reconcile"
 	peeringreconcile "github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
 	"os"
 
@@ -90,10 +91,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&cloudresourcescontrollers.CloudResourcesReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudresourcescontrollers.NewCloudResourcesReconciler(
+		cloudresourcesreconcile.NewReconciler(
+			mgr.GetClient(),
+			mgr.GetEventRecorderFor("cloud-resources-manager"),
+		),
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
 		os.Exit(1)
 	}
@@ -104,24 +107,18 @@ func main() {
 	)
 
 	if err = cloudresourcescontrollers.NewGcpVpcPeeringReconciler(
-		mgr.GetClient(),
-		mgr.GetScheme(),
 		peeringReeconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpVpcPeering")
 		os.Exit(1)
 	}
 	if err = cloudresourcescontrollers.NewAzureVpcPeeringReconciler(
-		mgr.GetClient(),
-		mgr.GetScheme(),
 		peeringReeconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcPeering")
 		os.Exit(1)
 	}
 	if err = cloudresourcescontrollers.NewAwsVpcPeeringReconciler(
-		mgr.GetClient(),
-		mgr.GetScheme(),
 		peeringReeconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")

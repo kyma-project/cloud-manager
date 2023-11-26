@@ -79,6 +79,10 @@ func (in *NfsVolume) GetSpec() any {
 	return in.Spec
 }
 
+func (in *NfsVolume) GetOutcome() *Outcome {
+	return nil // TODO: change if will support the outcome field
+}
+
 func (in *NfsVolume) GetSourceRef() SourceRef {
 	return SourceRef{
 		TypeMeta: metav1.TypeMeta{
