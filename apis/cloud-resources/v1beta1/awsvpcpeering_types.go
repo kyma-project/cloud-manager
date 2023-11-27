@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,8 +35,13 @@ type AwsVpcPeeringSpec struct {
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering
 type AwsVpcPeeringStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	State StatusState `json:"state,omitempty"`
+
+	// List of status conditions to indicate the status of a Peering.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -47,8 +53,9 @@ type AwsVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AwsVpcPeeringSpec   `json:"spec,omitempty"`
-	Status AwsVpcPeeringStatus `json:"status,omitempty"`
+	Spec    AwsVpcPeeringSpec   `json:"spec,omitempty"`
+	Status  AwsVpcPeeringStatus `json:"status,omitempty"`
+	Outcome *Outcome            `json:"outcome,omitempty"`
 }
 
 func (peering *AwsVpcPeering) GetSpec() any {
@@ -63,6 +70,26 @@ func (peering *AwsVpcPeering) GetSourceRef() SourceRef {
 		},
 		Name: peering.Name,
 	}
+}
+
+func (peering *AwsVpcPeering) GetOutcome() *Outcome {
+	return peering.Outcome
+}
+
+func (peering *AwsVpcPeering) GetConditions() *[]metav1.Condition {
+	return &peering.Status.Conditions
+}
+
+func (peering *AwsVpcPeering) GetStatusState() StatusState {
+	return peering.Status.State
+}
+
+func (peering *AwsVpcPeering) SetStatusState(statusState StatusState) {
+	peering.Status.State = statusState
+}
+
+func (peering *AwsVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
+	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
 }
 
 //+kubebuilder:object:root=true

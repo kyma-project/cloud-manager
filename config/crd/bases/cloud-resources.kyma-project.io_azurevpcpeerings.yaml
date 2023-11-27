@@ -32,6 +32,17 @@ spec:
             type: string
           metadata:
             type: object
+          outcome:
+            properties:
+              data:
+                additionalProperties:
+                  type: string
+                type: object
+              message:
+                type: string
+              type:
+                type: string
+            type: object
           spec:
             description: AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
             properties:

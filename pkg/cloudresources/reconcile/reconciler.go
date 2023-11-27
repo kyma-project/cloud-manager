@@ -2,6 +2,7 @@ package reconcile
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
 	"github.com/kyma-project/cloud-resources-manager/pkg/common/genericActions"
 	"k8s.io/client-go/tools/record"
@@ -14,17 +15,10 @@ func NewReconciler(client client.Client, eventRecorder record.EventRecorder) *Re
 		client:        client,
 		eventRecorder: eventRecorder,
 		action: composed.ComposeActions(
-			"peeringLoop",
-
+			"cloud-resources-manager",
 			genericActions.LoadObj,
-			whenBeingDeleted,
-			whenNoFinalizer,
 			genericActions.LoadCloudResources,
-			genericActions.EnsureServedCloudResources,
-			genericActions.Aggregate,
-			genericActions.SaveServedCloudResourcesAggregations,
-			whenOutcomeError,
-			whenOutcomeCreated,
+			handleServed,
 		),
 	}
 }
@@ -35,23 +29,9 @@ type Reconciler struct {
 	action        composed.Action
 }
 
-// Run runs the reconciliation actions.
-// For ctx and req pass values from the kubebuilder's Reconcile() arguments.
-// For obj argument pass empty instance of the object type you're reconciling
-// in the controller, it will be loaded by executed actions and aggregated
-// to the served CloudResources instance which then will be saved
-func (r *Reconciler) Run(
-	ctx context.Context,
-	req ctrl.Request,
-	obj client.Object,
-) (ctrl.Result, error) {
+func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	state := genericActions.NewState(
-		composed.NewState(
-			r.client,
-			r.eventRecorder,
-			req.NamespacedName,
-			obj,
-		),
+		composed.NewState(r.client, r.eventRecorder, req.NamespacedName, &cloudresourcesv1beta1.CloudResources{}),
 	)
 
 	err := r.action(ctx, state)

@@ -1,4 +1,4 @@
-package aggregation
+package genericActions
 
 import (
 	"github.com/elliotchance/pie/v2"
@@ -48,7 +48,7 @@ func (l *GcpVpcPeeringInfoListWrap) Append(sr cloudresourcesv1beta1.SourceRef, s
 }
 
 func (l *GcpVpcPeeringInfoListWrap) Remove(index int) {
-	pie.Delete(l.Items, index)
+	l.Items = pie.Delete(l.Items, index)
 }
 
 // ======================================================================

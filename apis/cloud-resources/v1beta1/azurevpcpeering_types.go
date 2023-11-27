@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,7 +32,7 @@ type AzureVpcPeeringSpec struct {
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
 type AzureVpcPeeringStatus struct {
-	State State `json:"state,omitempty"`
+	State StatusState `json:"state,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -51,8 +50,9 @@ type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AzureVpcPeeringSpec   `json:"spec,omitempty"`
-	Status AzureVpcPeeringStatus `json:"status,omitempty"`
+	Spec    AzureVpcPeeringSpec   `json:"spec,omitempty"`
+	Status  AzureVpcPeeringStatus `json:"status,omitempty"`
+	Outcome *Outcome              `json:"outcome,omitempty"`
 }
 
 func (peering *AzureVpcPeering) GetSpec() any {
@@ -69,32 +69,20 @@ func (peering *AzureVpcPeering) GetSourceRef() SourceRef {
 	}
 }
 
-func (peering *AzureVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
-	peering.Status.State = ReadyState
-
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            message,
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *AzureVpcPeering) GetOutcome() *Outcome {
+	return peering.Outcome
 }
 
-func (peering *AzureVpcPeering) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, error error) {
-	peering.Status.State = ErrorState
+func (peering *AzureVpcPeering) GetConditions() *[]metav1.Condition {
+	return &peering.Status.Conditions
+}
 
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            error.Error(),
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *AzureVpcPeering) GetStatusState() StatusState {
+	return peering.Status.State
+}
+
+func (peering *AzureVpcPeering) SetStatusState(statusState StatusState) {
+	peering.Status.State = statusState
 }
 
 //+kubebuilder:object:root=true
