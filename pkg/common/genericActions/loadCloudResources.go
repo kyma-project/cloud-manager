@@ -15,14 +15,6 @@ func LoadCloudResources(ctx context.Context, state composed.State) error {
 		return fmt.Errorf("error listing CloudResources: %w", err)
 	}
 
-	//// TODO: temporary, until CloudResources loop handling status.served is implemented
-	//if len(list.Items) == 1 {
-	//	cr := &list.Items[0]
-	//	ensureCloudResourcesDefaults(cr)
-	//	state.(StateWithCloudResources).SetServedCloudResources(cr)
-	//	return nil
-	//}
-
 	for _, cr := range list.Items {
 		if cr.Status.Served == cloudresourcesv1beta1.ServedTrue {
 			ensureCloudResourcesDefaults(&cr)

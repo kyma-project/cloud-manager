@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -158,32 +157,16 @@ type CloudResources struct {
 	Status CloudResourcesStatus `json:"status,omitempty"`
 }
 
-func (cr *CloudResources) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
-	cr.Status.State = ReadyState
-
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            message,
-	}
-	meta.RemoveStatusCondition(&cr.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&cr.Status.Conditions, condition)
+func (cr *CloudResources) GetConditions() *[]metav1.Condition {
+	return &cr.Status.Conditions
 }
 
-func (cr *CloudResources) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, error error) {
-	cr.Status.State = ErrorState
+func (cr *CloudResources) GetStatusState() StatusState {
+	return cr.Status.State
+}
 
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            error.Error(),
-	}
-	meta.RemoveStatusCondition(&cr.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&cr.Status.Conditions, condition)
+func (cr *CloudResources) SetStatusState(statusState StatusState) {
+	cr.Status.State = statusState
 }
 
 //+kubebuilder:object:root=true

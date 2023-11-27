@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,33 +73,39 @@ func (peering *AzureVpcPeering) GetOutcome() *Outcome {
 	return peering.Outcome
 }
 
-func (peering *AzureVpcPeering) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
-	peering.Status.State = ReadyState
-
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            message,
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *AzureVpcPeering) GetConditions() *[]metav1.Condition {
+	return &peering.Status.Conditions
 }
 
-func (peering *AzureVpcPeering) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, error error) {
-	peering.Status.State = ErrorState
-
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            error.Error(),
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *AzureVpcPeering) GetStatusState() StatusState {
+	return peering.Status.State
 }
+
+func (peering *AzureVpcPeering) SetStatusState(statusState StatusState) {
+	peering.Status.State = statusState
+}
+
+//func (peering *AzureVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
+//	peering.Status.State = conditionTypeMap[conditionType].statusState
+//
+//	condition := metav1.Condition{
+//		Type:               string(conditionType),
+//		Status:             conditionStatus,
+//		LastTransitionTime: metav1.Now(),
+//		Reason:             string(conditionTypeMap[conditionType].reason),
+//		Message:            message,
+//	}
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
+//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+//}
+//
+//func (peering *AzureVpcPeering) RemoveCondition(conditionType ConditionType) {
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
+//}
+//
+//func (peering *AzureVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
+//	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
+//}
 
 //+kubebuilder:object:root=true
 

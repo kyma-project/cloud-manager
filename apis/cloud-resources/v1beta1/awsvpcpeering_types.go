@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,8 +35,13 @@ type AwsVpcPeeringSpec struct {
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering
 type AwsVpcPeeringStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	State StatusState `json:"state,omitempty"`
+
+	// List of status conditions to indicate the status of a Peering.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -68,6 +74,40 @@ func (peering *AwsVpcPeering) GetSourceRef() SourceRef {
 
 func (peering *AwsVpcPeering) GetOutcome() *Outcome {
 	return peering.Outcome
+}
+
+func (peering *AwsVpcPeering) GetConditions() *[]metav1.Condition {
+	return &peering.Status.Conditions
+}
+
+func (peering *AwsVpcPeering) GetStatusState() StatusState {
+	return peering.Status.State
+}
+
+func (peering *AwsVpcPeering) SetStatusState(statusState StatusState) {
+	peering.Status.State = statusState
+}
+
+//func (peering *AwsVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
+//	peering.Status.State = conditionTypeMap[conditionType].statusState
+//
+//	condition := metav1.Condition{
+//		Type:               string(conditionType),
+//		Status:             conditionStatus,
+//		LastTransitionTime: metav1.Now(),
+//		Reason:             string(conditionTypeMap[conditionType].reason),
+//		Message:            message,
+//	}
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
+//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+//}
+//
+//func (peering *AwsVpcPeering) RemoveCondition(conditionType ConditionType) {
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
+//}
+
+func (peering *AwsVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
+	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
 }
 
 //+kubebuilder:object:root=true

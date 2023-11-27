@@ -22,7 +22,6 @@ type Aggregable interface {
 	GetDeletionTimestamp() *metav1.Time
 	GetSpec() any
 	GetSourceRef() cloudresourcesv1beta1.SourceRef
-	GetOutcome() *cloudresourcesv1beta1.Outcome
 }
 
 // ======================================================================

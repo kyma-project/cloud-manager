@@ -17,37 +17,11 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-type StatusState string
-
-const (
-	ProcessingState StatusState = "Processing"
-	ReadyState      StatusState = "Ready"
-	ErrorState      StatusState = "Error"
-)
-
-type ConditionType string
-
-const (
-	ConditionTypeReady      ConditionType = "Ready"
-	ConditionTypeProcessing ConditionType = "Processing"
-	ConditionTypeDeleted    ConditionType = "Deleted"
-	ConditionTypeError      ConditionType = "Error"
-)
-
-type ConditionReason string
-
-const (
-	ConditionReasonReady      ConditionReason = "Ready"
-	ConditionReasonProcessing ConditionReason = "Processing"
-	ConditionReasonError      ConditionReason = "Error"
-)
 
 // GcpVpcPeeringSpec defines the desired state of GcpVpcPeering
 type GcpVpcPeeringSpec struct {
@@ -102,27 +76,46 @@ func (peering *GcpVpcPeering) GetOutcome() *Outcome {
 	return peering.Outcome
 }
 
-func (peering *GcpVpcPeering) UpdateCondition(state StatusState, conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus, message string) {
-	peering.Status.State = state
-
-	condition := metav1.Condition{
-		Type:               string(conditionType),
-		Status:             conditionStatus,
-		LastTransitionTime: metav1.Now(),
-		Reason:             string(reason),
-		Message:            message,
-	}
-	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+func (peering *GcpVpcPeering) GetConditions() *[]metav1.Condition {
+	return &peering.Status.Conditions
 }
 
-func (peering *GcpVpcPeering) RemoveCondition(conditionType ConditionType) {
-	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
+func (peering *GcpVpcPeering) GetStatusState() StatusState {
+	return peering.Status.State
 }
 
-func (peering *GcpVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
-	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
+func (peering *GcpVpcPeering) SetStatusState(statusState StatusState) {
+	peering.Status.State = statusState
 }
+
+//func (peering *GcpVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
+//	newStatusState := conditionTypeMap[conditionType].statusState
+//
+//	existing := peering.FindStatusCondition(conditionType)
+//	if existing != nil && existing.Status == conditionStatus && existing.Message == message {
+//		return
+//	}
+//
+//	peering.Status.State = newStatusState
+//
+//	condition := metav1.Condition{
+//		Type:               string(conditionType),
+//		Status:             conditionStatus,
+//		LastTransitionTime: metav1.Now(),
+//		Reason:             string(conditionTypeMap[conditionType].reason),
+//		Message:            message,
+//	}
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
+//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
+//}
+//
+//func (peering *GcpVpcPeering) RemoveCondition(conditionType ConditionType) {
+//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
+//}
+//
+//func (peering *GcpVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
+//	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
+//}
 
 //+kubebuilder:object:root=true
 

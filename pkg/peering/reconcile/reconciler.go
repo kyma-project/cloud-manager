@@ -2,10 +2,8 @@ package reconcile
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
 	"github.com/kyma-project/cloud-resources-manager/pkg/common/genericActions"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,64 +15,16 @@ func NewReconciler(client client.Client, eventRecorder record.EventRecorder) *Re
 		eventRecorder: eventRecorder,
 		action: composed.ComposeActions(
 			"peeringLoop",
+
 			genericActions.LoadObj,
-
-			composed.BuildBranchingAction(
-				"ifBeingDeleted",
-				genericActions.IsBeingDeleted,
-				composed.ComposeActions(
-					"whenBeingDeleted",
-					composed.BuildBranchingAction(
-						"ifHasDeleteOutcome",
-						genericActions.HasOutcome(cloudresourcesv1beta1.OutcomeTypeDeleted),
-						composed.ComposeActions(
-							"whenBeingDeleted",
-							genericActions.UpdateCondition(
-								cloudresourcesv1beta1.ProcessingState,
-								cloudresourcesv1beta1.ConditionTypeDeleted,
-								cloudresourcesv1beta1.ConditionReasonProcessing,
-								metav1.ConditionTrue,
-								"Peering was deleted",
-							),
-							genericActions.SaveStatus,
-							genericActions.FinalizerRemove(cloudresourcesv1beta1.Finalizer),
-						),
-						nil,
-					),
-					genericActions.Stop, // !!!important
-				),
-				nil,
-			), // ifBeingDeleted
-
-			composed.BuildBranchingAction(
-				"ifHasNoFinalizer",
-				composed.Not(genericActions.HasFinalizer),
-				composed.ComposeActions(
-					"whenNoFinalizer",
-					genericActions.UpdateCondition(
-						cloudresourcesv1beta1.ProcessingState,
-						cloudresourcesv1beta1.ConditionTypeProcessing,
-						cloudresourcesv1beta1.ConditionReasonProcessing,
-						metav1.ConditionTrue,
-						"Provisioning the resource",
-					),
-					genericActions.SaveStatus,
-					genericActions.FinalizerAdd(cloudresourcesv1beta1.Finalizer),
-					genericActions.SaveObj,
-					genericActions.StopWithRequeue, // !!!important
-				),
-				nil,
-			), // ifHasNoFinalizer
-
+			whenBeingDeleted,
+			whenNoFinalizer,
 			genericActions.LoadCloudResources,
 			genericActions.EnsureServedCloudResources,
 			genericActions.Aggregate,
 			genericActions.SaveServedCloudResourcesAggregations,
-
-			genericActions.OutcomeErrorToCondition(),
-			genericActions.OutcomeCreatedToCondition(),
-
-			genericActions.SaveStatus,
+			whenOutcomeError,
+			whenOutcomeCreated,
 		),
 	}
 }
