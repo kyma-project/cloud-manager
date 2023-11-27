@@ -88,24 +88,6 @@ func (peering *AwsVpcPeering) SetStatusState(statusState StatusState) {
 	peering.Status.State = statusState
 }
 
-//func (peering *AwsVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
-//	peering.Status.State = conditionTypeMap[conditionType].statusState
-//
-//	condition := metav1.Condition{
-//		Type:               string(conditionType),
-//		Status:             conditionStatus,
-//		LastTransitionTime: metav1.Now(),
-//		Reason:             string(conditionTypeMap[conditionType].reason),
-//		Message:            message,
-//	}
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
-//}
-//
-//func (peering *AwsVpcPeering) RemoveCondition(conditionType ConditionType) {
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
-//}
-
 func (peering *AwsVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
 	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
 }

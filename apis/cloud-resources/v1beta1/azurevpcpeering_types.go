@@ -85,28 +85,6 @@ func (peering *AzureVpcPeering) SetStatusState(statusState StatusState) {
 	peering.Status.State = statusState
 }
 
-//func (peering *AzureVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
-//	peering.Status.State = conditionTypeMap[conditionType].statusState
-//
-//	condition := metav1.Condition{
-//		Type:               string(conditionType),
-//		Status:             conditionStatus,
-//		LastTransitionTime: metav1.Now(),
-//		Reason:             string(conditionTypeMap[conditionType].reason),
-//		Message:            message,
-//	}
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
-//}
-//
-//func (peering *AzureVpcPeering) RemoveCondition(conditionType ConditionType) {
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
-//}
-//
-//func (peering *AzureVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
-//	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
-//}
-
 //+kubebuilder:object:root=true
 
 // AzureVpcPeeringList contains a list of AzureVpcPeering

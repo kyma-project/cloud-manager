@@ -88,35 +88,6 @@ func (peering *GcpVpcPeering) SetStatusState(statusState StatusState) {
 	peering.Status.State = statusState
 }
 
-//func (peering *GcpVpcPeering) UpdateCondition(conditionType ConditionType, conditionStatus metav1.ConditionStatus, message string) {
-//	newStatusState := conditionTypeMap[conditionType].statusState
-//
-//	existing := peering.FindStatusCondition(conditionType)
-//	if existing != nil && existing.Status == conditionStatus && existing.Message == message {
-//		return
-//	}
-//
-//	peering.Status.State = newStatusState
-//
-//	condition := metav1.Condition{
-//		Type:               string(conditionType),
-//		Status:             conditionStatus,
-//		LastTransitionTime: metav1.Now(),
-//		Reason:             string(conditionTypeMap[conditionType].reason),
-//		Message:            message,
-//	}
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, condition.Type)
-//	meta.SetStatusCondition(&peering.Status.Conditions, condition)
-//}
-//
-//func (peering *GcpVpcPeering) RemoveCondition(conditionType ConditionType) {
-//	meta.RemoveStatusCondition(&peering.Status.Conditions, string(conditionType))
-//}
-//
-//func (peering *GcpVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
-//	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
-//}
-
 //+kubebuilder:object:root=true
 
 // GcpVpcPeeringList contains a list of GcpVpcPeering
