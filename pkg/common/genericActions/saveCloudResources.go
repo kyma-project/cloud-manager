@@ -2,7 +2,7 @@ package genericActions
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-resources-manager/pkg/common/composedAction"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -14,7 +14,8 @@ func SaveServedCloudResourcesAggregations(ctx context.Context, state composed.St
 	obj := &cloudresourcesv1beta1.CloudResources{
 		TypeMeta: cr.TypeMeta,
 		ObjectMeta: metav1.ObjectMeta{
-			Name: cr.Name,
+			Name:      cr.Name,
+			Namespace: cr.Namespace,
 		},
 		Spec: cloudresourcesv1beta1.CloudResourcesSpec{
 			Aggregations: cr.Spec.Aggregations,

@@ -18,19 +18,23 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/migrate-cloud-resources-manager/api/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1"
 )
+
+func NewAwsVpcPeeringReconciler(reconciler *reconcile.Reconciler) *AwsVpcPeeringReconciler {
+	return &AwsVpcPeeringReconciler{
+		reconciler: reconciler,
+	}
+}
 
 // AwsVpcPeeringReconciler reconciles a AwsVpcPeering object
 type AwsVpcPeeringReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	reconciler *reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsvpcpeerings,verbs=get;list;watch;create;update;patch;delete
@@ -49,9 +53,7 @@ type AwsVpcPeeringReconciler struct {
 func (r *AwsVpcPeeringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Run(ctx, req, &cloudresourcesv1beta1.AwsVpcPeering{})
 }
 
 // SetupWithManager sets up the controller with the Manager.
