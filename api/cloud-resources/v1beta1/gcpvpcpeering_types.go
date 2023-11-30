@@ -25,10 +25,6 @@ import (
 
 // GcpVpcPeeringSpec defines the desired state of GcpVpcPeering
 type GcpVpcPeeringSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of GcpVpcPeering. Edit gcpvpcpeering_types.go to remove/update
 	RemoteProject string `json:"remoteProject,omitempty"`
 	RemoteVpc     string `json:"remoteVpc,omitempty"`
 }

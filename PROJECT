@@ -4,28 +4,26 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: kyma-project.io
 layout:
-- go.kubebuilder.io/v3
+- go.kubebuilder.io/v4
 multigroup: true
 projectName: cloud-resources-manager
 repo: github.com/kyma-project/cloud-resources-manager
 resources:
 - api:
     crdVersion: v1
-    namespaced: false
   controller: true
   domain: kyma-project.io
   group: cloud-resources
   kind: CloudResources
-  path: github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1
+  path: github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
-    namespaced: false
   controller: true
   domain: kyma-project.io
   group: cloud-resources
   kind: GcpVpcPeering
-  path: github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1
+  path: github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
@@ -34,7 +32,7 @@ resources:
   domain: kyma-project.io
   group: cloud-resources
   kind: AzureVpcPeering
-  path: github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1
+  path: github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
@@ -43,7 +41,7 @@ resources:
   domain: kyma-project.io
   group: cloud-resources
   kind: AwsVpcPeering
-  path: github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1
+  path: github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
@@ -52,6 +50,6 @@ resources:
   domain: kyma-project.io
   group: cloud-resources
   kind: NfsVolume
-  path: github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1
+  path: github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1
   version: v1beta1
 version: "3"

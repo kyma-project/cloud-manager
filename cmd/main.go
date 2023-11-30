@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	cloudresourcesreconcile "github.com/kyma-project/cloud-resources-manager/pkg/cloudresources/reconcile"
 	peeringreconcile "github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
-	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -32,9 +33,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
-	cloudresourcescontrollers "github.com/kyma-project/cloud-resources-manager/controllers/cloud-resources"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/api/cloud-resources/v1beta1"
+	cloudresourcescontroller "github.com/kyma-project/cloud-resources-manager/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -69,11 +71,10 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "a66c5a4c.kyma-project.io",
+		LeaderElectionID:       "a649f9c0.kyma-project.io",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -91,7 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontrollers.NewCloudResourcesReconciler(
+	if err = cloudresourcescontroller.NewCloudResourcesReconciler(
 		cloudresourcesreconcile.NewReconciler(
 			mgr.GetClient(),
 			mgr.GetEventRecorderFor("cloud-resources-manager"),
@@ -101,30 +102,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	peeringReeconciler := peeringreconcile.NewReconciler(
+	peeringReconciler := peeringreconcile.NewReconciler(
 		mgr.GetClient(),
 		mgr.GetEventRecorderFor("cloud-resources-manager"),
 	)
 
-	if err = cloudresourcescontrollers.NewGcpVpcPeeringReconciler(
-		peeringReeconciler,
+	if err = cloudresourcescontroller.NewGcpVpcPeeringReconciler(
+		peeringReconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpVpcPeering")
 		os.Exit(1)
 	}
-	if err = cloudresourcescontrollers.NewAzureVpcPeeringReconciler(
-		peeringReeconciler,
+	if err = cloudresourcescontroller.NewAzureVpcPeeringReconciler(
+		peeringReconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcPeering")
 		os.Exit(1)
 	}
-	if err = cloudresourcescontrollers.NewAwsVpcPeeringReconciler(
-		peeringReeconciler,
+	if err = cloudresourcescontroller.NewAwsVpcPeeringReconciler(
+		peeringReconciler,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
 		os.Exit(1)
 	}
-	if err = (&cloudresourcescontrollers.NfsVolumeReconciler{
+	if err = (&cloudresourcescontroller.NfsVolumeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
