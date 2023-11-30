@@ -146,7 +146,6 @@ type CloudResourcesStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster
 
 // CloudResources is the Schema for the cloudresources API
 type CloudResources struct {

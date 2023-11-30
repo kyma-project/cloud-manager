@@ -18,22 +18,19 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
+
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/migrate-cloud-resources-manager/api/cloud-resources/v1beta1"
 )
-
-func NewAzureVpcPeeringReconciler(reconciler *reconcile.Reconciler) *AzureVpcPeeringReconciler {
-	return &AzureVpcPeeringReconciler{
-		reconciler: reconciler,
-	}
-}
 
 // AzureVpcPeeringReconciler reconciles a AzureVpcPeering object
 type AzureVpcPeeringReconciler struct {
-	reconciler *reconcile.Reconciler
+	client.Client
+	Scheme *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevpcpeerings,verbs=get;list;watch;create;update;patch;delete
@@ -48,11 +45,13 @@ type AzureVpcPeeringReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *AzureVpcPeeringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	return r.reconciler.Run(ctx, req, &cloudresourcesv1beta1.AzureVpcPeering{})
+	// TODO(user): your logic here
+
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

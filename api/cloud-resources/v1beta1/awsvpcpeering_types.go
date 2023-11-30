@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -86,10 +85,6 @@ func (peering *AwsVpcPeering) GetStatusState() StatusState {
 
 func (peering *AwsVpcPeering) SetStatusState(statusState StatusState) {
 	peering.Status.State = statusState
-}
-
-func (peering *AwsVpcPeering) FindStatusCondition(conditionType ConditionType) *metav1.Condition {
-	return meta.FindStatusCondition(peering.Status.Conditions, string(conditionType))
 }
 
 //+kubebuilder:object:root=true

@@ -18,22 +18,19 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources-manager/pkg/peering/reconcile"
+
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/apis/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/migrate-cloud-resources-manager/api/cloud-resources/v1beta1"
 )
-
-func NewAwsVpcPeeringReconciler(reconciler *reconcile.Reconciler) *AwsVpcPeeringReconciler {
-	return &AwsVpcPeeringReconciler{
-		reconciler: reconciler,
-	}
-}
 
 // AwsVpcPeeringReconciler reconciles a AwsVpcPeering object
 type AwsVpcPeeringReconciler struct {
-	reconciler *reconcile.Reconciler
+	client.Client
+	Scheme *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsvpcpeerings,verbs=get;list;watch;create;update;patch;delete
@@ -42,13 +39,19 @@ type AwsVpcPeeringReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
+// TODO(user): Modify the Reconcile function to compare the state specified by
+// the AwsVpcPeering object against the actual cluster state, and then
+// perform operations to make the cluster state reflect the state specified by
+// the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *AwsVpcPeeringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	return r.reconciler.Run(ctx, req, &cloudresourcesv1beta1.AwsVpcPeering{})
+	// TODO(user): your logic here
+
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
