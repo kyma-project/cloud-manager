@@ -3,12 +3,12 @@ package scope
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func createScope(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*State)
-	switch state.Provider {
+	state := st.(State)
+	switch state.Provider() {
 	case ProviderGCP:
 		return createScopeGcp(ctx, state)
 	case ProviderAzure:

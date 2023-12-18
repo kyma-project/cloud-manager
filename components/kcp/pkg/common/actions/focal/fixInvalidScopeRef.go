@@ -4,17 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func fixInvalidScopeRef(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
-	if state.CommonObj().ScopeRef() == nil && state.Scope == nil {
+	scopeRef := state.CommonObj().ScopeRef()
+	scope := state.Scope()
+	if scopeRef == nil && scope == nil {
 		return nil, nil // whenNoScope will handle this, it will create the Scope, set the reference and requeue
 	}
-	if state.CommonObj().ScopeRef() != nil && state.Scope != nil {
+	if scopeRef != nil && scope != nil {
 		return nil, nil // all fine, scope from the reference is loaded
 	}
 

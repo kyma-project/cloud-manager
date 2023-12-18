@@ -1,7 +1,7 @@
 package scope
 
 import (
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func WhenNoScope() composed.Action {

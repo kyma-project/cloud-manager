@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -12,7 +12,7 @@ import (
 
 func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
 	if state.CommonObj().ScopeRef() == nil {
 		logger.Info("Object has no scope reference")
@@ -38,7 +38,7 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Loaded Scope from reference")
 
-	state.Scope = scope
+	state.SetScope(scope)
 
 	return nil, nil
 }

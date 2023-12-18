@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createScopeGcp(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
-	js, ok := state.CredentialData["serviceaccount.json"]
+	js, ok := state.CredentialData()["serviceaccount.json"]
 	if !ok {
 		err := errors.New("gardener credential for gcp missing serviceaccount.json key")
 		logger.Error(err, "error defining GCP scope")
@@ -36,7 +36,7 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 		return composed.StopAndForget, nil // no requeue
 	}
 
-	state.Scope = &cloudresourcesv1beta1.Scope{
+	scope := &cloudresourcesv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      state.Obj().GetName(),
 			Namespace: state.Obj().GetNamespace(),
@@ -47,11 +47,13 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 			Scope: cloudresourcesv1beta1.ScopeInfo{
 				Gcp: &cloudresourcesv1beta1.GcpScope{
 					Project:    project,
-					VpcNetwork: fmt.Sprintf("shoot--%s--%s", state.ShootNamespace, state.ShootName),
+					VpcNetwork: fmt.Sprintf("shoot--%s--%s", state.ShootNamespace(), state.ShootName()),
 				},
 			},
 		},
 	}
+
+	state.SetScope(scope)
 
 	return nil, nil
 }

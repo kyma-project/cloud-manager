@@ -3,7 +3,7 @@ package scope
 import (
 	"context"
 	"errors"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func createScopeAws(ctx context.Context, state composed.State) (error, context.Context) {
