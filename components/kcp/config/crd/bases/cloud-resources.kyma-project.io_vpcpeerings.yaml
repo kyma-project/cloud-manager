@@ -66,7 +66,6 @@ spec:
                 type: object
             required:
             - kyma
-            - scope
             type: object
           status:
             description: VpcPeeringStatus defines the observed state of VpcPeering

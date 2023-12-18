@@ -3,22 +3,22 @@ package scope
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func loadShoot(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
-	shoot, err := state.GardenerClient.Shoots(state.ShootNamespace).Get(ctx, state.ShootName, metav1.GetOptions{})
+	shoot, err := state.GardenerClient().Shoots(state.ShootNamespace()).Get(ctx, state.ShootName(), metav1.GetOptions{})
 	if err != nil {
 		err = fmt.Errorf("error getting shoot: %w", err)
 		logger.Error(err, "Error loading shoot")
 		return err, nil
 	}
 
-	state.Shoot = shoot
+	state.SetShoot(shoot)
 
 	logger.Info("Shoot loaded")
 

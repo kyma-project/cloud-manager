@@ -18,6 +18,8 @@ package main
 
 import (
 	"flag"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange"
 	"os"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -111,8 +113,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&cloudresourcescontroller.IpRangeReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Reconciler: iprange.NewIPRangeReconciler(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme(), abstractions.NewFileReader()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)

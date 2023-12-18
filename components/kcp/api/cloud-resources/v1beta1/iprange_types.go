@@ -28,7 +28,7 @@ type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
 	Kyma string `json:"kyma"`
 
-	// +kubebuilder:validation:Required
+	// +optional
 	Scope *ScopeRef `json:"scope"`
 
 	// +kubebuilder:validation:Required

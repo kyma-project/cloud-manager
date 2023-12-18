@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func updateScopeRef(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
 	state.CommonObj().SetScopeRef(&cloudresourcesv1beta1.ScopeRef{
-		Name: state.Scope.Name,
+		Name: state.Scope().Name,
 	})
 
 	err := state.UpdateObj(ctx)

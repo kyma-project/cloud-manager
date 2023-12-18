@@ -62,7 +62,6 @@ spec:
                 type: object
             required:
             - kyma
-            - scope
             type: object
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance

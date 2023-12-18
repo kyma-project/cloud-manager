@@ -34,7 +34,7 @@ func buildTestAction(logName string, err error) Action {
 
 func newComposedActionTestState() *composedActionTestState {
 	return &composedActionTestState{
-		State: NewState(nil, nil, types.NamespacedName{}, nil),
+		State: NewState(nil, nil, nil, types.NamespacedName{}, nil),
 	}
 }
 

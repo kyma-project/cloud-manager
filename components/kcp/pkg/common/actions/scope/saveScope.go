@@ -3,14 +3,14 @@ package scope
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
 func saveScope(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 
-	err := state.Client().Create(ctx, state.Scope)
+	err := state.Client().Create(ctx, state.Scope())
 	if err != nil {
 		// it's possible that some other loop concurrently running already created this
 		// scope in the meanwhile since we checked if it exists in this loop

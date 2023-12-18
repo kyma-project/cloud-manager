@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -13,7 +13,7 @@ import (
 
 func createGardenerClient(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+	state := st.(State)
 	fn := os.Getenv("GARDENER_CREDENTIALS")
 	if len(fn) == 0 {
 		fn = "/opt/cloud-resources/gardener-credentials/kubeconfig"
@@ -21,7 +21,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 
 	logger = logger.WithValues("credentialsPath", fn)
 	logger.Info("Loading gardener credentials")
-	kubeBytes, err := state.FileReader.ReadFile(fn)
+	kubeBytes, err := state.FileReader().ReadFile(fn)
 	if err != nil {
 		err = fmt.Errorf("error loading gardener credentials: %w", err)
 		logger.Error(err, "error creating gardener client")
@@ -47,12 +47,12 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 		}
 	}
 	if configContext != nil && len(configContext.Namespace) > 0 {
-		state.ShootNamespace = configContext.Namespace
+		state.SetShootNamespace(configContext.Namespace)
 	} else {
-		state.ShootNamespace = os.Getenv("GARDENER_NAMESPACE")
+		state.SetShootNamespace(os.Getenv("GARDENER_NAMESPACE"))
 	}
 
-	logger = logger.WithValues("shootProject", state.ShootNamespace)
+	logger = logger.WithValues("shootProject", state.ShootNamespace())
 	logger.Info("Detected shoot namespace")
 
 	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
@@ -69,7 +69,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 		return composed.StopAndForget, nil // no requeue
 	}
 
-	state.GardenerClient = gClient
+	state.SetGardenerClient(gClient)
 
 	k8sClient, err := kubernetesClient.NewForConfig(restConfig)
 	if err != nil {
@@ -78,7 +78,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 		return composed.StopAndForget, nil // no requeue
 	}
 
-	state.GardenK8sClient = k8sClient
+	state.SetGardenK8sClient(k8sClient)
 
 	logger.Info("Gardener clients created")
 

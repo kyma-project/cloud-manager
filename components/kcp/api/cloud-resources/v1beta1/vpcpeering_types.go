@@ -28,7 +28,7 @@ type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	Kyma string `json:"kyma"`
 
-	// +kubebuilder:validation:Required
+	// +optional
 	Scope *ScopeRef `json:"scope"`
 
 	// +optional

@@ -18,11 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -57,17 +52,17 @@ type NfsInstanceReconciler struct {
 func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO: this should be moved into separate reconciler package
-	state := scope.NewState(
-		focal.NewState(
-			composed.NewState(r.Client, r.EventRecorder, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
-		),
-		abstractions.NewFileReader(),
-	)
-	action := actions.New()
-	err, _ := action(ctx, state)
+	//// TODO: this should be moved into separate reconciler package
+	//state := scope.NewState(
+	//	focal.NewState(
+	//		composed.NewState(r.Client, r.EventRecorder, r.Scheme, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
+	//	),
+	//	abstractions.NewFileReader(),
+	//)
+	//action := actions.New()
+	//err, _ := action(ctx, state)
 
-	return ctrl.Result{}, err
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

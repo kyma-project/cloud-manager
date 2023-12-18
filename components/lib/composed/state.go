@@ -3,6 +3,7 @@ package composed
 import (
 	"context"
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,6 +23,7 @@ func LoggerIntoCtx(ctx context.Context, logger logr.Logger) context.Context {
 type State interface {
 	Client() client.Client
 	EventRecorder() record.EventRecorder
+	Scheme() *runtime.Scheme
 	Name() types.NamespacedName
 	Obj() client.Object
 
@@ -33,12 +35,14 @@ type State interface {
 func NewState(
 	client client.Client,
 	eventRecorder record.EventRecorder,
+	scheme *runtime.Scheme,
 	name types.NamespacedName,
 	obj client.Object,
 ) State {
 	return &baseState{
 		client:        client,
 		eventRecorder: eventRecorder,
+		scheme:        scheme,
 		name:          name,
 		obj:           obj,
 	}
@@ -47,6 +51,7 @@ func NewState(
 type baseState struct {
 	client        client.Client
 	eventRecorder record.EventRecorder
+	scheme        *runtime.Scheme
 	name          types.NamespacedName
 	obj           client.Object
 	nextCtxHanler func(ctx context.Context)
@@ -58,6 +63,10 @@ func (s *baseState) Client() client.Client {
 
 func (s *baseState) EventRecorder() record.EventRecorder {
 	return s.eventRecorder
+}
+
+func (s *baseState) Scheme() *runtime.Scheme {
+	return s.scheme
 }
 
 func (s *baseState) Name() types.NamespacedName {

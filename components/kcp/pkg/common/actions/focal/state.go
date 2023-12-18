@@ -2,21 +2,36 @@ package focal
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/composed"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
 
-func NewState(base composed.State) *State {
-	return &State{
+type State interface {
+	composed.State
+	Scope() *cloudresourcesv1beta1.Scope
+	SetScope(*cloudresourcesv1beta1.Scope)
+	CommonObj() CommonObject
+}
+
+func NewState(base composed.State) State {
+	return &state{
 		State: base,
 	}
 }
 
-type State struct {
+type state struct {
 	composed.State
 
-	Scope *cloudresourcesv1beta1.Scope
+	scope *cloudresourcesv1beta1.Scope
 }
 
-func (s *State) CommonObj() CommonObject {
+func (s *state) Scope() *cloudresourcesv1beta1.Scope {
+	return s.scope
+}
+
+func (s *state) SetScope(scope *cloudresourcesv1beta1.Scope) {
+	s.scope = scope
+}
+
+func (s *state) CommonObj() CommonObject {
 	return s.Obj().(CommonObject)
 }
