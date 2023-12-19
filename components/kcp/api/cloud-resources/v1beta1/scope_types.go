@@ -21,13 +21,15 @@ import (
 )
 
 const (
-	ScopeKymaLabel = "operator.kyma-project.io/kyma-name"
+	KymaLabel         = "operator.kyma-project.io/kyma-name"
+	ScopeLabel        = "cloud-resources.kyma-project.io/scope-name"
+	ProviderTypeLabel = "cloud-resources.kyma-project.io/provider-type"
 )
 
 // ScopeSpec defines the desired state of Scope
 type ScopeSpec struct {
 	// +kubebuilder:validation:Required
-	Kyma string `json:"kyma"`
+	KymaName string `json:"kymaName"`
 
 	// +kubebuilder:validation:Required
 	ShootName string `json:"shootName"`

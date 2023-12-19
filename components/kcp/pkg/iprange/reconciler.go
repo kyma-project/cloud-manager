@@ -46,7 +46,7 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
-		scope.WhenNoScope(),
+		scope.New(),
 	)
 }
 

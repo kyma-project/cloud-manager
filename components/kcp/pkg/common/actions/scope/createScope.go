@@ -17,7 +17,7 @@ func createScope(ctx context.Context, st composed.State) (error, context.Context
 		return createScopeAws(ctx, state)
 	}
 
-	err := fmt.Errorf("unable to handle unknown provider '%s'", state.Provider)
+	err := fmt.Errorf("unable to handle unknown provider '%s'", state.Provider())
 	logger := composed.LoggerFromCtx(ctx)
 	logger.Error(err, "Error defining scope")
 	return composed.StopAndForget, nil // no requeue

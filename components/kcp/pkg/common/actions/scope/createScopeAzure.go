@@ -6,7 +6,6 @@ import (
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createScopeAzure(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,17 +26,9 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 		return composed.StopAndForget, nil // no requeue
 	}
 
+	// just create the scope with Azure specifics, the ensureScopeCommonFields will set common values
 	scope := &cloudresourcesv1beta1.Scope{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      state.Obj().GetName(),
-			Namespace: state.Obj().GetNamespace(),
-			Labels: map[string]string{
-				cloudresourcesv1beta1.ScopeKymaLabel: state.CommonObj().KymaName(),
-			},
-		},
 		Spec: cloudresourcesv1beta1.ScopeSpec{
-			Kyma:      "",
-			ShootName: "",
 			Scope: cloudresourcesv1beta1.ScopeInfo{
 				Azure: &cloudresourcesv1beta1.AzureScope{
 					TenantId:       tenantID,

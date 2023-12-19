@@ -6,12 +6,12 @@ import (
 )
 
 type State struct {
-	*focal.State
+	focal.State
 
 	ec2Client *ec2.Client
 }
 
-func NewState(baseState *focal.State) *State {
+func NewState(baseState focal.State) *State {
 	return &State{
 		State: baseState,
 	}
