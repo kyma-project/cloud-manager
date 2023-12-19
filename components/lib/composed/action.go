@@ -2,6 +2,7 @@ package composed
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -35,11 +36,11 @@ func ComposeActions(name string, actions ...Action) Action {
 					Info("Running action")
 				err, nextCtx := a(currentCtx, state)
 				lastError = err
-				if err != nil {
-					break loop
-				}
 				if nextCtx != nil {
 					currentCtx = nextCtx
+				}
+				if err != nil {
+					break loop
 				}
 			}
 		}
@@ -48,12 +49,19 @@ func ComposeActions(name string, actions ...Action) Action {
 			WithValues(
 				"lastAction", actionName,
 			)
+
 		if lastError == nil {
 			l.Info("Reconciliation finished")
-		} else {
-			l.Error(lastError, "reconciliation finished")
+			return nil, nil
+		} else if fce, ok := lastError.(FlowControlError); ok {
+			l.Info(fmt.Sprintf("Reconciliation finished with flow control: %s", fce))
+			if !fce.ShouldReturnError() {
+				lastError = nil
+			}
+			return lastError, currentCtx
 		}
 
+		l.Error(lastError, "Reconciliation finished with error")
 		return lastError, currentCtx
 	}
 }

@@ -34,7 +34,7 @@ spec:
           spec:
             description: ScopeSpec defines the desired state of Scope
             properties:
-              kyma:
+              kymaName:
                 type: string
               scope:
                 maxProperties: 1
@@ -74,7 +74,7 @@ spec:
               shootName:
                 type: string
             required:
-            - kyma
+            - kymaName
             - scope
             - shootName
             type: object

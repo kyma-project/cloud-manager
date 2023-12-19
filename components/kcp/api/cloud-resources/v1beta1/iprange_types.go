@@ -26,7 +26,7 @@ import (
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
-	Kyma string `json:"kyma"`
+	KymaName string `json:"kymaName"`
 
 	// +optional
 	Scope *ScopeRef `json:"scope"`
@@ -59,7 +59,7 @@ type IpRange struct {
 }
 
 func (in *IpRange) KymaName() string {
-	return in.Spec.Kyma
+	return in.Spec.KymaName
 }
 
 func (in *IpRange) ScopeRef() *ScopeRef {
@@ -72,6 +72,10 @@ func (in *IpRange) SetScopeRef(scopeRef *ScopeRef) {
 
 func (in *IpRange) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
+}
+
+func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 //+kubebuilder:object:root=true

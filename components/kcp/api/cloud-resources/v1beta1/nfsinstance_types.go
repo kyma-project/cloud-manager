@@ -104,6 +104,10 @@ func (in *NfsInstance) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *NfsInstance) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
+}
+
 //+kubebuilder:object:root=true
 
 // NfsInstanceList contains a list of NfsInstance
