@@ -16,8 +16,7 @@ func updateScopeRef(ctx context.Context, st composed.State) (error, context.Cont
 		Name: state.Scope().Name,
 	})
 
-	var meta *metav1.ObjectMeta
-	meta = st.Obj().(metav1.Object).(*metav1.ObjectMeta)
+	meta := state.CommonObj().GetObjectMeta()
 	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.KymaLabel, state.CommonObj().KymaName())
 	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.ScopeLabel, state.Scope().Name)
 	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.ProviderTypeLabel, string(state.Provider()))

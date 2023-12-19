@@ -74,6 +74,10 @@ func (in *IpRange) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
+}
+
 //+kubebuilder:object:root=true
 
 // IpRangeList contains a list of IpRange

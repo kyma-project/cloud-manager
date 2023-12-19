@@ -95,6 +95,10 @@ func (in *VpcPeering) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *VpcPeering) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
+}
+
 //+kubebuilder:object:root=true
 
 // VpcPeeringList contains a list of VpcPeering

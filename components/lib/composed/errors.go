@@ -7,10 +7,34 @@ import (
 	"time"
 )
 
+type FlowControlError interface {
+	error
+	ShouldReturnError() bool
+}
+
+type flowControlError struct {
+	msg               string
+	shouldReturnError bool
+}
+
+func (e *flowControlError) Error() string {
+	return e.msg
+}
+
+func (e *flowControlError) ShouldReturnError() bool {
+	return e.shouldReturnError
+}
+
 var (
 	StopAndForget   error
 	StopWithRequeue error
+	Break           error
 )
+
+func IsFlowControl(err error) bool {
+	_, ok := err.(FlowControlError)
+	return ok
+}
 
 func IsStopAndForget(err error) bool {
 	return err == StopAndForget
@@ -25,17 +49,35 @@ func IsStopWithRequeueDelay(err error) bool {
 	return ok
 }
 
+func IsBreak(err error) bool {
+	return err == Break
+}
+
 func IsTerminal(err error) bool {
 	return errors.Is(err, reconcile.TerminalError(nil))
 }
 
 func init() {
-	StopAndForget = errors.New("stop and forget")
-	StopWithRequeue = errors.New("stop with requeue")
+	StopAndForget = &flowControlError{
+		msg:               "stop and forget",
+		shouldReturnError: true,
+	}
+	StopWithRequeue = &flowControlError{
+		msg:               "stop with requeue",
+		shouldReturnError: true,
+	}
+	Break = &flowControlError{
+		msg:               "break",
+		shouldReturnError: false,
+	}
 }
 
 type stopWithRequeueDelay struct {
 	delay time.Duration
+}
+
+func (e *stopWithRequeueDelay) ShouldReturnError() bool {
+	return true
 }
 
 func (e *stopWithRequeueDelay) Error() string {

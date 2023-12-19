@@ -34,6 +34,16 @@ func Any(predicates ...Predicate) Predicate {
 	}
 }
 
+func BreakIf(predicate Predicate) Action {
+	return func(ctx context.Context, state State) (error, context.Context) {
+		val := predicate(ctx, state)
+		if val {
+			return Break, nil
+		}
+		return nil, nil
+	}
+}
+
 func BuildBranchingAction(name string, predicate Predicate, trueAction Action, falseAction Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		value := predicate(ctx, state)

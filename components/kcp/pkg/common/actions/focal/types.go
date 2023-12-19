@@ -15,4 +15,5 @@ type CommonObject interface {
 	SetScopeRef(scopeRef *cloudresourcesv1beta1.ScopeRef)
 
 	Conditions() *[]metav1.Condition
+	GetObjectMeta() *metav1.ObjectMeta
 }
