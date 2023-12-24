@@ -17,7 +17,7 @@ func whenNoScopeRef(ctx context.Context, st composed.State) (error, context.Cont
 		composed.BreakIf(func(_ context.Context, _ composed.State) bool {
 			return state.Scope() == nil // no scope found, break this flow
 		}),
-		// scope if found, continue the flow and update the object's scopeRef
+		// scope is found, continue the flow and update the object's scopeRef
 		updateScopeRef,
 		composed.StopWithRequeueAction,
 	)(ctx, st)

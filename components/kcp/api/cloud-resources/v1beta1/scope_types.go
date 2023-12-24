@@ -35,6 +35,12 @@ type ScopeSpec struct {
 	ShootName string `json:"shootName"`
 
 	// +kubebuilder:validation:Required
+	Region string `json:"region"`
+
+	// +kubebuilder:validation:Required
+	Provider ProviderType `json:"provider"`
+
+	// +kubebuilder:validation:Required
 	Scope ScopeInfo `json:"scope"`
 }
 
@@ -72,7 +78,29 @@ type AzureScope struct {
 
 type AwsScope struct {
 	// +kubebuilder:validation:Required
-	Foo string `json:"foo"`
+	VpcNetwork string `json:"vpcNetwork"`
+
+	Network AwsNetwork `json:"network"`
+
+	// +kubebuilder:validation:Required
+	AccountId string `json:"accountId"`
+}
+
+type AwsNetwork struct {
+	VPC   AwsVPC    `json:"VPC"`
+	Zones []AwsZone `json:"Zones"`
+}
+
+type AwsVPC struct {
+	Id   string `json:"id,omitempty"`
+	CIDR string `json:"cidr,omitempty"`
+}
+
+type AwsZone struct {
+	Name     string `json:"name"`
+	Internal string `json:"internal"`
+	Public   string `json:"public"`
+	Workers  string `json:"workers"`
 }
 
 // ScopeStatus defines the observed state of Scope

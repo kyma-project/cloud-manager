@@ -3,7 +3,6 @@ package scope
 import (
 	"context"
 	"errors"
-	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 )
@@ -33,7 +32,7 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 				Azure: &cloudresourcesv1beta1.AzureScope{
 					TenantId:       tenantID,
 					SubscriptionId: subscriptionID,
-					VpcNetwork:     fmt.Sprintf("shoot--%s--%s", state.ShootNamespace(), state.ShootName()),
+					VpcNetwork:     commonVpcName(state.ShootNamespace(), state.ShootName()),
 				},
 			},
 		},

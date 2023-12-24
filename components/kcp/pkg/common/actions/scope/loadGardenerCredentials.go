@@ -3,6 +3,7 @@ package scope
 import (
 	"context"
 	"fmt"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -20,7 +21,10 @@ func loadGardenerCredentials(ctx context.Context, st composed.State) (error, con
 		return err, nil
 	}
 
-	state.SetProvider(ProviderType(secretBinding.Provider.Type))
+	err = state.SetProvider(cloudresourcesv1beta1.ProviderType(secretBinding.Provider.Type))
+	if err != nil {
+		panic(err)
+	}
 
 	secret, err := state.GardenK8sClient().CoreV1().Secrets(secretBinding.SecretRef.Namespace).
 		Get(ctx, secretBinding.SecretRef.Name, metav1.GetOptions{})

@@ -3,17 +3,19 @@ package scope
 import (
 	"context"
 	"fmt"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"strings"
 )
 
 func createScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(State)
 	switch state.Provider() {
-	case ProviderGCP:
+	case cloudresourcesv1beta1.ProviderGCP:
 		return createScopeGcp(ctx, state)
-	case ProviderAzure:
+	case cloudresourcesv1beta1.ProviderAzure:
 		return createScopeAzure(ctx, state)
-	case ProviderAws:
+	case cloudresourcesv1beta1.ProviderAws:
 		return createScopeAws(ctx, state)
 	}
 
@@ -22,4 +24,9 @@ func createScope(ctx context.Context, st composed.State) (error, context.Context
 	logger.Error(err, "Error defining scope")
 	return composed.StopAndForget, nil // no requeue
 
+}
+
+func commonVpcName(shootNamespace, shootName string) string {
+	project := strings.TrimPrefix(shootNamespace, "garden-")
+	return fmt.Sprintf("shoot--%s--%s", project, shootName)
 }

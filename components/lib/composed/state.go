@@ -2,23 +2,11 @@ package composed
 
 import (
 	"context"
-	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
-
-func LoggerFromCtx(ctx context.Context) logr.Logger {
-	return log.FromContext(ctx)
-}
-
-func LoggerIntoCtx(ctx context.Context, logger logr.Logger) context.Context {
-	newCtx := log.IntoContext(ctx, logger)
-
-	return newCtx
-}
 
 type State interface {
 	Client() client.Client
@@ -30,23 +18,43 @@ type State interface {
 	LoadObj(ctx context.Context, opts ...client.GetOption) error
 	UpdateObj(ctx context.Context, opts ...client.UpdateOption) error
 	UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error
+
+	LogErrorAndReturn(err error, msg string, result error, ctx context.Context) (error, context.Context)
 }
 
-func NewState(
+type StateFactory interface {
+	NewState(name types.NamespacedName, obj client.Object) State
+}
+
+func NewStateFactory(
 	client client.Client,
 	eventRecorder record.EventRecorder,
 	scheme *runtime.Scheme,
-	name types.NamespacedName,
-	obj client.Object,
-) State {
-	return &baseState{
+) StateFactory {
+	return &stateFactory{
 		client:        client,
 		eventRecorder: eventRecorder,
 		scheme:        scheme,
+	}
+}
+
+type stateFactory struct {
+	client        client.Client
+	eventRecorder record.EventRecorder
+	scheme        *runtime.Scheme
+}
+
+func (f *stateFactory) NewState(name types.NamespacedName, obj client.Object) State {
+	return &baseState{
+		client:        f.client,
+		eventRecorder: f.eventRecorder,
+		scheme:        f.scheme,
 		name:          name,
 		obj:           obj,
 	}
 }
+
+// ========================================================================
 
 type baseState struct {
 	client        client.Client
@@ -54,7 +62,6 @@ type baseState struct {
 	scheme        *runtime.Scheme
 	name          types.NamespacedName
 	obj           client.Object
-	nextCtxHanler func(ctx context.Context)
 }
 
 func (s *baseState) Client() client.Client {
@@ -87,4 +94,10 @@ func (s *baseState) UpdateObj(ctx context.Context, opts ...client.UpdateOption) 
 
 func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error {
 	return s.Client().Status().Update(ctx, s.Obj(), opts...)
+}
+
+func (s *baseState) LogErrorAndReturn(err error, msg string, result error, ctx context.Context) (error, context.Context) {
+	logger := LoggerFromCtx(ctx)
+	logger.Error(err, msg)
+	return result, ctx
 }

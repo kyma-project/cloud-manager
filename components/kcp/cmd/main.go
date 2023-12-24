@@ -19,7 +19,14 @@ package main
 import (
 	"flag"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange"
+	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
+	awsiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange"
+	azureiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/iprange"
+	gcpiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/iprange"
+	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	"os"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -113,7 +120,14 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&cloudresourcescontroller.IpRangeReconciler{
-		Reconciler: iprange.NewIPRangeReconciler(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme(), abstractions.NewFileReader()),
+		Reconciler: iprange.NewIPRangeReconciler(
+			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme()),
+			focal.NewStateFactory(),
+			scope.NewStateFactory(abstractions.NewFileReader(), awsclient.NewGardenProvider()),
+			awsiprange.NewStateFactory(awsclient.NewSkrProvider(), abstractions.NewOSEnvironment()),
+			azureiprange.NewStateFactory(nil),
+			gcpiprange.NewStateFactory(nil),
+		),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)
