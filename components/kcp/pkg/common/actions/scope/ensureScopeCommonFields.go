@@ -22,5 +22,11 @@ func ensureScopeCommonFields(ctx context.Context, st composed.State) (error, con
 	// set shoot name
 	state.Scope().Spec.ShootName = state.ShootName()
 
+	// set region
+	state.Scope().Spec.Region = state.Shoot().Spec.Region
+
+	// set provider
+	state.Scope().Spec.Provider = state.Provider()
+
 	return nil, nil
 }

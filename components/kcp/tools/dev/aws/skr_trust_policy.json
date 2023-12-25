@@ -1,0 +1,10 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": "arn:aws:iam::CLOUDRESOURCES_AWS_ACCOUNT_ID:user/cloudresources"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}

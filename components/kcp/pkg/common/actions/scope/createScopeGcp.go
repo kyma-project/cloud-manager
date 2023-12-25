@@ -41,7 +41,7 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 			Scope: cloudresourcesv1beta1.ScopeInfo{
 				Gcp: &cloudresourcesv1beta1.GcpScope{
 					Project:    project,
-					VpcNetwork: fmt.Sprintf("shoot--%s--%s", state.ShootNamespace(), state.ShootName()),
+					VpcNetwork: commonVpcName(state.ShootNamespace(), state.ShootName()),
 				},
 			},
 		},

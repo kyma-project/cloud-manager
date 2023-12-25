@@ -20,6 +20,7 @@ require (
 replace github.com/kyma-project/cloud-resources/components/lib => ../lib
 
 require (
+	github.com/3th1nk/cidr v0.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.12 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9 // indirect

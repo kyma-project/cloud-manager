@@ -36,16 +36,55 @@ spec:
             properties:
               kymaName:
                 type: string
+              provider:
+                type: string
+              region:
+                type: string
               scope:
                 maxProperties: 1
                 minProperties: 1
                 properties:
                   aws:
                     properties:
-                      foo:
+                      accountId:
+                        type: string
+                      network:
+                        properties:
+                          VPC:
+                            properties:
+                              cidr:
+                                type: string
+                              id:
+                                type: string
+                            type: object
+                          Zones:
+                            items:
+                              properties:
+                                internal:
+                                  type: string
+                                name:
+                                  type: string
+                                public:
+                                  type: string
+                                workers:
+                                  type: string
+                              required:
+                              - internal
+                              - name
+                              - public
+                              - workers
+                              type: object
+                            type: array
+                        required:
+                        - VPC
+                        - Zones
+                        type: object
+                      vpcNetwork:
                         type: string
                     required:
-                    - foo
+                    - accountId
+                    - network
+                    - vpcNetwork
                     type: object
                   azure:
                     properties:
@@ -75,6 +114,8 @@ spec:
                 type: string
             required:
             - kymaName
+            - provider
+            - region
             - scope
             - shootName
             type: object

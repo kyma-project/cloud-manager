@@ -1,4 +1,4 @@
-package scope
+package v1beta1
 
 type ProviderType string
 

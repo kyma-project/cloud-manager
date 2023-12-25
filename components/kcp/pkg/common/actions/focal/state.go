@@ -12,11 +12,23 @@ type State interface {
 	CommonObj() CommonObject
 }
 
-func NewState(base composed.State) State {
+type StateFactory interface {
+	NewState(base composed.State) State
+}
+
+func NewStateFactory() StateFactory {
+	return &stateFactory{}
+}
+
+type stateFactory struct{}
+
+func (f *stateFactory) NewState(base composed.State) State {
 	return &state{
 		State: base,
 	}
 }
+
+// ========================================================================
 
 type state struct {
 	composed.State
