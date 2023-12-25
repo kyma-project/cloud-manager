@@ -39,6 +39,9 @@ type IpRangeSpec struct {
 type IpRangeStatus struct {
 	State StatusState `json:"state,omitempty"`
 
+	// +optional
+	Ranges []string `json:"ranges,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map

@@ -18,7 +18,12 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"awsIpRange",
-			handle,
+			splitRangeByZones,
+			ensureShootZonesAndRangeSubnetsMatch,
+			loadVpc,
+			loadSubnets,
+			findCloudResourceSubnets,
+			createSubnets,
 			func(_ context.Context, _ composed.State) (error, context.Context) {
 				return composed.StopAndForget, nil
 			},

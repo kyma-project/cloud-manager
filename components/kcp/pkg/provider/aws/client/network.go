@@ -11,7 +11,7 @@ import (
 type NetworkClient interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error)
-	CreateSubnet(ctx context.Context, vpcId, az, cidr string) (*types.Subnet, error)
+	CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error)
 	DeleteSubnet(ctx context.Context, subnetId string) error
 }
 
@@ -52,12 +52,21 @@ func (c *networkClient) DescribeSubnets(ctx context.Context, vpcId string) ([]ty
 	return out.Subnets, nil
 }
 
-func (c *networkClient) CreateSubnet(ctx context.Context, vpcId, az, cidr string) (*types.Subnet, error) {
-	out, err := c.svc.CreateSubnet(ctx, &ec2.CreateSubnetInput{
+func (c *networkClient) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error) {
+	in := &ec2.CreateSubnetInput{
 		VpcId:            pointer.String(vpcId),
 		AvailabilityZone: pointer.String(az),
 		CidrBlock:        pointer.String(cidr),
-	})
+	}
+	if len(tags) > 0 {
+		in.TagSpecifications = []types.TagSpecification{
+			{
+				ResourceType: types.ResourceTypeSubnet,
+				Tags:         tags,
+			},
+		}
+	}
+	out, err := c.svc.CreateSubnet(ctx, in)
 	if err != nil {
 		return nil, err
 	}

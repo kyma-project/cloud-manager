@@ -125,6 +125,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              ranges:
+                items:
+                  type: string
+                type: array
               state:
                 type: string
             type: object

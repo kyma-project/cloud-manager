@@ -18,8 +18,6 @@ type State interface {
 	LoadObj(ctx context.Context, opts ...client.GetOption) error
 	UpdateObj(ctx context.Context, opts ...client.UpdateOption) error
 	UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error
-
-	LogErrorAndReturn(err error, msg string, result error, ctx context.Context) (error, context.Context)
 }
 
 type StateFactory interface {
@@ -94,10 +92,4 @@ func (s *baseState) UpdateObj(ctx context.Context, opts ...client.UpdateOption) 
 
 func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error {
 	return s.Client().Status().Update(ctx, s.Obj(), opts...)
-}
-
-func (s *baseState) LogErrorAndReturn(err error, msg string, result error, ctx context.Context) (error, context.Context) {
-	logger := LoggerFromCtx(ctx)
-	logger.Error(err, msg)
-	return result, ctx
 }

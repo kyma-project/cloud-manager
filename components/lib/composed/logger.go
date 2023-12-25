@@ -15,3 +15,9 @@ func LoggerIntoCtx(ctx context.Context, logger logr.Logger) context.Context {
 
 	return newCtx
 }
+
+func LogErrorAndReturn(err error, msg string, result error, ctx context.Context) (error, context.Context) {
+	logger := LoggerFromCtx(ctx)
+	logger.Error(err, msg)
+	return result, ctx
+}

@@ -53,6 +53,12 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 		"main",
 		focal.New(),
 		scope.New(r.scopeStateFactory),
+		func(ctx context.Context, st composed.State) (error, context.Context) {
+			return composed.ComposeActions(
+				"ipRangeCommon",
+				// some IpRange common actions here
+			)(ctx, newState(st.(focal.State)))
+		},
 		composed.BuildSwitchAction(
 			"providerSwitch",
 			nil,

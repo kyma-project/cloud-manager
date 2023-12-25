@@ -22,7 +22,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 		state.CredentialData()["secretAccessKey"],
 	)
 	if err != nil {
-		return state.LogErrorAndReturn(
+		return composed.LogErrorAndReturn(
 			fmt.Errorf("error creating aws scope: %w", err),
 			"Error creating AWS scope",
 			composed.StopAndForget,
@@ -30,7 +30,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 	}
 	callerIdentity, err := stsClient.GetCallerIdentity(ctx)
 	if err != nil {
-		return state.LogErrorAndReturn(
+		return composed.LogErrorAndReturn(
 			fmt.Errorf("error getting caller identity: %w", err),
 			"Error creating AWS scope",
 			composed.StopWithRequeue,
@@ -40,7 +40,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 	infra := &awsgardener.InfrastructureConfig{}
 	err = json.Unmarshal(state.Shoot().Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
-		return state.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, nil)
+		return composed.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, nil)
 	}
 
 	scope := &cloudresourcesv1beta1.Scope{

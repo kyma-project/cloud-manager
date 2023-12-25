@@ -3,16 +3,25 @@ package iprange
 import (
 	"context"
 	"fmt"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
 )
 
+// State is state of the IpRange reconciliation for AWS
+// Though there's no need for it to be public, still made like that
+// to avoid conflict with variable names - DO NOT LOWERCASE IT TO MAKE IT PRIVATE
 type State struct {
 	focal.State
 
 	networkClient client.NetworkClient
 	efsClient     client.EfsClient
+
+	vpc                  *ec2Types.Vpc
+	allSubnets           []ec2Types.Subnet
+	cloudResourceSubnets []ec2Types.Subnet
 }
 
 type StateFactory interface {
@@ -65,4 +74,10 @@ func newState(focalState focal.State, networkClient client.NetworkClient, efsCli
 		networkClient: networkClient,
 		efsClient:     efsClient,
 	}
+}
+
+// ==================================================================
+
+func (s *State) IpRange() *cloudresourcesv1beta1.IpRange {
+	return s.Obj().(*cloudresourcesv1beta1.IpRange)
 }
