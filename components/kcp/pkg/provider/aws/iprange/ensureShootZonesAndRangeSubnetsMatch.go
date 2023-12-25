@@ -27,7 +27,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonShootAndVpcMismatch,
-			Message: fmt.Sprintf("RangeSubnetCount different then shootZonesCount", rangeSubnetCount, shootZonesCount),
+			Message: fmt.Sprintf("RangeSubnetCount %d different then shootZonesCount %d", rangeSubnetCount, shootZonesCount),
 		})
 
 		err := state.UpdateObjStatus(ctx)
