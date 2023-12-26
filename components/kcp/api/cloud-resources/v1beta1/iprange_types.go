@@ -20,8 +20,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Error reasons
+const (
+	ReasonInvalidCidr                    = "InvalidCidr"
+	ReasonCidrCanNotSplit                = "CidrCanNotSplit"
+	ReasonCidrOverlap                    = "CidrOverlap"
+	ReasonCidrAssociationFailed          = "CidrAssociationFailed"
+	ReasonVpcNotFound                    = "VpcNotFound"
+	ReasonShootAndVpcMismatch            = "ShootAndVpcMismatch"
+	ReasonFailedExtendingVpcAddressSpace = "FailedExtendingVpcAddressSpace"
+)
 
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
@@ -42,11 +50,20 @@ type IpRangeStatus struct {
 	// +optional
 	Ranges []string `json:"ranges,omitempty"`
 
+	// +optional
+	Subnets []IpRangeSubnet `json:"subnets,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+type IpRangeSubnet struct {
+	Id    string `json:"id"`
+	Zone  string `json:"zone"`
+	Range string `json:"range"`
 }
 
 //+kubebuilder:object:root=true

@@ -10,6 +10,7 @@ import (
 
 type NetworkClient interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
+	AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error)
 	DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error)
 	CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error)
 	DeleteSubnet(ctx context.Context, subnetId string) error
@@ -35,6 +36,18 @@ func (c *networkClient) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 		return nil, err
 	}
 	return out.Vpcs, nil
+}
+
+func (c *networkClient) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error) {
+	in := &ec2.AssociateVpcCidrBlockInput{
+		VpcId:     aws.String(vpcId),
+		CidrBlock: aws.String(cidr),
+	}
+	out, err := c.svc.AssociateVpcCidrBlock(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out.CidrBlockAssociation, nil
 }
 
 func (c *networkClient) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error) {

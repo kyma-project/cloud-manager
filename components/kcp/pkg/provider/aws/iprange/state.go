@@ -20,6 +20,7 @@ type State struct {
 	efsClient     client.EfsClient
 
 	vpc                  *ec2Types.Vpc
+	associatedCidrBlock  *ec2Types.VpcCidrBlockAssociation
 	allSubnets           []ec2Types.Subnet
 	cloudResourceSubnets []ec2Types.Subnet
 }
