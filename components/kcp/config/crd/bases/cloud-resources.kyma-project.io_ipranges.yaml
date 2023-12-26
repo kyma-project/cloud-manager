@@ -131,6 +131,21 @@ spec:
                 type: array
               state:
                 type: string
+              subnets:
+                items:
+                  properties:
+                    id:
+                      type: string
+                    range:
+                      type: string
+                    zone:
+                      type: string
+                  required:
+                  - id
+                  - range
+                  - zone
+                  type: object
+                type: array
             type: object
         type: object
     served: true
