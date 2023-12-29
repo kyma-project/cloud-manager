@@ -48,7 +48,7 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.SetShootName(kymaUnstructured.GetLabels()["kyma-project.io/shoot-name"])
 
-	logger = logger.WithValues("shootName", state.ShootName)
+	logger = logger.WithValues("shootName", state.ShootName())
 	logger.Info("Shoot name found")
 
 	return nil, composed.LoggerIntoCtx(ctx, logger)

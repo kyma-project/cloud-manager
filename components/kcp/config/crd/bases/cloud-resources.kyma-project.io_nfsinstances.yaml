@@ -60,7 +60,7 @@ spec:
                 type: object
               ipRange:
                 type: string
-              kyma:
+              kymaName:
                 type: string
               remoteRef:
                 properties:
@@ -82,7 +82,7 @@ spec:
             required:
             - instance
             - ipRange
-            - kyma
+            - kymaName
             - remoteRef
             type: object
           status:

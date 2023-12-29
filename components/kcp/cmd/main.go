@@ -23,10 +23,15 @@ import (
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
 	scopeclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope/client"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/nfsinstance"
 	awsiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange"
 	awsiprangeclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange/client"
+	awsnfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/nfsinstance"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/nfsinstance/client"
 	azureiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/iprange"
+	azurenfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/nfsinstance"
 	gcpiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/iprange"
+	gcpnfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/nfsinstance"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	"os"
 
@@ -107,8 +112,14 @@ func main() {
 	}
 
 	if err = (&cloudresourcescontroller.NfsInstanceReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Reconciler: nfsinstance.NewNfsInstanceReconciler(
+			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme()),
+			focal.NewStateFactory(),
+			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
+			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
+			azurenfsinstance.NewStateFactory(),
+			gcpnfsinstance.NewStateFactory(),
+		),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)

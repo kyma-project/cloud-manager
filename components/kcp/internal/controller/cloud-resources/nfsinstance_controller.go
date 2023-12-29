@@ -18,22 +18,16 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/util"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/nfsinstance"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 )
 
 // NfsInstanceReconciler reconciles a NfsInstance object
 type NfsInstanceReconciler struct {
-	client.Client
-	record.EventRecorder
-	Scheme *runtime.Scheme
+	Reconciler *nfsinstance.NfsInstanceReconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=nfsinstances,verbs=get;list;watch;create;update;patch;delete
@@ -50,19 +44,7 @@ type NfsInstanceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	//// TODO: this should be moved into separate reconciler package
-	//state := scope.NewState(
-	//	focal.NewState(
-	//		composed.NewState(r.K8sClient, r.EventRecorder, r.Scheme, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
-	//	),
-	//	abstractions.NewFileReader(),
-	//)
-	//action := actions.New()
-	//err, _ := action(ctx, state)
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Run(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.

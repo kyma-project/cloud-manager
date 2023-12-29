@@ -44,7 +44,7 @@ const (
 // NfsInstanceSpec defines the desired state of NfsInstance
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
-	Kyma string `json:"kyma"`
+	KymaName string `json:"kymaName"`
 
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -113,7 +113,7 @@ type NfsInstance struct {
 }
 
 func (in *NfsInstance) KymaName() string {
-	return in.Spec.Kyma
+	return in.Spec.KymaName
 }
 
 func (in *NfsInstance) ScopeRef() *ScopeRef {

@@ -27,6 +27,7 @@ func New(stateFactory StateFactory) composed.Action {
 			loadSubnets,
 			findCloudResourceSubnets,
 			createSubnets,
+			updateSuccessStatus,
 			func(_ context.Context, _ composed.State) (error, context.Context) {
 				return composed.StopAndForget, nil
 			},

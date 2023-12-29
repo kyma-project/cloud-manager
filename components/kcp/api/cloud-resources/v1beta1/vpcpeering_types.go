@@ -26,7 +26,7 @@ import (
 // VpcPeeringSpec defines the desired state of VpcPeering
 type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
-	Kyma string `json:"kyma"`
+	KymaName string `json:"kymaName"`
 
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -90,7 +90,7 @@ type VpcPeering struct {
 }
 
 func (in *VpcPeering) KymaName() string {
-	return in.Spec.Kyma
+	return in.Spec.KymaName
 }
 
 func (in *VpcPeering) ScopeRef() *ScopeRef {

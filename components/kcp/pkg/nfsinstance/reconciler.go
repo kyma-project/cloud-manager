@@ -5,9 +5,9 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
-	awsiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange"
-	azureiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/iprange"
-	gcpiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/iprange"
+	awsnfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/nfsinstance"
+	azurenfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/nfsinstance"
+	gcpnfsinstance "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/nfsinstance"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,18 +18,18 @@ type NfsInstanceReconciler struct {
 	focalStateFactory    focal.StateFactory
 	scopeStateFactory    scope.StateFactory
 
-	awsStateFactory   awsiprange.StateFactory
-	azureStateFactory azureiprange.StateFactory
-	gcpStateFactory   gcpiprange.StateFactory
+	awsStateFactory   awsnfsinstance.StateFactory
+	azureStateFactory azurenfsinstance.StateFactory
+	gcpStateFactory   gcpnfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
 	scopeStateFactory scope.StateFactory,
-	awsStateFactory awsiprange.StateFactory,
-	azureStateFactory azureiprange.StateFactory,
-	gcpStateFactory gcpiprange.StateFactory,
+	awsStateFactory awsnfsinstance.StateFactory,
+	azureStateFactory azurenfsinstance.StateFactory,
+	gcpStateFactory gcpnfsinstance.StateFactory,
 ) *NfsInstanceReconciler {
 	return &NfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -62,9 +62,9 @@ func (r *NfsInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+					composed.NewCase(focal.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
