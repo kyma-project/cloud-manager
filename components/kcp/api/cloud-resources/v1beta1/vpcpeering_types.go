@@ -28,9 +28,19 @@ type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	Kyma string `json:"kyma"`
 
+	// +kubebuilder:validation:Required
+	RemoteRef RemoteRef `json:"remoteRef"`
+
 	// +optional
 	Scope *ScopeRef `json:"scope"`
 
+	// +kubebuilder:validation:Required
+	VpcPeering VpcPeeringInfo `json:"vpcPeering"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type VpcPeeringInfo struct {
 	// +optional
 	Gcp *GcpVpcPeering `json:"gcp,omitempty"`
 

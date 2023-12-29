@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	"k8s.io/utils/pointer"
 )
@@ -14,10 +15,10 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	count := len(state.IpRange().Status.Ranges)
+	count := len(state.ObjAsIpRange().Status.Ranges)
 
 	rangeMap := make(map[string]interface{}, count)
-	for _, r := range state.IpRange().Status.Ranges {
+	for _, r := range state.ObjAsIpRange().Status.Ranges {
 		rangeMap[r] = nil
 	}
 
@@ -58,6 +59,22 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 		delete(zoneMap, zoneValue)
 		delete(rangeMap, rangeValue)
 		foundCount++
+
+		statusIpRangeSubnet := state.ObjAsIpRange().Status.Subnets.SubnetById(pointer.StringDeref(subnet.SubnetId, ""))
+		if statusIpRangeSubnet != nil {
+			continue
+		}
+
+		state.ObjAsIpRange().Status.Subnets = append(state.ObjAsIpRange().Status.Subnets, cloudresourcesv1beta1.IpRangeSubnet{
+			Id:    pointer.StringDeref(subnet.SubnetId, ""),
+			Zone:  pointer.StringDeref(subnet.AvailabilityZone, ""),
+			Range: pointer.StringDeref(subnet.CidrBlock, ""),
+		})
+
+		err := state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err, "Error adding subnet to the IpRange status", composed.StopWithRequeue, nil)
+		}
 	}
 
 	indexMap := make(map[string]int, count)
@@ -76,10 +93,10 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 		logger.Info("Creating subnet")
 
 		idx := indexMap[zn]
-		subnet, err := state.networkClient.CreateSubnet(ctx, aws.ToString(state.vpc.VpcId), zn, rng, []ec2Types.Tag{
+		subnet, err := state.client.CreateSubnet(ctx, aws.ToString(state.vpc.VpcId), zn, rng, []ec2Types.Tag{
 			{
 				Key:   pointer.String("Name"),
-				Value: pointer.String(fmt.Sprintf("cloudresources-%d", idx)),
+				Value: pointer.String(fmt.Sprintf("%s-%d", state.ObjAsIpRange().Spec.RemoteRef.String(), idx)),
 			},
 			{
 				Key:   pointer.String(tagKey),

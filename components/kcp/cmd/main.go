@@ -21,9 +21,10 @@ import (
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
+	scopeclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope/client"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange"
-	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
 	awsiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange"
+	awsiprangeclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange/client"
 	azureiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/iprange"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
@@ -123,8 +124,8 @@ func main() {
 		Reconciler: iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme()),
 			focal.NewStateFactory(),
-			scope.NewStateFactory(abstractions.NewFileReader(), awsclient.NewGardenProvider()),
-			awsiprange.NewStateFactory(awsclient.NewSkrProvider(), abstractions.NewOSEnvironment()),
+			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
+			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),
 			azureiprange.NewStateFactory(nil),
 			gcpiprange.NewStateFactory(nil),
 		),

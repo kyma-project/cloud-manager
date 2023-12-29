@@ -34,25 +34,44 @@ spec:
           spec:
             description: NfsInstanceSpec defines the desired state of NfsInstance
             properties:
-              aws:
+              instance:
+                maxProperties: 1
+                minProperties: 1
                 properties:
-                  throughput:
-                    enum:
-                    - Enhanced
-                    - Bursting
-                    type: string
-                  type:
-                    enum:
-                    - Regional
-                    - Zonal
-                    type: string
+                  aws:
+                    properties:
+                      performanceMode:
+                        default: generalPurpose
+                        enum:
+                        - generalPurpose
+                        - maxIO
+                        type: string
+                      throughput:
+                        default: bursting
+                        enum:
+                        - bursting
+                        - elastic
+                        type: string
+                    type: object
+                  azure:
+                    type: object
+                  gcp:
+                    type: object
                 type: object
-              azure:
-                type: object
-              gcp:
-                type: object
+              ipRange:
+                type: string
               kyma:
                 type: string
+              remoteRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
               scope:
                 properties:
                   name:
@@ -61,7 +80,10 @@ spec:
                 - name
                 type: object
             required:
+            - instance
+            - ipRange
             - kyma
+            - remoteRef
             type: object
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
@@ -139,6 +161,8 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              id:
+                type: string
               state:
                 type: string
             type: object

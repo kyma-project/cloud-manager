@@ -1,4 +1,4 @@
-package iprange
+package nfsinstance
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type IPRangeReconciler struct {
+type NfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 	scopeStateFactory    scope.StateFactory
@@ -23,15 +23,15 @@ type IPRangeReconciler struct {
 	gcpStateFactory   gcpiprange.StateFactory
 }
 
-func NewIPRangeReconciler(
+func NewNfsInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
 	scopeStateFactory scope.StateFactory,
 	awsStateFactory awsiprange.StateFactory,
 	azureStateFactory azureiprange.StateFactory,
 	gcpStateFactory gcpiprange.StateFactory,
-) *IPRangeReconciler {
-	return &IPRangeReconciler{
+) *NfsInstanceReconciler {
+	return &NfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		scopeStateFactory:    scopeStateFactory,
@@ -41,23 +41,23 @@ func NewIPRangeReconciler(
 	}
 }
 
-func (r *IPRangeReconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *NfsInstanceReconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
 	return composed.Handle(action(ctx, state))
 }
 
-func (r *IPRangeReconciler) newAction() composed.Action {
+func (r *NfsInstanceReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
 		scope.New(r.scopeStateFactory),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
-				"ipRangeCommon",
-				// common IpRange common actions here
-				// ... none so far
+				"nfsInstanceCommon",
+				// common NfsInstance common actions here
+				loadIpRange,
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",
@@ -71,7 +71,7 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 	)
 }
 
-func (r *IPRangeReconciler) newFocalState(name types.NamespacedName) focal.State {
+func (r *NfsInstanceReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
 		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.IpRange{}),
 	)

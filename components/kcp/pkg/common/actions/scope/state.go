@@ -7,7 +7,8 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
+	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope/client"
+	awsClient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 )
 
@@ -20,7 +21,7 @@ func init() {
 type State interface {
 	focal.State
 	FileReader() abstractions.FileReader
-	AwsGardenProvider() client.GardenProvider
+	AwsStsClientProvider() awsClient.GardenClientProvider[client.AwsStsClient]
 
 	ShootName() string
 	SetShootName(string)
@@ -41,28 +42,28 @@ type StateFactory interface {
 	CreateState(focalState focal.State) State
 }
 
-func NewStateFactory(fileReader abstractions.FileReader, gardenProvider client.GardenProvider) StateFactory {
+func NewStateFactory(fileReader abstractions.FileReader, awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]) StateFactory {
 	return &stateFactory{
-		fileReader:     fileReader,
-		gardenProvider: gardenProvider,
+		fileReader:           fileReader,
+		awsStsClientProvider: awsStsClientProvider,
 	}
 }
 
 type stateFactory struct {
-	fileReader     abstractions.FileReader
-	gardenProvider client.GardenProvider
+	fileReader           abstractions.FileReader
+	awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]
 }
 
 func (f *stateFactory) CreateState(focalState focal.State) State {
-	return newState(focalState, f.fileReader, f.gardenProvider)
+	return newState(focalState, f.fileReader, f.awsStsClientProvider)
 }
 
-func newState(focalState focal.State, fileReader abstractions.FileReader, gardenProvider client.GardenProvider) State {
+func newState(focalState focal.State, fileReader abstractions.FileReader, awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]) State {
 	return &state{
-		State:          focalState,
-		fileReader:     fileReader,
-		gardenProvider: gardenProvider,
-		credentialData: map[string]string{},
+		State:                focalState,
+		fileReader:           fileReader,
+		awsStsClientProvider: awsStsClientProvider,
+		credentialData:       map[string]string{},
 	}
 }
 
@@ -81,15 +82,15 @@ type state struct {
 	shoot          *gardenerTypes.Shoot
 	credentialData map[string]string
 
-	gardenProvider client.GardenProvider
+	awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]
 }
 
 func (s *state) FileReader() abstractions.FileReader {
 	return s.fileReader
 }
 
-func (s *state) AwsGardenProvider() client.GardenProvider {
-	return s.gardenProvider
+func (s *state) AwsStsClientProvider() awsClient.GardenClientProvider[client.AwsStsClient] {
+	return s.awsStsClientProvider
 }
 
 func (s *state) ShootName() string {

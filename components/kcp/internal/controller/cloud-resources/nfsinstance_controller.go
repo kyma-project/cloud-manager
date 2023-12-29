@@ -55,7 +55,7 @@ func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	//// TODO: this should be moved into separate reconciler package
 	//state := scope.NewState(
 	//	focal.NewState(
-	//		composed.NewState(r.Client, r.EventRecorder, r.Scheme, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
+	//		composed.NewState(r.K8sClient, r.EventRecorder, r.Scheme, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
 	//	),
 	//	abstractions.NewFileReader(),
 	//)

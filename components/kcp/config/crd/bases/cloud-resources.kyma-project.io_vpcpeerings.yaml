@@ -34,29 +34,18 @@ spec:
           spec:
             description: VpcPeeringSpec defines the desired state of VpcPeering
             properties:
-              aws:
-                properties:
-                  foo:
-                    type: string
-                type: object
-              azure:
-                properties:
-                  allowVnetAccess:
-                    type: boolean
-                  remoteResourceGroup:
-                    type: string
-                  remoteVnet:
-                    type: string
-                type: object
-              gcp:
-                properties:
-                  remoteProject:
-                    type: string
-                  remoteVpc:
-                    type: string
-                type: object
               kyma:
                 type: string
+              remoteRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
               scope:
                 properties:
                   name:
@@ -64,8 +53,36 @@ spec:
                 required:
                 - name
                 type: object
+              vpcPeering:
+                maxProperties: 1
+                minProperties: 1
+                properties:
+                  aws:
+                    properties:
+                      foo:
+                        type: string
+                    type: object
+                  azure:
+                    properties:
+                      allowVnetAccess:
+                        type: boolean
+                      remoteResourceGroup:
+                        type: string
+                      remoteVnet:
+                        type: string
+                    type: object
+                  gcp:
+                    properties:
+                      remoteProject:
+                        type: string
+                      remoteVpc:
+                        type: string
+                    type: object
+                type: object
             required:
             - kyma
+            - remoteRef
+            - vpcPeering
             type: object
           status:
             description: VpcPeeringStatus defines the observed state of VpcPeering

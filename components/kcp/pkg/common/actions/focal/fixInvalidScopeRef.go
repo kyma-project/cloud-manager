@@ -11,7 +11,7 @@ func fixInvalidScopeRef(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
 
-	scopeRef := state.CommonObj().ScopeRef()
+	scopeRef := state.ObjAsCommonObj().ScopeRef()
 	scope := state.Scope()
 	if scopeRef == nil && scope == nil {
 		return nil, nil // whenNoScope will handle this, it will create the Scope, set the reference and requeue
@@ -24,11 +24,11 @@ func fixInvalidScopeRef(ctx context.Context, st composed.State) (error, context.
 	// remove the invalid reference
 
 	err := errors.New("scope that object refers to does not exist")
-	logger.WithValues("scopeRef", state.CommonObj().ScopeRef().Name).
+	logger.WithValues("scopeRef", state.ObjAsCommonObj().ScopeRef().Name).
 		Error(err, "Missing scope reference")
 
 	// remove invalid scope reference from the object
-	state.CommonObj().SetScopeRef(nil)
+	state.ObjAsCommonObj().SetScopeRef(nil)
 	err = state.UpdateObj(ctx)
 	if err != nil {
 		err = fmt.Errorf("error updating object to remove invalid scope reference: %w", err)

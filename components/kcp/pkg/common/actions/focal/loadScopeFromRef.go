@@ -14,7 +14,7 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
 
-	if state.CommonObj().ScopeRef() == nil {
+	if state.ObjAsCommonObj().ScopeRef() == nil {
 		logger.Info("Object has no scope reference")
 		return nil, nil
 	}
@@ -22,9 +22,9 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 	logger.Info("Loading scope from reference")
 
 	scope := &cloudresourcesv1beta1.Scope{}
-	err := state.Client().Get(ctx, types.NamespacedName{
-		Name:      state.CommonObj().ScopeRef().Name,
-		Namespace: state.CommonObj().GetNamespace(),
+	err := state.K8sClient().Get(ctx, types.NamespacedName{
+		Name:      state.ObjAsCommonObj().ScopeRef().Name,
+		Namespace: state.ObjAsCommonObj().GetNamespace(),
 	}, scope)
 	if client.IgnoreNotFound(err) != nil {
 		err = fmt.Errorf("error getting Scope from reference: %w", err)

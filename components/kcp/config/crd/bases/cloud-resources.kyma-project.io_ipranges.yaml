@@ -38,6 +38,16 @@ spec:
                 type: string
               kymaName:
                 type: string
+              remoteRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
               scope:
                 properties:
                   name:
@@ -48,6 +58,7 @@ spec:
             required:
             - cidr
             - kymaName
+            - remoteRef
             type: object
           status:
             description: IpRangeStatus defines the observed state of IpRange
@@ -146,6 +157,8 @@ spec:
                   - zone
                   type: object
                 type: array
+              vpcId:
+                type: string
             type: object
         type: object
     served: true

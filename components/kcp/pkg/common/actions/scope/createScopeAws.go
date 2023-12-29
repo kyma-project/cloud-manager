@@ -15,7 +15,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(State)
 
 	// calling STS with Gardener credentials to find AWS Account ID
-	stsClient, err := state.AwsGardenProvider().Sts()(
+	stsClient, err := state.AwsStsClientProvider()(
 		ctx,
 		state.Shoot().Spec.Region,
 		state.CredentialData()["accessKeyID"],

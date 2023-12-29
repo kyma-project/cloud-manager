@@ -18,7 +18,7 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	rangeCidr, _ := cidr.Parse(state.IpRange().Spec.Cidr)
+	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
@@ -52,7 +52,7 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 		return composed.StopWithRequeueDelay(10 * time.Second), nil
 	}
 
-	meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+	meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 		Type:    cloudresourcesv1beta1.ConditionTypeError,
 		Status:  "True",
 		Reason:  cloudresourcesv1beta1.ReasonCidrAssociationFailed,

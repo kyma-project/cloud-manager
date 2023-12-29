@@ -13,7 +13,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	rangeSubnetCount := len(state.IpRange().Status.Ranges)
+	rangeSubnetCount := len(state.ObjAsIpRange().Status.Ranges)
 	shootZonesCount := len(state.Scope().Spec.Scope.Aws.Network.Zones)
 	if rangeSubnetCount != shootZonesCount {
 		logger.
@@ -23,7 +23,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 			).
 			Info("RangeSubnetCount different then shootZonesCount")
 
-		meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonShootAndVpcMismatch,
