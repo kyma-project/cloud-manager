@@ -16,7 +16,7 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	rangeCidr, _ := cidr.Parse(state.IpRange().Spec.Cidr)
+	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
@@ -29,7 +29,7 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 		}
 
 		if util.CidrOverlap(rangeCidr.CIDR(), cdr.CIDR()) {
-			meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+			meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudresourcesv1beta1.ReasonCidrOverlap,

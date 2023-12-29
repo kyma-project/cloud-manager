@@ -17,16 +17,16 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(State)
 
 	kymaUnstructured := util.NewKymaUnstructured()
-	err := state.Client().Get(ctx, types.NamespacedName{
-		Name:      state.CommonObj().KymaName(),
+	err := state.K8sClient().Get(ctx, types.NamespacedName{
+		Name:      state.ObjAsCommonObj().KymaName(),
 		Namespace: state.Obj().GetNamespace(),
 	}, kymaUnstructured)
 	if apierrors.IsNotFound(err) {
-		meta.SetStatusCondition(state.CommonObj().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsCommonObj().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ReasonInvalidKymaName,
-			Message: fmt.Sprintf("The Kyma CR '%s' does not exit", state.CommonObj().KymaName()),
+			Message: fmt.Sprintf("The Kyma CR '%s' does not exit", state.ObjAsCommonObj().KymaName()),
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
@@ -48,7 +48,7 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.SetShootName(kymaUnstructured.GetLabels()["kyma-project.io/shoot-name"])
 
-	logger = logger.WithValues("shootName", state.ShootName)
+	logger = logger.WithValues("shootName", state.ShootName())
 	logger.Info("Shoot name found")
 
 	return nil, composed.LoggerIntoCtx(ctx, logger)

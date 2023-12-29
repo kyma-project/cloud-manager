@@ -14,12 +14,12 @@ func findScope(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(State)
 
 	list := &cloudresourcesv1beta1.ScopeList{}
-	err := state.Client().List(
+	err := state.K8sClient().List(
 		ctx,
 		list,
 		client.InNamespace(state.Obj().GetNamespace()),
 		client.MatchingLabels{
-			cloudresourcesv1beta1.KymaLabel: state.CommonObj().KymaName(),
+			cloudresourcesv1beta1.KymaLabel: state.ObjAsCommonObj().KymaName(),
 		},
 	)
 	if err != nil {
@@ -36,7 +36,7 @@ func findScope(ctx context.Context, st composed.State) (error, context.Context) 
 	var scope *cloudresourcesv1beta1.Scope
 	if len(list.Items) > 1 {
 		for _, s := range list.Items {
-			if s.Name == state.CommonObj().KymaName() {
+			if s.Name == state.ObjAsCommonObj().KymaName() {
 				scope = &s
 				break
 			}

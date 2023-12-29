@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
@@ -15,7 +16,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
-	vpcList, err := state.networkClient.DescribeVpcs(ctx)
+	vpcList, err := state.client.DescribeVpcs(ctx)
 	if err != nil {
 		return err, nil
 	}
@@ -30,7 +31,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	if vpc == nil {
 		logger.WithValues("vpcName", vpcNetworkName).Info("VPC not found")
 
-		meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonVpcNotFound,
@@ -47,6 +48,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	state.vpc = vpc
+	state.ObjAsIpRange().Status.VpcId = pointer.StringDeref(vpc.VpcId, "") // will be saved when subnets are created
 
 	return nil, nil
 }

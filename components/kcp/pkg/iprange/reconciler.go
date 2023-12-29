@@ -56,16 +56,18 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"ipRangeCommon",
-				// some IpRange common actions here
+				// common IpRange common actions here
+				// ... none so far
+				// and now branch to provider specific flow
+				composed.BuildSwitchAction(
+					"providerSwitch",
+					nil,
+					composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+				),
 			)(ctx, newState(st.(focal.State)))
 		},
-		composed.BuildSwitchAction(
-			"providerSwitch",
-			nil,
-			composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
-			composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
-			composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
-		),
 	)
 }
 

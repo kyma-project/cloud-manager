@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/3th1nk/cidr"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-resources/components/kcp/pkg/util"
 	"github.com/kyma-project/cloud-resources/components/lib/composed"
@@ -18,7 +19,7 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	rangeCidr, _ := cidr.Parse(state.IpRange().Spec.Cidr)
+	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
@@ -26,7 +27,12 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 			continue
 		}
 
-		if util.CidrEquals(rangeCidr.CIDR(), cdr.CIDR()) {
+		if util.CidrEquals(rangeCidr.CIDR(), cdr.CIDR()) &&
+			// we must ignore disassociated sets
+			!pie.Contains([]ec2Types.VpcCidrBlockStateCode{
+				ec2Types.VpcCidrBlockStateCodeDisassociated,
+				ec2Types.VpcCidrBlockStateCodeDisassociating,
+			}, set.CidrBlockState.State) {
 			state.associatedCidrBlock = &set
 			break
 		}
@@ -45,14 +51,18 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 		).
 		Info("Found matching AWS CIDR block")
 
-	if state.associatedCidrBlock.CidrBlockState.State == ec2Types.VpcCidrBlockStateCodeAssociated {
+	if pie.Contains([]ec2Types.VpcCidrBlockStateCode{
+		ec2Types.VpcCidrBlockStateCodeAssociated,
+		ec2Types.VpcCidrBlockStateCodeDisassociated,
+		ec2Types.VpcCidrBlockStateCodeDisassociating,
+	}, state.associatedCidrBlock.CidrBlockState.State) {
 		return nil, nil
 	}
 	if state.associatedCidrBlock.CidrBlockState.State == ec2Types.VpcCidrBlockStateCodeAssociating {
 		return composed.StopWithRequeueDelay(10 * time.Second), nil
 	}
 
-	meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+	meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 		Type:    cloudresourcesv1beta1.ConditionTypeError,
 		Status:  "True",
 		Reason:  cloudresourcesv1beta1.ReasonCidrAssociationFailed,

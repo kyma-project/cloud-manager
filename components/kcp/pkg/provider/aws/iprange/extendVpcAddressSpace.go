@@ -19,11 +19,11 @@ func extendVpcAddressSpace(ctx context.Context, st composed.State) (error, conte
 
 	logger.Info("Associating vpc cidr block")
 
-	_, err := state.networkClient.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.IpRange().Spec.Cidr)
+	_, err := state.client.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.ObjAsIpRange().Spec.Cidr)
 
 	if err != nil {
 		logger.Error(err, "Error associating vpc cidr block")
-		meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonFailedExtendingVpcAddressSpace,

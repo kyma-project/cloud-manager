@@ -12,12 +12,12 @@ func updateScopeRef(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
 
-	state.CommonObj().SetScopeRef(&cloudresourcesv1beta1.ScopeRef{
+	state.ObjAsCommonObj().SetScopeRef(&cloudresourcesv1beta1.ScopeRef{
 		Name: state.Scope().Name,
 	})
 
-	meta := state.CommonObj().GetObjectMeta()
-	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.KymaLabel, state.CommonObj().KymaName())
+	meta := state.ObjAsCommonObj().GetObjectMeta()
+	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.KymaLabel, state.ObjAsCommonObj().KymaName())
 	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.ScopeLabel, state.Scope().Name)
 	metav1.SetMetaDataLabel(meta, cloudresourcesv1beta1.ProviderTypeLabel, string(state.Provider()))
 

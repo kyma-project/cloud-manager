@@ -9,7 +9,7 @@ type State interface {
 	composed.State
 	Scope() *cloudresourcesv1beta1.Scope
 	SetScope(*cloudresourcesv1beta1.Scope)
-	CommonObj() CommonObject
+	ObjAsCommonObj() CommonObject
 }
 
 type StateFactory interface {
@@ -44,6 +44,6 @@ func (s *state) SetScope(scope *cloudresourcesv1beta1.Scope) {
 	s.scope = scope
 }
 
-func (s *state) CommonObj() CommonObject {
+func (s *state) ObjAsCommonObj() CommonObject {
 	return s.Obj().(CommonObject)
 }

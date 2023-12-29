@@ -29,12 +29,16 @@ const (
 	ReasonVpcNotFound                    = "VpcNotFound"
 	ReasonShootAndVpcMismatch            = "ShootAndVpcMismatch"
 	ReasonFailedExtendingVpcAddressSpace = "FailedExtendingVpcAddressSpace"
+	ReasonInvalidIpRangeReference        = "InvalidIpRangeReference"
 )
 
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
 	KymaName string `json:"kymaName"`
+
+	// +kubebuilder:validation:Required
+	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +optional
 	Scope *ScopeRef `json:"scope"`
@@ -51,7 +55,10 @@ type IpRangeStatus struct {
 	Ranges []string `json:"ranges,omitempty"`
 
 	// +optional
-	Subnets []IpRangeSubnet `json:"subnets,omitempty"`
+	VpcId string `json:"vpcId,omitempty"`
+
+	// +optional
+	Subnets IpRangeSubnets `json:"subnets,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -60,10 +67,30 @@ type IpRangeStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
+type IpRangeSubnets []IpRangeSubnet
+
 type IpRangeSubnet struct {
 	Id    string `json:"id"`
 	Zone  string `json:"zone"`
 	Range string `json:"range"`
+}
+
+func (in IpRangeSubnets) SubnetById(id string) *IpRangeSubnet {
+	for _, s := range in {
+		if s.Id == id {
+			return &s
+		}
+	}
+	return nil
+}
+
+func (in IpRangeSubnets) SubnetByZone(zone string) *IpRangeSubnet {
+	for _, s := range in {
+		if s.Zone == zone {
+			return &s
+		}
+	}
+	return nil
 }
 
 //+kubebuilder:object:root=true

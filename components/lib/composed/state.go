@@ -9,7 +9,7 @@ import (
 )
 
 type State interface {
-	Client() client.Client
+	K8sClient() client.Client
 	EventRecorder() record.EventRecorder
 	Scheme() *runtime.Scheme
 	Name() types.NamespacedName
@@ -62,7 +62,7 @@ type baseState struct {
 	obj           client.Object
 }
 
-func (s *baseState) Client() client.Client {
+func (s *baseState) K8sClient() client.Client {
 	return s.client
 }
 
@@ -91,5 +91,5 @@ func (s *baseState) UpdateObj(ctx context.Context, opts ...client.UpdateOption) 
 }
 
 func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error {
-	return s.Client().Status().Update(ctx, s.Obj(), opts...)
+	return s.K8sClient().Status().Update(ctx, s.Obj(), opts...)
 }

@@ -14,7 +14,7 @@ import (
 func splitRangeByZones(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-	ipRangeObj := state.IpRange()
+	ipRangeObj := state.ObjAsIpRange()
 
 	if ipRangeObj.Status.Ranges != nil {
 		return nil, nil
@@ -24,7 +24,7 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 	if err != nil {
 		err = fmt.Errorf("error parsing IpRange CIDR: %w", err)
 		logger.Error(err, "Error splitting IpRange by zones")
-		meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonInvalidCidr,
@@ -46,7 +46,7 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 	subnetRanges, err := wholeRange.SubNetting(cidr.MethodSubnetNum, numberOfSubnets)
 	if err != nil {
 		err = fmt.Errorf("error splitting IpRange cidr: %w", err)
-		meta.SetStatusCondition(state.IpRange().Conditions(), metav1.Condition{
+		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonCidrCanNotSplit,
@@ -61,12 +61,12 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 	}
 	subnetRanges = subnetRanges[:zoneCount]
 
-	state.IpRange().Status.Ranges = pie.Map(subnetRanges, func(c *cidr.CIDR) string {
+	state.ObjAsIpRange().Status.Ranges = pie.Map(subnetRanges, func(c *cidr.CIDR) string {
 		return c.CIDR().String()
 	})
 
 	logger.
-		WithValues("ranges", state.IpRange().Status.Ranges).
+		WithValues("ranges", state.ObjAsIpRange().Status.Ranges).
 		Info("IpRange CIDR split")
 
 	err = state.UpdateObjStatus(ctx)

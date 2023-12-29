@@ -7,3 +7,7 @@ const (
 	ReadyState   StatusState = "Ready"
 	ErrorState   StatusState = "Error"
 )
+
+const (
+	ReasonProvisioned = "Provisioned"
+)

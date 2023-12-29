@@ -10,7 +10,7 @@ func saveScope(ctx context.Context, st composed.State) (error, context.Context) 
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
 
-	err := state.Client().Create(ctx, state.Scope())
+	err := state.K8sClient().Create(ctx, state.Scope())
 	if err != nil {
 		// it's possible that some other loop concurrently running already created this
 		// scope in the meanwhile since we checked if it exists in this loop

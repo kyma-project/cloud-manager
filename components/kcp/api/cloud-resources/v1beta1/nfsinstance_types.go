@@ -20,30 +20,48 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +kubebuilder:validation:Enum=Regional;Zonal
-type AwsFileSystemType string
-
 const (
-	AwsFileSystemTypeRegional = "Regional"
-	AwsFileSystemTypeZonal    = "Zonal"
+	ReasonFailedCreatingFileSystem        = "FailedCreatingFileSystem"
+	ReasonInvalidMountTargetsAlreadyExist = "InvalidMountTargetsAlreadyExist"
 )
 
-// +kubebuilder:validation:Enum=Enhanced;Bursting
+// +kubebuilder:validation:Enum=generalPurpose;maxIO
+type AwsPerformanceMode string
+
+const (
+	AwsPerformanceModeGeneralPurpose = AwsPerformanceMode("generalPurpose")
+	AwsPerformanceModeBursting       = AwsPerformanceMode("maxIO")
+)
+
+// +kubebuilder:validation:Enum=bursting;elastic
 type AwsThroughputMode string
 
 const (
-	AwsThroughputModeEnhanced = "Enhanced"
-	AwsThroughputModeBursting = "Bursting"
+	AwsThroughputModeBursting = AwsThroughputMode("bursting")
+	AwsThroughputModeElastic  = AwsThroughputMode("elastic")
 )
 
 // NfsInstanceSpec defines the desired state of NfsInstance
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
-	Kyma string `json:"kyma"`
+	KymaName string `json:"kymaName"`
+
+	// +kubebuilder:validation:Required
+	RemoteRef RemoteRef `json:"remoteRef"`
+
+	// +kubebuilder:validation:Required
+	IpRange string `json:"ipRange"`
 
 	// +optional
 	Scope *ScopeRef `json:"scope"`
 
+	// +kubebuilder:validation:Required
+	Instance NfsInstanceInfo `json:"instance"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type NfsInstanceInfo struct {
 	// +optional
 	Gcp *NfsInstanceGcp `json:"gcp,omitempty"`
 
@@ -61,13 +79,19 @@ type NfsInstanceAzure struct {
 }
 
 type NfsInstanceAws struct {
-	Type       AwsFileSystemType `json:"type,omitempty"`
+	// +kubebuilder:default=generalPurpose
+	PerformanceMode AwsPerformanceMode `json:"performanceMode,omitempty"`
+
+	// +kubebuilder:default=bursting
 	Throughput AwsThroughputMode `json:"throughput,omitempty"`
 }
 
 // NfsInstanceStatus defines the observed state of NfsInstance
 type NfsInstanceStatus struct {
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	Id string `json:"id,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -89,7 +113,7 @@ type NfsInstance struct {
 }
 
 func (in *NfsInstance) KymaName() string {
-	return in.Spec.Kyma
+	return in.Spec.KymaName
 }
 
 func (in *NfsInstance) ScopeRef() *ScopeRef {

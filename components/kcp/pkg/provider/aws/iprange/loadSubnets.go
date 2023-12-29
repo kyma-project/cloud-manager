@@ -9,7 +9,7 @@ import (
 func loadSubnets(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	subnetList, err := state.networkClient.DescribeSubnets(ctx, pointer.StringDeref(state.vpc.VpcId, ""))
+	subnetList, err := state.client.DescribeSubnets(ctx, pointer.StringDeref(state.vpc.VpcId, ""))
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading subnets", composed.StopWithRequeue, nil)
 	}

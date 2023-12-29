@@ -5,10 +5,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
 
-type NetworkClient interface {
+type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error)
 	DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error)
@@ -16,21 +17,27 @@ type NetworkClient interface {
 	DeleteSubnet(ctx context.Context, subnetId string) error
 }
 
-type NetworkProvider interface {
-	GetForSKR(ctx context.Context)
+func NewClientProvider() awsclient.SkrClientProvider[Client] {
+	return awsclient.NewCachedSkrClientProvider(
+		func(ctx context.Context, region, key, secret, role string) (Client, error) {
+			cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
+			if err != nil {
+				return nil, err
+			}
+			return newClient(ec2.NewFromConfig(cfg)), nil
+		},
+	)
 }
 
-func NetworkClientFactory(cfg aws.Config) NetworkClient {
-	return &networkClient{svc: ec2.NewFromConfig(cfg)}
+func newClient(svc *ec2.Client) Client {
+	return &client{svc: svc}
 }
 
-// ============================================================================
-
-type networkClient struct {
+type client struct {
 	svc *ec2.Client
 }
 
-func (c *networkClient) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
+func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 	out, err := c.svc.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{})
 	if err != nil {
 		return nil, err
@@ -38,7 +45,7 @@ func (c *networkClient) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 	return out.Vpcs, nil
 }
 
-func (c *networkClient) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error) {
+func (c *client) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error) {
 	in := &ec2.AssociateVpcCidrBlockInput{
 		VpcId:     aws.String(vpcId),
 		CidrBlock: aws.String(cidr),
@@ -50,7 +57,7 @@ func (c *networkClient) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr s
 	return out.CidrBlockAssociation, nil
 }
 
-func (c *networkClient) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error) {
+func (c *client) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error) {
 	out, err := c.svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []types.Filter{
 			{
@@ -65,7 +72,7 @@ func (c *networkClient) DescribeSubnets(ctx context.Context, vpcId string) ([]ty
 	return out.Subnets, nil
 }
 
-func (c *networkClient) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error) {
+func (c *client) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error) {
 	in := &ec2.CreateSubnetInput{
 		VpcId:            pointer.String(vpcId),
 		AvailabilityZone: pointer.String(az),
@@ -86,7 +93,7 @@ func (c *networkClient) CreateSubnet(ctx context.Context, vpcId, az, cidr string
 	return out.Subnet, nil
 }
 
-func (c *networkClient) DeleteSubnet(ctx context.Context, subnetId string) error {
+func (c *client) DeleteSubnet(ctx context.Context, subnetId string) error {
 	_, err := c.svc.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
 		SubnetId: pointer.String(subnetId),
 	})
