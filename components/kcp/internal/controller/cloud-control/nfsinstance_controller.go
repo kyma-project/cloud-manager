@@ -18,9 +18,9 @@ package cloudresources
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/nfsinstance"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/util"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 )

@@ -3,7 +3,7 @@ package focal
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func loadObj(ctx context.Context, state composed.State) (error, context.Context) {

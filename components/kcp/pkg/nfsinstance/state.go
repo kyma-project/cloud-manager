@@ -1,9 +1,9 @@
 package nfsinstance
 
 import (
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/nfsinstance/types"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 )
 
 type state struct {

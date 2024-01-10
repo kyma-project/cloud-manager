@@ -18,8 +18,8 @@ package cloudresources
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/iprange"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 

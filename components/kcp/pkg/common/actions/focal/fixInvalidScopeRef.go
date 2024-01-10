@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func fixInvalidScopeRef(ctx context.Context, st composed.State) (error, context.Context) {

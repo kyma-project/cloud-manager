@@ -5,7 +5,7 @@ import (
 	"fmt"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/utils/pointer"
 )
 

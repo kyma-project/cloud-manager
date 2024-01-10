@@ -1,4 +1,4 @@
-module github.com/kyma-project/cloud-resources-manager/components/kcp
+module github.com/kyma-project/cloud-manager/components/kcp
 
 go 1.21.4
 
@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.141.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.26.5
 	github.com/gardener/gardener v1.85.0
-	github.com/kyma-project/cloud-resources-manager/components/lib v0.0.0
+	github.com/kyma-project/cloud-manager/components/lib v0.0.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0
 	k8s.io/apimachinery v0.29.0
@@ -17,7 +17,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
-replace github.com/kyma-project/cloud-resources-manager/components/lib => ../lib
+replace github.com/kyma-project/cloud-manager/components/lib => ../lib
 
 require (
 	github.com/3th1nk/cidr v0.2.0 // indirect

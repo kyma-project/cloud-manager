@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	awsclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
 

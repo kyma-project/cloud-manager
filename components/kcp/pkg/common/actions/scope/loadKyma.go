@@ -3,9 +3,9 @@ package scope
 import (
 	"context"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/util"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

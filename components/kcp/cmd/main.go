@@ -18,22 +18,23 @@ package main
 
 import (
 	"flag"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/actions/scope"
-	scopeclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/actions/scope/client"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/iprange"
-	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/nfsinstance"
-	awsiprange "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/iprange"
-	awsiprangeclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/iprange/client"
-	awsnfsinstance "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/nfsinstance"
-	awsnfsinstanceclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
-	azureiprange "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/azure/iprange"
-	azurenfsinstance "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/azure/nfsinstance"
-	gcpiprange "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/gcp/iprange"
-	gcpnfsinstance "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/gcp/nfsinstance"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 	"os"
+
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
+	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
+	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
+	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
+	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
+	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
+	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
+	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -49,8 +50,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
-	cloudresourcescontroller "github.com/kyma-project/cloud-resources-manager/components/kcp/internal/controller/cloud-control"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudresourcescontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-control"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -113,7 +114,7 @@ func main() {
 
 	if err = (&cloudresourcescontroller.NfsInstanceReconciler{
 		Reconciler: nfsinstance.NewNfsInstanceReconciler(
-			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme()),
+			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
 			focal.NewStateFactory(),
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
@@ -133,7 +134,7 @@ func main() {
 	}
 	if err = (&cloudresourcescontroller.IpRangeReconciler{
 		Reconciler: iprange.NewIPRangeReconciler(
-			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-resources"), mgr.GetScheme()),
+			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
 			focal.NewStateFactory(),
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),

@@ -1,4 +1,4 @@
-module github.com/kyma-project/cloud-resources-manager/components/lib
+module github.com/kyma-project/cloud-manager/components/lib
 
 go 1.21.4
 

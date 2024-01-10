@@ -34,7 +34,7 @@ func buildTestAction(logName string, err error) Action {
 
 func newComposedActionTestState() *composedActionTestState {
 	return &composedActionTestState{
-		State: NewState(nil, nil, nil, types.NamespacedName{}, nil),
+		State: NewStateFactory(nil, nil, nil).NewState(types.NamespacedName{}, nil),
 	}
 }
 
@@ -147,7 +147,7 @@ func (me *composedActionSuite) TestLogsAllRunActions() {
 
 	assert.Len(me.T(), allLogs, 4)
 
-	actionName := "github.com/kyma-project/cloud-resources/components/skr/pkg/common/composedAction.(*composedActionSuite).TestLogsAllRunActions.func"
+	actionName := "github.com/kyma-project/cloud-manager/components/skr/pkg/common/composedAction.(*composedActionSuite).TestLogsAllRunActions.func"
 
 	assert.Equal(me.T(), "Running action", allLogs[0].Message)
 	assert.Equal(me.T(), myName, allLogs[0].FieldsMap()["action"])

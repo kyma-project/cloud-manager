@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -16,7 +16,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 	state := st.(State)
 	fn := os.Getenv("GARDENER_CREDENTIALS")
 	if len(fn) == 0 {
-		fn = "/opt/cloud-resources/gardener-credentials/kubeconfig"
+		fn = "/opt/cloud-manager/gardener-credentials/kubeconfig"
 	}
 
 	logger = logger.WithValues("credentialsPath", fn)

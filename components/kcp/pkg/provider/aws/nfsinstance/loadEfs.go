@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/utils/pointer"
 )
 
