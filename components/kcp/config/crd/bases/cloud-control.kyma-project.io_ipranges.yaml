@@ -38,6 +38,32 @@ spec:
                 type: string
               kymaName:
                 type: string
+              options:
+                maxProperties: 1
+                minProperties: 0
+                properties:
+                  aws:
+                    type: object
+                  azure:
+                    type: object
+                  gcp:
+                    properties:
+                      psaService:
+                        default: servicenetworking.googleapis.com
+                        type: string
+                      purpose:
+                        default: VPC_PEERING
+                        enum:
+                        - VPC_PEERING
+                        - GCE_ENDPOINT
+                        - DNS_RESOLVER
+                        - NAT_AUTO
+                        - IPSEC_INTERCONNECT
+                        - SHARED_LOADBALANCER_VIP
+                        - PRIVATE_SERVICE_CONNECT
+                        type: string
+                    type: object
+                type: object
               remoteRef:
                 properties:
                   name:

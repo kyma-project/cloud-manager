@@ -1,35 +1,37 @@
 package iprange
 
 import (
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"context"
+
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 )
 
 type State struct {
-	focal.State
+	types.State
 
 	client client.TbdGcpClient
 }
 
 type StateFactory interface {
-	NewState(focalState focal.State) *State
+	NewState(ctx context.Context, ipRangeState types.State) (*State, error)
 }
 
 type stateFactory struct {
 	client client.TbdGcpClient
 }
 
-func (f *stateFactory) NewState(focalState focal.State) *State {
-	return NewState(focalState, f.client)
+func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
+	return NewState(ipRangeState, f.client), nil
 }
 
 func NewStateFactory(client client.TbdGcpClient) StateFactory {
 	return &stateFactory{client: client}
 }
 
-func NewState(focalState focal.State, client client.TbdGcpClient) *State {
+func NewState(ipRangeState types.State, client client.TbdGcpClient) *State {
 	return &State{
-		State:  focalState,
+		State:  ipRangeState,
 		client: client,
 	}
 }
