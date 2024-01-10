@@ -3,10 +3,14 @@ module github.com/kyma-project/cloud-manager/components/kcp
 go 1.21.4
 
 require (
+	github.com/3th1nk/cidr v0.2.0
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.12
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.141.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.26.5
+	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5
+	github.com/elliotchance/pie/v2 v2.8.0
 	github.com/gardener/gardener v1.85.0
 	github.com/kyma-project/cloud-manager/components/lib v0.0.0
 	github.com/onsi/ginkgo/v2 v2.13.0
@@ -20,8 +24,6 @@ require (
 replace github.com/kyma-project/cloud-manager/components/lib => ../lib
 
 require (
-	github.com/3th1nk/cidr v0.2.0 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.12 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.9 // indirect
@@ -30,12 +32,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5 // indirect
 	github.com/aws/smithy-go v1.19.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elliotchance/pie/v2 v2.8.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
