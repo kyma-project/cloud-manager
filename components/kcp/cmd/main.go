@@ -51,7 +51,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	cloudresourcescontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-control"
+	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-control"
+	cloudresourcescontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -112,7 +113,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&cloudresourcescontroller.NfsInstanceReconciler{
+	// SKR Controllers
+	if err = (&cloudresourcescontroller.CloudResourcesReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
+		os.Exit(1)
+	}
+
+	// KCP Controllers
+	if err = (&cloudcontrolcontroller.NfsInstanceReconciler{
 		Reconciler: nfsinstance.NewNfsInstanceReconciler(
 			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
 			focal.NewStateFactory(),
@@ -125,14 +136,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
 	}
-	if err = (&cloudresourcescontroller.VpcPeeringReconciler{
+	if err = (&cloudcontrolcontroller.VpcPeeringReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
 	}
-	if err = (&cloudresourcescontroller.IpRangeReconciler{
+	if err = (&cloudcontrolcontroller.IpRangeReconciler{
 		Reconciler: iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
 			focal.NewStateFactory(),
