@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/client"
 )
 
 func NewAwsStsGardenClientProvider() awsclient.GardenClientProvider[AwsStsClient] {

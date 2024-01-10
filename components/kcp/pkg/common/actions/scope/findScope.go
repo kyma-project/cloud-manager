@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

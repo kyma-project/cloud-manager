@@ -3,8 +3,8 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/nfsinstance/types"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/nfsinstance/types"
+	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 )
 
 func New(stateFactory StateFactory) composed.Action {

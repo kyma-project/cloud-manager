@@ -3,7 +3,7 @@ package iprange
 import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 )
 
 func findCloudResourceSubnets(ctx context.Context, st composed.State) (error, context.Context) {

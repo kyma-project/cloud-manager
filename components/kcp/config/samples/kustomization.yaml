@@ -1,7 +1,7 @@
 ## Append samples of your project ##
 resources:
-- cloud-resources_v1beta1_nfsinstance.yaml
-- cloud-resources_v1beta1_vpcpeering.yaml
-- cloud-resources_v1beta1_iprange.yaml
-- cloud-resources_v1beta1_scope.yaml
+- cloud-control_v1beta1_nfsinstance.yaml
+- cloud-control_v1beta1_vpcpeering.yaml
+- cloud-control_v1beta1_iprange.yaml
+- cloud-control_v1beta1_scope.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

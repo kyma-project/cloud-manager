@@ -3,8 +3,8 @@ package iprange
 import (
 	"context"
 	"fmt"
-	iprangetypes "github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange/types"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	iprangetypes "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/iprange/types"
+	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 )
 
 func New(stateFactory StateFactory) composed.Action {

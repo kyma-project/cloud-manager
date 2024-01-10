@@ -3,8 +3,8 @@ package nfsinstance
 import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common"
+	"github.com/kyma-project/cloud-resources-manager/components/lib/composed"
 	"k8s.io/utils/pointer"
 )
 

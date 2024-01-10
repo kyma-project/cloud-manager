@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/actions/focal"
 )
 
 type State interface {

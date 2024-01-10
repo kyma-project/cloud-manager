@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/iprange/types"
-	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/iprange/client"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/iprange/types"
+	awsclient "github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/client"
+	"github.com/kyma-project/cloud-resources-manager/components/kcp/pkg/provider/aws/iprange/client"
 )
 
 // State is state of the IpRange reconciliation for AWS
