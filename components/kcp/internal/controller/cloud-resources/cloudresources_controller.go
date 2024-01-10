@@ -23,8 +23,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
 )
 
 // CloudResourcesReconciler reconciles a CloudResources object
@@ -56,7 +54,8 @@ func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *CloudResourcesReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&cloudresourcesv1beta1.CloudResources{}).
-		Complete(r)
+	return nil
+	//return ctrl.NewControllerManagedBy(mgr).
+	//	For(&cloudresourcesv1beta1.CloudResources{}).
+	//	Complete(r)
 }
