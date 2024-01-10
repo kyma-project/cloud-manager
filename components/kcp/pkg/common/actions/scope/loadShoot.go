@@ -3,7 +3,7 @@ package scope
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -2,27 +2,30 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/cloud-resources.kyma-project.io_nfsinstances.yaml
-- bases/cloud-resources.kyma-project.io_vpcpeerings.yaml
-- bases/cloud-resources.kyma-project.io_ipranges.yaml
-- bases/cloud-resources.kyma-project.io_scopes.yaml
+- bases/cloud-control.kyma-project.io_nfsinstances.yaml
+- bases/cloud-control.kyma-project.io_vpcpeerings.yaml
+- bases/cloud-control.kyma-project.io_ipranges.yaml
+- bases/cloud-control.kyma-project.io_scopes.yaml
+- bases/cloud-resources.kyma-project.io_cloudresources.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- path: patches/webhook_in_cloud-resources_nfsinstances.yaml
-#- path: patches/webhook_in_cloud-resources_vpcpeerings.yaml
-#- path: patches/webhook_in_cloud-resources_ipranges.yaml
-#- path: patches/webhook_in_cloud-resources_scopes.yaml
+#- path: patches/webhook_in_cloud-control_nfsinstances.yaml
+#- path: patches/webhook_in_cloud-control_vpcpeerings.yaml
+#- path: patches/webhook_in_cloud-control_ipranges.yaml
+#- path: patches/webhook_in_cloud-control_scopes.yaml
+#- path: patches/webhook_in_cloud-resources_cloudresources.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- path: patches/cainjection_in_cloud-resources_nfsinstances.yaml
-#- path: patches/cainjection_in_cloud-resources_vpcpeerings.yaml
-#- path: patches/cainjection_in_cloud-resources_ipranges.yaml
-#- path: patches/cainjection_in_cloud-resources_scopes.yaml
+#- path: patches/cainjection_in_cloud-control_nfsinstances.yaml
+#- path: patches/cainjection_in_cloud-control_vpcpeerings.yaml
+#- path: patches/cainjection_in_cloud-control_ipranges.yaml
+#- path: patches/cainjection_in_cloud-control_scopes.yaml
+#- path: patches/cainjection_in_cloud-resources_cloudresources.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

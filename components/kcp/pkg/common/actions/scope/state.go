@@ -4,11 +4,11 @@ import (
 	"errors"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope/client"
-	awsClient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope/client"
+	awsClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 )
 

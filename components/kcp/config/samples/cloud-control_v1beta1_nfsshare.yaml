@@ -1,0 +1,12 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: NfsInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: nfsinstance
+    app.kubernetes.io/instance: nfsinstance-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: nfsinstance-sample
+spec:
+  # TODO(user): Add fields here

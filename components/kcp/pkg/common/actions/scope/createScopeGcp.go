@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func createScopeGcp(ctx context.Context, st composed.State) (error, context.Context) {

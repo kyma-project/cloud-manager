@@ -5,10 +5,10 @@ import (
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/abstractions"
-	nfsinstancetypes "github.com/kyma-project/cloud-resources/components/kcp/pkg/nfsinstance/types"
-	awsclient "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/client"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/nfsinstance/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
 )
 
 type State struct {

@@ -3,9 +3,9 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	types2 "github.com/kyma-project/cloud-resources/components/kcp/pkg/nfsinstance/types"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	types2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

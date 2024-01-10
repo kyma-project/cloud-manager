@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	tagKey = "cloud-resources.kyma-project.io/iprange"
+	tagKey = "cloud-manager.kyma-project.io/iprange"
 )
 
 func getTagValue(tags []ec2Types.Tag, key string) string {

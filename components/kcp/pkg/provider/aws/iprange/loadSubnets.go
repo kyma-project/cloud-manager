@@ -2,7 +2,7 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/utils/pointer"
 )
 

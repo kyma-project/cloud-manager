@@ -2,8 +2,8 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/scope"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func New(stateFactory StateFactory) composed.Action {

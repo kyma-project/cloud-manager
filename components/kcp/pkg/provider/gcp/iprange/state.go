@@ -1,8 +1,8 @@
 package iprange
 
 import (
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 )
 
 type State struct {

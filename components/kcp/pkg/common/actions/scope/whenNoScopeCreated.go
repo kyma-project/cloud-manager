@@ -2,7 +2,7 @@ package scope
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func whenNoScopeCreated(ctx context.Context, state composed.State) (error, context.Context) {

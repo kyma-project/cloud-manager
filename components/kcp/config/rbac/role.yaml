@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - ipranges
   verbs:
@@ -17,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - ipranges/finalizers
   verbs:
   - update
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - ipranges/status
   verbs:
@@ -31,7 +31,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - nfsinstances
   verbs:
@@ -43,13 +43,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - nfsinstances/finalizers
   verbs:
   - update
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - nfsinstances/status
   verbs:
@@ -57,7 +57,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - vpcpeerings
   verbs:
@@ -69,15 +69,41 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - vpcpeerings/finalizers
   verbs:
   - update
 - apiGroups:
-  - cloud-resources.kyma-project.io
+  - cloud-control.kyma-project.io
   resources:
   - vpcpeerings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cloudresources
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cloudresources/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cloudresources/status
   verbs:
   - get
   - patch

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-resources/components/kcp/api/cloud-resources/v1beta1"
-	awsgardener "github.com/kyma-project/cloud-resources/components/kcp/pkg/provider/aws/gardener"
-	"github.com/kyma-project/cloud-resources/components/lib/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/gardener"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/pointer"
 )
