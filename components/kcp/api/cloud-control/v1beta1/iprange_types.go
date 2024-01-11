@@ -45,6 +45,49 @@ type IpRangeSpec struct {
 
 	// +kubebuilder:validation:Required
 	Cidr string `json:"cidr"`
+
+	// +optional
+	Options IpRangeOptions `json:"options,omitempty"`
+}
+
+// +kubebuilder:validation:MinProperties=0
+// +kubebuilder:validation:MaxProperties=1
+type IpRangeOptions struct {
+	// +optional
+	Gcp *IpRangeGcp `json:"gcp,omitempty"`
+
+	// +optional
+	Azure *IpRangeAzure `json:"azure,omitempty"`
+
+	// +optional
+	Aws *IpRangeAws `json:"aws,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=VPC_PEERING;GCE_ENDPOINT;DNS_RESOLVER;NAT_AUTO;IPSEC_INTERCONNECT;SHARED_LOADBALANCER_VIP;PRIVATE_SERVICE_CONNECT
+type GcpPurpose string
+
+const (
+	GcpPurposePSA   = GcpPurpose("VPC_PEERING")
+	GcpPurposeGCE   = GcpPurpose("GCE_ENDPOINT")
+	GcpPurposeDNS   = GcpPurpose("DNS_RESOLVER")
+	GcpPurposeNAT   = GcpPurpose("NAT_AUTO")
+	GcpPurposeIPSEC = GcpPurpose("IPSEC_INTERCONNECT")
+	GcpPurposeVIP   = GcpPurpose("SHARED_LOADBALANCER_VIP")
+	GcpPurposePSC   = GcpPurpose("PRIVATE_SERVICE_CONNECT")
+)
+
+type IpRangeGcp struct {
+	// +kubebuilder:default=VPC_PEERING
+	Purpose GcpPurpose `json:"purpose,omitempty"`
+
+	// +kubebuilder:default=servicenetworking.googleapis.com
+	PsaService string `json:"psaService,omitempty"`
+}
+
+type IpRangeAzure struct {
+}
+
+type IpRangeAws struct {
 }
 
 // IpRangeStatus defines the observed state of IpRange
