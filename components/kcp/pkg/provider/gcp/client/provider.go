@@ -5,7 +5,6 @@ import (
 	"sync"
 )
 
-
 type ClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, error)
 
 func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T] {
