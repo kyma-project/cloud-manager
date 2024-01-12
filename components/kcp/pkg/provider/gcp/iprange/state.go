@@ -3,14 +3,17 @@ package iprange
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 )
 
 type State struct {
 	types.State
 
-	client client.TbdGcpClient
+	serviceNetworkingClient client.ServiceNetworkingClient
+	computeClient client.ComputeClient
 }
 
 type StateFactory interface {
@@ -18,20 +21,42 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	client client.TbdGcpClient
-}
+	serviceNetworkingClientProvider gcpclient.ClientProvider[client.ServiceNetworkingClient]
+	computeClientProvider gcpclient.ClientProvider[client.ComputeClient]
+	env         abstractions.Environment}
+
+
+func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[client.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[client.ComputeClient], env abstractions.Environment) StateFactory {
+	return &stateFactory{
+		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
+		computeClientProvider: computeClientProvider,
+		env:         env,
+	}}
+
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
-	return NewState(ipRangeState, f.client), nil
+	snc, err := f.serviceNetworkingClientProvider(
+		ctx,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	cc, err := f.computeClientProvider(
+		ctx,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return newState(ipRangeState, snc, cc), nil
 }
 
-func NewStateFactory(client client.TbdGcpClient) StateFactory {
-	return &stateFactory{client: client}
-}
-
-func NewState(ipRangeState types.State, client client.TbdGcpClient) *State {
+func newState(ipRangeState types.State, snc client.ServiceNetworkingClient, cc client.ComputeClient) *State {
 	return &State{
 		State:  ipRangeState,
-		client: client,
+		serviceNetworkingClient: snc,
+		computeClient: cc,
 	}
 }
