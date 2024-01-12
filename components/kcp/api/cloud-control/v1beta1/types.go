@@ -10,4 +10,5 @@ const (
 
 const (
 	ReasonProvisioned = "Provisioned"
+	FinalizerName     = "cloud-control.kyma-project.io"
 )

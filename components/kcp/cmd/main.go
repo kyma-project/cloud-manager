@@ -33,6 +33,7 @@ import (
 	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
 	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
@@ -150,7 +151,7 @@ func main() {
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),
 			azureiprange.NewStateFactory(nil),
-			gcpiprange.NewStateFactory(nil, nil, abstractions.NewOSEnvironment()),
+			gcpiprange.NewStateFactory(gcpiprangeclient.NewServiceNetworkingClient(), gcpiprangeclient.NewComputeClient(), abstractions.NewOSEnvironment()),
 		),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")

@@ -9,14 +9,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func checkNupdateStatus(ctx context.Context, st composed.State) (error, context.Context) {
+func switchToReadyState(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	//TBD: Check and see whether the desiredState == actualState
-	match := true
-
-	//If states do notmatch, continue to the next step
-	if !match {
+	//If desiredState != actualState, continue.
+	if !state.inSync {
 		return nil, nil
 	}
 
@@ -36,4 +33,14 @@ func checkNupdateStatus(ctx context.Context, st composed.State) (error, context.
 	}
 
 	return composed.StopAndForget, nil
+}
+
+func SetStatusCondition(ctx context.Context, state *State, typ, status, reason, msg string) error {
+	meta.SetStatusCondition(state.ObjAsCommonObj().Conditions(), metav1.Condition{
+		Type:    typ,
+		Status:  metav1.ConditionStatus(status),
+		Reason:  reason,
+		Message: msg,
+	})
+	return state.UpdateObjStatus(ctx)
 }

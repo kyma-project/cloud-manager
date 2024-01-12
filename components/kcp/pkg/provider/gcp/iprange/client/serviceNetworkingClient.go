@@ -9,9 +9,8 @@ import (
 )
 
 type ServiceNetworkingClient interface {
-	ListServiceConnections(ctx context.Context, projectId, vpcId string ) ([]*servicenetworking.Connection, error)
+	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
 	CreateServiceConnection(ctx context.Context, projectId, vpcId, reservedIpRangeName string) (*servicenetworking.Operation, error)
-
 }
 
 func NewServiceNetworkingClient() gcpclient.ClientProvider[ServiceNetworkingClient] {
@@ -26,7 +25,6 @@ func NewServiceNetworkingClient() gcpclient.ClientProvider[ServiceNetworkingClie
 	)
 }
 
-
 func newServiceNetworkingClient(svcNet *servicenetworking.APIService) ServiceNetworkingClient {
 	return &serviceNetworkingClient{svcNet: svcNet}
 }
@@ -34,7 +32,6 @@ func newServiceNetworkingClient(svcNet *servicenetworking.APIService) ServiceNet
 type serviceNetworkingClient struct {
 	svcNet *servicenetworking.APIService
 }
-
 
 func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
 	network := gcpclient.GetVPCPath(projectId, vpcId)
@@ -50,11 +47,7 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 	var reservedIpRanges []string
 	reservedIpRanges = append(reservedIpRanges, reservedIpRangeName)
 	return c.svcNet.Services.Connections.Create(gcpclient.ServiceNetworkingServicePath, &servicenetworking.Connection{
-		Network: network,
+		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
-		}).Do()
+	}).Do()
 }
-
-
-
-
