@@ -6,6 +6,7 @@ import (
 
 const vPCPathPattern = "projects/%s/global/networks/%s"
 const ServiceNetworkingServicePath = "services/servicenetworking.googleapis.com"
+const ServiceNetworkingServiceConnectionName = "services/servicenetworking.googleapis.com/connections/servicenetworking-googleapis-com"
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)
