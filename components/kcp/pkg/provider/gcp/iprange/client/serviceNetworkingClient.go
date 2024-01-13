@@ -33,6 +33,21 @@ type serviceNetworkingClient struct {
 	svcNet *servicenetworking.APIService
 }
 
+func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+	network := gcpclient.GetVPCPath(projectId, vpcId)
+	return c.svcNet.Services.Connections.Patch(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
+		Network:               network,
+		ReservedPeeringRanges: reservedIpRanges,
+	}).Do()
+}
+
+func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
+	network := gcpclient.GetVPCPath(projectId, vpcId)
+	return c.svcNet.Services.Connections.DeleteConnection(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
+		ConsumerNetwork: network,
+	}).Do()
+}
+
 func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
 	network := gcpclient.GetVPCPath(projectId, vpcId)
 	out, err := c.svcNet.Services.Connections.List(gcpclient.ServiceNetworkingServicePath).Network(network).Do()

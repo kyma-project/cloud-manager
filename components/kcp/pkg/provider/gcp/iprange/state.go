@@ -2,12 +2,15 @@ package iprange
 
 import (
 	"context"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/servicenetworking/v1"
 )
 
 type State struct {
@@ -16,8 +19,13 @@ type State struct {
 	inSync    bool
 	ipAddress string
 	prefix    int
+	ipRanges  []string
 
-	address *compute.Address
+	addressOp    focal.OperationType
+	connectionOp focal.OperationType
+
+	address           *compute.Address
+	serviceConnection *servicenetworking.Connection
 
 	serviceNetworkingClient client.ServiceNetworkingClient
 	computeClient           client.ComputeClient
@@ -68,9 +76,24 @@ func newState(ipRangeState types.State, snc client.ServiceNetworkingClient, cc c
 	}
 }
 
-func (s State) isMatching(addr *compute.Address) bool {
+func (s State) doesAddressMatch() bool {
 	vpc := s.Scope().Spec.Scope.Gcp.VpcNetwork
-	return addr.Address == s.ipAddress &&
-		addr.PrefixLength == int64(s.prefix) &&
-		addr.Network == vpc
+	return s.address != nil && s.address.Address == s.ipAddress &&
+		s.address.PrefixLength == int64(s.prefix) &&
+		strings.HasSuffix(s.address.Network, vpc)
+}
+
+func (s State) doesConnectionIncludeRange() int {
+
+	if s.serviceConnection == nil {
+		return -1
+	}
+
+	rangeName := s.ObjAsIpRange().Name
+	for i, name := range s.serviceConnection.ReservedPeeringRanges {
+		if rangeName == name {
+			return i
+		}
+	}
+	return -1
 }

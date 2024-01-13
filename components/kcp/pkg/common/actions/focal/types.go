@@ -17,3 +17,12 @@ type CommonObject interface {
 	Conditions() *[]metav1.Condition
 	GetObjectMeta() *metav1.ObjectMeta
 }
+
+type OperationType int
+
+const (
+	NONE OperationType = iota
+	ADD
+	MODIFY
+	DELETE
+)

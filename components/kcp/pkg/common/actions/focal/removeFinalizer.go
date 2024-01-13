@@ -11,7 +11,7 @@ import (
 func RemoveFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 
 	//Object is not being deleted, don't remove finalizer
-	if !state.Obj().GetDeletionTimestamp().IsZero() {
+	if state.Obj().GetDeletionTimestamp().IsZero() {
 		return nil, nil
 	}
 

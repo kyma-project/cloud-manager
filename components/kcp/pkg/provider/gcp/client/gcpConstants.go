@@ -7,6 +7,9 @@ import (
 const vPCPathPattern = "projects/%s/global/networks/%s"
 const ServiceNetworkingServicePath = "services/servicenetworking.googleapis.com"
 const ServiceNetworkingServiceConnectionName = "services/servicenetworking.googleapis.com/connections/servicenetworking-googleapis-com"
+const NetworkFilter = "network=\"https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s\""
+
+const PsaPeeringName = "servicenetworking-googleapis-com"
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)

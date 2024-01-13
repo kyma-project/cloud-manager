@@ -7,4 +7,5 @@ const (
 	ReasonInvalidKymaName = "InvalidKymaName"
 	ReasonUnknown         = "Unknown"
 	ReasonReady           = "Ready"
+	ReasonGcpError        = "GCPError"
 )

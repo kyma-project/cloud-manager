@@ -3,6 +3,8 @@ package iprange
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
@@ -12,6 +14,27 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 
 	ipRange := state.ObjAsIpRange()
 	logger.WithValues("ipRange :", ipRange.Name).Info("Saving GCP Address")
+
+	gcpScope := state.Scope().Spec.Scope.Gcp
+	project := gcpScope.Project
+	vpc := gcpScope.VpcNetwork
+
+	switch state.addressOp {
+	case focal.ADD:
+		_, err := state.computeClient.CreatePscIpRange(ctx, project, vpc, ipRange.Name, ipRange.Name, state.ipAddress, int64(state.prefix))
+		if err != nil {
+			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
+			return composed.LogErrorAndReturn(err, "Error creating Address object in GCP", composed.StopWithRequeue, nil)
+		}
+	case focal.MODIFY:
+		//TBD
+	case focal.DELETE:
+		_, err := state.computeClient.DeleteIpRange(ctx, project, ipRange.Name)
+		if err != nil {
+			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
+			return composed.LogErrorAndReturn(err, "Error deleting address object in GCP", composed.StopWithRequeue, nil)
+		}
+	}
 
 	return nil, nil
 }

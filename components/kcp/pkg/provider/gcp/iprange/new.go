@@ -25,9 +25,11 @@ func New(stateFactory StateFactory) composed.Action {
 			focal.AddFinalizer,
 			loadAddress,
 			loadPsaConnection,
+			compareStates,
 			composed.BuildSwitchAction(
 				"gcpIpRangeSwitch",
 				composed.ComposeActions("SyncGCP", syncAddress, syncPsaConnection),
+				composed.NewCase(DeletePending, composed.ComposeActions("DeleteIPRange", syncPsaConnection, syncAddress)),
 				composed.NewCase(Deleted, focal.RemoveFinalizer),
 				composed.NewCase(InSync, switchToReadyState),
 			),
@@ -40,7 +42,12 @@ func Deleted(_ context.Context, st composed.State) bool {
 	return state.inSync && !state.Obj().GetDeletionTimestamp().IsZero()
 }
 
+func DeletePending(_ context.Context, st composed.State) bool {
+	state := st.(*State)
+	return !state.inSync && !state.Obj().GetDeletionTimestamp().IsZero()
+}
+
 func InSync(_ context.Context, st composed.State) bool {
 	state := st.(*State)
-	return state.inSync && !state.Obj().GetDeletionTimestamp().IsZero()
+	return state.inSync && state.Obj().GetDeletionTimestamp().IsZero()
 }
