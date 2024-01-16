@@ -1,0 +1,11 @@
+name: PR Checks
+run-name: ${{github.event.pull_request.title}}
+on: [ pull_request]
+jobs:
+   build:
+     runs-on: ubuntu-latest
+     steps:
+     - name: checkout repo
+       uses: actions/checkout@v3
+     - name: build application
+       run: make build
