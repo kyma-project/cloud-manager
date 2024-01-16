@@ -145,6 +145,8 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	mngr, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
 	if err != nil {
 		logger.Error(err, "error creating Manager")
+		time.Sleep(5 * time.Second)
+		return
 	}
 
 	logger.Info("Starting runner")
