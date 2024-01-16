@@ -10,9 +10,7 @@ import (
 
 type ServiceNetworkingClient interface {
 	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
-	CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error)
-	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
+	CreateServiceConnection(ctx context.Context, projectId, vpcId, reservedIpRangeName string) (*servicenetworking.Operation, error)
 }
 
 func NewServiceNetworkingClient() gcpclient.ClientProvider[ServiceNetworkingClient] {
@@ -35,21 +33,6 @@ type serviceNetworkingClient struct {
 	svcNet *servicenetworking.APIService
 }
 
-func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
-	network := gcpclient.GetVPCPath(projectId, vpcId)
-	return c.svcNet.Services.Connections.Patch(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
-		Network: network,
-		ReservedPeeringRanges: reservedIpRanges,
-	}).Do()
-}
-
-func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
-	network := gcpclient.GetVPCPath(projectId, vpcId)
-	return c.svcNet.Services.Connections.DeleteConnection(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
-		ConsumerNetwork: network,
-	}).Do()
-}
-
 func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
 	network := gcpclient.GetVPCPath(projectId, vpcId)
 	out, err := c.svcNet.Services.Connections.List(gcpclient.ServiceNetworkingServicePath).Network(network).Do()
@@ -59,8 +42,10 @@ func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, pr
 	return out.Connections, nil
 }
 
-func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, projectId, vpcId, reservedIpRangeName string) (*servicenetworking.Operation, error) {
 	network := gcpclient.GetVPCPath(projectId, vpcId)
+	var reservedIpRanges []string
+	reservedIpRanges = append(reservedIpRanges, reservedIpRangeName)
 	return c.svcNet.Services.Connections.Create(gcpclient.ServiceNetworkingServicePath, &servicenetworking.Connection{
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,

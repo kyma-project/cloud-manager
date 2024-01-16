@@ -18,17 +18,29 @@ package cloudresources
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
+	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+type CloudResourcesFactory struct {
+}
+
+func (f *CloudResourcesFactory) New(kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+	return &CloudResourcesReconciler{
+		kcpCluster: kcpCluster,
+		skrCluster: skrCluster,
+	}
+}
+
 // CloudResourcesReconciler reconciles a CloudResources object
 type CloudResourcesReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	kcpCluster cluster.Cluster
+	skrCluster cluster.Cluster
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources,verbs=get;list;watch;create;update;patch;delete
@@ -45,17 +57,16 @@ type CloudResourcesReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	logger.Info("Hello from CloudResourcesReconciler!")
 
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *CloudResourcesReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return nil
-	//return ctrl.NewControllerManagedBy(mgr).
-	//	For(&cloudresourcesv1beta1.CloudResources{}).
-	//	Complete(r)
+func SetupCloudResourcesReconciler(reg registry.SkrRegistry) error {
+	return reg.Register().
+		WithFactory(&CloudResourcesFactory{}).
+		For(&cloudresourcesv1beta1.CloudResources{}).
+		Complete()
 }

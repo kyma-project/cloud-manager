@@ -18,6 +18,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	skrlooper "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/looper"
+	skrregistry "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
 	"os"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
@@ -51,25 +54,31 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
 	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-control"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	kcpScheme = runtime.NewScheme()
+	skrScheme = runtime.NewScheme()
+	setupLog  = ctrl.Log.WithName("setup")
 )
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
+	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
 	//+kubebuilder:scaffold:scheme
 }
 
 func main() {
+	for k := range skrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion) {
+		fmt.Println(k)
+	}
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -87,7 +96,7 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
+		Scheme:                 kcpScheme,
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
@@ -114,11 +123,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	skrRegistry := skrregistry.New(skrScheme)
+
 	// SKR Controllers
-	if err = (&cloudresourcescontroller.CloudResourcesReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
 		os.Exit(1)
 	}
@@ -165,6 +173,14 @@ func main() {
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
+
+	skrLoop := skrlooper.New(mgr, skrScheme, skrRegistry, mgr.GetLogger())
+	skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
+	err = mgr.Add(skrLoop)
+	if err != nil {
+		setupLog.Error(err, "error adding SkrLooper to KCP manager")
 		os.Exit(1)
 	}
 

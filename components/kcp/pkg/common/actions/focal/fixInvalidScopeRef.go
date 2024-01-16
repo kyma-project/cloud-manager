@@ -10,7 +10,6 @@ import (
 func fixInvalidScopeRef(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
-
 	scopeRef := state.ObjAsCommonObj().ScopeRef()
 	scope := state.Scope()
 	if scopeRef == nil && scope == nil {
