@@ -42,7 +42,10 @@ func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, 
 	if err != nil {
 		return nil, fmt.Errorf("error getting kubeconfig secret: %w", err)
 	}
-	b := secret.Data["config"]
+	b, ok := secret.Data["config"]
+	if !ok {
+		return nil, fmt.Errorf("the kubeconfig secret for %s does not have the 'config' key", kymaName)
+	}
 	cc, err := clientcmd.NewClientConfigFromBytes(b)
 	if err != nil {
 		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
