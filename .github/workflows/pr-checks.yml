@@ -10,3 +10,5 @@ jobs:
      - name: build application
        working-directory: components/kcp
        run: make build
+     - name: check modified files
+       run: git diff --exit-code
