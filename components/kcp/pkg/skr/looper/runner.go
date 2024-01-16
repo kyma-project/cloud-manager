@@ -45,15 +45,22 @@ type skrRunner struct {
 	kcpCluster cluster.Cluster
 	registry   registry.SkrRegistry
 	runOnce    sync.Once
+	started    bool
+	stopped    bool
 }
 
 func (r *skrRunner) Run(ctx context.Context, mngr skrmanager.SkrManager, opts ...RunOption) {
+	if r.started {
+		return
+	}
 	options := &RunOptions{}
 	for _, o := range opts {
 		o(options)
 	}
 	r.runOnce.Do(func() {
-		for _, descr := range r.registry.GetDescriptors(mngr) {
+		r.started = true
+		descriptors := r.registry.GetDescriptors(mngr)
+		for _, descr := range descriptors {
 			logger2 := mngr.GetLogger().WithValues("controller", descr.Name)
 			ctrl, err := controller.New(descr.Name, mngr, r.GetControllerOptions(
 				descr,
@@ -75,9 +82,17 @@ func (r *skrRunner) Run(ctx context.Context, mngr skrmanager.SkrManager, opts ..
 		if options.timeout == 0 {
 			options.timeout = time.Minute
 		}
-		timeoutCtx, cancel := context.WithTimeout(ctx, options.timeout)
+		timeoutCtx, cancelInternal := context.WithTimeout(ctx, options.timeout)
+		var cancelOnce sync.Once
+		cancel := func() {
+			cancelOnce.Do(cancelInternal)
+		}
 		defer cancel()
+
+		go r.queueMonitor(timeoutCtx, descriptors, cancel)
+
 		err := mngr.Start(timeoutCtx)
+		r.stopped = true
 		if err != nil {
 			mngr.GetLogger().Error(err, "error starting manager")
 		}
@@ -113,4 +128,24 @@ func (r *skrRunner) GetControllerOptions(descriptor registry.Descriptor, skrMana
 		},
 	}
 	return ctrlOptions
+}
+
+func (r *skrRunner) queueMonitor(ctx context.Context, descriptors registry.DescriptorList, cancel func()) {
+	whereAllEmptyBefore := false
+	allEmptyNow := false
+	for !r.stopped {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			time.Sleep(10 * time.Second)
+
+			allEmptyNow = descriptors.AllQueuesEmpty()
+			if allEmptyNow && whereAllEmptyBefore {
+				cancel()
+				return
+			}
+			whereAllEmptyBefore = allEmptyNow
+		}
+	}
 }

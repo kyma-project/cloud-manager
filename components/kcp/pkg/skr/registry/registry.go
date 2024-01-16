@@ -25,6 +25,23 @@ type Watch struct {
 	Predicates   []predicate.Predicate
 }
 
+type DescriptorList []Descriptor
+
+func (dl DescriptorList) AllQueuesEmpty() bool {
+	for _, desc := range dl {
+		for _, watch := range desc.Watches {
+			src, ok := watch.Src.(skrsource.SkrSource)
+			if !ok {
+				continue
+			}
+			if src.Queue().Len() > 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 type Descriptor struct {
 	Name              string
 	GVK               schema.GroupVersionKind
@@ -33,7 +50,7 @@ type Descriptor struct {
 }
 
 type SkrRegistry interface {
-	GetDescriptors(mngr manager.SkrManager) []Descriptor
+	GetDescriptors(mngr manager.SkrManager) DescriptorList
 	Register() Builder
 }
 
@@ -62,8 +79,8 @@ type skrRegistry struct {
 	items  []*registryItem
 }
 
-func (r *skrRegistry) GetDescriptors(mngr manager.SkrManager) []Descriptor {
-	result := make([]Descriptor, 0, len(r.items))
+func (r *skrRegistry) GetDescriptors(mngr manager.SkrManager) DescriptorList {
+	result := make(DescriptorList, 0, len(r.items))
 	cch := mngr.GetCache().(skrcache.SkrCache)
 	for _, item := range r.items {
 		d := Descriptor{
