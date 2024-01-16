@@ -16,8 +16,8 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	//Get from GCP.
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
-	vpc := gcpScope.VpcNetwork
-	list, err := state.computeClient.ListGlobalAddresses(ctx, project, vpc)
+	//vpc := gcpScope.VpcNetwork
+	list, err := state.computeClient.ListGlobalAddresses(ctx, project)
 	if err != nil {
 		return err, nil
 	}

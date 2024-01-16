@@ -1,2 +1,1 @@
-kubeconfig-garden.yaml
-kubeconfig-kcp.yaml
+kubeconfig-*.yaml
