@@ -8,4 +8,5 @@ jobs:
      - name: checkout repo
        uses: actions/checkout@v3
      - name: build application
+       working-directory: ./componenets/kpc
        run: make build
