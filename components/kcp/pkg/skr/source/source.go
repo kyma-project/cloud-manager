@@ -19,6 +19,7 @@ var _ SkrSource = &skrSource{}
 
 type SkrSource interface {
 	ctrlsource.Source
+	fmt.Stringer
 	IsStarted() bool
 	Queue() workqueue.RateLimitingInterface
 }
