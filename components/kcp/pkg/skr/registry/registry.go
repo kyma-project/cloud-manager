@@ -34,6 +34,9 @@ func (dl DescriptorList) AllQueuesEmpty() bool {
 			if !ok {
 				continue
 			}
+			if !src.IsStarted() {
+				return false
+			}
 			if src.Queue().Len() > 0 {
 				return false
 			}
