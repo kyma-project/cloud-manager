@@ -5,4 +5,6 @@ resources:
 - cloud-control_v1beta1_iprange.yaml
 - cloud-control_v1beta1_scope.yaml
 - cloud-resources_v1beta1_cloudresources.yaml
+- cloud-resources_v1beta1_awsnfsvolume.yaml
+- cloud-resources_v1beta1_iprange.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

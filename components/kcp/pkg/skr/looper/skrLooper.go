@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sync"
 	"time"
@@ -153,17 +152,4 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	runner := NewSkrRunner(l.registry, mngr)
 	runner.Run(l.ctx, mngr, WithTimeout(30*time.Second))
 	logger.Info("Runner stopped")
-}
-
-func (l *skrLooper) getControllerOptions(
-	reconcilerFactory registry.ReconcilerFactory,
-	skrManager skrmanager.SkrManager,
-) controller.Options {
-	ctrlOptions := controller.Options{
-		Reconciler: reconcilerFactory.New(l.kcpCluster, skrManager),
-		// TODO: copy other options,
-		// check sigs.k8s.io/controller-runtime@v0.16.3/pkg/controller/controller.go for details
-		MaxConcurrentReconciles: skrManager.GetControllerOptions().MaxConcurrentReconciles,
-	}
-	return ctrlOptions
 }

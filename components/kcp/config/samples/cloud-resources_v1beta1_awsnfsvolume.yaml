@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsNfsVolume
+metadata:
+  labels:
+    app.kubernetes.io/name: awsnfsvolume
+    app.kubernetes.io/instance: awsnfsvolume-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: awsnfsvolume-sample
+spec:
+  # TODO(user): Add fields here

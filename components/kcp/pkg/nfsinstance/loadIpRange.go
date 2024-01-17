@@ -18,7 +18,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := &cloudresourcesv1beta1.IpRange{}
-	err := state.K8sClient().Get(ctx, types.NamespacedName{
+	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),
 		Name:      state.ObjAsNfsInstance().Spec.IpRange,
 	}, ipRange)

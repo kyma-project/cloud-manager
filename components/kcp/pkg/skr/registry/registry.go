@@ -6,6 +6,7 @@ import (
 	skrsource "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/source"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -15,7 +16,7 @@ import (
 )
 
 type ReconcilerFactory interface {
-	New(kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler
+	New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler
 }
 
 type Watch struct {

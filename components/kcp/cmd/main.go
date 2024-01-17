@@ -19,9 +19,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	skrlooper "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/looper"
 	skrregistry "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
-	"os"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
@@ -128,6 +129,14 @@ func main() {
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
+		os.Exit(1)
+	}
+	if err = cloudresourcescontroller.SetupIpRangeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
+		os.Exit(1)
+	}
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
 

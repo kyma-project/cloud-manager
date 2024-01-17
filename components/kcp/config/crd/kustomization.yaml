@@ -7,6 +7,8 @@ resources:
 - bases/cloud-control.kyma-project.io_ipranges.yaml
 - bases/cloud-control.kyma-project.io_scopes.yaml
 - bases/cloud-resources.kyma-project.io_cloudresources.yaml
+- bases/cloud-resources.kyma-project.io_awsnfsvolumes.yaml
+- bases/cloud-resources.kyma-project.io_ipranges.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -17,6 +19,8 @@ patches:
 #- path: patches/webhook_in_cloud-control_ipranges.yaml
 #- path: patches/webhook_in_cloud-control_scopes.yaml
 #- path: patches/webhook_in_cloud-resources_cloudresources.yaml
+#- path: patches/webhook_in_cloud-resources_awsnfsvolumes.yaml
+#- path: patches/webhook_in_cloud-resources_ipranges.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
@@ -26,6 +30,8 @@ patches:
 #- path: patches/cainjection_in_cloud-control_ipranges.yaml
 #- path: patches/cainjection_in_cloud-control_scopes.yaml
 #- path: patches/cainjection_in_cloud-resources_cloudresources.yaml
+#- path: patches/cainjection_in_cloud-resources_awsnfsvolumes.yaml
+#- path: patches/cainjection_in_cloud-resources_ipranges.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

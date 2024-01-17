@@ -17,7 +17,7 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(State)
 
 	kymaUnstructured := util.NewKymaUnstructured()
-	err := state.K8sClient().Get(ctx, types.NamespacedName{
+	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Name:      state.ObjAsCommonObj().KymaName(),
 		Namespace: state.Obj().GetNamespace(),
 	}, kymaUnstructured)

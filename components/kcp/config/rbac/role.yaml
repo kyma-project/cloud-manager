@@ -85,6 +85,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awsnfsvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsvolumes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsvolumes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - cloudresources
   verbs:
   - create
@@ -104,6 +130,32 @@ rules:
   - cloud-resources.kyma-project.io
   resources:
   - cloudresources/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - ipranges
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - ipranges/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - ipranges/status
   verbs:
   - get
   - patch
