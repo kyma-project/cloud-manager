@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
@@ -35,6 +36,15 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 				state.connectionOp = focal.DELETE
 			}
 		}
+
+		//Set the State value.
+		if state.connectionOp != focal.NONE {
+			state.curState = client.DeletePsaConnection
+		} else if state.addressOp != focal.NONE {
+			state.curState = client.DeleteAddress
+		} else {
+			state.curState = client.Deleted
+		}
 	} else {
 		if state.address == nil {
 			//If address doesn't exist, add it.
@@ -57,6 +67,15 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 				state.connectionOp = focal.MODIFY
 				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, ipRange.Name)
 			}
+		}
+
+		//Set the State value.
+		if state.addressOp != focal.NONE {
+			state.curState = client.SyncAddress
+		} else if state.connectionOp != focal.NONE {
+			state.curState = client.SyncPsaConnection
+		} else {
+			state.curState = v1beta1.ReadyState
 		}
 	}
 	state.inSync = state.addressOp == focal.NONE && state.connectionOp == focal.NONE

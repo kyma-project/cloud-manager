@@ -2,6 +2,8 @@ package client
 
 import (
 	"fmt"
+
+	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 )
 
 const vPCPathPattern = "projects/%s/global/networks/%s"
@@ -48,4 +50,12 @@ type ipv6EndpointType string
 const (
 	Ipv6EndpointTypeVm    ipv6EndpointType = "VM"
 	Ipv6EndpointTypeNetlb ipv6EndpointType = "NETLB"
+)
+
+const (
+	SyncAddress         v1beta1.StatusState = "SyncAddress"
+	SyncPsaConnection   v1beta1.StatusState = "SyncPSAConnection"
+	DeletePsaConnection v1beta1.StatusState = "DeletePSAConnection"
+	DeleteAddress       v1beta1.StatusState = "DeleteAddress"
+	Deleted             v1beta1.StatusState = "Deleted"
 )

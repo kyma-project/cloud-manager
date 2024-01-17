@@ -8,4 +8,5 @@ const (
 	ReasonUnknown         = "Unknown"
 	ReasonReady           = "Ready"
 	ReasonGcpError        = "GCPError"
+	ReasonNotSupported    = "NotSupported"
 )

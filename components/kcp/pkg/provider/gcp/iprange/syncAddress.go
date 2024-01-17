@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+	"errors"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
@@ -27,7 +28,9 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 			return composed.LogErrorAndReturn(err, "Error creating Address object in GCP", composed.StopWithRequeue, nil)
 		}
 	case focal.MODIFY:
-		//TBD
+		err := errors.New("IpRange update not supported.")
+		state.AddErrorCondition(ctx, v1beta1.ReasonNotSupported, err)
+		return composed.LogErrorAndReturn(err, "IpRange update not supported.", composed.StopAndForget, nil)
 	case focal.DELETE:
 		_, err := state.computeClient.DeleteIpRange(ctx, project, ipRange.Name)
 		if err != nil {

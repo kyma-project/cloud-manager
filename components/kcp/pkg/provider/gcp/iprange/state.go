@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
@@ -23,6 +24,7 @@ type State struct {
 
 	addressOp    focal.OperationType
 	connectionOp focal.OperationType
+	curState     v1beta1.StatusState
 
 	address           *compute.Address
 	serviceConnection *servicenetworking.Connection
