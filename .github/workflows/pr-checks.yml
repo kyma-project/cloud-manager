@@ -1,0 +1,22 @@
+name: PR Checks
+run-name: '${{github.event.pull_request.title}}'
+'on':
+  - pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+      - name: Display Go version
+        run: go version
+      - name: go download
+        working-directory: components/kcp
+        run: go mod download
+      - name: build application
+        working-directory: components/kcp
+        run: make build
+      - name: check modified files
+        run: git diff --exit-code
