@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v4
@@ -14,11 +14,14 @@ jobs:
           go-version: '1.21'
       - name: Display Go version
         run: go version
-      - name: go download
+      - name: Download modules to local cache
+        working-directory: components/kcp
+        run: go mod tidy
+      - name: Download modules to local cache
         working-directory: components/kcp
         run: go mod download
-      - name: build application
+      - name: Build application
         working-directory: components/kcp
         run: make build
-      - name: check modified files
+      - name: Check modified files
         run: git diff --exit-code
