@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
@@ -25,22 +27,23 @@ func New(stateFactory StateFactory) composed.Action {
 			focal.AddFinalizer,
 			loadAddress,
 			loadPsaConnection,
+			compareStates,
+			updateState,
 			composed.BuildSwitchAction(
 				"gcpIpRangeSwitch",
-				composed.ComposeActions("SyncGCP", syncAddress, syncPsaConnection),
-				composed.NewCase(Deleted, focal.RemoveFinalizer),
-				composed.NewCase(InSync, switchToReadyState),
+				nil,
+				composed.NewCase(StatePredicate(client.SyncAddress, ctx, state), syncAddress),
+				composed.NewCase(StatePredicate(client.SyncPsaConnection, ctx, state), syncPsaConnection),
+				composed.NewCase(StatePredicate(client.DeletePsaConnection, ctx, state), syncPsaConnection),
+				composed.NewCase(StatePredicate(client.DeleteAddress, ctx, state), syncAddress),
+				composed.NewCase(StatePredicate(client.Deleted, ctx, state), focal.RemoveFinalizer),
 			),
 		)(ctx, state)
 	}
 }
 
-func Deleted(_ context.Context, st composed.State) bool {
-	state := st.(*State)
-	return state.inSync && !state.Obj().GetDeletionTimestamp().IsZero()
-}
-
-func InSync(_ context.Context, st composed.State) bool {
-	state := st.(*State)
-	return state.inSync && !state.Obj().GetDeletionTimestamp().IsZero()
+func StatePredicate(status v1beta1.StatusState, ctx context.Context, state *State) composed.Predicate {
+	return func(ctx context.Context, st composed.State) bool {
+		return status == state.curState
+	}
 }
