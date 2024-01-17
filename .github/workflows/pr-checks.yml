@@ -14,7 +14,7 @@ jobs:
           go-version: '1.21'
       - name: Display Go version
         run: go version
-      - name: Download modules to local cache
+      - name: Add missing and remove unused modules
         working-directory: components/kcp
         run: go mod tidy
       - name: Download modules to local cache
