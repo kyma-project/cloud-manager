@@ -52,16 +52,20 @@ func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[cl
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
+	httpClient, err := gcpclient.GetCachedGcpClient(ctx, f.env.Get("GCP_SA_JSON_KEY_PATH"))
+	if err != nil {
+		return nil, err
+	}
 	snc, err := f.serviceNetworkingClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		httpClient,
 	)
 	if err != nil {
 		return nil, err
 	}
 	cc, err := f.computeClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		httpClient,
 	)
 	if err != nil {
 		return nil, err
