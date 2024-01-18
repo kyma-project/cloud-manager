@@ -16,5 +16,7 @@ func New(factory StateFactory) composed.Action {
 		createKcpIpRange,
 		deleteKcpIpRange,
 		removeFinalizer,
+		updateStatus,
+		composed.StopAndForgetAction,
 	)
 }
