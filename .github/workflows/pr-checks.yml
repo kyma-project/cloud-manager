@@ -26,7 +26,7 @@ jobs:
         run: |
           go mod tidy
           go mod download
-          go build
-          go test
+          go build ./composed
+          go test ./composed
       - name: Check modified files
         run: git diff --exit-code
