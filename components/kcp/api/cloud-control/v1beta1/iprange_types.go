@@ -95,6 +95,9 @@ type IpRangeStatus struct {
 	State StatusState `json:"state,omitempty"`
 
 	// +optional
+	Cidr string `json:"cidr,omitempty"`
+
+	// +optional
 	Ranges []string `json:"ranges,omitempty"`
 
 	// +optional

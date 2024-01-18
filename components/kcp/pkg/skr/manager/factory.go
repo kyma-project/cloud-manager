@@ -8,14 +8,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var _ Factory = &skrManagerFactory{}
 
 type Factory interface {
-	CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (manager.Manager, error)
+	CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, error)
 }
 
 func NewFactory(kcpClient client.Reader, namespace string, skrScheme *runtime.Scheme) Factory {
@@ -32,7 +32,7 @@ type skrManagerFactory struct {
 	skrScheme *runtime.Scheme
 }
 
-func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (manager.Manager, error) {
+func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, error) {
 	secret := &corev1.Secret{}
 	name := fmt.Sprintf("kubeconfig-%s", kymaName)
 	err := f.kcpClient.Get(ctx, types.NamespacedName{
@@ -55,5 +55,8 @@ func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, 
 		return nil, fmt.Errorf("error getting rest config from kubeconfig: %w", err)
 	}
 
-	return New(restConfig, f.skrScheme, logger)
+	return New(restConfig, f.skrScheme, klog.ObjectRef{
+		Name:      kymaName,
+		Namespace: f.namespace,
+	}, logger)
 }

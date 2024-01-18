@@ -110,7 +110,7 @@ func (r *skrRunner) GetControllerOptions(descriptor registry.Descriptor, skrMana
 		"controllerKind", descriptor.GVK.Kind,
 	)
 	ctrlOptions := controller.Options{
-		Reconciler: descriptor.ReconcilerFactory.New(r.kcpCluster, skrManager),
+		Reconciler: descriptor.ReconcilerFactory.New(skrManager.KymaRef(), r.kcpCluster, skrManager),
 		// TODO: copy other options,
 		// for details check:
 		//  * sigs.k8s.io/controller-runtime@v0.16.3/pkg/controller/controller.go

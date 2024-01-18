@@ -6,6 +6,7 @@ import (
 	skrcache "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/cache"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -20,9 +21,10 @@ var _ SkrManager = &skrManager{}
 
 type SkrManager interface {
 	manager.Manager
+	KymaRef() klog.ObjectRef
 }
 
-func New(cfg *rest.Config, skrScheme *runtime.Scheme, logger logr.Logger) (SkrManager, error) {
+func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, logger logr.Logger) (SkrManager, error) {
 	cls, err := cluster.New(cfg, func(clusterOptions *cluster.Options) {
 		clusterOptions.Scheme = skrScheme
 		clusterOptions.Logger = logger
@@ -35,6 +37,7 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, logger logr.Logger) (SkrMa
 	}
 	return &skrManager{
 		Cluster: cls,
+		kymaRef: kymaRef,
 		logger:  logger,
 	}, nil
 }
@@ -42,8 +45,13 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, logger logr.Logger) (SkrMa
 type skrManager struct {
 	cluster.Cluster
 
+	kymaRef     klog.ObjectRef
 	logger      logr.Logger
 	controllers []manager.Runnable
+}
+
+func (m *skrManager) KymaRef() klog.ObjectRef {
+	return m.kymaRef
 }
 
 func (m *skrManager) Start(ctx context.Context) error {

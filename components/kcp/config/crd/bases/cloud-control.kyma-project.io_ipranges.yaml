@@ -89,6 +89,8 @@ spec:
           status:
             description: IpRangeStatus defines the observed state of IpRange
             properties:
+              cidr:
+                type: string
               conditions:
                 description: List of status conditions to indicate the status of a
                   Peering.

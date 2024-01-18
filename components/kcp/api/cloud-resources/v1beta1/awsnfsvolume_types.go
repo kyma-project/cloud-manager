@@ -20,22 +20,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// +kubebuilder:validation:Enum=generalPurpose;maxIO
+type AwsPerformanceMode string
 
-// CloudResourcesSpec defines the desired state of CloudResources
-type CloudResourcesSpec struct {
+const (
+	AwsPerformanceModeGeneralPurpose = AwsPerformanceMode("generalPurpose")
+	AwsPerformanceModeBursting       = AwsPerformanceMode("maxIO")
+)
+
+// +kubebuilder:validation:Enum=bursting;elastic
+type AwsThroughputMode string
+
+const (
+	AwsThroughputModeBursting = AwsThroughputMode("bursting")
+	AwsThroughputModeElastic  = AwsThroughputMode("elastic")
+)
+
+// AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
+type AwsNfsVolumeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of CloudResources. Edit cloudresources_types.go to remove/update
+	// Foo is an example field of AwsNfsVolume. Edit awsnfsvolume_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// CloudResourcesStatus defines the observed state of CloudResources
-type CloudResourcesStatus struct {
-	Served string `json:"served,omitempty"`
-
+// AwsNfsVolumeStatus defines the observed state of AwsNfsVolume
+type AwsNfsVolumeStatus struct {
 	// List of status conditions
 	// +optional
 	// +listType=map
@@ -46,24 +57,24 @@ type CloudResourcesStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// CloudResources is the Schema for the cloudresources API
-type CloudResources struct {
+// AwsNfsVolume is the Schema for the awsnfsvolumes API
+type AwsNfsVolume struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   CloudResourcesSpec   `json:"spec,omitempty"`
-	Status CloudResourcesStatus `json:"status,omitempty"`
+	Spec   AwsNfsVolumeSpec   `json:"spec,omitempty"`
+	Status AwsNfsVolumeStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// CloudResourcesList contains a list of CloudResources
-type CloudResourcesList struct {
+// AwsNfsVolumeList contains a list of AwsNfsVolume
+type AwsNfsVolumeList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CloudResources `json:"items"`
+	Items           []AwsNfsVolume `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&CloudResources{}, &CloudResourcesList{})
+	SchemeBuilder.Register(&AwsNfsVolume{}, &AwsNfsVolumeList{})
 }

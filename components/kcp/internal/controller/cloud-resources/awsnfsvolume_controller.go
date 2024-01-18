@@ -18,7 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -26,50 +25,51 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
 )
 
-type CloudResourcesFactory struct {
-}
+type AwsNfsVolumeReconcilerFactory struct{}
 
-func (f *CloudResourcesFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
-	return &CloudResourcesReconciler{
+func (f *AwsNfsVolumeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+	return &AwsNfsVolumeReconciler{
 		kymaRef:    kymaRef,
 		kcpCluster: kcpCluster,
 		skrCluster: skrCluster,
 	}
 }
 
-// CloudResourcesReconciler reconciles a CloudResources object
-type CloudResourcesReconciler struct {
+// AwsNfsVolumeReconciler reconciles a AwsNfsVolume object
+type AwsNfsVolumeReconciler struct {
 	kymaRef    klog.ObjectRef
 	kcpCluster cluster.Cluster
 	skrCluster cluster.Cluster
 }
 
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsvolumes,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsvolumes/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsvolumes/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the CloudResources object against the actual cluster state, and then
+// the AwsNfsVolume object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
-func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+func (r *AwsNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	_ = log.FromContext(ctx)
 
-	logger.Info("Hello from CloudResourcesReconciler!")
+	// TODO(user): your logic here
 
 	return ctrl.Result{}, nil
 }
 
-func SetupCloudResourcesReconciler(reg registry.SkrRegistry) error {
+func SetupAwsNfsVolumeReconciler(reg registry.SkrRegistry) error {
 	return reg.Register().
-		WithFactory(&CloudResourcesFactory{}).
-		For(&cloudresourcesv1beta1.CloudResources{}).
+		WithFactory(&AwsNfsVolumeReconcilerFactory{}).
+		For(&cloudresourcesv1beta1.AwsNfsVolume{}).
 		Complete()
 }

@@ -14,7 +14,7 @@ func findScope(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(State)
 
 	list := &cloudresourcesv1beta1.ScopeList{}
-	err := state.K8sClient().List(
+	err := state.Cluster().K8sClient().List(
 		ctx,
 		list,
 		client.InNamespace(state.Obj().GetNamespace()),
