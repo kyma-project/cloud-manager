@@ -6,7 +6,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
+
+func NewStateClusterFromManager(mgr manager.Manager) StateCluster {
+	return NewStateCluster(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme())
+}
 
 func NewStateCluster(client client.Client,
 	eventRecorder record.EventRecorder,
@@ -74,40 +79,26 @@ type StateFactory interface {
 	NewState(name types.NamespacedName, obj client.Object) State
 }
 
-func NewStateFactory(
-	client client.Client,
-	eventRecorder record.EventRecorder,
-	scheme *runtime.Scheme,
-) StateFactory {
-	return &stateFactory{
-		client:        client,
-		eventRecorder: eventRecorder,
-		scheme:        scheme,
-	}
+func NewStateFactory(cluster StateCluster) StateFactory {
+	return &stateFactory{cluster: cluster}
 }
 
 type stateFactory struct {
-	client        client.Client
-	eventRecorder record.EventRecorder
-	scheme        *runtime.Scheme
+	cluster StateCluster
 }
 
 func (f *stateFactory) NewState(name types.NamespacedName, obj client.Object) State {
 	return &baseState{
-		cluster: &stateCluster{
-			client:        f.client,
-			eventRecorder: f.eventRecorder,
-			scheme:        f.scheme,
-		},
-		name: name,
-		obj:  obj,
+		cluster: f.cluster,
+		name:    name,
+		obj:     obj,
 	}
 }
 
 // ========================================================================
 
 type baseState struct {
-	cluster *stateCluster
+	cluster StateCluster
 	//client        client.Client
 	//eventRecorder record.EventRecorder
 	//scheme        *runtime.Scheme
@@ -141,13 +132,13 @@ func (s *baseState) Obj() client.Object {
 }
 
 func (s *baseState) LoadObj(ctx context.Context, opts ...client.GetOption) error {
-	return s.cluster.client.Get(ctx, s.name, s.obj, opts...)
+	return s.Cluster().K8sClient().Get(ctx, s.name, s.obj, opts...)
 }
 
 func (s *baseState) UpdateObj(ctx context.Context, opts ...client.UpdateOption) error {
-	return s.cluster.client.Update(ctx, s.Obj(), opts...)
+	return s.Cluster().K8sClient().Update(ctx, s.Obj(), opts...)
 }
 
 func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error {
-	return s.cluster.client.Status().Update(ctx, s.Obj(), opts...)
+	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj(), opts...)
 }
