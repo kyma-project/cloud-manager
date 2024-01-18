@@ -143,7 +143,7 @@ func main() {
 	// KCP Controllers
 	if err = (&cloudcontrolcontroller.NfsInstanceReconciler{
 		Reconciler: nfsinstance.NewNfsInstanceReconciler(
-			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
+			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
 			focal.NewStateFactory(),
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
@@ -163,7 +163,7 @@ func main() {
 	}
 	if err = (&cloudcontrolcontroller.IpRangeReconciler{
 		Reconciler: iprange.NewIPRangeReconciler(
-			composed.NewStateFactory(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme()),
+			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
 			focal.NewStateFactory(),
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),
@@ -186,7 +186,7 @@ func main() {
 	}
 
 	skrLoop := skrlooper.New(mgr, skrScheme, skrRegistry, mgr.GetLogger())
-	//skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
+	skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
 	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
 	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")
 	//skrLoop.AddKymaName("3f6f5a93-1c75-425a-b07e-4c82a0db1526")

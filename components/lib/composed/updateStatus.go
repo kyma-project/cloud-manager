@@ -16,15 +16,14 @@ type ObjWithConditions interface {
 
 func UpdateStatus(obj ObjWithConditions) *UpdateStatusBuilder {
 	return &UpdateStatusBuilder{
-		obj:              obj,
-		conditionsToKeep: map[string]struct{}{},
+		obj: obj,
 	}
 }
 
 type UpdateStatusBuilder struct {
 	obj                ObjWithConditions
-	doRemoveConditions bool
 	conditionsToKeep   map[string]struct{}
+	conditionsToRemove map[string]struct{}
 	conditionsToSet    []metav1.Condition
 	updateErrorLogMsg  string
 	failedError        error
@@ -34,15 +33,25 @@ type UpdateStatusBuilder struct {
 	onUpdateSuccess    func(ctx context.Context) (error, context.Context)
 }
 
-func (b *UpdateStatusBuilder) RemoveAllConditionsExcept(conditionTypes ...string) *UpdateStatusBuilder {
+func (b *UpdateStatusBuilder) KeepConditions(conditionTypes ...string) *UpdateStatusBuilder {
+	if b.conditionsToKeep == nil {
+		b.conditionsToKeep = map[string]struct{}{}
+	}
+	b.conditionsToRemove = nil
 	for _, c := range conditionTypes {
 		b.conditionsToKeep[c] = struct{}{}
 	}
 	return b
 }
 
-func (b *UpdateStatusBuilder) KeepAllConditions() *UpdateStatusBuilder {
-	b.doRemoveConditions = false
+func (b *UpdateStatusBuilder) RemoveConditions(conditionTypes ...string) *UpdateStatusBuilder {
+	if b.conditionsToRemove == nil {
+		b.conditionsToRemove = map[string]struct{}{}
+	}
+	b.conditionsToKeep = nil
+	for _, c := range conditionTypes {
+		b.conditionsToRemove[c] = struct{}{}
+	}
 	return b
 }
 
@@ -84,15 +93,20 @@ func (b *UpdateStatusBuilder) SuccessError(err error) *UpdateStatusBuilder {
 func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, context.Context) {
 	b.setDefaults()
 
-	if b.doRemoveConditions {
-		var conditionsToRemove []string
-		for _, c := range *b.obj.Conditions() {
-			_, keep := b.conditionsToKeep[c.Type]
-			if !keep {
-				conditionsToRemove = append(conditionsToRemove, c.Type)
+	if b.conditionsToRemove == nil {
+		if b.conditionsToKeep != nil {
+			b.conditionsToRemove = map[string]struct{}{}
+			for _, c := range *b.obj.Conditions() {
+				_, keep := b.conditionsToKeep[c.Type]
+				if !keep {
+					b.conditionsToRemove[c.Type] = struct{}{}
+				}
 			}
 		}
-		for _, c := range conditionsToRemove {
+	}
+
+	if b.conditionsToRemove != nil {
+		for c := range b.conditionsToRemove {
 			_ = meta.RemoveStatusCondition(b.obj.Conditions(), c)
 		}
 	}
@@ -112,8 +126,6 @@ func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, cont
 
 func (b *UpdateStatusBuilder) setDefaults() {
 	b.updateErrorLogMsg = fmt.Sprintf("Error updating status for %T", b.obj)
-
-	b.doRemoveConditions = true
 
 	if b.updateErrorWrapper == nil {
 		b.updateErrorWrapper = func(err error) error {

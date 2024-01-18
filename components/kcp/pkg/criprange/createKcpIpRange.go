@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -51,5 +52,13 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 		WithValues("kcpIpRangeName", state.KcpIpRange.Name).
 		Info("KCP IpRange created")
 
-	return nil, nil
+	return composed.UpdateStatus(state.ObjAsIpRange()).
+		SetCondition(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
+			Message: "Resource is submitted for provisioning",
+		}).
+		ErrorLogMessage("Error updating IpRange status with submitted condition").
+		Run(ctx, state)
 }
