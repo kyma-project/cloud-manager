@@ -14,14 +14,19 @@ jobs:
           go-version: '1.21'
       - name: Display Go version
         run: go version
-      - name: Add missing and remove unused modules
+      - name: Build and test KCP
         working-directory: components/kcp
-        run: go mod tidy
-      - name: Download modules to local cache
-        working-directory: components/kcp
-        run: go mod download
-      - name: Build application
-        working-directory: components/kcp
-        run: make build
+        run: |
+          go mod tidy
+          go mod download
+          make build
+          make test
+      - name: Build and test LIB
+        working-directory: components/lib
+        run: |
+          go mod tidy
+          go mod download
+          go build
+          go test
       - name: Check modified files
         run: git diff --exit-code
