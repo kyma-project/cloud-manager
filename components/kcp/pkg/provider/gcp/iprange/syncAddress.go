@@ -39,5 +39,5 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 		}
 	}
 
-	return nil, nil
+	return composed.StopWithRequeue, nil
 }
