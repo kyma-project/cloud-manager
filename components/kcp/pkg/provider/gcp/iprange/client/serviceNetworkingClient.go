@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"net/http"
 
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"google.golang.org/api/option"
@@ -17,8 +19,8 @@ type ServiceNetworkingClient interface {
 
 func NewServiceNetworkingClient() gcpclient.ClientProvider[ServiceNetworkingClient] {
 	return gcpclient.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (ServiceNetworkingClient, error) {
-			client, err := servicenetworking.NewService(ctx, option.WithCredentialsFile(saJsonKeyPath))
+		func(ctx context.Context, httpClient *http.Client) (ServiceNetworkingClient, error) {
+			client, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
 				return nil, err
 			}
@@ -36,33 +38,44 @@ type serviceNetworkingClient struct {
 }
 
 func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	network := gcpclient.GetVPCPath(projectId, vpcId)
-	return c.svcNet.Services.Connections.Patch(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
+	operation, err := c.svcNet.Services.Connections.Patch(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Force(true).Do()
+	logger.V(4).Info("PatchServiceConnection", "operation", operation, "err", err)
+	return operation, err
 }
 
 func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	network := gcpclient.GetVPCPath(projectId, vpcId)
-	return c.svcNet.Services.Connections.DeleteConnection(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
+	operation, err := c.svcNet.Services.Connections.DeleteConnection(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
 		ConsumerNetwork: network,
 	}).Do()
+	logger.V(4).Info("DeleteServiceConnection", "operation", operation, "err", err)
+	return operation, err
 }
 
 func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	network := gcpclient.GetVPCPath(projectId, vpcId)
 	out, err := c.svcNet.Services.Connections.List(gcpclient.ServiceNetworkingServicePath).Network(network).Do()
 	if err != nil {
+		logger.Error(err, "ListServiceConnections", "projectId", projectId, "vpcId", vpcId)
 		return nil, err
 	}
 	return out.Connections, nil
 }
 
 func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	network := gcpclient.GetVPCPath(projectId, vpcId)
-	return c.svcNet.Services.Connections.Create(gcpclient.ServiceNetworkingServicePath, &servicenetworking.Connection{
+	operation, err := c.svcNet.Services.Connections.Create(gcpclient.ServiceNetworkingServicePath, &servicenetworking.Connection{
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Do()
+	logger.V(4).Info("CreateServiceConnection", "operation", operation, "err", err)
+	return operation, err
 }
