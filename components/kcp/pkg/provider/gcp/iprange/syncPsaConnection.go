@@ -40,5 +40,5 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 		}
 	}
 
-	return nil, nil
+	return composed.StopWithRequeue, nil
 }

@@ -40,7 +40,7 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 	return c.svcNet.Services.Connections.Patch(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
-	}).Do()
+	}).Force(true).Do()
 }
 
 func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
