@@ -2,12 +2,25 @@ package nfsinstance
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func New(stateFactory StateFactory) composed.Action {
-	return func(ctx context.Context, state composed.State) (error, context.Context) {
-		panic(errors.New("not implemented"))
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+
+		logger := composed.LoggerFromCtx(ctx)
+		state, err := stateFactory.NewState(ctx, st.(types.State))
+		if err != nil {
+			err = fmt.Errorf("error creating new gcp nfsInstance state: %w", err)
+			logger.Error(err, "Error")
+			return composed.StopAndForget, nil
+		}
+		return composed.ComposeActions(
+			"gcsNfsInstance",
+			focal.AddFinalizer,
+		)(ctx, state)
 	}
 }
