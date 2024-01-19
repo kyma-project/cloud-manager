@@ -79,3 +79,13 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 	logger.V(4).Info("CreateServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
+
+func (c *serviceNetworkingClient) GetOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	operation, err := c.svcNet.Operations.Get(operationName).Do()
+	if err != nil {
+		logger.Error(err, "GetOperation", "operationName", operationName)
+		return nil, err
+	}
+	return operation, nil
+}

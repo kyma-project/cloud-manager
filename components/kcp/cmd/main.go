@@ -39,6 +39,7 @@ import (
 	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
+	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -148,7 +149,7 @@ func main() {
 			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
 			azurenfsinstance.NewStateFactory(),
-			gcpnfsinstance.NewStateFactory(),
+			gcpnfsinstance.NewStateFactory(gcpFilestoreClient.NewFilestoreClient(), abstractions.NewOSEnvironment()),
 		),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")

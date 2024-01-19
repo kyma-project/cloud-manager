@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"net/http"
 
@@ -16,6 +15,7 @@ type ComputeClient interface {
 	CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (*compute.Operation, error)
 	DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error)
 	GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error)
+	GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error)
 }
 
 func NewComputeClient() gcpclient.ClientProvider[ComputeClient] {
@@ -71,10 +71,20 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 
 func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc string) (*compute.AddressList, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	filter := fmt.Sprintf(gcpclient.NetworkFilter, projectId, vpc)
+	filter := gcpclient.GetNetworkFilter(projectId, vpc)
 	out, err := c.svcCompute.GlobalAddresses.List(projectId).Filter(filter).Do()
 	if err != nil {
 		logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	out, err := c.svcCompute.GlobalOperations.Get(projectId, operationName).Do()
+	if err != nil {
+		logger.Error(err, "GetGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
 	}
 	return out, nil
