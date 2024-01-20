@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	types2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
@@ -45,6 +46,9 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 
 		return composed.StopAndForget, nil
 	}
+
+	//Store IPRange into the state object.
+	state.SetIpRange(ipRange)
 
 	return nil, nil
 }

@@ -23,12 +23,12 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 
 	state.operation = focal.NONE
 	if deleting {
-		//If the address exists, delete it.
-		if state.fsInstance != nil {
+		if state.fsInstance == nil {
+			state.curState = client.Deleted
+		} else if state.fsInstance.State != string(client.DELETING) {
+			//If the filestore exists and not DELETING, delete it.
 			state.operation = focal.DELETE
 			state.curState = client.SyncFilestore
-		} else {
-			state.curState = client.Deleted
 		}
 	} else {
 		if state.fsInstance == nil {
@@ -36,10 +36,10 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			state.operation = focal.ADD
 			state.curState = client.SyncFilestore
 		} else if !state.doesFilestoreMatch() {
-			//If the address exists, but does not match, update it.
+			//If the filestore exists, but does not match, update it.
 			state.operation = focal.MODIFY
 			state.curState = client.SyncFilestore
-		} else {
+		} else if state.fsInstance.State == string(client.READY) {
 			state.curState = v1beta1.ReadyState
 		}
 	}
@@ -48,13 +48,14 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	state.ObjAsNfsInstance().Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
+		state.ObjAsNfsInstance().Status.Hosts = state.fsInstance.Networks[0].IpAddresses
 		meta.RemoveStatusCondition(state.ObjAsNfsInstance().Conditions(), v1beta1.ConditionTypeError)
 		state.AddReadyCondition(ctx, "Filestore Instance provisioned in GCP.")
 	}
 
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating IpRange success status", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error updating NfsInstance success status", composed.StopWithRequeue, nil)
 	}
 
 	if state.curState == v1beta1.ReadyState {

@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"net/http"
+
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"google.golang.org/api/file/v1"
@@ -49,7 +50,7 @@ func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, projectId, l
 
 func (c *filestoreClient) CreateFilestoreInstance(ctx context.Context, projectId, location, instanceId string, instance *file.Instance) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	operation, err := c.svcFilestore.Projects.Locations.Instances.Create(gcpclient.GetFilestoreInstancePath(projectId, location, instanceId), instance).Do()
+	operation, err := c.svcFilestore.Projects.Locations.Instances.Create(gcpclient.GetFilestoreParentPath(projectId, location), instance).InstanceId(instanceId).Do()
 	if err != nil {
 		logger.Error(err, "CreateFilestoreInstance", "projectId", projectId, "location", location, "instanceId", instanceId)
 		return nil, err

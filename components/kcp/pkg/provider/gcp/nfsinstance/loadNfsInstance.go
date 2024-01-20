@@ -16,13 +16,13 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Loading GCP Filestore Instance")
 
-	//Get from GCP.
+	//Get GCP details.
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
-	region := state.Scope().Spec.Region
+	location := state.getGcpLocation()
 	name := nfsInstance.Spec.RemoteRef.Name
 
-	inst, err := state.filestoreClient.GetFilestoreInstance(ctx, project, region, name)
+	inst, err := state.filestoreClient.GetFilestoreInstance(ctx, project, location, name)
 	if err != nil {
 
 		var e *googleapi.Error

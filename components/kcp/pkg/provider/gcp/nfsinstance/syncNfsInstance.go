@@ -16,14 +16,15 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Saving GCP Filestore")
 
+	//Get GCP details.
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
-	region := state.Scope().Spec.Region
+	location := state.getGcpLocation()
 	name := nfsInstance.Spec.RemoteRef.Name
 
 	switch state.operation {
 	case focal.ADD:
-		_, err := state.filestoreClient.CreateFilestoreInstance(ctx, project, region, name, state.toInstance())
+		_, err := state.filestoreClient.CreateFilestoreInstance(ctx, project, location, name, state.toInstance())
 		if err != nil {
 			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
 			return composed.LogErrorAndReturn(err, "Error creating Filestore object in GCP", composed.StopWithRequeue, nil)
@@ -33,12 +34,12 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 		state.AddErrorCondition(ctx, v1beta1.ReasonNotSupported, err)
 		return composed.LogErrorAndReturn(err, "Filestore update not supported.", composed.StopAndForget, nil)
 	case focal.DELETE:
-		_, err := state.filestoreClient.DeleteFilestoreInstance(ctx, project, region, name)
+		_, err := state.filestoreClient.DeleteFilestoreInstance(ctx, project, location, name)
 		if err != nil {
 			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
 			return composed.LogErrorAndReturn(err, "Error deleting Filestore object in GCP", composed.StopWithRequeue, nil)
 		}
 	}
 
-	return composed.StopWithRequeue, nil
+	return nil, nil
 }

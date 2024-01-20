@@ -56,6 +56,38 @@ spec:
                   azure:
                     type: object
                   gcp:
+                    properties:
+                      capacityGb:
+                        default: 1024
+                        type: integer
+                      connectMode:
+                        default: PRIVATE_SERVICE_ACCESS
+                        enum:
+                        - DIRECT_PEERING
+                        - PRIVATE_SERVICE_ACCESS
+                        type: string
+                      fileShareName:
+                        default: vol1
+                        pattern: ^[a-z][a-z0-9_]*[a-z0-9]$
+                        type: string
+                      location:
+                        type: string
+                      tier:
+                        default: BASIC_HDD
+                        enum:
+                        - BASIC_HDD
+                        - BASIC_SSD
+                        - HIGH_SCALE_SSD
+                        - ENTERPRISE
+                        - ZONAL
+                        - REGIONAL
+                        type: string
+                    required:
+                    - capacityGb
+                    - connectMode
+                    - fileShareName
+                    - location
+                    - tier
                     type: object
                 type: object
               ipRange:
@@ -161,6 +193,12 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              hosts:
+                description: List of NFS Hosts (DNS Names or IP Addresses) that clients
+                  can use to connect
+                items:
+                  type: string
+                type: array
               id:
                 type: string
               state:

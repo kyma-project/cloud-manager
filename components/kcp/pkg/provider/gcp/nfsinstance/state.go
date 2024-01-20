@@ -60,34 +60,43 @@ func newState(nfsInstanceState types.State, fc client.FilestoreClient) *State {
 
 func (s State) doesFilestoreMatch() bool {
 	nfsInstance := s.ObjAsNfsInstance()
-	name := nfsInstance.Spec.RemoteRef.Name
-	return s.fsInstance != nil && s.fsInstance.Name == name
+	return s.fsInstance != nil &&
+		s.fsInstance.FileShares[0].CapacityGb == int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
+}
+
+func (s State) getGcpLocation() string {
+	nfsInstance := s.ObjAsNfsInstance()
+	gcpOptions := nfsInstance.Spec.Instance.Gcp
+	location := gcpOptions.Location
+	if location == "" {
+		location = s.Scope().Spec.Region
+	}
+	return location
 }
 
 func (s State) toInstance() *file.Instance {
 	nfsInstance := s.ObjAsNfsInstance()
+	gcpOptions := nfsInstance.Spec.Instance.Gcp
 
-	//GCP Scope Details
+	//Collect GCP Details
 	gcpScope := s.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 
 	return &file.Instance{
-		Name:        nfsInstance.Spec.RemoteRef.Name,
 		Description: nfsInstance.Name,
-		Tier:        "BASIC_HDD",
+		Tier:        string(gcpOptions.Tier),
 
 		FileShares: []*file.FileShareConfig{
 			{
-				Name:       "vol",
-				CapacityGb: 1024,
+				Name:       gcpOptions.FileShareName,
+				CapacityGb: int64(gcpOptions.CapacityGb),
 			},
 		},
 		Networks: []*file.NetworkConfig{
 			{
-				Network:         gcpclient.GetVPCPath(project, vpc),
-				ReservedIpRange: s.IpRange().Spec.Cidr,
-				ConnectMode:     "PRIVATE_SERVICE_ACCESS",
+				Network:     gcpclient.GetVPCPath(project, vpc),
+				ConnectMode: string(gcpOptions.ConnectMode),
 			},
 		},
 	}
