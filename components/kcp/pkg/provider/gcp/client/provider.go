@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 	"net/http"
@@ -46,4 +47,27 @@ func GetCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client
 		return newCachedGcpClient(ctx, saJsonKeyPath)
 	}
 	return gcpClient, nil
+}
+
+var projectNumbers map[string]int64 = make(map[string]int64)
+var projectNumbersMutex sync.Mutex
+
+// GetCachedProjectNumber get project number from cloud resources manager for a given project id
+func GetCachedProjectNumber(ctx context.Context, projectId string, httpClient *http.Client) (int64, error) {
+	projectNumbersMutex.Lock()
+	defer projectNumbersMutex.Unlock()
+	projectNumber, ok := projectNumbers[projectId]
+	if !ok {
+		crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
+		if err != nil {
+			return 0, err
+		}
+		project, err := crmService.Projects.Get(projectId).Do()
+		if err != nil {
+			return 0, err
+		}
+		projectNumbers[projectId] = project.ProjectNumber
+		projectNumber = project.ProjectNumber
+	}
+	return projectNumber, nil
 }
