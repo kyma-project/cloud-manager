@@ -3,15 +3,15 @@ package composed
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/wojas/genericr"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
-	"time"
 )
 
 type composedActionSuite struct {
@@ -147,7 +147,7 @@ func (me *composedActionSuite) TestLogsAllRunActions() {
 
 	assert.Len(me.T(), allLogs, 4)
 
-	actionName := "github.com/kyma-project/cloud-manager/components/skr/pkg/common/composedAction.(*composedActionSuite).TestLogsAllRunActions.func"
+	actionName := "github.com/kyma-project/cloud-manager/components/lib/composed.(*composedActionSuite).TestLogsAllRunActions.buildTestAction.func"
 
 	assert.Equal(me.T(), "Running action", allLogs[0].Message)
 	assert.Equal(me.T(), myName, allLogs[0].FieldsMap()["action"])
@@ -164,7 +164,7 @@ func (me *composedActionSuite) TestLogsAllRunActions() {
 	assert.Equal(me.T(), "Reconciliation finished", allLogs[3].Message)
 	assert.Equal(me.T(), myName, allLogs[3].FieldsMap()["action"])
 	assert.Equal(me.T(), actionName+"4", allLogs[3].FieldsMap()["lastAction"])
-	assert.Equal(me.T(), reconcile.Result{}, allLogs[3].FieldsMap()["result"])
+	assert.Equal(me.T(), nil, allLogs[3].FieldsMap()["result"])
 	assert.Equal(me.T(), nil, allLogs[3].FieldsMap()["err"])
 }
 
