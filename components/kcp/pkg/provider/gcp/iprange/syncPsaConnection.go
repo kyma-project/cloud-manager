@@ -33,7 +33,7 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 			return composed.LogErrorAndReturn(err, "Error patching Service Connections in GCP", composed.StopWithRequeue, nil)
 		}
 	case focal.DELETE:
-		_, err := state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
+		_, err := state.serviceNetworkingClient.DeleteServiceConnection(ctx, state.projectNumber, vpc)
 		if err != nil {
 			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
 			return composed.LogErrorAndReturn(err, "Error deleting Service Connections in GCP", composed.StopWithRequeue, nil)

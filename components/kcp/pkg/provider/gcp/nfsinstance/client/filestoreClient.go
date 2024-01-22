@@ -15,6 +15,7 @@ type FilestoreClient interface {
 	CreateFilestoreInstance(ctx context.Context, projectId, location, instanceId string, instance *file.Instance) (*file.Operation, error)
 	DeleteFilestoreInstance(ctx context.Context, projectId, location, instanceId string) (*file.Operation, error)
 	GetOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
+	PatchFilestoreInstance(ctx context.Context, projectId, location, instanceId, updateMask string, instance *file.Instance) (*file.Operation, error)
 }
 
 func NewFilestoreClient() gcpclient.ClientProvider[FilestoreClient] {
@@ -71,6 +72,18 @@ func (c *filestoreClient) GetOperation(ctx context.Context, projectId, operation
 	operation, err := c.svcFilestore.Projects.Locations.Operations.Get(operationName).Do()
 	if err != nil {
 		logger.Error(err, "GetOperation", "projectId", projectId, "operationName", operationName)
+		return nil, err
+	}
+	return operation, nil
+}
+
+// PatchFilestoreInstance updates the Filestore instance.
+// UpdateMask is a comma-separated list of fully qualified names of fields that should be updated in this request.
+func (c *filestoreClient) PatchFilestoreInstance(ctx context.Context, projectId, location, instanceId, updateMask string, instance *file.Instance) (*file.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	operation, err := c.svcFilestore.Projects.Locations.Instances.Patch(gcpclient.GetFilestoreInstancePath(projectId, location, instanceId), instance).UpdateMask(updateMask).Do()
+	if err != nil {
+		logger.Error(err, "PatchFilestoreInstance", "projectId", projectId, "location", location, "instanceId", instanceId)
 		return nil, err
 	}
 	return operation, nil

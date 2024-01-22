@@ -17,10 +17,11 @@ import (
 type State struct {
 	types.State
 
-	inSync    bool
-	ipAddress string
-	prefix    int
-	ipRanges  []string
+	inSync        bool
+	ipAddress     string
+	prefix        int
+	ipRanges      []string
+	projectNumber int64
 
 	addressOp    focal.OperationType
 	connectionOp focal.OperationType
@@ -70,15 +71,20 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (
 	if err != nil {
 		return nil, err
 	}
-
-	return newState(ipRangeState, snc, cc), nil
+	projectId := ipRangeState.Scope().Spec.Scope.Gcp.Project
+	projectNumber, err := gcpclient.GetCachedProjectNumber(ctx, projectId, httpClient)
+	if err != nil {
+		return nil, err
+	}
+	return newState(ipRangeState, snc, cc, projectNumber), nil
 }
 
-func newState(ipRangeState types.State, snc client.ServiceNetworkingClient, cc client.ComputeClient) *State {
+func newState(ipRangeState types.State, snc client.ServiceNetworkingClient, cc client.ComputeClient, projectNumber int64) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,
 		computeClient:           cc,
+		projectNumber:           projectNumber,
 	}
 }
 

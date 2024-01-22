@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"net/http"
+	"strconv"
 
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"google.golang.org/api/option"
@@ -13,7 +14,9 @@ import (
 type ServiceNetworkingClient interface {
 	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
 	CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error)
+	// DeleteServiceConnection: Deletes a private service access connection.
+	// projectNumber: Project number which is different from project id. Get it by calling client.GetProjectNumber(ctx, projectId)
+	DeleteServiceConnection(ctx context.Context, projectNumber int64, vpcId string) (*servicenetworking.Operation, error)
 	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
 }
 
@@ -48,9 +51,9 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, ProjectNumber int64, vpcId string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	network := gcpclient.GetVPCPath(projectId, vpcId)
+	network := gcpclient.GetVPCPath(strconv.FormatInt(ProjectNumber, 10), vpcId)
 	operation, err := c.svcNet.Services.Connections.DeleteConnection(gcpclient.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
 		ConsumerNetwork: network,
 	}).Do()
