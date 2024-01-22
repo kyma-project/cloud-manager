@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	skrlooper "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/looper"
-	skrregistry "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
-
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
@@ -40,6 +37,7 @@ import (
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
+	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -125,7 +123,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	skrRegistry := skrregistry.New(skrScheme)
+	skrRegistry := skrruntime.NewRegistry(skrScheme)
 
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
@@ -186,7 +184,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	skrLoop := skrlooper.New(mgr, skrScheme, skrRegistry, mgr.GetLogger())
+	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
 	skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
 	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
 	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")

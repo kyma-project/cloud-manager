@@ -19,7 +19,7 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/registry"
+	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -67,7 +67,7 @@ func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return ctrl.Result{}, nil
 }
 
-func SetupCloudResourcesReconciler(reg registry.SkrRegistry) error {
+func SetupCloudResourcesReconciler(reg skrruntime.SkrRegistry) error {
 	return reg.Register().
 		WithFactory(&CloudResourcesFactory{}).
 		For(&cloudresourcesv1beta1.CloudResources{}).
