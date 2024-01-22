@@ -12,6 +12,7 @@ const ServiceNetworkingServiceConnectionName = "services/servicenetworking.googl
 const networkFilter = "network=\"https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s\""
 const PsaPeeringName = "servicenetworking-googleapis-com"
 const filestoreInstancePattern = "projects/%s/locations/%s/instances/%s"
+const filestoreParentPattern = "projects/%s/locations/%s"
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)
@@ -23,6 +24,10 @@ func GetNetworkFilter(projectId, vpcId string) string {
 
 func GetFilestoreInstancePath(projectId, location, instanceId string) string {
 	return fmt.Sprintf(filestoreInstancePattern, projectId, location, instanceId)
+}
+
+func GetFilestoreParentPath(projectId, location string) string {
+	return fmt.Sprintf(filestoreParentPattern, projectId, location)
 }
 
 type networkTier string
@@ -61,9 +66,31 @@ const (
 )
 
 const (
+	//Common States
+	Deleted v1beta1.StatusState = "Deleted"
+
+	//IPRange States
 	SyncAddress         v1beta1.StatusState = "SyncAddress"
 	SyncPsaConnection   v1beta1.StatusState = "SyncPSAConnection"
 	DeletePsaConnection v1beta1.StatusState = "DeletePSAConnection"
 	DeleteAddress       v1beta1.StatusState = "DeleteAddress"
-	Deleted             v1beta1.StatusState = "Deleted"
+
+	//Filestore States
+	SyncFilestore   v1beta1.StatusState = "SyncFilestore"
+	DeleteFilestore v1beta1.StatusState = "DeleteFilestore"
+)
+
+type FilestoreState string
+
+const (
+	CREATING   FilestoreState = "CREATING"
+	READY      FilestoreState = "READY"
+	REPAIRING  FilestoreState = "REPAIRING"
+	DELETING   FilestoreState = "DELETING"
+	ERROR      FilestoreState = "ERROR"
+	RESTORING  FilestoreState = "RESTORING"
+	SUSPENDED  FilestoreState = "SUSPENDED"
+	SUSPENDING FilestoreState = "SUSPENDING"
+	RESUMING   FilestoreState = "RESUMING"
+	REVERTING  FilestoreState = "REVERTING"
 )

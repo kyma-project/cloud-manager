@@ -72,8 +72,7 @@ type NfsInstanceInfo struct {
 	Aws *NfsInstanceAws `json:"aws,omitempty"`
 }
 
-type NfsInstanceGcp struct {
-}
+type NfsInstanceGcp NfsOptionsGcp
 
 type NfsInstanceAzure struct {
 }
@@ -98,6 +97,10 @@ type NfsInstanceStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
+	// +optional
+	Hosts []string `json:"hosts,omitempty"`
 }
 
 //+kubebuilder:object:root=true
