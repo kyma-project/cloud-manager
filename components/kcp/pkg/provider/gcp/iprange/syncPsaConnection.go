@@ -5,7 +5,9 @@ import (
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"google.golang.org/api/servicenetworking/v1"
 )
 
 func syncPsaConnection(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,26 +21,25 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 
+	var operation *servicenetworking.Operation
+	var err error
+
 	switch state.connectionOp {
 	case focal.ADD:
-		_, err := state.serviceNetworkingClient.CreateServiceConnection(ctx, project, vpc, state.ipRanges)
-		if err != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-			return composed.LogErrorAndReturn(err, "Error creating Service Connections in GCP", composed.StopWithRequeue, nil)
-		}
+		operation, err = state.serviceNetworkingClient.CreateServiceConnection(ctx, project, vpc, state.ipRanges)
 	case focal.MODIFY:
-		_, err := state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
-		if err != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-			return composed.LogErrorAndReturn(err, "Error patching Service Connections in GCP", composed.StopWithRequeue, nil)
-		}
+		operation, err = state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
 	case focal.DELETE:
-		_, err := state.serviceNetworkingClient.DeleteServiceConnection(ctx, state.projectNumber, vpc)
-		if err != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-			return composed.LogErrorAndReturn(err, "Error deleting Service Connections in GCP", composed.StopWithRequeue, nil)
-		}
+		operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, state.projectNumber, vpc)
 	}
 
-	return composed.StopWithRequeue, nil
+	if err != nil {
+		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
+		return composed.LogErrorAndReturn(err, "Error syncronizing Service Connections in GCP", composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil)
+	}
+	if operation != nil {
+		ipRange.Status.OpIdentifier = operation.Name
+		state.UpdateObjStatus(ctx)
+	}
+	return composed.StopWithRequeueDelay(client.GcpOperationWaitTime), nil
 }

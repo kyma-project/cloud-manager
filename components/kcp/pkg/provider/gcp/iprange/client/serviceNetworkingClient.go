@@ -2,9 +2,10 @@ package client
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"net/http"
 	"strconv"
+
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"google.golang.org/api/option"
@@ -18,6 +19,7 @@ type ServiceNetworkingClient interface {
 	// projectNumber: Project number which is different from project id. Get it by calling client.GetProjectNumber(ctx, projectId)
 	DeleteServiceConnection(ctx context.Context, projectNumber int64, vpcId string) (*servicenetworking.Operation, error)
 	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
+	GetOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
 }
 
 func NewServiceNetworkingClient() gcpclient.ClientProvider[ServiceNetworkingClient] {

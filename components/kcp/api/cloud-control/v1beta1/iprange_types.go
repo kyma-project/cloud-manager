@@ -111,6 +111,10 @@ type IpRangeStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// Operation Identifier to track the Hyperscaler Operation
+	// +optional
+	OpIdentifier string `json:"opIdentifier,omitempty"`
 }
 
 type IpRangeSubnets []IpRangeSubnet

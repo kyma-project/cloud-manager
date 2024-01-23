@@ -16,6 +16,7 @@ type State struct {
 	types.State
 	curState        v1beta1.StatusState
 	operation       focal.OperationType
+	updateMask      []string
 	fsInstance      *file.Instance
 	filestoreClient client.FilestoreClient
 }

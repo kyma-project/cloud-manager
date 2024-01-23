@@ -201,6 +201,9 @@ spec:
                 type: array
               id:
                 type: string
+              opIdentifier:
+                description: Operation Identifier to track the Hyperscaler Operation
+                type: string
               state:
                 type: string
             type: object

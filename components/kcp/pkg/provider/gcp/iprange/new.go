@@ -25,6 +25,7 @@ func New(stateFactory StateFactory) composed.Action {
 			"gcpIpRange",
 			validateCidr,
 			focal.AddFinalizer,
+			checkGcpOperation,
 			loadAddress,
 			loadPsaConnection,
 			compareStates,

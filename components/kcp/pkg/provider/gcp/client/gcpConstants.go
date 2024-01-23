@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 )
@@ -13,6 +14,9 @@ const networkFilter = "network=\"https://www.googleapis.com/compute/v1/projects/
 const PsaPeeringName = "servicenetworking-googleapis-com"
 const filestoreInstancePattern = "projects/%s/locations/%s/instances/%s"
 const filestoreParentPattern = "projects/%s/locations/%s"
+
+const GcpRetryWaitTime = time.Second * 3
+const GcpOperationWaitTime = time.Second * 5
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)
