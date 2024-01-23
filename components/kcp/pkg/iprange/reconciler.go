@@ -5,7 +5,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
 	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
@@ -17,7 +16,6 @@ import (
 type IPRangeReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
-	scopeStateFactory    scope.StateFactory
 
 	awsStateFactory   awsiprange.StateFactory
 	azureStateFactory azureiprange.StateFactory
@@ -27,7 +25,6 @@ type IPRangeReconciler struct {
 func NewIPRangeReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	scopeStateFactory scope.StateFactory,
 	awsStateFactory awsiprange.StateFactory,
 	azureStateFactory azureiprange.StateFactory,
 	gcpStateFactory gcpiprange.StateFactory,
@@ -35,7 +32,6 @@ func NewIPRangeReconciler(
 	return &IPRangeReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
-		scopeStateFactory:    scopeStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
@@ -53,7 +49,6 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
-		scope.New(r.scopeStateFactory),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"ipRangeCommon",

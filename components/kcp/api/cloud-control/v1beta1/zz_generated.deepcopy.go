@@ -305,11 +305,7 @@ func (in *IpRangeOptions) DeepCopy() *IpRangeOptions {
 func (in *IpRangeSpec) DeepCopyInto(out *IpRangeSpec) {
 	*out = *in
 	out.RemoteRef = in.RemoteRef
-	if in.Scope != nil {
-		in, out := &in.Scope, &out.Scope
-		*out = new(ScopeRef)
-		**out = **in
-	}
+	out.Scope = in.Scope
 	in.Options.DeepCopyInto(&out.Options)
 }
 
@@ -527,11 +523,7 @@ func (in *NfsInstanceList) DeepCopyObject() runtime.Object {
 func (in *NfsInstanceSpec) DeepCopyInto(out *NfsInstanceSpec) {
 	*out = *in
 	out.RemoteRef = in.RemoteRef
-	if in.Scope != nil {
-		in, out := &in.Scope, &out.Scope
-		*out = new(ScopeRef)
-		**out = **in
-	}
+	out.Scope = in.Scope
 	in.Instance.DeepCopyInto(&out.Instance)
 }
 
@@ -837,11 +829,7 @@ func (in *VpcPeeringList) DeepCopyObject() runtime.Object {
 func (in *VpcPeeringSpec) DeepCopyInto(out *VpcPeeringSpec) {
 	*out = *in
 	out.RemoteRef = in.RemoteRef
-	if in.Scope != nil {
-		in, out := &in.Scope, &out.Scope
-		*out = new(ScopeRef)
-		**out = **in
-	}
+	out.Scope = in.Scope
 	in.VpcPeering.DeepCopyInto(&out.VpcPeering)
 }
 

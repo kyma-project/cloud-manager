@@ -2,7 +2,6 @@ package scope
 
 import (
 	"context"
-	"fmt"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	kubernetesClient "k8s.io/client-go/kubernetes"
@@ -13,7 +12,7 @@ import (
 
 func createGardenerClient(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(State)
+	state := st.(*State)
 	fn := os.Getenv("GARDENER_CREDENTIALS")
 	if len(fn) == 0 {
 		fn = "/opt/cloud-manager/gardener-credentials/kubeconfig"
@@ -21,22 +20,21 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 
 	logger = logger.WithValues("credentialsPath", fn)
 	logger.Info("Loading gardener credentials")
-	kubeBytes, err := state.FileReader().ReadFile(fn)
+	kubeBytes, err := state.fileReader.ReadFile(fn)
 	if err != nil {
-		err = fmt.Errorf("error loading gardener credentials: %w", err)
-		logger.Error(err, "error creating gardener client")
-		return composed.StopAndForget, nil // no requeue
+		return composed.LogErrorAndReturn(err, "Error loading gardener client", composed.StopAndForget, nil)
 	}
 
 	config, err := clientcmd.NewClientConfigFromBytes(kubeBytes)
 	if err != nil {
-		return fmt.Errorf("error creating gardener client config: %w", err), nil
+		return composed.LogErrorAndReturn(err, "Error creating gardener client config", composed.StopAndForget, nil)
 	}
 
 	rawConfig, err := config.RawConfig()
 	if err != nil {
-		return fmt.Errorf("error getting gardener raw client config: %w", err), nil
+		return composed.LogErrorAndReturn(err, "Error getting gardener raw client config", composed.StopAndForget, nil)
 	}
+
 	var configContext *clientcmdapi.Context
 	if len(rawConfig.CurrentContext) > 0 {
 		configContext = rawConfig.Contexts[rawConfig.CurrentContext]
@@ -47,38 +45,32 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 		}
 	}
 	if configContext != nil && len(configContext.Namespace) > 0 {
-		state.SetShootNamespace(configContext.Namespace)
+		state.shootNamespace = configContext.Namespace
 	} else {
-		state.SetShootNamespace(os.Getenv("GARDENER_NAMESPACE"))
+		state.shootNamespace = os.Getenv("GARDENER_NAMESPACE")
 	}
 
-	logger = logger.WithValues("shootProject", state.ShootNamespace())
+	logger = logger.WithValues("shootProject", state.shootNamespace)
 	logger.Info("Detected shoot namespace")
 
 	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
 	if err != nil {
-		err = fmt.Errorf("error creating gardener rest config: %w", err)
-		logger.Error(err, "error creating gardener client")
-		return composed.StopAndForget, nil // no requeue
+		return composed.LogErrorAndReturn(err, "Error creating gardener rest config", composed.StopAndForget, nil)
 	}
 
 	gClient, err := gardenerClient.NewForConfig(restConfig)
 	if err != nil {
-		err = fmt.Errorf("error creating gardener client: %w", err)
-		logger.Error(err, "error creating gardener client")
-		return composed.StopAndForget, nil // no requeue
+		return composed.LogErrorAndReturn(err, "Error creating gardener client", composed.StopAndForget, nil)
 	}
 
-	state.SetGardenerClient(gClient)
+	state.gardenerClient = gClient
 
 	k8sClient, err := kubernetesClient.NewForConfig(restConfig)
 	if err != nil {
-		err = fmt.Errorf("error creating gardene k8s client: %w", err)
-		logger.Error(err, "error creating gardene k8s client")
-		return composed.StopAndForget, nil // no requeue
+		return composed.LogErrorAndReturn(err, "Error creating garden k8s client", composed.StopAndForget, nil)
 	}
 
-	state.SetGardenK8sClient(k8sClient)
+	state.gardenK8sClient = k8sClient
 
 	logger.Info("Gardener clients created")
 

@@ -26,6 +26,10 @@ const (
 	ProviderTypeLabel = "cloud-control.kyma-project.io/provider-type"
 )
 
+const (
+	ReasonMissingKyma = "MissingKyma"
+)
+
 // ScopeSpec defines the desired state of Scope
 type ScopeSpec struct {
 	// +kubebuilder:validation:Required
@@ -105,8 +109,6 @@ type AwsZone struct {
 
 // ScopeStatus defines the observed state of Scope
 type ScopeStatus struct {
-	State StatusState `json:"state,omitempty"`
-
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map
@@ -124,6 +126,14 @@ type Scope struct {
 
 	Spec   ScopeSpec   `json:"spec,omitempty"`
 	Status ScopeStatus `json:"status,omitempty"`
+}
+
+func (in *Scope) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *Scope) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 //+kubebuilder:object:root=true

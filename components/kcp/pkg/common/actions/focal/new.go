@@ -7,6 +7,5 @@ func New() composed.Action {
 		"focal",
 		composed.LoadObj,
 		loadScopeFromRef,
-		fixInvalidScopeRef,
 	)
 }

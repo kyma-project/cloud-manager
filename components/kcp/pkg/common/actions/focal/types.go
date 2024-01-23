@@ -2,20 +2,16 @@ package focal
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type CommonObject interface {
 	client.Object
+	composed.ObjWithConditions
 
-	KymaName() string
-
-	ScopeRef() *cloudresourcesv1beta1.ScopeRef
-	SetScopeRef(scopeRef *cloudresourcesv1beta1.ScopeRef)
-
-	Conditions() *[]metav1.Condition
-	GetObjectMeta() *metav1.ObjectMeta
+	ScopeRef() cloudresourcesv1beta1.ScopeRef
+	SetScopeRef(scopeRef cloudresourcesv1beta1.ScopeRef)
 }
 
 type OperationType int

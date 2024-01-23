@@ -19,12 +19,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	kcpscope "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope"
+	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
 	"os"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
-	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope/client"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
 	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
@@ -140,11 +140,20 @@ func main() {
 	}
 
 	// KCP Controllers
+	if err = (&cloudcontrolcontroller.ScopeReconciler{
+		Reconciler: kcpscope.NewScopeReconciler(kcpscope.NewStateFactory(
+			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
+			abstractions.NewFileReader(),
+			scopeclient.NewAwsStsGardenClientProvider(),
+		)),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
 	if err = (&cloudcontrolcontroller.NfsInstanceReconciler{
 		Reconciler: nfsinstance.NewNfsInstanceReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
 			focal.NewStateFactory(),
-			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
 			azurenfsinstance.NewStateFactory(),
 			gcpnfsinstance.NewStateFactory(gcpFilestoreClient.NewFilestoreClient(), abstractions.NewOSEnvironment()),
@@ -164,7 +173,6 @@ func main() {
 		Reconciler: iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
 			focal.NewStateFactory(),
-			scope.NewStateFactory(abstractions.NewFileReader(), scopeclient.NewAwsStsGardenClientProvider()),
 			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),
 			azureiprange.NewStateFactory(nil),
 			gcpiprange.NewStateFactory(gcpiprangeclient.NewServiceNetworkingClient(), gcpiprangeclient.NewComputeClient(), abstractions.NewOSEnvironment()),
@@ -185,7 +193,7 @@ func main() {
 	}
 
 	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
-	skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
+	//skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
 	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
 	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")
 	//skrLoop.AddKymaName("3f6f5a93-1c75-425a-b07e-4c82a0db1526")

@@ -34,8 +34,6 @@ spec:
           spec:
             description: VpcPeeringSpec defines the desired state of VpcPeering
             properties:
-              kymaName:
-                type: string
               remoteRef:
                 properties:
                   name:
@@ -80,8 +78,8 @@ spec:
                     type: object
                 type: object
             required:
-            - kymaName
             - remoteRef
+            - scope
             - vpcPeering
             type: object
           status:

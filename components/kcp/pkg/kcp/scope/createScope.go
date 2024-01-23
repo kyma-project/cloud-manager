@@ -3,23 +3,23 @@ package scope
 import (
 	"context"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"strings"
 )
 
 func createScope(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(State)
-	switch state.Provider() {
-	case cloudresourcesv1beta1.ProviderGCP:
+	state := st.(*State)
+	switch state.provider {
+	case cloudcontrolv1beta1.ProviderGCP:
 		return createScopeGcp(ctx, state)
-	case cloudresourcesv1beta1.ProviderAzure:
+	case cloudcontrolv1beta1.ProviderAzure:
 		return createScopeAzure(ctx, state)
-	case cloudresourcesv1beta1.ProviderAws:
+	case cloudcontrolv1beta1.ProviderAws:
 		return createScopeAws(ctx, state)
 	}
 
-	err := fmt.Errorf("unable to handle unknown provider '%s'", state.Provider())
+	err := fmt.Errorf("unable to handle unknown provider '%s'", state.provider)
 	logger := composed.LoggerFromCtx(ctx)
 	logger.Error(err, "Error defining scope")
 	return composed.StopAndForget, nil // no requeue
