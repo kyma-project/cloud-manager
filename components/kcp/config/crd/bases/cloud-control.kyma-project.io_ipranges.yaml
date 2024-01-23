@@ -36,8 +36,6 @@ spec:
             properties:
               cidr:
                 type: string
-              kymaName:
-                type: string
               options:
                 maxProperties: 1
                 minProperties: 0
@@ -83,8 +81,8 @@ spec:
                 type: object
             required:
             - cidr
-            - kymaName
             - remoteRef
+            - scope
             type: object
           status:
             description: IpRangeStatus defines the observed state of IpRange

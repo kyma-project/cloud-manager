@@ -35,13 +35,10 @@ const (
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
-	KymaName string `json:"kymaName"`
-
-	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
 
-	// +optional
-	Scope *ScopeRef `json:"scope"`
+	// +kubebuilder:validation:Required
+	Scope ScopeRef `json:"scope"`
 
 	// +kubebuilder:validation:Required
 	Cidr string `json:"cidr"`
@@ -151,15 +148,11 @@ type IpRange struct {
 	Status IpRangeStatus `json:"status,omitempty"`
 }
 
-func (in *IpRange) KymaName() string {
-	return in.Spec.KymaName
-}
-
-func (in *IpRange) ScopeRef() *ScopeRef {
+func (in *IpRange) ScopeRef() ScopeRef {
 	return in.Spec.Scope
 }
 
-func (in *IpRange) SetScopeRef(scopeRef *ScopeRef) {
+func (in *IpRange) SetScopeRef(scopeRef ScopeRef) {
 	in.Spec.Scope = scopeRef
 }
 

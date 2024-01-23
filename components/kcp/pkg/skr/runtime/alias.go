@@ -10,3 +10,5 @@ var NewLooper = looper.New
 var NewRegistry = registry.New
 
 type SkrRegistry = registry.SkrRegistry
+
+type ActiveSkrCollection = looper.ActiveSkrCollection

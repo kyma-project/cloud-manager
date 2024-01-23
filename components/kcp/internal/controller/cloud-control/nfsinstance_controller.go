@@ -20,9 +20,7 @@ import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 )
 
 // NfsInstanceReconciler reconciles a NfsInstance object
@@ -49,15 +47,7 @@ func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NfsInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	kymaUnstructured := util.NewKymaUnstructured()
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudresourcesv1beta1.NfsInstance{}).
-		// Kyma CR should be watched on one place only so it gets into the cache
-		// we're using empty handler since we're not interested into starting
-		// reconciliation when Kyma CR changes, we just want them cached
-		Watches(
-			kymaUnstructured,
-			handler.Funcs{},
-		).
 		Complete(r)
 }

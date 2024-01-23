@@ -1,12 +1,13 @@
 package v1beta1
 
 const (
-	ConditionTypeError = "error"
-	ConditionTypeReady = "ready"
+	ConditionTypeError = "Error"
+	ConditionTypeReady = "Ready"
 
-	ReasonInvalidKymaName = "InvalidKymaName"
-	ReasonUnknown         = "Unknown"
-	ReasonReady           = "Ready"
-	ReasonGcpError        = "GCPError"
-	ReasonNotSupported    = "NotSupported"
+	ReasonScopeNotFound = "ScopeNoFound"
+
+	ReasonUnknown      = "Unknown"
+	ReasonReady        = "Ready"
+	ReasonGcpError     = "GCPError"
+	ReasonNotSupported = "NotSupported"
 )

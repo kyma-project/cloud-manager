@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func createScopeGcp(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(State)
+	state := st.(*State)
 
-	js, ok := state.CredentialData()["serviceaccount.json"]
+	js, ok := state.credentialData["serviceaccount.json"]
 	if !ok {
 		err := errors.New("gardener credential for gcp missing serviceaccount.json key")
 		logger.Error(err, "error defining GCP scope")
@@ -36,18 +36,18 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	// just create the scope with GCP specifics, the ensureScopeCommonFields will set common values
-	scope := &cloudresourcesv1beta1.Scope{
-		Spec: cloudresourcesv1beta1.ScopeSpec{
-			Scope: cloudresourcesv1beta1.ScopeInfo{
-				Gcp: &cloudresourcesv1beta1.GcpScope{
+	scope := &cloudcontrolv1beta1.Scope{
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			Scope: cloudcontrolv1beta1.ScopeInfo{
+				Gcp: &cloudcontrolv1beta1.GcpScope{
 					Project:    project,
-					VpcNetwork: commonVpcName(state.ShootNamespace(), state.ShootName()),
+					VpcNetwork: commonVpcName(state.shootNamespace, state.shootName),
 				},
 			},
 		},
 	}
 
-	state.SetScope(scope)
+	state.SetObj(scope)
 
 	return nil, nil
 }

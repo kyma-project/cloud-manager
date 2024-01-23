@@ -59,6 +59,32 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - scope
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - scope/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - scope/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
   - vpcpeerings
   verbs:
   - create
@@ -160,3 +186,17 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - operator.kyma-project.io
+  resources:
+  - kymas
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - operator.kyma-project.io
+  resources:
+  - kymas/status
+  verbs:
+  - get

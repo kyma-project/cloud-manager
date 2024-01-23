@@ -14,10 +14,14 @@ import (
 	"time"
 )
 
-type SkrLooper interface {
-	manager.Runnable
+type ActiveSkrCollection interface {
 	AddKymaName(kymaName string)
 	RemoveKymaName(kymaName string)
+}
+
+type SkrLooper interface {
+	manager.Runnable
+	ActiveSkrCollection
 }
 
 func New(kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
@@ -57,6 +61,9 @@ type skrLooper struct {
 
 func (l *skrLooper) AddKymaName(kymaName string) {
 	l.mu.Lock()
+	if pie.Contains(l.kymaNames, kymaName) {
+		return
+	}
 	l.kymaNames = append(l.kymaNames, kymaName)
 	l.mu.Unlock()
 }
@@ -82,8 +89,10 @@ func (l *skrLooper) Start(ctx context.Context) error {
 	l.ch = make(chan string, l.concurrency)
 	l.started = true
 	for x := 0; x < l.concurrency; x++ {
+		l.wg.Add(1)
 		go l.worker()
 	}
+	l.wg.Add(1)
 	go l.emitActiveKymaNames()
 
 	<-ctx.Done()
@@ -108,7 +117,6 @@ func (l *skrLooper) getKymaNames() []string {
 }
 
 func (l *skrLooper) emitActiveKymaNames() {
-	l.wg.Add(1)
 	defer l.wg.Done()
 	for !l.stopped {
 		kymaNames := l.getKymaNames()
@@ -127,7 +135,6 @@ func (l *skrLooper) emitActiveKymaNames() {
 }
 
 func (l *skrLooper) worker() {
-	l.wg.Add(1)
 	defer l.wg.Done()
 	for !l.stopped {
 		kymaName := <-l.ch

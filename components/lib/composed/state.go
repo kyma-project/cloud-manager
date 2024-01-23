@@ -69,6 +69,7 @@ type State interface {
 
 	Name() types.NamespacedName
 	Obj() client.Object
+	SetObj(client.Object)
 
 	LoadObj(ctx context.Context, opts ...client.GetOption) error
 	UpdateObj(ctx context.Context, opts ...client.UpdateOption) error
@@ -129,6 +130,10 @@ func (s *baseState) Name() types.NamespacedName {
 
 func (s *baseState) Obj() client.Object {
 	return s.obj
+}
+
+func (s *baseState) SetObj(obj client.Object) {
+	s.obj = obj
 }
 
 func (s *baseState) LoadObj(ctx context.Context, opts ...client.GetOption) error {

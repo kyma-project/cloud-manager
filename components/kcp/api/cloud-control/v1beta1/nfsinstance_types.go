@@ -44,16 +44,13 @@ const (
 // NfsInstanceSpec defines the desired state of NfsInstance
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
-	KymaName string `json:"kymaName"`
-
-	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +kubebuilder:validation:Required
 	IpRange string `json:"ipRange"`
 
-	// +optional
-	Scope *ScopeRef `json:"scope"`
+	// +kubebuilder:validation:Required
+	Scope ScopeRef `json:"scope"`
 
 	// +kubebuilder:validation:Required
 	Instance NfsInstanceInfo `json:"instance"`
@@ -115,15 +112,11 @@ type NfsInstance struct {
 	Status NfsInstanceStatus `json:"status,omitempty"`
 }
 
-func (in *NfsInstance) KymaName() string {
-	return in.Spec.KymaName
-}
-
-func (in *NfsInstance) ScopeRef() *ScopeRef {
+func (in *NfsInstance) ScopeRef() ScopeRef {
 	return in.Spec.Scope
 }
 
-func (in *NfsInstance) SetScopeRef(scopeRef *ScopeRef) {
+func (in *NfsInstance) SetScopeRef(scopeRef ScopeRef) {
 	in.Spec.Scope = scopeRef
 }
 

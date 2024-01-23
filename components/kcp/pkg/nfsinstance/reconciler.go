@@ -5,7 +5,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/scope"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
@@ -17,7 +16,6 @@ import (
 type NfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
-	scopeStateFactory    scope.StateFactory
 
 	awsStateFactory   awsnfsinstance.StateFactory
 	azureStateFactory azurenfsinstance.StateFactory
@@ -27,7 +25,6 @@ type NfsInstanceReconciler struct {
 func NewNfsInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	scopeStateFactory scope.StateFactory,
 	awsStateFactory awsnfsinstance.StateFactory,
 	azureStateFactory azurenfsinstance.StateFactory,
 	gcpStateFactory gcpnfsinstance.StateFactory,
@@ -35,7 +32,6 @@ func NewNfsInstanceReconciler(
 	return &NfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
-		scopeStateFactory:    scopeStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
@@ -53,7 +49,6 @@ func (r *NfsInstanceReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
-		scope.New(r.scopeStateFactory),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"nfsInstanceCommon",
