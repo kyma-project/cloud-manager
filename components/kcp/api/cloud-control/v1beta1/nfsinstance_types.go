@@ -101,6 +101,10 @@ type NfsInstanceStatus struct {
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
+
+	// Operation Identifier to track the Hyperscaler Operation
+	// +optional
+	OpIdentifier string `json:"opIdentifier,omitempty"`
 }
 
 //+kubebuilder:object:root=true

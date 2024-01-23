@@ -24,6 +24,7 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcsNfsInstance",
 			focal.AddFinalizer,
+			checkGcpOperation,
 			loadNfsInstance,
 			checkNUpdateState,
 			syncNfsInstance,
