@@ -5,7 +5,7 @@ import (
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
+	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
 	awsClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
@@ -22,7 +22,7 @@ type StateFactory interface {
 func NewStateFactory(
 	baseStateFactory composed.StateFactory,
 	fileReader abstractions.FileReader,
-	awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient],
+	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
 ) StateFactory {
 	return &stateFactory{
 		baseStateFactory:     baseStateFactory,
@@ -34,7 +34,7 @@ func NewStateFactory(
 type stateFactory struct {
 	baseStateFactory     composed.StateFactory
 	fileReader           abstractions.FileReader
-	awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]
+	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -49,7 +49,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 // =====================================================================
 
-func newState(baseState composed.State, fileReader abstractions.FileReader, awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]) *State {
+func newState(baseState composed.State, fileReader abstractions.FileReader, awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]) *State {
 	return &State{
 		State:                baseState,
 		fileReader:           fileReader,
@@ -77,7 +77,7 @@ type State struct {
 	shoot          *gardenerTypes.Shoot
 	credentialData map[string]string
 
-	awsStsClientProvider awsClient.GardenClientProvider[client.AwsStsClient]
+	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 }
 
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {

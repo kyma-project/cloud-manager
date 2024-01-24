@@ -17,6 +17,7 @@ require (
 	github.com/kyma-project/cloud-manager/components/lib v0.0.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/api v0.156.0
 	k8s.io/api v0.29.0
 	k8s.io/apimachinery v0.29.0
@@ -73,6 +74,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.16.0 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect

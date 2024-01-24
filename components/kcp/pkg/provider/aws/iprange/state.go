@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
+	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
 )
 
 // State is state of the IpRange reconciliation for AWS
@@ -16,7 +16,7 @@ import (
 type State struct {
 	types.State
 
-	client client.Client
+	client iprangeclient.Client
 
 	vpc                  *ec2Types.Vpc
 	associatedCidrBlock  *ec2Types.VpcCidrBlockAssociation
@@ -28,7 +28,7 @@ type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState types.State) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[client.Client], env abstractions.Environment) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[iprangeclient.Client], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 		env:         env,
@@ -36,7 +36,7 @@ func NewStateFactory(skrProvider awsclient.SkrClientProvider[client.Client], env
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[client.Client]
+	skrProvider awsclient.SkrClientProvider[iprangeclient.Client]
 	env         abstractions.Environment
 }
 
@@ -57,7 +57,7 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (
 	return newState(ipRangeState, c), nil
 }
 
-func newState(ipRangeState types.State, c client.Client) *State {
+func newState(ipRangeState types.State, c iprangeclient.Client) *State {
 	return &State{
 		State:  ipRangeState,
 		client: c,

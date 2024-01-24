@@ -19,11 +19,38 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
+	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
+	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
+	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
+	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// IpRangeReconciler reconciles a IpRange object
+func NewIpRangeReconciler(
+	mgr manager.Manager,
+	awsProvider awsclient.SkrClientProvider[iprangeclient.Client],
+	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+) *IpRangeReconciler {
+	return &IpRangeReconciler{
+		Reconciler: iprange.NewIPRangeReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
+			focal.NewStateFactory(),
+			awsiprange.NewStateFactory(awsProvider, abstractions.NewOSEnvironment()),
+			azureiprange.NewStateFactory(nil),
+			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, abstractions.NewOSEnvironment()),
+		),
+	}
+}
+
 type IpRangeReconciler struct {
 	Reconciler *iprange.IPRangeReconciler
 }

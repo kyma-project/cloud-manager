@@ -19,27 +19,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	kcpscope "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
+	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
 	"os"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
-	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
-	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
-	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
-	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
-	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
-	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
-	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
-	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
-	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
-	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -71,6 +58,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
+	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
 	//+kubebuilder:scaffold:scheme
 }
@@ -140,44 +128,30 @@ func main() {
 	}
 
 	// KCP Controllers
-	if err = (&cloudcontrolcontroller.ScopeReconciler{
-		Reconciler: kcpscope.NewScopeReconciler(kcpscope.NewStateFactory(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
-			abstractions.NewFileReader(),
-			scopeclient.NewAwsStsGardenClientProvider(),
-		)),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.NewScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider()).
+		SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
-	if err = (&cloudcontrolcontroller.NfsInstanceReconciler{
-		Reconciler: nfsinstance.NewNfsInstanceReconciler(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
-			focal.NewStateFactory(),
-			awsnfsinstance.NewStateFactory(awsnfsinstanceclient.NewClientProvider(), abstractions.NewOSEnvironment()),
-			azurenfsinstance.NewStateFactory(),
-			gcpnfsinstance.NewStateFactory(gcpFilestoreClient.NewFilestoreClient(), abstractions.NewOSEnvironment()),
-		),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.NewNfsInstanceReconciler(
+		mgr,
+		awsnfsinstanceclient.NewClientProvider(),
+		gcpFilestoreClient.NewFilestoreClient(),
+	).
+		SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
 	}
-	if err = (&cloudcontrolcontroller.VpcPeeringReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.NewVpcPeeringReconciler(mgr).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
 	}
-	if err = (&cloudcontrolcontroller.IpRangeReconciler{
-		Reconciler: iprange.NewIPRangeReconciler(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
-			focal.NewStateFactory(),
-			awsiprange.NewStateFactory(awsiprangeclient.NewClientProvider(), abstractions.NewOSEnvironment()),
-			azureiprange.NewStateFactory(nil),
-			gcpiprange.NewStateFactory(gcpiprangeclient.NewServiceNetworkingClient(), gcpiprangeclient.NewComputeClient(), abstractions.NewOSEnvironment()),
-		),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.NewIpRangeReconciler(
+		mgr,
+		awsiprangeclient.NewClientProvider(),
+		gcpiprangeclient.NewServiceNetworkingClient(),
+		gcpiprangeclient.NewComputeClient(),
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)
 	}

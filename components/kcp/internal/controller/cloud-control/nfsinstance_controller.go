@@ -19,11 +19,37 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
+	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
+	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
+	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
+	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// NfsInstanceReconciler reconciles a NfsInstance object
+func NewNfsInstanceReconciler(
+	mgr manager.Manager,
+	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
+	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
+) *NfsInstanceReconciler {
+	return &NfsInstanceReconciler{
+		Reconciler: nfsinstance.NewNfsInstanceReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
+			focal.NewStateFactory(),
+			awsnfsinstance.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
+			azurenfsinstance.NewStateFactory(),
+			gcpnfsinstance.NewStateFactory(filestoreClientProvider, abstractions.NewOSEnvironment()),
+		),
+	}
+}
+
 type NfsInstanceReconciler struct {
 	Reconciler *nfsinstance.NfsInstanceReconciler
 }
