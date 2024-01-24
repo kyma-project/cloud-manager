@@ -5,7 +5,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
@@ -15,7 +14,7 @@ import (
 type State struct {
 	types.State
 	curState        v1beta1.StatusState
-	operation       focal.OperationType
+	operation       gcpclient.OperationType
 	updateMask      []string
 	fsInstance      *file.Instance
 	filestoreClient client.FilestoreClient

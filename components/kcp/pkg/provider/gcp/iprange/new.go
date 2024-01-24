@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
@@ -24,7 +24,7 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			validateCidr,
-			focal.AddFinalizer,
+			actions.AddFinalizer,
 			checkGcpOperation,
 			loadAddress,
 			loadPsaConnection,
@@ -37,7 +37,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.NewCase(StatePredicate(client.SyncPsaConnection, ctx, state), syncPsaConnection),
 				composed.NewCase(StatePredicate(client.DeletePsaConnection, ctx, state), syncPsaConnection),
 				composed.NewCase(StatePredicate(client.DeleteAddress, ctx, state), syncAddress),
-				composed.NewCase(StatePredicate(client.Deleted, ctx, state), focal.RemoveFinalizer),
+				composed.NewCase(StatePredicate(client.Deleted, ctx, state), actions.RemoveFinalizer),
 			),
 		)(ctx, state)
 	}

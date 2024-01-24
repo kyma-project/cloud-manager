@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"google.golang.org/api/servicenetworking/v1"
@@ -25,11 +24,11 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	var err error
 
 	switch state.connectionOp {
-	case focal.ADD:
+	case client.ADD:
 		operation, err = state.serviceNetworkingClient.CreateServiceConnection(ctx, project, vpc, state.ipRanges)
-	case focal.MODIFY:
+	case client.MODIFY:
 		operation, err = state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
-	case focal.DELETE:
+	case client.DELETE:
 		operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, state.projectNumber, vpc)
 	}
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
@@ -23,13 +23,13 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"gcsNfsInstance",
-			focal.AddFinalizer,
+			actions.AddFinalizer,
 			checkGcpOperation,
 			loadNfsInstance,
 			checkNUpdateState,
 			syncNfsInstance,
 			composed.BuildBranchingAction("RunFinalizer", StatePredicate(client.Deleted, ctx, state),
-				focal.RemoveFinalizer, nil),
+				actions.RemoveFinalizer, nil),
 		)(ctx, state)
 	}
 }

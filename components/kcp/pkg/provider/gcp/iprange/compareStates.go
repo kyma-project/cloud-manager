@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
@@ -17,30 +16,30 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 	gcpOptions := state.ObjAsIpRange().Spec.Options.Gcp
 	ipRange := state.ObjAsIpRange()
 
-	state.addressOp = focal.NONE
-	state.connectionOp = focal.NONE
+	state.addressOp = client.NONE
+	state.connectionOp = client.NONE
 	if deleting {
 		//If the address exists, delete it.
 		if state.address != nil {
-			state.addressOp = focal.DELETE
+			state.addressOp = client.DELETE
 		}
 		//If service connection exists,
 		//delete or update it based on whether IP range is present in it.
 		index := state.doesConnectionIncludeRange()
 		if state.serviceConnection != nil && index >= 0 {
 			if len(state.serviceConnection.ReservedPeeringRanges) > 1 {
-				state.connectionOp = focal.MODIFY
+				state.connectionOp = client.MODIFY
 				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges[:index],
 					state.serviceConnection.ReservedPeeringRanges[index+1:]...)
 			} else {
-				state.connectionOp = focal.DELETE
+				state.connectionOp = client.DELETE
 			}
 		}
 
 		//Set the State value.
-		if state.connectionOp != focal.NONE {
+		if state.connectionOp != client.NONE {
 			state.curState = client.DeletePsaConnection
-		} else if state.addressOp != focal.NONE {
+		} else if state.addressOp != client.NONE {
 			state.curState = client.DeleteAddress
 		} else {
 			state.curState = client.Deleted
@@ -48,10 +47,10 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 	} else {
 		if state.address == nil {
 			//If address doesn't exist, add it.
-			state.addressOp = focal.ADD
+			state.addressOp = client.ADD
 		} else if !state.doesAddressMatch() {
 			//If the address exists, but does not match, update it.
-			state.addressOp = focal.MODIFY
+			state.addressOp = client.MODIFY
 		}
 
 		//Check whether the IPRange is created for PSA.
@@ -60,25 +59,25 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 		if gcpOptions == nil || gcpOptions.Purpose == v1beta1.GcpPurposePSA {
 			if state.serviceConnection == nil {
 				//If serviceConnection doesn't exist, add it.
-				state.connectionOp = focal.ADD
+				state.connectionOp = client.ADD
 				state.ipRanges = []string{ipRange.Name}
 			} else if index := state.doesConnectionIncludeRange(); index < 0 {
 				//If connection exists, but the ipRange is not part of it, include it.
-				state.connectionOp = focal.MODIFY
+				state.connectionOp = client.MODIFY
 				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, ipRange.Name)
 			}
 		}
 
 		//Set the State value.
-		if state.addressOp != focal.NONE {
+		if state.addressOp != client.NONE {
 			state.curState = client.SyncAddress
-		} else if state.connectionOp != focal.NONE {
+		} else if state.connectionOp != client.NONE {
 			state.curState = client.SyncPsaConnection
 		} else {
 			state.curState = v1beta1.ReadyState
 		}
 	}
-	state.inSync = state.addressOp == focal.NONE && state.connectionOp == focal.NONE
+	state.inSync = state.addressOp == client.NONE && state.connectionOp == client.NONE
 
 	return nil, nil
 }
