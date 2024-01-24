@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
@@ -15,7 +15,7 @@ func checkUpdateMask(ctx context.Context, st composed.State) (error, context.Con
 	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Checking for Update Mask")
 
 	//If the operation is not modify, continue.
-	if state.operation != focal.MODIFY {
+	if state.operation != client.MODIFY {
 		return nil, nil
 	}
 

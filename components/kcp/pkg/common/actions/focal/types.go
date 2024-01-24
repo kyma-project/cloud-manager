@@ -13,12 +13,3 @@ type CommonObject interface {
 	ScopeRef() cloudresourcesv1beta1.ScopeRef
 	SetScopeRef(scopeRef cloudresourcesv1beta1.ScopeRef)
 }
-
-type OperationType int
-
-const (
-	NONE OperationType = iota
-	ADD
-	MODIFY
-	DELETE
-)

@@ -1,4 +1,4 @@
-package focal
+package actions
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 func AddFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 
 	//Object is being deleted, don't add finalizer
-	if !state.Obj().GetDeletionTimestamp().IsZero() {
+	if composed.MarkedForDeletionPredicate(ctx, state) {
 		return nil, nil
 	}
 

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"google.golang.org/api/file/v1"
@@ -28,12 +27,12 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	var err error
 
 	switch state.operation {
-	case focal.ADD:
+	case client.ADD:
 		operation, err = state.filestoreClient.CreateFilestoreInstance(ctx, project, location, name, state.toInstance())
-	case focal.MODIFY:
+	case client.MODIFY:
 		mask := strings.Join(state.updateMask, ",")
 		operation, err = state.filestoreClient.PatchFilestoreInstance(ctx, project, location, name, mask, state.toInstance())
-	case focal.DELETE:
+	case client.DELETE:
 		operation, err = state.filestoreClient.DeleteFilestoreInstance(ctx, project, location, name)
 	}
 

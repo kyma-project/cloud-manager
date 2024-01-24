@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"google.golang.org/api/compute/v1"
@@ -25,13 +24,13 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	var operation *compute.Operation
 	var err error
 	switch state.addressOp {
-	case focal.ADD:
+	case client.ADD:
 		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, ipRange.Name, ipRange.Name, state.ipAddress, int64(state.prefix))
-	case focal.MODIFY:
+	case client.MODIFY:
 		err = errors.New("IpRange update not supported.")
 		state.AddErrorCondition(ctx, v1beta1.ReasonNotSupported, err)
 		return composed.LogErrorAndReturn(err, "IpRange update not supported.", composed.StopAndForget, nil)
-	case focal.DELETE:
+	case client.DELETE:
 		operation, err = state.computeClient.DeleteIpRange(ctx, project, ipRange.Name)
 	}
 

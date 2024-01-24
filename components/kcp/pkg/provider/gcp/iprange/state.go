@@ -6,7 +6,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
@@ -23,8 +22,8 @@ type State struct {
 	ipRanges      []string
 	projectNumber int64
 
-	addressOp    focal.OperationType
-	connectionOp focal.OperationType
+	addressOp    gcpclient.OperationType
+	connectionOp gcpclient.OperationType
 	curState     v1beta1.StatusState
 
 	address           *compute.Address

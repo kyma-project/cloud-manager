@@ -98,3 +98,12 @@ const (
 	RESUMING   FilestoreState = "RESUMING"
 	REVERTING  FilestoreState = "REVERTING"
 )
+
+type OperationType int
+
+const (
+	NONE OperationType = iota
+	ADD
+	MODIFY
+	DELETE
+)

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -21,23 +20,23 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	//Check and see whether the desiredState == actualState
 	deleting := !state.Obj().GetDeletionTimestamp().IsZero()
 
-	state.operation = focal.NONE
+	state.operation = client.NONE
 	if deleting {
 		if state.fsInstance == nil {
 			state.curState = client.Deleted
 		} else if state.fsInstance.State != string(client.DELETING) {
 			//If the filestore exists and not DELETING, delete it.
-			state.operation = focal.DELETE
+			state.operation = client.DELETE
 			state.curState = client.SyncFilestore
 		}
 	} else {
 		if state.fsInstance == nil {
 			//If filestore doesn't exist, add it.
-			state.operation = focal.ADD
+			state.operation = client.ADD
 			state.curState = client.SyncFilestore
 		} else if !state.doesFilestoreMatch() {
 			//If the filestore exists, but does not match, update it.
-			state.operation = focal.MODIFY
+			state.operation = client.MODIFY
 			state.curState = client.SyncFilestore
 		} else if state.fsInstance.State == string(client.READY) {
 			state.curState = v1beta1.ReadyState
