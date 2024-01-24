@@ -19,9 +19,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	kcpscope "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
-	"os"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
@@ -136,6 +137,10 @@ func main() {
 	}
 	if err = cloudresourcescontroller.SetupAwsNfsVolumeReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
+		os.Exit(1)
+	}
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
 	}
 
