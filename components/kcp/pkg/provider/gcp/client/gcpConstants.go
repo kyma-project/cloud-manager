@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
@@ -17,6 +18,8 @@ const filestoreParentPattern = "projects/%s/locations/%s"
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
+
+var FilestoreInstanceRegEx *regexp.Regexp = regexp.MustCompile(`^projects\/([^/]+)\/locations\/([^/]+)\/instances\/([^/]+)$`)
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)

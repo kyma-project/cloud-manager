@@ -42,6 +42,9 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if operation != nil {
+		if state.operation == client.ADD {
+			nfsInstance.Status.Id = client.GetFilestoreInstancePath(project, location, name)
+		}
 		nfsInstance.Status.OpIdentifier = operation.Name
 		state.UpdateObjStatus(ctx)
 	}

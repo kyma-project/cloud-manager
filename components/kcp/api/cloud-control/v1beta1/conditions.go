@@ -6,8 +6,9 @@ const (
 
 	ReasonScopeNotFound = "ScopeNoFound"
 
-	ReasonUnknown      = "Unknown"
-	ReasonReady        = "Ready"
-	ReasonGcpError     = "GCPError"
-	ReasonNotSupported = "NotSupported"
+	ReasonUnknown          = "Unknown"
+	ReasonReady            = "Ready"
+	ReasonGcpError         = "GCPError"
+	ReasonNotSupported     = "NotSupported"
+	ReasonValidationFailed = "ValidationFailed"
 )
