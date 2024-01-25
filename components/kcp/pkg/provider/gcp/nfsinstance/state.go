@@ -16,6 +16,7 @@ type State struct {
 	curState        v1beta1.StatusState
 	operation       gcpclient.OperationType
 	updateMask      []string
+	validations     []string
 	fsInstance      *file.Instance
 	filestoreClient client.FilestoreClient
 }
@@ -83,6 +84,14 @@ func (s State) toInstance() *file.Instance {
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 
+	nwConfig := &file.NetworkConfig{
+		Network:     gcpclient.GetVPCPath(project, vpc),
+		ConnectMode: string(gcpOptions.ConnectMode),
+	}
+	if s.IpRange() != nil {
+		nwConfig.ReservedIpRange = s.IpRange().Spec.Cidr
+	}
+
 	return &file.Instance{
 		Description: nfsInstance.Name,
 		Tier:        string(gcpOptions.Tier),
@@ -94,10 +103,7 @@ func (s State) toInstance() *file.Instance {
 			},
 		},
 		Networks: []*file.NetworkConfig{
-			{
-				Network:     gcpclient.GetVPCPath(project, vpc),
-				ConnectMode: string(gcpOptions.ConnectMode),
-			},
+			nwConfig,
 		},
 	}
 }

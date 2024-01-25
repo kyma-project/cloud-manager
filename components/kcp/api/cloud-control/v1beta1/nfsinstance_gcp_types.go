@@ -22,6 +22,8 @@ type NfsOptionsGcp struct {
 type GcpFileTier string
 
 const (
+	STANDARD       = GcpFileTier("STANDARD")
+	PREMIUM        = GcpFileTier("PREMIUM")
 	BASIC_HDD      = GcpFileTier("BASIC_HDD")
 	BASIC_SSD      = GcpFileTier("BASIC_SSD")
 	HIGH_SCALE_SSD = GcpFileTier("HIGH_SCALE_SSD")

@@ -7,4 +7,5 @@ resources:
 - cloud-resources_v1beta1_cloudresources.yaml
 - cloud-resources_v1beta1_awsnfsvolume.yaml
 - cloud-resources_v1beta1_iprange.yaml
+- cloud-resources_v1beta1_gcpnfsvolume.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
