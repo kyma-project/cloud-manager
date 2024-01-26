@@ -8,7 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func validateCidr(ctx context.Context, st composed.State) (error, context.Context) {
+func validateSpec(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	existing := meta.FindStatusCondition(state.ObjAsGcpNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeCidrValid)
 	if existing != nil && existing.Status == metav1.ConditionTrue {

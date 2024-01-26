@@ -41,6 +41,9 @@ spec:
                 default: vol1
                 pattern: ^[a-z][a-z0-9_]*[a-z0-9]$
                 type: string
+                x-kubernetes-validations:
+                - message: FileShareName is immutable.
+                  rule: (self == oldSelf)
               ipRange:
                 properties:
                   name:
@@ -48,11 +51,20 @@ spec:
                 required:
                 - name
                 type: object
+                x-kubernetes-validations:
+                - message: IpRange is immutable.
+                  rule: (self == oldSelf)
               location:
                 type: string
+                x-kubernetes-validations:
+                - message: Location is immutable.
+                  rule: (self == oldSelf)
               tier:
                 default: BASIC_HDD
                 type: string
+                x-kubernetes-validations:
+                - message: Tier is immutable.
+                  rule: (self == oldSelf)
             required:
             - capacityGb
             - fileShareName

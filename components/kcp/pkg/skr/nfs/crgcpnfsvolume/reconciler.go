@@ -24,12 +24,16 @@ func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeMain",
 		composed.LoadObj,
-		validateCidr,
+		validateSpec,
 		addFinalizer,
 		loadKcpNfsInstance,
-		createKcpNfsInstance,
+		loadPersistenceVolume,
+		modifyKcpNfsInstance,
+		deletePersistenceVolume,
 		deleteKcpNfsInstance,
 		removeFinalizer,
+		removePersistenceVolumeFinalizer,
+		modifyPersistenceVolume,
 		updateStatus,
 		composed.StopAndForgetAction,
 	)
