@@ -23,15 +23,19 @@ import (
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
 type GcpNfsVolumeSpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	IpRange IpRangeRef `json:"ipRange"`
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
 	Location string `json:"location"`
 
 	// +kubebuilder:default=BASIC_HDD
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
 	Tier GcpFileTier `json:"tier"`
 
 	// +kubebuilder:validation:Pattern="^[a-z][a-z0-9_]*[a-z0-9]$"
 	// +kubebuilder:default=vol1
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="FileShareName is immutable."
 	FileShareName string `json:"fileShareName"`
 
 	// +kubebuilder:default=2560
