@@ -21,7 +21,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	ipRange := &cloudresourcesv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),
-		Name:      state.ObjAsNfsInstance().Spec.IpRange,
+		Name:      state.ObjAsNfsInstance().Spec.IpRange.Name,
 	}, ipRange)
 
 	if client.IgnoreNotFound(err) != nil {
@@ -30,13 +30,13 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 
 	if apierrors.IsNotFound(err) {
 		logger.
-			WithValues("ipRange", state.ObjAsNfsInstance().Spec.IpRange).
+			WithValues("ipRange", state.ObjAsNfsInstance().Spec.IpRange.Name).
 			Error(err, "Referred IpRange does not exist")
 		meta.SetStatusCondition(state.ObjAsNfsInstance().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudresourcesv1beta1.ReasonInvalidIpRangeReference,
-			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), state.ObjAsNfsInstance().Spec.IpRange),
+			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), state.ObjAsNfsInstance().Spec.IpRange.Name),
 		})
 		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
 		err = state.UpdateObjStatus(ctx)

@@ -91,7 +91,12 @@ spec:
                     type: object
                 type: object
               ipRange:
-                type: string
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
               remoteRef:
                 properties:
                   name:
