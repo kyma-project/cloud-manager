@@ -60,11 +60,11 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 			if state.serviceConnection == nil {
 				//If serviceConnection doesn't exist, add it.
 				state.connectionOp = client.ADD
-				state.ipRanges = []string{ipRange.Name}
+				state.ipRanges = []string{ipRange.Spec.RemoteRef.Name}
 			} else if index := state.doesConnectionIncludeRange(); index < 0 {
 				//If connection exists, but the ipRange is not part of it, include it.
 				state.connectionOp = client.MODIFY
-				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, ipRange.Name)
+				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, ipRange.Spec.RemoteRef.Name)
 			}
 		}
 

@@ -21,8 +21,9 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
+	name := ipRange.Spec.RemoteRef.Name
 
-	addr, err := state.computeClient.GetIpRange(ctx, project, ipRange.Name)
+	addr, err := state.computeClient.GetIpRange(ctx, project, name)
 	if err != nil {
 
 		var e *googleapi.Error

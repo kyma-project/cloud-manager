@@ -20,18 +20,19 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
+	name := ipRange.Spec.RemoteRef.Name
 
 	var operation *compute.Operation
 	var err error
 	switch state.addressOp {
 	case client.ADD:
-		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, ipRange.Name, ipRange.Name, state.ipAddress, int64(state.prefix))
+		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, name, name, state.ipAddress, int64(state.prefix))
 	case client.MODIFY:
 		err = errors.New("IpRange update not supported.")
 		state.AddErrorCondition(ctx, v1beta1.ReasonNotSupported, err)
 		return composed.LogErrorAndReturn(err, "IpRange update not supported.", composed.StopAndForget, nil)
 	case client.DELETE:
-		operation, err = state.computeClient.DeleteIpRange(ctx, project, ipRange.Name)
+		operation, err = state.computeClient.DeleteIpRange(ctx, project, name)
 	}
 
 	if err != nil {

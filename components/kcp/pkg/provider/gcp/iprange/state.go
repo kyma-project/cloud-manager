@@ -100,7 +100,7 @@ func (s State) doesConnectionIncludeRange() int {
 		return -1
 	}
 
-	rangeName := s.ObjAsIpRange().Name
+	rangeName := s.ObjAsIpRange().Spec.RemoteRef.Name
 	for i, name := range s.serviceConnection.ReservedPeeringRanges {
 		if rangeName == name {
 			return i

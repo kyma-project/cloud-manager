@@ -44,6 +44,7 @@ const (
 // NfsInstanceSpec defines the desired state of NfsInstance
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +kubebuilder:validation:Required

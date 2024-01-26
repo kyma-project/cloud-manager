@@ -13,8 +13,8 @@ func validateAlways(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	//If the instance already exists, continue.
-	if state.fsInstance != nil {
+	//If the instance already exists or if it is deleting, continue to next action.
+	if state.fsInstance != nil || composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 
@@ -26,15 +26,6 @@ func validateAlways(ctx context.Context, st composed.State) (error, context.Cont
 
 	//Validate whether the requested capacity is a valid value.
 	if _, err := IsValidCapacity(gcpOptions.Tier, gcpOptions.CapacityGb); err != nil {
-		state.validations = append(state.validations, err.Error())
-	}
-
-	//Validate whether the nwMask is a valid value.
-	cidr := ""
-	if state.IpRange() != nil {
-		cidr = state.IpRange().Spec.Cidr
-	}
-	if _, err := IsValidNwMask(gcpOptions.Tier, cidr); err != nil {
 		state.validations = append(state.validations, err.Error())
 	}
 
