@@ -2,17 +2,9 @@ package nfsinstance
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 )
-
-type GcpFileTierValidation interface {
-	IsValidCapacity(capacityGb int) (bool, error)
-	CanScaleDown() bool
-	IsValidNwMask(cidr string) (bool, error)
-}
 
 func IsValidCapacity(tier v1beta1.GcpFileTier, capacityGb int) (bool, error) {
 	switch tier {
@@ -53,29 +45,4 @@ func IsValidCapacity(tier v1beta1.GcpFileTier, capacityGb int) (bool, error) {
 func CanScaleDown(tier v1beta1.GcpFileTier) bool {
 	return tier == v1beta1.ZONAL || tier == v1beta1.HIGH_SCALE_SSD ||
 		tier == v1beta1.ENTERPRISE || tier == v1beta1.REGIONAL
-}
-
-func IsValidNwMask(tier v1beta1.GcpFileTier, cidr string) (bool, error) {
-	if cidr == "" {
-		return true, nil
-	}
-	switch tier {
-	case v1beta1.BASIC_HDD, v1beta1.STANDARD, v1beta1.BASIC_SSD, v1beta1.PREMIUM, v1beta1.ZONAL:
-		return checkCidrSuffix(tier, cidr, "/29")
-	case v1beta1.ENTERPRISE, v1beta1.REGIONAL:
-		return checkCidrSuffix(tier, cidr, "/26")
-	case v1beta1.HIGH_SCALE_SSD:
-		return checkCidrSuffix(tier, cidr, "/24")
-	default:
-		return false, errors.New("Unknown Tier")
-	}
-}
-
-func checkCidrSuffix(tier v1beta1.GcpFileTier, cidr, suffix string) (bool, error) {
-	valid := strings.HasSuffix(cidr, suffix)
-	if valid {
-		return valid, nil
-	} else {
-		return valid, errors.New(fmt.Sprintf("CIDR block should be %s for Tier: %s", suffix, string(tier)))
-	}
 }
