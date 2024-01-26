@@ -47,7 +47,7 @@ type NfsInstanceSpec struct {
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +kubebuilder:validation:Required
-	IpRange string `json:"ipRange"`
+	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
