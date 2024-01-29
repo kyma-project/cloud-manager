@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"google.golang.org/api/file/v1"

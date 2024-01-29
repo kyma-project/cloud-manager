@@ -4,7 +4,7 @@ import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	"k8s.io/utils/pointer"
 )
 

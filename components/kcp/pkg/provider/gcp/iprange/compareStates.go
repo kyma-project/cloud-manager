@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func compareStates(ctx context.Context, st composed.State) (error, context.Context) {

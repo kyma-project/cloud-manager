@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

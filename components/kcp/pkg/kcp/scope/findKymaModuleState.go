@@ -2,8 +2,8 @@ package scope
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func findKymaModuleState(ctx context.Context, st composed.State) (error, context.Context) {

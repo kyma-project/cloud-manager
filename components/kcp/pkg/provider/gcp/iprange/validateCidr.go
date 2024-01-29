@@ -4,8 +4,8 @@ import (
 	"context"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
 func validateCidr(ctx context.Context, st composed.State) (error, context.Context) {

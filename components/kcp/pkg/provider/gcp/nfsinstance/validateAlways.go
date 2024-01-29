@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 )
 
 func validateAlways(ctx context.Context, st composed.State) (error, context.Context) {

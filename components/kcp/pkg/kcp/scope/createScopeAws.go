@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/gardener"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/pointer"
 )

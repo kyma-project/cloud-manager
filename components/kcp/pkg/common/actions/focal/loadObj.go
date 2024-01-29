@@ -2,7 +2,7 @@ package focal
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 )
 
 // loadObj loads object with state.Name into the state.Obj()
