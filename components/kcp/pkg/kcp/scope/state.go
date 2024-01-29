@@ -4,7 +4,6 @@ import (
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
 	awsClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
@@ -21,20 +20,20 @@ type StateFactory interface {
 
 func NewStateFactory(
 	baseStateFactory composed.StateFactory,
-	fileReader abstractions.FileReader,
 	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
+	activeSkrCollection skrruntime.ActiveSkrCollection,
 ) StateFactory {
 	return &stateFactory{
 		baseStateFactory:     baseStateFactory,
-		fileReader:           fileReader,
 		awsStsClientProvider: awsStsClientProvider,
+		activeSkrCollection:  activeSkrCollection,
 	}
 }
 
 type stateFactory struct {
 	baseStateFactory     composed.StateFactory
-	fileReader           abstractions.FileReader
 	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]
+	activeSkrCollection  skrruntime.ActiveSkrCollection
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -42,26 +41,28 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 	return newState(
 		baseState,
-		f.fileReader,
 		f.awsStsClientProvider,
+		f.activeSkrCollection,
 	)
 }
 
 // =====================================================================
 
-func newState(baseState composed.State, fileReader abstractions.FileReader, awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]) *State {
+func newState(
+	baseState composed.State,
+	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
+	activeSkrCollection skrruntime.ActiveSkrCollection,
+) *State {
 	return &State{
 		State:                baseState,
-		fileReader:           fileReader,
 		awsStsClientProvider: awsStsClientProvider,
+		activeSkrCollection:  activeSkrCollection,
 		credentialData:       map[string]string{},
 	}
 }
 
 type State struct {
 	composed.State
-
-	fileReader abstractions.FileReader
 
 	kyma                *unstructured.Unstructured
 	moduleState         util.KymaModuleState

@@ -7,6 +7,8 @@ import (
 
 var NewLooper = looper.New
 
+type SkrLooper = looper.SkrLooper
+
 var NewRegistry = registry.New
 
 var NewRunner = looper.NewSkrRunner

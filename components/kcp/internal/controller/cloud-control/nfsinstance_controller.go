@@ -34,24 +34,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-func NewNfsInstanceReconciler(
-	mgr manager.Manager,
+func SetupNfsInstanceReconciler(
+	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
 	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
-) *NfsInstanceReconciler {
-	return &NfsInstanceReconciler{
-		Reconciler: nfsinstance.NewNfsInstanceReconciler(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
+) error {
+	return NewNfsInstanceReconciler(
+		nfsinstance.NewNfsInstanceReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromManager(kcpManager)),
 			focal.NewStateFactory(),
 			awsnfsinstance.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
 			azurenfsinstance.NewStateFactory(),
 			gcpnfsinstance.NewStateFactory(filestoreClientProvider, abstractions.NewOSEnvironment()),
 		),
+	).SetupWithManager(kcpManager)
+}
+
+func NewNfsInstanceReconciler(
+	reconciler nfsinstance.NfsInstanceReconciler,
+) *NfsInstanceReconciler {
+	return &NfsInstanceReconciler{
+		Reconciler: reconciler,
 	}
 }
 
 type NfsInstanceReconciler struct {
-	Reconciler *nfsinstance.NfsInstanceReconciler
+	Reconciler nfsinstance.NfsInstanceReconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=nfsinstances,verbs=get;list;watch;create;update;patch;delete
@@ -68,7 +76,7 @@ type NfsInstanceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Reconciler.Run(ctx, req)
+	return r.Reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.

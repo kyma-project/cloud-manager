@@ -1,10 +1,10 @@
 package testinfra
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,104 +14,109 @@ import (
 var crdsInitialized = false
 
 var (
-	dirSkr    string
-	dirKcp    string
-	dirGarden string
-
 	crdMutex sync.Mutex
 )
 
-func initCrds() error {
+func initCrds(projectRoot string) (dirSkr, dirKcp, dirGarden string, err error) {
 	crdMutex.Lock()
 	defer crdMutex.Unlock()
 
 	if crdsInitialized {
-		return nil
+		err = errors.New("the CRDs are already initialized")
+		return
 	}
 
-	localBin := os.Getenv("LOCALBIN")
-	if len(localBin) == 0 {
-		localBin = filepath.Join("..", "..", "bin")
-	}
-
-	dirSkr = path.Join(localBin, "cloud-manager", "skr")
-	dirKcp = path.Join(localBin, "cloud-manager", "kcp")
-	dirGarden = path.Join(localBin, "cloud-manager", "garden")
+	dirSkr = path.Join(projectRoot, "bin", "cloud-manager", "skr")
+	dirKcp = path.Join(projectRoot, "bin", "cloud-manager", "kcp")
+	dirGarden = path.Join(projectRoot, "bin", "cloud-manager", "garden")
 
 	// recreate destination directories
-	if err := createDir(dirSkr); err != nil {
-		return err
+	if err = createDir(dirSkr); err != nil {
+		return
 	}
-	if err := createDir(dirKcp); err != nil {
-		return err
+	if err = createDir(dirKcp); err != nil {
+		return
 	}
-	if err := createDir(dirGarden); err != nil {
-		return err
-	}
-
-	// copy CRDs to destination dirs
-	configCrdBases := filepath.Join("..", "..", "config", "crd", "bases")
-	list, err := os.ReadDir(configCrdBases)
-	if err != nil {
-		return fmt.Errorf("error reading files in config/crd/bases dir: %w", err)
+	if err = createDir(dirGarden); err != nil {
+		return
 	}
 
-	prefixMap := map[string]string{
-		"cloud-control.":   dirKcp,
-		"cloud-resources.": dirSkr,
-	}
-	for _, x := range list {
-		if x.IsDir() {
-			continue
+	var list []os.DirEntry
+
+	// copy cloud-manager CRDs to destination dirs
+	{
+		configCrdBases := filepath.Join(projectRoot, "config", "crd", "bases")
+		list, err = os.ReadDir(configCrdBases)
+		if err != nil {
+			err = fmt.Errorf("error reading files in config/crd/bases dir: %w", err)
+			return
 		}
-		for prefix, dir := range prefixMap {
-			if strings.HasPrefix(x.Name(), prefix) {
-				err := copyFile(
-					filepath.Join(configCrdBases, x.Name()),
-					filepath.Join(dir, x.Name()),
-				)
-				if err != nil {
-					return err
+
+		prefixMap := map[string]string{
+			"cloud-control.":   dirKcp,
+			"cloud-resources.": dirSkr,
+		}
+		for _, x := range list {
+			if x.IsDir() {
+				continue
+			}
+			for prefix, dir := range prefixMap {
+				if strings.HasPrefix(x.Name(), prefix) {
+					err = copyFile(
+						filepath.Join(configCrdBases, x.Name()),
+						filepath.Join(dir, x.Name()),
+					)
+					if err != nil {
+						return
+					}
+					break
 				}
-				break
 			}
 		}
 	}
 
-	// generate all gardener CRDs
-	cmd := exec.Command(
-		filepath.Join(localBin, "controller-gen"),
-		"crd:allowDangerousTypes=true",
-		fmt.Sprintf(`paths="%s/pkg/mod/github.com/gardener/gardener@v1.85.0/pkg/apis/core/v1beta1"`, os.Getenv("GOPATH")),
-		fmt.Sprintf("output:crd:artifacts:config=%s", dirGarden),
-	)
-	err = cmd.Run()
-	if err != nil {
-		return err
+	// copy gardener CRDs
+	{
+		gardenerCrdsDir := filepath.Join(projectRoot, "config", "crd", "gardener")
+		list, err = os.ReadDir(gardenerCrdsDir)
+		if err != nil {
+			err = fmt.Errorf("error listing gardener crds: %w", err)
+			return
+		}
+		for _, f := range list {
+			err = copyFile(
+				filepath.Join(gardenerCrdsDir, f.Name()),
+				filepath.Join(dirGarden, f.Name()),
+			)
+			if err != nil {
+				err = fmt.Errorf("error copying gardener crd %s: %w", f.Name(), err)
+				return
+			}
+		}
 	}
 
-	// delete all garedener CRDs except few we want to keep
-	gardenFilesToKeep := map[string]struct{}{
-		"core.gardener.cloud_shoots.yaml":         {},
-		"core.gardener.cloud_secretbindings.yaml": {},
-	}
-	list, err = os.ReadDir(dirGarden)
-	if err != nil {
-		return err
-	}
-	for _, f := range list {
-		_, keep := gardenFilesToKeep[f.Name()]
-		if keep {
-			continue
-		}
-		err = os.Remove(filepath.Join(dirGarden, f.Name()))
+	// copy operator CRDs
+	{
+		operatorCrdsDir := filepath.Join(projectRoot, "config", "crd", "operator")
+		list, err = os.ReadDir(operatorCrdsDir)
 		if err != nil {
-			return err
+			err = fmt.Errorf("error listing operator crds: %w", err)
+			return
+		}
+		for _, f := range list {
+			err = copyFile(
+				filepath.Join(operatorCrdsDir, f.Name()),
+				filepath.Join(dirKcp, f.Name()),
+			)
+			if err != nil {
+				err = fmt.Errorf("error copying operator crd %s: %w", f.Name(), err)
+				return
+			}
 		}
 	}
 
 	crdsInitialized = true
-	return nil
+	return
 }
 
 func createDir(dir string) error {

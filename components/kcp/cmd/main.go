@@ -112,6 +112,7 @@ func main() {
 	}
 
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
+	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
 
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
@@ -132,30 +133,28 @@ func main() {
 	}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.NewScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider()).
-		SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.NewNfsInstanceReconciler(
+	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
 		gcpFilestoreClient.NewFilestoreClient(),
-	).
-		SetupWithManager(mgr); err != nil {
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.NewVpcPeeringReconciler(mgr).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.SetupVpcPeeringReconciler(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.NewIpRangeReconciler(
+	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
 		mgr,
 		awsiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
-	).SetupWithManager(mgr); err != nil {
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)
 	}
@@ -170,7 +169,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
 	//skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
 	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
 	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")

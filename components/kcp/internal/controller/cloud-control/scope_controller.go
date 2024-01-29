@@ -3,12 +3,11 @@ package cloudresources
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	kcpscope "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
-	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -19,13 +18,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewScopeReconciler(mgr manager.Manager, awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient]) *ScopeReconciler {
-	return &ScopeReconciler{
-		Reconciler: kcpscope.NewScopeReconciler(kcpscope.NewStateFactory(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
-			abstractions.NewFileReader(),
+func SetupScopeReconciler(
+	kcpManager manager.Manager,
+	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
+	activeSkrCollection skrruntime.ActiveSkrCollection,
+) error {
+	return NewScopeReconciler(
+		kcpscope.New(
+			kcpManager,
 			awsStsClientProvider,
-		)),
+			activeSkrCollection,
+		),
+	).SetupWithManager(kcpManager)
+}
+
+func NewScopeReconciler(
+	reconciler kcpscope.ScopeReconciler,
+) *ScopeReconciler {
+	return &ScopeReconciler{
+		Reconciler: reconciler,
 	}
 }
 

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -39,6 +40,42 @@ func GetKymaModuleState(k *unstructured.Unstructured, moduleName string) KymaMod
 	}
 
 	return KymaModuleStateNotPresent
+}
+
+func SetKymaModuleState(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
+	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
+	if err != nil {
+		return err
+	}
+	if !exists {
+		modules = []interface{}{}
+		err = unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
+		if err != nil {
+			return nil
+		}
+	}
+
+	for idx, m := range modules {
+		mm, ok := m.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("kyma CR module #%d is not a map", idx)
+		}
+
+		name, exists, err := unstructured.NestedString(mm, "name")
+		if err != nil {
+			return err
+		}
+		if exists && name == moduleName {
+			return unstructured.SetNestedField(mm, string(state), "state")
+		}
+	}
+
+	modules = append(modules, map[string]interface{}{
+		"name":  moduleName,
+		"state": string(state),
+	})
+
+	return unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 }
 
 // https://github.com/kyma-project/lifecycle-manager/blob/main/api/shared/state.go

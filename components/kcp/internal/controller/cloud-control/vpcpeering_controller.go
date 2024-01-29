@@ -29,6 +29,14 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 )
 
+func SetupVpcPeeringReconciler(
+	kcpManager manager.Manager,
+) error {
+	return NewVpcPeeringReconciler(
+		kcpManager,
+	).SetupWithManager(kcpManager)
+}
+
 func NewVpcPeeringReconciler(mgr manager.Manager) *VpcPeeringReconciler {
 	return &VpcPeeringReconciler{
 		Client: mgr.GetClient(),

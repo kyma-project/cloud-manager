@@ -54,13 +54,14 @@ type Descriptor struct {
 }
 
 type SkrRegistry interface {
+	Len() int
 	GetDescriptors(mngr manager.SkrManager) DescriptorList
 	Register() Builder
 }
 
-func New(scheme *runtime.Scheme) SkrRegistry {
+func New(skrScheme *runtime.Scheme) SkrRegistry {
 	return &skrRegistry{
-		scheme: scheme,
+		skrScheme: skrScheme,
 	}
 }
 
@@ -79,8 +80,12 @@ type registryItemWatch struct {
 }
 
 type skrRegistry struct {
-	scheme *runtime.Scheme
-	items  []*registryItem
+	skrScheme *runtime.Scheme
+	items     []*registryItem
+}
+
+func (r *skrRegistry) Len() int {
+	return len(r.items)
 }
 
 func (r *skrRegistry) GetDescriptors(mngr manager.SkrManager) DescriptorList {

@@ -64,7 +64,7 @@ func (b *skrBuilder) Complete() error {
 		return errors.New("the For(...) method must be called to define reconciled object")
 	}
 
-	gvk, err := util.GetObjGvk(b.registry.scheme, b.forInput.object)
+	gvk, err := util.GetObjGvk(b.registry.skrScheme, b.forInput.object)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (b *skrBuilder) Complete() error {
 		reconcilerFactory: b.factory,
 	}
 
-	gvk, err = util.GetObjGvk(b.registry.scheme, b.forInput.object)
+	gvk, err = util.GetObjGvk(b.registry.skrScheme, b.forInput.object)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (b *skrBuilder) Complete() error {
 	})
 
 	for _, w := range b.watchesInput {
-		gvk, err := util.GetObjGvk(b.registry.scheme, w.object)
+		gvk, err := util.GetObjGvk(b.registry.skrScheme, w.object)
 		if err != nil {
 			return err
 		}

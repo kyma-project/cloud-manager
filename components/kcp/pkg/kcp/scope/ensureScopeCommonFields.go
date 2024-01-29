@@ -13,7 +13,7 @@ func ensureScopeCommonFields(ctx context.Context, st composed.State) (error, con
 
 	// set name
 	state.ObjAsScope().Name = state.kyma.GetName() // same name as Kyma CR
-	state.ObjAsScope().Namespace = state.Obj().GetNamespace()
+	state.ObjAsScope().Namespace = state.kyma.GetNamespace()
 
 	// set finalizer
 	controllerutil.AddFinalizer(state.ObjAsScope(), cloudcontrolv1beta1.FinalizerName)

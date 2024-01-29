@@ -1,6 +1,9 @@
 package gardener
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
 
 /**
  * To avoid as reference copied from
@@ -10,6 +13,13 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type InfrastructureConfig struct {
 	metav1.TypeMeta `json:",inline"`
 	Networks        Networks `json:"networks"`
+}
+
+func (i *InfrastructureConfig) DeepCopyObject() runtime.Object {
+	return &InfrastructureConfig{
+		TypeMeta: i.TypeMeta,
+		Networks: i.Networks,
+	}
 }
 
 type Networks struct {
