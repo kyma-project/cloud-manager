@@ -22,15 +22,34 @@ import (
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
 type GcpNfsVolumeSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
+	IpRange IpRangeRef `json:"ipRange"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
+	Location string `json:"location"`
 
-	// Foo is an example field of GcpNfsVolume. Edit gcpnfsvolume_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:default=BASIC_HDD
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
+	Tier GcpFileTier `json:"tier"`
+
+	// +kubebuilder:validation:Pattern="^[a-z][a-z0-9_]*[a-z0-9]$"
+	// +kubebuilder:default=vol1
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="FileShareName is immutable."
+	FileShareName string `json:"fileShareName"`
+
+	// +kubebuilder:default=2560
+	CapacityGb int `json:"capacityGb"`
 }
 
 // GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
 type GcpNfsVolumeStatus struct {
+	State StatusState `json:"state,omitempty"`
+
+	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
+	// +optional
+	Hosts []string `json:"hosts,omitempty"`
+
 	// List of status conditions
 	// +optional
 	// +listType=map
@@ -50,6 +69,14 @@ type GcpNfsVolume struct {
 	Status GcpNfsVolumeStatus `json:"status,omitempty"`
 }
 
+func (in *GcpNfsVolume) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *GcpNfsVolume) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
+}
+
 //+kubebuilder:object:root=true
 
 // GcpNfsVolumeList contains a list of GcpNfsVolume
@@ -62,3 +89,16 @@ type GcpNfsVolumeList struct {
 func init() {
 	SchemeBuilder.Register(&GcpNfsVolume{}, &GcpNfsVolumeList{})
 }
+
+type GcpFileTier string
+
+const (
+	STANDARD       = GcpFileTier("STANDARD")
+	PREMIUM        = GcpFileTier("PREMIUM")
+	BASIC_HDD      = GcpFileTier("BASIC_HDD")
+	BASIC_SSD      = GcpFileTier("BASIC_SSD")
+	HIGH_SCALE_SSD = GcpFileTier("HIGH_SCALE_SSD")
+	ENTERPRISE     = GcpFileTier("ENTERPRISE")
+	ZONAL          = GcpFileTier("ZONAL")
+	REGIONAL       = GcpFileTier("REGIONAL")
+)

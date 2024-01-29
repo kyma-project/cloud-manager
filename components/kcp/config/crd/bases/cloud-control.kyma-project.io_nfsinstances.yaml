@@ -70,8 +70,14 @@ spec:
                         default: vol1
                         pattern: ^[a-z][a-z0-9_]*[a-z0-9]$
                         type: string
+                        x-kubernetes-validations:
+                        - message: FileShareName is immutable.
+                          rule: (self == oldSelf)
                       location:
                         type: string
+                        x-kubernetes-validations:
+                        - message: Location is immutable.
+                          rule: (self == oldSelf)
                       tier:
                         default: BASIC_HDD
                         enum:
@@ -82,6 +88,9 @@ spec:
                         - ZONAL
                         - REGIONAL
                         type: string
+                        x-kubernetes-validations:
+                        - message: Tier is immutable.
+                          rule: (self == oldSelf)
                     required:
                     - capacityGb
                     - connectMode
@@ -91,7 +100,12 @@ spec:
                     type: object
                 type: object
               ipRange:
-                type: string
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
               remoteRef:
                 properties:
                   name:
@@ -102,6 +116,9 @@ spec:
                 - name
                 - namespace
                 type: object
+                x-kubernetes-validations:
+                - message: RemoteRef is immutable.
+                  rule: (self == oldSelf)
               scope:
                 properties:
                   name:

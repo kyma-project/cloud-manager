@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/lib/composed"
 )
 
@@ -14,33 +13,16 @@ func validatePostCreate(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	//If it is deleting, continue to next action
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Validating Instance Details")
 
 	//Get GCP details.
 	gcpOptions := nfsInstance.Spec.Instance.Gcp
-	name := nfsInstance.Spec.RemoteRef.Name
-
-	id := nfsInstance.Status.Id
-	if id != "" {
-		matches := client.FilestoreInstanceRegEx.FindStringSubmatch(id)
-		l := len(matches)
-
-		//Validate the location of the instance is not modified
-		if l > 2 && matches[2] != gcpOptions.Location {
-			state.validations = append(state.validations, "Location cannot be modified")
-		}
-
-		//Validate if the name of the instance is not modified.
-		if l > 3 && matches[3] != name {
-			state.validations = append(state.validations, "Name cannot be modified")
-		}
-	}
-
-	//Validate the Tier is not modified.
-	if state.fsInstance != nil && v1beta1.GcpFileTier(state.fsInstance.Tier) != gcpOptions.Tier {
-		state.validations = append(state.validations, "Tier cannot be modified")
-	}
 
 	//Validate the instance is not being scale down.
 	if !CanScaleDown(gcpOptions.Tier) && state.fsInstance != nil &&
