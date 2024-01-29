@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/nfsinstance/types"
 )
 
 func New(stateFactory StateFactory) composed.Action {

@@ -6,7 +6,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
+	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/nfsinstance/types"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	nfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
 )

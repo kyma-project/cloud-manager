@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
+	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/nfsinstance/types"
 )
 
 type State struct {

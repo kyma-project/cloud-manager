@@ -3,11 +3,11 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/nfsinstance/types"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 )
 
