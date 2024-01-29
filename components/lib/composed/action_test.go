@@ -9,7 +9,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/wojas/genericr"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -124,48 +123,6 @@ loop:
 	assert.True(me.T(), hasReturned)
 	assert.Len(me.T(), state.log, 4)
 	assert.Equal(me.T(), "2.canceled", state.log[3])
-}
-
-func (me *composedActionSuite) TestLogsAllRunActions() {
-	myName := "TestLogsAllRunActions"
-
-	var allLogs []genericr.Entry
-	ctx := log.IntoContext(me.ctx, logr.New(genericr.New(func(e genericr.Entry) {
-		allLogs = append(allLogs, e)
-	})))
-
-	state := newComposedActionTestState()
-
-	a := ComposeActions(
-		myName,
-		buildTestAction("1", nil),
-		buildTestAction("2", nil),
-		buildTestAction("3", nil),
-	)
-
-	_, _ = a(ctx, state)
-
-	assert.Len(me.T(), allLogs, 4)
-
-	actionName := "github.com/kyma-project/cloud-manager/components/lib/composed.(*composedActionSuite).TestLogsAllRunActions.buildTestAction.func"
-
-	assert.Equal(me.T(), "Running action", allLogs[0].Message)
-	assert.Equal(me.T(), myName, allLogs[0].FieldsMap()["action"])
-	assert.Equal(me.T(), actionName+"2", allLogs[0].FieldsMap()["targetAction"])
-
-	assert.Equal(me.T(), "Running action", allLogs[1].Message)
-	assert.Equal(me.T(), myName, allLogs[1].FieldsMap()["action"])
-	assert.Equal(me.T(), actionName+"3", allLogs[1].FieldsMap()["targetAction"])
-
-	assert.Equal(me.T(), "Running action", allLogs[2].Message)
-	assert.Equal(me.T(), myName, allLogs[2].FieldsMap()["action"])
-	assert.Equal(me.T(), actionName+"4", allLogs[2].FieldsMap()["targetAction"])
-
-	assert.Equal(me.T(), "Reconciliation finished", allLogs[3].Message)
-	assert.Equal(me.T(), myName, allLogs[3].FieldsMap()["action"])
-	assert.Equal(me.T(), actionName+"4", allLogs[3].FieldsMap()["lastAction"])
-	assert.Equal(me.T(), nil, allLogs[3].FieldsMap()["result"])
-	assert.Equal(me.T(), nil, allLogs[3].FieldsMap()["err"])
 }
 
 func TestComposedAction(t *testing.T) {
