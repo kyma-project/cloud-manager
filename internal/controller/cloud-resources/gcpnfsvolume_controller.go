@@ -32,7 +32,7 @@ import (
 type GcpNfsVolumeReconcilerFactory struct{}
 
 func (f *GcpNfsVolumeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
-	return &AwsNfsVolumeReconciler{
+	return &GcpNfsVolumeReconciler{
 		kymaRef:    kymaRef,
 		kcpCluster: kcpCluster,
 		skrCluster: skrCluster,
@@ -70,6 +70,6 @@ func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func SetupGcpNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeReconcilerFactory{}).
-		For(&cloudresourcesv1beta1.AwsNfsVolume{}).
+		For(&cloudresourcesv1beta1.GcpNfsVolume{}).
 		Complete()
 }

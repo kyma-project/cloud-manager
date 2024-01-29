@@ -50,7 +50,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 	// TODO: log as warning
 	logger.
 		WithValues("objectKind", "NfsInstance").
-		WithValues("names", names).
+		WithValues("names", names).V(-1).
 		Info("Found more then one KCP object")
 	selectedName := names[0]
 	for _, i := range list.Items {

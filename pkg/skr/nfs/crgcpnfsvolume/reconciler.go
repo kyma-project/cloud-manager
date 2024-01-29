@@ -24,7 +24,9 @@ func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeMain",
 		composed.LoadObj,
-		validateSpec,
+		composed.ComposeActions(
+			"crGcpNfsVolumeValidateSpec",
+			validateIpRange, validateCapacity, validateFileShareName),
 		addFinalizer,
 		loadKcpNfsInstance,
 		loadPersistenceVolume,
