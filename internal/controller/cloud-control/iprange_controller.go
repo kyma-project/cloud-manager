@@ -22,7 +22,7 @@ import (
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
 	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"

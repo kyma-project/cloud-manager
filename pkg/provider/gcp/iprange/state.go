@@ -2,11 +2,11 @@ package iprange
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange/types"
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
 	"google.golang.org/api/compute/v1"

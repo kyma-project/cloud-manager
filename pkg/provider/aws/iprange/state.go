@@ -5,7 +5,7 @@ import (
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
 )

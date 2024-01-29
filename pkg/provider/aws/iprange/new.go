@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	iprangetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/iprange/types"
+	iprangetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange/types"
 )
 
 func New(stateFactory StateFactory) composed.Action {
