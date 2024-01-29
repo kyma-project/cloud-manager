@@ -18,7 +18,7 @@ package cloudresources
 
 import (
 	"context"
-	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -26,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
 type GcpNfsVolumeReconcilerFactory struct{}

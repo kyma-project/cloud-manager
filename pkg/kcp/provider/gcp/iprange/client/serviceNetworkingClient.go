@@ -2,11 +2,11 @@ package client
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"net/http"
 	"strconv"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"

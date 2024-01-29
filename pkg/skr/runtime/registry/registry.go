@@ -1,9 +1,9 @@
 package registry
 
 import (
-	skrcache "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/cache"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/manager"
-	skrsource "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/source"
+	skrcache "github.com/kyma-project/cloud-manager/pkg/skr/runtime/cache"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
+	skrsource "github.com/kyma-project/cloud-manager/pkg/skr/runtime/source"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"

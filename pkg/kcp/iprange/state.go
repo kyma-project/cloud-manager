@@ -1,9 +1,9 @@
 package iprange
 
 import (
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange/types"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 )
 
 type state struct {

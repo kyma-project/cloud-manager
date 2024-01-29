@@ -2,7 +2,7 @@ package crgcpnfsvolume
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 

@@ -2,8 +2,8 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 

@@ -3,7 +3,7 @@ package scope
 import (
 	"context"
 	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	kubernetesClient "k8s.io/client-go/kubernetes"

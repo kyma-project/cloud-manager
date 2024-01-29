@@ -3,8 +3,8 @@ package testinfra
 import (
 	"errors"
 	"fmt"
-	awsmock "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/mock"
-	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
+	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/onsi/ginkgo/v2"
 	"k8s.io/client-go/rest"
 	"os"

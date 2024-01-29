@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"net/http"
 
 	"google.golang.org/api/compute/v1"

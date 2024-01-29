@@ -2,7 +2,7 @@ package crgcpnfsvolume
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (error, context.Context) {

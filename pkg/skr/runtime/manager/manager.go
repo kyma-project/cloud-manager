@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 	"github.com/go-logr/logr"
-	skrcache "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/cache"
+	skrcache "github.com/kyma-project/cloud-manager/pkg/skr/runtime/cache"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"

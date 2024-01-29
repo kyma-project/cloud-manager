@@ -2,10 +2,10 @@ package scope
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
-	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
-	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

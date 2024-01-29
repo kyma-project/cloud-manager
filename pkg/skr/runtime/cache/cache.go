@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"

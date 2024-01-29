@@ -2,10 +2,10 @@ package mock
 
 import (
 	"context"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange/client"
-	nfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/nfsinstance/client"
-	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 )
 
 var _ Server = &server{}

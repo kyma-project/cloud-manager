@@ -19,14 +19,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange/client"
-	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/nfsinstance/client"
-	client2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/iprange/client"
-	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/nfsinstance/client"
-	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"os"
 
-	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -41,10 +41,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
-	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-control"
-	cloudresourcescontroller "github.com/kyma-project/cloud-manager/components/kcp/internal/controller/cloud-resources"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
+	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )
 

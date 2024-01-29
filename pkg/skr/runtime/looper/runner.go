@@ -3,8 +3,8 @@ package looper
 import (
 	"context"
 	"github.com/go-logr/logr"
-	skrmanager "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/manager"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/registry"
+	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/controller"

@@ -2,9 +2,9 @@ package nfsinstance
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func checkUpdateMask(ctx context.Context, st composed.State) (error, context.Context) {

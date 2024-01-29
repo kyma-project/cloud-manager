@@ -1,6 +1,6 @@
 package focal
 
-import "github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+import "github.com/kyma-project/cloud-manager/pkg/composed"
 
 func New() composed.Action {
 	return composed.ComposeActions(

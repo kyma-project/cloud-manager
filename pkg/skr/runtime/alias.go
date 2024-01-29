@@ -1,8 +1,8 @@
 package runtime
 
 import (
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/looper"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime/registry"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/looper"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 )
 
 var NewLooper = looper.New

@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"errors"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
 func IsValidCapacity(tier v1beta1.GcpFileTier, capacityGb int) (bool, error) {

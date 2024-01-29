@@ -1,4 +1,4 @@
-module github.com/kyma-project/cloud-manager/components/kcp
+module github.com/kyma-project/cloud-manager
 
 go 1.21.4
 

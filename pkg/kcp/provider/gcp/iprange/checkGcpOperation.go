@@ -3,10 +3,10 @@ package iprange
 import (
 	"context"
 	"errors"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func checkGcpOperation(ctx context.Context, st composed.State) (error, context.Context) {

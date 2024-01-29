@@ -3,7 +3,7 @@ package registry
 import (
 	"errors"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"strings"

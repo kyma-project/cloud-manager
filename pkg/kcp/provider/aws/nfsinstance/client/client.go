@@ -7,7 +7,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	client2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
+	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
 

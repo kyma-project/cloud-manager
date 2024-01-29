@@ -2,8 +2,8 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func New(stateFactory StateFactory) composed.Action {

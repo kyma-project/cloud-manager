@@ -2,14 +2,14 @@ package iprange
 
 import (
 	"context"
-	iprange2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/azure/iprange"
-	iprange3 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/iprange"
+	iprange2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
+	iprange3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )

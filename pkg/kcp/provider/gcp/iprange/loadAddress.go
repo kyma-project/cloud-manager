@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"google.golang.org/api/googleapi"
 )
 

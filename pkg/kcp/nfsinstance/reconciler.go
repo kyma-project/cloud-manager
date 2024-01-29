@@ -2,14 +2,14 @@ package nfsinstance
 
 import (
 	"context"
-	nfsinstance3 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/nfsinstance"
-	nfsinstance2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/azure/nfsinstance"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/nfsinstance"
+	nfsinstance3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
+	nfsinstance2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )

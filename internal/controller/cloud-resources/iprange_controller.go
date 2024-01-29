@@ -18,8 +18,8 @@ package cloudresources
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-resources/v1beta1"
-	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
