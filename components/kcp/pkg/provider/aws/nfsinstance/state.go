@@ -8,13 +8,13 @@ import (
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance/types"
 	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
-	"github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
+	nfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
 )
 
 type State struct {
 	nfsinstancetypes.State
 
-	awsClient client.Client
+	awsClient nfsinstanceclient.Client
 
 	efs                       *efsTypes.FileSystemDescription
 	mountTargets              []efsTypes.MountTargetDescription
@@ -27,7 +27,7 @@ type StateFactory interface {
 	NewState(ctx context.Context, nfsInstanceState nfsinstancetypes.State) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[client.Client], env abstractions.Environment) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[nfsinstanceclient.Client], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 		env:         env,
@@ -35,7 +35,7 @@ func NewStateFactory(skrProvider awsclient.SkrClientProvider[client.Client], env
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[client.Client]
+	skrProvider awsclient.SkrClientProvider[nfsinstanceclient.Client]
 	env         abstractions.Environment
 }
 
@@ -56,7 +56,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 	return newState(nfsInstanceState, c), nil
 }
 
-func newState(nfsInstanceState nfsinstancetypes.State, c client.Client) *State {
+func newState(nfsInstanceState nfsinstancetypes.State, c nfsinstanceclient.Client) *State {
 	return &State{
 		State:     nfsInstanceState,
 		awsClient: c,

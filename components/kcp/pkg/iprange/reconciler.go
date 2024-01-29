@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
@@ -13,7 +14,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type IPRangeReconciler struct {
+type IPRangeReconciler interface {
+	reconcile.Reconciler
+}
+
+type ipRangeReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
@@ -28,8 +33,8 @@ func NewIPRangeReconciler(
 	awsStateFactory awsiprange.StateFactory,
 	azureStateFactory azureiprange.StateFactory,
 	gcpStateFactory gcpiprange.StateFactory,
-) *IPRangeReconciler {
-	return &IPRangeReconciler{
+) IPRangeReconciler {
+	return &ipRangeReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
@@ -38,14 +43,14 @@ func NewIPRangeReconciler(
 	}
 }
 
-func (r *IPRangeReconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *ipRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
 	return composed.Handle(action(ctx, state))
 }
 
-func (r *IPRangeReconciler) newAction() composed.Action {
+func (r *ipRangeReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
@@ -67,7 +72,7 @@ func (r *IPRangeReconciler) newAction() composed.Action {
 	)
 }
 
-func (r *IPRangeReconciler) newFocalState(name types.NamespacedName) focal.State {
+func (r *ipRangeReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
 		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.IpRange{}),
 	)

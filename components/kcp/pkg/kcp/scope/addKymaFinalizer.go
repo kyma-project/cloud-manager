@@ -28,7 +28,7 @@ func addKymaFinalizer(ctx context.Context, st composed.State) (error, context.Co
 
 	err := state.Cluster().K8sClient().Update(ctx, state.kyma)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating Kyma CR with added finalizer", composed.StopWithRequeueDelay(time.Second), nil)
+		return composed.LogErrorAndReturn(err, "Error updating Kyma CR with added finalizer", composed.StopWithRequeueDelay(time.Second), ctx)
 	}
 
 	return composed.StopWithRequeueDelay(time.Second), nil

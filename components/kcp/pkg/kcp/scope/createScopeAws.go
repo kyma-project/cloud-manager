@@ -26,7 +26,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 			fmt.Errorf("error creating aws scope: %w", err),
 			"Error creating AWS scope",
 			composed.StopAndForget,
-			nil)
+			ctx)
 	}
 	callerIdentity, err := stsClient.GetCallerIdentity(ctx)
 	if err != nil {
@@ -34,13 +34,13 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 			fmt.Errorf("error getting caller identity: %w", err),
 			"Error creating AWS scope",
 			composed.StopWithRequeue,
-			nil)
+			ctx)
 	}
 
 	infra := &awsgardener.InfrastructureConfig{}
 	err = json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, nil)
+		return composed.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, ctx)
 	}
 
 	scope := &cloudcontrolv1beta1.Scope{

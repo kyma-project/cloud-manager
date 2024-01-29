@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
@@ -13,7 +14,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type NfsInstanceReconciler struct {
+type NfsInstanceReconciler interface {
+	reconcile.Reconciler
+}
+
+type nfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
@@ -28,8 +33,8 @@ func NewNfsInstanceReconciler(
 	awsStateFactory awsnfsinstance.StateFactory,
 	azureStateFactory azurenfsinstance.StateFactory,
 	gcpStateFactory gcpnfsinstance.StateFactory,
-) *NfsInstanceReconciler {
-	return &NfsInstanceReconciler{
+) NfsInstanceReconciler {
+	return &nfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
@@ -38,14 +43,14 @@ func NewNfsInstanceReconciler(
 	}
 }
 
-func (r *NfsInstanceReconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *nfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
 	return composed.Handle(action(ctx, state))
 }
 
-func (r *NfsInstanceReconciler) newAction() composed.Action {
+func (r *nfsInstanceReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
@@ -67,7 +72,7 @@ func (r *NfsInstanceReconciler) newAction() composed.Action {
 	)
 }
 
-func (r *NfsInstanceReconciler) newFocalState(name types.NamespacedName) focal.State {
+func (r *nfsInstanceReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
 		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.NfsInstance{}),
 	)

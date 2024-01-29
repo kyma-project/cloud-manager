@@ -19,6 +19,7 @@ package cloudresources
 import (
 	"context"
 	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,7 +29,21 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 )
 
-// VpcPeeringReconciler reconciles a VpcPeering object
+func SetupVpcPeeringReconciler(
+	kcpManager manager.Manager,
+) error {
+	return NewVpcPeeringReconciler(
+		kcpManager,
+	).SetupWithManager(kcpManager)
+}
+
+func NewVpcPeeringReconciler(mgr manager.Manager) *VpcPeeringReconciler {
+	return &VpcPeeringReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}
+}
+
 type VpcPeeringReconciler struct {
 	client.Client
 	record.EventRecorder

@@ -19,13 +19,47 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/nfsinstance"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
+	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
+	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
+	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
+	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
+	"github.com/kyma-project/cloud-manager/components/lib/composed"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// NfsInstanceReconciler reconciles a NfsInstance object
+func SetupNfsInstanceReconciler(
+	kcpManager manager.Manager,
+	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
+	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
+) error {
+	return NewNfsInstanceReconciler(
+		nfsinstance.NewNfsInstanceReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromManager(kcpManager)),
+			focal.NewStateFactory(),
+			awsnfsinstance.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
+			azurenfsinstance.NewStateFactory(),
+			gcpnfsinstance.NewStateFactory(filestoreClientProvider, abstractions.NewOSEnvironment()),
+		),
+	).SetupWithManager(kcpManager)
+}
+
+func NewNfsInstanceReconciler(
+	reconciler nfsinstance.NfsInstanceReconciler,
+) *NfsInstanceReconciler {
+	return &NfsInstanceReconciler{
+		Reconciler: reconciler,
+	}
+}
+
 type NfsInstanceReconciler struct {
-	Reconciler *nfsinstance.NfsInstanceReconciler
+	Reconciler nfsinstance.NfsInstanceReconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=nfsinstances,verbs=get;list;watch;create;update;patch;delete
@@ -42,7 +76,7 @@ type NfsInstanceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *NfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Reconciler.Run(ctx, req)
+	return r.Reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.

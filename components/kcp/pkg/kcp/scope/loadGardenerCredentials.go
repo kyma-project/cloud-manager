@@ -9,13 +9,13 @@ import (
 
 func loadGardenerCredentials(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(State)
+	state := st.(*State)
 
 	bindingName := *state.shoot.Spec.SecretBindingName
 
 	secretBinding, err := state.gardenerClient.SecretBindings(state.shootNamespace).Get(ctx, bindingName, metav1.GetOptions{})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting shoot secret binding", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error getting shoot secret binding", composed.StopWithRequeue, ctx)
 	}
 
 	state.provider = cloudcontrolv1beta1.ProviderType(secretBinding.Provider.Type)
@@ -23,7 +23,7 @@ func loadGardenerCredentials(ctx context.Context, st composed.State) (error, con
 	secret, err := state.gardenK8sClient.CoreV1().Secrets(secretBinding.SecretRef.Namespace).
 		Get(ctx, secretBinding.SecretRef.Name, metav1.GetOptions{})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting shoot secret", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error getting shoot secret", composed.StopWithRequeue, ctx)
 	}
 
 	for k, v := range secret.Data {

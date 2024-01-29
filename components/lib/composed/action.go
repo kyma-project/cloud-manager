@@ -31,9 +31,9 @@ func ComposeActions(name string, actions ...Action) Action {
 				lastError = currentCtx.Err()
 				break loop
 			default:
-				logger.
-					WithValues("targetAction", actionName).
-					Info("Running action")
+				//logger.
+				//	WithValues("targetAction", actionName).
+				//	Info("Running action")
 				err, nextCtx := a(currentCtx, state)
 				lastError = err
 				if nextCtx != nil {
@@ -51,7 +51,7 @@ func ComposeActions(name string, actions ...Action) Action {
 			)
 
 		if lastError == nil {
-			l.Info("Reconciliation finished")
+			//l.Info("Reconciliation finished")
 			return nil, nil
 		} else if fce, ok := lastError.(FlowControlError); ok {
 			l.Info(fmt.Sprintf("Reconciliation finished with flow control: %s", fce))
