@@ -6,7 +6,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/gardener"
+	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/gardener"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/pointer"
 )

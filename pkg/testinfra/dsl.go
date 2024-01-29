@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/gardener"
+	awsgardener "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/gardener"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

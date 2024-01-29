@@ -3,9 +3,9 @@ package cloudresources
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
 	kcpscope "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
 	"k8s.io/apimachinery/pkg/types"

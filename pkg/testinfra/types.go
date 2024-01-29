@@ -2,7 +2,7 @@ package testinfra
 
 import (
 	"context"
-	awsmock "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/mock"
+	awsmock "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -23,13 +23,13 @@ import (
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/iprange"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
-	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange"
-	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
-	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/iprange"
-	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/client"
-	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange"
-	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
+	awsiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange"
+	iprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange/client"
+	azureiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/azure/iprange"
+	gcpclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/client"
+	gcpiprange "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/iprange"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/iprange/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -37,8 +37,8 @@ import (
 func SetupIpRangeReconciler(
 	kcpManager manager.Manager,
 	awsProvider awsclient.SkrClientProvider[iprangeclient.Client],
-	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
-	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	gcpSvcNetProvider gcpclient.ClientProvider[client.ServiceNetworkingClient],
+	gcpComputeProvider gcpclient.ClientProvider[client.ComputeClient],
 ) error {
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(

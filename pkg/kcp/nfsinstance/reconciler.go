@@ -2,14 +2,14 @@ package nfsinstance
 
 import (
 	"context"
+	nfsinstance3 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/nfsinstance"
+	nfsinstance2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/azure/nfsinstance"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/nfsinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/components/kcp/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
-	awsnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance"
-	azurenfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/azure/nfsinstance"
-	gcpnfsinstance "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -22,17 +22,17 @@ type nfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   awsnfsinstance.StateFactory
-	azureStateFactory azurenfsinstance.StateFactory
-	gcpStateFactory   gcpnfsinstance.StateFactory
+	awsStateFactory   nfsinstance3.StateFactory
+	azureStateFactory nfsinstance2.StateFactory
+	gcpStateFactory   nfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	awsStateFactory awsnfsinstance.StateFactory,
-	azureStateFactory azurenfsinstance.StateFactory,
-	gcpStateFactory gcpnfsinstance.StateFactory,
+	awsStateFactory nfsinstance3.StateFactory,
+	azureStateFactory nfsinstance2.StateFactory,
+	gcpStateFactory nfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -63,9 +63,9 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(focal.AwsProviderPredicate, nfsinstance3.New(r.awsStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, nfsinstance2.New(r.azureStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, nfsinstance.New(r.gcpStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

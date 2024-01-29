@@ -19,11 +19,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/iprange/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/nfsinstance/client"
+	client2 "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/iprange/client"
+	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/gcp/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
-	awsiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/iprange/client"
-	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/nfsinstance/client"
-	gcpiprangeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/iprange/client"
-	gcpFilestoreClient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/gcp/nfsinstance/client"
 	"os"
 
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
@@ -152,8 +152,8 @@ func main() {
 	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
 		mgr,
 		awsiprangeclient.NewClientProvider(),
-		gcpiprangeclient.NewServiceNetworkingClient(),
-		gcpiprangeclient.NewComputeClient(),
+		client2.NewServiceNetworkingClient(),
+		client2.NewComputeClient(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)

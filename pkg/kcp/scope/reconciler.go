@@ -3,8 +3,8 @@ package scope
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/components/kcp/pkg/composed"
+	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
 	scopeclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/scope/client"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
 	skrruntime "github.com/kyma-project/cloud-manager/components/kcp/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

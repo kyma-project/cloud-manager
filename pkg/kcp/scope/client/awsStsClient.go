@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	awsclient "github.com/kyma-project/cloud-manager/components/kcp/pkg/provider/aws/client"
+	"github.com/kyma-project/cloud-manager/components/kcp/pkg/kcp/provider/aws/client"
 )
 
-func NewAwsStsGardenClientProvider() awsclient.GardenClientProvider[AwsStsClient] {
-	return awsclient.NewCachedGardenClientProvider(
+func NewAwsStsGardenClientProvider() client.GardenClientProvider[AwsStsClient] {
+	return client.NewCachedGardenClientProvider(
 		func(ctx context.Context, region, key, secret string) (AwsStsClient, error) {
-			cfg, err := awsclient.NewGardenConfig(ctx, region, key, secret)
+			cfg, err := client.NewGardenConfig(ctx, region, key, secret)
 			if err != nil {
 				return nil, err
 			}
