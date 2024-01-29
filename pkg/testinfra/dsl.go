@@ -111,7 +111,7 @@ func (dsl *infraDSL) GivenGardenShootAwsExists(name string) error {
 				Name:      name,
 			},
 			Spec: gardenerTypes.ShootSpec{
-				Region: "us-central1",
+				Region: "eu-west-1",
 				Networking: &gardenerTypes.Networking{
 					IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
 					Nodes:      pointer.String("10.180.0.0/16"),

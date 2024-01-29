@@ -19,6 +19,7 @@ package cloudresources
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -39,6 +40,10 @@ import (
 var infra testinfra.Infra
 
 func TestControllers(t *testing.T) {
+	if len(os.Getenv("PROJECTROOT")) == 0 {
+		t.Skip("Skipping TestControllers since PROJECTROOT env var is not set. It should point to dir where Makefile is. Check `make test` for details.")
+		return
+	}
 	RegisterFailHandler(Fail)
 
 	RunSpecs(t, "Controller Suite")

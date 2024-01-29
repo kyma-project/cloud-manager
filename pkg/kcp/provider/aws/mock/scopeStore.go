@@ -8,6 +8,7 @@ import (
 
 type ScopeConfig interface {
 	SetAccount(string)
+	GetAccount() string
 }
 
 type scopeStore struct {
@@ -16,6 +17,10 @@ type scopeStore struct {
 
 func (s *scopeStore) SetAccount(account string) {
 	s.account = account
+}
+
+func (s *scopeStore) GetAccount() string {
+	return s.account
 }
 
 func (s *scopeStore) GetCallerIdentity(ctx context.Context) (*sts.GetCallerIdentityOutput, error) {

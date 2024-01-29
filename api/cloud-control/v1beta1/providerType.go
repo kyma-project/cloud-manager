@@ -3,7 +3,7 @@ package v1beta1
 type ProviderType string
 
 const (
-	ProviderGCP   = "gcp"
-	ProviderAzure = "azure"
-	ProviderAws   = "aws"
+	ProviderGCP   = ProviderType("gcp")
+	ProviderAzure = ProviderType("azure")
+	ProviderAws   = ProviderType("aws")
 )
