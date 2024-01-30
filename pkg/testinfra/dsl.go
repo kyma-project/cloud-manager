@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -12,7 +13,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 var _ InfraDSL = &infraDSL{}
@@ -276,4 +279,59 @@ func (dsl *clusterDSL) GivenNamespaceExists(name string) error {
 	err = dsl.ci.Client().Create(dsl.ctx(), ns)
 	return err
 
+}
+
+func (dsl *infraDSL) GivenScopeAwsExists(name string) error {
+	shootNamespace := os.Getenv("GARDENER_NAMESPACE")
+	project := strings.TrimPrefix(shootNamespace, "garden-")
+	scope := &cloudcontrolv1beta1.Scope{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: dsl.i.KCP().Namespace(),
+			Name:      name,
+		},
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			KymaName:  name,
+			ShootName: name,
+			Region:    "eu-west-1",
+			Provider:  cloudcontrolv1beta1.ProviderAws,
+			Scope: cloudcontrolv1beta1.ScopeInfo{
+				Aws: &cloudcontrolv1beta1.AwsScope{
+					AccountId:  dsl.i.AwsMock().GetAccount(),
+					VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, name),
+					Network: cloudcontrolv1beta1.AwsNetwork{
+						VPC: cloudcontrolv1beta1.AwsVPC{
+							CIDR: "10.180.0.0/16",
+						},
+						Zones: []cloudcontrolv1beta1.AwsZone{
+							{
+								Name:     "eu-west-1a",
+								Internal: "10.180.48.0/20",
+								Public:   "10.180.32.0/20",
+								Workers:  "10.180.0.0/19",
+							},
+							{
+								Name:     "eu-west-1b",
+								Internal: "10.180.112.0/20",
+								Public:   "10.180.96.0/20",
+								Workers:  "10.180.64.0/19",
+							},
+							{
+								Name:     "eu-west-1c",
+								Internal: "10.180.176.0/20",
+								Public:   "10.180.160.0/20",
+								Workers:  "10.180.128.0/19",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err := dsl.i.KCP().Client().Create(dsl.i.Ctx(), scope)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

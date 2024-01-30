@@ -59,6 +59,7 @@ type ClusterEnv interface {
 type InfraDSL interface {
 	GivenKymaCRExists(name string) error
 	GivenGardenShootAwsExists(name string) error
+	GivenScopeAwsExists(name string) error
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
 }
 
