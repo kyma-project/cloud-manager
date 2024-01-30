@@ -1,4 +1,4 @@
-package crgcpnfsvolume
+package gcpnfsvolume
 
 import (
 	"context"
