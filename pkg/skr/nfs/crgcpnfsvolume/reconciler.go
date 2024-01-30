@@ -35,6 +35,7 @@ func (r *Reconciler) newAction() composed.Action {
 		deleteKcpNfsInstance,
 		removeFinalizer,
 		removePersistenceVolumeFinalizer,
+		createPersistenceVolume,
 		modifyPersistenceVolume,
 		updateStatus,
 		composed.StopAndForgetAction,

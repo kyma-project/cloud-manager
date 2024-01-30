@@ -12,6 +12,8 @@ const (
 	labelKymaName        = "cloud-resources.kyma-project.io/kymaName"
 	labelRemoteName      = "cloud-resources.kyma-project.io/remoteName"
 	labelRemoteNamespace = "cloud-resources.kyma-project.io/remoteNamespace"
+	labelNfsVolName      = "cloud-resources.kyma-project.io/nfsVolumeName"
+	labelNfsVolNS        = "cloud-resources.kyma-project.io/nfsVolumeNamespace"
 )
 
 func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {

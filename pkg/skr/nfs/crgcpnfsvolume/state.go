@@ -4,6 +4,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -12,22 +13,26 @@ type State struct {
 	KymaRef        klog.ObjectRef
 	KcpCluster     composed.StateCluster
 	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
+	SkrCluster     composed.StateCluster
+	PV             *v1.PersistentVolume
 }
 
 type StateFactory interface {
 	NewState(baseState composed.State) *State
 }
 
-func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster) StateFactory {
+func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, skrCluster composed.StateCluster) StateFactory {
 	return &stateFactory{
 		kymaRef:    kymaRef,
 		kcpCluster: kcpCluster,
+		skrCluster: skrCluster,
 	}
 }
 
 type stateFactory struct {
 	kymaRef    klog.ObjectRef
 	kcpCluster composed.StateCluster
+	skrCluster composed.StateCluster
 }
 
 func (f *stateFactory) NewState(baseState composed.State) *State {
@@ -35,6 +40,7 @@ func (f *stateFactory) NewState(baseState composed.State) *State {
 		State:      baseState,
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
+		SkrCluster: f.skrCluster,
 	}
 }
 
