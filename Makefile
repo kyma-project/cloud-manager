@@ -143,7 +143,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 ##@ Build Dependencies
 
-PROJECTROOT ?= $(shell pwd)
+PROJECTROOT = $(shell pwd)
 
 ## Location to install dependencies to
 LOCALBIN ?= $(shell pwd)/bin

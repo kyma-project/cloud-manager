@@ -104,6 +104,7 @@ func Start() (Infra, error) {
 	looper := skrruntime.NewLooper(kcpMgr, infra.SKR().Scheme(), registry, kcpMgr.GetLogger())
 
 	awsMock := awsmock.New()
+	awsMock.SetAccount("some-aws-account")
 
 	infra.InfraEnv = &infraEnv{
 		kcpManager: kcpMgr,
@@ -120,6 +121,8 @@ func Start() (Infra, error) {
 			ctx: infra.Ctx,
 		}
 	}
+
+	_ = os.Setenv("GARDENER_NAMESPACE", infra.Garden().Namespace())
 
 	return infra, nil
 }
