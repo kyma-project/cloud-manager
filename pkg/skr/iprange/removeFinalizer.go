@@ -1,4 +1,4 @@
-package criprange
+package iprange
 
 import (
 	"context"
