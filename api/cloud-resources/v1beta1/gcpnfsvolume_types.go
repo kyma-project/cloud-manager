@@ -20,6 +20,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ConditionTypeSpecValid = "CidrValid"
+
+	ConditionReasonCapacityValid        = "CapacityGbValid"
+	ConditionReasonCapacityInvalid      = "CapacityGbInvalid"
+	ConditionReasonLocationValid        = "LocationValid"
+	ConditionReasonLocationInvalid      = "LocationInvalid"
+	ConditionReasonIpRangeValid         = "IpRangeValid"
+	ConditionReasonIpRangeInvalid       = "IpRangeInvalid"
+	ConditionReasonFileShareNameValid   = "FileShareNameValid"
+	ConditionReasonFileShareNameInvalid = "FileShareNameInvalid"
+)
+
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
 type GcpNfsVolumeSpec struct {
 	// +kubebuilder:validation:Required

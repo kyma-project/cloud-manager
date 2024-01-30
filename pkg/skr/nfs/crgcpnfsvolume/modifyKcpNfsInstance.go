@@ -2,6 +2,7 @@ package crgcpnfsvolume
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -19,10 +20,14 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if state.KcpNfsInstance != nil {
-		// mirror NfsInstance in KCP is already created
-		return nil, nil
+		return updateKcpNfsInstance(ctx, state, logger.WithValues("operation", "updateKcpNfsInstance"))
+	} else {
+		return createKcpNfsInstance(ctx, state, logger.WithValues("operation", "createKcpNfsInstance"))
 	}
 
+}
+
+func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      uuid.NewString(),
@@ -64,12 +69,40 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance created")
 
+	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.UnknownState
+
 	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 		SetCondition(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
 			Message: "Resource is submitted for provisioning",
+		}).
+		ErrorLogMessage("Error updating GcpNfsVolume status with submitted condition").
+		Run(ctx, state)
+}
+
+func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
+	modified := state.KcpNfsInstance.DeepCopy()
+	// As of now, only CapacityGb is mutable
+	modified.Spec.Instance.Gcp.CapacityGb = state.ObjAsGcpNfsVolume().Spec.CapacityGb
+	err := state.KcpCluster.K8sClient().Update(ctx, modified)
+
+	if err != nil {
+		logger.Error(err, "Error updating KCP NfsInstance")
+		return composed.StopWithRequeue, nil
+	}
+	logger.
+		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
+		Info("KCP NFS instance got updated")
+
+	// Updating only condition (not status.state) as changing it to unknown is confusing
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SetCondition(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
+			Message: "Resource is submitted for provisioning/updating",
 		}).
 		ErrorLogMessage("Error updating GcpNfsVolume status with submitted condition").
 		Run(ctx, state)

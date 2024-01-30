@@ -16,6 +16,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	condReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 
 	if condErr != nil {
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.ErrorState
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -28,6 +29,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if condReady != nil {
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.ReadyState
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
