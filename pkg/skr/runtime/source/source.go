@@ -3,6 +3,7 @@ package source
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,15 +25,16 @@ type SkrSource interface {
 	Queue() workqueue.RateLimitingInterface
 }
 
-func New(scheme *runtime.Scheme, skrApiReader client.Reader, gvk schema.GroupVersionKind, store clientcache.Store) SkrSource {
+func New(skrManager manager.SkrManager, gvk schema.GroupVersionKind, store clientcache.Store) SkrSource {
 	listGvk := schema.GroupVersionKind{
 		Group:   gvk.Group,
 		Version: gvk.Version,
 		Kind:    gvk.Kind + "List",
 	}
 	return &skrSource{
-		scheme:       scheme,
-		skrApiReader: skrApiReader,
+		skrManager:   skrManager,
+		scheme:       skrManager.GetScheme(),
+		skrApiReader: skrManager.GetAPIReader(),
 		objGvk:       gvk,
 		listGvk:      listGvk,
 		store:        store,
@@ -40,6 +42,7 @@ func New(scheme *runtime.Scheme, skrApiReader client.Reader, gvk schema.GroupVer
 }
 
 type skrSource struct {
+	skrManager   manager.SkrManager
 	scheme       *runtime.Scheme
 	skrApiReader client.Reader
 	objGvk       schema.GroupVersionKind
@@ -63,6 +66,8 @@ func (s *skrSource) Queue() workqueue.RateLimitingInterface {
 }
 
 func (s *skrSource) Start(ctx context.Context, handler handler.EventHandler, limitingInterface workqueue.RateLimitingInterface, predicate ...predicate.Predicate) error {
+	logger := s.skrManager.GetLogger().WithValues("GVK", s.objGvk.String())
+	logger.Info("Starting SKR Source")
 	s.started = true
 	s.queue = limitingInterface
 
@@ -83,6 +88,11 @@ func (s *skrSource) Start(ctx context.Context, handler handler.EventHandler, lim
 	if err != nil {
 		return err
 	}
+
+	logger.Info(fmt.Sprintf("Loaded list with %d items", len(arr)))
+
+	var events []event.GenericEvent
+
 itemLoop:
 	for _, item := range arr {
 		obj, ok := item.(client.Object)
@@ -97,6 +107,15 @@ itemLoop:
 			}
 		}
 
+		events = append(events, evt)
+		err = s.store.Add(obj)
+		if err != nil {
+			logger.Error(err, "Error adding object to store")
+			return err
+		}
+	}
+
+	for _, evt := range events {
 		handler.Generic(ctx, evt, limitingInterface)
 	}
 

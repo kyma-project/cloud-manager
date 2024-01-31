@@ -18,7 +18,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 	vpcList, err := state.client.DescribeVpcs(ctx)
 	if err != nil {
-		return err, nil
+		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
 	}
 
 	var vpc *ec2Types.Vpc

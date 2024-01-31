@@ -19,7 +19,7 @@ func ensureScopeCommonFields(ctx context.Context, st composed.State) (error, con
 	controllerutil.AddFinalizer(state.ObjAsScope(), cloudcontrolv1beta1.FinalizerName)
 
 	// set kyma name in label
-	metav1.SetMetaDataLabel(&state.ObjAsScope().ObjectMeta, cloudcontrolv1beta1.KymaLabel, state.Obj().GetName())
+	metav1.SetMetaDataLabel(&state.ObjAsScope().ObjectMeta, cloudcontrolv1beta1.LabelKymaName, state.Obj().GetName())
 
 	// set kyma name in spec
 	state.ObjAsScope().Spec.KymaName = state.Obj().GetName()

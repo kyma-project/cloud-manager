@@ -18,10 +18,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/elliotchance/pie/v2"
+	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"os"
@@ -43,7 +44,6 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )
@@ -64,9 +64,6 @@ func init() {
 }
 
 func main() {
-	for k := range skrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion) {
-		fmt.Println(k)
-	}
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -82,6 +79,15 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	setupLog.WithValues(
+		"scheme", "KCP",
+		"kinds", pie.Keys(kcpScheme.KnownTypes(cloudcontrolv1beta1.GroupVersion)),
+	).Info("Schema dump")
+	setupLog.WithValues(
+		"scheme", "SKR",
+		"kinds", pie.Keys(skrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)),
+	).Info("Schema dump")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 kcpScheme,
@@ -152,8 +158,8 @@ func main() {
 	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
 		mgr,
 		awsiprangeclient.NewClientProvider(),
-		client2.NewServiceNetworkingClient(),
-		client2.NewComputeClient(),
+		gcpiprangeclient.NewServiceNetworkingClient(),
+		gcpiprangeclient.NewComputeClient(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)

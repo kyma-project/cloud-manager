@@ -6,11 +6,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
-func NewStateClusterFromManager(mgr manager.Manager) StateCluster {
-	return NewStateCluster(mgr.GetClient(), mgr.GetEventRecorderFor("cloud-manager"), mgr.GetScheme())
+func NewStateClusterFromCluster(cluster cluster.Cluster) StateCluster {
+	return NewStateCluster(cluster.GetClient(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
 }
 
 func NewStateCluster(client client.Client,

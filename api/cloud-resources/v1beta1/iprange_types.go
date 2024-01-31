@@ -34,6 +34,11 @@ const (
 	ConditionReasonCidrChanged = "CidrChanged"
 )
 
+const (
+	// ConditionReasonInvalidCidr used with ConditionTypeError in case ConditionTypeCidrValid is also set
+	ConditionReasonInvalidCidr = "InvalidCidr"
+)
+
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:Required

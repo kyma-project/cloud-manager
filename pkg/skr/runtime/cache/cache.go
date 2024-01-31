@@ -56,7 +56,7 @@ type skrCache struct {
 func (c *skrCache) GetIndexerFor(gvk schema.GroupVersionKind) clientcache.Indexer {
 	i, exists := c.indexers[gvk]
 	if !exists {
-		i := clientcache.NewIndexer(clientcache.MetaNamespaceKeyFunc, clientcache.Indexers{
+		i = clientcache.NewIndexer(clientcache.MetaNamespaceKeyFunc, clientcache.Indexers{
 			clientcache.NamespaceIndex: clientcache.MetaNamespaceIndexFunc,
 		})
 		c.indexers[gvk] = i
@@ -93,6 +93,8 @@ func (c *skrCache) Get(ctx context.Context, key client.ObjectKey, out client.Obj
 		key.Namespace = ""
 	}
 
+	out.SetNamespace(key.Namespace)
+	out.SetName(key.Name)
 	storeKey, err := clientcache.MetaNamespaceKeyFunc(out)
 	if err != nil {
 		return err

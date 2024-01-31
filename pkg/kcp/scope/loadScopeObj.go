@@ -7,7 +7,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func loadScopeObj(ctx context.Context, state composed.State) (error, context.Context) {
+func loadScopeObj(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	err := state.LoadObj(ctx)
 	if apierrors.IsNotFound(err) {
@@ -21,6 +22,8 @@ func loadScopeObj(ctx context.Context, state composed.State) (error, context.Con
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading Scope object", composed.StopWithRequeue, ctx)
 	}
+
+	state.activeSkrCollection.AddKymaName(state.kyma.GetName())
 
 	return composed.StopAndForget, nil
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cloudresources
+package cloudcontrol
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func SetupIpRangeReconciler(
 ) error {
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(kcpManager)),
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider, abstractions.NewOSEnvironment()),
 			azureiprange.NewStateFactory(nil),

@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	ConditionTypeSpecValid = "CidrValid"
+	ConditionTypeSpecValid = "SpecValid"
 
 	ConditionReasonCapacityValid        = "CapacityGbValid"
 	ConditionReasonCapacityInvalid      = "CapacityGbInvalid"

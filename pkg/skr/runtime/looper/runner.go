@@ -27,7 +27,7 @@ func WithTimeout(timeout time.Duration) RunOption {
 }
 
 type SkrRunner interface {
-	Run(ctx context.Context, mngr skrmanager.SkrManager, opts ...RunOption)
+	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption)
 	GetControllerOptions(
 		descriptor registry.Descriptor,
 		skrManager skrmanager.SkrManager,
@@ -49,7 +49,7 @@ type skrRunner struct {
 	stopped    bool
 }
 
-func (r *skrRunner) Run(ctx context.Context, mngr skrmanager.SkrManager, opts ...RunOption) {
+func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) {
 	if r.started {
 		return
 	}
@@ -59,12 +59,12 @@ func (r *skrRunner) Run(ctx context.Context, mngr skrmanager.SkrManager, opts ..
 	}
 	r.runOnce.Do(func() {
 		r.started = true
-		descriptors := r.registry.GetDescriptors(mngr)
+		descriptors := r.registry.GetDescriptors(skrManager)
 		for _, descr := range descriptors {
-			logger2 := mngr.GetLogger().WithValues("controller", descr.Name)
-			ctrl, err := controller.New(descr.Name, mngr, r.GetControllerOptions(
+			logger2 := skrManager.GetLogger().WithValues("controller", descr.Name)
+			ctrl, err := controller.New(descr.Name, skrManager, r.GetControllerOptions(
 				descr,
-				mngr,
+				skrManager,
 			))
 			if err != nil {
 				logger2.Error(err, "error creating controller")
@@ -91,10 +91,10 @@ func (r *skrRunner) Run(ctx context.Context, mngr skrmanager.SkrManager, opts ..
 
 		go r.queueMonitor(timeoutCtx, descriptors, cancel)
 
-		err := mngr.Start(timeoutCtx)
+		err := skrManager.Start(timeoutCtx)
 		r.stopped = true
 		if err != nil {
-			mngr.GetLogger().Error(err, "error starting manager")
+			skrManager.GetLogger().Error(err, "error starting manager")
 		}
 	})
 }

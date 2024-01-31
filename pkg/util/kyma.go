@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -42,6 +43,44 @@ func GetKymaModuleState(k *unstructured.Unstructured, moduleName string) KymaMod
 	return KymaModuleStateNotPresent
 }
 
+func RemoveKymaModuleState(k *unstructured.Unstructured, moduleName string) error {
+	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
+	if err != nil {
+		return err
+	}
+	if !exists {
+		modules = []interface{}{}
+		err = unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
+		if err != nil {
+			return nil
+		}
+	}
+
+	idxToRemove := -1
+	for idx, m := range modules {
+		mm, ok := m.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("kyma CR module #%d is not a map", idx)
+		}
+
+		name, exists, err := unstructured.NestedString(mm, "name")
+		if err != nil {
+			return err
+		}
+		if exists && name == moduleName {
+			idxToRemove = idx
+			break
+		}
+	}
+
+	if idxToRemove == -1 {
+		return nil
+	}
+
+	modules = pie.Delete(modules, idxToRemove)
+	return unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
+}
+
 func SetKymaModuleState(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if err != nil {
@@ -66,7 +105,12 @@ func SetKymaModuleState(k *unstructured.Unstructured, moduleName string, state K
 			return err
 		}
 		if exists && name == moduleName {
-			return unstructured.SetNestedField(mm, string(state), "state")
+			err = unstructured.SetNestedField(mm, string(state), "state")
+			if err != nil {
+				return err
+			}
+			modules[idx] = mm
+			return unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 		}
 	}
 
