@@ -188,5 +188,5 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-	//test me
+	//test 2014-01-31 13:44
 }
