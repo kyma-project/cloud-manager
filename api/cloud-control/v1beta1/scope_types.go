@@ -20,16 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	KymaLabel         = "operator.kyma-project.io/kyma-name"
-	ScopeLabel        = "cloud-control.kyma-project.io/scope-name"
-	ProviderTypeLabel = "cloud-control.kyma-project.io/provider-type"
-)
-
-const (
-	ReasonMissingKyma = "MissingKyma"
-)
-
 // ScopeSpec defines the desired state of Scope
 type ScopeSpec struct {
 	// +kubebuilder:validation:Required

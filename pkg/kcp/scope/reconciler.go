@@ -21,7 +21,7 @@ func New(
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 ) ScopeReconciler {
 	return NewScopeReconciler(NewStateFactory(
-		composed.NewStateFactory(composed.NewStateClusterFromManager(mgr)),
+		composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 		awsStsClientProvider,
 		activeSkrCollection,
 	))

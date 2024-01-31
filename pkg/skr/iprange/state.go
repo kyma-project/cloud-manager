@@ -5,34 +5,34 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/klog/v2"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type State struct {
 	composed.State
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
+
 	KcpIpRange *cloudcontrolv1beta1.IpRange
 }
 
-type StateFactory interface {
-	NewState(baseState composed.State) *State
-}
-
-func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster) StateFactory {
+func newStateFactory(baseStateFactory composed.StateFactory, kymaRef klog.ObjectRef, kcpCluster composed.StateCluster) *stateFactory {
 	return &stateFactory{
-		kymaRef:    kymaRef,
-		kcpCluster: kcpCluster,
+		baseStateFactory: baseStateFactory,
+		kymaRef:          kymaRef,
+		kcpCluster:       kcpCluster,
 	}
 }
 
 type stateFactory struct {
-	kymaRef    klog.ObjectRef
-	kcpCluster composed.StateCluster
+	baseStateFactory composed.StateFactory
+	kymaRef          klog.ObjectRef
+	kcpCluster       composed.StateCluster
 }
 
-func (f *stateFactory) NewState(baseState composed.State) *State {
+func (f *stateFactory) NewState(req ctrl.Request) *State {
 	return &State{
-		State:      baseState,
+		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.IpRange{}),
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
 	}

@@ -38,11 +38,15 @@ const (
 
 // AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
 type AwsNfsVolumeSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of AwsNfsVolume. Edit awsnfsvolume_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+	IpRange IpRangeRef `json:"ipRange"`
+
+	// +kubebuilder:default=generalPurpose
+	PerformanceMode AwsPerformanceMode `json:"performanceMode,omitempty"`
+
+	// +kubebuilder:default=bursting
+	Throughput AwsThroughputMode `json:"throughput,omitempty"`
 }
 
 // AwsNfsVolumeStatus defines the observed state of AwsNfsVolume
@@ -64,6 +68,14 @@ type AwsNfsVolume struct {
 
 	Spec   AwsNfsVolumeSpec   `json:"spec,omitempty"`
 	Status AwsNfsVolumeStatus `json:"status,omitempty"`
+}
+
+func (in *AwsNfsVolume) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *AwsNfsVolume) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 //+kubebuilder:object:root=true

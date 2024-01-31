@@ -98,7 +98,7 @@ func (r *skrRegistry) GetDescriptors(mngr manager.SkrManager) DescriptorList {
 			ReconcilerFactory: item.reconcilerFactory,
 		}
 		for _, wi := range item.watches {
-			src := skrsource.New(mngr.GetScheme(), mngr.GetAPIReader(), wi.gvk, cch.GetIndexerFor(wi.gvk))
+			src := skrsource.New(mngr, wi.gvk, cch.GetIndexerFor(wi.gvk))
 			w := Watch{
 				Name:         wi.name,
 				Src:          src,

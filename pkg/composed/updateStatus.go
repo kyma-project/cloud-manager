@@ -26,6 +26,7 @@ type UpdateStatusBuilder struct {
 	conditionsToRemove map[string]struct{}
 	conditionsToSet    []metav1.Condition
 	updateErrorLogMsg  string
+	successLogMsg      string
 	failedError        error
 	successError       error
 	updateErrorWrapper func(err error) error
@@ -62,6 +63,11 @@ func (b *UpdateStatusBuilder) SetCondition(cond metav1.Condition) *UpdateStatusB
 
 func (b *UpdateStatusBuilder) ErrorLogMessage(msg string) *UpdateStatusBuilder {
 	b.updateErrorLogMsg = msg
+	return b
+}
+
+func (b *UpdateStatusBuilder) SuccessLogMsg(msg string) *UpdateStatusBuilder {
+	b.successLogMsg = msg
 	return b
 }
 
@@ -121,6 +127,11 @@ func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, cont
 		return b.onUpdateError(ctx, err)
 	}
 
+	if len(b.successLogMsg) > 0 {
+		logger := LoggerFromCtx(ctx)
+		logger.Info(b.successLogMsg)
+	}
+
 	return b.onUpdateSuccess(ctx)
 }
 
@@ -142,7 +153,7 @@ func (b *UpdateStatusBuilder) setDefaults() {
 
 	if b.onUpdateError == nil {
 		b.onUpdateError = func(ctx context.Context, err error) (error, context.Context) {
-			return LogErrorAndReturn(err, b.updateErrorLogMsg, b.failedError, nil)
+			return LogErrorAndReturn(err, b.updateErrorLogMsg, b.failedError, ctx)
 		}
 	}
 

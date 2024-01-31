@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -10,6 +11,10 @@ import (
 )
 
 func NewGardenConfig(ctx context.Context, region, key, secret string) (cfg aws.Config, err error) {
+	if key == "" || secret == "" {
+		err = errors.New("AWS credentials are not specified")
+		return
+	}
 	cfg, err = config.LoadDefaultConfig(
 		ctx,
 		config.WithRegion(region),
@@ -19,6 +24,10 @@ func NewGardenConfig(ctx context.Context, region, key, secret string) (cfg aws.C
 }
 
 func NewSkrConfig(ctx context.Context, region, key, secret, assumeRole string) (cfg aws.Config, err error) {
+	if key == "" || secret == "" {
+		err = errors.New("AWS credentials are not specified")
+		return
+	}
 	var assumeCfg aws.Config
 	assumeCfg, err = config.LoadDefaultConfig(
 		ctx,

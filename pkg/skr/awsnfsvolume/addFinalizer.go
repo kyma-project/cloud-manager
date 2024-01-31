@@ -1,4 +1,4 @@
-package iprange
+package awsnfsvolume
 
 import (
 	"context"
@@ -18,12 +18,9 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	logger := composed.LoggerFromCtx(ctx)
-	logger.Info("Adding finalier to IpRange")
-
 	err := st.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error saving AwsNfsVolume after finalizer added", composed.StopWithRequeue, nil)
 	}
 
 	return nil, nil

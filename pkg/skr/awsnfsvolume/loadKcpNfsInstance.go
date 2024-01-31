@@ -1,4 +1,4 @@
-package iprange
+package awsnfsvolume
 
 import (
 	"context"
@@ -8,13 +8,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Context) {
+func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
-	logger.Info("Loading KCP IpRange")
-
-	list := &cloudcontrolv1beta1.IpRangeList{}
+	list := &cloudcontrolv1beta1.NfsInstanceList{}
 	err := state.KcpCluster.K8sClient().List(
 		ctx,
 		list,
@@ -26,35 +23,33 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 		client.InNamespace(state.KymaRef.Namespace),
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, nil)
 	}
 
 	if len(list.Items) == 0 {
-		logger.Info("KCP IpRange not found")
 		return nil, nil
 	}
 
 	if len(list.Items) == 1 {
-		logger.Info("KCP IpRange is loaded")
-		state.KcpIpRange = &list.Items[0]
+		state.KcpNfsInstance = &list.Items[0]
 		return nil, nil
 	}
 
-	// more than one IpRange found in KCP, log warning and pick one
-	names := pie.Map(list.Items, func(x cloudcontrolv1beta1.IpRange) string {
+	// more than one NfsInstance found in KCP, log warning and pick one
+	names := pie.Map(list.Items, func(x cloudcontrolv1beta1.NfsInstance) string {
 		return x.Name
 	})
 	names = pie.Sort(names)
-
+	logger := composed.LoggerFromCtx(ctx)
 	// TODO: log as warning
 	logger.
-		WithValues("objectKind", "IpRange").
+		WithValues("objectKind", "NfsInstance").
 		WithValues("names", names).
 		Info("Found more then one KCP object")
 	selectedName := names[0]
 	for _, i := range list.Items {
 		if i.Name == selectedName {
-			state.KcpIpRange = &i
+			state.KcpNfsInstance = &i
 			break
 		}
 	}

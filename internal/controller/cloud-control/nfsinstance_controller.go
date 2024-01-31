@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cloudresources
+package cloudcontrol
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func SetupNfsInstanceReconciler(
 ) error {
 	return NewNfsInstanceReconciler(
 		nfsinstance.NewNfsInstanceReconciler(
-			composed.NewStateFactory(composed.NewStateClusterFromManager(kcpManager)),
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsnfsinstance.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
 			azurenfsinstance.NewStateFactory(),

@@ -22,5 +22,6 @@ func preventCidrChange(ctx context.Context, st composed.State) (error, context.C
 		}).
 		ErrorLogMessage("Error updating IpRange status with CIDR changed condition").
 		SuccessError(composed.StopAndForget).
+		SuccessLogMsg("Forgetting IpRange with changed Cidr").
 		Run(ctx, state)
 }

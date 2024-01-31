@@ -11,6 +11,9 @@ import (
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
+
+	logger.Info("Updating IpRange status")
 
 	condErr := meta.FindStatusCondition(state.KcpIpRange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	condReady := meta.FindStatusCondition(state.KcpIpRange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)

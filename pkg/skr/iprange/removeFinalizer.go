@@ -9,6 +9,7 @@ import (
 
 func removeFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
@@ -18,6 +19,8 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		// KCP IpRange is not yet deleted
 		return nil, nil
 	}
+
+	logger.Info("Removing IpRange finalizer")
 
 	// KCP IpRange does not exist, remove the finalizer so SKR IpRange is also deleted
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)

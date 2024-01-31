@@ -34,10 +34,30 @@ spec:
           spec:
             description: AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
             properties:
-              foo:
-                description: Foo is an example field of AwsNfsVolume. Edit awsnfsvolume_types.go
-                  to remove/update
+              ipRange:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+              performanceMode:
+                default: generalPurpose
+                enum:
+                - generalPurpose
+                - maxIO
                 type: string
+              throughput:
+                default: bursting
+                enum:
+                - bursting
+                - elastic
+                type: string
+            required:
+            - ipRange
             type: object
           status:
             description: AwsNfsVolumeStatus defines the observed state of AwsNfsVolume

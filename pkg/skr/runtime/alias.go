@@ -11,6 +11,8 @@ type SkrLooper = looper.SkrLooper
 
 var NewRegistry = registry.New
 
+type ReconcilerFactory = registry.ReconcilerFactory
+
 var NewRunner = looper.NewSkrRunner
 
 type SkrRegistry = registry.SkrRegistry

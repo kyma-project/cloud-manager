@@ -13,6 +13,8 @@ func copyCidrToStatus(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
+	logger.Info("Copying IpRange Cidr to status field")
+
 	obj.Status.Cidr = obj.Spec.Cidr
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {

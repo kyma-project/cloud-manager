@@ -12,12 +12,15 @@ import (
 
 func validateCidr(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 	existing := meta.FindStatusCondition(state.ObjAsIpRange().Status.Conditions, cloudresourcesv1beta1.ConditionTypeCidrValid)
 	if existing != nil && existing.Status == metav1.ConditionTrue {
+		logger.Info("Cidr already checked and valid")
 		// already valid
 		return nil, nil
 	}
 	if existing != nil && existing.Status == metav1.ConditionFalse {
+		logger.Info("Forgetting IpRange due to already invalid Cidr")
 		// already not valid
 		return composed.StopAndForget, nil
 	}
@@ -31,7 +34,15 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSyntax,
 				Message: fmt.Sprintf("CIDR %s has invalid syntax", state.ObjAsIpRange().Spec.Cidr),
 			}).
+			SetCondition(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
+				Message: "Invalid CIDR",
+			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating IpRange status with invalid CIDR syntax").
+			SuccessLogMsg("Forgetting IpRange with invalid Cidr syntax").
 			Run(ctx, state)
 	}
 
@@ -45,7 +56,15 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSize,
 				Message: fmt.Sprintf("CIDR %s is not IPv4", state.ObjAsIpRange().Spec.Cidr),
 			}).
+			SetCondition(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
+				Message: "Invalid CIDR",
+			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating IpRange status with CIDR not an IPv4 condition").
+			SuccessLogMsg("Forgetting IpRange with invalid non IPv4 Cidr").
 			Run(ctx, state)
 	}
 
@@ -58,7 +77,15 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSize,
 				Message: fmt.Sprintf("CIDR %s block size must not be greater than %d", state.ObjAsIpRange().Spec.Cidr, maxOnes),
 			}).
+			SetCondition(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
+				Message: "Invalid CIDR",
+			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating IpRange status with invalid CIDR mask").
+			SuccessLogMsg("Forgetting IpRange with invalid Cidr mask").
 			Run(ctx, state)
 	}
 
@@ -71,5 +98,6 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 		}).
 		SuccessError(nil).
 		ErrorLogMessage("Error updating IpRange status with valid CIDR condition").
+		SuccessLogMsg("Set IpRange valid Cidr condition").
 		Run(ctx, state)
 }

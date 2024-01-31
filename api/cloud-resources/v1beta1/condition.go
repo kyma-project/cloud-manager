@@ -12,3 +12,10 @@ const (
 
 	ConditionReasonError = "Error"
 )
+
+const (
+	ConditionTypeError = "Error"
+
+	// ConditionReasonIpRangeNotFound used with ConditionTypeError in case IpRange specified in object does not exist
+	ConditionReasonIpRangeNotFound = "IpRangeNotFound"
+)
