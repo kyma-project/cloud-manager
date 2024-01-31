@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/skr/nfs/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -36,6 +37,7 @@ func (f *GcpNfsVolumeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster c
 		kymaRef:    kymaRef,
 		kcpCluster: kcpCluster,
 		skrCluster: skrCluster,
+		Reconciler: gcpnfsvolume.NewReconciler(kymaRef, kcpCluster, skrCluster),
 	}
 }
 
@@ -44,6 +46,7 @@ type GcpNfsVolumeReconciler struct {
 	kymaRef    klog.ObjectRef
 	kcpCluster cluster.Cluster
 	skrCluster cluster.Cluster
+	Reconciler gcpnfsvolume.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsvolumes,verbs=get;list;watch;create;update;patch;delete
@@ -62,9 +65,7 @@ type GcpNfsVolumeReconciler struct {
 func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Run(ctx, req)
 }
 
 func SetupGcpNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
