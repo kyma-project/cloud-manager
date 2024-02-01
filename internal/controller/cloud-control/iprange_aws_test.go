@@ -1,4 +1,4 @@
-package cloudresources
+package cloudcontrol
 
 import (
 	"bytes"
