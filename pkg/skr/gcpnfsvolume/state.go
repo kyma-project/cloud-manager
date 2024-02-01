@@ -13,6 +13,7 @@ type State struct {
 	KymaRef        klog.ObjectRef
 	KcpCluster     composed.StateCluster
 	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
+	KcpIpRange     *cloudcontrolv1beta1.IpRange
 	SkrCluster     composed.StateCluster
 	PV             *v1.PersistentVolume
 }

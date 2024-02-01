@@ -18,10 +18,12 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/skr/nfs/gcpnfsvolume"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -72,5 +74,6 @@ func SetupGcpNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.GcpNfsVolume{}).
+		Watches(&v1.PersistentVolume{}, handler.Funcs{}).
 		Complete()
 }
