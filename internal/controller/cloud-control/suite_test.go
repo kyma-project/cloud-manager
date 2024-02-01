@@ -66,11 +66,19 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
 	// Setup controllers
+	// Scope
 	Expect(SetupScopeReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().ScopeGardenProvider(),
 		infra.Looper(),
 	)).NotTo(HaveOccurred())
+	// IpRange
+	Expect(SetupIpRangeReconciler(
+		infra.KcpManager(),
+		infra.AwsMock().IpRangeSkrProvider(),
+		nil,
+		nil,
+	))
 
 	// Start controllers
 	infra.StartControllers(context.Background())

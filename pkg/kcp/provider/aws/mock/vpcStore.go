@@ -6,8 +6,36 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/pointer"
 )
+
+func VpcSubnetsFromScope(scope *cloudcontrolv1beta1.Scope) []VpcSubnet {
+	cnt := 0
+	result := pie.Flat(pie.Map(scope.Spec.Scope.Aws.Network.Zones, func(z cloudcontrolv1beta1.AwsZone) []VpcSubnet {
+		result := []VpcSubnet{
+			{
+				AZ:   z.Name,
+				Cidr: z.Workers,
+				Tags: awsutil.Ec2Tags("Name", fmt.Sprintf("%s-%d", scope.Spec.Scope.Aws.VpcNetwork, cnt)),
+			},
+			{
+				AZ:   z.Name,
+				Cidr: z.Public,
+				Tags: awsutil.Ec2Tags("Name", fmt.Sprintf("%s-public-%d", scope.Spec.Scope.Aws.VpcNetwork, cnt)),
+			},
+			{
+				AZ:   z.Name,
+				Cidr: z.Internal,
+				Tags: awsutil.Ec2Tags("Name", fmt.Sprintf("%s-internal-%d", scope.Spec.Scope.Aws.VpcNetwork, cnt)),
+			},
+		}
+		cnt++
+		return result
+	}))
+	return result
+}
 
 type VpcSubnet struct {
 	AZ   string
@@ -25,15 +53,15 @@ type vpcEntry struct {
 }
 
 type vpcStore struct {
-	items []vpcEntry
+	items []*vpcEntry
 }
 
-func (s *vpcStore) itemByVpcId(vpcId string) (vpcEntry, error) {
-	idx := pie.FindFirstUsing(s.items, func(e vpcEntry) bool {
+func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
+	idx := pie.FindFirstUsing(s.items, func(e *vpcEntry) bool {
 		return pointer.StringDeref(e.vpc.VpcId, "") == vpcId
 	})
 	if idx == -1 {
-		return vpcEntry{}, fmt.Errorf("vpc with id %s does not exist", vpcId)
+		return nil, fmt.Errorf("vpc with id %s does not exist", vpcId)
 	}
 	return s.items[idx], nil
 }
@@ -41,7 +69,13 @@ func (s *vpcStore) itemByVpcId(vpcId string) (vpcEntry, error) {
 // Config implementation =======================================
 
 func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) {
-	s.items = append(s.items, vpcEntry{
+	if pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
+		return pointer.StringDeref(value.vpc.VpcId, "xxx") == id
+	}) > -1 {
+		return
+	}
+
+	s.items = append(s.items, &vpcEntry{
 		vpc: ec2Types.Vpc{
 			VpcId:     pointer.String(id),
 			CidrBlock: pointer.String(cidr),
@@ -54,7 +88,7 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 				CidrBlock:          pointer.String(x.Cidr),
 				State:              ec2Types.SubnetStateAvailable,
 				SubnetId:           pointer.String(uuid.NewString()),
-				Tags:               append(make([]ec2Types.Tag, 0, len(tags)), tags...),
+				Tags:               append(make([]ec2Types.Tag, 0, len(tags)), x.Tags...),
 				VpcId:              pointer.String(id),
 			}
 		}),
@@ -67,7 +101,7 @@ func (s *vpcStore) DescribeVpcs(ctx context.Context) ([]ec2Types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
-	return pie.Map(s.items, func(e vpcEntry) ec2Types.Vpc {
+	return pie.Map(s.items, func(e *vpcEntry) ec2Types.Vpc {
 		return e.vpc
 	}), nil
 }
@@ -77,7 +111,7 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 		return nil, context.Canceled
 	}
 	item, err := s.itemByVpcId(vpcId)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 	a := ec2Types.VpcCidrBlockAssociation{
@@ -97,7 +131,7 @@ func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Type
 		return nil, context.Canceled
 	}
 	item, err := s.itemByVpcId(vpcId)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 	return item.subnets, nil
@@ -108,7 +142,7 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tag
 		return nil, context.Canceled
 	}
 	item, err := s.itemByVpcId(vpcId)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 	subnet := ec2Types.Subnet{

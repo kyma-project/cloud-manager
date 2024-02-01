@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"github.com/elliotchance/pie/v2"
-	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
@@ -44,6 +43,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	//+kubebuilder:scaffold:imports
 )

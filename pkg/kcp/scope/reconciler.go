@@ -38,6 +38,10 @@ type scopeReconciler struct {
 }
 
 func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if Ignore != nil && Ignore.ShouldIgnoreKey(req) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.newState(req)
 	action := r.newAction()
 

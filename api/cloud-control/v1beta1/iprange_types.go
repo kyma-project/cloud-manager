@@ -22,6 +22,7 @@ import (
 
 // Error reasons
 const (
+	ReasonCidrCanNotChange               = "CidrCanNotChange"
 	ReasonInvalidCidr                    = "InvalidCidr"
 	ReasonCidrCanNotSplit                = "CidrCanNotSplit"
 	ReasonCidrOverlap                    = "CidrOverlap"
