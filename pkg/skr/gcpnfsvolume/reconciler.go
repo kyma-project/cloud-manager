@@ -36,6 +36,7 @@ func (r *Reconciler) newAction() composed.Action {
 			"crGcpNfsVolumeValidateSpec",
 			validateIpRange, validateCapacity, validateFileShareName),
 		addFinalizer,
+		loadKcpIpRange,
 		loadKcpNfsInstance,
 		loadPersistenceVolume,
 		modifyKcpNfsInstance,

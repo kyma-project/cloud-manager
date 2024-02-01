@@ -47,7 +47,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 				Name:      state.ObjAsGcpNfsVolume().Name,
 			},
 			IpRange: cloudcontrolv1beta1.IpRangeRef{
-				Name: state.ObjAsGcpNfsVolume().Spec.IpRange.Name,
+				Name: state.KcpIpRange.Name,
 			},
 			Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 				Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
@@ -55,6 +55,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 					Tier:          cloudcontrolv1beta1.GcpFileTier(state.ObjAsGcpNfsVolume().Spec.Tier),
 					FileShareName: state.ObjAsGcpNfsVolume().Spec.FileShareName,
 					CapacityGb:    state.ObjAsGcpNfsVolume().Spec.CapacityGb,
+					ConnectMode:   cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS,
 				},
 			},
 		},
