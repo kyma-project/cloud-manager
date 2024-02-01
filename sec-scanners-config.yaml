@@ -1,0 +1,8 @@
+module-name: cloud-resources-manager
+protecode:
+  - europe-docker.pkg.dev/kyma-project/dev/cloud-resources-manager:PR-75
+whitesource:
+  language: golang-mod
+  subprojects: false
+  exclude:
+    - "**/*_test.go"
