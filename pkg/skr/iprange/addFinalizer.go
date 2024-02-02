@@ -19,7 +19,7 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
-	logger.Info("Adding finalier to IpRange")
+	logger.Info("Adding finalizer to IpRange")
 
 	err := st.UpdateObj(ctx)
 	if err != nil {

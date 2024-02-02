@@ -21,22 +21,9 @@ import (
 )
 
 const (
-	ConditionTypeCidrValid = "CidrValid"
-
-	ConditionReasonCidrValid         = "CidrValid"
-	ConditionReasonCidrInvalidSyntax = "InvalidCidrSyntax"
-	ConditionReasonCidrInvalidSize   = "InvalidCidrSize"
-)
-
-const (
-	ConditionTypeCidrCanNotChange = "CidrCanNotChange"
-
-	ConditionReasonCidrChanged = "CidrChanged"
-)
-
-const (
-	// ConditionReasonInvalidCidr used with ConditionTypeError in case ConditionTypeCidrValid is also set
 	ConditionReasonInvalidCidr = "InvalidCidr"
+
+	ConditionReasonCidrCanNotBeChanged = "CidrCanNotBeChanged"
 )
 
 // IpRangeSpec defines the desired state of IpRange

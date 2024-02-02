@@ -9,19 +9,21 @@ import (
 
 func preventCidrChange(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	if state.ObjAsIpRange().Spec.Cidr == state.ObjAsIpRange().Status.Cidr {
+	if len(state.ObjAsIpRange().Status.Cidr) == 0 ||
+		state.ObjAsIpRange().Spec.Cidr == state.ObjAsIpRange().Status.Cidr {
+		// status.cidr is empty OR same as spec.cidr
 		return nil, nil
 	}
 
+	// status.cidr is not empty AND different from spec.cidr
 	return composed.UpdateStatus(state.ObjAsIpRange()).
 		SetCondition(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeCidrCanNotChange,
+			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  "False",
-			Reason:  cloudresourcesv1beta1.ConditionReasonCidrChanged,
-			Message: "IpRange CIDR can not change",
+			Reason:  cloudresourcesv1beta1.ConditionReasonCidrCanNotBeChanged,
+			Message: "IpRange CIDR can not be changed",
 		}).
 		ErrorLogMessage("Error updating IpRange status with CIDR changed condition").
-		SuccessError(composed.StopAndForget).
 		SuccessLogMsg("Forgetting IpRange with changed Cidr").
 		Run(ctx, state)
 }

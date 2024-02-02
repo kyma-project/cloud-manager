@@ -21,6 +21,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -30,10 +31,10 @@ import (
 
 type IpRangeReconcilerFactory struct{}
 
-func (f *IpRangeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+func (f *IpRangeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	ff := iprange.NewReconcilerFactory()
 	return &IpRangeReconciler{
-		reconciler: ff.New(kymaRef, kcpCluster, skrCluster),
+		reconciler: ff.New(args),
 	}
 }
 

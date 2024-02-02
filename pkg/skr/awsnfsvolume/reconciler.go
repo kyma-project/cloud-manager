@@ -3,7 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

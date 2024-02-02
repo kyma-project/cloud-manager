@@ -3,42 +3,31 @@ package registry
 import (
 	skrcache "github.com/kyma-project/cloud-manager/pkg/skr/runtime/cache"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	skrsource "github.com/kyma-project/cloud-manager/pkg/skr/runtime/source"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
-
-type ReconcilerFactory interface {
-	New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler
-}
 
 type Watch struct {
 	Name         string
-	Src          source.Source
+	Src          skrsource.SkrSource
 	EventHandler handler.EventHandler
 	Predicates   []predicate.Predicate
 }
 
-type DescriptorList []Descriptor
+type DescriptorList []*Descriptor
 
 func (dl DescriptorList) AllQueuesEmpty() bool {
 	for _, desc := range dl {
 		for _, watch := range desc.Watches {
-			src, ok := watch.Src.(skrsource.SkrSource)
-			if !ok {
-				continue
-			}
-			if !src.IsStarted() {
+			if !watch.Src.IsStarted() {
 				return false
 			}
-			if src.Queue().Len() > 0 {
+			if watch.Src.Queue().Len() > 0 {
 				return false
 			}
 		}
@@ -50,7 +39,7 @@ type Descriptor struct {
 	Name              string
 	GVK               schema.GroupVersionKind
 	Watches           []Watch
-	ReconcilerFactory ReconcilerFactory
+	ReconcilerFactory reconcile.ReconcilerFactory
 }
 
 type SkrRegistry interface {
@@ -67,7 +56,7 @@ func New(skrScheme *runtime.Scheme) SkrRegistry {
 
 type registryItem struct {
 	name              string
-	reconcilerFactory ReconcilerFactory
+	reconcilerFactory reconcile.ReconcilerFactory
 	watches           []*registryItemWatch
 }
 
@@ -92,7 +81,7 @@ func (r *skrRegistry) GetDescriptors(mngr manager.SkrManager) DescriptorList {
 	result := make(DescriptorList, 0, len(r.items))
 	cch := mngr.GetCache().(skrcache.SkrCache)
 	for _, item := range r.items {
-		d := Descriptor{
+		d := &Descriptor{
 			Name:              item.name,
 			GVK:               item.watches[0].gvk,
 			ReconcilerFactory: item.reconcilerFactory,

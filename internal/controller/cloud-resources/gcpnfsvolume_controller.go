@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -33,12 +34,12 @@ import (
 
 type GcpNfsVolumeReconcilerFactory struct{}
 
-func (f *GcpNfsVolumeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+func (f *GcpNfsVolumeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeReconciler{
-		kymaRef:    kymaRef,
-		kcpCluster: kcpCluster,
-		skrCluster: skrCluster,
-		Reconciler: gcpnfsvolume.NewReconciler(kymaRef, kcpCluster, skrCluster),
+		kymaRef:    args.KymaRef,
+		kcpCluster: args.KcpCluster,
+		skrCluster: args.SkrCluster,
+		Reconciler: gcpnfsvolume.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster),
 	}
 }
 

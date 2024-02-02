@@ -25,6 +25,7 @@ type infraEnv struct {
 	awsMock    awsmock.Server
 	skrKymaRef klog.ObjectRef
 	skrManager skrmanager.SkrManager
+	runner     skrruntime.SkrRunner
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -50,6 +51,10 @@ func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {
 	return ie.skrKymaRef
 }
 
+func (ie *infraEnv) SkrRunner() skrruntime.SkrRunner {
+	return ie.runner
+}
+
 func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 	ginkgo.By("Starting controllers")
 	if ctx == nil {
@@ -61,7 +66,7 @@ func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 		err := ie.kcpManager.Start(ie.ctx)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run kcp manager")
 	}()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(time.Second)
 }
 
 func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
@@ -71,14 +76,18 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 		panic(fmt.Errorf("error creating SKR manager: %w", err))
 	}
 
-	runner := skrruntime.NewRunner(ie.registry, ie.kcpManager)
+	ie.runner = skrruntime.NewRunner(ie.registry, ie.kcpManager)
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
 	go func() {
 		defer ginkgo.GinkgoRecover()
-		runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
-		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run skr runner")
+		err := ie.kcpManager.Start(ie.ctx)
+		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run kcp manager in skr suite")
 	}()
-	time.Sleep(100 * time.Millisecond)
+	go func() {
+		defer ginkgo.GinkgoRecover()
+		ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
+	}()
+	time.Sleep(time.Second)
 }
 
 func (ie *infraEnv) Ctx() context.Context {

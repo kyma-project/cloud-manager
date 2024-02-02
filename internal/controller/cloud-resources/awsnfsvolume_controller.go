@@ -19,6 +19,7 @@ package cloudresources
 import (
 	"context"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,11 +32,11 @@ import (
 
 type AwsNfsVolumeReconcilerFactory struct{}
 
-func (f *AwsNfsVolumeReconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+func (f *AwsNfsVolumeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AwsNfsVolumeReconciler{
-		kymaRef:    kymaRef,
-		kcpCluster: kcpCluster,
-		skrCluster: skrCluster,
+		kymaRef:    args.KymaRef,
+		kcpCluster: args.KcpCluster,
+		skrCluster: args.SkrCluster,
 	}
 }
 

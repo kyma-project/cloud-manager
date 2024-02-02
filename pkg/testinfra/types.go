@@ -47,6 +47,7 @@ type InfraEnv interface {
 	Looper() skrruntime.SkrLooper
 	AwsMock() awsmock.Server
 	SkrKymaRef() klog.ObjectRef
+	SkrRunner() skrruntime.SkrRunner
 
 	StartKcpControllers(ctx context.Context)
 	StartSkrControllers(ctx context.Context)
