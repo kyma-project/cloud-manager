@@ -5,7 +5,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -70,17 +69,8 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance created")
 
-	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.UnknownState
-
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-		SetCondition(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
-			Message: "Resource is submitted for provisioning",
-		}).
-		ErrorLogMessage("Error updating GcpNfsVolume status with submitted condition").
-		Run(ctx, state)
+	// We only update conditions for "Ready" and "Error" cases
+	return nil, nil
 }
 
 func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
@@ -97,14 +87,6 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance got updated")
 
-	// Updating only condition (not status.state) as changing it to unknown is confusing
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-		SetCondition(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
-			Message: "Resource is submitted for provisioning/updating",
-		}).
-		ErrorLogMessage("Error updating GcpNfsVolume status with submitted condition").
-		Run(ctx, state)
+	// We only update conditions for "Ready" and "Error" cases
+	return nil, nil
 }

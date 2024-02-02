@@ -56,6 +56,20 @@ func (b *UpdateStatusBuilder) RemoveConditions(conditionTypes ...string) *Update
 	return b
 }
 
+func (b *UpdateStatusBuilder) RemoveConditionIfReasonMatched(conditionType, conditionReason string) *UpdateStatusBuilder {
+	if b.conditionsToRemove == nil {
+		b.conditionsToRemove = map[string]struct{}{}
+	}
+	b.conditionsToKeep = nil
+	for i := range *b.obj.Conditions() {
+		condition := (*b.obj.Conditions())[i]
+		if condition.Type == conditionType && condition.Reason == conditionReason {
+			b.conditionsToRemove[conditionType] = struct{}{}
+		}
+	}
+	return b
+}
+
 func (b *UpdateStatusBuilder) SetCondition(cond metav1.Condition) *UpdateStatusBuilder {
 	b.conditionsToSet = append(b.conditionsToSet, cond)
 	return b

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -21,7 +22,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	capacity := resource.NewQuantity(int64(nfsVolume.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
 
 	//If GcpNfsVolume is not Ready state, continue.
-	if nfsVolume.Status.State != v1beta1.ReadyState {
+	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
 		return nil, nil
 	}
 

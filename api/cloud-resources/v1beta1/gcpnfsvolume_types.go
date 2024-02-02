@@ -20,17 +20,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Additional error reasons
 const (
-	ConditionTypeSpecValid = "SpecValid"
-
-	ConditionReasonCapacityValid        = "CapacityGbValid"
 	ConditionReasonCapacityInvalid      = "CapacityGbInvalid"
-	ConditionReasonLocationValid        = "LocationValid"
-	ConditionReasonLocationInvalid      = "LocationInvalid"
-	ConditionReasonIpRangeValid         = "IpRangeValid"
-	ConditionReasonIpRangeInvalid       = "IpRangeInvalid"
-	ConditionReasonFileShareNameValid   = "FileShareNameValid"
+	ConditionReasonIpRangeNotReady      = "IpRangeNotReady"
 	ConditionReasonFileShareNameInvalid = "FileShareNameInvalid"
+	ConditionReasonTierInvalid          = "TierInvalid"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
@@ -57,11 +52,14 @@ type GcpNfsVolumeSpec struct {
 
 // GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
 type GcpNfsVolumeStatus struct {
-	State StatusState `json:"state,omitempty"`
 
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
+
+	// Capacity of the volume with Ready Condition
+	// +optional
+	CapacityGb int `json:"capacityGb"`
 
 	// List of status conditions
 	// +optional
