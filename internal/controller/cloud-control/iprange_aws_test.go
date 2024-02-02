@@ -106,7 +106,9 @@ var _ = Describe("IpRange AWS", func() {
 		Expect(iprange.Status.Subnets).To(HaveLen(3))
 
 		subnets := pie.SortStableUsing(iprange.Status.Subnets, func(a, b cloudcontrolv1beta1.IpRangeSubnet) bool {
-			return a.Zone < b.Zone
+			aa := net.ParseIP(a.Range)
+			bb := net.ParseIP(b.Range)
+			return bytes.Compare(aa, bb) == -1
 		})
 		_, _ = fmt.Fprintf(GinkgoWriter, "Subnets: %v", subnets)
 		Expect(subnets[0].Id).NotTo(BeEmpty())
