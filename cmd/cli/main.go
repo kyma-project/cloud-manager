@@ -4,12 +4,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var (
+	namespace string
+)
+
+func init() {
+	cmdRoot.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace")
+}
+
+var cmdRoot = &cobra.Command{
 	Use: "cli",
 }
 
 func main() {
-	err := rootCmd.Execute()
+	err := cmdRoot.Execute()
 	if err != nil {
 		panic(err)
 	}
