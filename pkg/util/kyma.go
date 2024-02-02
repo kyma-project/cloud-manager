@@ -17,6 +17,16 @@ func NewKymaUnstructured() *unstructured.Unstructured {
 	return u
 }
 
+func NewKymaListUnstructured() *unstructured.UnstructuredList {
+	u := &unstructured.UnstructuredList{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "operator.kyma-project.io",
+		Version: "v1beta2",
+		Kind:    "KymaList",
+	})
+	return u
+}
+
 func GetKymaModuleState(k *unstructured.Unstructured, moduleName string) KymaModuleState {
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if !exists || err != nil {
