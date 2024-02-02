@@ -48,3 +48,7 @@ func (f *stateFactory) NewState(baseState composed.State) *State {
 func (s *State) ObjAsGcpNfsVolume() *cloudresourcesv1beta1.GcpNfsVolume {
 	return s.Obj().(*cloudresourcesv1beta1.GcpNfsVolume)
 }
+
+func (s *State) IsChanged() bool {
+	return s.KcpNfsInstance != nil && s.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb != s.ObjAsGcpNfsVolume().Spec.CapacityGb
+}

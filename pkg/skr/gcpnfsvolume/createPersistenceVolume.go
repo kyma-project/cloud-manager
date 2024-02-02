@@ -9,12 +9,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 func createPersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
-	//If GcpNfsVolume is marked for deletion, continue
+	//If NfsVolume is marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
 		return nil, nil
@@ -34,6 +36,14 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 		return nil, nil
 	}
 
+	//If the NFS Host list is empty, create error response.
+	if len(state.KcpNfsInstance.Status.Hosts) == 0 {
+		logger.WithValues("kyma-name", state.KymaRef).
+			WithValues("NfsVolume", state.ObjAsGcpNfsVolume().Name).
+			Info("Error creating PV: Not able to get Host(s).")
+		return nil, nil
+	}
+
 	//Construct a PV Object
 	pvName := fmt.Sprintf("%s--%s", nfsVolume.Namespace, nfsVolume.Name)
 	state.PV = &v1.PersistentVolume{
@@ -43,6 +53,9 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 				labelNfsVolName: nfsVolume.Name,
 				labelNfsVolNS:   nfsVolume.Namespace,
 			},
+			Finalizers: []string{
+				v1beta1.Finalizer,
+			},
 		},
 		Spec: v1.PersistentVolumeSpec{
 			Capacity: v1.ResourceList{
@@ -51,7 +64,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				NFS: &v1.NFSVolumeSource{
-					Server: nfsVolume.Status.Hosts[0],
+					Server: state.KcpNfsInstance.Status.Hosts[0],
 					Path:   fmt.Sprintf("/%s", nfsVolume.Spec.FileShareName),
 				},
 			},
@@ -65,5 +78,5 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return nil, nil
+	return composed.StopWithRequeueDelay(1 * time.Second), nil
 }

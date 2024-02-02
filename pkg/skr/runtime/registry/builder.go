@@ -48,7 +48,7 @@ func (b *skrBuilder) For(object client.Object, opts ...ForOption) Builder {
 }
 
 func (b *skrBuilder) Watches(object client.Object, eventHandler handler.EventHandler, opts ...WatchesOption) Builder {
-	in := &WatchesInput{object: object}
+	in := &WatchesInput{object: object, eventHandler: eventHandler}
 	for _, opt := range opts {
 		opt.ApplyToWatches(in)
 	}

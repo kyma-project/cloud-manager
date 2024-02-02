@@ -18,11 +18,13 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	if state.KcpNfsInstance != nil {
-		return updateKcpNfsInstance(ctx, state, logger.WithValues("operation", "updateKcpNfsInstance"))
-	} else {
+	if state.KcpNfsInstance == nil {
 		return createKcpNfsInstance(ctx, state, logger.WithValues("operation", "createKcpNfsInstance"))
+	} else if state.IsChanged() {
+		return updateKcpNfsInstance(ctx, state, logger.WithValues("operation", "updateKcpNfsInstance"))
 	}
+
+	return nil, nil
 
 }
 
