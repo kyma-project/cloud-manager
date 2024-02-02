@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"time"
 )
 
 func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -50,5 +51,5 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return nil, nil
+	return composed.StopWithRequeueDelay(1 * time.Second), nil
 }
