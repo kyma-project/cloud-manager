@@ -78,6 +78,9 @@ spec:
           status:
             description: GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
             properties:
+              capacityGb:
+                description: Capacity of the volume with Ready Condition
+                type: integer
               conditions:
                 description: List of status conditions
                 items:
@@ -156,8 +159,6 @@ spec:
                 items:
                   type: string
                 type: array
-              state:
-                type: string
             type: object
         type: object
     served: true

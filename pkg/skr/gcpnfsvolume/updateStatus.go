@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strconv"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,20 +17,22 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	condReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 
 	if condErr != nil {
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.ErrorState
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeReady,
-				Status:  metav1.ConditionFalse,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: condErr.Message,
 			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with not ready condition due to KCP error").
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+			ErrorLogMessage("Error updating GcpNfsVolume status with Error condition due to KCP error").
 			Run(ctx, state)
 	}
 
 	if condReady != nil {
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.ReadyState
+		// TODO - update capacityGb in status based on capacityGb in NfsInstance status when it is available
+		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb
+		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -37,7 +40,9 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
 				Message: condReady.Message,
 			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with ready condition").
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
+			ErrorLogMessage("Error updating GcpNfsVolume status with Ready condition").
+			SuccessLogMsg("GcpNfsVolume status got updated with Ready condition "+strconv.Itoa(state.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb)).
 			Run(ctx, state)
 	}
 
