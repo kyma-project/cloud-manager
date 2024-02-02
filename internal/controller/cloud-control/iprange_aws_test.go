@@ -97,7 +97,7 @@ var _ = Describe("IpRange AWS", func() {
 			bb := net.ParseIP(b)
 			return bytes.Compare(aa, bb) == -1
 		})
-		_, _ = fmt.Fprintf(GinkgoWriter, "Ranges: %v", ranges)
+		_, _ = fmt.Fprintf(GinkgoWriter, "Ranges: %v\n", ranges)
 		Expect(ranges[0]).To(Equal("10.181.0.0/18"))
 		Expect(ranges[1]).To(Equal("10.181.64.0/18"))
 		Expect(ranges[2]).To(Equal("10.181.128.0/18"))
@@ -110,7 +110,7 @@ var _ = Describe("IpRange AWS", func() {
 			bb := net.ParseIP(b.Range)
 			return bytes.Compare(aa, bb) == -1
 		})
-		_, _ = fmt.Fprintf(GinkgoWriter, "Subnets: %v", subnets)
+		_, _ = fmt.Fprintf(GinkgoWriter, "Subnets: %v\n", subnets)
 		Expect(subnets[0].Id).NotTo(BeEmpty())
 		Expect(subnets[0].Zone).To(Equal("eu-west-1a"))
 		Expect(subnets[0].Range).To(Equal(ranges[0]))
