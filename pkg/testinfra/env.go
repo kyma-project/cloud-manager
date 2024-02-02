@@ -76,13 +76,8 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 		panic(fmt.Errorf("error creating SKR manager: %w", err))
 	}
 
-	ie.runner = skrruntime.NewRunner(ie.registry, ie.kcpManager)
+	ie.runner = skrruntime.NewRunner(ie.registry, newKcpClusterWrap(ie.kcpManager))
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
-	go func() {
-		defer ginkgo.GinkgoRecover()
-		err := ie.kcpManager.Start(ie.ctx)
-		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run kcp manager in skr suite")
-	}()
 	go func() {
 		defer ginkgo.GinkgoRecover()
 		ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
