@@ -3,7 +3,6 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
-
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	v1 "k8s.io/api/core/v1"
@@ -79,5 +78,5 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return composed.StopWithRequeueDelay(1 * time.Second), nil
+	return composed.StopWithRequeueDelay(3 * time.Second), nil
 }

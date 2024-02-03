@@ -48,6 +48,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 
 	if state.curState == v1beta1.ReadyState {
 		state.ObjAsNfsInstance().Status.Hosts = state.fsInstance.Networks[0].IpAddresses
+		state.ObjAsNfsInstance().Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
 		meta.RemoveStatusCondition(state.ObjAsNfsInstance().Conditions(), v1beta1.ConditionTypeError)
 		state.AddReadyCondition(ctx, "Filestore Instance provisioned in GCP.")
 	}
