@@ -103,6 +103,10 @@ type NfsInstanceStatus struct {
 	// Operation Identifier to track the Hyperscaler Operation
 	// +optional
 	OpIdentifier string `json:"opIdentifier,omitempty"`
+
+	// Provisioned Capacity in GBs
+	// +optional
+	CapacityGb int `json:"capacityGb"`
 }
 
 //+kubebuilder:object:root=true

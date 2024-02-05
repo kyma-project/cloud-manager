@@ -135,6 +135,9 @@ spec:
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
+              capacityGb:
+                description: Provisioned Capacity in GBs
+                type: integer
               conditions:
                 description: List of status conditions to indicate the status of a
                   Peering.

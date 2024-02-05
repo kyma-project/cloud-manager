@@ -78,5 +78,5 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return composed.StopWithRequeueDelay(1 * time.Second), nil
+	return composed.StopWithRequeueDelay(3 * time.Second), nil
 }

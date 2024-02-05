@@ -30,8 +30,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if condReady != nil {
-		// TODO - update capacityGb in status based on capacityGb in NfsInstance status when it is available
-		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb
+		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Status.CapacityGb
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
