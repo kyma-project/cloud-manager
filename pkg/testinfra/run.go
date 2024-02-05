@@ -7,6 +7,7 @@ import (
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/onsi/ginkgo/v2"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 	"os"
 	"path/filepath"
 	goruntime "runtime"
@@ -107,10 +108,15 @@ func Start() (Infra, error) {
 	awsMock.SetAccount("some-aws-account")
 
 	infra.InfraEnv = &infraEnv{
+		i:          infra,
 		kcpManager: kcpMgr,
 		registry:   registry,
 		looper:     looper,
 		awsMock:    awsMock,
+		skrKymaRef: klog.ObjectRef{
+			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
+			Namespace: infra.KCP().Namespace(),
+		},
 	}
 
 	// Create DSL

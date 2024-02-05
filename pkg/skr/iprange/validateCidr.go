@@ -6,39 +6,26 @@ import (
 	"github.com/3th1nk/cidr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func validateCidr(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	existing := meta.FindStatusCondition(state.ObjAsIpRange().Status.Conditions, cloudresourcesv1beta1.ConditionTypeCidrValid)
-	if existing != nil && existing.Status == metav1.ConditionTrue {
+
+	if len(state.ObjAsIpRange().Status.Cidr) > 0 {
 		logger.Info("Cidr already checked and valid")
-		// already valid
 		return nil, nil
-	}
-	if existing != nil && existing.Status == metav1.ConditionFalse {
-		logger.Info("Forgetting IpRange due to already invalid Cidr")
-		// already not valid
-		return composed.StopAndForget, nil
 	}
 
 	rng, err := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	if err != nil {
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeCidrValid,
-				Status:  metav1.ConditionFalse,
-				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSyntax,
-				Message: fmt.Sprintf("CIDR %s has invalid syntax", state.ObjAsIpRange().Spec.Cidr),
-			}).
-			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
+				Status:  metav1.ConditionFalse,
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
-				Message: "Invalid CIDR",
+				Message: fmt.Sprintf("CIDR %s has invalid syntax", state.ObjAsIpRange().Spec.Cidr),
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating IpRange status with invalid CIDR syntax").
@@ -51,16 +38,10 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	if bits != 32 {
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeCidrValid,
-				Status:  metav1.ConditionFalse,
-				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSize,
-				Message: fmt.Sprintf("CIDR %s is not IPv4", state.ObjAsIpRange().Spec.Cidr),
-			}).
-			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
+				Status:  metav1.ConditionFalse,
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
-				Message: "Invalid CIDR",
+				Message: fmt.Sprintf("CIDR %s is not IPv4", state.ObjAsIpRange().Spec.Cidr),
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating IpRange status with CIDR not an IPv4 condition").
@@ -68,13 +49,13 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	maxOnes := 31
+	maxOnes := 30
 	if ones > maxOnes {
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeCidrValid,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionFalse,
-				Reason:  cloudresourcesv1beta1.ConditionReasonCidrInvalidSize,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
 				Message: fmt.Sprintf("CIDR %s block size must not be greater than %d", state.ObjAsIpRange().Spec.Cidr, maxOnes),
 			}).
 			SetCondition(metav1.Condition{
@@ -89,15 +70,11 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	return composed.UpdateStatus(state.ObjAsIpRange()).
-		SetCondition(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeCidrValid,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionReasonCidrValid,
-			Message: fmt.Sprintf("CIDR %s is valid", state.ObjAsIpRange().Spec.Cidr),
-		}).
-		SuccessError(nil).
-		ErrorLogMessage("Error updating IpRange status with valid CIDR condition").
-		SuccessLogMsg("Set IpRange valid Cidr condition").
-		Run(ctx, state)
+	state.ObjAsIpRange().Status.Cidr = state.ObjAsIpRange().Spec.Cidr
+	err = state.UpdateObjStatus(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "error updating IpRange status after cidr successful validation", composed.StopWithRequeue, ctx)
+	}
+
+	return nil, nil
 }

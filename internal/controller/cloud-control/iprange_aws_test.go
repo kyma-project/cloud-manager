@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"bytes"
 	"fmt"
+	"github.com/3th1nk/cidr"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
@@ -106,9 +107,15 @@ var _ = Describe("IpRange AWS", func() {
 		Expect(iprange.Status.Subnets).To(HaveLen(3))
 
 		subnets := pie.SortStableUsing(iprange.Status.Subnets, func(a, b cloudcontrolv1beta1.IpRangeSubnet) bool {
-			aa := net.ParseIP(a.Range)
-			bb := net.ParseIP(b.Range)
-			return bytes.Compare(aa, bb) == -1
+			aa, err := cidr.Parse(a.Range)
+			if err != nil {
+				return false
+			}
+			bb, err := cidr.Parse(b.Range)
+			if err != nil {
+				return false
+			}
+			return bytes.Compare(aa.IP(), bb.IP()) == -1
 		})
 		_, _ = fmt.Fprintf(GinkgoWriter, "Subnets: %v\n", subnets)
 		Expect(subnets[0].Id).NotTo(BeEmpty())

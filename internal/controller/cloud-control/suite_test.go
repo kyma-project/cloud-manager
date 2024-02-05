@@ -33,10 +33,6 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-//var cfg *rest.Config
-//var k8sClient client.Client
-//var testEnv *envtest.Environment
-
 var infra testinfra.Infra
 
 func TestControllers(t *testing.T) {
@@ -46,13 +42,13 @@ func TestControllers(t *testing.T) {
 	}
 	RegisterFailHandler(Fail)
 
-	RunSpecs(t, "Controller Suite")
+	RunSpecs(t, "KCP Controller Suite")
 }
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
-	By("bootstrapping test environment")
+	By("bootstrapping KCP test environment")
 	var err error
 	infra, err = testinfra.Start()
 	Expect(err).
@@ -81,7 +77,7 @@ var _ = BeforeSuite(func() {
 	))
 
 	// Start controllers
-	infra.StartControllers(context.Background())
+	infra.StartKcpControllers(context.Background())
 })
 
 var _ = AfterSuite(func() {

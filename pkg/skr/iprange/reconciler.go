@@ -3,10 +3,8 @@ package iprange
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	"k8s.io/klog/v2"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -17,12 +15,13 @@ func NewReconcilerFactory() skrruntime.ReconcilerFactory {
 type reconcilerFactory struct {
 }
 
-func (f *reconcilerFactory) New(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) reconcile.Reconciler {
+func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 	return &reconciler{
 		factory: newStateFactory(
-			composed.NewStateFactory(composed.NewStateClusterFromCluster(skrCluster)),
-			kymaRef,
-			composed.NewStateClusterFromCluster(kcpCluster),
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
+			args.KymaRef,
+			composed.NewStateClusterFromCluster(args.KcpCluster),
+			args.Reloader,
 		),
 	}
 }
@@ -46,9 +45,8 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crIpRangeMain",
 		composed.LoadObj,
-		validateCidr,
-		copyCidrToStatus,
 		preventCidrChange,
+		validateCidr,
 		addFinalizer,
 		loadKcpIpRange,
 		createKcpIpRange,

@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -45,8 +46,11 @@ type InfraEnv interface {
 	Registry() skrruntime.SkrRegistry
 	Looper() skrruntime.SkrLooper
 	AwsMock() awsmock.Server
+	SkrKymaRef() klog.ObjectRef
+	SkrRunner() skrruntime.SkrRunner
 
-	StartControllers(ctx context.Context)
+	StartKcpControllers(ctx context.Context)
+	StartSkrControllers(ctx context.Context)
 	Ctx() context.Context
 	stopControllers()
 }

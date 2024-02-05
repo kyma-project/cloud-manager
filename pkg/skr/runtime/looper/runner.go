@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/go-logr/logr"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/reload"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -28,10 +30,7 @@ func WithTimeout(timeout time.Duration) RunOption {
 
 type SkrRunner interface {
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption)
-	GetControllerOptions(
-		descriptor registry.Descriptor,
-		skrManager skrmanager.SkrManager,
-	) controller.Options
+	Reloader() reload.Reloader
 }
 
 func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster) SkrRunner {
@@ -47,6 +46,11 @@ type skrRunner struct {
 	runOnce    sync.Once
 	started    bool
 	stopped    bool
+	reloader   *reloader
+}
+
+func (r *skrRunner) Reloader() reload.Reloader {
+	return r.reloader
 }
 
 func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) {
@@ -60,11 +64,13 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 	r.runOnce.Do(func() {
 		r.started = true
 		descriptors := r.registry.GetDescriptors(skrManager)
+		r.reloader = &reloader{skrScheme: skrManager.GetScheme(), descriptors: descriptors}
 		for _, descr := range descriptors {
 			logger2 := skrManager.GetLogger().WithValues("controller", descr.Name)
 			ctrl, err := controller.New(descr.Name, skrManager, r.GetControllerOptions(
 				descr,
 				skrManager,
+				r.reloader,
 			))
 			if err != nil {
 				logger2.Error(err, "error creating controller")
@@ -99,7 +105,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 	})
 }
 
-func (r *skrRunner) GetControllerOptions(descriptor registry.Descriptor, skrManager skrmanager.SkrManager) controller.Options {
+func (r *skrRunner) GetControllerOptions(descriptor *registry.Descriptor, skrManager skrmanager.SkrManager, reloader reload.Reloader) controller.Options {
 	controllerName := descriptor.Name
 	if len(controllerName) == 0 {
 		controllerName = strings.ToLower(descriptor.GVK.Kind)
@@ -110,7 +116,12 @@ func (r *skrRunner) GetControllerOptions(descriptor registry.Descriptor, skrMana
 		"controllerKind", descriptor.GVK.Kind,
 	)
 	ctrlOptions := controller.Options{
-		Reconciler: descriptor.ReconcilerFactory.New(skrManager.KymaRef(), r.kcpCluster, skrManager),
+		Reconciler: descriptor.ReconcilerFactory.New(reconcile2.ReconcilerArguments{
+			KymaRef:    skrManager.KymaRef(),
+			KcpCluster: r.kcpCluster,
+			SkrCluster: skrManager,
+			Reloader:   reloader,
+		}),
 		// TODO: copy other options,
 		// for details check:
 		//  * sigs.k8s.io/controller-runtime@v0.16.3/pkg/controller/controller.go

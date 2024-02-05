@@ -3,6 +3,7 @@ package registry
 import (
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -12,7 +13,7 @@ import (
 var _ Builder = &skrBuilder{}
 
 type Builder interface {
-	WithFactory(f ReconcilerFactory) Builder
+	WithFactory(f reconcile.ReconcilerFactory) Builder
 
 	Named(name string) Builder
 	For(object client.Object, opts ...ForOption) Builder
@@ -22,7 +23,7 @@ type Builder interface {
 
 type skrBuilder struct {
 	registry     *skrRegistry
-	factory      ReconcilerFactory
+	factory      reconcile.ReconcilerFactory
 	name         string
 	forInput     *ForInput
 	watchesInput []*WatchesInput
@@ -33,7 +34,7 @@ func (b *skrBuilder) Named(name string) Builder {
 	return b
 }
 
-func (b *skrBuilder) WithFactory(f ReconcilerFactory) Builder {
+func (b *skrBuilder) WithFactory(f reconcile.ReconcilerFactory) Builder {
 	b.factory = f
 	return b
 }
@@ -82,12 +83,12 @@ func (b *skrBuilder) Complete() error {
 	if err != nil {
 		return err
 	}
-	hdler := &handler.EnqueueRequestForObject{}
+	h := &handler.EnqueueRequestForObject{}
 	item.watches = append(item.watches, &registryItemWatch{
 		name:         fmt.Sprintf("%s/%s/%s", gvk.Group, gvk.Version, gvk.Kind),
 		object:       b.forInput.object,
 		gvk:          gvk,
-		eventHandler: hdler,
+		eventHandler: h,
 		predicates:   nil,
 	})
 
