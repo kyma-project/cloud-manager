@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/looper"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
@@ -23,6 +24,7 @@ type infraEnv struct {
 	registry   skrruntime.SkrRegistry
 	looper     skrruntime.SkrLooper
 	awsMock    awsmock.Server
+	gcpMock    gcpmock.Server
 	skrKymaRef klog.ObjectRef
 	skrManager skrmanager.SkrManager
 	runner     skrruntime.SkrRunner
@@ -45,6 +47,10 @@ func (ie *infraEnv) Looper() skrruntime.SkrLooper {
 
 func (ie *infraEnv) AwsMock() awsmock.Server {
 	return ie.awsMock
+}
+
+func (ie *infraEnv) GcpMock() gcpmock.Server {
+	return ie.gcpMock
 }
 
 func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {

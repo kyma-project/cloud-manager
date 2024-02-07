@@ -38,13 +38,10 @@ func NewStateFactory(filestoreClientProvider client2.ClientProvider[client.Files
 }
 
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.State) (*State, error) {
-	httpClient, err := client2.GetCachedGcpClient(ctx, f.env.Get("GCP_SA_JSON_KEY_PATH"))
-	if err != nil {
-		return nil, err
-	}
+
 	fc, err := f.filestoreClientProvider(
 		ctx,
-		httpClient,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
 	)
 	if err != nil {
 		return nil, err

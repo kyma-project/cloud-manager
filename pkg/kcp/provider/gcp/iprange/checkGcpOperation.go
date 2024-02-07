@@ -25,7 +25,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 	//Check SyncPsa Operation..
 	if ipRange.Status.State == client.SyncPsaConnection ||
 		ipRange.Status.State == client.DeletePsaConnection {
-		op, err := state.serviceNetworkingClient.GetOperation(ctx, opName)
+		op, err := state.serviceNetworkingClient.GetServiceNetworkingOperation(ctx, opName)
 		if err != nil {
 			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
 			return composed.LogErrorAndReturn(err, "Error getting operation from GCP", composed.StopWithRequeue, nil)

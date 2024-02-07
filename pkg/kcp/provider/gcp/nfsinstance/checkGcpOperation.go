@@ -23,7 +23,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	project := state.Scope().Spec.Scope.Gcp.Project
-	op, err := state.filestoreClient.GetOperation(ctx, project, opName)
+	op, err := state.filestoreClient.GetFilestoreOperation(ctx, project, opName)
 	if err != nil {
 		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
 		return composed.LogErrorAndReturn(err, "Error getting operation from GCP", composed.StopWithRequeue, nil)

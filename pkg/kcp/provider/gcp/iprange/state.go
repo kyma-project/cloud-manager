@@ -16,11 +16,10 @@ import (
 type State struct {
 	types.State
 
-	inSync        bool
-	ipAddress     string
-	prefix        int
-	ipRanges      []string
-	projectNumber int64
+	inSync    bool
+	ipAddress string
+	prefix    int
+	ipRanges  []string
 
 	addressOp    client2.OperationType
 	connectionOp client2.OperationType
@@ -52,38 +51,30 @@ func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[clie
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
-	httpClient, err := client2.GetCachedGcpClient(ctx, f.env.Get("GCP_SA_JSON_KEY_PATH"))
-	if err != nil {
-		return nil, err
-	}
+
 	snc, err := f.serviceNetworkingClientProvider(
 		ctx,
-		httpClient,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
 	)
 	if err != nil {
 		return nil, err
 	}
 	cc, err := f.computeClientProvider(
 		ctx,
-		httpClient,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
 	)
 	if err != nil {
 		return nil, err
 	}
-	projectId := ipRangeState.Scope().Spec.Scope.Gcp.Project
-	projectNumber, err := client2.GetCachedProjectNumber(ctx, projectId, httpClient)
-	if err != nil {
-		return nil, err
-	}
-	return newState(ipRangeState, snc, cc, projectNumber), nil
+
+	return newState(ipRangeState, snc, cc), nil
 }
 
-func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient, projectNumber int64) *State {
+func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,
 		computeClient:           cc,
-		projectNumber:           projectNumber,
 	}
 }
 

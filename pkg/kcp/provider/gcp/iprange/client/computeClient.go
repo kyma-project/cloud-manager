@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"net/http"
-
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 )
@@ -20,12 +18,17 @@ type ComputeClient interface {
 
 func NewComputeClient() client.ClientProvider[ComputeClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, httpClient *http.Client) (ComputeClient, error) {
-			client, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
+		func(ctx context.Context, saJsonKeyPath string) (ComputeClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
 			if err != nil {
 				return nil, err
 			}
-			return newComputeClient(client), nil
+
+			computeClient, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, err
+			}
+			return newComputeClient(computeClient), nil
 		},
 	)
 }

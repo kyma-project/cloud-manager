@@ -17,29 +17,34 @@ type ServiceNetworkingClient interface {
 	CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
 	// DeleteServiceConnection: Deletes a private service access connection.
 	// projectNumber: Project number which is different from project id. Get it by calling client.GetProjectNumber(ctx, projectId)
-	DeleteServiceConnection(ctx context.Context, projectNumber int64, vpcId string) (*servicenetworking.Operation, error)
+	DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error)
 	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	GetOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
+	GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
 }
 
 func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, httpClient *http.Client) (ServiceNetworkingClient, error) {
-			client, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
+		func(ctx context.Context, saJsonKeyPath string) (ServiceNetworkingClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
 			if err != nil {
 				return nil, err
 			}
-			return newServiceNetworkingClient(client), nil
+			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, err
+			}
+			return newServiceNetworkingClient(svcNetClient, httpClient), nil
 		},
 	)
 }
 
-func newServiceNetworkingClient(svcNet *servicenetworking.APIService) ServiceNetworkingClient {
-	return &serviceNetworkingClient{svcNet: svcNet}
+func newServiceNetworkingClient(svcNet *servicenetworking.APIService, httpClient *http.Client) ServiceNetworkingClient {
+	return &serviceNetworkingClient{svcNet: svcNet, httpClient: httpClient}
 }
 
 type serviceNetworkingClient struct {
-	svcNet *servicenetworking.APIService
+	svcNet     *servicenetworking.APIService
+	httpClient *http.Client
 }
 
 func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
@@ -53,8 +58,12 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, ProjectNumber int64, vpcId string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
+	ProjectNumber, err := client.GetCachedProjectNumber(ctx, projectId, c.httpClient)
+	if err != nil {
+		return nil, err
+	}
 	network := client.GetVPCPath(strconv.FormatInt(ProjectNumber, 10), vpcId)
 	operation, err := c.svcNet.Services.Connections.DeleteConnection(client.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
 		ConsumerNetwork: network,
@@ -85,11 +94,11 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) GetOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClient) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcNet.Operations.Get(operationName).Do()
 	if err != nil {
-		logger.Error(err, "GetOperation", "operationName", operationName)
+		logger.Error(err, "GetServiceNetworkingOperation", "operationName", operationName)
 		return nil, err
 	}
 	return operation, nil

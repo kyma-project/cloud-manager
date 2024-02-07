@@ -335,3 +335,124 @@ func (dsl *infraDSL) GivenScopeAwsExists(name string) error {
 
 	return nil
 }
+
+func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
+	// Gardener-credentials secret
+	{
+		secret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: dsl.i.KCP().Namespace(),
+				Name:      "gardener-credentials",
+			},
+		}
+		err := dsl.i.KCP().Client().Get(dsl.i.Ctx(), client.ObjectKeyFromObject(secret), secret)
+		if client.IgnoreNotFound(err) != nil {
+			return err
+		}
+		if apierrors.IsNotFound(err) {
+			b, err := kubeconfigToBytes(restConfigToKubeconfig(dsl.i.Garden().Cfg()))
+			if err != nil {
+				return fmt.Errorf("error getting garden kubeconfig bytes: %w", err)
+			}
+			secret.Data = map[string][]byte{
+				"kubeconfig": b,
+			}
+
+			err = dsl.i.KCP().Client().Create(dsl.i.Ctx(), secret)
+			if client.IgnoreAlreadyExists(err) != nil {
+				return fmt.Errorf("error creating gardener-credentials secret: %w", err)
+			}
+		}
+	}
+
+	// Shoot
+	{
+		shoot := &gardenerTypes.Shoot{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: dsl.i.Garden().Namespace(),
+				Name:      name,
+			},
+			Spec: gardenerTypes.ShootSpec{
+				Region: "us-west1",
+				Provider: gardenerTypes.Provider{
+					Type: "gcp",
+				},
+				SecretBindingName: pointer.String(name),
+			},
+		}
+		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), shoot)
+		if err != nil {
+			return err
+		}
+	}
+
+	// SecretBinding
+	{
+		secretBinding := &gardenerTypes.SecretBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: dsl.i.Garden().Namespace(),
+				Name:      name,
+			},
+			Provider: &gardenerTypes.SecretBindingProvider{
+				Type: "aws",
+			},
+			SecretRef: corev1.SecretReference{
+				Name:      name,
+				Namespace: dsl.i.Garden().Namespace(),
+			},
+		}
+		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), secretBinding)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Secret
+	{
+		secret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: dsl.i.Garden().Namespace(),
+				Name:      name,
+			},
+			StringData: map[string]string{
+				"serviceaccount.json": "{}",
+			},
+		}
+		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), secret)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
+	shootNamespace := os.Getenv("GARDENER_NAMESPACE")
+	project := strings.TrimPrefix(shootNamespace, "garden-")
+	scope := &cloudcontrolv1beta1.Scope{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: dsl.i.KCP().Namespace(),
+			Name:      name,
+		},
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			KymaName:  name,
+			ShootName: name,
+			Region:    "us-west1",
+			Provider:  cloudcontrolv1beta1.ProviderGCP,
+			Scope: cloudcontrolv1beta1.ScopeInfo{
+				Gcp: &cloudcontrolv1beta1.GcpScope{
+					Project:    dsl.i.AwsMock().GetAccount(),
+					VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, name),
+				},
+			},
+		},
+	}
+
+	err := dsl.i.KCP().Client().Create(dsl.i.Ctx(), scope)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
