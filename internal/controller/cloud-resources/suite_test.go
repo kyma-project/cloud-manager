@@ -68,6 +68,9 @@ var _ = BeforeSuite(func() {
 	// IpRange
 	Expect(SetupIpRangeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AwsNfsVolume
+	Expect(SetupAwsNfsVolumeReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())

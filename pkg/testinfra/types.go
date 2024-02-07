@@ -2,10 +2,12 @@ package testinfra
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -66,6 +68,10 @@ type InfraDSL interface {
 	GivenKymaCRExists(name string) error
 	GivenGardenShootAwsExists(name string) error
 	GivenScopeAwsExists(name string) error
+
+	GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error
+	WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error
+
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
 	GivenGardenShootGcpExists(name string) error
 	GivenScopeGcpExists(name string) error
@@ -74,4 +80,7 @@ type InfraDSL interface {
 type ClusterDSL interface {
 	GivenSecretExists(name string, data map[string][]byte) error
 	GivenNamespaceExists(name string) error
+
+	GivenConditionIsSet(ctx context.Context, obj composed.ObjWithConditions, conditions ...metav1.Condition) error
+	WhenConditionIsSet(ctx context.Context, obj composed.ObjWithConditions, conditions ...metav1.Condition) error
 }

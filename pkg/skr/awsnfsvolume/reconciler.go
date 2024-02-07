@@ -20,6 +20,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
+			args.Reloader,
 		),
 	}
 }
@@ -40,7 +41,13 @@ func (r *reconciler) newAction() composed.Action {
 		"crIpRangeMain",
 		composed.LoadObj,
 		loadSkrIpRange,
-		//addFinalizer,
-		//loadKcpNfsInstance,
+		waitIpRangeReady,
+		loadVolume,
+		addFinalizer,
+		loadKcpNfsInstance,
+		createKcpNfsInstance,
+		createVolume,
+		updateStatus,
+		composed.StopAndForgetAction,
 	)
 }

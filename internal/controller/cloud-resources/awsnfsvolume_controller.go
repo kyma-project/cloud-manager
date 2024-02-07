@@ -18,33 +18,26 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type AwsNfsVolumeReconcilerFactory struct{}
 
 func (f *AwsNfsVolumeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AwsNfsVolumeReconciler{
-		kymaRef:    args.KymaRef,
-		kcpCluster: args.KcpCluster,
-		skrCluster: args.SkrCluster,
+		reconciler: awsnfsvolume.NewReconcilerFactory().New(args),
 	}
 }
 
 // AwsNfsVolumeReconciler reconciles a AwsNfsVolume object
 type AwsNfsVolumeReconciler struct {
-	kymaRef    klog.ObjectRef
-	kcpCluster cluster.Cluster
-	skrCluster cluster.Cluster
+	reconciler reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsvolumes,verbs=get;list;watch;create;update;patch;delete
@@ -61,11 +54,7 @@ type AwsNfsVolumeReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *AwsNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Reconcile(ctx, req)
 }
 
 func SetupAwsNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {

@@ -5,10 +5,13 @@ import (
 	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -231,54 +234,39 @@ func (dsl *infraDSL) WhenKymaModuleStateUpdates(kymaName string, state util.Kyma
 	return nil
 }
 
-// =======================
-
-var _ ClusterDSL = &clusterDSL{}
-
-type clusterDSL struct {
-	ci  ClusterInfo
-	ctx func() context.Context
+func (dsl *infraDSL) WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error {
+	skrIpRange, err := dsl.createSkrIpRangeExists(ctx, ns, name, cidr)
+	if err != nil {
+		return err
+	}
+	return dsl.i.SKR().GivenConditionIsSet(ctx, skrIpRange, conditions...)
 }
 
-func (dsl *clusterDSL) GivenSecretExists(name string, data map[string][]byte) error {
-	secret := &corev1.Secret{
+func (dsl *infraDSL) GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error {
+	skrIpRange, err := dsl.createSkrIpRangeExists(ctx, ns, name, cidr)
+	if client.IgnoreAlreadyExists(err) != nil {
+		return client.IgnoreAlreadyExists(err)
+	}
+	return dsl.i.SKR().GivenConditionIsSet(ctx, skrIpRange, conditions...)
+}
+
+func (dsl *infraDSL) createSkrIpRangeExists(ctx context.Context, ns, name, cidr string) (*cloudresourcesv1beta1.IpRange, error) {
+	skrIpRange := &cloudresourcesv1beta1.IpRange{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dsl.ci.Namespace(),
+			Namespace: ns,
 			Name:      name,
 		},
-	}
-	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(secret), secret)
-	if client.IgnoreNotFound(err) != nil {
-		return err
-	}
-	secret.Data = data
-	if apierrors.IsNotFound(err) {
-		err = dsl.ci.Client().Create(dsl.ctx(), secret)
-	} else {
-		err = dsl.ci.Client().Update(dsl.ctx(), secret)
-	}
-	return err
-
-}
-
-func (dsl *clusterDSL) GivenNamespaceExists(name string) error {
-	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+		Spec: cloudresourcesv1beta1.IpRangeSpec{
+			Cidr: cidr,
 		},
 	}
-	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(ns), ns)
-	if err == nil {
-		// already exists
-		return nil
+	if err := dsl.i.SKR().Client().Create(ctx, skrIpRange); err != nil {
+		return nil, err
 	}
-	if client.IgnoreNotFound(err) != nil {
-		// some error
-		return err
+	if err := dsl.i.SKR().Client().Get(ctx, client.ObjectKeyFromObject(skrIpRange), skrIpRange); err != nil {
+		return nil, err
 	}
-	err = dsl.ci.Client().Create(dsl.ctx(), ns)
-	return err
-
+	return skrIpRange, nil
 }
 
 func (dsl *infraDSL) GivenScopeAwsExists(name string) error {
@@ -455,4 +443,74 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 	}
 
 	return nil
+}
+
+// =======================
+
+var _ ClusterDSL = &clusterDSL{}
+
+type clusterDSL struct {
+	ci  ClusterInfo
+	ctx func() context.Context
+}
+
+func (dsl *clusterDSL) GivenSecretExists(name string, data map[string][]byte) error {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: dsl.ci.Namespace(),
+			Name:      name,
+		},
+	}
+	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(secret), secret)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	secret.Data = data
+	if apierrors.IsNotFound(err) {
+		err = dsl.ci.Client().Create(dsl.ctx(), secret)
+	} else {
+		err = dsl.ci.Client().Update(dsl.ctx(), secret)
+	}
+	return err
+
+}
+
+func (dsl *clusterDSL) GivenNamespaceExists(name string) error {
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(ns), ns)
+	if err == nil {
+		// already exists
+		return nil
+	}
+	if client.IgnoreNotFound(err) != nil {
+		// some error
+		return err
+	}
+	err = dsl.ci.Client().Create(dsl.ctx(), ns)
+	return client.IgnoreAlreadyExists(err)
+
+}
+
+func (dsl *clusterDSL) GivenConditionIsSet(ctx context.Context, obj composed.ObjWithConditions, conditions ...metav1.Condition) error {
+	return dsl.setCondition(ctx, obj, conditions)
+}
+
+func (dsl *clusterDSL) WhenConditionIsSet(ctx context.Context, obj composed.ObjWithConditions, conditions ...metav1.Condition) error {
+	return dsl.setCondition(ctx, obj, conditions)
+}
+
+func (dsl *clusterDSL) setCondition(ctx context.Context, obj composed.ObjWithConditions, conditions []metav1.Condition) error {
+	err := dsl.ci.Client().Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if err != nil {
+		return err
+	}
+	for _, cond := range conditions {
+		_ = meta.SetStatusCondition(obj.Conditions(), cond)
+	}
+	err = dsl.ci.Client().Status().Update(ctx, obj)
+	return err
 }

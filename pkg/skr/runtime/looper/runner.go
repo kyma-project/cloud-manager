@@ -54,6 +54,8 @@ func (r *skrRunner) Reloader() reload.Reloader {
 }
 
 func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) {
+	logger := skrManager.GetLogger()
+	logger.Info("Starting SKR Runner")
 	if r.started {
 		return
 	}
@@ -67,6 +69,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		r.reloader = &reloader{skrScheme: skrManager.GetScheme(), descriptors: descriptors}
 		for _, descr := range descriptors {
 			logger2 := skrManager.GetLogger().WithValues("controller", descr.Name)
+			logger2.Info("Creating SKR controller")
 			ctrl, err := controller.New(descr.Name, skrManager, r.GetControllerOptions(
 				descr,
 				skrManager,
@@ -77,6 +80,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				continue
 			}
 			for _, w := range descr.Watches {
+				logger2.WithValues("watch", w.Name).Info("Starting SKR Watch")
 				err = ctrl.Watch(w.Src, w.EventHandler, w.Predicates...)
 				if err != nil {
 					logger2.WithValues("watch", w.Name).Error(err, "error watching source")
