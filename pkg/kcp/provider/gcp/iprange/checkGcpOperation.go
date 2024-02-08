@@ -2,11 +2,11 @@ package iprange
 
 import (
 	"context"
-	"errors"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-
+	"fmt"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func checkGcpOperation(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,8 +27,17 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		ipRange.Status.State == client.DeletePsaConnection {
 		op, err := state.serviceNetworkingClient.GetServiceNetworkingOperation(ctx, opName)
 		if err != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-			return composed.LogErrorAndReturn(err, "Error getting operation from GCP", composed.StopWithRequeue, nil)
+			return composed.UpdateStatus(ipRange).
+				SetCondition(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: err.Error(),
+				}).
+				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg("Error getting Service Networking Operation from GCP.").
+				Run(ctx, state)
 		}
 
 		//Operation not completed yet.. requeue again.
@@ -43,15 +52,34 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, errors.New(op.Error.Message))
+			return composed.UpdateStatus(ipRange).
+				SetCondition(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: op.Error.Message,
+				}).
+				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg(fmt.Sprintf("Service Networking Operation error : %s", op.Error.Message)).
+				Run(ctx, state)
 		}
 	} else if ipRange.Status.State == client.SyncAddress ||
 		ipRange.Status.State == client.DeleteAddress {
 		project := state.Scope().Spec.Scope.Gcp.Project
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-			return composed.LogErrorAndReturn(err, "Error getting operation from GCP", composed.StopWithRequeue, nil)
+			return composed.UpdateStatus(ipRange).
+				SetCondition(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: err.Error(),
+				}).
+				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg("Error getting Compute Operation from GCP.").
+				Run(ctx, state)
 		}
 
 		//Operation not completed yet.. requeue again.
@@ -66,7 +94,17 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
-			state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, errors.New(op.StatusMessage))
+			return composed.UpdateStatus(ipRange).
+				SetCondition(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: op.StatusMessage,
+				}).
+				RemoveConditions(v1beta1.ConditionTypeReady).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg(fmt.Sprintf("Compute Operation error : %s", op.StatusMessage)).
+				Run(ctx, state)
 		}
 
 	}

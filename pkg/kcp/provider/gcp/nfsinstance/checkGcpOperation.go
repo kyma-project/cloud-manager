@@ -2,8 +2,9 @@ package nfsinstance
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -25,8 +26,17 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 	project := state.Scope().Spec.Scope.Gcp.Project
 	op, err := state.filestoreClient.GetFilestoreOperation(ctx, project, opName)
 	if err != nil {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error getting operation from GCP", composed.StopWithRequeue, nil)
+		return composed.UpdateStatus(nfsInstance).
+			SetCondition(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: err.Error(),
+			}).
+			RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("Error getting File Operation from GCP.").
+			Run(ctx, state)
 	}
 
 	//Operation not completed yet.. requeue again.
@@ -41,7 +51,17 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	//If the operation failed, update the error status on the object.
 	if op != nil && op.Error != nil {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, errors.New(op.Error.Message))
+		return composed.UpdateStatus(nfsInstance).
+			SetCondition(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: op.Error.Message,
+			}).
+			RemoveConditions(v1beta1.ConditionTypeReady).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg(fmt.Sprintf("File Operation error : %s", op.Error.Message)).
+			Run(ctx, state)
 	}
 
 	return nil, nil

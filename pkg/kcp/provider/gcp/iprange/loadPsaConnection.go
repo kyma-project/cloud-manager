@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -28,8 +29,17 @@ func loadPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	vpc := gcpScope.VpcNetwork
 	list, err := state.serviceNetworkingClient.ListServiceConnections(ctx, project, vpc)
 	if err != nil {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error listing Service Connections from GCP", composed.StopWithRequeue, nil)
+		return composed.UpdateStatus(ipRange).
+			SetCondition(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: "Error listing Service Connections from GCP",
+			}).
+			RemoveConditions(v1beta1.ConditionTypeReady).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("Error listing Service Connections from GCP").
+			Run(ctx, state)
 	}
 
 	//Iterate over the list and store the address in the state object

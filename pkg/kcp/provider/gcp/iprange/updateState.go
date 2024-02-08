@@ -2,29 +2,32 @@ package iprange
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 func updateState(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	state.ObjAsIpRange().Status.State = state.curState
+	ipRange := state.ObjAsIpRange()
+	prevState := ipRange.Status.State
+	ipRange.Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
-		state.ObjAsIpRange().Status.Cidr = state.ObjAsIpRange().Spec.Cidr
-		meta.RemoveStatusCondition(state.ObjAsIpRange().Conditions(), v1beta1.ConditionTypeError)
-		state.AddReadyCondition(ctx, "IpRange provisioned in GCP.")
-	}
-
-	err := state.UpdateObjStatus(ctx)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating IpRange success status", composed.StopWithRequeue, nil)
-	}
-
-	if state.inSync && state.curState == v1beta1.ReadyState {
-		return composed.StopAndForget, nil
+		ipRange.Status.Cidr = ipRange.Spec.Cidr
+		return composed.UpdateStatus(ipRange).
+			SetCondition(metav1.Condition{
+				Type:    v1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonReady,
+				Message: "IpRange provisioned in GCP.",
+			}).
+			SuccessError(composed.StopAndForget).
+			RemoveConditions(v1beta1.ConditionTypeError).
+			Run(ctx, state)
+	} else if prevState != state.curState {
+		return composed.UpdateStatus(ipRange).SuccessError(composed.StopWithRequeue).Run(ctx, state)
 	}
 
 	return nil, nil
