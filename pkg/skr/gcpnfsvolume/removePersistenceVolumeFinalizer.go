@@ -2,7 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
-	v1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -10,14 +10,8 @@ import (
 func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	//If PV doesn't exist OR is not marked for deletion, continue
-	if state.PV == nil || state.PV.DeletionTimestamp.IsZero() {
-		return nil, nil
-	}
-
-	//If Kcp NfsInstance still exists, continue
-	if state.KcpNfsInstance != nil {
-		// KCP NfsInstance is not yet deleted
+	//If PV doesn't exist OR nfsVolume is not marked for deletion, continue
+	if state.PV == nil || !composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 

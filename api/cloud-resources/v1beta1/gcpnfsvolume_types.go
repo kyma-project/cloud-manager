@@ -22,10 +22,11 @@ import (
 
 // Additional error reasons
 const (
-	ConditionReasonCapacityInvalid      = "CapacityGbInvalid"
-	ConditionReasonIpRangeNotReady      = "IpRangeNotReady"
-	ConditionReasonFileShareNameInvalid = "FileShareNameInvalid"
-	ConditionReasonTierInvalid          = "TierInvalid"
+	ConditionReasonCapacityInvalid       = "CapacityGbInvalid"
+	ConditionReasonIpRangeNotReady       = "IpRangeNotReady"
+	ConditionReasonFileShareNameInvalid  = "FileShareNameInvalid"
+	ConditionReasonTierInvalid           = "TierInvalid"
+	ConditionReasonPVNotReadyForDeletion = "PVNotReadyForDeletion"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
