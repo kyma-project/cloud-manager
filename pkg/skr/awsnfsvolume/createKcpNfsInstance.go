@@ -33,10 +33,22 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 			},
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-			RemoteRef: cloudcontrolv1beta1.RemoteRef{},
-			IpRange:   cloudcontrolv1beta1.IpRangeRef{},
-			Scope:     cloudcontrolv1beta1.ScopeRef{},
-			Instance:  cloudcontrolv1beta1.NfsInstanceInfo{},
+			RemoteRef: cloudcontrolv1beta1.RemoteRef{
+				Namespace: state.ObjAsAwsNfsVolume().Namespace,
+				Name:      state.ObjAsAwsNfsVolume().Name,
+			},
+			IpRange: cloudcontrolv1beta1.IpRangeRef{
+				Name: state.SkrIpRange.Status.Id,
+			},
+			Scope: cloudcontrolv1beta1.ScopeRef{
+				Name: state.KymaRef.Name,
+			},
+			Instance: cloudcontrolv1beta1.NfsInstanceInfo{
+				Aws: &cloudcontrolv1beta1.NfsInstanceAws{
+					PerformanceMode: cloudcontrolv1beta1.AwsPerformanceMode(state.ObjAsAwsNfsVolume().Spec.PerformanceMode),
+					Throughput:      cloudcontrolv1beta1.AwsThroughputMode(state.ObjAsAwsNfsVolume().Spec.Throughput),
+				},
+			},
 		},
 	}
 

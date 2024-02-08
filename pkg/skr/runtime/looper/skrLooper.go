@@ -171,7 +171,7 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 
 	logger.Info("Starting SKR Runner")
 	runner := NewSkrRunner(l.registry, l.kcpCluster)
-	to := 30 * time.Second
+	to := 10 * time.Second
 	if debugged.Debugged {
 		to = 15 * time.Minute
 	}

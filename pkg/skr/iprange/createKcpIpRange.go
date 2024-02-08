@@ -2,11 +2,11 @@ package iprange
 
 import (
 	"context"
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,7 +27,7 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 
 	state.KcpIpRange = &cloudcontrolv1beta1.IpRange{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      uuid.NewString(),
+			Name:      state.ObjAsIpRange().Status.Id,
 			Namespace: state.KymaRef.Namespace,
 			Labels: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
@@ -64,5 +64,6 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Message: "Resource is submitted for provisioning",
 		}).
 		ErrorLogMessage("Error updating IpRange status with submitted condition").
+		SuccessError(composed.StopWithRequeueDelay(100*time.Millisecond)).
 		Run(ctx, state)
 }

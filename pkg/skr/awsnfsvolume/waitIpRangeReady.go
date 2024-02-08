@@ -12,7 +12,7 @@ import (
 func waitIpRangeReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	isReady := meta.IsStatusConditionTrue(state.ObjAsAwsNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+	isReady := meta.IsStatusConditionTrue(state.SkrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 	if isReady {
 		return nil, nil
 	}

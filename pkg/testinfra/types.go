@@ -69,8 +69,8 @@ type InfraDSL interface {
 	GivenGardenShootAwsExists(name string) error
 	GivenScopeAwsExists(name string) error
 
-	GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error
-	WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error
+	GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error
+	WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error
 
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
 	GivenGardenShootGcpExists(name string) error

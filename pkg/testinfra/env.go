@@ -76,6 +76,7 @@ func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 }
 
 func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
+	ie.kcpManager.GetLogger().Info("TestInfra: StartSkrControllers")
 	var err error
 	ie.skrManager, err = skrmanager.New(ie.i.SKR().Cfg(), ie.i.SKR().Scheme(), ie.skrKymaRef, ie.kcpManager.GetLogger())
 	if err != nil {
@@ -86,7 +87,10 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
 	go func() {
 		defer ginkgo.GinkgoRecover()
-		ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
+		err = ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
+		if err != nil {
+			ie.skrManager.GetLogger().Error(err, "Error running SKR Runner")
+		}
 	}()
 	time.Sleep(time.Second)
 }

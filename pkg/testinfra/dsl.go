@@ -234,18 +234,32 @@ func (dsl *infraDSL) WhenKymaModuleStateUpdates(kymaName string, state util.Kyma
 	return nil
 }
 
-func (dsl *infraDSL) WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error {
+func (dsl *infraDSL) WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error {
 	skrIpRange, err := dsl.createSkrIpRangeExists(ctx, ns, name, cidr)
 	if err != nil {
 		return err
 	}
+	if id != "" {
+		skrIpRange.Status.Id = id
+		err = dsl.i.SKR().Client().Update(ctx, skrIpRange)
+		if err != nil {
+			return fmt.Errorf("error updating SKR IpRange status with id")
+		}
+	}
 	return dsl.i.SKR().GivenConditionIsSet(ctx, skrIpRange, conditions...)
 }
 
-func (dsl *infraDSL) GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, conditions ...metav1.Condition) error {
+func (dsl *infraDSL) GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error {
 	skrIpRange, err := dsl.createSkrIpRangeExists(ctx, ns, name, cidr)
 	if client.IgnoreAlreadyExists(err) != nil {
 		return client.IgnoreAlreadyExists(err)
+	}
+	if id != "" {
+		skrIpRange.Status.Id = id
+		err = dsl.i.SKR().Client().Update(ctx, skrIpRange)
+		if err != nil {
+			return fmt.Errorf("error updating SKR IpRange status with id")
+		}
 	}
 	return dsl.i.SKR().GivenConditionIsSet(ctx, skrIpRange, conditions...)
 }
@@ -512,5 +526,9 @@ func (dsl *clusterDSL) setCondition(ctx context.Context, obj composed.ObjWithCon
 		_ = meta.SetStatusCondition(obj.Conditions(), cond)
 	}
 	err = dsl.ci.Client().Status().Update(ctx, obj)
+	if err != nil {
+		return err
+	}
+	err = dsl.ci.Client().Get(ctx, client.ObjectKeyFromObject(obj), obj)
 	return err
 }

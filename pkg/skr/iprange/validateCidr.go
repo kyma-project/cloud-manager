@@ -75,6 +75,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "error updating IpRange status after cidr successful validation", composed.StopWithRequeue, ctx)
 	}
+	logger.Info("SKR IpRange Cidr validated")
 
 	return nil, nil
 }

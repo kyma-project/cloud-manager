@@ -21,7 +21,6 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
-			args.Reloader,
 		),
 	}
 }
@@ -52,6 +51,7 @@ func (r *reconciler) newAction() composed.Action {
 		preventCidrChange,
 		validateCidr,
 		addFinalizer,
+		updateId,
 		loadKcpIpRange,
 		createKcpIpRange,
 		deleteKcpIpRange,

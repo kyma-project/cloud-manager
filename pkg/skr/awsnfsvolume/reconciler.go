@@ -20,7 +20,6 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
-			args.Reloader,
 		),
 	}
 }

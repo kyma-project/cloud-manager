@@ -1,97 +1,102 @@
 package cloudresources
 
 import (
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
+	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("KCP AwsNfsVolume", Focus, func() {
+var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Ready condition and PV created", Focus, func() {
 
-	const (
-		awsNfsVolumeName = "aws-nfs-volume1"
-		skrNamespace     = "test"
+	Context("Given SKR Cluster", Ordered, func() {
 
-		duration = time.Second * 5
-		interval = time.Millisecond * 250
-	)
+		It("And Given SKR namespace exists", func() {
+			Eventually(CreateNamespace).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{},
+				).
+				Should(Succeed())
+		})
 
-	var (
-		timeout = time.Second * 10
-	)
+		skrIpRangeName := "aws-nfs-iprange-1"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		skrIpRangeId := "db018167-dd48-4d8c-aa3c-ea9e2ed05307"
 
-	if debugged.Debugged {
-		timeout = time.Minute * 20
-	}
+		It("And Given SKR IpRange exists", func() {
 
-	It("AwsNfsVolume creation", func() {
+			skriprange.Ignore.AddName(skrIpRangeName)
 
-		Expect(infra.SKR().GivenNamespaceExists(skrNamespace)).
-			NotTo(HaveOccurred())
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+				).
+				Should(Succeed())
 
-		skriprange.Ignore.AddName(awsNfsVolumeName)
+			By("And SKR IpRange has Ready condition")
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusCidr(skrIpRange.Spec.Cidr),
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
 
-		Expect(infra.GivenSkrIpRangeExists(
-			infra.Ctx(),
-			skrNamespace,
-			awsNfsVolumeName,
-			"10.181.0.0/16",
-			metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeReady,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
-				Message: "Ready",
-			},
-		)).
-			NotTo(HaveOccurred())
+		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		It("When AwsNfsVolume is created", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					WithName("aws-nfs-volume-1"),
+					WithNfsVolumeIpRange(skrIpRange.Name),
+				).
+				Should(Succeed())
+		})
 
-		// When AwsNfsVolume is created
-		nfsVol := &cloudresourcesv1beta1.AwsNfsVolume{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: skrNamespace,
-				Name:      awsNfsVolumeName,
-			},
-			Spec: cloudresourcesv1beta1.AwsNfsVolumeSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Namespace: skrNamespace,
-					Name:      awsNfsVolumeName,
-				},
-				PerformanceMode: "",
-				Throughput:      "",
-			},
-		}
-		Expect(infra.SKR().Client().Create(infra.Ctx(), nfsVol)).
-			NotTo(HaveOccurred())
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
-		// When SKR source is reloaded and SKR loop triggered
-		Expect(infra.SkrRunner().Reloader().ReloadObjKind(infra.Ctx(), &cloudresourcesv1beta1.IpRange{})).
-			NotTo(HaveOccurred())
-		Expect(infra.SkrRunner().Reloader().ReloadObjKind(infra.Ctx(), &cloudresourcesv1beta1.AwsNfsVolume{})).
-			NotTo(HaveOccurred())
+		It("Then KCP NfsInstance is created", func() {
+			Eventually(CreateNfsInstance).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					WithName(skrIpRange.Status.Id),
+					WithNfsInstanceAws(),
+				).
+				Should(Succeed())
+		})
 
-		// Then AwsNfsVolume will eventually get status condition
-		var readyCond *metav1.Condition
-		var errorCond *metav1.Condition
-		Eventually(func() (ok bool, err error) {
-			err = infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(nfsVol), nfsVol)
-			if err != nil {
-				return false, client.IgnoreNotFound(err)
-			}
+		It("When KCP NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					WithNfsInstanceStatusHost(DefaultNfsInstanceHost),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
 
-			readyCond = meta.FindStatusCondition(*nfsVol.Conditions(), cloudresourcesv1beta1.ConditionTypeReady)
-			errorCond = meta.FindStatusCondition(*nfsVol.Conditions(), cloudresourcesv1beta1.ConditionTypeError)
-			return len(*nfsVol.Conditions()) > 0, nil
-		}, timeout, interval).
-			Should(BeTrue(), "expected SKR AwsNfsVolume to be loaded and have a status condition")
+		It("Then SKR AwsNfsVolume will get Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
 
-		Expect(errorCond).To(BeNil(), "expected SKR AwsNfsVolume not to have Error condition")
-		Expect(readyCond).NotTo(BeNil(), "expected SKR AwsNfsVolume to have Ready condition")
 	})
 
 })

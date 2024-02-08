@@ -37,6 +37,9 @@ type IpRangeStatus struct {
 	// +optional
 	Cidr string `json:"cidr,omitempty"`
 
+	// +optional
+	Id string `json:"id,omitempty"`
+
 	// List of status conditions
 	// +optional
 	// +listType=map
