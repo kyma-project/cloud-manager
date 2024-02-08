@@ -68,7 +68,7 @@ func AssertSkrIpRangeHasId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.IpRange)
 		if !ok {
-			return fmt.Errorf("the object %T is not SKR IpRange")
+			return fmt.Errorf("the object %T is not SKR IpRange", obj)
 		}
 		if x.Status.Id == "" {
 			return errors.New("the SKR IpRange ID not set")

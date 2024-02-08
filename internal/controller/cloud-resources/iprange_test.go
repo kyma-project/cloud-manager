@@ -21,7 +21,7 @@ var _ = Describe("Created SKR IpRange gets projects into KCP", func() {
 				Should(Succeed())
 		})
 
-		skrIpRangeName := "aws-nfs-iprange-1"
+		skrIpRangeName := "iprange-1"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		It("When SKR IpRange is created", func() {

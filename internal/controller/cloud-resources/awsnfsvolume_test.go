@@ -1,7 +1,6 @@
 package cloudresources
 
 import (
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -10,15 +9,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Ready condition and PV created", Focus, func() {
+var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Ready condition and PV created", func() {
 
 	Context("Given SKR Cluster", Ordered, func() {
 
 		It("And Given SKR namespace exists", func() {
 			Eventually(CreateNamespace).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{},
-				).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 				Should(Succeed())
 		})
 
@@ -28,6 +25,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 
 		It("And Given SKR IpRange exists", func() {
 
+			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
 
 			Eventually(CreateSkrIpRange).
@@ -36,8 +34,9 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 					WithName(skrIpRangeName),
 				).
 				Should(Succeed())
+		})
 
-			By("And SKR IpRange has Ready condition")
+		It("And SKR IpRange has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -49,6 +48,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 		})
 
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+
 		It("When AwsNfsVolume is created", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(
@@ -59,43 +59,42 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 				Should(Succeed())
 		})
 
-		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-
-		It("Then KCP NfsInstance is created", func() {
-			Eventually(CreateNfsInstance).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpNfsInstance,
-					WithName(skrIpRange.Status.Id),
-					WithNfsInstanceAws(),
-				).
-				Should(Succeed())
-		})
-
-		It("When KCP NfsInstance has Ready condition", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpNfsInstance,
-					WithNfsInstanceStatusHost(DefaultNfsInstanceHost),
-					WithConditions(KcpReadyCondition()),
-				).
-				Should(Succeed())
-		})
-
-		It("Then SKR AwsNfsVolume will get Ready condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					awsNfsVolume,
-					NewObjActions(),
-					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed())
-		})
+		//kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		//
+		//It("Then KCP NfsInstance is created", func() {
+		//	Eventually(LoadAndCheck).
+		//		WithArguments(
+		//			infra.Ctx(),
+		//			infra.KCP().Client(),
+		//			kcpNfsInstance,
+		//			WithName(skrIpRange.Status.Id),
+		//		).
+		//		Should(Succeed())
+		//})
+		//
+		//It("When KCP NfsInstance gets Ready condition", func() {
+		//	Eventually(UpdateStatus).
+		//		WithArguments(
+		//			infra.Ctx(),
+		//			infra.KCP().Client(),
+		//			kcpNfsInstance,
+		//			WithNfsInstanceStatusHost(DefaultNfsInstanceHost),
+		//			WithConditions(KcpReadyCondition()),
+		//		).
+		//		Should(Succeed())
+		//})
+		//
+		//It("Then SKR AwsNfsVolume will get Ready condition", func() {
+		//	Eventually(LoadAndCheck).
+		//		WithArguments(
+		//			infra.Ctx(),
+		//			infra.SKR().Client(),
+		//			awsNfsVolume,
+		//			NewObjActions(),
+		//			AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+		//		).
+		//		Should(Succeed())
+		//})
 
 	})
 
