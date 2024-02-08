@@ -30,13 +30,12 @@ func loadPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	list, err := state.serviceNetworkingClient.ListServiceConnections(ctx, project, vpc)
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: "Error listing Service Connections from GCP",
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeue).
 			SuccessLogMsg("Error listing Service Connections from GCP").
 			Run(ctx, state)

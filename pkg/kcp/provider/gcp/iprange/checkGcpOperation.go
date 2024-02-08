@@ -28,13 +28,12 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		op, err := state.serviceNetworkingClient.GetServiceNetworkingOperation(ctx, opName)
 		if err != nil {
 			return composed.UpdateStatus(ipRange).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  v1beta1.ReasonGcpError,
 					Message: err.Error(),
 				}).
-				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
 				SuccessError(composed.StopWithRequeue).
 				SuccessLogMsg("Error getting Service Networking Operation from GCP.").
 				Run(ctx, state)
@@ -53,13 +52,12 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
 			return composed.UpdateStatus(ipRange).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  v1beta1.ReasonGcpError,
 					Message: op.Error.Message,
 				}).
-				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
 				SuccessError(composed.StopWithRequeue).
 				SuccessLogMsg(fmt.Sprintf("Service Networking Operation error : %s", op.Error.Message)).
 				Run(ctx, state)
@@ -70,13 +68,12 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
 			return composed.UpdateStatus(ipRange).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  v1beta1.ReasonGcpError,
 					Message: err.Error(),
 				}).
-				RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
 				SuccessError(composed.StopWithRequeue).
 				SuccessLogMsg("Error getting Compute Operation from GCP.").
 				Run(ctx, state)
@@ -95,13 +92,12 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
 			return composed.UpdateStatus(ipRange).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  v1beta1.ReasonGcpError,
 					Message: op.StatusMessage,
 				}).
-				RemoveConditions(v1beta1.ConditionTypeReady).
 				SuccessError(composed.StopWithRequeue).
 				SuccessLogMsg(fmt.Sprintf("Compute Operation error : %s", op.StatusMessage)).
 				Run(ctx, state)

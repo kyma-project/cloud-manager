@@ -17,14 +17,13 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 	if state.curState == v1beta1.ReadyState {
 		ipRange.Status.Cidr = ipRange.Spec.Cidr
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonReady,
 				Message: "IpRange provisioned in GCP.",
 			}).
 			SuccessError(composed.StopAndForget).
-			RemoveConditions(v1beta1.ConditionTypeError).
 			Run(ctx, state)
 	} else if prevState != state.curState {
 		return composed.UpdateStatus(ipRange).SuccessError(composed.StopWithRequeue).Run(ctx, state)

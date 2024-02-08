@@ -20,13 +20,12 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	addr, prefix, err := util.CidrParseIPnPrefix(ipRange.Spec.Cidr)
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonInvalidCidr,
 				Message: err.Error(),
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopAndForget).
 			SuccessLogMsg("Error updating IpRange status due to cidr overlap.").
 			Run(ctx, state)

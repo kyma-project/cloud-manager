@@ -51,14 +51,13 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 		nfsInstance.Status.Hosts = state.fsInstance.Networks[0].IpAddresses
 		nfsInstance.Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
 		return composed.UpdateStatus(nfsInstance).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonReady,
 				Message: "Filestore instance provisioned in GCP.",
 			}).
 			SuccessError(composed.StopAndForget).
-			RemoveConditions(v1beta1.ConditionTypeError).
 			Run(ctx, state)
 	} else if prevState != state.curState {
 		return composed.UpdateStatus(nfsInstance).SuccessError(composed.StopWithRequeue).Run(ctx, state)

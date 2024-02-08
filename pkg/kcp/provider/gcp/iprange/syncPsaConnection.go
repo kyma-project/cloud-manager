@@ -36,13 +36,12 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Service Connection object in GCP :%s", err)).
 			Run(ctx, state)

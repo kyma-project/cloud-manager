@@ -35,13 +35,12 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 			}
 		}
 		return composed.UpdateStatus(nfsInstance).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: "Error getting Filestore Instance from GCP",
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
 			SuccessLogMsg("Error getting Filestore Instance from GCP").
 			Run(ctx, state)

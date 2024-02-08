@@ -40,13 +40,12 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 
 	if err != nil {
 		return composed.UpdateStatus(nfsInstance).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
 			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error updating Filestore object in GCP :%s", err)).
 			Run(ctx, state)

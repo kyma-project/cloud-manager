@@ -29,16 +29,8 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	case client.ADD:
 		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, name, name, state.ipAddress, int64(state.prefix))
 	case client.MODIFY:
-		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
-				Type:    v1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  v1beta1.ReasonNotSupported,
-				Message: "IpRange update not supported.",
-			}).
-			SuccessError(composed.StopAndForget).
-			SuccessLogMsg("IpRange update not supported.").
-			Run(ctx, state)
+		logger.WithValues("ipRange :", ipRange.Name).Info("IpRange update not supported.")
+		return composed.StopAndForget, nil
 	case client.DELETE:
 		operation, err = state.computeClient.DeleteIpRange(ctx, project, name)
 	default:
@@ -47,13 +39,12 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			RemoveConditionIfReasonMatched(v1beta1.ConditionTypeError, v1beta1.ReasonGcpError).
 			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Address object in GCP :%s", err)).
 			Run(ctx, state)

@@ -36,13 +36,12 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 		}
 
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: "Error getting Addresses from GCP",
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeue).
 			SuccessLogMsg("Error getting Addresses from GCP").
 			Run(ctx, state)
@@ -51,13 +50,12 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	//Check whether the IPRange is in the same VPC as that of the SKR.
 	if !strings.HasSuffix(addr.Network, vpc) {
 		return composed.UpdateStatus(ipRange).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: "IPRange with the same name exists in another VPC.",
 			}).
-			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeue).
 			SuccessLogMsg("GCP - IPRange name conflict").
 			Run(ctx, state)
