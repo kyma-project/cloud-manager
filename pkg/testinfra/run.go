@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/onsi/ginkgo/v2"
 	"k8s.io/client-go/rest"
@@ -113,6 +114,7 @@ func Start() (Infra, error) {
 		registry:   registry,
 		looper:     looper,
 		awsMock:    awsMock,
+		gcpMock:    gcpmock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),

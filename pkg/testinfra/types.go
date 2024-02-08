@@ -3,6 +3,7 @@ package testinfra
 import (
 	"context"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -46,6 +47,7 @@ type InfraEnv interface {
 	Registry() skrruntime.SkrRegistry
 	Looper() skrruntime.SkrLooper
 	AwsMock() awsmock.Server
+	GcpMock() gcpmock.Server
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
 
@@ -65,6 +67,8 @@ type InfraDSL interface {
 	GivenGardenShootAwsExists(name string) error
 	GivenScopeAwsExists(name string) error
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
+	GivenGardenShootGcpExists(name string) error
+	GivenScopeGcpExists(name string) error
 }
 
 type ClusterDSL interface {

@@ -13,6 +13,7 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 	state.ObjAsIpRange().Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
+		state.ObjAsIpRange().Status.Cidr = state.ObjAsIpRange().Spec.Cidr
 		meta.RemoveStatusCondition(state.ObjAsIpRange().Conditions(), v1beta1.ConditionTypeError)
 		state.AddReadyCondition(ctx, "IpRange provisioned in GCP.")
 	}
