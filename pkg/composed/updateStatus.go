@@ -75,6 +75,14 @@ func (b *UpdateStatusBuilder) SetCondition(cond metav1.Condition) *UpdateStatusB
 	return b
 }
 
+func (b *UpdateStatusBuilder) SetExclusiveConditions(conditions ...metav1.Condition) *UpdateStatusBuilder {
+	for _, c := range conditions {
+		b.KeepConditions(c.Type)
+	}
+	b.conditionsToSet = conditions
+	return b
+}
+
 func (b *UpdateStatusBuilder) ErrorLogMessage(msg string) *UpdateStatusBuilder {
 	b.updateErrorLogMsg = msg
 	return b

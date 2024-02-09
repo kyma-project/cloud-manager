@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -33,8 +34,16 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 				return nil, nil
 			}
 		}
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error getting Filestore Instance from GCP", composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil)
+		return composed.UpdateStatus(nfsInstance).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: "Error getting Filestore Instance from GCP",
+			}).
+			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
+			SuccessLogMsg("Error getting Filestore Instance from GCP").
+			Run(ctx, state)
 	}
 
 	//Store the fsInstance in state

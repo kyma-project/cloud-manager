@@ -2,7 +2,9 @@ package iprange
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -33,12 +35,22 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if err != nil {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error syncronizing Service Connections in GCP", composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil)
+		return composed.UpdateStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: err.Error(),
+			}).
+			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
+			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Service Connection object in GCP :%s", err)).
+			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
-		state.UpdateObjStatus(ctx)
+		return composed.UpdateStatus(ipRange).
+			SuccessError(composed.StopWithRequeueDelay(client.GcpOperationWaitTime)).
+			Run(ctx, state)
 	}
 	return composed.StopWithRequeueDelay(client.GcpOperationWaitTime), nil
 }

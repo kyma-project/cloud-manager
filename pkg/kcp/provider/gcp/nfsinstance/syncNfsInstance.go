@@ -2,7 +2,9 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -37,8 +39,16 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if err != nil {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error synchronizing Filestore object in GCP", composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil)
+		return composed.UpdateStatus(nfsInstance).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: err.Error(),
+			}).
+			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
+			SuccessLogMsg(fmt.Sprintf("Error updating Filestore object in GCP :%s", err)).
+			Run(ctx, state)
 	}
 
 	if operation != nil {
@@ -46,7 +56,9 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 			nfsInstance.Status.Id = client.GetFilestoreInstancePath(project, location, name)
 		}
 		nfsInstance.Status.OpIdentifier = operation.Name
-		state.UpdateObjStatus(ctx)
+		return composed.UpdateStatus(nfsInstance).
+			SuccessError(composed.StopWithRequeueDelay(client.GcpOperationWaitTime)).
+			Run(ctx, state)
 	}
 	return nil, nil
 }

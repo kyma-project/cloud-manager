@@ -3,10 +3,10 @@ package nfsinstance
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 func checkNUpdateState(ctx context.Context, st composed.State) (error, context.Context) {
@@ -44,22 +44,23 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	//Update State Info
-	state.ObjAsNfsInstance().Status.State = state.curState
+	prevState := nfsInstance.Status.State
+	nfsInstance.Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
-		state.ObjAsNfsInstance().Status.Hosts = state.fsInstance.Networks[0].IpAddresses
-		state.ObjAsNfsInstance().Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
-		meta.RemoveStatusCondition(state.ObjAsNfsInstance().Conditions(), v1beta1.ConditionTypeError)
-		state.AddReadyCondition(ctx, "Filestore Instance provisioned in GCP.")
-	}
-
-	err := state.UpdateObjStatus(ctx)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating NfsInstance success status", composed.StopWithRequeue, nil)
-	}
-
-	if state.curState == v1beta1.ReadyState {
-		return composed.StopAndForget, nil
+		nfsInstance.Status.Hosts = state.fsInstance.Networks[0].IpAddresses
+		nfsInstance.Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
+		return composed.UpdateStatus(nfsInstance).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonReady,
+				Message: "Filestore instance provisioned in GCP.",
+			}).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	} else if prevState != state.curState {
+		return composed.UpdateStatus(nfsInstance).SuccessError(composed.StopWithRequeue).Run(ctx, state)
 	}
 
 	return nil, nil

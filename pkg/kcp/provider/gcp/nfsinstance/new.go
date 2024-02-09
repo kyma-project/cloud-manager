@@ -29,6 +29,7 @@ func New(stateFactory StateFactory) composed.Action {
 			loadNfsInstance,
 			validatePostCreate,
 			checkNUpdateState,
+			checkUpdateMask,
 			syncNfsInstance,
 			composed.BuildBranchingAction("RunFinalizer", StatePredicate(client.Deleted, ctx, state),
 				actions.RemoveFinalizer, nil),

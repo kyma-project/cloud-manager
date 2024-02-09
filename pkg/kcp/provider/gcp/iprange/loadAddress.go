@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -33,14 +34,31 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 				return nil, nil
 			}
 		}
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, err)
-		return composed.LogErrorAndReturn(err, "Error getting Addresses from GCP", composed.StopWithRequeue, nil)
+
+		return composed.UpdateStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: "Error getting Addresses from GCP",
+			}).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("Error getting Addresses from GCP").
+			Run(ctx, state)
 	}
 
 	//Check whether the IPRange is in the same VPC as that of the SKR.
 	if !strings.HasSuffix(addr.Network, vpc) {
-		state.AddErrorCondition(ctx, v1beta1.ReasonGcpError, errors.New("IPRange with the same name exists in another VPC."))
-		return composed.LogErrorAndReturn(err, "GCP - IPRange name conflict", composed.StopWithRequeue, nil)
+		return composed.UpdateStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: "IPRange with the same name exists in another VPC.",
+			}).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("GCP - IPRange name conflict").
+			Run(ctx, state)
 	}
 	state.address = addr
 

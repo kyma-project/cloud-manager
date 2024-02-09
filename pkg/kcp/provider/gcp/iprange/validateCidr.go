@@ -2,8 +2,9 @@ package iprange
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -18,12 +19,16 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	//Parse CIDR.
 	addr, prefix, err := util.CidrParseIPnPrefix(ipRange.Spec.Cidr)
 	if err != nil {
-		err := state.AddErrorCondition(ctx, cloudresourcesv1beta1.ReasonInvalidCidr, err)
-		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating IpRange status due to cidr overlap", composed.StopWithRequeue, nil)
-		}
-
-		return composed.StopAndForget, nil
+		return composed.UpdateStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonInvalidCidr,
+				Message: err.Error(),
+			}).
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("Error updating IpRange status due to cidr overlap.").
+			Run(ctx, state)
 	}
 
 	//Store the parsed values in the state object.
