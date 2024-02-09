@@ -51,6 +51,10 @@ type AwsNfsVolumeSpec struct {
 
 // AwsNfsVolumeStatus defines the observed state of AwsNfsVolume
 type AwsNfsVolumeStatus struct {
+
+	// +optional
+	Server string `json:"server,omitempty"`
+
 	// List of status conditions
 	// +optional
 	// +listType=map

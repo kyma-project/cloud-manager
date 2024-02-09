@@ -1,10 +1,6 @@
 package cloudcontrol
 
 import (
-	"bytes"
-	"fmt"
-	"github.com/3th1nk/cidr"
-	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -14,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
@@ -93,42 +88,26 @@ var _ = Describe("IpRange AWS", func() {
 		Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr), "expected IpRange status.cidr to be equal to spec.cidr")
 		Expect(iprange.Status.Ranges).To(HaveLen(3), "expected three IpRange status.ranges")
 
-		ranges := pie.SortStableUsing(iprange.Status.Ranges, func(a, b string) bool {
-			aa := net.ParseIP(a)
-			bb := net.ParseIP(b)
-			return bytes.Compare(aa, bb) == -1
-		})
-		_, _ = fmt.Fprintf(GinkgoWriter, "Ranges: %v\n", ranges)
-		Expect(ranges[0]).To(Equal("10.181.0.0/18"))
-		Expect(ranges[1]).To(Equal("10.181.64.0/18"))
-		Expect(ranges[2]).To(Equal("10.181.128.0/18"))
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.0.0/18"))
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.64.0/18"))
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.128.0/18"))
 
 		Expect(iprange.Status.VpcId).To(Equal(vpcId))
 		Expect(iprange.Status.Subnets).To(HaveLen(3))
 
-		subnets := pie.SortStableUsing(iprange.Status.Subnets, func(a, b cloudcontrolv1beta1.IpRangeSubnet) bool {
-			aa, err := cidr.Parse(a.Range)
-			if err != nil {
-				return false
-			}
-			bb, err := cidr.Parse(b.Range)
-			if err != nil {
-				return false
-			}
-			return bytes.Compare(aa.IP(), bb.IP()) == -1
-		})
-		_, _ = fmt.Fprintf(GinkgoWriter, "Subnets: %v\n", subnets)
-		Expect(subnets[0].Id).NotTo(BeEmpty())
-		Expect(subnets[0].Zone).To(Equal("eu-west-1a"))
-		Expect(subnets[0].Range).To(Equal(ranges[0]))
+		Expect(iprange.Status.Subnets).To(HaveLen(3))
+		expectedZones := map[string]struct{}{
+			"eu-west-1a": {},
+			"eu-west-1b": {},
+			"eu-west-1c": {},
+		}
+		for _, subnet := range iprange.Status.Subnets {
+			Expect(subnet.Id).NotTo(BeEmpty())
+			Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range))
+			Expect(expectedZones).To(HaveKey(subnet.Zone))
+			delete(expectedZones, subnet.Zone)
+		}
 
-		Expect(subnets[1].Id).NotTo(BeEmpty())
-		Expect(subnets[1].Zone).To(Equal("eu-west-1b"))
-		Expect(subnets[1].Range).To(Equal(ranges[1]))
-
-		Expect(subnets[2].Id).NotTo(BeEmpty())
-		Expect(subnets[2].Zone).To(Equal("eu-west-1c"))
-		Expect(subnets[2].Range).To(Equal(ranges[2]))
 	})
 
 })

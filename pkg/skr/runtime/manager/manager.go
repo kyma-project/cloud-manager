@@ -3,11 +3,10 @@ package manager
 import (
 	"context"
 	"github.com/go-logr/logr"
-	skrcache "github.com/kyma-project/cloud-manager/pkg/skr/runtime/cache"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -28,8 +27,10 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, lo
 	cls, err := cluster.New(cfg, func(clusterOptions *cluster.Options) {
 		clusterOptions.Scheme = skrScheme
 		clusterOptions.Logger = logger
-		clusterOptions.NewCache = func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
-			return skrcache.New(logger, opts.Scheme, opts.Mapper), nil
+		clusterOptions.Client = client.Options{
+			Cache: &client.CacheOptions{
+				Unstructured: true,
+			},
 		}
 	})
 	if err != nil {
@@ -55,19 +56,21 @@ func (m *skrManager) KymaRef() klog.ObjectRef {
 }
 
 func (m *skrManager) Start(ctx context.Context) error {
-	m.logger.Info("SkrManager started")
+	m.logger.Info("SkrManager starting")
+	m.controllers = append(m.controllers, m.Cluster)
 	var wg sync.WaitGroup
 	for _, r := range m.controllers {
-		ctrl, ok := r.(controller.Controller)
-		if !ok {
-			continue
-		}
+		rr := r
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := ctrl.Start(ctx)
+			err := rr.Start(ctx)
 			if err != nil {
-				ctrl.GetLogger().Error(err, "error starting controller")
+				logger := m.logger
+				if ctrl, ok := rr.(controller.Controller); ok {
+					logger = ctrl.GetLogger()
+				}
+				logger.Error(err, "error starting controller")
 				return
 			}
 		}()

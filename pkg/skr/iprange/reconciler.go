@@ -21,7 +21,6 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
-			args.Reloader,
 		),
 	}
 }
@@ -31,6 +30,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if Ignore.ShouldIgnoreKey(req) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.factory.NewState(req)
 	action := r.newAction()
 
@@ -48,6 +51,7 @@ func (r *reconciler) newAction() composed.Action {
 		preventCidrChange,
 		validateCidr,
 		addFinalizer,
+		updateId,
 		loadKcpIpRange,
 		createKcpIpRange,
 		deleteKcpIpRange,

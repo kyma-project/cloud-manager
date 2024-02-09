@@ -4,6 +4,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -15,6 +16,7 @@ type State struct {
 
 	SkrIpRange     *cloudresourcesv1beta1.IpRange
 	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
+	Volume         *corev1.PersistentVolume
 }
 
 func newStateFactory(
@@ -23,9 +25,9 @@ func newStateFactory(
 	kcpCluster composed.StateCluster,
 ) *stateFactory {
 	return &stateFactory{
-		baseStateFactory: nil,
-		kymaRef:          klog.ObjectRef{},
-		kcpCluster:       nil,
+		baseStateFactory: baseStateFactory,
+		kymaRef:          kymaRef,
+		kcpCluster:       kcpCluster,
 	}
 }
 
@@ -36,18 +38,10 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
-	return newState(
-		f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AwsNfsVolume{}),
-		f.kymaRef,
-		f.kcpCluster,
-	)
-}
-
-func newState(baseState composed.State, kymaRef klog.ObjectRef, kcpCluster composed.StateCluster) *State {
 	return &State{
-		State:      baseState,
-		KymaRef:    kymaRef,
-		KcpCluster: kcpCluster,
+		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AwsNfsVolume{}),
+		KymaRef:    f.kymaRef,
+		KcpCluster: f.kcpCluster,
 	}
 }
 

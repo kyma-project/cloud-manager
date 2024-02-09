@@ -2,16 +2,11 @@ package looper
 
 import (
 	"context"
-	"github.com/go-logr/logr"
+	"errors"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
-	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/reload"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strings"
 	"sync"
 	"time"
 )
@@ -29,8 +24,7 @@ func WithTimeout(timeout time.Duration) RunOption {
 }
 
 type SkrRunner interface {
-	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption)
-	Reloader() reload.Reloader
+	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
 
 func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster) SkrRunner {
@@ -46,42 +40,30 @@ type skrRunner struct {
 	runOnce    sync.Once
 	started    bool
 	stopped    bool
-	reloader   *reloader
 }
 
-func (r *skrRunner) Reloader() reload.Reloader {
-	return r.reloader
-}
-
-func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) {
+func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) (err error) {
 	if r.started {
-		return
+		return errors.New("already started")
 	}
+	logger := skrManager.GetLogger()
+	logger.Info("Starting SKR Runner")
 	options := &RunOptions{}
 	for _, o := range opts {
 		o(options)
 	}
 	r.runOnce.Do(func() {
 		r.started = true
-		descriptors := r.registry.GetDescriptors(skrManager)
-		r.reloader = &reloader{skrScheme: skrManager.GetScheme(), descriptors: descriptors}
-		for _, descr := range descriptors {
-			logger2 := skrManager.GetLogger().WithValues("controller", descr.Name)
-			ctrl, err := controller.New(descr.Name, skrManager, r.GetControllerOptions(
-				descr,
-				skrManager,
-				r.reloader,
-			))
+		rArgs := reconcile2.ReconcilerArguments{
+			KymaRef:    skrManager.KymaRef(),
+			KcpCluster: r.kcpCluster,
+			SkrCluster: skrManager,
+		}
+
+		for _, b := range r.registry.Builders() {
+			err = b.SetupWithManager(skrManager, rArgs)
 			if err != nil {
-				logger2.Error(err, "error creating controller")
-				continue
-			}
-			for _, w := range descr.Watches {
-				err = ctrl.Watch(w.Src, w.EventHandler, w.Predicates...)
-				if err != nil {
-					logger2.WithValues("watch", w.Name).Error(err, "error watching source")
-					continue
-				}
+				return
 			}
 		}
 
@@ -95,68 +77,11 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 		defer cancel()
 
-		go r.queueMonitor(timeoutCtx, descriptors, cancel)
-
-		err := skrManager.Start(timeoutCtx)
+		err = skrManager.Start(timeoutCtx)
 		r.stopped = true
 		if err != nil {
-			skrManager.GetLogger().Error(err, "error starting manager")
+			skrManager.GetLogger().Error(err, "error starting SKR manager")
 		}
 	})
-}
-
-func (r *skrRunner) GetControllerOptions(descriptor *registry.Descriptor, skrManager skrmanager.SkrManager, reloader reload.Reloader) controller.Options {
-	controllerName := descriptor.Name
-	if len(controllerName) == 0 {
-		controllerName = strings.ToLower(descriptor.GVK.Kind)
-	}
-	logger := skrManager.GetLogger().WithValues(
-		"controller", controllerName,
-		"controllerGroup", descriptor.GVK.Group,
-		"controllerKind", descriptor.GVK.Kind,
-	)
-	ctrlOptions := controller.Options{
-		Reconciler: descriptor.ReconcilerFactory.New(reconcile2.ReconcilerArguments{
-			KymaRef:    skrManager.KymaRef(),
-			KcpCluster: r.kcpCluster,
-			SkrCluster: skrManager,
-			Reloader:   reloader,
-		}),
-		// TODO: copy other options,
-		// for details check:
-		//  * sigs.k8s.io/controller-runtime@v0.16.3/pkg/controller/controller.go
-		//  * sigs.k8s.io/controller-runtime@v0.16.3/pkg/builder/controller.go
-		MaxConcurrentReconciles: skrManager.GetControllerOptions().MaxConcurrentReconciles,
-		LogConstructor: func(req *reconcile.Request) logr.Logger {
-			logger := logger
-			if req != nil {
-				logger = logger.WithValues(
-					descriptor.GVK.Kind, klog.KRef(req.Namespace, req.Name),
-					"namespace", req.Namespace, "name", req.Name,
-				)
-			}
-			return logger
-		},
-	}
-	return ctrlOptions
-}
-
-func (r *skrRunner) queueMonitor(ctx context.Context, descriptors registry.DescriptorList, cancel func()) {
-	whereAllEmptyBefore := false
-	allEmptyNow := false
-	for !r.stopped {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			time.Sleep(10 * time.Second)
-
-			allEmptyNow = descriptors.AllQueuesEmpty()
-			if allEmptyNow && whereAllEmptyBefore {
-				cancel()
-				return
-			}
-			whereAllEmptyBefore = allEmptyNow
-		}
-	}
+	return
 }

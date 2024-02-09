@@ -6,7 +6,9 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	"os"
@@ -15,6 +17,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"time"
 )
 
 func Start() (Infra, error) {
@@ -131,6 +134,20 @@ func Start() (Infra, error) {
 	}
 
 	_ = os.Setenv("GARDENER_NAMESPACE", infra.Garden().Namespace())
+
+	// github.com/onsi/gomega@v1.29.0/internal/duration_bundle.go
+	if debugged.Debugged {
+		ginkgo.By("Setting high GOMEGA timeouts and durations since debug build flag is set!!!")
+		gomega.Default.SetDefaultEventuallyTimeout(5 * time.Minute)
+		gomega.Default.SetDefaultEventuallyPollingInterval(1 * time.Second)
+		gomega.Default.SetDefaultConsistentlyDuration(5 * time.Minute)
+		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
+	} else {
+		gomega.Default.SetDefaultEventuallyTimeout(5 * time.Second)
+		gomega.Default.SetDefaultEventuallyPollingInterval(250 * time.Millisecond)
+		gomega.Default.SetDefaultConsistentlyDuration(5 * time.Second)
+		gomega.Default.SetDefaultConsistentlyPollingInterval(250 * time.Millisecond)
+	}
 
 	return infra, nil
 }

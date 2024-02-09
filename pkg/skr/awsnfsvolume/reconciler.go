@@ -40,7 +40,13 @@ func (r *reconciler) newAction() composed.Action {
 		"crIpRangeMain",
 		composed.LoadObj,
 		loadSkrIpRange,
-		//addFinalizer,
-		//loadKcpNfsInstance,
+		waitIpRangeReady,
+		loadVolume,
+		addFinalizer,
+		loadKcpNfsInstance,
+		createKcpNfsInstance,
+		createVolume,
+		updateStatus,
+		composed.StopAndForgetAction,
 	)
 }
