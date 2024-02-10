@@ -50,8 +50,8 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 		ObjectMeta: metav1.ObjectMeta{
 			Name: pvName,
 			Labels: map[string]string{
-				labelNfsVolName: nfsVolume.Name,
-				labelNfsVolNS:   nfsVolume.Namespace,
+				v1beta1.LabelNfsVolName: nfsVolume.Name,
+				v1beta1.LabelNfsVolNS:   nfsVolume.Namespace,
 			},
 			Finalizers: []string{
 				v1beta1.Finalizer,

@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -36,10 +37,10 @@ func isMatchingPV(obj client.Object) (bool, *types.NamespacedName) {
 		return false, nil
 	}
 
-	if name, ok := obj.GetLabels()[labelNfsVolName]; ok {
+	if name, ok := obj.GetLabels()[v1beta1.LabelNfsVolName]; ok {
 		return true, &types.NamespacedName{
 			Name:      name,
-			Namespace: obj.GetLabels()[labelNfsVolNS],
+			Namespace: obj.GetLabels()[v1beta1.LabelNfsVolNS],
 		}
 	}
 

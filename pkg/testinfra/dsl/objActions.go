@@ -94,3 +94,16 @@ func WithName(name string) ObjAction {
 		},
 	}
 }
+
+func WithLabels(labels map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if obj.GetLabels() == nil {
+				obj.SetLabels(make(map[string]string))
+			}
+			for key, value := range labels {
+				obj.GetLabels()[key] = value
+			}
+		},
+	}
+}

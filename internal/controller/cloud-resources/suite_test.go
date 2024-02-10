@@ -71,6 +71,9 @@ var _ = BeforeSuite(func() {
 	// AwsNfsVolume
 	Expect(SetupAwsNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// GcpNfsVolume
+	Expect(SetupGcpNfsVolumeReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())

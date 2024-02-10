@@ -1,6 +1,8 @@
 package dsl
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,15 +22,15 @@ func AssertKcpIpRangeScope(expectedScopeName string) ObjAssertion {
 	}
 }
 
-func AssertKcpIpRangeCidr(exectedCidr string) ObjAssertion {
+func AssertKcpIpRangeCidr(expectedCidr string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.IpRange)
 		if !ok {
 			return fmt.Errorf("expected *cloudcontrolv1beta1.IpRange, but got %T", obj)
 		}
-		if x.Spec.Cidr != exectedCidr {
+		if x.Spec.Cidr != expectedCidr {
 			return fmt.Errorf("the KCP IpRange %s/%s expected cidr is %s, but it has %s",
-				x.Namespace, x.Name, exectedCidr, x.Spec.Cidr)
+				x.Namespace, x.Name, expectedCidr, x.Spec.Cidr)
 		}
 		return nil
 	}
@@ -49,5 +51,45 @@ func AssertKcpIpRangeRemoteRef(expectedNamespace, expectedName string) ObjAssert
 				x.Namespace, x.Name, expectedNamespace, x.Spec.Cidr)
 		}
 		return nil
+	}
+}
+
+func CreateKcpIpRange(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.IpRange, opts ...ObjAction) error {
+	if obj == nil {
+		obj = &cloudcontrolv1beta1.IpRange{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultSkrNamespace),
+			WithKcpIpRangeSpecCidr(DefaultIpRangeCidr),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the KCP IpRange must have name set")
+	}
+	err := clnt.Create(ctx, obj)
+	return err
+}
+
+func WithKcpIpRangeSpecCidr(cidr string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			if x.Spec.Cidr == "" {
+				x.Spec.Cidr = cidr
+			}
+		},
+	}
+}
+
+func WithKcpIpRangeStatusCidr(cidr string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			if x.Status.Cidr == "" {
+				x.Status.Cidr = cidr
+			}
+		},
 	}
 }
