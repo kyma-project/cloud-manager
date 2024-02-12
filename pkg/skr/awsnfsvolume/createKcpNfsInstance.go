@@ -2,7 +2,6 @@ package awsnfsvolume
 
 import (
 	"context"
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,12 +23,12 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      uuid.NewString(),
+			Name:      state.ObjAsAwsNfsVolume().Status.Id,
 			Namespace: state.KymaRef.Namespace,
 			Labels: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
+				cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsAwsNfsVolume().Name,
+				cloudcontrolv1beta1.LabelRemoteNamespace: state.ObjAsAwsNfsVolume().Namespace,
 			},
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{

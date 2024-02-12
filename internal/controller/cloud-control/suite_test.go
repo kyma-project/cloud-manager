@@ -85,3 +85,5 @@ var _ = AfterSuite(func() {
 	err := infra.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+var _ = ReportAfterSuite("gherkin report", testinfra.ReportAfterSuite)

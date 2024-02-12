@@ -42,9 +42,16 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			SuccessError(composed.StopAndForget). // do not continue further with the flow
 			Run(ctx, state)
 	}
+	if kcpCondErr != nil && skrCondErr != nil {
+		// already with Error condition
+		return composed.StopAndForget, nil
+	}
 
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR AwsNfsVolume status with Ready condition")
+		if len(state.KcpNfsInstance.Status.Hosts) > 0 {
+			state.ObjAsAwsNfsVolume().Status.Server = state.KcpNfsInstance.Status.Hosts[0]
+		}
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -54,10 +61,16 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
 			ErrorLogMessage("Error updating KCP AwsNfsVolume status with ready condition").
-			SuccessError(composed.StopWithRequeue). // have to contie to create volume
+			SuccessError(composed.StopWithRequeue). // have to continue and requeue to create PV
 			Run(ctx, state)
 	}
+	if kcpCondReady != nil && skrCondReady != nil {
+		// already with Ready condition
+		// continue with next actions to create PV
+		return nil, nil
+	}
 
+	// no conditions on KCP NfsInstance
 	// keep looping until KCP NfsInstance gets some condition
 	return composed.StopWithRequeueDelay(200 * time.Millisecond), nil
 }

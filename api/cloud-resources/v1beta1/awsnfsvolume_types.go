@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,6 +43,9 @@ type AwsNfsVolumeSpec struct {
 	// +kubebuilder:validation:Required
 	IpRange IpRangeRef `json:"ipRange"`
 
+	// +kubebuilder:validation:Required
+	Capacity resource.Quantity `json:"capacity"`
+
 	// +kubebuilder:default=generalPurpose
 	PerformanceMode AwsPerformanceMode `json:"performanceMode,omitempty"`
 
@@ -53,13 +57,16 @@ type AwsNfsVolumeSpec struct {
 type AwsNfsVolumeStatus struct {
 
 	// +optional
-	Server string `json:"server,omitempty"`
+	Id string `json:"id,omitempty"`
+
+	// +optional
+	Server string `json:"server,omitempty" json:"server,omitempty"`
 
 	// List of status conditions
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

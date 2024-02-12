@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5
 	github.com/elliotchance/pie/v2 v2.8.0
+	github.com/fatih/color v1.16.0
 	github.com/gardener/gardener v1.85.0
 	github.com/go-logr/logr v1.3.0
 	github.com/google/uuid v1.5.0
@@ -68,6 +69,8 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

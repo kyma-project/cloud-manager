@@ -2,57 +2,42 @@ package awsnfsvolume
 
 import (
 	"context"
-	"github.com/elliotchance/pie/v2"
+	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-
-	list := &cloudcontrolv1beta1.NfsInstanceList{}
-	err := state.KcpCluster.K8sClient().List(
-		ctx,
-		list,
-		client.MatchingLabels{
-			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
-			cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
-		},
-		client.InNamespace(state.KymaRef.Namespace),
-	)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, nil)
-	}
-
-	if len(list.Items) == 0 {
-		return nil, nil
-	}
-
-	if len(list.Items) == 1 {
-		state.KcpNfsInstance = &list.Items[0]
-		return nil, nil
-	}
-
-	// more than one NfsInstance found in KCP, log warning and pick one
-	names := pie.Map(list.Items, func(x cloudcontrolv1beta1.NfsInstance) string {
-		return x.Name
-	})
-	names = pie.Sort(names)
 	logger := composed.LoggerFromCtx(ctx)
-	// TODO: log as warning
-	logger.
-		WithValues("objectKind", "NfsInstance").
-		WithValues("names", names).
-		Info("Found more then one KCP object")
-	selectedName := names[0]
-	for _, i := range list.Items {
-		if i.Name == selectedName {
-			state.KcpNfsInstance = &i
-			break
-		}
+
+	if state.ObjAsAwsNfsVolume().Status.Id == "" {
+		return composed.LogErrorAndReturn(
+			errors.New("missing SKR AwsNfsVolume state.id"),
+			"Logical error in loadKcpNfsInstance",
+			composed.StopAndForget,
+			ctx,
+		)
 	}
+
+	kcpNfsInstnace := &cloudcontrolv1beta1.NfsInstance{}
+	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
+		Namespace: state.KymaRef.Namespace,
+		Name:      state.ObjAsAwsNfsVolume().Status.Id,
+	}, kcpNfsInstnace)
+	if apierrors.IsNotFound(err) {
+		logger.Info("KCP NfsInstance does not exist")
+		return nil, nil
+	}
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, ctx)
+	}
+
+	state.KcpNfsInstance = kcpNfsInstnace
+
+	logger.Info("KCP NfsInstance loaded")
 
 	return nil, nil
 }

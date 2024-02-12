@@ -14,6 +14,9 @@ const (
 func WithNfsInstanceStatusHost(host string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
+			if host == "" {
+				host = DefaultNfsInstanceHost
+			}
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
 				if len(x.Status.Hosts) == 0 {
 					x.Status.Hosts = []string{host}
