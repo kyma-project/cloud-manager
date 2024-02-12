@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5
 	github.com/elliotchance/pie/v2 v2.8.0
+	github.com/fatih/color v1.16.0
 	github.com/gardener/gardener v1.85.0
 	github.com/go-logr/logr v1.3.0
 	github.com/google/uuid v1.5.0
@@ -44,7 +45,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
-	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
