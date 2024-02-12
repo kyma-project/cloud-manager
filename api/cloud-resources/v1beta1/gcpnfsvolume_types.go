@@ -54,6 +54,9 @@ type GcpNfsVolumeSpec struct {
 // GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
 type GcpNfsVolumeStatus struct {
 
+	// +optional
+	Id string `json:"id,omitempty"`
+
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`

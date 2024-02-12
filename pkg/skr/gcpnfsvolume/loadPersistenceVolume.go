@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,8 +17,8 @@ func loadPersistenceVolume(ctx context.Context, st composed.State) (error, conte
 		ctx,
 		list,
 		client.MatchingLabels{
-			labelNfsVolName: state.Name().Name,
-			labelNfsVolNS:   state.Name().Namespace,
+			v1beta1.LabelNfsVolName: state.Name().Name,
+			v1beta1.LabelNfsVolNS:   state.Name().Namespace,
 		},
 	)
 	if err != nil {

@@ -8,14 +8,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	labelKymaName        = "cloud-resources.kyma-project.io/kymaName"
-	labelRemoteName      = "cloud-resources.kyma-project.io/remoteName"
-	labelRemoteNamespace = "cloud-resources.kyma-project.io/remoteNamespace"
-	labelNfsVolName      = "cloud-resources.kyma-project.io/nfsVolumeName"
-	labelNfsVolNS        = "cloud-resources.kyma-project.io/nfsVolumeNamespace"
-)
-
 func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
@@ -24,9 +16,9 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		ctx,
 		list,
 		client.MatchingLabels{
-			labelKymaName:        state.KymaRef.Name,
-			labelRemoteName:      state.Name().Name,
-			labelRemoteNamespace: state.Name().Namespace,
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
 		},
 		client.InNamespace(state.KymaRef.Namespace),
 	)

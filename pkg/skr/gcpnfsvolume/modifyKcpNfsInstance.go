@@ -34,9 +34,9 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 			Name:      uuid.NewString(),
 			Namespace: state.KymaRef.Namespace,
 			Labels: map[string]string{
-				labelKymaName:        state.KymaRef.Name,
-				labelRemoteName:      state.Name().Name,
-				labelRemoteNamespace: state.Name().Namespace,
+				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+				cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
+				cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
 			},
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
@@ -71,8 +71,11 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance created")
 
-	// We only update conditions for "Ready" and "Error" cases
-	return nil, nil
+	// Update the object with the ID of the KCP NfsInstance
+	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SuccessError(composed.StopWithRequeue).
+		Run(ctx, state)
 }
 
 func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
@@ -89,6 +92,9 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance got updated")
 
-	// We only update conditions for "Ready" and "Error" cases
-	return nil, nil
+	// Update the object with the ID of the KCP NfsInstance
+	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SuccessError(composed.StopWithRequeue).
+		Run(ctx, state)
 }
