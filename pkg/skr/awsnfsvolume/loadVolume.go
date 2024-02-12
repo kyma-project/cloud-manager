@@ -19,7 +19,7 @@ func loadVolume(ctx context.Context, st composed.State) (error, context.Context)
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error getting PersistentVolumes", composed.StopWithRequeue, ctx)
 	}
-	if err != nil {
+	if err == nil {
 		state.Volume = vol
 	}
 

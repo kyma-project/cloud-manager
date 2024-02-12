@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = Describe("Created SKR IpRange gets projects into KCP", func() {
+var _ = Describe("Created SKR IpRange gets projects into KCP", Ordered, func() {
 
 	Context("Given SKR cluster", Ordered, func() {
 
@@ -56,25 +56,23 @@ var _ = Describe("Created SKR IpRange gets projects into KCP", func() {
 					NewObjActions(WithName(skrIpRange.Status.Id)),
 				).
 				Should(Succeed())
-		})
 
-		It("And KCP IpRange should be properly created", func() {
-			By("KCP IpRange should have label cloud-manager.kyma-project.io/kymaName")
+			By("And has label cloud-manager.kyma-project.io/kymaName")
 			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
 
-			By("KCP IpRange should have label cloud-manager.kyma-project.io/remoteName")
+			By("And has label cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(skrIpRange.Name))
 
-			By("KCP IpRange should have label cloud-manager.kyma-project.io/remoteNamespace")
+			By("And has label cloud-manager.kyma-project.io/remoteNamespace")
 			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(skrIpRange.Namespace))
 
-			By("KCP IpRange should have spec.scope.name equal to SKR Cluster kyma name")
+			By("And has spec.scope.name equal to SKR Cluster kyma name")
 			Expect(kcpIpRange.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
 
-			By("KCP IpRange should have spec.cidr equal to SKR IpRange cidr")
+			By("And has spec.cidr equal to SKR IpRange cidr")
 			Expect(kcpIpRange.Spec.Cidr).To(Equal(skrIpRange.Spec.Cidr))
 
-			By("KCP IpRange should have spec.remoteRef matching to to SKR IpRange")
+			By("And has spec.remoteRef matching to to SKR IpRange")
 			Expect(kcpIpRange.Spec.RemoteRef.Namespace).To(Equal(skrIpRange.Namespace))
 			Expect(kcpIpRange.Spec.RemoteRef.Name).To(Equal(skrIpRange.Name))
 		})

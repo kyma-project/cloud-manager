@@ -22,7 +22,7 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-	if kcpCondReady != nil {
+	if kcpCondReady == nil {
 		// not yet ready, PV will be created only once KCP NfsInstance is ready
 		return nil, nil
 	}
@@ -34,9 +34,12 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 			Labels:    map[string]string{},
 		},
 		Spec: corev1.PersistentVolumeSpec{
+			Capacity: corev1.ResourceList{
+				"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
+			},
 			PersistentVolumeSource: corev1.PersistentVolumeSource{
 				NFS: &corev1.NFSVolumeSource{
-					Server:   "",
+					Server:   state.ObjAsAwsNfsVolume().Status.Server,
 					Path:     "/",
 					ReadOnly: false,
 				},

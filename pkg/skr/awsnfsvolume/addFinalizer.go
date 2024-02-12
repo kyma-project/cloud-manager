@@ -9,6 +9,8 @@ import (
 
 func addFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
+
 	if composed.MarkedForDeletionPredicate(ctx, state) {
 		return nil, nil
 	}
@@ -23,6 +25,8 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving AwsNfsVolume after finalizer added", composed.StopWithRequeue, nil)
 	}
+
+	logger.Info("Added finalizer to SKR IpRange, requeue")
 
 	return composed.StopWithRequeue, nil
 }

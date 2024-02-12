@@ -37,16 +37,17 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"crIpRangeMain",
+		"crAwsNfsVolumeMain",
 		composed.LoadObj,
 		loadSkrIpRange,
 		waitIpRangeReady,
 		loadVolume,
 		addFinalizer,
+		updateId,
 		loadKcpNfsInstance,
 		createKcpNfsInstance,
-		createVolume,
 		updateStatus,
+		createVolume,
 		composed.StopAndForgetAction,
 	)
 }
