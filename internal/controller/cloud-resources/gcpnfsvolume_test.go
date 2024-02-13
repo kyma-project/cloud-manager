@@ -1,6 +1,7 @@
 package cloudresources
 
 import (
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -27,8 +28,9 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 		skrGcpNfsVolumeName := "gcp-nfs-volume-1"
 		nfsIpAddress := "10.11.12.14"
+		pvName := fmt.Sprintf("%s--%s", DefaultSkrNamespace, skrGcpNfsVolumeName)
 
-		It("And Given SKR IpRange exists", func() {
+		It("And Given SKR and KCP IpRanges exist", func() {
 
 			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
@@ -39,9 +41,6 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					WithName(skrIpRangeName),
 				).
 				Should(Succeed())
-		})
-
-		It("And Given KCP IpRange exists", func() {
 
 			// tell kcpiprange reconciler to ignore this KCP IpRange
 			kcpiprange.Ignore.AddName(kcpIpRangeName)
@@ -60,7 +59,7 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 				Should(Succeed())
 		})
 
-		It("And KCP IpRange has Ready condition", func() {
+		It("And Given SKR and KCP IpRanges have Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
@@ -68,9 +67,7 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					WithConditions(KcpReadyCondition()),
 				).
 				Should(Succeed())
-		})
 
-		It("And SKR IpRange has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -95,7 +92,7 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
-		It("Then GcpNfsVolume gets ID from the KCP NfsInstance", func() {
+		It("Then KCP NfsInstance is created ", func() {
 			// load GcpNfsVolume to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -106,9 +103,7 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					AssertGcpNfsVolumeHasId(),
 				).
 				Should(Succeed())
-		})
 
-		It("Then Load KCP NfsInstance with the specified identifier", func() {
 			// check KCP NfsInstance is created with name=gcpNfsVolume.ID
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -118,22 +113,20 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					NewObjActions(WithName(gcpNfsVolume.Status.Id)),
 				).
 				Should(Succeed())
-		})
 
-		It("And KCP NfsInstance should be properly created", func() {
-			By("KCP NfsInstance should have label cloud-manager.kyma-project.io/kymaName")
+			By("And has label cloud-manager.kyma-project.io/kymaName")
 			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
 
-			By("KCP NfsInstance should have label cloud-manager.kyma-project.io/remoteName")
+			By("And has label cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(gcpNfsVolume.Name))
 
-			By("KCP NfsInstance should have label cloud-manager.kyma-project.io/remoteNamespace")
+			By("And has label cloud-manager.kyma-project.io/remoteNamespace")
 			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(gcpNfsVolume.Namespace))
 
-			By("KCP NfsInstance should have spec.scope.name equal to SKR Cluster kyma name")
+			By("And has spec.scope.name equal to SKR Cluster kyma name")
 			Expect(kcpNfsInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
 
-			By("KCP IpRange should have spec.remoteRef matching to to SKR IpRange")
+			By("And has spec.remoteRef matching to to SKR IpRange")
 			Expect(kcpNfsInstance.Spec.RemoteRef.Namespace).To(Equal(gcpNfsVolume.Namespace))
 			Expect(kcpNfsInstance.Spec.RemoteRef.Name).To(Equal(gcpNfsVolume.Name))
 		})
@@ -145,6 +138,7 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					WithConditions(KcpReadyCondition()),
 					WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
 					WithKcpNfsStatusHost(nfsIpAddress),
+					WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 				).
 				Should(Succeed())
 		})
@@ -156,8 +150,43 @@ var _ = Describe("Created SKR GcpNfsVolume is projected into KCP and it gets Rea
 					infra.SKR().Client(),
 					gcpNfsVolume,
 					NewObjActions(),
+					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
+
+			By("And has the File store Host")
+			Expect(gcpNfsVolume.Status.Hosts).To(HaveLen(1))
+
+			By("And has the capacity equal to provisioned value.")
+			Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
+		})
+
+		pv := &corev1.PersistentVolume{}
+
+		It("And Then SKR PersistentVolume will be created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pv,
+					NewObjActions(
+						WithName(pvName),
+					),
+				).
+				Should(Succeed())
+
+			By("And has the Server Name matching the provisioned File server host.")
+			Expect(pv.Spec.PersistentVolumeSource.NFS.Server).To(Equal(gcpNfsVolume.Status.Hosts[0]))
+
+			By("And has the Volume Name matching the requested FileShare name.")
+			path := fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName)
+			Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
+
+			By("And has the Capacity equal to requested value in GB.")
+			expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+			quantity, _ := pv.Spec.Capacity["storage"]
+			pvQuantity, _ := quantity.AsInt64()
+			Expect(pvQuantity).To(Equal(expectedCapacity))
 		})
 	})
 
