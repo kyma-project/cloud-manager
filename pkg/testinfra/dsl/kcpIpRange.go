@@ -60,7 +60,7 @@ func CreateKcpIpRange(ctx context.Context, clnt client.Client, obj *cloudcontrol
 	}
 	NewObjActions(opts...).
 		Append(
-			WithNamespace(DefaultSkrNamespace),
+			WithNamespace(DefaultKcpNamespace),
 			WithKcpIpRangeSpecCidr(DefaultIpRangeCidr),
 		).
 		ApplyOnObject(obj)
@@ -89,6 +89,17 @@ func WithKcpIpRangeStatusCidr(cidr string) ObjStatusAction {
 			x := obj.(*cloudcontrolv1beta1.IpRange)
 			if x.Status.Cidr == "" {
 				x.Status.Cidr = cidr
+			}
+		},
+	}
+}
+
+func WithKcpIpRangeSpecScope(scopeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			if x.Spec.Scope.Name == "" {
+				x.Spec.Scope.Name = scopeName
 			}
 		},
 	}

@@ -75,7 +75,12 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
 	))
-
+	// NfsInstance
+	Expect(SetupNfsInstanceReconciler(
+		infra.KcpManager(),
+		infra.AwsMock().NfsInstanceSkrProvider(),
+		infra.GcpMock().FilestoreClientProvider(),
+	))
 	// Start controllers
 	infra.StartKcpControllers(context.Background())
 })

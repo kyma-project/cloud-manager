@@ -75,7 +75,7 @@ func (c *filestoreClient) GetFilestoreOperation(ctx context.Context, projectId, 
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFilestore.Projects.Locations.Operations.Get(operationName).Do()
 	if err != nil {
-		logger.Error(err, "GetServiceNetworkingOperation", "projectId", projectId, "operationName", operationName)
+		logger.Error(err, "GetFilestoreOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
 	}
 	return operation, nil
