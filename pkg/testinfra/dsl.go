@@ -450,12 +450,16 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 			},
 		},
 	}
-
-	err := dsl.i.KCP().Client().Create(dsl.i.Ctx(), scope)
-	if err != nil {
+	err := dsl.i.KCP().Client().Get(dsl.i.Ctx(), client.ObjectKeyFromObject(scope), scope)
+	if client.IgnoreNotFound(err) != nil {
 		return err
 	}
-
+	if apierrors.IsNotFound(err) {
+		err := dsl.i.KCP().Client().Create(dsl.i.Ctx(), scope)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

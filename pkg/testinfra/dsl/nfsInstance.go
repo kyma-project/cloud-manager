@@ -8,7 +8,11 @@ import (
 )
 
 const (
-	DefaultNfsInstanceHost = "nfs.instance.local"
+	DefaultNfsInstanceHost             = "nfs.instance.local"
+	DefaultGcpNfsInstanceFileShareName = "vol1"
+	DefaultGcpNfsInstanceCapacityGb    = 1024
+	DefaultGcpNfsInstanceConnectMode   = "PRIVATE_SERVICE_ACCESS"
+	DefaultGcpNfsInstanceTier          = "BASIC_HDD"
 )
 
 func WithNfsInstanceStatusHost(host string) ObjStatusAction {
@@ -32,6 +36,45 @@ func WithNfsInstanceAws() ObjAction {
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
 				x.Spec.Instance.Aws = &cloudcontrolv1beta1.NfsInstanceAws{}
 			}
+		},
+	}
+}
+
+func WithNfsInstanceGcp(location string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Instance.Gcp = &cloudcontrolv1beta1.NfsInstanceGcp{}
+				x.Spec.Instance.Gcp.ConnectMode = DefaultGcpNfsInstanceConnectMode
+				x.Spec.Instance.Gcp.CapacityGb = DefaultGcpNfsInstanceCapacityGb
+				x.Spec.Instance.Gcp.FileShareName = DefaultGcpNfsInstanceFileShareName
+				x.Spec.Instance.Gcp.Location = location
+				x.Spec.Instance.Gcp.Tier = DefaultGcpNfsInstanceTier
+			}
+		},
+	}
+}
+
+func WithNfsInstanceIpRange(ipRangeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.IpRange.Name = ipRangeName
+				return
+			}
+			panic("unhandled type in WithNfsInstanceIpRange")
+		},
+	}
+}
+
+func WithNfsInstanceScope(scopeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Scope.Name = scopeName
+				return
+			}
+			panic("unhandled type in WithNfsInstanceScope")
 		},
 	}
 }

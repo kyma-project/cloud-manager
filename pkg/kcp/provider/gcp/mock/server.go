@@ -40,6 +40,8 @@ func (s *server) ComputeClientProvider() client.ClientProvider[iprangeclient.Com
 
 func (s *server) FilestoreClientProvider() client.ClientProvider[nfsclient.FilestoreClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (nfsclient.FilestoreClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
 	}
 }
