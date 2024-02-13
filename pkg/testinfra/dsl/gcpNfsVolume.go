@@ -94,6 +94,15 @@ func WithKcpNfsStatusHost(host string) ObjStatusAction {
 	}
 }
 
+func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.NfsInstance)
+			x.Status.CapacityGb = capacity
+		},
+	}
+}
+
 func AssertKcpStatusHosts(host string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
