@@ -87,8 +87,8 @@ func (s *nfsStore) PatchFilestoreInstance(ctx context.Context, projectId, locati
 	for i, item := range s.instances {
 		if item != nil && item.Name == completeId {
 			for _, field := range strings.Split(updateMask, ",") {
-				switch field {
-				case "fileShares":
+				switch strings.ToLower(field) {
+				case "fileshares":
 					s.instances[i].FileShares = instance.FileShares
 				case "description":
 					s.instances[i].Description = instance.Description
