@@ -96,3 +96,40 @@ func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontro
 	err := clnt.Create(ctx, obj)
 	return err
 }
+
+func UpdateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("for updating the KCP NfsInstance, the object must be provided")
+	}
+	obj.Spec.Instance.Gcp.CapacityGb = 2 * DefaultGcpNfsInstanceCapacityGb
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the KCP NfsInstance must have name set")
+	}
+
+	err := clnt.Update(ctx, obj)
+	return err
+}
+
+func DeleteNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("for deleting the KCP NfsInstance, the object must be provided")
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the KCP NfsInstance must have name set")
+	}
+
+	err := clnt.Delete(ctx, obj)
+	return err
+}
