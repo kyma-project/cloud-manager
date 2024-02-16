@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,7 +46,16 @@ func CreateGcpNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 		obj.Spec.IpRange.Namespace = DefaultSkrNamespace
 	}
 
-	err := clnt.Create(ctx, obj)
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if err == nil {
+		// already exists
+		return nil
+	}
+	if client.IgnoreNotFound(err) != nil {
+		// some error
+		return err
+	}
+	err = clnt.Create(ctx, obj)
 	return err
 }
 
@@ -57,6 +67,18 @@ func WithGcpNfsValues() ObjAction {
 				x.Spec.Tier = "BASIC_HDD"
 				x.Spec.CapacityGb = 1024
 				x.Spec.FileShareName = "test01"
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
+		},
+	}
+}
+
+func WithGcpNfsVolumeCapacity(capacityGb int) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.CapacityGb = capacityGb
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
@@ -99,6 +121,15 @@ func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.NfsInstance)
 			x.Status.CapacityGb = capacity
+		},
+	}
+}
+
+func WithPvStatusPhase(phase v1.PersistentVolumePhase) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*v1.PersistentVolume)
+			x.Status.Phase = phase
 		},
 	}
 }

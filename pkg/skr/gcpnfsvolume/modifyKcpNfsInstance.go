@@ -5,6 +5,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -95,6 +96,7 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	// Update the object with the ID of the KCP NfsInstance
 	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
 	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

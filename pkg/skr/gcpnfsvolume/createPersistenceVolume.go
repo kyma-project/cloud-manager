@@ -61,7 +61,8 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 			Capacity: v1.ResourceList{
 				"storage": *capacity,
 			},
-			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
+			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
+			StorageClassName: "",
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				NFS: &v1.NFSVolumeSource{
 					Server: state.KcpNfsInstance.Status.Hosts[0],

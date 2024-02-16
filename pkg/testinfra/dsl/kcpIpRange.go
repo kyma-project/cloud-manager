@@ -68,7 +68,16 @@ func CreateKcpIpRange(ctx context.Context, clnt client.Client, obj *cloudcontrol
 	if obj.Name == "" {
 		return errors.New("the KCP IpRange must have name set")
 	}
-	err := clnt.Create(ctx, obj)
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if err == nil {
+		// already exists
+		return nil
+	}
+	if client.IgnoreNotFound(err) != nil {
+		// some error
+		return err
+	}
+	err = clnt.Create(ctx, obj)
 	return err
 }
 
