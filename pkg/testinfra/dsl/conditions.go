@@ -85,3 +85,20 @@ func UpdateStatus(ctx context.Context, clnt client.Client, obj client.Object, op
 	err := clnt.Status().Update(ctx, obj)
 	return err
 }
+
+func LoadAndUpdateStatus(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("the object for Conditions() can not be nil")
+	}
+
+	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	if err != nil {
+		return err
+	}
+
+	NewObjActions(opts...).
+		ApplyOnStatus(obj)
+
+	err = client.Status().Update(ctx, obj)
+	return err
+}

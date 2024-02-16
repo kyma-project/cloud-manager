@@ -1,7 +1,11 @@
 package dsl
 
 import (
+	"context"
+	"errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type ObjActionFunc func(obj client.Object)
@@ -106,4 +110,48 @@ func WithLabels(labels map[string]string) ObjAction {
 			}
 		},
 	}
+}
+
+func RemoveFinalizer(name string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			controllerutil.RemoveFinalizer(obj, name)
+		},
+	}
+}
+
+func LoadAndUpdate(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("the object for LoadAndUpdate() can not be nil")
+	}
+
+	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	if err != nil {
+		return err
+	}
+
+	NewObjActions(opts...).
+		ApplyOnObject(obj)
+
+	err = client.Update(ctx, obj)
+	return err
+}
+
+func LoadAndDelete(ctx context.Context, client client.Client, obj client.Object) error {
+	if obj == nil {
+		return errors.New("the object for LoadAndDelete() can not be nil")
+	}
+
+	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	if err != nil {
+		return err
+	}
+
+	err = client.Delete(ctx, obj)
+	return err
+}
+
+func IsDeleted(ctx context.Context, client client.Client, obj client.Object) bool {
+	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	return err != nil && apierrors.IsNotFound(err)
 }

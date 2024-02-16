@@ -60,7 +60,16 @@ func CreateSkrIpRange(ctx context.Context, clnt client.Client, obj *cloudresourc
 	if obj.Name == "" {
 		return errors.New("the SKR IpRange must have name set")
 	}
-	err := clnt.Create(ctx, obj)
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if err == nil {
+		// already exists
+		return nil
+	}
+	if client.IgnoreNotFound(err) != nil {
+		// some error
+		return err
+	}
+	err = clnt.Create(ctx, obj)
 	return err
 }
 
