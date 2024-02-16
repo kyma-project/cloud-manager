@@ -2,6 +2,8 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -13,6 +15,13 @@ import (
 )
 
 var _ = Describe("SKR GcpNfsVolume workflows", func() {
+
+	const (
+		interval = time.Millisecond * 250
+	)
+	var (
+		timeout = time.Second * 10
+	)
 
 	Context("Given SKR Cluster with SKR and KCP IPRanges in Ready state", Ordered, func() {
 
@@ -410,7 +419,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 				Expect(gcpNfsVolume.DeletionTimestamp.IsZero()).NotTo(BeTrue())
 			})
 
-			Describe("When PV Phase is Available, and all finalizers removed", Ordered, func() {
+			Describe("When PV phase changes to Available, and all finalizers removed", Ordered, func() {
 				BeforeEach(func() {
 					//Update PV Phase to Available.
 					Eventually(UpdateStatus).
@@ -430,19 +439,28 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 						).
 						Should(Succeed())
 				})
-				It("Then SKR GcpNfsVolume is marked for Deletion ", func() {
-					Eventually(LoadAndCheck).
+				It("Then PV, NfsInstance, and GcpNfsVolume are all deleted.", func() {
+					Eventually(IsDeleted, timeout, interval).
+						WithArguments(
+							infra.Ctx(), infra.SKR().Client(), pv,
+						).
+						Should(BeTrue())
+					By("And the PersistentVolume in SKR is deleted.")
+
+					Eventually(IsDeleted, timeout, interval).
+						WithArguments(
+							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+						).
+						Should(BeTrue())
+					By("And the NfsInstance in KCP is deleted.")
+
+					Eventually(IsDeleted, timeout, interval).
 						WithArguments(
 							infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-							NewObjActions(),
 						).
-						Should(Succeed())
-
-					By("And has DeletionTimestamp set.")
-					Expect(gcpNfsVolume.DeletionTimestamp.IsZero()).NotTo(BeTrue())
+						Should(BeTrue())
+					By("And the GcpNfsVolume in SKR is deleted.")
 				})
-
-				//TODO: complete the deletion flow.
 			})
 		})
 	})

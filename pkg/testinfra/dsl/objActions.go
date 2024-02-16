@@ -3,6 +3,7 @@ package dsl
 import (
 	"context"
 	"errors"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -151,7 +152,7 @@ func LoadAndDelete(ctx context.Context, client client.Client, obj client.Object)
 	return err
 }
 
-func IsDeleted(ctx context.Context, client client.Client, obj client.Object) bool {
-	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object) bool {
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
 	return err != nil && apierrors.IsNotFound(err)
 }
