@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	"google.golang.org/api/googleapi"
 )
 
 var _ Server = &server{}
@@ -20,6 +21,26 @@ func New() Server {
 type server struct {
 	*iprangeStore
 	*nfsStore
+}
+
+func (s *server) SetCreateError(error *googleapi.Error) {
+	s.createError = error
+}
+
+func (s *server) SetPatchError(error *googleapi.Error) {
+	s.patchError = error
+}
+
+func (s *server) SetDeleteError(error *googleapi.Error) {
+	s.deleteError = error
+}
+
+func (s *server) SetGetError(error *googleapi.Error) {
+	s.getError = error
+}
+
+func (s *server) SetOperationError(error *googleapi.Error) {
+	s.operationError = error
 }
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
