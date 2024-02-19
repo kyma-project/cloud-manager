@@ -17,8 +17,8 @@ func ReportAfterSuite(report ginkgo.Report) {
 			root.add(path, spec.State, spec.RunTime)
 			subState := spec.State
 			for _, evt := range spec.SpecEvents {
-				if evt.SpecEventType == types.SpecEventByStart {
-					root.add(append(path, evt.Message), subState, 0)
+				if evt.SpecEventType == types.SpecEventByEnd {
+					root.add(append(path, evt.Message), subState, evt.Duration)
 				}
 			}
 		}
@@ -26,7 +26,7 @@ func ReportAfterSuite(report ginkgo.Report) {
 	root.print()
 }
 
-var spaces = strings.Repeat(" ", 100)
+var spaces = strings.Repeat(" ", 1000)
 
 type node struct {
 	state    types.SpecState
@@ -38,14 +38,26 @@ type node struct {
 func (n *node) prepare() {
 	for _, child := range n.items {
 		child.prepare()
-		n.duration = n.duration + child.duration
+		//n.duration = n.duration + child.duration
 	}
 }
 
 func (n *node) print() {
 	color.NoColor = false
+	fmt.Println()
 	n.prepare()
-	n.printInternal(0)
+	n.printInternal(0, n.maxNameLen()+14) // 14 estimated max indent
+}
+
+func (n *node) maxNameLen() int {
+	result := len(n.name)
+	for _, child := range n.items {
+		cl := child.maxNameLen()
+		if cl > result {
+			result = cl
+		}
+	}
+	return result
 }
 
 func (n *node) coloredName() string {
@@ -59,12 +71,21 @@ func (n *node) coloredName() string {
 	txt = strings.ReplaceAll(txt, "And ", color.CyanString("And "))
 	txt = strings.ReplaceAll(txt, "By ", color.CyanString("By "))
 
-	if n.duration > 0 {
-		d := float64(n.duration) / float64(time.Millisecond)
-		ds := fmt.Sprintf("%.2fms", d)
-		txt = fmt.Sprintf("%s      %s ", txt, color.BlueString(ds))
-	}
 	return txt
+}
+
+func (n *node) coloredDuration() (string, int) {
+	if n.duration == 0 {
+		return "", 0
+	}
+	d := float64(n.duration) / float64(time.Millisecond)
+	if d <= 0.01 {
+		d = 0.01234
+	}
+	ds := fmt.Sprintf("%.2fms", d)
+	txt := color.BlueString(ds)
+
+	return txt, len(ds)
 }
 
 func (n *node) coloredState() string {
@@ -80,11 +101,21 @@ func (n *node) coloredState() string {
 	return color.RedString("×")
 }
 
-func (n *node) printInternal(level int) {
+func (n *node) printInternal(level int, paddingRight int) {
+	nameTxt := n.coloredName()
+	durationTxt, durationLen := n.coloredDuration()
+
 	indent := level * 4
-	fmt.Printf("%s%v     %v\n", spaces[:indent], n.coloredName(), n.coloredState())
+	padding := ""
+	cnt := paddingRight - len(n.name) - indent - durationLen
+	if cnt > 0 {
+		padding = spaces[:cnt]
+	}
+
+	fmt.Printf("%s%v   %s  %v %v\n", spaces[:indent], nameTxt, padding, durationTxt, n.coloredState())
+
 	for _, child := range n.items {
-		child.printInternal(level + 1)
+		child.printInternal(level+1, paddingRight)
 	}
 }
 

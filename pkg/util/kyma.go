@@ -27,7 +27,104 @@ func NewKymaListUnstructured() *unstructured.UnstructuredList {
 	return u
 }
 
-func GetKymaModuleState(k *unstructured.Unstructured, moduleName string) KymaModuleState {
+func IsKymaModuleListedInSpec(k *unstructured.Unstructured, moduleName string) bool {
+	modules, exists, err := unstructured.NestedSlice(k.Object, "spec", "modules")
+	if !exists || err != nil {
+		return false
+	}
+	for _, m := range modules {
+		mm, ok := m.(map[string]interface{})
+		if !ok {
+			return false
+		}
+		name, exists, err := unstructured.NestedString(mm, "name")
+		if err != nil {
+			return false
+		}
+		if !exists {
+			continue
+		}
+		if name == moduleName {
+			return true
+		}
+	}
+	return false
+}
+
+func SetKymaModuleInSpec(k *unstructured.Unstructured, moduleName string) error {
+	modules, exists, err := unstructured.NestedSlice(k.Object, "spec", "modules")
+	if err != nil {
+		return err
+	}
+	if !exists {
+		modules = []interface{}{}
+		err = unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
+		if err != nil {
+			return nil
+		}
+	}
+
+	for idx, m := range modules {
+		mm, ok := m.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("kyma CR spec module #%d is not a map", idx)
+		}
+
+		name, exists, err := unstructured.NestedString(mm, "name")
+		if err != nil {
+			return err
+		}
+		if exists && name == moduleName {
+			return nil
+		}
+	}
+
+	modules = append(modules, map[string]interface{}{
+		"name": moduleName,
+	})
+
+	return unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
+}
+
+func RemoveKymaModuleFromSpec(k *unstructured.Unstructured, moduleName string) error {
+	modules, exists, err := unstructured.NestedSlice(k.Object, "spec", "modules")
+	if err != nil {
+		return err
+	}
+	if !exists {
+		modules = []interface{}{}
+		err = unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
+		if err != nil {
+			return nil
+		}
+	}
+
+	idxToRemove := -1
+	for idx, m := range modules {
+		mm, ok := m.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("kyma CR module spec #%d is not a map", idx)
+		}
+
+		name, exists, err := unstructured.NestedString(mm, "name")
+		if err != nil {
+			return err
+		}
+		if exists && name == moduleName {
+			idxToRemove = idx
+			break
+		}
+	}
+
+	if idxToRemove == -1 {
+		return nil
+	}
+
+	modules = pie.Delete(modules, idxToRemove)
+	return unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
+}
+
+func GetKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName string) KymaModuleState {
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if !exists || err != nil {
 		return KymaModuleStateNotPresent
@@ -53,7 +150,7 @@ func GetKymaModuleState(k *unstructured.Unstructured, moduleName string) KymaMod
 	return KymaModuleStateNotPresent
 }
 
-func RemoveKymaModuleState(k *unstructured.Unstructured, moduleName string) error {
+func RemoveKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName string) error {
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if err != nil {
 		return err
@@ -70,7 +167,7 @@ func RemoveKymaModuleState(k *unstructured.Unstructured, moduleName string) erro
 	for idx, m := range modules {
 		mm, ok := m.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("kyma CR module #%d is not a map", idx)
+			return fmt.Errorf("kyma CR module status #%d is not a map", idx)
 		}
 
 		name, exists, err := unstructured.NestedString(mm, "name")
@@ -91,7 +188,7 @@ func RemoveKymaModuleState(k *unstructured.Unstructured, moduleName string) erro
 	return unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 }
 
-func SetKymaModuleState(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
+func SetKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if err != nil {
 		return err
@@ -107,7 +204,7 @@ func SetKymaModuleState(k *unstructured.Unstructured, moduleName string, state K
 	for idx, m := range modules {
 		mm, ok := m.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("kyma CR module #%d is not a map", idx)
+			return fmt.Errorf("kyma CR module status #%d is not a map", idx)
 		}
 
 		name, exists, err := unstructured.NestedString(mm, "name")

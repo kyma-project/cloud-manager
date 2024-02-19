@@ -17,12 +17,64 @@ const (
 	DefaultModuleName = "cloud-manager"
 )
 
+func WithKymaModuleChannelInSpec(channel string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if channel == "" {
+				channel = "dev"
+			}
+			x, ok := obj.(*unstructured.Unstructured)
+			if ok {
+				val, exists, err := unstructured.NestedString(x.Object, "spec", "channel")
+				if err != nil {
+					panic(err)
+				}
+				if exists && val == channel {
+					return
+				}
+				err = unstructured.SetNestedField(x.Object, channel, "spec", "channel")
+				if err != nil {
+					panic(err)
+				}
+			}
+		},
+	}
+}
+
+func WithKymaModuleListedInSpec() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x, ok := obj.(*unstructured.Unstructured)
+			if ok {
+				err := util.SetKymaModuleInSpec(x, DefaultModuleName)
+				if err != nil {
+					panic(err)
+				}
+			}
+		},
+	}
+}
+
+func WithKymaModuleRemovedInSpec() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x, ok := obj.(*unstructured.Unstructured)
+			if ok {
+				err := util.RemoveKymaModuleFromSpec(x, DefaultModuleName)
+				if err != nil {
+					panic(err)
+				}
+			}
+		},
+	}
+}
+
 func WithKymaModuleState(state util.KymaModuleState) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			x, ok := obj.(*unstructured.Unstructured)
 			if ok {
-				err := util.SetKymaModuleState(x, DefaultModuleName, state)
+				err := util.SetKymaModuleStateFromStatus(x, DefaultModuleName, state)
 				if err != nil {
 					panic(err)
 				}

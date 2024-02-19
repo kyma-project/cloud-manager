@@ -29,7 +29,7 @@ var cmdKymaCreate = &cobra.Command{
 
 		fmt.Printf("KymaName \t\t\t\t\t\t Module %s state\n", kymaModuleName)
 		for _, item := range list.Items {
-			state := util.GetKymaModuleState(&item, kymaModuleName)
+			state := util.GetKymaModuleStateFromStatus(&item, kymaModuleName)
 			name := item.GetName()
 			if kymaName == "" || strings.Contains(name, kymaName) {
 				fmt.Printf("%s/%s \t %s\n", item.GetNamespace(), name, state)
