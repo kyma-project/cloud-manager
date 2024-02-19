@@ -1,25 +1,35 @@
 package dsl
 
-import "sigs.k8s.io/controller-runtime/pkg/client"
+import (
+	"context"
+	"errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
-func copyForUpdate(existing, desired client.Object) {
-	// labels
-	if desired.GetLabels() != nil {
-		if existing.GetLabels() == nil {
-			existing.SetLabels(map[string]string{})
-		}
-		for k, v := range desired.GetLabels() {
-			existing.GetLabels()[k] = v
-		}
+func UpdateObj(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("the object for UpdateObj() can not be nil")
 	}
 
-	// annotations
-	if desired.GetAnnotations() != nil {
-		if existing.GetAnnotations() == nil {
-			existing.SetAnnotations(map[string]string{})
-		}
-		for k, v := range desired.GetAnnotations() {
-			existing.GetAnnotations()[k] = v
-		}
+	NewObjActions(opts...).
+		ApplyOnObject(obj)
+
+	err := clnt.Update(ctx, obj)
+	if err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func UpdateStatus(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("the object for UpdateStatus() can not be nil")
+	}
+
+	NewObjActions(opts...).
+		ApplyOnStatus(obj)
+
+	err := clnt.Status().Update(ctx, obj)
+	return err
 }

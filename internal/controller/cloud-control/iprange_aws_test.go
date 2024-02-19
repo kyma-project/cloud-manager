@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("IpRange AWS", Ordered, func() {
+var _ = Describe("KCP IpRange", func() {
 
 	const (
 		kymaName = "d87cfa6d-ff74-47e9-a3f6-c6efc637ce2a"
@@ -20,74 +20,81 @@ var _ = Describe("IpRange AWS", Ordered, func() {
 
 	scope := &cloudcontrolv1beta1.Scope{}
 
-	It("Given Scope exists", func() {
-		// Tell Scope reconciler to ignore this kymaName
-		scopePkg.Ignore.AddName(kymaName)
+	It("IpRange AWS", func() {
 
-		Eventually(CreateScopeAws).
-			WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
-			Should(Succeed())
-	})
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			scopePkg.Ignore.AddName(kymaName)
 
-	It("And Given AWS VPC exists", func() {
-		infra.AwsMock().AddVpc(
-			vpcId,
-			"10.180.0.0/16",
-			awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
-			awsmock.VpcSubnetsFromScope(scope),
-		)
-	})
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
 
-	iprangeName := "some-aws-ip-range"
-	iprangeCidr := "10.181.0.0/16"
-	iprange := &cloudcontrolv1beta1.IpRange{}
+		By("And Given AWS VPC exists", func() {
+			infra.AwsMock().AddVpc(
+				vpcId,
+				"10.180.0.0/16",
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
 
-	It("When IpRange is created", func() {
-		Eventually(CreateKcpIpRange).
-			WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
-				WithName(iprangeName),
-				WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
-				WithKcpIpRangeSpecScope(kymaName),
-				WithKcpIpRangeSpecCidr(iprangeCidr),
-			).
-			Should(Succeed())
-	})
+		iprangeName := "some-aws-ip-range"
+		iprangeCidr := "10.181.0.0/16"
+		iprange := &cloudcontrolv1beta1.IpRange{}
 
-	It("Then IpRange will have Ready condition", func() {
-		Eventually(LoadAndCheck).
-			WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
-				NewObjActions(),
-				AssertHasConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
-			).
-			Should(Succeed())
+		By("When IpRange is created", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					WithName(iprangeName),
+					WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+					WithKcpIpRangeSpecScope(kymaName),
+					WithKcpIpRangeSpecCidr(iprangeCidr),
+				).
+				Should(Succeed())
+		})
 
-		By("And has status.cidr equal to spec.cidr")
-		Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr), "expected IpRange status.cidr to be equal to spec.cidr")
+		By("Then IpRange will have Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					AssertHasConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
 
-		By("And has count(status.ranges) equal to Scope zones count")
-		Expect(iprange.Status.Ranges).To(HaveLen(3), "expected three IpRange status.ranges")
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.0.0/18"), "expected IpRange status range to have 10.181.0.0/18")
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.64.0/18"), "expected IpRange status range to have 10.181.64.0/18")
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.128.0/18"), "expected IpRange status range to have 10.181.128.0/18")
+		By("And has status.cidr equal to spec.cidr", func() {
+			Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr), "expected IpRange status.cidr to be equal to spec.cidr")
+		})
 
-		By("And has status.vpcId equal to existing AWS VPC id")
-		Expect(iprange.Status.VpcId).To(Equal(vpcId))
+		By("And has count(status.ranges) equal to Scope zones count", func() {
+			Expect(iprange.Status.Ranges).To(HaveLen(3), "expected three IpRange status.ranges")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.181.0.0/18"), "expected IpRange status range to have 10.181.0.0/18")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.181.64.0/18"), "expected IpRange status range to have 10.181.64.0/18")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.181.128.0/18"), "expected IpRange status range to have 10.181.128.0/18")
+		})
 
-		By("And has status.subnets as Scope has zones")
-		Expect(iprange.Status.Subnets).To(HaveLen(3))
+		By("And has status.vpcId equal to existing AWS VPC id", func() {
+			Expect(iprange.Status.VpcId).To(Equal(vpcId))
+		})
 
-		Expect(iprange.Status.Subnets).To(HaveLen(3))
-		expectedZones := map[string]struct{}{
-			"eu-west-1a": {},
-			"eu-west-1b": {},
-			"eu-west-1c": {},
-		}
-		for i, subnet := range iprange.Status.Subnets {
-			Expect(subnet.Id).NotTo(BeEmpty(), fmt.Sprintf("expected IpRange.status.subnets[%d].id not to be empty", i))
-			Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range), fmt.Sprintf("expected IpRange.status.subnets[%d].range %s to be listed in IpRange.status.ranges", i, subnet.Range))
-			Expect(expectedZones).To(HaveKey(subnet.Zone), fmt.Sprintf("expected IpRange.status.subnets[%d].zone %s to be one of %v", i, subnet.Zone, expectedZones))
-			delete(expectedZones, subnet.Zone)
-		}
+		By("And has status.subnets as Scope has zones", func() {
+			Expect(iprange.Status.Subnets).To(HaveLen(3))
+
+			Expect(iprange.Status.Subnets).To(HaveLen(3))
+			expectedZones := map[string]struct{}{
+				"eu-west-1a": {},
+				"eu-west-1b": {},
+				"eu-west-1c": {},
+			}
+			for i, subnet := range iprange.Status.Subnets {
+				Expect(subnet.Id).NotTo(BeEmpty(), fmt.Sprintf("expected IpRange.status.subnets[%d].id not to be empty", i))
+				Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range), fmt.Sprintf("expected IpRange.status.subnets[%d].range %s to be listed in IpRange.status.ranges", i, subnet.Range))
+				Expect(expectedZones).To(HaveKey(subnet.Zone), fmt.Sprintf("expected IpRange.status.subnets[%d].zone %s to be one of %v", i, subnet.Zone, expectedZones))
+				delete(expectedZones, subnet.Zone)
+			}
+		})
 	})
 
 })

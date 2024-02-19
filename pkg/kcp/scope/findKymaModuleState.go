@@ -9,9 +9,9 @@ import (
 func findKymaModuleState(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	state.moduleState = util.GetKymaModuleState(state.kyma, "cloud-manager")
+	isListed := util.IsKymaModuleListedInSpec(state.kyma, "cloud-manager")
 
-	if state.moduleState != util.KymaModuleStateReady {
+	if !isListed {
 		return composed.StopAndForget, nil
 	}
 

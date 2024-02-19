@@ -27,7 +27,7 @@ var cmdKymaModuleStateShow = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("Module %s state is: %s\n", kymaModuleName, util.GetKymaModuleState(kymaCR, kymaModuleName))
+		fmt.Printf("Module %s state is: %s\n", kymaModuleName, util.GetKymaModuleStateFromStatus(kymaCR, kymaModuleName))
 
 		return nil
 	},

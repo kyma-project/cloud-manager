@@ -74,18 +74,6 @@ func AssertHasConditionTrue(conditionType string) ObjAssertion {
 	}
 }
 
-func UpdateStatus(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
-	if obj == nil {
-		return errors.New("the object for Conditions() can not be nil")
-	}
-
-	NewObjActions(opts...).
-		ApplyOnStatus(obj)
-
-	err := clnt.Status().Update(ctx, obj)
-	return err
-}
-
 func LoadAndUpdateStatus(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
 	if obj == nil {
 		return errors.New("the object for Conditions() can not be nil")

@@ -8,7 +8,6 @@ import (
 	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -65,7 +64,6 @@ type State struct {
 	composed.State
 
 	kyma                *unstructured.Unstructured
-	moduleState         util.KymaModuleState
 	activeSkrCollection skrruntime.ActiveSkrCollection
 
 	shootName      string

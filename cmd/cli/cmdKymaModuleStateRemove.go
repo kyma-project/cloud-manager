@@ -30,7 +30,7 @@ var cmdKymaModuleStateRemove = &cobra.Command{
 			return
 		}
 
-		err = util.RemoveKymaModuleState(kymaCR, kymaModuleName)
+		err = util.RemoveKymaModuleStateFromStatus(kymaCR, kymaModuleName)
 		if err != nil {
 			return fmt.Errorf("error removing kyma module %s from state: %w", kymaModuleName, err)
 		}
