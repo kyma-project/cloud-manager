@@ -1,98 +1,79 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
-var _ = Describe("IpRange AWS", func() {
+var _ = Describe("IpRange AWS", Ordered, func() {
 
 	const (
 		kymaName = "d87cfa6d-ff74-47e9-a3f6-c6efc637ce2a"
 		vpcId    = "b1d68fc4-1bd4-4ad6-b81c-3d86de54f4f9"
-
-		duration = time.Second * 5
-		interval = time.Millisecond * 250
-	)
-	var (
-		timeout = time.Second * 5
 	)
 
-	if debugged.Debugged {
-		timeout = time.Minute * 20
-	}
+	scope := &cloudcontrolv1beta1.Scope{}
 
-	It("IpRange AWS", func() {
-
+	It("Given Scope exists", func() {
 		// Tell Scope reconciler to ignore this kymaName
-		scope.Ignore.AddName(kymaName)
+		scopePkg.Ignore.AddName(kymaName)
 
-		// Given Scope exists
-		Expect(
-			infra.GivenScopeAwsExists(kymaName),
-		).NotTo(HaveOccurred())
+		Eventually(CreateScopeAws).
+			WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Should(Succeed())
+	})
 
-		// Load created scope
-		scope := &cloudcontrolv1beta1.Scope{}
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
-			exists = err == nil
-			return exists, client.IgnoreNotFound(err)
-		}, timeout, interval).
-			Should(BeTrue(), "expected Scope to get created")
+	It("And Given AWS VPC exists", func() {
+		infra.AwsMock().AddVpc(
+			vpcId,
+			"10.180.0.0/16",
+			awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+			awsmock.VpcSubnetsFromScope(scope),
+		)
+	})
 
-		// Given AWS VPC exists for this kymaName
-		infra.AwsMock().AddVpc(vpcId, "10.180.0.0/16", awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork), awsmock.VpcSubnetsFromScope(scope))
+	iprangeName := "some-aws-ip-range"
+	iprangeCidr := "10.181.0.0/16"
+	iprange := &cloudcontrolv1beta1.IpRange{}
 
-		// When IpRange is created
-		iprange := &cloudcontrolv1beta1.IpRange{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "some-ip-range",
-			},
-			Spec: cloudcontrolv1beta1.IpRangeSpec{
-				RemoteRef: cloudcontrolv1beta1.RemoteRef{
-					Namespace: "skr-namespace",
-					Name:      "skr-ip-range",
-				},
-				Scope: cloudcontrolv1beta1.ScopeRef{
-					Name: kymaName,
-				},
-				Cidr: "10.181.0.0/16",
-			},
-		}
-		Expect(
-			infra.KCP().Client().Create(infra.Ctx(), iprange),
-		).NotTo(HaveOccurred())
+	It("When IpRange is created", func() {
+		Eventually(CreateKcpIpRange).
+			WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+				WithName(iprangeName),
+				WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+				WithKcpIpRangeSpecScope(kymaName),
+				WithKcpIpRangeSpecCidr(iprangeCidr),
+			).
+			Should(Succeed())
+	})
 
-		// Then IpRange will get Ready condition
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(iprange), iprange)
-			if err != nil {
-				return false, err
-			}
-			exists = meta.IsStatusConditionTrue(iprange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-			return exists, nil
-		}, timeout, interval).
-			Should(BeTrue(), "expected IpRange with Ready condition")
+	It("Then IpRange will have Ready condition", func() {
+		Eventually(LoadAndCheck).
+			WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+				NewObjActions(),
+				AssertHasConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+			).
+			Should(Succeed())
 
+		By("And has status.cidr equal to spec.cidr")
 		Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr), "expected IpRange status.cidr to be equal to spec.cidr")
+
+		By("And has count(status.ranges) equal to Scope zones count")
 		Expect(iprange.Status.Ranges).To(HaveLen(3), "expected three IpRange status.ranges")
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.0.0/18"), "expected IpRange status range to have 10.181.0.0/18")
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.64.0/18"), "expected IpRange status range to have 10.181.64.0/18")
+		Expect(iprange.Status.Ranges).To(ContainElement("10.181.128.0/18"), "expected IpRange status range to have 10.181.128.0/18")
 
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.0.0/18"))
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.64.0/18"))
-		Expect(iprange.Status.Ranges).To(ContainElement("10.181.128.0/18"))
-
+		By("And has status.vpcId equal to existing AWS VPC id")
 		Expect(iprange.Status.VpcId).To(Equal(vpcId))
+
+		By("And has status.subnets as Scope has zones")
 		Expect(iprange.Status.Subnets).To(HaveLen(3))
 
 		Expect(iprange.Status.Subnets).To(HaveLen(3))
@@ -101,13 +82,12 @@ var _ = Describe("IpRange AWS", func() {
 			"eu-west-1b": {},
 			"eu-west-1c": {},
 		}
-		for _, subnet := range iprange.Status.Subnets {
-			Expect(subnet.Id).NotTo(BeEmpty())
-			Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range))
-			Expect(expectedZones).To(HaveKey(subnet.Zone))
+		for i, subnet := range iprange.Status.Subnets {
+			Expect(subnet.Id).NotTo(BeEmpty(), fmt.Sprintf("expected IpRange.status.subnets[%d].id not to be empty", i))
+			Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range), fmt.Sprintf("expected IpRange.status.subnets[%d].range %s to be listed in IpRange.status.ranges", i, subnet.Range))
+			Expect(expectedZones).To(HaveKey(subnet.Zone), fmt.Sprintf("expected IpRange.status.subnets[%d].zone %s to be one of %v", i, subnet.Zone, expectedZones))
 			delete(expectedZones, subnet.Zone)
 		}
-
 	})
 
 })
