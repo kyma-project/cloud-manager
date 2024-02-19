@@ -17,8 +17,8 @@ const (
 	DefaultModuleName = "cloud-manager"
 )
 
-func WithKymaModuleState(state util.KymaModuleState) ObjAction {
-	return &objAction{
+func WithKymaModuleState(state util.KymaModuleState) ObjStatusAction {
+	return &objStatusAction{
 		f: func(obj client.Object) {
 			x, ok := obj.(*unstructured.Unstructured)
 			if ok {
@@ -104,6 +104,7 @@ func KymaCRModuleStateUpdate(ctx context.Context, kcpClient client.Client, kymaC
 		Append(
 			WithNamespace(DefaultKcpNamespace),
 		).
+		ApplyOnObject(kymaCR).
 		ApplyOnStatus(kymaCR)
 
 	err := kcpClient.Status().Update(ctx, kymaCR)

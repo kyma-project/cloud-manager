@@ -60,22 +60,24 @@ func (arr ObjActions) Append(actionsToAdd ...ObjAction) ObjActions {
 	return append(arr, actionsToAdd...)
 }
 
-func (arr ObjActions) ApplyOnObject(obj client.Object) {
+func (arr ObjActions) ApplyOnObject(obj client.Object) ObjActions {
 	for _, a := range arr {
 		_, isStatusAction := a.(ObjStatusAction)
 		if !isStatusAction {
 			a.Apply(obj)
 		}
 	}
+	return arr
 }
 
-func (arr ObjActions) ApplyOnStatus(obj client.Object) {
+func (arr ObjActions) ApplyOnStatus(obj client.Object) ObjActions {
 	for _, a := range arr {
 		sa, isStatusChanger := a.(ObjStatusAction)
 		if isStatusChanger {
 			sa.ApplyOnStatus(obj)
 		}
 	}
+	return arr
 }
 
 // ===========================================================

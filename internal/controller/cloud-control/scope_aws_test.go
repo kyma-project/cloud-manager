@@ -7,9 +7,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"time"
 )
 
-var _ = Describe("Scope AWS", Focus, Ordered, func() {
+var _ = Describe("Scope AWS", Ordered, func() {
 
 	const (
 		kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
@@ -33,7 +34,7 @@ var _ = Describe("Scope AWS", Focus, Ordered, func() {
 
 	It("Then Scope should not exist", func() {
 		scope := &cloudcontrolv1beta1.Scope{}
-		Consistently(LoadAndCheck).
+		Consistently(LoadAndCheck, time.Second).
 			WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(
 				WithName(kymaName),
 				WithNamespace(DefaultKcpNamespace),

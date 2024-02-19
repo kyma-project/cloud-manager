@@ -65,8 +65,6 @@ type ClusterEnv interface {
 }
 
 type InfraDSL interface {
-	GivenScopeAwsExists(name string) error
-
 	GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error
 	WhenSkrIpRangeIsCreated(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error
 
