@@ -65,8 +65,6 @@ type ClusterEnv interface {
 }
 
 type InfraDSL interface {
-	GivenKymaCRExists(name string) error
-	GivenGardenShootAwsExists(name string) error
 	GivenScopeAwsExists(name string) error
 
 	GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr string, id string, conditions ...metav1.Condition) error
