@@ -123,9 +123,9 @@ func RemoveFinalizer(name string) ObjAction {
 	}
 }
 
-func LoadAndUpdate(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
+func Update(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
 	if obj == nil {
-		return errors.New("the object for LoadAndUpdate() can not be nil")
+		return errors.New("the object for Update() can not be nil")
 	}
 
 	err := LoadAndCheck(ctx, client, obj, NewObjActions())
@@ -140,9 +140,9 @@ func LoadAndUpdate(ctx context.Context, client client.Client, obj client.Object,
 	return err
 }
 
-func LoadAndDelete(ctx context.Context, client client.Client, obj client.Object) error {
+func Delete(ctx context.Context, client client.Client, obj client.Object) error {
 	if obj == nil {
-		return errors.New("the object for LoadAndDelete() can not be nil")
+		return errors.New("the object for Delete() can not be nil")
 	}
 
 	err := LoadAndCheck(ctx, client, obj, NewObjActions())
