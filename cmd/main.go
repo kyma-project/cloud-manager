@@ -182,6 +182,7 @@ func main() {
 	//skrLoop.AddKymaName("46059d75-d7b0-4d6a-955d-ce828ec4bb37")
 	//skrLoop.AddKymaName("511d7132-448d-4672-a90d-420ad61b2365")
 	//skrLoop.AddKymaName("eb693381-3e9c-4818-9f5d-378ba0c47314")
+	// 2024-02-21T14:28
 
 	err = mgr.Add(skrLoop)
 	if err != nil {
