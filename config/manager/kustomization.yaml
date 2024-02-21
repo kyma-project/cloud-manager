@@ -6,5 +6,9 @@ configMapGenerator:
   - name: manager-env
     behavior: merge
     literals:
-      - GARDENER_NAMESPACE=garden-kyma
+      - GARDENER_NAMESPACE=garden-spm-test01
       - SKR_PROVIDERS=/var/kyma/cloud-manager/skr/providers/
+      - AWS_ROLE_NAME=CrossAccountPowerUser
+      - AWS_ACCESS_KEY_ID=???
+      - AWS_SECRET_ACCESS_KEY=???
+      - GCP_SA_JSON_KEY_PATH=???

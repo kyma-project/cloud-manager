@@ -82,7 +82,7 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 			tagKey, "1",
 		))
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error creating subnet", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error creating subnet", composed.StopWithRequeue, ctx)
 		}
 		logger.WithValues("subnetId", subnet.SubnetId).Info("Subnet created")
 

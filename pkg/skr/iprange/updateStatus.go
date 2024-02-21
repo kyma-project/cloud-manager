@@ -32,6 +32,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: condErr.Message,
 			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeSubmitted).
 			ErrorLogMessage("Error updating IpRange status with not ready condition due to KCP error").
 			Run(ctx, state)
 	}
@@ -46,9 +47,10 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Message: condReady.Message,
 			}).
 			ErrorLogMessage("Error updating IpRange status with ready condition").
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeSubmitted).
 			Run(ctx, state)
 	}
 
 	// keep looping until KCP IpRange gets some condition
-	return composed.StopWithRequeueDelay(200 * time.Millisecond), nil
+	return composed.StopWithRequeueDelay(250 * time.Millisecond), nil
 }

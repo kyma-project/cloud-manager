@@ -20,6 +20,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ServedTrue  = "True"
+	ServedFalse = "False"
+)
+
+const (
+	ConditionReasonOtherIsServed = "OtherIsServed"
+)
+
 // +kubebuilder:validation:Enum=Deleting;Ready;Warning
 type ModuleState string
 
@@ -52,6 +61,7 @@ type CloudResourcesStatus struct {
 	// +kubebuilder:validation:Enum=Deleting;Ready;Warning
 	State ModuleState `json:"state,omitempty"`
 
+	// +kubebuilder:validation:Enum=True;False
 	Served string `json:"served,omitempty"`
 
 	// List of status conditions
@@ -71,6 +81,14 @@ type CloudResources struct {
 
 	Spec   CloudResourcesSpec   `json:"spec,omitempty"`
 	Status CloudResourcesStatus `json:"status,omitempty"`
+}
+
+func (in *CloudResources) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *CloudResources) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 //+kubebuilder:object:root=true

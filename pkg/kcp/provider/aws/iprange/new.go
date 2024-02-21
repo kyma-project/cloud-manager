@@ -27,6 +27,7 @@ func New(stateFactory StateFactory) composed.Action {
 			extendVpcAddressSpace,
 			loadSubnets,
 			findCloudResourceSubnets,
+			checkSubnetOverlap,
 			createSubnets,
 			updateSuccessStatus,
 			func(_ context.Context, _ composed.State) (error, context.Context) {
