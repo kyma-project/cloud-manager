@@ -115,6 +115,9 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               served:
+                enum:
+                - "True"
+                - "False"
                 type: string
               state:
                 allOf:
