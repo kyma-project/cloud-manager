@@ -79,6 +79,22 @@ func WithNfsInstanceScope(scopeName string) ObjAction {
 	}
 }
 
+func WithRemoteRef(name string) ObjAction {
+	remoteRef := &cloudcontrolv1beta1.RemoteRef{
+		Name:      name,
+		Namespace: DefaultSkrNamespace,
+	}
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.RemoteRef = *remoteRef
+				return
+			}
+			panic("unhandled type in WithNfsInstanceScope")
+		},
+	}
+}
+
 func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.NfsInstance{}
