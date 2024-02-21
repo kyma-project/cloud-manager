@@ -115,6 +115,20 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               served:
+                enum:
+                - "True"
+                - "False"
+                type: string
+              state:
+                allOf:
+                - enum:
+                  - Deleting
+                  - Ready
+                  - Warning
+                - enum:
+                  - Deleting
+                  - Ready
+                  - Warning
                 type: string
             type: object
         type: object

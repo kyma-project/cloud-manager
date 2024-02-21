@@ -33,7 +33,6 @@ func loadSkrIpRange(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	logger = logger.WithValues("IpRange", state.ObjAsAwsNfsVolume().Spec.IpRange.ObjKey())
-	logger.Info("SKR IpRange loaded")
 
 	return nil, composed.LoggerIntoCtx(ctx, logger)
 }

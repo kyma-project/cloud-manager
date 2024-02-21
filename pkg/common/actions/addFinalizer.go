@@ -23,7 +23,7 @@ func AddFinalizer(ctx context.Context, state composed.State) (error, context.Con
 	//Add finalizer
 	controllerutil.AddFinalizer(state.Obj(), cloudresourcesv1beta1.FinalizerName)
 	if err := state.UpdateObj(ctx); err != nil {
-		return composed.LogErrorAndReturn(err, "Error adding Finalizer", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error adding Finalizer", composed.StopWithRequeue, ctx)
 	}
 
 	//continue

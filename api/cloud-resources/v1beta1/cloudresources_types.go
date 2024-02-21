@@ -20,8 +20,31 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	ServedTrue  = "True"
+	ServedFalse = "False"
+)
+
+const (
+	ConditionReasonOtherIsServed = "OtherIsServed"
+)
+
+// +kubebuilder:validation:Enum=Deleting;Ready;Warning
+type ModuleState string
+
+// Valid Module CR States.
+const (
+	// StateReady signifies Module CR is Ready and has been installed successfully.
+	StateReady ModuleState = "Ready"
+
+	// StateDeleting signifies Module CR is being deleted. This is the state that is used
+	// when a deletionTimestamp was detected and Finalizers are picked up.
+	StateDeleting ModuleState = "Deleting"
+
+	// StateWarning signifies specified resource has been deployed, but cannot be used due to misconfiguration,
+	// usually it means that user interaction is required.
+	StateWarning ModuleState = "Warning"
+)
 
 // CloudResourcesSpec defines the desired state of CloudResources
 type CloudResourcesSpec struct {
@@ -34,13 +57,18 @@ type CloudResourcesSpec struct {
 
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=Deleting;Ready;Warning
+	State ModuleState `json:"state,omitempty"`
+
+	// +kubebuilder:validation:Enum=True;False
 	Served string `json:"served,omitempty"`
 
 	// List of status conditions
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -53,6 +81,14 @@ type CloudResources struct {
 
 	Spec   CloudResourcesSpec   `json:"spec,omitempty"`
 	Status CloudResourcesStatus `json:"status,omitempty"`
+}
+
+func (in *CloudResources) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *CloudResources) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 //+kubebuilder:object:root=true

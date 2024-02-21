@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -22,7 +23,11 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 			Values: []string{state.IpRange().Status.VpcId},
 		},
 		{
-			Name:   pointer.String(common.TagCloudManagerName),
+			Name:   pointer.String("tag:Name"),
+			Values: []string{state.Obj().GetName()},
+		},
+		{
+			Name:   pointer.String(fmt.Sprintf("tag:%s", common.TagCloudManagerName)),
 			Values: []string{state.Name().String()},
 		},
 	}, nil)
@@ -34,7 +39,7 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		state.securityGroup = &list[0]
 		state.securityGroupId = pointer.StringDeref(state.securityGroup.GroupId, "")
 		logger = logger.WithValues("securityGroupId", state.securityGroupId)
-		logger.Info("NFS purpose security group found")
+		logger.Info("NFS security group found")
 		return nil, composed.LoggerIntoCtx(ctx, logger)
 	}
 

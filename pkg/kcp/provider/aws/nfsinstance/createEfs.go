@@ -2,9 +2,11 @@ package nfsinstance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +29,19 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		[]efsTypes.Tag{
 			{
 				Key:   pointer.String("Name"),
+				Value: pointer.String(state.Obj().GetName()),
+			},
+			{
+				Key:   pointer.String(common.TagCloudManagerName),
+				Value: pointer.String(state.Name().String()),
+			},
+			{
+				Key:   pointer.String(common.TagCloudManagerRemoteName),
 				Value: pointer.String(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
+			},
+			{
+				Key:   pointer.String(common.TagScope),
+				Value: pointer.String(state.ObjAsNfsInstance().Spec.Scope.Name),
 			},
 		},
 	)
@@ -35,9 +49,9 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	if err != nil {
 		logger.Error(err, "Error creating AWS EFS")
 		meta.SetStatusCondition(state.ObjAsNfsInstance().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonFailedCreatingFileSystem,
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingFileSystem,
 			Message: fmt.Sprintf("Failed creating file system: %s", err),
 		})
 		err = state.UpdateObjStatus(ctx)
@@ -48,23 +62,28 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.StopWithRequeueDelay(time.Minute), nil
 	}
 
-	logger.
-		WithValues("efsId", out.FileSystemId).
-		Info("AWS EFS created")
+	logger = logger.WithValues("efsId", *out.FileSystemId)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	//state.NfsInstance().Status.Id = pointer.StringDeref(out.FileSystemId, "")
-	//meta.SetStatusCondition(state.NfsInstance().Conditions(), metav1.Condition{
-	//	Type:               cloudresourcesv1beta1.ConditionTypeReady,
-	//	Status:             "True",
-	//	Reason:             cloudresourcesv1beta1.ReasonProvisioned,
-	//	Message:            "AWS EFS is provisioned",
-	//})
-	//state.NfsInstance().Status.State = cloudresourcesv1beta1.ReadyState
-	//
-	//err = state.UpdateObjStatus(ctx)
-	//if err != nil {
-	//	return composed.LogErrorAndReturn(err, "Error updating NfsInstance status due to ready state", composed.StopWithRequeue, nil)
-	//}
+	logger.Info("AWS EFS created")
 
-	return nil, nil
+	err, ctx = loadEfs(ctx, st)
+	if err != nil {
+		return err, ctx
+	}
+
+	if state.efs == nil {
+		logger.Error(errors.New("unable to load just created EFS"), "Logical error!!!")
+		return composed.UpdateStatus(state.ObjAsNfsInstance()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonUnknown,
+				Message: "Failed creating EFS",
+			}).
+			ErrorLogMessage("Error updating KCP NfsInstance status after failed loading of just created EFS").
+			Run(ctx, state)
+	}
+
+	return nil, ctx
 }

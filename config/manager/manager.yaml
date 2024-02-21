@@ -72,6 +72,9 @@ spec:
         - --leader-elect
         image: controller:latest
         name: manager
+        envFrom:
+          - configMapRef:
+              name: cloud-manager-env
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

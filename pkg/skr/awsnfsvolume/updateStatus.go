@@ -2,8 +2,6 @@ package awsnfsvolume
 
 import (
 	"context"
-	"fmt"
-	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,11 +14,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 
 	logger := composed.LoggerFromCtx(ctx)
-	logger.
-		WithValues("kcpNfsInstanceConditions", pie.Map(state.KcpNfsInstance.Status.Conditions, func(c metav1.Condition) string {
-			return fmt.Sprintf("%s:%s", c.Type, c.Status)
-		})).
-		Info("Updating SKR AwsNfsVolume status from KCP NgsInstance conditions")
 
 	kcpCondErr := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
@@ -68,6 +61,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		// already with Ready condition
 		// continue with next actions to create PV
 		return nil, nil
+	}
+
+	if skrCondReady != nil || skrCondErr != nil {
+		state.ObjAsAwsNfsVolume().Status.Conditions = nil
+		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
 	}
 
 	// no conditions on KCP NfsInstance

@@ -33,12 +33,16 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		return composed.StopAndForget, nil
 	}
 
-	sg, err := state.awsClient.DescribeSecurityGroups(ctx, []ec2Types.Filter{
-		{
-			Name:   pointer.String("vpc-id"),
-			Values: []string{state.IpRange().Status.VpcId},
+	sg, err := state.awsClient.DescribeSecurityGroups(
+		ctx,
+		[]ec2Types.Filter{
+			{
+				Name:   pointer.String("vpc-id"),
+				Values: []string{state.IpRange().Status.VpcId},
+			},
 		},
-	}, []string{state.securityGroupId})
+		[]string{state.securityGroupId},
+	)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading security group", composed.StopWithRequeue, nil)
 	}

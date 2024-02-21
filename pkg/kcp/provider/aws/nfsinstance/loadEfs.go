@@ -14,9 +14,8 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error listing AWS file systems", composed.StopWithRequeue, nil)
 	}
 
-	name := state.ObjAsNfsInstance().Spec.RemoteRef.String()
 	for _, fs := range list {
-		if pointer.StringDeref(fs.Name, "") == name {
+		if pointer.StringDeref(fs.Name, "") == state.Obj().GetName() {
 			state.efs = &fs
 			return nil, nil
 		}

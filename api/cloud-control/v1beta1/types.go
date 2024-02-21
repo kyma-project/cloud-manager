@@ -3,12 +3,10 @@ package v1beta1
 type StatusState string
 
 const (
-	UnknownState StatusState = "Unknown"
-	ReadyState   StatusState = "Ready"
-	ErrorState   StatusState = "Error"
+	ReadyState StatusState = "Ready"
+	ErrorState StatusState = "Error"
 )
 
 const (
-	ReasonProvisioned = "Provisioned"
-	FinalizerName     = "cloud-control.kyma-project.io"
+	FinalizerName = "cloud-control.kyma-project.io/deletion-hook"
 )
