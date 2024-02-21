@@ -18,6 +18,7 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"awsIpRange",
+			addFinalizer,
 			preventCidrEdit,
 			splitRangeByZones,
 			ensureShootZonesAndRangeSubnetsMatch,
