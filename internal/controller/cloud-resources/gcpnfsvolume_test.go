@@ -147,7 +147,15 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 
 			Describe("When KCP NfsInstance is switched to Ready condition", Ordered, func() {
 				BeforeEach(func() {
-					Eventually(LoadAndUpdateStatus).
+					Eventually(LoadAndCheck).
+						WithArguments(
+							infra.Ctx(),
+							infra.KCP().Client(),
+							kcpNfsInstance,
+							NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+						).
+						Should(Succeed())
+					Eventually(UpdateStatus).
 						WithArguments(
 							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 							WithConditions(KcpReadyCondition()),
@@ -248,7 +256,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 					Should(Succeed())
 
 				//Update KCP NfsInstance to Ready state
-				Eventually(LoadAndUpdateStatus).
+				Eventually(UpdateStatus).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
@@ -258,7 +266,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 					).
 					Should(Succeed())
 
-				Eventually(LoadAndUpdate).
+				Eventually(Update).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 						WithGcpNfsVolumeCapacity(updatedCapacityGb),
@@ -294,7 +302,16 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 
 			Describe("When KCP NfsInstance Status is updated with new Capacity.", Ordered, func() {
 				BeforeEach(func() {
-					Eventually(LoadAndUpdateStatus).
+					Eventually(LoadAndCheck).
+						WithArguments(
+							infra.Ctx(),
+							infra.KCP().Client(),
+							kcpNfsInstance,
+							NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+						).
+						Should(Succeed())
+
+					Eventually(UpdateStatus).
 						WithArguments(
 							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 							WithConditions(KcpReadyCondition()),
@@ -380,7 +397,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 					Should(Succeed())
 
 				//Update KCP NfsInstance to Ready state
-				Eventually(LoadAndUpdateStatus).
+				Eventually(UpdateStatus).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
@@ -401,7 +418,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 					Should(Succeed())
 
 				//Delete SKR GcpNfsVolume
-				Eventually(LoadAndDelete).
+				Eventually(Delete).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 					).Should(Succeed())
@@ -432,7 +449,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 						Should(Succeed())
 
 					//Remove pv-protection finalizer
-					Eventually(LoadAndUpdate).
+					Eventually(Update).
 						WithArguments(
 							infra.Ctx(), infra.SKR().Client(), pv,
 							RemoveFinalizer("kubernetes.io/pv-protection"),
