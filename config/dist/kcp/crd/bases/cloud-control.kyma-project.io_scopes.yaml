@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
-  name: cloudresources.cloud-resources.kyma-project.io
+  name: scopes.cloud-control.kyma-project.io
 spec:
-  group: cloud-resources.kyma-project.io
+  group: cloud-control.kyma-project.io
   names:
-    kind: CloudResources
-    listKind: CloudResourcesList
-    plural: cloudresources
-    singular: cloudresources
+    kind: Scope
+    listKind: ScopeList
+    plural: scopes
+    singular: scope
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: CloudResources is the Schema for the cloudresources API
+        description: Scope is the Schema for the scopes API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,18 +32,99 @@ spec:
           metadata:
             type: object
           spec:
-            description: CloudResourcesSpec defines the desired state of CloudResources
+            description: ScopeSpec defines the desired state of Scope
             properties:
-              foo:
-                description: Foo is an example field of CloudResources. Edit cloudresources_types.go
-                  to remove/update
+              kymaName:
                 type: string
+              provider:
+                type: string
+              region:
+                type: string
+              scope:
+                maxProperties: 1
+                minProperties: 1
+                properties:
+                  aws:
+                    properties:
+                      accountId:
+                        type: string
+                      network:
+                        properties:
+                          VPC:
+                            properties:
+                              cidr:
+                                type: string
+                              id:
+                                type: string
+                            type: object
+                          Zones:
+                            items:
+                              properties:
+                                internal:
+                                  type: string
+                                name:
+                                  type: string
+                                public:
+                                  type: string
+                                workers:
+                                  type: string
+                              required:
+                              - internal
+                              - name
+                              - public
+                              - workers
+                              type: object
+                            type: array
+                        required:
+                        - VPC
+                        - Zones
+                        type: object
+                      vpcNetwork:
+                        type: string
+                    required:
+                    - accountId
+                    - network
+                    - vpcNetwork
+                    type: object
+                  azure:
+                    properties:
+                      subscriptionId:
+                        type: string
+                      tenantId:
+                        type: string
+                      vpcNetwork:
+                        type: string
+                    required:
+                    - subscriptionId
+                    - tenantId
+                    - vpcNetwork
+                    type: object
+                  gcp:
+                    properties:
+                      project:
+                        type: string
+                      vpcNetwork:
+                        type: string
+                    required:
+                    - project
+                    - vpcNetwork
+                    type: object
+                type: object
+              shootName:
+                type: string
+            required:
+            - kymaName
+            - provider
+            - region
+            - scope
+            - shootName
             type: object
           status:
-            description: CloudResourcesStatus defines the observed state of CloudResources
+            description: ScopeStatus defines the observed state of Scope
             properties:
               conditions:
-                description: List of status conditions
+                description: List of status conditions to indicate the status of a
+                  Peering.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -114,19 +195,6 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              served:
-                type: string
-              state:
-                allOf:
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                type: string
             type: object
         type: object
     served: true

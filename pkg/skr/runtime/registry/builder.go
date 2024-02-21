@@ -20,6 +20,8 @@ var _ Builder = &skrBuilder{}
 type Builder interface {
 	WithFactory(f reconcile.ReconcilerFactory) Builder
 
+	GetForObj() client.Object
+
 	For(object client.Object, opts ...builder.ForOption) Builder
 	Owns(object client.Object, opts ...builder.OwnsOption) Builder
 	Watches(object client.Object, eventHandler handler.EventHandler, opts ...builder.WatchesOption) Builder
@@ -42,6 +44,7 @@ type skrBuilder struct {
 	factory      reconcile.ReconcilerFactory
 	items        []applyBuildItem
 	forCallCount int
+	forObj       client.Object
 }
 
 func (b *skrBuilder) add(i applyBuildItem) Builder {
@@ -54,8 +57,13 @@ func (b *skrBuilder) WithFactory(f reconcile.ReconcilerFactory) Builder {
 	return b
 }
 
+func (b *skrBuilder) GetForObj() client.Object {
+	return b.forObj
+}
+
 func (b *skrBuilder) For(object client.Object, opts ...builder.ForOption) Builder {
 	b.forCallCount++
+	b.forObj = object
 	return b.add(func(cb *builder.Builder) {
 		cb.For(object, opts...)
 	})

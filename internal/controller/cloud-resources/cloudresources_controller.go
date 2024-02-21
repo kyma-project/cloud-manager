@@ -19,32 +19,26 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	skrcloudresources "github.com/kyma-project/cloud-manager/pkg/skr/cloudresources"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-type CloudResourcesFactory struct {
+type CloudResourcesReconcilerFactory struct {
 }
 
-func (f *CloudResourcesFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+func (f *CloudResourcesReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &CloudResourcesReconciler{
-		kymaRef:    args.KymaRef,
-		kcpCluster: args.KcpCluster,
-		skrCluster: args.SkrCluster,
+		reconciler: skrcloudresources.NewReconcilerFactory().New(args),
 	}
 }
 
 // CloudResourcesReconciler reconciles a CloudResources object
 type CloudResourcesReconciler struct {
-	kymaRef    klog.ObjectRef
-	kcpCluster cluster.Cluster
-	skrCluster cluster.Cluster
+	reconciler reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=cloudresources,verbs=get;list;watch;create;update;patch;delete
@@ -61,16 +55,12 @@ type CloudResourcesReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
-	logger.Info("Hello from CloudResourcesReconciler!")
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Reconcile(ctx, req)
 }
 
 func SetupCloudResourcesReconciler(reg skrruntime.SkrRegistry) error {
 	return reg.Register().
-		WithFactory(&CloudResourcesFactory{}).
+		WithFactory(&CloudResourcesReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.CloudResources{}).
 		Complete()
 }

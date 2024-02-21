@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
-  name: cloudresources.cloud-resources.kyma-project.io
+  name: nfsinstances.cloud-control.kyma-project.io
 spec:
-  group: cloud-resources.kyma-project.io
+  group: cloud-control.kyma-project.io
   names:
-    kind: CloudResources
-    listKind: CloudResourcesList
-    plural: cloudresources
-    singular: cloudresources
+    kind: NfsInstance
+    listKind: NfsInstanceList
+    plural: nfsinstances
+    singular: nfsinstance
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: CloudResources is the Schema for the cloudresources API
+        description: NfsInstance is the Schema for the nfsinstances API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,18 +32,115 @@ spec:
           metadata:
             type: object
           spec:
-            description: CloudResourcesSpec defines the desired state of CloudResources
+            description: NfsInstanceSpec defines the desired state of NfsInstance
             properties:
-              foo:
-                description: Foo is an example field of CloudResources. Edit cloudresources_types.go
-                  to remove/update
-                type: string
+              instance:
+                maxProperties: 1
+                minProperties: 1
+                properties:
+                  aws:
+                    properties:
+                      performanceMode:
+                        default: generalPurpose
+                        enum:
+                        - generalPurpose
+                        - maxIO
+                        type: string
+                      throughput:
+                        default: bursting
+                        enum:
+                        - bursting
+                        - elastic
+                        type: string
+                    type: object
+                  azure:
+                    type: object
+                  gcp:
+                    properties:
+                      capacityGb:
+                        default: 1024
+                        type: integer
+                      connectMode:
+                        default: PRIVATE_SERVICE_ACCESS
+                        enum:
+                        - DIRECT_PEERING
+                        - PRIVATE_SERVICE_ACCESS
+                        type: string
+                      fileShareName:
+                        default: vol1
+                        pattern: ^[a-z][a-z0-9_]*[a-z0-9]$
+                        type: string
+                        x-kubernetes-validations:
+                        - message: FileShareName is immutable.
+                          rule: (self == oldSelf)
+                      location:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: Location is immutable.
+                          rule: (self == oldSelf)
+                      tier:
+                        default: BASIC_HDD
+                        enum:
+                        - BASIC_HDD
+                        - BASIC_SSD
+                        - HIGH_SCALE_SSD
+                        - ENTERPRISE
+                        - ZONAL
+                        - REGIONAL
+                        type: string
+                        x-kubernetes-validations:
+                        - message: Tier is immutable.
+                          rule: (self == oldSelf)
+                    required:
+                    - capacityGb
+                    - connectMode
+                    - fileShareName
+                    - location
+                    - tier
+                    type: object
+                type: object
+              ipRange:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              remoteRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+                x-kubernetes-validations:
+                - message: RemoteRef is immutable.
+                  rule: (self == oldSelf)
+              scope:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+            required:
+            - instance
+            - ipRange
+            - remoteRef
+            - scope
             type: object
           status:
-            description: CloudResourcesStatus defines the observed state of CloudResources
+            description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
+              capacityGb:
+                description: Provisioned Capacity in GBs
+                type: integer
               conditions:
-                description: List of status conditions
+                description: List of status conditions to indicate the status of a
+                  Peering.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -114,18 +211,18 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              served:
+              hosts:
+                description: List of NFS Hosts (DNS Names or IP Addresses) that clients
+                  can use to connect
+                items:
+                  type: string
+                type: array
+              id:
+                type: string
+              opIdentifier:
+                description: Operation Identifier to track the Hyperscaler Operation
                 type: string
               state:
-                allOf:
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
                 type: string
             type: object
         type: object

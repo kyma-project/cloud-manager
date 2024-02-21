@@ -116,17 +116,6 @@ spec:
                 x-kubernetes-list-type: map
               served:
                 type: string
-              state:
-                allOf:
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                type: string
             type: object
         type: object
     served: true

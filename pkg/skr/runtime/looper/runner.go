@@ -3,19 +3,42 @@ package looper
 import (
 	"context"
 	"errors"
+	"fmt"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
 	"time"
 )
 
+var (
+	providerSpecificTypes = map[string]cloudcontrolv1beta1.ProviderType{
+		// AWS
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.AwsNfsVolume{}): cloudcontrolv1beta1.ProviderAws,
+
+		// GCP
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolume{}): cloudcontrolv1beta1.ProviderGCP,
+	}
+)
+
 type RunOptions struct {
-	timeout time.Duration
+	timeout           time.Duration
+	checkSkrReadiness bool
+	provider          *cloudcontrolv1beta1.ProviderType
 }
 
 type RunOption = func(options *RunOptions)
+
+func WithProvider(provider cloudcontrolv1beta1.ProviderType) RunOption {
+	return func(options *RunOptions) {
+		options.checkSkrReadiness = true
+		options.provider = &provider
+	}
+}
 
 func WithTimeout(timeout time.Duration) RunOption {
 	return func(options *RunOptions) {
@@ -47,13 +70,38 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		return errors.New("already started")
 	}
 	logger := skrManager.GetLogger()
-	logger.Info("Starting SKR Runner")
+	logger.Info("SKR Runner running")
 	options := &RunOptions{}
 	for _, o := range opts {
 		o(options)
 	}
 	r.runOnce.Do(func() {
 		r.started = true
+		defer func() {
+			r.stopped = true
+		}()
+
+		if options.checkSkrReadiness {
+			chkr := &checker{logger: logger}
+			if !chkr.IsReady(ctx, skrManager) {
+				logger.Info("SKR cluster is not ready")
+				return
+			}
+		}
+
+		if options.provider != nil {
+			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", *options.provider))
+			instlr := &installer{
+				skrProvidersPath: os.Getenv("SKR_PROVIDERS"),
+				logger:           logger,
+			}
+			err = instlr.Handle(ctx, string(*options.provider), skrManager)
+			if err != nil {
+				logger.Error(err, "Error installing provider %s dependencies", options.provider)
+				return
+			}
+		}
+
 		rArgs := reconcile2.ReconcilerArguments{
 			KymaRef:    skrManager.KymaRef(),
 			KcpCluster: r.kcpCluster,
@@ -61,9 +109,22 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 
 		for _, b := range r.registry.Builders() {
-			err = b.SetupWithManager(skrManager, rArgs)
-			if err != nil {
-				return
+			shouldRegister := true
+			skipMsg := ""
+			if options.provider != nil {
+				pt, ptDefined := providerSpecificTypes[fmt.Sprintf("%T", b.GetForObj())]
+				if ptDefined && pt != *options.provider {
+					shouldRegister = false
+					skipMsg = fmt.Sprintf("Skipping controller for %T due to non matching provider to %s", b.GetForObj(), *options.provider)
+				}
+			}
+			if shouldRegister {
+				err = b.SetupWithManager(skrManager, rArgs)
+				if err != nil {
+					return
+				}
+			} else {
+				logger.Info(skipMsg)
 			}
 		}
 
@@ -78,7 +139,6 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		defer cancel()
 
 		err = skrManager.Start(timeoutCtx)
-		r.stopped = true
 		if err != nil {
 			skrManager.GetLogger().Error(err, "error starting SKR manager")
 		}

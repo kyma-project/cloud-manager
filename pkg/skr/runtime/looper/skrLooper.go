@@ -102,8 +102,8 @@ func (l *skrLooper) Start(ctx context.Context) error {
 	<-ctx.Done()
 
 	l.stopped = true
-	l.wg.Wait()
 	close(l.ch)
+	l.wg.Wait()
 	l.ch = nil
 	l.logger.Info("SkrLooper stopped")
 	return nil
@@ -162,7 +162,7 @@ func (l *skrLooper) worker(id int) {
 
 func (l *skrLooper) handleOneSkr(kymaName string) {
 	logger := l.logger.WithValues("skrKymaName", kymaName)
-	skrManager, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
+	skrManager, scope, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
 	if err != nil {
 		logger.Error(err, "error creating Manager")
 		time.Sleep(5 * time.Second)
@@ -175,6 +175,10 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	if debugged.Debugged {
 		to = 15 * time.Minute
 	}
-	runner.Run(l.ctx, skrManager, WithTimeout(to))
+
+	err = runner.Run(l.ctx, skrManager, WithTimeout(to), WithProvider(scope.Spec.Provider))
+	if err != nil {
+		logger.Error(err, "Error running SKR Runner")
+	}
 	logger.Info("SKR Runner stopped")
 }

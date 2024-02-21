@@ -29,6 +29,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /src/manager .
+COPY config/dist/skr/crd/bases/providers /var/kyma/cloud-manager/skr/providers
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

@@ -1,2 +1,10 @@
 resources:
+- configmap.yaml
 - manager.yaml
+
+configMapGenerator:
+  - name: manager-env
+    behavior: merge
+    literals:
+      - GARDENER_NAMESPACE=garden-kyma
+      - SKR_PROVIDERS=/var/kyma/cloud-manager/skr/providers/
