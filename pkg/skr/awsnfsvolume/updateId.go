@@ -12,7 +12,6 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.ObjAsAwsNfsVolume().Status.Id != "" {
-		logger.Info("SKR AwsNfsVolume already has ID set")
 		return nil, nil
 	}
 

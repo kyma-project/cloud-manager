@@ -37,7 +37,5 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 
 	state.KcpNfsInstance = kcpNfsInstnace
 
-	logger.Info("KCP NfsInstance loaded")
-
 	return nil, nil
 }

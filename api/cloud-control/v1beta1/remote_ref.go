@@ -11,5 +11,5 @@ type RemoteRef struct {
 }
 
 func (rr RemoteRef) String() string {
-	return fmt.Sprintf("cr--%s--%s", rr.Namespace, rr.Name)
+	return fmt.Sprintf("%s--%s", rr.Namespace, rr.Name)
 }

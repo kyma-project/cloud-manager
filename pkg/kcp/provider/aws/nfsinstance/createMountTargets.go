@@ -8,6 +8,7 @@ import (
 
 func createMountTargets(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	mountTargetsBySubnetId := make(map[string]string, len(state.IpRange().Status.Subnets))
 	for _, mt := range state.mountTargets {
@@ -19,6 +20,13 @@ func createMountTargets(ctx context.Context, st composed.State) (error, context.
 		if ok {
 			continue
 		}
+
+		logger.
+			WithValues(
+				"subnetId", subnet.Id,
+				"subnetZone", subnet.Zone,
+			).
+			Info("Creating mount target")
 
 		_, err := state.awsClient.CreateMountTarget(
 			ctx,

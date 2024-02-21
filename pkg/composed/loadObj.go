@@ -13,12 +13,10 @@ func LoadObj(ctx context.Context, state State) (error, context.Context) {
 		return StopAndForget, nil
 	}
 	if err != nil {
-		err = fmt.Errorf("error getting object: %w", err)
+		err = fmt.Errorf("error loading object: %w", err)
 		logger.Error(err, "error")
 		return StopWithRequeue, nil
 	}
-
-	logger.Info("Object loaded")
 
 	return nil, nil
 }

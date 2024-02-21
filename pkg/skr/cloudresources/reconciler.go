@@ -40,13 +40,6 @@ func (r *reconciler) newAction() composed.Action {
 		"crAwsNfsVolumeMain",
 		composed.LoadObj,
 
-		func(ctx context.Context, state composed.State) (error, context.Context) {
-			logger := composed.LoggerFromCtx(ctx)
-			logger.Info("Hello from CloudResources Module CR!!! ========================")
-
-			return nil, nil
-		},
-
 		handleServed,
 		addFinalizer,
 		statusReady,

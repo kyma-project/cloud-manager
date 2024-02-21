@@ -2,7 +2,6 @@ package nfsinstance
 
 import (
 	"context"
-	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -17,11 +16,22 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	name := fmt.Sprintf("cr--%s", state.ObjAsNfsInstance().Spec.RemoteRef.String())
-	sgId, err := state.awsClient.CreateSecurityGroup(ctx, state.IpRange().Status.VpcId, name, []ec2Types.Tag{
+	sgId, err := state.awsClient.CreateSecurityGroup(ctx, state.IpRange().Status.VpcId, state.Obj().GetName(), []ec2Types.Tag{
+		{
+			Key:   pointer.String("Name"),
+			Value: pointer.String(state.Obj().GetName()),
+		},
+		{
+			Key:   pointer.String(common.TagCloudManagerRemoteName),
+			Value: pointer.String(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
+		},
 		{
 			Key:   pointer.String(common.TagCloudManagerName),
 			Value: pointer.String(state.Name().String()),
+		},
+		{
+			Key:   pointer.String(common.TagScope),
+			Value: pointer.String(state.ObjAsNfsInstance().Spec.Scope.Name),
 		},
 	})
 	if err != nil {
