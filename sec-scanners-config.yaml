@@ -1,4 +1,4 @@
-module-name: cloud-resources-manager
+module-name: cloud-manager
 protecode:
   - europe-docker.pkg.dev/kyma-project/dev/cloud-resources-manager:PR-75
 whitesource:
