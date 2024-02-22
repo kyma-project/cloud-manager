@@ -42,7 +42,7 @@ func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	defer cancel()
 
 	//Get state object with Deleted GcpNfsVolume
-	state := factory.newStateWithDeleted()
+	state := factory.newStateWith(&deletedGcpNfsVolume)
 	assert.Nil(suite.T(), err)
 
 	//Call addFinalizer
