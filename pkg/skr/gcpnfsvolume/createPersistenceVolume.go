@@ -37,7 +37,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//If the NFS Host list is empty, create error response.
-	if len(state.KcpNfsInstance.Status.Hosts) == 0 {
+	if len(nfsVolume.Status.Hosts) == 0 {
 		logger.WithValues("kyma-name", state.KymaRef).
 			WithValues("NfsVolume", state.ObjAsGcpNfsVolume().Name).
 			Info("Error creating PV: Not able to get Host(s).")
@@ -65,7 +65,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 			StorageClassName: "",
 			PersistentVolumeSource: v1.PersistentVolumeSource{
 				NFS: &v1.NFSVolumeSource{
-					Server: state.KcpNfsInstance.Status.Hosts[0],
+					Server: nfsVolume.Status.Hosts[0],
 					Path:   fmt.Sprintf("/%s", nfsVolume.Spec.FileShareName),
 				},
 			},
