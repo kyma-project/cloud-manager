@@ -1,9 +1,11 @@
 package gcpnfsvolume
 
 import (
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -36,7 +38,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
 		Id:         "test-gcp-nfs-instance",
-		Hosts:      []string{"10.0.0.2"},
+		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
 		Conditions: []v1.Condition{
 			{
@@ -60,6 +62,79 @@ var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Finalizers: []string{"test-finalizer"},
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{},
+	Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
+		Id:         "to-delete-gcp-nfs-instance",
+		Hosts:      []string{"10.20.30.4"},
+		CapacityGb: 1024,
+	},
+}
+
+var pvGcpNfsVolume = corev1.PersistentVolume{
+	ObjectMeta: v1.ObjectMeta{
+		Name: fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name),
+		Labels: map[string]string{
+			cloudresourcesv1beta1.LabelNfsVolName: gcpNfsVolume.Name,
+			cloudresourcesv1beta1.LabelNfsVolNS:   gcpNfsVolume.Namespace,
+		},
+		Finalizers: []string{"kubernetes.io/pv-protection"},
+	},
+	Spec: corev1.PersistentVolumeSpec{
+		Capacity: nil,
+	},
+	Status: corev1.PersistentVolumeStatus{
+		Phase: "Available",
+	},
+}
+
+var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
+	ObjectMeta: v1.ObjectMeta{
+		Name: fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name),
+		Labels: map[string]string{
+			cloudresourcesv1beta1.LabelNfsVolName: deletedGcpNfsVolume.Name,
+			cloudresourcesv1beta1.LabelNfsVolNS:   deletedGcpNfsVolume.Namespace,
+		},
+		Finalizers: []string{"kubernetes.io/pv-protection"},
+	},
+	Spec: corev1.PersistentVolumeSpec{
+		Capacity: nil,
+		PersistentVolumeSource: corev1.PersistentVolumeSource{
+			NFS: &corev1.NFSVolumeSource{
+				Server:   deletedGcpNfsVolume.Status.Hosts[0],
+				Path:     fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName),
+				ReadOnly: false,
+			},
+		},
+	},
+	Status: corev1.PersistentVolumeStatus{
+		Phase: "Available",
+	},
+}
+
+var kcpIpRange = cloudcontrolv1beta1.IpRange{
+	ObjectMeta: v1.ObjectMeta{
+		Name:      "test-ip-range",
+		Namespace: kymaRef.Namespace,
+		Labels: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      gcpNfsVolume.Spec.IpRange.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: gcpNfsVolume.Spec.IpRange.Namespace,
+		},
+	},
+	Spec: cloudcontrolv1beta1.IpRangeSpec{
+		RemoteRef: cloudcontrolv1beta1.RemoteRef{
+			Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
+			Name:      gcpNfsVolume.Spec.IpRange.Name,
+		},
+		Scope: cloudcontrolv1beta1.ScopeRef{
+			Name: kymaRef.Name,
+		},
+		Cidr: "10.20.30.0/24",
+		Options: cloudcontrolv1beta1.IpRangeOptions{
+			Gcp: &cloudcontrolv1beta1.IpRangeGcp{
+				Purpose: cloudcontrolv1beta1.GcpPurposePSA,
+			},
+		},
+	},
 }
 
 var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
@@ -105,25 +180,26 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 				Message:            "NFS is instance is ready",
 			},
 		},
-		Hosts:      []string{"10.0.0.2"},
+		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: gcpNfsVolume.Spec.CapacityGb,
 	},
 }
 
-var gcpNfsInstance2 = cloudcontrolv1beta1.NfsInstance{
+var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 	ObjectMeta: v1.ObjectMeta{
-		Name:      "test-gcp-nfs-instance-2",
+		Name:      "to-delete-gcp-nfs-instance",
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
 			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      "test-gcp-nfs-volume-2",
+			cloudcontrolv1beta1.LabelRemoteName:      "deleted-gcp-nfs-volume",
 			cloudcontrolv1beta1.LabelRemoteNamespace: "test",
 		},
+		Finalizers: []string{cloudcontrolv1beta1.FinalizerName},
 	},
 	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
 			Namespace: "test",
-			Name:      "test-gcp-nfs-volume-2",
+			Name:      "deleted-gcp-nfs-volume",
 		},
 		IpRange: cloudcontrolv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
@@ -160,7 +236,9 @@ func newTestStateFactory() (*testStateFactory, error) {
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).
 		WithObjects(&gcpNfsInstance).
-		WithObjects(&gcpNfsInstance2).
+		WithStatusSubresource(&gcpNfsInstance).
+		WithObjects(&gcpNfsInstanceToDelete).
+		WithStatusSubresource(&gcpNfsInstanceToDelete).
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
 
@@ -171,7 +249,9 @@ func newTestStateFactory() (*testStateFactory, error) {
 	skrClient := fake.NewClientBuilder().
 		WithScheme(skrScheme).
 		WithObjects(&gcpNfsVolume).
+		WithStatusSubresource(&gcpNfsVolume).
 		WithObjects(&deletedGcpNfsVolume).
+		WithStatusSubresource(&deletedGcpNfsVolume).
 		Build()
 	skrCluster := composed.NewStateCluster(skrClient, nil, skrScheme)
 
