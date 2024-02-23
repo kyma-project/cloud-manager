@@ -461,21 +461,21 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 						WithArguments(
 							infra.Ctx(), infra.SKR().Client(), pv,
 						).
-						Should(BeTrue())
+						Should(Succeed())
 					By("And the PersistentVolume in SKR is deleted.")
 
 					Eventually(IsDeleted, timeout, interval).
 						WithArguments(
 							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						).
-						Should(BeTrue())
+						Should(Succeed())
 					By("And the NfsInstance in KCP is deleted.")
 
 					Eventually(IsDeleted, timeout, interval).
 						WithArguments(
 							infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 						).
-						Should(BeTrue())
+						Should(Succeed())
 					By("And the GcpNfsVolume in SKR is deleted.")
 				})
 			})

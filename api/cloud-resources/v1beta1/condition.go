@@ -19,3 +19,10 @@ const (
 	// ConditionReasonIpRangeNotFound used with ConditionTypeError in case IpRange specified in object does not exist
 	ConditionReasonIpRangeNotFound = "IpRangeNotFound"
 )
+
+const (
+	ConditionTypeDeleting = "Deleting"
+
+	ConditionReasonDeletingPV       = "DeletingPersistentVolume"
+	ConditionReasonDeletingInstance = "DeletingInstance"
+)

@@ -68,6 +68,16 @@ func Start() (Infra, error) {
 			return nil, fmt.Errorf("error starting cluster %s: %w", name, err)
 		}
 
+		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s", name))
+		b, err := kubeconfigToBytes(restConfigToKubeconfig(cfg))
+		if err != nil {
+			return nil, fmt.Errorf("error getting %s kubeconfig bytes: %w", name, err)
+		}
+		err = os.WriteFile(kubeconfigFilePath, b, 0644)
+		if err != nil {
+			return nil, fmt.Errorf("error saving %s kubeconfig: %w", name, err)
+		}
+
 		k8sClient, err := ctrlclient.New(cfg, ctrlclient.Options{Scheme: sch})
 		if err != nil {
 			return nil, fmt.Errorf("error creating client for %s: %w", name, err)
