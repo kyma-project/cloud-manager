@@ -10,22 +10,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Ready condition and PV created", Ordered, func() {
+var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
-	Context("Given SKR Cluster", Ordered, func() {
-
-		It("And Given SKR namespace exists", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
+	It("Scenario: SKR AwsNfsVolume is created", func() {
 
 		skrIpRangeName := "aws-nfs-iprange-1"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		skrIpRangeId := "db018167-dd48-4d8c-aa3c-ea9e2ed05307"
 
-		It("And Given SKR IpRange exists", func() {
-
+		By("Given SKR namespace exists", func() {
+			Eventually(CreateNamespace).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
+				Should(Succeed())
+		})
+		By("And Given SKR IpRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
 
@@ -36,8 +34,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 				).
 				Should(Succeed())
 		})
-
-		It("And SKR IpRange has Ready condition", func() {
+		By("And Given SKR IpRange has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -48,14 +45,15 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 				Should(Succeed())
 		})
 
+		awsNfsVolumeName := "aws-nfs-volume-1"
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		awsNfsVolumeCapacity := "100G"
 
-		It("When AwsNfsVolume is created", func() {
+		By("When AwsNfsVolume is created", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
-					WithName("aws-nfs-volume-1"),
+					WithName(awsNfsVolumeName),
 					WithNfsVolumeIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
 				).
@@ -64,7 +62,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
-		It("Then KCP NfsInstance is created", func() {
+		By("Then KCP NfsInstance is created", func() {
 			// load SKR AwsNfsVolume to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -72,7 +70,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 					infra.SKR().Client(),
 					awsNfsVolume,
 					NewObjActions(),
-					AssertAwsNfsVolumeHasId(),
+					WhereAwsNfsVolumeHasId(),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -111,7 +109,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 			Expect(kcpNfsInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))
 		})
 
-		It("When KCP NfsInstance gets Ready condition", func() {
+		By("When KCP NfsInstance has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(),
@@ -123,7 +121,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 				Should(Succeed())
 		})
 
-		It("Then SKR AwsNfsVolume will get Ready condition", func() {
+		By("Then SKR AwsNfsVolume has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -136,7 +134,7 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 		})
 
 		pv := &corev1.PersistentVolume{}
-		It("And Then SKR PersistentVolume will be created", func() {
+		By("And Then SKR PersistentVolume is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -149,6 +147,141 @@ var _ = Describe("Created SKR AwsNfsVolume is projected into KCP and it gets Rea
 				Should(Succeed())
 		})
 
+		By("And Then SKR PersistentVolume has owner reference", func() {
+			Expect(pv.OwnerReferences).To(HaveLen(1), "expected PV to have one owner reference")
+			ref := pv.OwnerReferences[0]
+			Expect(ref.Kind).To(Equal("AwsNfsVolume"))
+			Expect(ref.Name).To(Equal(awsNfsVolume.Name))
+			Expect(ref.UID).To(Equal(awsNfsVolume.UID))
+		})
 	})
 
+	It("Scenario: SKR AwsNfsVolume is deleted", func() {
+
+		skrIpRangeName := "aws-nfs-iprange-2"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		skrIpRangeId := "034fd495-3222-465c-8dc9-4617f7ff0013"
+
+		By("Given SKR namespace exists", func() {
+			Eventually(CreateNamespace).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
+				Should(Succeed())
+		})
+		By("And Given SKR IpRange exists", func() {
+			// tell skriprange reconciler to ignore this SKR IpRange
+			skriprange.Ignore.AddName(skrIpRangeName)
+
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+				).
+				Should(Succeed())
+		})
+		By("And Given SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusCidr(skrIpRange.Spec.Cidr),
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		awsNfsVolumeName := "aws-nfs-volume-2"
+		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		awsNfsVolumeCapacity := "100G"
+
+		By("And Given AwsNfsVolume is created", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					WithName(awsNfsVolumeName),
+					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
+				).
+				Should(Succeed())
+		})
+
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+
+		By("And Given KCP NfsInstance is created", func() {
+			// load SKR AwsNfsVolume to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					WhereAwsNfsVolumeHasId(),
+				).
+				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					NewObjActions(
+						WithName(awsNfsVolume.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					WithNfsInstanceStatusHost(""),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed setting KCP NfsInstance Ready condition")
+		})
+
+		By("And Given SKR AwsNfsVolume has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected AwsNfsVolume to exist and have Ready condition")
+		})
+
+		pv := &corev1.PersistentVolume{}
+		By("And Given SKR PersistentVolume is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pv,
+					NewObjActions(
+						WithName(awsNfsVolume.Name),
+					),
+				).
+				Should(Succeed(), "failed creating PV")
+		})
+
+		// DELETE
+
+		By("When AwsNfsVolume is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed(), "failed deleting PV")
+		})
+
+		By("Then SKR PersistentVolume is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
+				Should(Succeed(), "expected PV not to exist")
+		})
+
+		// TODO: And Then KCP NfsInstance is deleted
+	})
 })

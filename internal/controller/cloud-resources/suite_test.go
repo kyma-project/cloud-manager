@@ -62,6 +62,9 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
 	// Setup controllers
+	// Test Only PV Controller
+	Expect(testinfra.SetupPvController(infra.Registry())).
+		NotTo(HaveOccurred())
 	// CloudResources
 	Expect(SetupCloudResourcesReconciler(infra.Registry())).
 		NotTo(HaveOccurred())

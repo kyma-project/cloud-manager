@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -152,9 +151,4 @@ func Delete(ctx context.Context, client client.Client, obj client.Object) error 
 
 	err = client.Delete(ctx, obj)
 	return err
-}
-
-func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object) bool {
-	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
-	return err != nil && apierrors.IsNotFound(err)
 }

@@ -73,7 +73,7 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 	return err
 }
 
-func AssertAwsNfsVolumeHasId() ObjAssertion {
+func WhereAwsNfsVolumeHasId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume)
 		if !ok {

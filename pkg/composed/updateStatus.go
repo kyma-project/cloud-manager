@@ -29,6 +29,7 @@ type UpdateStatusBuilder struct {
 	successLogMsg      string
 	failedError        error
 	successError       error
+	successErrorNil    bool
 	updateErrorWrapper func(err error) error
 	onUpdateError      func(ctx context.Context, err error) (error, context.Context)
 	onUpdateSuccess    func(ctx context.Context) (error, context.Context)
@@ -118,6 +119,12 @@ func (b *UpdateStatusBuilder) SuccessError(err error) *UpdateStatusBuilder {
 	return b
 }
 
+func (b *UpdateStatusBuilder) SuccessErrorNil() *UpdateStatusBuilder {
+	b.successErrorNil = true
+	b.successError = nil
+	return b
+}
+
 func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, context.Context) {
 	b.setDefaults()
 
@@ -166,7 +173,7 @@ func (b *UpdateStatusBuilder) setDefaults() {
 		}
 	}
 
-	if b.successError == nil {
+	if b.successError == nil && !b.successErrorNil {
 		b.successError = StopAndForget
 	}
 	if b.failedError == nil {

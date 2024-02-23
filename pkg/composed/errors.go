@@ -50,7 +50,7 @@ func IsStopWithRequeueDelay(err error) bool {
 }
 
 func IsBreak(err error) bool {
-	return err == Break
+	return errors.Is(err, Break)
 }
 
 func IsTerminal(err error) bool {

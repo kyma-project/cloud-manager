@@ -3,10 +3,12 @@ package awsnfsvolume
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func createVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -31,7 +33,9 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: state.Obj().GetNamespace(),
 			Name:      state.Obj().GetName(),
-			Labels:    map[string]string{},
+			Labels: map[string]string{
+				cloudresourcesv1beta1.LabelCloudManaged: "true",
+			},
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{
@@ -47,7 +51,11 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 		},
 	}
-	err := state.Cluster().K8sClient().Create(ctx, pv)
+	err := controllerutil.SetOwnerReference(state.ObjAsAwsNfsVolume(), pv, state.Cluster().Scheme())
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error setting owner reference", composed.StopAndForget, ctx)
+	}
+	err = state.Cluster().K8sClient().Create(ctx, pv)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating PV for AwsNfsVolume", composed.StopWithRequeue, ctx)
 	}
