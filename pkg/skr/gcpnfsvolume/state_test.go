@@ -6,6 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -79,7 +80,17 @@ var pvGcpNfsVolume = corev1.PersistentVolume{
 		Finalizers: []string{"kubernetes.io/pv-protection"},
 	},
 	Spec: corev1.PersistentVolumeSpec{
-		Capacity: nil,
+		Capacity: corev1.ResourceList{
+			"storage": resource.Quantity{
+				Format: "1024Gi",
+			},
+		},
+		PersistentVolumeSource: corev1.PersistentVolumeSource{
+			NFS: &corev1.NFSVolumeSource{
+				Server: gcpNfsVolume.Status.Hosts[0],
+				Path:   fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName),
+			},
+		},
 	},
 	Status: corev1.PersistentVolumeStatus{
 		Phase: "Available",
