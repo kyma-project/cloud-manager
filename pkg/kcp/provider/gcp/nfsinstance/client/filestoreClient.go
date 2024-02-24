@@ -17,7 +17,7 @@ type FilestoreClient interface {
 	PatchFilestoreInstance(ctx context.Context, projectId, location, instanceId, updateMask string, instance *file.Instance) (*file.Operation, error)
 }
 
-func NewFilestoreClient() client.ClientProvider[FilestoreClient] {
+func NewFilestoreClientProvider() client.ClientProvider[FilestoreClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, saJsonKeyPath string) (FilestoreClient, error) {
 			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
@@ -29,12 +29,12 @@ func NewFilestoreClient() client.ClientProvider[FilestoreClient] {
 			if err != nil {
 				return nil, err
 			}
-			return newFilestoreClient(fsClient), nil
+			return NewFilestoreClient(fsClient), nil
 		},
 	)
 }
 
-func newFilestoreClient(svcFilestore *file.Service) FilestoreClient {
+func NewFilestoreClient(svcFilestore *file.Service) FilestoreClient {
 	return &filestoreClient{svcFilestore: svcFilestore}
 }
 
