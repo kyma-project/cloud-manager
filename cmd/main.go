@@ -146,7 +146,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpFilestoreClient.NewFilestoreClient(),
+		gcpFilestoreClient.NewFilestoreClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
