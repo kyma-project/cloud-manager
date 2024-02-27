@@ -32,8 +32,8 @@ var PVEventHandler handler.Funcs = handler.Funcs{
 }
 
 func isMatchingPV(obj client.Object) (bool, *types.NamespacedName) {
-	pv := v1.PersistentVolume{}
-	if obj.GetObjectKind() != pv.GetObjectKind() {
+
+	if _, ok := obj.(*v1.PersistentVolume); !ok {
 		return false, nil
 	}
 
