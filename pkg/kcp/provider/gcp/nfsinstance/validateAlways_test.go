@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"net/http"
+	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
 )
@@ -21,14 +23,18 @@ func (suite *validateAlwaysSuite) SetupTest() {
 }
 
 func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return // no-op
+	}))
+
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	testState, err := factory.newStateWith(ctx, getInstanceWithoutStatus())
+	testState, err := factory.newStateWith(ctx, getGcpNfsInstanceWithoutStatus(), "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
@@ -37,16 +43,19 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
 }
 
 func (suite *validateAlwaysSuite) TestValidateAlwaysInvalidCapacity() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return // no-op
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	instance := getInstanceWithoutStatus()
+	instance := getGcpNfsInstanceWithoutStatus()
 	instance.Spec.Instance.Gcp.CapacityGb = 100
-	testState, err := factory.newStateWith(ctx, instance)
+	testState, err := factory.newStateWith(ctx, instance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
