@@ -14,11 +14,9 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
-	"net/http"
 	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"time"
@@ -93,7 +91,7 @@ func getGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 	}
 }
 
-func getInstanceWithoutStatus() *cloudcontrolv1beta1.NfsInstance {
+func getGcpNfsInstanceWithoutStatus() *cloudcontrolv1beta1.NfsInstance {
 	var gcpNfsInstance2 = getGcpNfsInstance().DeepCopy()
 	gcpNfsInstance2.Name = "test-gcp-nfs-instance-2"
 	gcpNfsInstance2.Labels[cloudcontrolv1beta1.LabelRemoteName] = "test-gcp-nfs-volume-2"
@@ -111,7 +109,7 @@ type testStateFactory struct {
 	fakeHttpServer         *httptest.Server
 }
 
-func newTestStateFactory() (*testStateFactory, error) {
+func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
 
 	kcpScheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
@@ -120,18 +118,18 @@ func newTestStateFactory() (*testStateFactory, error) {
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).
 		WithObjects(getGcpNfsInstance()).
-		WithObjects(getInstanceWithoutStatus()).
+		WithObjects(getGcpNfsInstanceWithoutStatus()).
 		WithObjects(getDeletedGcpNfsInstance()).
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
-	fakeFileStoreClientProvider, fakeHttpServer := NewFakeFilestoreClientProvider()
+	fakeFileStoreClientProvider := NewFakeFilestoreClientProvider(fakeHttpServer)
 	factory := NewStateFactory(fakeFileStoreClientProvider, abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"}))
 
 	return &testStateFactory{
 		factory:                factory,
 		kcpCluster:             kcpCluster,
 		nfsInstance:            getGcpNfsInstance(),
-		nfsInstanceNoCondition: getInstanceWithoutStatus(),
+		nfsInstanceNoCondition: getGcpNfsInstanceWithoutStatus(),
 		deletedNfsInstance:     getDeletedGcpNfsInstance(),
 		fakeHttpServer:         fakeHttpServer,
 	}, nil
@@ -143,19 +141,33 @@ type TestState struct {
 	FakeHttpServer *httptest.Server
 }
 
-func (f *testStateFactory) newState(ctx context.Context) (*TestState, error) {
-	return f.newStateWith(ctx, getGcpNfsInstance())
-}
-
-func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudcontrolv1beta1.NfsInstance) (*TestState, error) {
+func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudcontrolv1beta1.NfsInstance, opIdentifier string) (*TestState, error) {
 	focalState := focal.NewStateFactory().NewState(composed.NewStateFactory(f.kcpCluster).NewState(
 		types.NamespacedName{
 			Name:      nfsInstance.Name,
 			Namespace: nfsInstance.Namespace,
 		}, nfsInstance))
+	focalState.SetScope(&cloudcontrolv1beta1.Scope{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      kymaRef.Name,
+			Namespace: kymaRef.Namespace,
+		},
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			Region: "us-west1",
+			Scope: cloudcontrolv1beta1.ScopeInfo{
+				Gcp: &cloudcontrolv1beta1.GcpScope{
+					Project:    "test-project",
+					VpcNetwork: "test-vpc",
+				},
+			},
+		},
+	})
 	typesState := newTypesState(focalState)
 
 	state, err := f.factory.NewState(ctx, typesState)
+	if opIdentifier != "" {
+		state.ObjAsNfsInstance().Status.OpIdentifier = opIdentifier
+	}
 	if err != nil {
 		return nil, err
 	} else {
@@ -166,49 +178,7 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 	}
 }
 
-func NewFakeFilestoreClientProvider() (client.ClientProvider[client2.FilestoreClient], *httptest.Server) {
-	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var opResp *file.Operation
-		switch r.Method {
-		case http.MethodGet:
-			if r.URL.Path == "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume" {
-
-			}
-			if r.URL.Path == "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume-2" {
-
-			}
-			//Check if url path is for operation
-			if r.URL.Path == "/projects/test-project/locations/us-west1/operations/create-operation" {
-				// check if operation name is create-operation
-			}
-
-		case http.MethodPost:
-			opResp = &file.Operation{
-				Name: "create-operation",
-				Done: false,
-			}
-		case http.MethodPatch:
-			opResp = &file.Operation{
-				Name: "patch-operation",
-				Done: false,
-			}
-		case http.MethodDelete:
-			opResp = &file.Operation{
-				Name: "delete-operation",
-				Done: false,
-			}
-		}
-		b, err := json.Marshal(opResp)
-		if err != nil {
-			http.Error(w, "unable to marshal request: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		_, err = w.Write(b)
-		if err != nil {
-			http.Error(w, "unable to write to provided ResponseWriter: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}))
+func NewFakeFilestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[client2.FilestoreClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, saJsonKeyPath string) (client2.FilestoreClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
@@ -217,7 +187,7 @@ func NewFakeFilestoreClientProvider() (client.ClientProvider[client2.FilestoreCl
 			}
 			return client2.NewFilestoreClient(fsClient), nil
 		},
-	), fakeHttpServer
+	)
 }
 
 type typesState struct {
