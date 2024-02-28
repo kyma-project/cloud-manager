@@ -26,15 +26,15 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return // no-op
 	}))
-
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstanceWithoutStatus := getGcpNfsInstanceWithoutStatus()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstanceWithoutStatus)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstanceWithoutStatus(), "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstanceWithoutStatus, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
@@ -46,16 +46,16 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysInvalidCapacity() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return // no-op
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstanceWithoutStatus := getGcpNfsInstanceWithoutStatus()
+	gcpNfsInstanceWithoutStatus.Spec.Instance.Gcp.CapacityGb = 100
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstanceWithoutStatus)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	instance := getGcpNfsInstanceWithoutStatus()
-	instance.Spec.Instance.Gcp.CapacityGb = 100
-	testState, err := factory.newStateWith(ctx, instance, "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstanceWithoutStatus, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
