@@ -32,7 +32,8 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		return
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -40,7 +41,7 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
@@ -78,7 +79,8 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 		}
 		return
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -86,7 +88,7 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "/projects/test-project/locations/us-west1/operations/create-operation")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkGcpOperation(ctx, testState.State)
@@ -124,7 +126,8 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 		}
 		return
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -132,7 +135,7 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "/projects/test-project/locations/us-west1/operations/create-operation")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
@@ -166,7 +169,8 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() 
 		}
 		return
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -174,7 +178,7 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() 
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "/projects/test-project/locations/us-west1/operations/create-operation")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)

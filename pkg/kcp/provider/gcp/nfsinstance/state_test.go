@@ -109,17 +109,18 @@ type testStateFactory struct {
 	fakeHttpServer         *httptest.Server
 }
 
-func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
+func newTestStateFactory(fakeHttpServer *httptest.Server, objects ...*cloudcontrolv1beta1.NfsInstance) (*testStateFactory, error) {
 
 	kcpScheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
-	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
-		WithObjects(getGcpNfsInstance()).
-		WithObjects(getGcpNfsInstanceWithoutStatus()).
-		WithObjects(getDeletedGcpNfsInstance()).
+	kcpClientBuilder := fake.NewClientBuilder().
+		WithScheme(kcpScheme)
+	for _, obj := range objects {
+		kcpClientBuilder = kcpClientBuilder.WithObjects(obj).WithStatusSubresource(obj)
+	}
+	kcpClient := kcpClientBuilder.
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
 	fakeFileStoreClientProvider := NewFakeFilestoreClientProvider(fakeHttpServer)

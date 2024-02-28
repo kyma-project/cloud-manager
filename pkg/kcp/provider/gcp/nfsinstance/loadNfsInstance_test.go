@@ -38,7 +38,8 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -46,7 +47,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := loadNfsInstance(ctx, testState.State)
@@ -68,15 +69,15 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceOtherErrors() {
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = loadNfsInstance(ctx, testState.State)
@@ -102,7 +103,8 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
-	factory, err := newTestStateFactory(fakeHttpServer)
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
 	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -110,7 +112,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 
 	//Get state object with GcpNfsVolume
 
-	testState, err := factory.newStateWith(ctx, getGcpNfsInstance(), "")
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := loadNfsInstance(ctx, testState.State)
