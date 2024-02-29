@@ -37,7 +37,8 @@ func getDeletedGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 			},
 			Finalizers: []string{"test-finalizer"},
 		},
-		Spec: cloudcontrolv1beta1.NfsInstanceSpec{},
+		Spec:   cloudcontrolv1beta1.NfsInstanceSpec{},
+		Status: cloudcontrolv1beta1.NfsInstanceStatus{},
 	}
 }
 
@@ -75,7 +76,6 @@ func getGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 		},
 		Status: cloudcontrolv1beta1.NfsInstanceStatus{
 			State: "Ready",
-			Id:    "gcp-filestore-1",
 			Conditions: []v1.Condition{
 				{
 					Type:               "Ready",
@@ -168,6 +168,15 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 	state, err := f.factory.NewState(ctx, typesState)
 	if opIdentifier != "" {
 		state.ObjAsNfsInstance().Status.OpIdentifier = opIdentifier
+	}
+	if state.ObjAsNfsInstance().Spec.IpRange.Name != "" {
+		state.SetIpRange(&cloudcontrolv1beta1.IpRange{
+			Spec: cloudcontrolv1beta1.IpRangeSpec{
+				RemoteRef: cloudcontrolv1beta1.RemoteRef{
+					Name: state.ObjAsNfsInstance().Spec.IpRange.Name,
+				},
+			},
+		})
 	}
 	if err != nil {
 		return nil, err

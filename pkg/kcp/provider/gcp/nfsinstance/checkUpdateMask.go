@@ -19,8 +19,8 @@ func checkUpdateMask(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	//If capacity is increased, add it to updateMask
-	if nfsInstance.Spec.Instance.Gcp.CapacityGb > int(state.fsInstance.FileShares[0].CapacityGb) {
+	//If capacity is different, add it to updateMask
+	if nfsInstance.Spec.Instance.Gcp.CapacityGb != int(state.fsInstance.FileShares[0].CapacityGb) {
 		state.updateMask = append(state.updateMask, "FileShares")
 	}
 	return nil, nil
