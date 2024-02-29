@@ -28,12 +28,12 @@ func NewComputeClient() client.ClientProvider[ComputeClient] {
 			if err != nil {
 				return nil, err
 			}
-			return newComputeClient(computeClient), nil
+			return NewComputeClientForService(computeClient), nil
 		},
 	)
 }
 
-func newComputeClient(svcCompute *compute.Service) ComputeClient {
+func NewComputeClientForService(svcCompute *compute.Service) ComputeClient {
 	return &computeClient{svcCompute: svcCompute}
 }
 

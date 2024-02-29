@@ -33,12 +33,12 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 			if err != nil {
 				return nil, err
 			}
-			return newServiceNetworkingClient(svcNetClient, httpClient), nil
+			return NewServiceNetworkingClientForService(svcNetClient, httpClient), nil
 		},
 	)
 }
 
-func newServiceNetworkingClient(svcNet *servicenetworking.APIService, httpClient *http.Client) ServiceNetworkingClient {
+func NewServiceNetworkingClientForService(svcNet *servicenetworking.APIService, httpClient *http.Client) ServiceNetworkingClient {
 	return &serviceNetworkingClient{svcNet: svcNet, httpClient: httpClient}
 }
 
