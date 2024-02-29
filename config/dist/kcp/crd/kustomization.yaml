@@ -6,3 +6,6 @@ resources:
 - bases/cloud-control.kyma-project.io_vpcpeerings.yaml
 - bases/cloud-control.kyma-project.io_ipranges.yaml
 - bases/cloud-control.kyma-project.io_scopes.yaml
+
+commonLabels:
+  app.kubernetes.io/component: cloud-manager.kyma-project.io
