@@ -18,11 +18,11 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"awsNfsInstance",
-			// aws nfs actions here
 			addFinalizer,
 			findSecurityGroup,
 			createSecurityGroup,
 			loadSecurityGroup,
+			authorizeSecurityGroupIngress,
 			loadEfs,
 			createEfs,
 			waitEfsAvailable,

@@ -50,6 +50,9 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 					AccountId:  pointer.StringDeref(callerIdentity.Account, ""),
 					VpcNetwork: commonVpcName(state.shootNamespace, state.shootName),
 					Network: cloudcontrolv1beta1.AwsNetwork{
+						Nodes:    pointer.StringDeref(state.shoot.Spec.Networking.Nodes, ""),
+						Pods:     pointer.StringDeref(state.shoot.Spec.Networking.Pods, ""),
+						Services: pointer.StringDeref(state.shoot.Spec.Networking.Services, ""),
 						VPC: cloudcontrolv1beta1.AwsVPC{
 							Id:   pointer.StringDeref(infra.Networks.VPC.ID, ""),
 							CIDR: pointer.StringDeref(infra.Networks.VPC.CIDR, ""),

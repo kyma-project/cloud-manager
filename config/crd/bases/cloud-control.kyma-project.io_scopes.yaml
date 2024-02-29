@@ -50,14 +50,20 @@ spec:
                         type: string
                       network:
                         properties:
-                          VPC:
+                          nodes:
+                            type: string
+                          pods:
+                            type: string
+                          services:
+                            type: string
+                          vpc:
                             properties:
                               cidr:
                                 type: string
                               id:
                                 type: string
                             type: object
-                          Zones:
+                          zones:
                             items:
                               properties:
                                 internal:
@@ -76,8 +82,8 @@ spec:
                               type: object
                             type: array
                         required:
-                        - VPC
-                        - Zones
+                        - vpc
+                        - zones
                         type: object
                       vpcNetwork:
                         type: string

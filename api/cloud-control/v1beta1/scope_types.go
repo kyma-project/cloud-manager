@@ -81,8 +81,17 @@ type AwsScope struct {
 }
 
 type AwsNetwork struct {
-	VPC   AwsVPC    `json:"VPC"`
-	Zones []AwsZone `json:"Zones"`
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+
+	VPC   AwsVPC    `json:"vpc"`
+	Zones []AwsZone `json:"zones"`
 }
 
 type AwsVPC struct {

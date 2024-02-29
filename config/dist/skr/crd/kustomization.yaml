@@ -3,4 +3,3 @@
 # It should be run by config/default
 resources:
 - bases/cloud-resources.kyma-project.io_cloudresources.yaml
-- bases/cloud-resources.kyma-project.io_ipranges.yaml
