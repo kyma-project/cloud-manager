@@ -1,0 +1,5 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: CloudResources
+metadata:
+  name: default
+  namespace: kyma-system

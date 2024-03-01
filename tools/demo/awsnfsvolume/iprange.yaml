@@ -1,0 +1,6 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: IpRange
+metadata:
+  name: nfs-range-1
+spec:
+  cidr: 10.181.0.0/16

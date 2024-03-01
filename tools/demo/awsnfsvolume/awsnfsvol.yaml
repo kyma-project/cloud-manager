@@ -1,0 +1,9 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsNfsVolume
+metadata:
+  name: nfs-vol-1
+spec:
+  ipRange:
+    name: nfs-range-1
+    namespace: default
+  capacity: 10G

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/pointer"
@@ -78,7 +79,10 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 
 		idx := indexMap[zn]
 		subnet, err := state.client.CreateSubnet(ctx, aws.ToString(state.vpc.VpcId), zn, rng, awsutil.Ec2Tags(
-			"Name", fmt.Sprintf("%s-%d", state.ObjAsIpRange().Spec.RemoteRef.String(), idx),
+			"Name", fmt.Sprintf("%s-%d", state.ObjAsIpRange().Name, idx),
+			common.TagCloudManagerName, state.Name().String(),
+			common.TagCloudManagerRemoteName, state.ObjAsIpRange().Spec.RemoteRef.String(),
+			common.TagScope, state.ObjAsIpRange().Spec.Scope.Name,
 			tagKey, "1",
 		))
 		if err != nil {

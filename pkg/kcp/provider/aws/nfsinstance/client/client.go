@@ -96,7 +96,7 @@ func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId stri
 		IpPermissions: ipPermissions,
 	})
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }
