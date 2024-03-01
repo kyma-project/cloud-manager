@@ -93,14 +93,31 @@ func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontr
 	snc, _ := f.serviceNetworkingClientProvider(ctx, "test")
 	cc, _ := f.computeClientProvider(ctx, "test")
 
-	return newState(newTypesState(
-		focal.NewStateFactory().NewState(
-			composed.NewStateFactory(f.kcpCluster).NewState(
-				types.NamespacedName{
-					Name:      ipRange.Name,
-					Namespace: ipRange.Namespace,
+	focalState := focal.NewStateFactory().NewState(
+		composed.NewStateFactory(f.kcpCluster).NewState(
+			types.NamespacedName{
+				Name:      ipRange.Name,
+				Namespace: ipRange.Namespace,
+			},
+			ipRange))
+
+	focalState.SetScope(&cloudcontrolv1beta1.Scope{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      kymaRef.Name,
+			Namespace: kymaRef.Namespace,
+		},
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			Region: "us-west1",
+			Scope: cloudcontrolv1beta1.ScopeInfo{
+				Gcp: &cloudcontrolv1beta1.GcpScope{
+					Project:    "test-project",
+					VpcNetwork: "test-vpc",
 				},
-				ipRange))), snc, cc), nil
+			},
+		},
+	})
+
+	return newState(newTypesState(focalState), snc, cc), nil
 
 }
 
