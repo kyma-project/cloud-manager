@@ -53,15 +53,11 @@ var projectNumbers map[string]int64 = make(map[string]int64)
 var projectNumbersMutex sync.Mutex
 
 // GetCachedProjectNumber get project number from cloud resources manager for a given project id
-func GetCachedProjectNumber(ctx context.Context, projectId string, httpClient *http.Client) (int64, error) {
+func GetCachedProjectNumber(ctx context.Context, projectId string, crmService *cloudresourcemanager.Service) (int64, error) {
 	projectNumbersMutex.Lock()
 	defer projectNumbersMutex.Unlock()
 	projectNumber, ok := projectNumbers[projectId]
 	if !ok {
-		crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
-		if err != nil {
-			return 0, err
-		}
 		project, err := crmService.Projects.Get(projectId).Do()
 		if err != nil {
 			return 0, err

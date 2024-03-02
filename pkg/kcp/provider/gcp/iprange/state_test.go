@@ -10,6 +10,7 @@ import (
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"
@@ -19,7 +20,6 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
-	"net/http"
 	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -43,7 +43,11 @@ func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.Cl
 			if err != nil {
 				return nil, err
 			}
-			return iprangeclient.NewServiceNetworkingClientForService(svcNwClient, &http.Client{}), nil
+			crmService, err := cloudresourcemanager.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
+			if err != nil {
+				return nil, err
+			}
+			return iprangeclient.NewServiceNetworkingClientForService(svcNwClient, crmService), nil
 		},
 	)
 }
@@ -133,6 +137,7 @@ func newTypesState(focalState focal.State) iprangetypes.State {
 	return &typesState{State: focalState}
 }
 
+// **** Global variables ****
 var kymaRef = klog.ObjectRef{
 	Name:      "skr",
 	Namespace: "test",
@@ -149,11 +154,12 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 			cloudcontrolv1beta1.LabelRemoteName:      "test-gcp-ip-range",
 			cloudcontrolv1beta1.LabelRemoteNamespace: "test",
 		},
+		Finalizers: []string{cloudcontrolv1beta1.FinalizerName},
 	},
 	Spec: cloudcontrolv1beta1.IpRangeSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
-			Namespace: "test-gcp-ip-range",
-			Name:      "test",
+			Namespace: "test",
+			Name:      "test-gcp-ip-range",
 		},
 		Scope: cloudcontrolv1beta1.ScopeRef{
 			Name: kymaRef.Name,
@@ -166,3 +172,12 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 		},
 	},
 }
+
+var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
+var urlGlobalAddress = "/projects/test-project/global/addresses"
+var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, gcpIpRange.Spec.RemoteRef.Name)
+
+var urlSvcNetworking = "services/servicenetworking.googleapis.com/connections"
+var getUrlSvcNw = fmt.Sprintf("%s/%s", urlSvcNetworking, client.PsaPeeringName)
+
+var getUrlCrmSvc = "projects/test-project"

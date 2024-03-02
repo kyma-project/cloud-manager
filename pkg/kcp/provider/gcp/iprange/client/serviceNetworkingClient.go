@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"net/http"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -33,18 +33,22 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 			if err != nil {
 				return nil, err
 			}
-			return NewServiceNetworkingClientForService(svcNetClient, httpClient), nil
+			crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, err
+			}
+			return NewServiceNetworkingClientForService(svcNetClient, crmService), nil
 		},
 	)
 }
 
-func NewServiceNetworkingClientForService(svcNet *servicenetworking.APIService, httpClient *http.Client) ServiceNetworkingClient {
-	return &serviceNetworkingClient{svcNet: svcNet, httpClient: httpClient}
+func NewServiceNetworkingClientForService(svcNet *servicenetworking.APIService, crmService *cloudresourcemanager.Service) ServiceNetworkingClient {
+	return &serviceNetworkingClient{svcNet: svcNet, crmService: crmService}
 }
 
 type serviceNetworkingClient struct {
 	svcNet     *servicenetworking.APIService
-	httpClient *http.Client
+	crmService *cloudresourcemanager.Service
 }
 
 func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
@@ -60,7 +64,7 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 
 func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	ProjectNumber, err := client.GetCachedProjectNumber(ctx, projectId, c.httpClient)
+	ProjectNumber, err := client.GetCachedProjectNumber(ctx, projectId, c.crmService)
 	if err != nil {
 		return nil, err
 	}

@@ -24,8 +24,6 @@ type checkGcpOperationSuite struct {
 	ctx context.Context
 }
 
-var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
-
 func (suite *checkGcpOperationSuite) SetupTest() {
 	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
@@ -48,7 +46,7 @@ func (suite *checkGcpOperationSuite) TestWhenOpIdentifierIsNil() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
-	//Call checkGcpOperation
+	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), err)
 	assert.Nil(suite.T(), resCtx)
@@ -76,7 +74,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwGetOperationFailed() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//Get state object with GcpNfsVolume
+	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
 	ipRange.Status.State = client.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
@@ -86,6 +84,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwGetOperationFailed() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, _ = checkGcpOperation(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 
@@ -138,7 +137,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationFailed() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//Get state object with GcpNfsVolume
+	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
 	ipRange.Status.State = client.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
@@ -148,6 +147,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationFailed() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, _ = checkGcpOperation(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 
@@ -206,6 +206,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), resCtx)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
@@ -255,6 +256,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), err)
 	assert.Nil(suite.T(), resCtx)
@@ -282,7 +284,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeGetOperationFailed() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//Get state object with GcpNfsVolume
+	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
 	ipRange.Status.State = client.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
@@ -292,6 +294,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeGetOperationFailed() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, _ = checkGcpOperation(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 
@@ -347,7 +350,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationFailed() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//Get state object with GcpNfsVolume
+	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
 	ipRange.Status.State = client.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
@@ -357,6 +360,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationFailed() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, _ = checkGcpOperation(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 
@@ -415,6 +419,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), resCtx)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
@@ -464,6 +469,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 
+	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), err)
 	assert.Nil(suite.T(), resCtx)
