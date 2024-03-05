@@ -1,6 +1,6 @@
 module-name: cloud-manager
 protecode:
-  - europe-docker.pkg.dev/kyma-project/dev/cloud-resources-manager:PR-75
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:v20240304-85958aa0
 whitesource:
   language: golang-mod
   subprojects: false
