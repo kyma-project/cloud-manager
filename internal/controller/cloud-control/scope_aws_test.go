@@ -43,7 +43,7 @@ var _ = Describe("KCP Scope", func() {
 
 		By("When Kyma Module is listed in spec", func() {
 			Eventually(UpdateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaModuleListedInSpec(), WithKymaModuleChannelInSpec("dev")).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaModuleState(util.KymaModuleStateProcessing), WithKymaModuleChannelInSpec("dev")).
 				Should(Succeed(), "failed updating KymaCR module to Ready state")
 
 			Eventually(LoadAndCheck).
