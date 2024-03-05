@@ -229,6 +229,12 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
+  - kymas/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - operator.kyma-project.io
+  resources:
   - kymas/status
   verbs:
   - get

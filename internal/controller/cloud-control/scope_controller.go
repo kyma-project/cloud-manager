@@ -49,6 +49,7 @@ type ScopeReconciler struct {
 //+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes/finalizers,verbs=update
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas,verbs=get;list;watch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/status,verbs=get
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
