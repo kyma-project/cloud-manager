@@ -41,11 +41,13 @@ var _ = Describe("KCP Scope", func() {
 				Should(Not(Succeed()), "expected Scope not to exist")
 		})
 
-		By("When Kyma Module is listed in status in Processing state", func() {
+		By("When Kyma Module is listed in status", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateProcessing)).
 				Should(Succeed(), "failed updating KymaCR module to Processing state")
+		})
 
+		By("Then Scope is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(WithName(kymaName))).
 				Should(Succeed(), "expected Scope to be created")
