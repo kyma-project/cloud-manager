@@ -27,7 +27,7 @@ var _ = Describe("KCP Scope", func() {
 		kymaCR := util.NewKymaUnstructured()
 		By("And Given Kyma CR exists", func() {
 			Eventually(CreateKymaCR).
-				WithArguments(infra.Ctx(), infra, kymaCR, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, kymaCR, WithName(kymaName), WithKymaSpecChannel("dev")).
 				Should(Succeed(), "failed creating kyma cr")
 		})
 
@@ -41,10 +41,10 @@ var _ = Describe("KCP Scope", func() {
 				Should(Not(Succeed()), "expected Scope not to exist")
 		})
 
-		By("When Kyma Module is listed in spec", func() {
-			Eventually(UpdateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaModuleState(util.KymaModuleStateProcessing), WithKymaModuleChannelInSpec("dev")).
-				Should(Succeed(), "failed updating KymaCR module to Ready state")
+		By("When Kyma Module is listed in status in Processing state", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateProcessing)).
+				Should(Succeed(), "failed updating KymaCR module to Processing state")
 
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(WithName(kymaName))).

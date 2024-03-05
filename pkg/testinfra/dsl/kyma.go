@@ -17,7 +17,7 @@ const (
 	DefaultModuleName = "cloud-manager"
 )
 
-func WithKymaModuleChannelInSpec(channel string) ObjAction {
+func WithKymaSpecChannel(channel string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if channel == "" {
@@ -69,7 +69,7 @@ func WithKymaModuleRemovedInSpec() ObjAction {
 	}
 }
 
-func WithKymaModuleState(state util.KymaModuleState) ObjStatusAction {
+func WithKymaStatusModuleState(state util.KymaModuleState) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			x, ok := obj.(*unstructured.Unstructured)

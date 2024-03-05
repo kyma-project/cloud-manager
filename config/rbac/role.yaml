@@ -65,7 +65,7 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - scope
+  - scopes
   verbs:
   - create
   - delete
@@ -77,13 +77,13 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - scope/finalizers
+  - scopes/finalizers
   verbs:
   - update
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - scope/status
+  - scopes/status
   verbs:
   - get
   - patch
