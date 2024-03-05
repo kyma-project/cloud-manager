@@ -36,9 +36,15 @@ type node struct {
 }
 
 func (n *node) prepare() {
+	addChildrenDurations := false
+	if n.duration == 0 {
+		addChildrenDurations = true
+	}
 	for _, child := range n.items {
 		child.prepare()
-		//n.duration = n.duration + child.duration
+		if addChildrenDurations {
+			n.duration = n.duration + child.duration
+		}
 	}
 }
 
@@ -46,7 +52,7 @@ func (n *node) print() {
 	color.NoColor = false
 	fmt.Println()
 	n.prepare()
-	n.printInternal(0, n.maxNameLen()+14) // 14 estimated max indent
+	n.printInternal(0, n.maxNameLen()+24) // 14 estimated max indent
 }
 
 func (n *node) maxNameLen() int {
