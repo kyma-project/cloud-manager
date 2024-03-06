@@ -17,6 +17,8 @@ COPY api api/
 COPY pkg pkg/
 COPY internal/controller internal/controller/
 COPY config/dist/skr/crd/bases/providers providers/
+RUN find /src/providers -type d -exec chmod +rx {} \;
+RUN find /src/providers -type f -exec chmod +r {} \;
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
@@ -30,7 +32,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /src/manager .
-COPY --from=builder /src/providers /cloud-manager/providers/
+COPY --chown=65532:65532 --from=builder /src/providers /cloud-manager/providers/
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
