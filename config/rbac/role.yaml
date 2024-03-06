@@ -225,6 +225,7 @@ rules:
   verbs:
   - get
   - list
+  - update
   - watch
 - apiGroups:
   - operator.kyma-project.io
