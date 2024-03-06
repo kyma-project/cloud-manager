@@ -91,6 +91,8 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 
 		if options.provider != nil {
 			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", *options.provider))
+			// TODO: remove me
+			logger.Info("Dummy test, TODO: remove me")
 			instlr := &installer{
 				skrProvidersPath: os.Getenv("SKR_PROVIDERS"),
 				logger:           logger,
