@@ -97,7 +97,9 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			}
 			err = instlr.Handle(ctx, string(*options.provider), skrManager)
 			if err != nil {
-				logger.Error(err, "Error installing provider %s dependencies", options.provider)
+				logger.
+					WithValues("provider", options.provider).
+					Error(err, "Error installing dependencies")
 				return
 			}
 		}
