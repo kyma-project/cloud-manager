@@ -10,6 +10,8 @@ rules:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
