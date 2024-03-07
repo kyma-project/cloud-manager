@@ -71,7 +71,7 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 		WithObjects(&gcpIpRange).
 		WithStatusSubresource(&gcpIpRange).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
 	computeClientProvider := newFakeComputeClientProvider(fakeHttpServer)
 	svcNwClientProvider := newFakeServiceNetworkingProvider(fakeHttpServer)

@@ -19,7 +19,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 	logger.Info("Loading gardener credentials")
 
 	secret := &corev1.Secret{}
-	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
+	err := state.Cluster().ApiReader().Get(ctx, types.NamespacedName{
 		Namespace: "kcp-system",
 		Name:      "gardener-credentials",
 	}, secret)

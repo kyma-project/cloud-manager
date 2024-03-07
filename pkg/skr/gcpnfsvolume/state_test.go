@@ -251,7 +251,7 @@ func newTestStateFactory() (*testStateFactory, error) {
 		WithObjects(&gcpNfsInstanceToDelete).
 		WithStatusSubresource(&gcpNfsInstanceToDelete).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
 	skrScheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
@@ -264,7 +264,7 @@ func newTestStateFactory() (*testStateFactory, error) {
 		WithObjects(&deletedGcpNfsVolume).
 		WithStatusSubresource(&deletedGcpNfsVolume).
 		Build()
-	skrCluster := composed.NewStateCluster(skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
 
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster)
 
