@@ -111,6 +111,10 @@ func Start() (Infra, error) {
 			},
 		},
 	})
+	reader := kcpMgr.GetAPIReader()
+	if reader == nil {
+		return nil, errors.New("KCP Manager API Reader is nil")
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error creating KCP manager: %w", err)
 	}

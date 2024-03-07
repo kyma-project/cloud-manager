@@ -10,15 +10,18 @@ import (
 )
 
 func NewStateClusterFromCluster(cluster cluster.Cluster) StateCluster {
-	return NewStateCluster(cluster.GetClient(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
+	return NewStateCluster(cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
 }
 
-func NewStateCluster(client client.Client,
+func NewStateCluster(
+	client client.Client,
+	reader client.Reader,
 	eventRecorder record.EventRecorder,
 	scheme *runtime.Scheme,
 ) StateCluster {
 	return &stateCluster{
 		client:        client,
+		reader:        reader,
 		eventRecorder: eventRecorder,
 		scheme:        scheme,
 	}
@@ -26,18 +29,24 @@ func NewStateCluster(client client.Client,
 
 type StateCluster interface {
 	K8sClient() client.Client
+	ApiReader() client.Reader
 	EventRecorder() record.EventRecorder
 	Scheme() *runtime.Scheme
 }
 
 type stateCluster struct {
 	client        client.Client
+	reader        client.Reader
 	eventRecorder record.EventRecorder
 	scheme        *runtime.Scheme
 }
 
 func (c *stateCluster) K8sClient() client.Client {
 	return c.client
+}
+
+func (c *stateCluster) ApiReader() client.Reader {
+	return c.reader
 }
 
 func (c *stateCluster) EventRecorder() record.EventRecorder {

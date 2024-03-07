@@ -122,7 +122,7 @@ func newTestStateFactory(fakeHttpServer *httptest.Server, objects ...*cloudcontr
 	}
 	kcpClient := kcpClientBuilder.
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, nil, kcpScheme)
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 	fakeFileStoreClientProvider := NewFakeFilestoreClientProvider(fakeHttpServer)
 	factory := NewStateFactory(fakeFileStoreClientProvider, abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"}))
 
