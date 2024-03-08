@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
@@ -27,7 +28,7 @@ func NewFilestoreClientProvider() client.ClientProvider[FilestoreClient] {
 
 			fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error obtaining GCP File Client: [%w]", err)
 			}
 			return NewFilestoreClient(fsClient), nil
 		},

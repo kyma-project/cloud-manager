@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
@@ -35,7 +36,7 @@ func newCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client
 	if gcpClient == nil {
 		client, _, err := transport.NewHTTPClient(ctx, option.WithCredentialsFile(saJsonKeyPath), option.WithScopes("https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform"))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error obtaining GCP connection: [%w]", err)
 		}
 		gcpClient = client
 	}

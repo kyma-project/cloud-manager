@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"strconv"
@@ -31,11 +32,11 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 			}
 			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error obtaining GCP ServiceNetworking Client: [%w]", err)
 			}
 			crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error obtaining GCP CRM Client: [%w]", err)
 			}
 			return NewServiceNetworkingClientForService(svcNetClient, crmService), nil
 		},
