@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/compute/v1"
@@ -26,7 +27,7 @@ func NewComputeClient() client.ClientProvider[ComputeClient] {
 
 			computeClient, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error obtaining GCP Compute Client: [%w]", err)
 			}
 			return NewComputeClientForService(computeClient), nil
 		},

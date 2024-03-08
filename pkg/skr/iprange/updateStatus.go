@@ -27,8 +27,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		logger.Info("Updating IpRange status with Error condition")
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeReady,
-				Status:  metav1.ConditionFalse,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: condErr.Message,
 			}).
