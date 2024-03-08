@@ -122,6 +122,14 @@ func RemoveFinalizer(name string) ObjAction {
 	}
 }
 
+func AddFinalizer(finalizer string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			controllerutil.AddFinalizer(obj, finalizer)
+		},
+	}
+}
+
 func Update(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
 	if obj == nil {
 		return errors.New("the object for Update() can not be nil")

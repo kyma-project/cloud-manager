@@ -48,11 +48,18 @@ func (r *reconciler) newAction() composed.Action {
 		createKcpNfsInstance,
 		updateStatus,
 		createVolume,
+		requeueWaitKcpStatus,
+		stopIfNotBeingDeleted,
+
+		// this below executes only when marked for deletion
 
 		deletePv,
 		waitPvDeleted,
 
-		requeueWaitKcpStatus,
+		deleteKcpNfsInstance,
+		waitKcpNfsInstanceDeleted,
+
+		removeFinalizer,
 
 		composed.StopAndForgetAction,
 	)
