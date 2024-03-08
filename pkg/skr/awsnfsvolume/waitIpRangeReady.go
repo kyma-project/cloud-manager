@@ -12,6 +12,10 @@ import (
 func waitIpRangeReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, nil
+	}
+
 	isReady := meta.IsStatusConditionTrue(state.SkrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 	if isReady {
 		return nil, nil

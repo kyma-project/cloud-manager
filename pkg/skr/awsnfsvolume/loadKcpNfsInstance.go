@@ -28,6 +28,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		Name:      state.ObjAsAwsNfsVolume().Status.Id,
 	}, kcpNfsInstnace)
 	if apierrors.IsNotFound(err) {
+		state.KcpNfsInstance = nil
 		logger.Info("KCP NfsInstance does not exist")
 		return nil, nil
 	}

@@ -13,6 +13,11 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	if state.KcpNfsInstance == nil {
+		// it's deleted
+		return nil, nil
+	}
+
 	kcpCondErr := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 

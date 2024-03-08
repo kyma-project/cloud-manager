@@ -227,7 +227,11 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 						WithName(awsNfsVolume.Status.Id),
 					),
 				).
-				Should(Succeed())
+				Should(Succeed(), "expected KCP AwsNfsInstance to be created, but it was not")
+
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				Should(Succeed(), "failed adding finalizer on KCP NfsInstance")
 		})
 
 		By("And Given KCP NfsInstance has Ready condition", func() {
@@ -268,7 +272,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "failed creating PV")
 		})
 
-		// DELETE
+		// DELETE START HERE
 
 		By("When AwsNfsVolume is deleted", func() {
 			Eventually(Delete).
@@ -282,6 +286,22 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "expected PV not to exist")
 		})
 
-		// TODO: And Then KCP NfsInstance is deleted
+		By("And Then KCP NfsInstance is marked for deletion", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, NewObjActions(), HavingDeletionTimestamp()).
+				Should(Succeed(), "expected KCP NfsInstance to be marked for deletion")
+		})
+
+		By("When KCP NfsInstance finalizer is removed and it is deleted", func() {
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				Should(Succeed(), "failed removing finalizer on KCP NfsInstance")
+		})
+
+		By("Then SKR AwsNfsVolume is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed(), "expected AwsNfsVolume not to exist")
+		})
 	})
 })

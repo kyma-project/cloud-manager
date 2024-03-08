@@ -5,11 +5,16 @@ import (
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"time"
 )
 
 func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, nil
+	}
 
 	if state.ObjAsAwsNfsVolume().Status.Id != "" {
 		return nil, nil
@@ -35,5 +40,5 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 	logger.Info("SKR AwsNfsVolume updated with ID status")
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeueDelay(100 * time.Millisecond), nil
 }

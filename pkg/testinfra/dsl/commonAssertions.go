@@ -5,34 +5,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func AssertHasLabelValue(name, expected string) ObjAssertion {
+func HavingDeletionTimestamp() ObjAssertion {
 	return func(obj client.Object) error {
-		if obj.GetLabels() == nil {
+		if obj.GetDeletionTimestamp().IsZero() {
 			return fmt.Errorf(
-				"expected object %T %s/%s to have label %s: %s, but it has no labels",
+				"Expected object %T %s/%s to have deletion timestamp set, but it doesnt have it",
 				obj,
 				obj.GetNamespace(), obj.GetName(),
-				name, expected,
-			)
-		}
-
-		actual, exists := obj.GetLabels()[name]
-		if !exists {
-			return fmt.Errorf(
-				"expected object %T %s/%s to have label %s: %s, but it's not set",
-				obj,
-				obj.GetNamespace(), obj.GetName(),
-				name, expected,
-			)
-		}
-
-		if actual != expected {
-			return fmt.Errorf(
-				"expected object %T %s/%s to have label %s: %s, but it's value is %s",
-				obj,
-				obj.GetNamespace(), obj.GetName(),
-				name, expected,
-				actual,
 			)
 		}
 		return nil
