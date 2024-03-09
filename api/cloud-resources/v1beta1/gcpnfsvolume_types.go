@@ -74,6 +74,9 @@ type GcpNfsVolumeStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.conditions[?(@.type==\"Error\")].status"
 
 // GcpNfsVolume is the Schema for the gcpnfsvolumes API
 type GcpNfsVolume struct {

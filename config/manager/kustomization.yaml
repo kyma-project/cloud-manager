@@ -5,20 +5,26 @@ resources:
 - secret-gcp.yaml
 
 configMapGenerator:
-  - name: manager-env
-    behavior: merge
-    literals:
-      - GARDENER_NAMESPACE=garden-spm-test01
-      - SKR_PROVIDERS=/var/kyma/cloud-manager/skr/providers/
+- behavior: merge
+  literals:
+  - GARDENER_NAMESPACE=garden-spm-test01
+  - SKR_PROVIDERS=/var/kyma/cloud-manager/skr/providers/
+  name: manager-env
 
 secretGenerator:
-  - name: manager-env-aws
-    behavior: merge
-    literals:
-      - AWS_ROLE_NAME=CrossAccountPowerUser
-      - AWS_ACCESS_KEY_ID=xxx
-      - AWS_SECRET_ACCESS_KEY=xxx
-  - name: manager-env-gcp
-    behavior: merge
-    literals:
-      - credentials.json=xxx
+- behavior: merge
+  literals:
+  - AWS_ROLE_NAME=CrossAccountPowerUser
+  - AWS_ACCESS_KEY_ID=xxx
+  - AWS_SECRET_ACCESS_KEY=xxx
+  name: manager-env-aws
+- behavior: merge
+  literals:
+  - credentials.json=xxx
+  name: manager-env-gcp
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: controller
+  newName: controller
+  newTag: latest
