@@ -13,14 +13,16 @@ var _ Server = &server{}
 
 func New() Server {
 	return &server{
-		iprangeStore: &iprangeStore{},
-		nfsStore:     &nfsStore{},
+		iprangeStore:      &iprangeStore{},
+		nfsStore:          &nfsStore{},
+		serviceUsageStore: &serviceUsageStore{},
 	}
 }
 
 type server struct {
 	*iprangeStore
 	*nfsStore
+	*serviceUsageStore
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -43,6 +45,22 @@ func (s *server) SetOperationError(error *googleapi.Error) {
 	s.operationError = error
 }
 
+func (s *server) SetSuEnableError(error *googleapi.Error) {
+	s.suEnableError = error
+}
+
+func (s *server) SetSuDisableError(error *googleapi.Error) {
+	s.suDisableError = error
+}
+
+func (s *server) SetSuOperationError(error *googleapi.Error) {
+	s.suOperationError = error
+}
+
+func (s *server) SetSuIsEnabledError(error *googleapi.Error) {
+	s.suIsEnabledError = error
+}
+
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ServiceNetworkingClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
@@ -61,6 +79,14 @@ func (s *server) ComputeClientProvider() client.ClientProvider[iprangeclient.Com
 
 func (s *server) FilestoreClientProvider() client.ClientProvider[nfsclient.FilestoreClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (nfsclient.FilestoreClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP FilestoreClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (client.ServiceUsageClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil

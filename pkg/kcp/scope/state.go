@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,18 +22,21 @@ func NewStateFactory(
 	baseStateFactory composed.StateFactory,
 	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) StateFactory {
 	return &stateFactory{
-		baseStateFactory:     baseStateFactory,
-		awsStsClientProvider: awsStsClientProvider,
-		activeSkrCollection:  activeSkrCollection,
+		baseStateFactory:              baseStateFactory,
+		awsStsClientProvider:          awsStsClientProvider,
+		activeSkrCollection:           activeSkrCollection,
+		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 	}
 }
 
 type stateFactory struct {
-	baseStateFactory     composed.StateFactory
-	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]
-	activeSkrCollection  skrruntime.ActiveSkrCollection
+	baseStateFactory              composed.StateFactory
+	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
+	activeSkrCollection           skrruntime.ActiveSkrCollection
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -42,6 +46,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 		baseState,
 		f.awsStsClientProvider,
 		f.activeSkrCollection,
+		f.gcpServiceUsageClientProvider,
 	)
 }
 
@@ -51,12 +56,14 @@ func newState(
 	baseState composed.State,
 	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) *State {
 	return &State{
-		State:                baseState,
-		awsStsClientProvider: awsStsClientProvider,
-		activeSkrCollection:  activeSkrCollection,
-		credentialData:       map[string]string{},
+		State:                         baseState,
+		awsStsClientProvider:          awsStsClientProvider,
+		activeSkrCollection:           activeSkrCollection,
+		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
+		credentialData:                map[string]string{},
 	}
 }
 
@@ -76,7 +83,8 @@ type State struct {
 	shoot          *gardenerTypes.Shoot
 	credentialData map[string]string
 
-	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient]
+	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 }
 
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {

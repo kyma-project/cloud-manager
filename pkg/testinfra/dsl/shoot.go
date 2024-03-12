@@ -184,3 +184,93 @@ func restConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
 
 	return clientConfig
 }
+
+func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerTypes.Shoot, opts ...ObjAction) error {
+	// KCP Gardener-credentials secret
+	{
+		secret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: infra.KCP().Namespace(),
+				Name:      "gardener-credentials",
+			},
+		}
+		err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
+		if client.IgnoreNotFound(err) != nil {
+			return fmt.Errorf("error getting gardener-credentials secret: %w", err)
+		}
+		if apierrors.IsNotFound(err) {
+			b, err := kubeconfigToBytes(restConfigToKubeconfig(infra.Garden().Cfg()))
+			if err != nil {
+				return fmt.Errorf("error getting garden kubeconfig bytes: %w", err)
+			}
+			secret.Data = map[string][]byte{
+				"kubeconfig": b,
+			}
+
+			err = infra.KCP().Client().Create(ctx, secret)
+			if client.IgnoreAlreadyExists(err) != nil {
+				return fmt.Errorf("error creating gardener-credentials secret: %w", err)
+			}
+		}
+	}
+
+	// Garden resources
+	if shoot == nil {
+		shoot = &gardenerTypes.Shoot{}
+	}
+	actions := NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultGardenNamespace),
+		)
+
+	// Shoot
+	{
+		actions.ApplyOnObject(shoot)
+		shoot.Spec = gardenerTypes.ShootSpec{
+			Region:     "eu-west-1",
+			Networking: &gardenerTypes.Networking{},
+			Provider: gardenerTypes.Provider{
+				Type: "gcp",
+			},
+			SecretBindingName: pointer.String(shoot.Name),
+		}
+
+		err := infra.Garden().Client().Create(ctx, shoot)
+		if err != nil {
+			return fmt.Errorf("error creating Shoot: %w", err)
+		}
+	}
+
+	// SecretBinding
+	{
+		secretBinding := &gardenerTypes.SecretBinding{}
+		actions.ApplyOnObject(secretBinding)
+		secretBinding.Provider = &gardenerTypes.SecretBindingProvider{
+			Type: "gcp",
+		}
+		secretBinding.SecretRef = corev1.SecretReference{
+			Name:      shoot.Name,
+			Namespace: shoot.Namespace,
+		}
+		err := infra.Garden().Client().Create(ctx, secretBinding)
+		if err != nil {
+			return fmt.Errorf("error creating SecretBinding: %w", err)
+		}
+	}
+
+	// Secret
+	{
+		secret := &corev1.Secret{}
+		actions.ApplyOnObject(secret)
+		secret.StringData = map[string]string{
+			"serviceaccount.json": "{" +
+				"\"project_id\": \"project_id\"}",
+		}
+		err := infra.Garden().Client().Create(ctx, secret)
+		if err != nil {
+			return fmt.Errorf("error creating garden secret: %w", err)
+		}
+	}
+
+	return nil
+}

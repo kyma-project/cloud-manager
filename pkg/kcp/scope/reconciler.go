@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -19,11 +20,13 @@ func New(
 	mgr manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) ScopeReconciler {
 	return NewScopeReconciler(NewStateFactory(
 		composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 		awsStsClientProvider,
 		activeSkrCollection,
+		gcpServiceUsageClientProvider,
 	))
 }
 
@@ -71,10 +74,18 @@ func (r *scopeReconciler) newAction() composed.Action {
 		// module is in Ready state
 
 		addKymaFinalizer,
-		loadScopeObj, // stops if Scope exists
-
+		loadScopeObj,
+		composed.BuildBranchingAction(
+			"scopeAlreadyCreatedBranching",
+			ObjIsLoadedPredicate(),
+			composed.ComposeActions( // This is called only if scope exits.
+				"enableApisAndActivateSkr",
+				enableApis,
+				addReadyCondition,
+				skrActivate,
+				composed.StopAndForgetAction),
+			nil),
 		// scope does not exist
-
 		createGardenerClient,
 		findShootName,
 		loadShoot,
@@ -82,9 +93,13 @@ func (r *scopeReconciler) newAction() composed.Action {
 		createScope,
 		ensureScopeCommonFields,
 		saveScope,
-
-		skrActivate,
-
-		composed.StopAndForgetAction,
+		composed.StopWithRequeueAction, // enableApisAndActivateSkr will be called in the next loop
 	)
+}
+
+func ObjIsLoadedPredicate() composed.Predicate {
+	return func(ctx context.Context, st composed.State) bool {
+		obj := st.Obj()
+		return obj != nil && obj.GetName() != "" // empty object is created when state gets created
+	}
 }

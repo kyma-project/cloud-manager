@@ -110,3 +110,16 @@ const (
 	MODIFY
 	DELETE
 )
+
+type GcpServiceName string
+
+const (
+	ServiceNetworkingService    GcpServiceName = "servicenetworking.googleapis.com"
+	ComputeService              GcpServiceName = "compute.googleapis.com"
+	FilestoreService            GcpServiceName = "file.googleapis.com"
+	CloudResourceManagerService GcpServiceName = "cloudresourcemanager.googleapis.com"
+)
+
+func GetCompleteServiceName(projectId string, serviceName GcpServiceName) string {
+	return fmt.Sprintf("projects/%s/services/%s", projectId, serviceName)
+}

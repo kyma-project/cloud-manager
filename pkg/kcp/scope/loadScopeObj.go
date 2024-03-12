@@ -23,7 +23,5 @@ func loadScopeObj(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.LogErrorAndReturn(err, "Error loading Scope object", composed.StopWithRequeue, ctx)
 	}
 
-	state.activeSkrCollection.AddKymaName(state.kyma.GetName())
-
-	return composed.StopAndForget, nil
+	return nil, nil
 }
