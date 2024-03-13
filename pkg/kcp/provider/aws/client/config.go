@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	smithymiddleware "github.com/aws/smithy-go/middleware"
+	"github.com/kyma-project/cloud-manager/pkg/metrics"
 )
 
 func NewGardenConfig(ctx context.Context, region, key, secret string) (cfg aws.Config, err error) {
@@ -19,7 +22,16 @@ func NewGardenConfig(ctx context.Context, region, key, secret string) (cfg aws.C
 		ctx,
 		config.WithRegion(region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(key, secret, "")),
+		config.WithRetryer(
+			func() aws.Retryer {
+				// https://github.com/aws/aws-sdk-go-v2/issues/1744
+				return retry.NewStandard()
+			},
+		),
 	)
+	cfg.APIOptions = append(cfg.APIOptions, func(stack *smithymiddleware.Stack) error {
+		return stack.Deserialize.Add(metrics.AwsReportMetricsMiddleware(), smithymiddleware.After)
+	})
 	return
 }
 
@@ -47,6 +59,15 @@ func NewSkrConfig(ctx context.Context, region, key, secret, assumeRole string) (
 				assumeRole,
 			)),
 		),
+		config.WithRetryer(
+			func() aws.Retryer {
+				// https://github.com/aws/aws-sdk-go-v2/issues/1744
+				return retry.NewStandard()
+			},
+		),
 	)
+	cfg.APIOptions = append(cfg.APIOptions, func(stack *smithymiddleware.Stack) error {
+		return stack.Deserialize.Add(metrics.AwsReportMetricsMiddleware(), smithymiddleware.After)
+	})
 	return
 }
