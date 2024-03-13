@@ -31,7 +31,7 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 	foundCount := 0
 
 	for _, subnet := range state.cloudResourceSubnets {
-		subnetName := getTagValue(subnet.Tags, "Name")
+		subnetName := awsutil.GetEc2TagValue(subnet.Tags, "Name")
 		zoneValue := pointer.StringDeref(subnet.AvailabilityZone, "")
 		rangeValue := pointer.StringDeref(subnet.CidrBlock, "")
 		key := fmt.Sprintf("%s/%s", zoneValue, rangeValue)

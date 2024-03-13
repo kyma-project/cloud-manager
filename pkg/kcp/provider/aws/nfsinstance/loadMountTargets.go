@@ -13,6 +13,10 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
+	if state.efs == nil {
+		return nil, nil
+	}
+
 	mtList, err := state.awsClient.DescribeMountTargets(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading mount targets", composed.StopWithRequeue, nil)

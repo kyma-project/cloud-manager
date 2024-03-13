@@ -23,6 +23,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		),
 	}
 
+	state.ObjAsNfsInstance().Status.Id = *state.efs.FileSystemId
+
 	return composed.UpdateStatus(state.ObjAsNfsInstance()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,

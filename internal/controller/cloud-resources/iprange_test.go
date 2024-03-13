@@ -95,7 +95,7 @@ var _ = Describe("Created SKR IpRange gets projects into KCP", Ordered, func() {
 					infra.SKR().Client(),
 					skrIpRange,
 					NewObjActions(),
-					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
 		})
