@@ -9,6 +9,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/pointer"
+	"sync"
 )
 
 func VpcSubnetsFromScope(scope *cloudcontrolv1beta1.Scope) []VpcSubnet {
@@ -53,6 +54,7 @@ type vpcEntry struct {
 }
 
 type vpcStore struct {
+	m     sync.Mutex
 	items []*vpcEntry
 }
 
@@ -69,6 +71,8 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 // Config implementation =======================================
 
 func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) {
+	s.m.Lock()
+	defer s.m.Unlock()
 	if pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
 		return pointer.StringDeref(value.vpc.VpcId, "xxx") == id
 	}) > -1 {
@@ -101,6 +105,8 @@ func (s *vpcStore) DescribeVpcs(ctx context.Context) ([]ec2Types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
+	s.m.Lock()
+	defer s.m.Unlock()
 	return pie.Map(s.items, func(e *vpcEntry) ec2Types.Vpc {
 		return e.vpc
 	}), nil
@@ -110,6 +116,8 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
+	s.m.Lock()
+	defer s.m.Unlock()
 	item, err := s.itemByVpcId(vpcId)
 	if err != nil {
 		return nil, err
@@ -130,6 +138,8 @@ func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Type
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
+	s.m.Lock()
+	defer s.m.Unlock()
 	item, err := s.itemByVpcId(vpcId)
 	if err != nil {
 		return nil, err
@@ -141,6 +151,8 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tag
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
+	s.m.Lock()
+	defer s.m.Unlock()
 	item, err := s.itemByVpcId(vpcId)
 	if err != nil {
 		return nil, err
@@ -162,6 +174,8 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
+	s.m.Lock()
+	defer s.m.Unlock()
 	for _, item := range s.items {
 		idx := -1
 		for i, subnet := range item.subnets {

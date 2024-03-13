@@ -34,6 +34,7 @@ func NewClientProvider() client2.SkrClientProvider[Client] {
 type Client interface {
 	DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error)
 	CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error)
+	DeleteSecurityGroup(ctx context.Context, id string) error
 	AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error
 
 	DescribeFileSystems(ctx context.Context) ([]efsTypes.FileSystemDescription, error)
@@ -43,8 +44,10 @@ type Client interface {
 		throughputMode efsTypes.ThroughputMode,
 		tags []efsTypes.Tag,
 	) (*efs.CreateFileSystemOutput, error)
+	DeleteFileSystem(ctx context.Context, fsId string) error
 	DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error)
 	CreateMountTarget(ctx context.Context, fsId, subnetId string, securityGroups []string) (string, error)
+	DeleteMountTarget(ctx context.Context, mountTargetId string) error
 
 	DescribeMountTargetSecurityGroups(ctx context.Context, mountTargetId string) ([]string, error)
 }
@@ -90,6 +93,14 @@ func (c *client) CreateSecurityGroup(ctx context.Context, vpcId, name string, ta
 	return pointer.StringDeref(out.GroupId, ""), nil
 }
 
+func (c *client) DeleteSecurityGroup(ctx context.Context, id string) error {
+	in := &ec2.DeleteSecurityGroupInput{
+		GroupId: pointer.String(id),
+	}
+	_, err := c.ec2Svc.DeleteSecurityGroup(ctx, in)
+	return err
+}
+
 func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
 	_, err := c.ec2Svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       pointer.String(groupId),
@@ -124,6 +135,12 @@ func (c *client) CreateFileSystem(ctx context.Context, performanceMode efsTypes.
 	return out, nil
 }
 
+func (c *client) DeleteFileSystem(ctx context.Context, fsId string) error {
+	in := &efs.DeleteFileSystemInput{FileSystemId: pointer.String(fsId)}
+	_, err := c.efsSvc.DeleteFileSystem(ctx, in)
+	return err
+}
+
 func (c *client) DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error) {
 	out, err := c.efsSvc.DescribeMountTargets(ctx, &efs.DescribeMountTargetsInput{
 		FileSystemId: pointer.String(fsId),
@@ -144,6 +161,14 @@ func (c *client) CreateMountTarget(ctx context.Context, fsId, subnetId string, s
 		return "", err
 	}
 	return pointer.StringDeref(out.MountTargetId, ""), nil
+}
+
+func (c *client) DeleteMountTarget(ctx context.Context, mountTargetId string) error {
+	in := &efs.DeleteMountTargetInput{
+		MountTargetId: pointer.String(mountTargetId),
+	}
+	_, err := c.efsSvc.DeleteMountTarget(ctx, in)
+	return err
 }
 
 func (c *client) DescribeMountTargetSecurityGroups(ctx context.Context, mountTargetId string) ([]string, error) {

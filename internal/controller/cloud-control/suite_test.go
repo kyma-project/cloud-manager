@@ -19,6 +19,7 @@ package cloudcontrol
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
 
@@ -46,7 +47,9 @@ func TestControllers(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true), zap.ConsoleEncoder(func(config *zapcore.EncoderConfig) {
+		config.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+	})))
 
 	By("bootstrapping KCP test environment")
 	var err error

@@ -18,17 +18,51 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"awsNfsInstance",
-			addFinalizer,
-			findSecurityGroup,
-			createSecurityGroup,
-			loadSecurityGroup,
-			authorizeSecurityGroupIngress,
-			loadEfs,
-			createEfs,
-			waitEfsAvailable,
-			loadMountTargets,
-			createMountTargets,
-			updateStatus,
+			composed.BuildSwitchAction(
+				"awsNfsInstance-switch",
+				// non-delete
+				composed.ComposeActions(
+					"awsNfsInstance-non-delete",
+					validateIpRangeSubnets,
+					addFinalizer,
+					findSecurityGroup,
+					createSecurityGroup,
+					loadSecurityGroup,
+					authorizeSecurityGroupIngress,
+					loadEfs,
+					createEfs,
+					waitEfsAvailable,
+					loadMountTargets,
+					validateExistingMountTargets,
+					createMountTargets,
+					updateStatus,
+
+					composed.StopAndForgetAction,
+				),
+				// delete
+				composed.NewCase(
+					composed.MarkedForDeletionPredicate,
+					composed.ComposeActions(
+						"awsNfsInstance-delete",
+						removeReadyCondition,
+						loadEfs,
+						findSecurityGroup,
+						loadMountTargets,
+
+						deleteMountTargets,
+						waitMountTargetsDeleted,
+
+						deleteEfs,
+						waitEfsDeleted,
+
+						deleteSecurityGroup,
+
+						removeFinalizer,
+
+						composed.StopAndForgetAction,
+					),
+				),
+			), // switch
 			composed.StopAndForgetAction,
 		)(ctx, state)
 	}

@@ -17,9 +17,23 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	for _, fs := range list {
 		if pointer.StringDeref(fs.Name, "") == state.Obj().GetName() {
 			state.efs = &fs
-			return nil, nil
+			break
 		}
 	}
 
-	return nil, nil
+	if state.efs == nil {
+		return nil, nil
+	}
+
+	if len(state.ObjAsNfsInstance().Status.Id) > 0 {
+		return nil, nil
+	}
+
+	state.ObjAsNfsInstance().Status.Id = *state.efs.FileSystemId
+	err = state.UpdateObjStatus(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status with file system id", composed.StopWithRequeue, ctx)
+	}
+
+	return composed.StopWithRequeue, nil
 }

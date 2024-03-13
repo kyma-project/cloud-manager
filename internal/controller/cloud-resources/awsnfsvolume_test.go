@@ -70,7 +70,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					awsNfsVolume,
 					NewObjActions(),
-					WhereAwsNfsVolumeHasId(),
+					HavingAwsNfsVolumeStatusId(),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -128,7 +128,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					awsNfsVolume,
 					NewObjActions(),
-					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
 		})
@@ -214,7 +214,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					awsNfsVolume,
 					NewObjActions(),
-					WhereAwsNfsVolumeHasId(),
+					HavingAwsNfsVolumeStatusId(),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -253,7 +253,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					awsNfsVolume,
 					NewObjActions(),
-					AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed(), "expected AwsNfsVolume to exist and have Ready condition")
 		})
