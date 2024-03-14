@@ -24,12 +24,6 @@ func awsReportMetrics(metrics *awsRequestMetricTuple) {
 		fmt.Sprintf("%d", metrics.ResponseCode),
 		metrics.Region,
 	).Inc()
-
-	CloudProviderCallTime.WithLabelValues(
-		CloudProviderAWS,
-		fmt.Sprintf("%s/%s", metrics.ServiceName, metrics.OperationName),
-		metrics.Region,
-	).Observe(metrics.Latency.Seconds())
 }
 
 func AwsReportMetricsMiddleware() smithymiddleware.DeserializeMiddleware {

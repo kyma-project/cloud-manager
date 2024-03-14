@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
@@ -69,6 +70,7 @@ func (l *skrLooper) AddKymaName(kymaName string) {
 	}
 	l.logger.WithValues("kymaName", kymaName).Info("Adding Kyma to SkrLooper")
 	l.kymaNames = append(l.kymaNames, kymaName)
+	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName).Add(1)
 }
 
 func (l *skrLooper) RemoveKymaName(kymaName string) {
@@ -80,6 +82,7 @@ func (l *skrLooper) RemoveKymaName(kymaName string) {
 	if idx > -1 {
 		l.logger.WithValues("kymaName", kymaName).Info("Removing Kyma from SkrLooper")
 		l.kymaNames = pie.Delete(l.kymaNames, idx)
+		metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName).Add(-1)
 	}
 }
 
@@ -161,6 +164,9 @@ func (l *skrLooper) worker(id int) {
 }
 
 func (l *skrLooper) handleOneSkr(kymaName string) {
+	defer func() {
+		metrics.SkrRuntimeReconcileTotal.WithLabelValues(kymaName).Inc()
+	}()
 	logger := l.logger.WithValues("skrKymaName", kymaName)
 	skrManager, scope, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
 	if err != nil {
