@@ -41,6 +41,14 @@ KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
   --from-file=kubeconfig=tools/dev/kind/kubeconfig-garden.yaml
 ```
 
+Create the `kubeconfig-<kyma-name>` secret in KCP cluster
+```shell
+KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
+  kubectl create secret generic \
+  -n kcp-system kubeconfig-$KYMA_NAME \
+  --from-file=config=tools/dev/kind/kubeconfig-skr.yaml
+```
+
 Set the env var `GARDENER_CREDENTIALS` to point to the gardener kubeconfig
 ```shell
 export GARDENER_CREDENTIALS=$PROJECT_ROOT/tools/dev/kind/kubeconfig-garden.yaml
@@ -49,6 +57,11 @@ export GARDENER_CREDENTIALS=$PROJECT_ROOT/tools/dev/kind/kubeconfig-garden.yaml
 Set the env var `GARDENER_NAMESPACE` to the value that you will use as garden project and create `Shoot` and `SecretBinding instances` so operator can find them there, ie
 ```shell
 export GARDENER_NAMESPACE=garden-project
+```
+
+Set the env var `SKR_PROVIDERS` to point to 
+```shell
+export SKR_PROVIDERS=$PROJECT_ROOT/config/dist/skr/crd/bases/providers
 ```
 
 In the garden cluster create:
