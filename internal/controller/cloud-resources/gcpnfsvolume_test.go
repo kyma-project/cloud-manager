@@ -174,7 +174,7 @@ var _ = Describe("SKR GcpNfsVolume workflows", func() {
 							infra.SKR().Client(),
 							gcpNfsVolume,
 							NewObjActions(),
-							AssertHasConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+							HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 						).
 						Should(Succeed())
 

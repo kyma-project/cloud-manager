@@ -53,7 +53,7 @@ func WithConditions(setConds ...metav1.Condition) ObjStatusAction {
 	}
 }
 
-func AssertHasConditionTrue(conditionType string) ObjAssertion {
+func HavingConditionTrue(conditionType string) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(composed.ObjWithConditions); ok {
 			if !meta.IsStatusConditionTrue(*x.Conditions(), conditionType) {

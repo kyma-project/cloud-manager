@@ -3,6 +3,7 @@ package dsl
 import (
 	"context"
 	"errors"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -148,4 +149,17 @@ func DeleteNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontro
 
 	err := clnt.Delete(ctx, obj)
 	return err
+}
+
+func HavingNfsInstanceStatusId() ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
+		if !ok {
+			return fmt.Errorf("the object %T is not SKR AwsNfsVolume", obj)
+		}
+		if x.Status.Id == "" {
+			return errors.New("the SKR AwsNfsVolume ID not set")
+		}
+		return nil
+	}
 }

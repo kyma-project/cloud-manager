@@ -59,7 +59,7 @@ var _ = Describe("KCP IpRange", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					NewObjActions(),
-					AssertHasConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
 		})
