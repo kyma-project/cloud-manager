@@ -3,4 +3,4 @@ kind: IpRange
 metadata:
   name: nfs-range-1
 spec:
-  cidr: 10.181.0.0/16
+  cidr: 10.251.0.0/16

@@ -8,6 +8,7 @@ import (
 
 func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	list, err := state.awsClient.DescribeFileSystems(ctx)
 	if err != nil {
@@ -25,8 +26,14 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 		return nil, nil
 	}
 
+	logger = logger.WithValues(
+		"efsId", pointer.StringDeref(state.efs.FileSystemId, ""),
+		"efsLifeCycleState", state.efs.LifeCycleState,
+	)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+
 	if len(state.ObjAsNfsInstance().Status.Id) > 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.ObjAsNfsInstance().Status.Id = *state.efs.FileSystemId
@@ -35,5 +42,5 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status with file system id", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

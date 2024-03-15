@@ -18,7 +18,7 @@ func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, nil
 	}
 	if state.efs.LifeCycleState == efsTypes.LifeCycleStateDeleted {
-		logger.Info("The EFS is the deleted state")
+		logger.Info("The EFS is in the deleted state")
 		return nil, nil
 	}
 
