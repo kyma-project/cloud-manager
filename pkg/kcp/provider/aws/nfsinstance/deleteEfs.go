@@ -13,7 +13,7 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.efs != nil {
+	if state.efs == nil {
 		return nil, nil
 	}
 
