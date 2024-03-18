@@ -8,7 +8,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func createVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -32,7 +31,7 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 	pv := &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: state.Obj().GetNamespace(),
-			Name:      state.Obj().GetName(),
+			Name:      state.ObjAsAwsNfsVolume().Status.Id,
 			Labels: map[string]string{
 				cloudresourcesv1beta1.LabelCloudManaged: "true",
 			},
@@ -51,11 +50,7 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 		},
 	}
-	err := controllerutil.SetOwnerReference(state.ObjAsAwsNfsVolume(), pv, state.Cluster().Scheme())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error setting owner reference", composed.StopAndForget, ctx)
-	}
-	err = state.Cluster().K8sClient().Create(ctx, pv)
+	err := state.Cluster().K8sClient().Create(ctx, pv)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating PV for AwsNfsVolume", composed.StopWithRequeue, ctx)
 	}
