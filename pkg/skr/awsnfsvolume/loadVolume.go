@@ -14,7 +14,7 @@ func loadVolume(ctx context.Context, st composed.State) (error, context.Context)
 	vol := &corev1.PersistentVolume{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),
-		Name:      state.Obj().GetName(),
+		Name:      state.ObjAsAwsNfsVolume().Status.Id,
 	}, vol)
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error getting PersistentVolumes", composed.StopWithRequeue, ctx)
