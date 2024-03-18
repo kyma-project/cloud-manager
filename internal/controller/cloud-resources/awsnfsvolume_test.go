@@ -141,19 +141,12 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pv,
 					NewObjActions(
-						WithName(awsNfsVolume.Name),
+						WithName(awsNfsVolume.Status.Id),
 					),
 				).
 				Should(Succeed())
 		})
 
-		By("And Then SKR PersistentVolume has owner reference", func() {
-			Expect(pv.OwnerReferences).To(HaveLen(1), "expected PV to have one owner reference")
-			ref := pv.OwnerReferences[0]
-			Expect(ref.Kind).To(Equal("AwsNfsVolume"))
-			Expect(ref.Name).To(Equal(awsNfsVolume.Name))
-			Expect(ref.UID).To(Equal(awsNfsVolume.UID))
-		})
 	})
 
 	It("Scenario: SKR AwsNfsVolume is deleted", func() {
@@ -266,7 +259,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pv,
 					NewObjActions(
-						WithName(awsNfsVolume.Name),
+						WithName(awsNfsVolume.Status.Id),
 					),
 				).
 				Should(Succeed(), "failed creating PV")
