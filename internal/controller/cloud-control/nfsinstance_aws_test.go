@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-var _ = Describe("Feature: KCP NfsInstance for AWS", func() {
+var _ = Describe("Feature: KCP NfsInstance", func() {
 
-	It("Scenario: KCP NfsInstance for AWS is created", func() {
+	It("Scenario: KCP AWS NfsInstance is created and deleted", func() {
 
 		name := "5338ac8f-4927-40ee-a51d-e22e2334bd19"
 		scope := &cloudcontrolv1beta1.Scope{}

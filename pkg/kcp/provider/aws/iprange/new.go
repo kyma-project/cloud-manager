@@ -16,24 +16,43 @@ func New(stateFactory StateFactory) composed.Action {
 			logger.Error(err, "Error")
 			return composed.StopAndForget, nil
 		}
-		return composed.ComposeActions(
+		return composed.BuildSwitchAction(
 			"awsIpRange",
-			addFinalizer,
-			preventCidrEdit,
-			splitRangeByZones,
-			ensureShootZonesAndRangeSubnetsMatch,
-			loadVpc,
-			checkCidrOverlap,
-			checkCidrBlockStatus,
-			extendVpcAddressSpace,
-			loadSubnets,
-			findCloudResourceSubnets,
-			checkSubnetOverlap,
-			createSubnets,
-			updateSuccessStatus,
-			func(_ context.Context, _ composed.State) (error, context.Context) {
-				return composed.StopAndForget, nil
-			},
+			composed.ComposeActions(
+				"awsIpRange-non-delete",
+				addFinalizer,
+				preventCidrEdit,
+				splitRangeByZones,
+				ensureShootZonesAndRangeSubnetsMatch,
+				loadVpc,
+				checkCidrOverlap,
+				checkCidrBlockStatus,
+				extendVpcAddressSpace,
+				loadSubnets,
+				findCloudResourceSubnets,
+				checkSubnetOverlap,
+				createSubnets,
+				updateSuccessStatus,
+				composed.StopAndForgetAction,
+			),
+			composed.NewCase(
+				composed.MarkedForDeletionPredicate,
+				composed.ComposeActions(
+					"awsIpRange-delete",
+					removeReadyCondition,
+					loadVpc,
+					loadSubnets,
+					findCloudResourceSubnets,
+
+					deleteSubnets,
+					waitSubnetsDeleted,
+
+					disassociateVpcAddressSpace,
+					waitCidrBlockDisassociated,
+
+					removeFinalizer,
+				),
+			),
 		)(ctx, state)
 	}
 }

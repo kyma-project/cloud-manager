@@ -68,6 +68,8 @@ func (n *node) maxNameLen() int {
 
 func (n *node) coloredName() string {
 	txt := n.name
+	txt = strings.ReplaceAll(txt, "Feature:", color.MagentaString("Feature:"))
+	txt = strings.ReplaceAll(txt, "Scenario:", color.YellowString("Scenario:"))
 	txt = strings.ReplaceAll(txt, "And Given ", color.CyanString("And Given "))
 	txt = strings.ReplaceAll(txt, "And When ", color.CyanString("And When "))
 	txt = strings.ReplaceAll(txt, "And Then ", color.CyanString("And Then "))
