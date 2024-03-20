@@ -28,5 +28,5 @@ func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	// give some time to cloud-control and cloud providers to delete it, and then run again
-	return composed.StopWithRequeueDelay(3 * time.Second), nil
+	return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
 }

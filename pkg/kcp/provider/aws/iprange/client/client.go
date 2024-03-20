@@ -12,6 +12,7 @@ import (
 type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error)
+	DisassociateVpcCidrBlockInput(ctx context.Context, associationId string) error
 	DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error)
 	CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error)
 	DeleteSubnet(ctx context.Context, subnetId string) error
@@ -55,6 +56,15 @@ func (c *client) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) 
 		return nil, err
 	}
 	return out.CidrBlockAssociation, nil
+}
+
+func (c *client) DisassociateVpcCidrBlockInput(ctx context.Context, associationId string) error {
+	in := &ec2.DisassociateVpcCidrBlockInput{AssociationId: &associationId}
+	_, err := c.svc.DisassociateVpcCidrBlock(ctx, in)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *client) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Subnet, error) {

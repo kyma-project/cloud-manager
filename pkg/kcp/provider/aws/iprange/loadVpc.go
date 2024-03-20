@@ -51,5 +51,8 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state.vpc = vpc
 	state.ObjAsIpRange().Status.VpcId = pointer.StringDeref(vpc.VpcId, "") // will be saved when subnets are created
 
-	return nil, nil
+	logger = logger.WithValues("vpcId", pointer.StringDeref(state.vpc.VpcId, ""))
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+
+	return nil, ctx
 }

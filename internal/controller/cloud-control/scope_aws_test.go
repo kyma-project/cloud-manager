@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-var _ = Describe("KCP Scope", func() {
+var _ = Describe("Feature: KCP Scope", func() {
 
 	const (
 		kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 	)
 
-	It("Scope AWS", func() {
+	It("Scenario: KCP AWS Scope is created when module is activated in Kyma CR", func() {
 		shoot := &gardenerTypes.Shoot{}
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootAws).

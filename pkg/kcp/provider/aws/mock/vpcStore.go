@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -45,7 +46,7 @@ type VpcSubnet struct {
 }
 
 type VpcConfig interface {
-	AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet)
+	AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) *ec2Types.Vpc
 }
 
 type vpcEntry struct {
@@ -70,16 +71,17 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 
 // Config implementation =======================================
 
-func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) {
+func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) *ec2Types.Vpc {
 	s.m.Lock()
 	defer s.m.Unlock()
-	if pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
+	existinIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
 		return pointer.StringDeref(value.vpc.VpcId, "xxx") == id
-	}) > -1 {
-		return
+	})
+	if existinIndex > -1 {
+		return &s.items[existinIndex].vpc
 	}
 
-	s.items = append(s.items, &vpcEntry{
+	item := &vpcEntry{
 		vpc: ec2Types.Vpc{
 			VpcId:     pointer.String(id),
 			CidrBlock: pointer.String(cidr),
@@ -96,7 +98,10 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 				VpcId:              pointer.String(id),
 			}
 		}),
-	})
+	}
+	s.items = append(s.items, item)
+
+	return &item.vpc
 }
 
 // Client implementation ========================================
@@ -132,6 +137,36 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 	}
 	item.vpc.CidrBlockAssociationSet = append(item.vpc.CidrBlockAssociationSet, a)
 	return &a, nil
+}
+
+func (s *vpcStore) DisassociateVpcCidrBlockInput(ctx context.Context, associationId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var theItem *vpcEntry
+	theIndex := -1
+	for _, item := range s.items {
+		for idx, cidrBlock := range item.vpc.CidrBlockAssociationSet {
+			if pointer.StringDeref(cidrBlock.AssociationId, "") == associationId {
+				theItem = item
+				theIndex = idx
+				break
+			}
+		}
+	}
+	if theItem == nil || theIndex == -1 {
+		return &smithy.GenericAPIError{
+			Code:    "404",
+			Message: "Not found",
+		}
+	}
+
+	theItem.vpc.CidrBlockAssociationSet = pie.Delete(theItem.vpc.CidrBlockAssociationSet, theIndex)
+
+	return nil
 }
 
 func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Types.Subnet, error) {
@@ -181,6 +216,7 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 		for i, subnet := range item.subnets {
 			if pointer.StringDeref(subnet.SubnetId, "") == subnetId {
 				idx = i
+				break
 			}
 		}
 		if idx > -1 {
@@ -188,5 +224,8 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("subnet with id %s", subnetId)
+	return &smithy.GenericAPIError{
+		Code:    "404",
+		Message: fmt.Sprintf("subnet %s does not exist", subnetId),
+	}
 }
