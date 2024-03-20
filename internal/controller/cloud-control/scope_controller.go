@@ -4,6 +4,7 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -22,12 +23,14 @@ func SetupScopeReconciler(
 	kcpManager manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) error {
 	return NewScopeReconciler(
 		kcpscope.New(
 			kcpManager,
 			awsStsClientProvider,
 			activeSkrCollection,
+			gcpServiceUsageClientProvider,
 		),
 	).SetupWithManager(kcpManager)
 }

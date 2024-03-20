@@ -68,3 +68,6 @@ func GetCachedProjectNumber(ctx context.Context, projectId string, crmService *c
 	}
 	return projectNumber, nil
 }
+
+// write a method to enable gcp services
+// write a method to disable gcp services

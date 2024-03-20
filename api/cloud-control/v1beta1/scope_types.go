@@ -113,6 +113,10 @@ type ScopeStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// Operation Identifier to track the ServiceUsage Operation
+	// +optional
+	GcpOperations []string `json:"gcpOperations,omitempty"`
 }
 
 //+kubebuilder:object:root=true

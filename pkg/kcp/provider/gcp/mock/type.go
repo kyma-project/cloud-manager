@@ -25,6 +25,7 @@ type Providers interface {
 	ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient]
 	ComputeClientProvider() client.ClientProvider[iprangeclient.ComputeClient]
 	FilestoreClientProvider() client.ClientProvider[nfsclient.FilestoreClient]
+	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
