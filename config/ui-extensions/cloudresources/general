@@ -1,0 +1,9 @@
+resource:
+    kind: CloudResources
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: cloudresources
+name: Cloud Resources
+scope: namespace
+description: >-
+    Cloud Resources description here

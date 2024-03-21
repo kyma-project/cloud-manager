@@ -1,0 +1,9 @@
+resource:
+    kind: IpRange
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: ipranges
+name: Ip Ranges
+scope: namespace
+description: >-
+    IpRange description here
