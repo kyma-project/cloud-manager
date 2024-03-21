@@ -1,0 +1,5 @@
+- path: spec.cidr
+  name: spec.cidr
+  widget: Text
+  simple: true
+  required: true
