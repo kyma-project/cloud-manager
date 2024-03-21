@@ -80,6 +80,10 @@ type IpRangeList struct {
 	Items           []IpRange `json:"items"`
 }
 
+func (l *IpRangeList) GetItemCount() int {
+	return len(l.Items)
+}
+
 func init() {
 	SchemeBuilder.Register(&IpRange{}, &IpRangeList{})
 }

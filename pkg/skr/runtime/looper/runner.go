@@ -108,6 +108,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			KymaRef:    skrManager.KymaRef(),
 			KcpCluster: r.kcpCluster,
 			SkrCluster: skrManager,
+			Provider:   options.provider,
 		}
 
 		for _, b := range r.registry.Builders() {

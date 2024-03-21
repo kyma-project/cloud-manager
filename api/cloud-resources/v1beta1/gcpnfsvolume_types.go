@@ -104,6 +104,10 @@ type GcpNfsVolumeList struct {
 	Items           []GcpNfsVolume `json:"items"`
 }
 
+func (l *GcpNfsVolumeList) GetItemCount() int {
+	return len(l.Items)
+}
+
 func init() {
 	SchemeBuilder.Register(&GcpNfsVolume{}, &GcpNfsVolumeList{})
 }

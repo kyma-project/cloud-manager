@@ -28,7 +28,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionReasonError,
+			Reason:  cloudresourcesv1beta1.ConditionTypeReady,
 			Message: "Ready",
 		}).
 		ErrorLogMessage("Error updating CloudResources CR with Ready condition").

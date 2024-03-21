@@ -60,7 +60,7 @@ func handleServed(ctx context.Context, st composed.State) (error, context.Contex
 		SetExclusiveConditions(metav1.Condition{
 			Type:   cloudresourcesv1beta1.ConditionTypeError,
 			Status: metav1.ConditionTrue,
-			Reason: cloudresourcesv1beta1.ConditionReasonOtherIsServed,
+			Reason: cloudresourcesv1beta1.ReasonOtherIsServed,
 			Message: fmt.Sprintf("only one instance of CloudResources is allowed (current served instance: %s",
 				served.Name),
 		}).
