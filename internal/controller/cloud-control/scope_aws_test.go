@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -53,6 +54,12 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed(), "expected Scope to be created")
 		})
 
+		By("And Then Scope has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
+				Should(Succeed(), "expected created Scope to have Ready condition")
+		})
+
 		By("And has provider aws", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAws))
 		})
@@ -85,6 +92,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones[1].Name).To(Equal("eu-west-1b")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
 		})
+
 		By("And has Ready condition", func() {
 			Expect(scope.Status.Conditions).To(HaveLen(1))
 			Expect(scope.Status.Conditions[0].Type).To(Equal(cloudcontrolv1beta1.ConditionTypeReady))

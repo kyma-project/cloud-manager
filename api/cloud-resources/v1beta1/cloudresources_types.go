@@ -26,10 +26,10 @@ const (
 )
 
 const (
-	ConditionReasonOtherIsServed = "OtherIsServed"
+	ReasonOtherIsServed  = "OtherIsServed"
+	ReasonResourcesExist = "ResourcesExist"
 )
 
-// +kubebuilder:validation:Enum=Deleting;Ready;Warning
 type ModuleState string
 
 // Valid Module CR States.
@@ -57,8 +57,6 @@ type CloudResourcesSpec struct {
 
 // CloudResourcesStatus defines the observed state of CloudResources
 type CloudResourcesStatus struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Deleting;Ready;Warning
 	State ModuleState `json:"state,omitempty"`
 
 	// +kubebuilder:validation:Enum=True;False

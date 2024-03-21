@@ -68,13 +68,20 @@ func (r *scopeReconciler) newAction() composed.Action {
 	//  * add SKR to the looper
 	return composed.ComposeActions(
 		"kymaMain",
-		loadKyma,            // stops if Kyma not found
-		findKymaModuleState, // stops if module not present
+		loadKyma, // stops if Kyma not found
+		findKymaModuleState,
+		loadScopeObj,
 
-		// module is in Ready state
+		skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
+
+		stopIfReady,
+
+		// module exists in Kyma status in some state (processing, ready, deleting, warning)
+		// scope:
+		//   * does not exist - has to be created
+		//   * exist but waiting for api to be activated
 
 		addKymaFinalizer,
-		loadScopeObj,
 		composed.BuildBranchingAction(
 			"scopeAlreadyCreatedBranching",
 			ObjIsLoadedPredicate(),

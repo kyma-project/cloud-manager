@@ -120,15 +120,6 @@ spec:
                 - "False"
                 type: string
               state:
-                allOf:
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
-                - enum:
-                  - Deleting
-                  - Ready
-                  - Warning
                 type: string
             type: object
         type: object

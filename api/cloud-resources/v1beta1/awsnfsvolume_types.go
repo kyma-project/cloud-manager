@@ -101,6 +101,10 @@ type AwsNfsVolumeList struct {
 	Items           []AwsNfsVolume `json:"items"`
 }
 
+func (l *AwsNfsVolumeList) GetItemCount() int {
+	return len(l.Items)
+}
+
 func init() {
 	SchemeBuilder.Register(&AwsNfsVolume{}, &AwsNfsVolumeList{})
 }

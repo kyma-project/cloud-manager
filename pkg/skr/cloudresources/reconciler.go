@@ -20,6 +20,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
+			args.Provider,
 		),
 	}
 }
@@ -35,11 +36,27 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return composed.Handle(action(ctx, state))
 }
 
+// When module is deleted from the SKR Kyma spec
+// Then module CR will get deletionTimestamp
+
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"crAwsNfsVolumeMain",
+		"cloudResources-main",
 		composed.LoadObj,
 
+		composed.BuildBranchingAction(
+			"cloudResources-if-delete",
+			composed.MarkedForDeletionPredicate,
+			composed.ComposeActions(
+				"cloudResources-delete",
+
+				checkIfResourcesExist,
+				removeFinalizer,
+
+				composed.StopAndForgetAction,
+			),
+			nil,
+		),
 		handleServed,
 		addFinalizer,
 		statusReady,

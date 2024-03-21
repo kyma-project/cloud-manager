@@ -1,4 +1,4 @@
-package iprange
+package cloudresources
 
 import (
 	"context"
@@ -11,24 +11,14 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if !composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
+	logger.Info("Removing CloudResources finalizer")
 
-	if state.KcpIpRange != nil {
-		// KCP IpRange is not yet deleted
-		return nil, nil
-	}
-
-	logger.Info("Removing IpRange finalizer")
-
-	// KCP IpRange does not exist, remove the finalizer so SKR IpRange is also deleted
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
 	err := state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving SKR IpRange after finalizer remove", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error saving CloudResources CR after finalizer remove", composed.StopWithRequeue, ctx)
 	}
 
-	// bye, bye SKR IpRange
+	// bye, bye cloud-manager module
 	return composed.StopAndForget, nil
 }
