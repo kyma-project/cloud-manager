@@ -20,6 +20,7 @@ import (
 type ActiveSkrCollection interface {
 	AddKymaName(kymaName string)
 	RemoveKymaName(kymaName string)
+	Contains(kymaName string) bool
 }
 
 type SkrLooper interface {
@@ -84,6 +85,15 @@ func (l *skrLooper) RemoveKymaName(kymaName string) {
 		l.kymaNames = pie.Delete(l.kymaNames, idx)
 		metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName).Add(-1)
 	}
+}
+
+func (l *skrLooper) Contains(kymaName string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if pie.Contains(l.kymaNames, kymaName) {
+		return true
+	}
+	return false
 }
 
 func (l *skrLooper) Start(ctx context.Context) error {

@@ -74,7 +74,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 
 		skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
 
-		stopIfReady,
+		stopIfReadyAndActive,
 
 		// module exists in Kyma status in some state (processing, ready, deleting, warning)
 		// scope:
