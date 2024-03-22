@@ -21,7 +21,11 @@ func findKymaModuleState(ctx context.Context, st composed.State) (error, context
 	state.moduleState = moduleState
 
 	//isListed := util.IsKymaModuleListedInSpec(state.kyma, "cloud-manager")
-	isModuleActivated := moduleState == util.KymaModuleStateProcessing || moduleState == util.KymaModuleStateReady
+	outome := util.NewDelayActIgnoreBuilder[util.KymaModuleState](util.Ignore).
+		Act(util.KymaModuleStateProcessing, util.KymaModuleStateReady, util.KymaModuleStateWarning).
+		Build().
+		Case(moduleState)
+	isModuleActivated := outome == util.Act
 
 	if !isModuleActivated {
 		return composed.StopAndForget, ctx

@@ -12,6 +12,8 @@ func handleServed(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	logger.Info("Handling served")
+
 	served, err := func() (*cloudresourcesv1beta1.CloudResources, error) {
 		list := &cloudresourcesv1beta1.CloudResourcesList{}
 		err := state.Cluster().K8sClient().List(ctx, list)
@@ -35,10 +37,12 @@ func handleServed(ctx context.Context, st composed.State) (error, context.Contex
 
 	if served != nil && state.Obj().GetName() == served.Name && state.Obj().GetNamespace() == served.Namespace {
 		// nothing to do, the obj is the served one
+		logger.Info("Found served CloudResources")
 		return nil, nil
 	}
 
 	if state.ObjAsCloudResources().Status.Served == cloudresourcesv1beta1.ServedFalse {
+		logger.Info("Ignoring not served CloudResources")
 		// we're not handling not served objects
 		return composed.StopAndForget, nil
 	}
