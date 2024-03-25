@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupScopeReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().ScopeGardenProvider(),
-		infra.Looper(),
+		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
 	)).NotTo(HaveOccurred())
 	// IpRange

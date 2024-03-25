@@ -120,18 +120,18 @@ func Start() (Infra, error) {
 	}
 
 	registry := skrruntime.NewRegistry(infra.SKR().Scheme())
-	looper := skrruntime.NewLooper(kcpMgr, infra.SKR().Scheme(), registry, kcpMgr.GetLogger())
+	activeSkrCollection := skrruntime.NewActiveSkrCollection(kcpMgr.GetLogger())
 
 	awsMock := awsmock.New()
 	awsMock.SetAccount("some-aws-account")
 
 	infra.InfraEnv = &infraEnv{
-		i:          infra,
-		kcpManager: kcpMgr,
-		registry:   registry,
-		looper:     looper,
-		awsMock:    awsMock,
-		gcpMock:    gcpmock.New(),
+		i:                   infra,
+		kcpManager:          kcpMgr,
+		registry:            registry,
+		activeSkrCollection: activeSkrCollection,
+		awsMock:             awsMock,
+		gcpMock:             gcpmock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),
