@@ -17,18 +17,16 @@ const (
 )
 
 func NewClientProvider() client2.SkrClientProvider[Client] {
-	return client2.NewCachedSkrClientProvider(
-		func(ctx context.Context, region, key, secret, role string) (Client, error) {
-			cfg, err := client2.NewSkrConfig(ctx, region, key, secret, role)
-			if err != nil {
-				return nil, err
-			}
-			return newClient(
-				ec2.NewFromConfig(cfg),
-				efs.NewFromConfig(cfg),
-			), nil
-		},
-	)
+	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
+		cfg, err := client2.NewSkrConfig(ctx, region, key, secret, role)
+		if err != nil {
+			return nil, err
+		}
+		return newClient(
+			ec2.NewFromConfig(cfg),
+			efs.NewFromConfig(cfg),
+		), nil
+	}
 }
 
 type Client interface {
