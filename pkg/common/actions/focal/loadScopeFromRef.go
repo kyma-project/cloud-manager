@@ -14,6 +14,11 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(State)
 
+	logger = logger.WithValues(
+		"scope", state.ObjAsCommonObj().ScopeRef().Name,
+		"scopeNamespace", state.ObjAsCommonObj().GetNamespace(),
+	)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Loading Scope from reference")
 
 	scope := &cloudcontrolv1beta1.Scope{}
@@ -21,7 +26,10 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 		Name:      state.ObjAsCommonObj().ScopeRef().Name,
 		Namespace: state.ObjAsCommonObj().GetNamespace(),
 	}, scope)
+
 	if apierrors.IsNotFound(err) {
+		logger.Info("Scope not found")
+
 		return composed.UpdateStatus(state.ObjAsCommonObj()).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -29,16 +37,28 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudcontrolv1beta1.ReasonScopeNotFound,
 				Message: fmt.Sprintf("Scope %s does not exist", state.ObjAsCommonObj().ScopeRef().Name),
 			}).
+			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading Scope", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading Scope", composed.StopWithRequeue, ctx)
 	}
 
+	logger = logger.WithValues(
+		"provider", scope.Spec.Provider,
+		"region", scope.Spec.Region,
+		"shootName", scope.Spec.ShootName,
+	)
+	if scope.Spec.Provider == cloudcontrolv1beta1.ProviderAws && scope.Spec.Scope.Aws != nil {
+		logger = logger.WithValues(
+			"awsAccount", scope.Spec.Scope.Aws.AccountId,
+		)
+	}
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Loaded Scope from reference")
 
 	state.SetScope(scope)
 
-	return nil, nil
+	return nil, ctx
 }

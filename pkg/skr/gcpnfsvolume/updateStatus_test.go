@@ -40,11 +40,10 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	state.KcpNfsInstance = &gcpNfsInstance
 
 	//Invoke updateStatus
-	err, _ctx := updateStatus(ctx, state)
+	err, _ = updateStatus(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), err, composed.StopWithRequeue)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -121,11 +120,10 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 	state.KcpNfsInstance = nfsInstance
 
 	//Invoke updateStatus
-	err, _ctx := updateStatus(ctx, state)
+	err, _ = updateStatus(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), err, composed.StopAndForget)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}

@@ -33,11 +33,10 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
 	state.KcpIpRange = &kcpIpRange
 
 	//Invoke modifyKcpNfsInstance
-	err, _ctx := modifyKcpNfsInstance(ctx, state)
+	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), err, composed.StopWithRequeue)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -93,11 +92,10 @@ func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 	assert.Nil(suite.T(), err)
 
 	//Invoke modifyKcpNfsInstance
-	err, _ctx := modifyKcpNfsInstance(ctx, state)
+	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), err, composed.StopWithRequeue)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}

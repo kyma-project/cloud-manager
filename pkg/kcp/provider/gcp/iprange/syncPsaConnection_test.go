@@ -70,9 +70,8 @@ func (suite *syncPsaConnectionSuite) TestCreateSuccess() {
 	state.connectionOp = client.ADD
 
 	//Invoke the function under test
-	err, resCtx := syncPsaConnection(ctx, state)
+	err, _ = syncPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -122,9 +121,8 @@ func (suite *syncPsaConnectionSuite) TestCreateFailure() {
 	state.connectionOp = client.ADD
 
 	//Invoke the function under test
-	err, resCtx := syncPsaConnection(ctx, state)
+	err, _ = syncPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -178,9 +176,8 @@ func (suite *syncPsaConnectionSuite) TestUpdate() {
 	state.connectionOp = client.MODIFY
 
 	//Invoke the function under test
-	err, resCtx := syncPsaConnection(ctx, state)
+	err, _ = syncPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -250,9 +247,8 @@ func (suite *syncPsaConnectionSuite) TestDeleteSuccess() {
 	state.connectionOp = client.DELETE
 
 	//Invoke the function under test
-	err, resCtx := syncPsaConnection(ctx, state)
+	err, _ = syncPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -298,9 +294,8 @@ func (suite *syncPsaConnectionSuite) TestDeleteFailure() {
 	state.connectionOp = client.DELETE
 
 	//Invoke the function under test
-	err, resCtx := syncPsaConnection(ctx, state)
+	err, _ = syncPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

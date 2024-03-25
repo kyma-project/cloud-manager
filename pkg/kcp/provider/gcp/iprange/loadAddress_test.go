@@ -97,9 +97,8 @@ func (suite *loadAddressSuite) TestWhenErrorResponse() {
 	assert.Nil(suite.T(), err)
 
 	//Invoke the function under test
-	err, resCtx := loadAddress(ctx, state)
+	err, _ = loadAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -155,9 +154,8 @@ func (suite *loadAddressSuite) TestWhenGcpAddressHasWrongVPC() {
 	assert.Nil(suite.T(), err)
 
 	//Invoke the function under test
-	err, resCtx := loadAddress(ctx, state)
+	err, _ = loadAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

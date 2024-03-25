@@ -76,9 +76,8 @@ func (suite *validateCidrSuite) TestInvalidCidr() {
 	assert.Nil(suite.T(), err)
 
 	//Invoke validateCidr
-	err, _ctx := validateCidr(ctx, state)
+	err, _ = validateCidr(ctx, state)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the updated ipRange object
 	ipRange = &cloudcontrolv1beta1.IpRange{}
