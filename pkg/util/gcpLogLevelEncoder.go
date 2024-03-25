@@ -15,7 +15,7 @@ func GcpZapEncoderConfigOption() zap.EncoderConfigOption {
 		config.StacktraceKey = "stacktrace"
 		config.LineEnding = zapcore.DefaultLineEnding
 		config.EncodeLevel = gcpLogLevelEncoder()
-		config.EncodeTime = zapcore.RFC3339TimeEncoder
+		config.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 		config.EncodeDuration = zapcore.MillisDurationEncoder
 		config.EncodeCaller = zapcore.ShortCallerEncoder
 	}

@@ -11,7 +11,7 @@ func removeKymaFinalizer(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	isRemoved := controllerutil.RemoveFinalizer(state.ObjAsScope(), cloudcontrolv1beta1.FinalizerName)
+	isRemoved := controllerutil.RemoveFinalizer(state.kyma, cloudcontrolv1beta1.FinalizerName)
 
 	if !isRemoved {
 		return nil, nil
