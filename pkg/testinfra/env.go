@@ -19,15 +19,15 @@ import (
 var _ InfraEnv = &infraEnv{}
 
 type infraEnv struct {
-	i          Infra
-	kcpManager manager.Manager
-	registry   skrruntime.SkrRegistry
-	looper     skrruntime.SkrLooper
-	awsMock    awsmock.Server
-	gcpMock    gcpmock.Server
-	skrKymaRef klog.ObjectRef
-	skrManager skrmanager.SkrManager
-	runner     skrruntime.SkrRunner
+	i                   Infra
+	kcpManager          manager.Manager
+	registry            skrruntime.SkrRegistry
+	activeSkrCollection skrruntime.ActiveSkrCollection
+	awsMock             awsmock.Server
+	gcpMock             gcpmock.Server
+	skrKymaRef          klog.ObjectRef
+	skrManager          skrmanager.SkrManager
+	runner              skrruntime.SkrRunner
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -41,8 +41,8 @@ func (ie *infraEnv) Registry() skrruntime.SkrRegistry {
 	return ie.registry
 }
 
-func (ie *infraEnv) Looper() skrruntime.SkrLooper {
-	return ie.looper
+func (ie *infraEnv) ActiveSkrCollection() skrruntime.ActiveSkrCollection {
+	return ie.activeSkrCollection
 }
 
 func (ie *infraEnv) AwsMock() awsmock.Server {

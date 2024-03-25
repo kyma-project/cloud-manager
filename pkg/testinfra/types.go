@@ -47,7 +47,7 @@ type ClusterInfo interface {
 type InfraEnv interface {
 	KcpManager() manager.Manager
 	Registry() skrruntime.SkrRegistry
-	Looper() skrruntime.SkrLooper
+	ActiveSkrCollection() skrruntime.ActiveSkrCollection
 	AwsMock() awsmock.Server
 	GcpMock() gcpmock.Server
 	SkrKymaRef() klog.ObjectRef

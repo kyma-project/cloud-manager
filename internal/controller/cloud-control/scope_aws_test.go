@@ -13,12 +13,13 @@ import (
 
 var _ = Describe("Feature: KCP Scope", func() {
 
-	const (
-		kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
-	)
-
 	It("Scenario: KCP AWS Scope is created when module is activated in Kyma CR", func() {
+		const (
+			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
+		)
+
 		shoot := &gardenerTypes.Shoot{}
+
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootAws).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
@@ -33,7 +34,8 @@ var _ = Describe("Feature: KCP Scope", func() {
 		})
 
 		scope := &cloudcontrolv1beta1.Scope{}
-		By("Then Scope should not exist", func() {
+
+		By("Then Scope does not exist", func() {
 			Consistently(LoadAndCheck, time.Second).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(
 					WithName(kymaName),
@@ -42,7 +44,12 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Not(Succeed()), "expected Scope not to exist")
 		})
 
-		By("When Kyma Module is listed in status", func() {
+		By("And Then SKR is not active", func() {
+			Expect(infra.ActiveSkrCollection().Contains(kymaName)).
+				To(BeFalse(), "expected SKR not to be active, but it is active")
+		})
+
+		By("When Kyma Module state is Processing", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateProcessing)).
 				Should(Succeed(), "failed updating KymaCR module to Processing state")
@@ -60,42 +67,42 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed(), "expected created Scope to have Ready condition")
 		})
 
-		By("And has provider aws", func() {
+		By("And Then Scope provider is aws", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAws))
 		})
 
-		By("And has spec.kymaName to equal shoot.name", func() {
+		By("And Then Scope has spec.kymaName to equal shoot.name", func() {
 			Expect(scope.Spec.KymaName).To(Equal(shoot.Name), "expected Scope.spec.kymaName to equal shoot.name")
 		})
 
-		By("And has spec.region equal to shoot.spec.region", func() {
+		By("And Then Scope has spec.region equal to shoot.spec.region", func() {
 			Expect(scope.Spec.Region).To(Equal(shoot.Spec.Region), "expected Shoot.spec.region equal to shoot.spec.region")
 		})
 
-		By("And has nil spec.scope.azure", func() {
+		By("And Then Scope has spec.scope.azure equal to nil", func() {
 			Expect(scope.Spec.Scope.Azure).To(BeNil(), "expected Shoot.spec.scope.azure to be nil")
 		})
 
-		By("And has nil spec.scope.gcp", func() {
+		By("And Then Scope has spec.scope.gcp equal to nil", func() {
 			Expect(scope.Spec.Scope.Gcp).To(BeNil(), "expected Shoot.spec.scope.gcp to be nil")
 		})
 
-		By("And has spec.scope.aws.accountId", func() {
+		By("And Then Scope has spec.scope.aws.accountId", func() {
 			Expect(scope.Spec.Scope.Aws).NotTo(BeNil())
 			Expect(scope.Spec.Scope.Aws.AccountId).NotTo(BeEmpty())
 			Expect(scope.Spec.Scope.Aws.AccountId).To(Equal(infra.AwsMock().GetAccount()))
 		})
 
-		By("And has spec.scope.aws.network.zones as shoot", func() {
+		By("And Then Scope has spec.scope.aws.network.zones as shoot", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones).To(HaveLen(3))
 			Expect(scope.Spec.Scope.Aws.Network.Zones[0].Name).To(Equal("eu-west-1a")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[1].Name).To(Equal("eu-west-1b")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
 		})
 
-		By("And has Ready condition", func() {
-			Expect(scope.Status.Conditions).To(HaveLen(1))
-			Expect(scope.Status.Conditions[0].Type).To(Equal(cloudcontrolv1beta1.ConditionTypeReady))
+		By("And Then SKR is active", func() {
+			Expect(infra.ActiveSkrCollection().Contains(kymaName)).
+				To(BeTrue(), "expected SKR to be active, but it is not active")
 		})
 	})
 

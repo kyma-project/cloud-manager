@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -10,26 +11,22 @@ func findKymaModuleState(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// Once module is added to the SKR Kyma CR, in KCP it first appears in the status field
-	// with state: Processing, and it does not appear in the spec
-	moduleState := util.GetKymaModuleStateFromStatus(state.kyma, "cloud-manager")
+	moduleName := "cloud-manager"
+	moduleState := util.GetKymaModuleStateFromStatus(state.kyma, moduleName)
+	moduleInSpec := util.IsKymaModuleListedInSpec(state.kyma, moduleName)
+	skrActive := state.activeSkrCollection.Contains(state.kyma.GetName())
 
-	logger = logger.WithValues("moduleState", moduleState)
+	logger = logger.WithValues(
+		"moduleState", moduleState,
+		"moduleInSpec", fmt.Sprintf("%v", moduleInSpec),
+		"skrActive", fmt.Sprintf("%v", skrActive),
+	)
 	logger.Info("Module state loaded")
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	state.moduleState = moduleState
-
-	//isListed := util.IsKymaModuleListedInSpec(state.kyma, "cloud-manager")
-	outome := util.NewDelayActIgnoreBuilder[util.KymaModuleState](util.Ignore).
-		Act(util.KymaModuleStateProcessing, util.KymaModuleStateReady, util.KymaModuleStateWarning).
-		Build().
-		Case(moduleState)
-	isModuleActivated := outome == util.Act
-
-	if !isModuleActivated {
-		return composed.StopAndForget, ctx
-	}
+	state.moduleInSpec = moduleInSpec
+	state.skrActive = skrActive
 
 	return nil, ctx
 }

@@ -74,7 +74,9 @@ type State struct {
 	kyma                *unstructured.Unstructured
 	activeSkrCollection skrruntime.ActiveSkrCollection
 
-	moduleState util.KymaModuleState
+	moduleState  util.KymaModuleState
+	moduleInSpec bool
+	skrActive    bool
 
 	shootName      string
 	shootNamespace string

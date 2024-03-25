@@ -7,6 +7,7 @@ import (
 )
 
 var NewLooper = looper.New
+var NewActiveSkrCollection = looper.NewActiveSkrCollection
 
 type SkrLooper = looper.SkrLooper
 

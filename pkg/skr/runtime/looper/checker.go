@@ -33,6 +33,7 @@ func (c *checker) IsReady(ctx context.Context, skrCluster cluster.Cluster) bool 
 			}
 			if timeout.Before(time.Now()) {
 				c.logger.Info("Timeout checking SKR readiness")
+				return false
 			}
 			time.Sleep(interval)
 		}

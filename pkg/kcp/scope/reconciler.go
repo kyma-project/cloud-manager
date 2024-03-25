@@ -67,40 +67,59 @@ func (r *scopeReconciler) newAction() composed.Action {
 	//  * create Scope with finalizer
 	//  * add SKR to the looper
 	return composed.ComposeActions(
-		"kymaMain",
+		"scopeMain",
 		loadKyma, // stops if Kyma not found
 		findKymaModuleState,
 		loadScopeObj,
 
-		skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
+		composed.BuildSwitchAction(
+			"scope-switch",
+			nil,
 
-		stopIfReadyAndActive,
+			// module is disabled
+			composed.NewCase(
+				predicateShouldDisable(),
+				composed.ComposeActions(
+					"scope-disable",
+					// TODO remove Kyma finalizer
+					removeKymaFinalizer,
+					skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
+				),
+			),
 
-		// module exists in Kyma status in some state (processing, ready, deleting, warning)
-		// scope:
-		//   * does not exist - has to be created
-		//   * exist but waiting for api to be activated
+			// module is enabled
+			composed.NewCase(
+				predicateShouldEnable(),
+				composed.ComposeActions(
+					"scope-enable",
+					// module exists in Kyma status in some state (processing, ready, deleting, warning)
+					// scope:
+					//   * does not exist - has to be created
+					//   * exist but waiting for api to be activated
 
-		addKymaFinalizer,
-		composed.BuildBranchingAction(
-			"scopeAlreadyCreatedBranching",
-			ObjIsLoadedPredicate(),
-			composed.ComposeActions( // This is called only if scope exits.
-				"enableApisAndActivateSkr",
-				enableApis,
-				addReadyCondition,
-				skrActivate,
-				composed.StopAndForgetAction),
-			nil),
-		// scope does not exist
-		createGardenerClient,
-		findShootName,
-		loadShoot,
-		loadGardenerCredentials,
-		createScope,
-		ensureScopeCommonFields,
-		saveScope,
-		composed.StopWithRequeueAction, // enableApisAndActivateSkr will be called in the next loop
+					addKymaFinalizer,
+					composed.BuildBranchingAction(
+						"scopeAlreadyCreatedBranching",
+						ObjIsLoadedPredicate(),
+						composed.ComposeActions( // This is called only if scope exits.
+							"enableApisAndActivateSkr",
+							enableApis,
+							addReadyCondition,
+							skrActivate,
+							composed.StopAndForgetAction),
+						nil),
+					// scope does not exist
+					createGardenerClient,
+					findShootName,
+					loadShoot,
+					loadGardenerCredentials,
+					createScope,
+					ensureScopeCommonFields,
+					saveScope,
+					composed.StopWithRequeueAction, // enableApisAndActivateSkr will be called in the next loop
+				),
+			),
+		),
 	)
 }
 
