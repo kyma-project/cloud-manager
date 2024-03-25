@@ -7,15 +7,13 @@ import (
 )
 
 func NewAwsStsGardenClientProvider() client.GardenClientProvider[AwsStsClient] {
-	return client.NewCachedGardenClientProvider(
-		func(ctx context.Context, region, key, secret string) (AwsStsClient, error) {
-			cfg, err := client.NewGardenConfig(ctx, region, key, secret)
-			if err != nil {
-				return nil, err
-			}
-			return newAwsStsClient(sts.NewFromConfig(cfg)), nil
-		},
-	)
+	return func(ctx context.Context, region, key, secret string) (AwsStsClient, error) {
+		cfg, err := client.NewGardenConfig(ctx, region, key, secret)
+		if err != nil {
+			return nil, err
+		}
+		return newAwsStsClient(sts.NewFromConfig(cfg)), nil
+	}
 }
 
 type AwsStsClient interface {
