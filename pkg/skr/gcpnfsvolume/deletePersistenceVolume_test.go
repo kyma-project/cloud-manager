@@ -122,11 +122,10 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 	state.PV = pv
 
 	//Call deletePersistenceVolume method.
-	err, _ctx := deletePersistenceVolume(ctx, state)
+	err, _ = deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), _ctx)
 
 	//Validate the Error Status is removed.
 	nfsVolume := cloudresourcesv1beta1.GcpNfsVolume{}

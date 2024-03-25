@@ -124,7 +124,7 @@ func (suite *validateSpecSuite) checkCapacity(capacityGb int, tier cloudresource
 	state := factory.newStateWith(nfsVol)
 
 	//Invoke validateSpec
-	err, _ctx := validateCapacity(ctx, state)
+	err, _ = validateCapacity(ctx, state)
 
 	//validate expected return values
 	if valid {
@@ -132,7 +132,6 @@ func (suite *validateSpecSuite) checkCapacity(capacityGb int, tier cloudresource
 	} else {
 		assert.Equal(suite.T(), composed.StopAndForget, err)
 	}
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -166,11 +165,10 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotExist() {
 	state := factory.newState()
 
 	//Invoke validateIpRange
-	err, _ctx := validateIpRange(ctx, state)
+	err, _ = validateIpRange(ctx, state)
 
 	//validate expected return values
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -302,7 +300,7 @@ func (suite *validateSpecSuite) checkFileShare(fsName string, tier cloudresource
 	state := factory.newStateWith(nfsVol)
 
 	//Invoke validateSpec
-	err, _ctx := validateFileShareName(ctx, state)
+	err, _ = validateFileShareName(ctx, state)
 
 	//validate expected return values
 	if valid {
@@ -310,7 +308,6 @@ func (suite *validateSpecSuite) checkFileShare(fsName string, tier cloudresource
 	} else {
 		assert.Equal(suite.T(), composed.StopAndForget, err)
 	}
-	assert.Nil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}

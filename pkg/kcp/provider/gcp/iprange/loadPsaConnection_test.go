@@ -165,9 +165,8 @@ func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
 	assert.Nil(suite.T(), err)
 
 	//Invoke the function under test
-	err, resCtx := loadPsaConnection(ctx, state)
+	err, _ = loadPsaConnection(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

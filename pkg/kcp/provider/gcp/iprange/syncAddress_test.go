@@ -68,9 +68,8 @@ func (suite *syncAddressSuite) TestCreateSuccess() {
 	state.addressOp = client.ADD
 
 	//Invoke the function under test
-	err, resCtx := syncAddress(ctx, state)
+	err, _ = syncAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -111,9 +110,8 @@ func (suite *syncAddressSuite) TestCreateFailure() {
 	state.addressOp = client.ADD
 
 	//Invoke the function under test
-	err, resCtx := syncAddress(ctx, state)
+	err, _ = syncAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -193,9 +191,8 @@ func (suite *syncAddressSuite) TestDeleteSuccess() {
 	state.addressOp = client.DELETE
 
 	//Invoke the function under test
-	err, resCtx := syncAddress(ctx, state)
+	err, _ = syncAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -245,9 +242,8 @@ func (suite *syncAddressSuite) TestDeleteFailure() {
 	state.addressOp = client.DELETE
 
 	//Invoke the function under test
-	err, resCtx := syncAddress(ctx, state)
+	err, _ = syncAddress(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

@@ -188,7 +188,7 @@ func (b *UpdateStatusBuilder) setDefaults() {
 
 	if b.onUpdateSuccess == nil {
 		b.onUpdateSuccess = func(ctx context.Context) (error, context.Context) {
-			return b.successError, nil
+			return b.successError, ctx
 		}
 	}
 }

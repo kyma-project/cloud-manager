@@ -43,8 +43,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateDeleted() {
 	testState.fsInstance = nil
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := checkNUpdateState(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.Deleted, testState.State.ObjAsNfsInstance().Status.State)
@@ -73,8 +72,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateNotDeleting() {
 	}
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := checkNUpdateState(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.DELETE, testState.State.operation)
@@ -130,8 +128,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateCreate() {
 	testState.fsInstance = nil
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := checkNUpdateState(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.ADD, testState.State.operation)
@@ -170,8 +167,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateUpdate() {
 	}
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := checkNUpdateState(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.MODIFY, testState.State.operation)
@@ -215,8 +211,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	}
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := checkNUpdateState(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
 	assert.Equal(suite.T(), v1beta1.ReadyState, testState.State.curState)

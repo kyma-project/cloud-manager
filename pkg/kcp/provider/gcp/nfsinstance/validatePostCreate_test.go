@@ -48,8 +48,7 @@ func (suite *validatePostCreateSuite) TestValidatePostCreateScaleDownFail() {
 	}
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	err, resCtx := validatePostCreate(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = validatePostCreate(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	// validate status conditions error
 	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)

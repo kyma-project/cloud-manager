@@ -45,9 +45,8 @@ func (suite *updateStateSuite) TestStateChangeToReady() {
 	state.curState = v1beta1.ReadyState
 
 	//Invoke the function under test
-	err, resCtx := updateState(ctx, state)
+	err, _ = updateState(ctx, state)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -84,9 +83,8 @@ func (suite *updateStateSuite) TestStateChangeToOther() {
 	state.curState = client.SyncPsaConnection
 
 	//Invoke the function under test
-	err, resCtx := updateState(ctx, state)
+	err, _ = updateState(ctx, state)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Nil(suite.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
