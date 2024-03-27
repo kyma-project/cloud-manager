@@ -32,7 +32,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating IpRange status on shoot and vpc mismatch", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating IpRange status on shoot and vpc mismatch", composed.StopWithRequeue, ctx)
 		}
 
 		return composed.StopAndForget, nil

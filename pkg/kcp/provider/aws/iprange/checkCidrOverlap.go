@@ -37,7 +37,7 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 			})
 			err := state.UpdateObjStatus(ctx)
 			if err != nil {
-				return composed.LogErrorAndReturn(err, "Error updating IpRange status due to cidr overlap", composed.StopWithRequeue, nil)
+				return composed.LogErrorAndReturn(err, "Error updating IpRange status due to cidr overlap", composed.StopWithRequeue, ctx)
 			}
 
 			return composed.StopAndForget, nil

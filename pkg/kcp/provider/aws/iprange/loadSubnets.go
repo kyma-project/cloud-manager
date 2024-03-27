@@ -11,7 +11,7 @@ func loadSubnets(ctx context.Context, st composed.State) (error, context.Context
 
 	subnetList, err := state.client.DescribeSubnets(ctx, pointer.StringDeref(state.vpc.VpcId, ""))
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading subnets", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading subnets", composed.StopWithRequeue, ctx)
 	}
 
 	state.allSubnets = subnetList

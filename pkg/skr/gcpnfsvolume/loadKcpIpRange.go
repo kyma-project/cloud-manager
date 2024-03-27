@@ -27,7 +27,7 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 		client.InNamespace(state.KymaRef.Namespace),
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange", composed.StopWithRequeue, ctx)
 	}
 
 	if len(list.Items) == 0 {

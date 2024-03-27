@@ -23,7 +23,7 @@ func RemoveFinalizer(ctx context.Context, state composed.State) (error, context.
 	//Remove finalizer
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.FinalizerName)
 	if err := state.UpdateObj(ctx); err != nil {
-		return composed.LogErrorAndReturn(err, "Error removing Finalizer", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error removing Finalizer", composed.StopWithRequeue, ctx)
 	}
 
 	//stop reconciling loop.

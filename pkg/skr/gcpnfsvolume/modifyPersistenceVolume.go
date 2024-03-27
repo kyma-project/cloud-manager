@@ -47,7 +47,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	err := state.SkrCluster.K8sClient().Update(ctx, state.PV)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating PersistentVolume", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error updating PersistentVolume", composed.StopWithRequeue, ctx)
 	}
 
 	//continue

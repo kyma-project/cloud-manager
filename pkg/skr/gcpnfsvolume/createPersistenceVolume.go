@@ -75,7 +75,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	//Create PV
 	err := state.SkrCluster.K8sClient().Create(ctx, state.PV)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating PersistentVolume", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error creating PersistentVolume", composed.StopWithRequeue, ctx)
 	}
 
 	//continue

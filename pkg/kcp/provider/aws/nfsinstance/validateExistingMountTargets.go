@@ -63,13 +63,13 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 	})
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status conditions after invalid mount targets found", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status conditions after invalid mount targets found", composed.StopWithRequeue, ctx)
 	}
 
 	state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
 	err = state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status state after invalid mount targets found", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status state after invalid mount targets found", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopAndForget, nil

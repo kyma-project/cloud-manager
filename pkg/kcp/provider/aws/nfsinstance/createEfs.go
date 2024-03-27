@@ -56,7 +56,7 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status due failed creating efs", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status due failed creating efs", composed.StopWithRequeue, ctx)
 		}
 
 		return composed.StopWithRequeueDelay(time.Minute), nil

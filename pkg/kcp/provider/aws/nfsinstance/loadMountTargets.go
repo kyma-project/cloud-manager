@@ -19,7 +19,7 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 
 	mtList, err := state.awsClient.DescribeMountTargets(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading mount targets", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading mount targets", composed.StopWithRequeue, ctx)
 	}
 
 	state.mountTargets = mtList
@@ -29,7 +29,7 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		mtID := pointer.StringDeref(mt.MountTargetId, "")
 		sgList, err := state.awsClient.DescribeMountTargetSecurityGroups(ctx, mtID)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error loading mount target security groups", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error loading mount target security groups", composed.StopWithRequeue, ctx)
 		}
 		state.mountTargetSecurityGroups[mtID] = sgList
 	}

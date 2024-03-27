@@ -23,7 +23,7 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 
 	err := state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving AwsNfsVolume after finalizer added", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error saving AwsNfsVolume after finalizer added", composed.StopWithRequeue, ctx)
 	}
 
 	logger.Info("Added finalizer to SKR IpRange, requeue")

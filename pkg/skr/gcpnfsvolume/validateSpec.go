@@ -81,7 +81,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			Name:      ipRangeName.Name},
 		ipRange)
 	if client.IgnoreNotFound(err) != nil {
-		return composed.LogErrorAndReturn(err, "Error loading referred IpRange", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading referred IpRange", composed.StopWithRequeue, ctx)
 	}
 	if err != nil {
 		logger.

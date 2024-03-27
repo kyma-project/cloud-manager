@@ -32,7 +32,7 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		},
 	}, nil)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing security groups", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error listing security groups", composed.StopWithRequeue, ctx)
 	}
 
 	if len(list) > 0 {

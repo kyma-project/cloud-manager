@@ -12,7 +12,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 
 	list, err := state.awsClient.DescribeFileSystems(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing AWS file systems", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error listing AWS file systems", composed.StopWithRequeue, ctx)
 	}
 
 	for _, fs := range list {

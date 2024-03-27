@@ -21,7 +21,7 @@ func deleteKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 	err := state.KcpCluster.K8sClient().Delete(ctx, state.KcpNfsInstance)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting KCP NfsInstance", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error deleting KCP NfsInstance", composed.StopWithRequeue, ctx)
 	}
 
 	// give some time to cloud-control and cloud providers to delete it, and then run again
