@@ -91,12 +91,20 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
+			msg := op.StatusMessage
+			if msg == "" {
+				if op.Error.Errors != nil && len(op.Error.Errors) > 0 {
+					msg = op.Error.Errors[0].Message
+				} else {
+					msg = "Operation failed with no error message."
+				}
+			}
 			return composed.UpdateStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  v1beta1.ReasonGcpError,
-					Message: op.StatusMessage,
+					Message: msg,
 				}).
 				SuccessError(composed.StopWithRequeue).
 				SuccessLogMsg(fmt.Sprintf("Compute Operation error : %s", op.StatusMessage)).
