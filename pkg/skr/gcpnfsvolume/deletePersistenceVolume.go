@@ -55,7 +55,7 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 	//Delete PV
 	err := state.SkrCluster.K8sClient().Delete(ctx, state.PV)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting PersistentVolume", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error deleting PersistentVolume", composed.StopWithRequeue, ctx)
 	}
 
 	// give some time, and then run again

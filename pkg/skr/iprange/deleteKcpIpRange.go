@@ -24,7 +24,7 @@ func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 
 	err := state.KcpCluster.K8sClient().Delete(ctx, state.KcpIpRange)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting KCP IpRange", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error deleting KCP IpRange", composed.StopWithRequeue, ctx)
 	}
 
 	// give some time to cloud-control and cloud providers to delete it, and then run again

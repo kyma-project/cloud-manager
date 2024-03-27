@@ -72,7 +72,7 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 	err = state.UpdateObjStatus(ctx)
 	if err != nil {
 		err = fmt.Errorf("error updating IpRange status: %w", err)
-		return composed.LogErrorAndReturn(err, "Error splitting IpRange CIDR", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error splitting IpRange CIDR", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopWithRequeue, nil

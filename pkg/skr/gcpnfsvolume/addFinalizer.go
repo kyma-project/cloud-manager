@@ -20,7 +20,7 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 
 	err := st.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, ctx)
 	}
 
 	return nil, nil

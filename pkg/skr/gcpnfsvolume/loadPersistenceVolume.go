@@ -22,7 +22,7 @@ func loadPersistenceVolume(ctx context.Context, st composed.State) (error, conte
 		},
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading Persistent Volume", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading Persistent Volume", composed.StopWithRequeue, ctx)
 	}
 
 	if len(list.Items) == 0 {

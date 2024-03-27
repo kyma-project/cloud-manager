@@ -70,7 +70,7 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 	})
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Failed updating CidrAssociationFailed status", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Failed updating CidrAssociationFailed status", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopAndForget, nil

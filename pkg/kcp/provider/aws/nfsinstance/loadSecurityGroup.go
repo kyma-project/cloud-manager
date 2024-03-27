@@ -28,7 +28,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing security group id", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing security group id", composed.StopWithRequeue, ctx)
 		}
 		return composed.StopAndForget, nil
 	}
@@ -44,7 +44,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		[]string{state.securityGroupId},
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading security group", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading security group", composed.StopWithRequeue, ctx)
 	}
 	if len(sg) < 1 {
 		logger.Info("Security group with id not found!!!")
@@ -57,7 +57,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing created security group", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing created security group", composed.StopWithRequeue, ctx)
 		}
 		return composed.StopAndForget, nil
 	}

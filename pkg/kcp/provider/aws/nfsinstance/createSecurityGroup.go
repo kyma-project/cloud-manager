@@ -35,7 +35,7 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 		},
 	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating security group", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error creating security group", composed.StopWithRequeue, ctx)
 	}
 
 	state.securityGroupId = sgId

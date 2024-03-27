@@ -35,7 +35,7 @@ func createMountTargets(ctx context.Context, st composed.State) (error, context.
 			[]string{state.securityGroupId},
 		)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error creating Mount point", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error creating Mount point", composed.StopWithRequeue, ctx)
 		}
 	}
 

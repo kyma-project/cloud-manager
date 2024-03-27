@@ -25,7 +25,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	}, ipRange)
 
 	if client.IgnoreNotFound(err) != nil {
-		return composed.LogErrorAndReturn(err, "Error loading referred IpRange", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading referred IpRange", composed.StopWithRequeue, ctx)
 	}
 
 	if apierrors.IsNotFound(err) {
@@ -41,7 +41,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after referred IpRange not found", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after referred IpRange not found", composed.StopWithRequeue, ctx)
 		}
 
 		return composed.StopAndForget, nil

@@ -23,7 +23,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		client.InNamespace(state.KymaRef.Namespace),
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, ctx)
 	}
 
 	if len(list.Items) == 0 {

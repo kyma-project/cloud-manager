@@ -23,7 +23,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
 	err := state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving SKR GcpNfsVolume after finalizer remove", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error saving SKR GcpNfsVolume after finalizer remove", composed.StopWithRequeue, ctx)
 	}
 
 	// bye, bye SKR GcpNfsVolume

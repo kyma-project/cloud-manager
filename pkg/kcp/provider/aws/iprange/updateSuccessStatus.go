@@ -22,7 +22,7 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating IpRange success status", composed.StopWithRequeue, nil)
+		return composed.LogErrorAndReturn(err, "Error updating IpRange success status", composed.StopWithRequeue, ctx)
 	}
 
 	return nil, nil

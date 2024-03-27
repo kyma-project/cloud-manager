@@ -31,7 +31,7 @@ func extendVpcAddressSpace(ctx context.Context, st composed.State) (error, conte
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating status due to failed extending vpc address space", composed.StopWithRequeue, nil)
+			return composed.LogErrorAndReturn(err, "Error updating status due to failed extending vpc address space", composed.StopWithRequeue, ctx)
 		}
 
 		return composed.StopAndForget, nil
