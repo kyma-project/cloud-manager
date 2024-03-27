@@ -26,7 +26,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if condErr != nil {
 		logger.Info("Updating IpRange status with Error condition")
 		return composed.UpdateStatus(state.ObjAsIpRange()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
@@ -40,7 +40,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if condReady != nil {
 		logger.Info("Updating IpRange status with Ready condition")
 		return composed.UpdateStatus(state.ObjAsIpRange()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
