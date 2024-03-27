@@ -3,7 +3,6 @@ package awsnfsvolume
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -30,11 +29,10 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 
 	pv := &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.Obj().GetNamespace(),
-			Name:      state.ObjAsAwsNfsVolume().Status.Id,
-			Labels: map[string]string{
-				cloudresourcesv1beta1.LabelCloudManaged: "true",
-			},
+			Namespace:   state.Obj().GetNamespace(),
+			Name:        getVolumeName(state.ObjAsAwsNfsVolume()),
+			Labels:      getVolumeLabels(state.ObjAsAwsNfsVolume()),
+			Annotations: getVolumeAnnotations(state.ObjAsAwsNfsVolume()),
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{

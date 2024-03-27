@@ -35,6 +35,61 @@ func WithNfsVolumeIpRange(ipRangeName string) ObjAction {
 	}
 }
 
+func WithAwsNfsVolumePvName(name string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolume == nil {
+					x.Spec.PersistentVolume = &cloudresourcesv1beta1.AwsNfsVolumePvSpec{}
+				}
+				x.Spec.PersistentVolume.Name = name
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvName", obj))
+		},
+	}
+}
+
+func WithAwsNfsVolumePvLabels(labels map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolume == nil {
+					x.Spec.PersistentVolume = &cloudresourcesv1beta1.AwsNfsVolumePvSpec{}
+				}
+				if x.Spec.PersistentVolume.Labels == nil {
+					x.Spec.PersistentVolume.Labels = map[string]string{}
+				}
+				for k, v := range labels {
+					x.Spec.PersistentVolume.Labels[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvLabels", obj))
+		},
+	}
+}
+
+func WithAwsNfsVolumePvAnnotations(annotations map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolume == nil {
+					x.Spec.PersistentVolume = &cloudresourcesv1beta1.AwsNfsVolumePvSpec{}
+				}
+				if x.Spec.PersistentVolume.Annotations == nil {
+					x.Spec.PersistentVolume.Annotations = map[string]string{}
+				}
+				for k, v := range annotations {
+					x.Spec.PersistentVolume.Annotations[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvAnnotations", obj))
+		},
+	}
+}
+
 func WithAwsNfsVolumeCapacity(capacity string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
