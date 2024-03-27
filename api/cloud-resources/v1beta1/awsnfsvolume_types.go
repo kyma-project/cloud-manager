@@ -51,6 +51,14 @@ type AwsNfsVolumeSpec struct {
 
 	// +kubebuilder:default=bursting
 	Throughput AwsThroughputMode `json:"throughput,omitempty"`
+
+	PersistentVolume *AwsNfsVolumePvSpec `json:"volume,omitempty"`
+}
+
+type AwsNfsVolumePvSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // AwsNfsVolumeStatus defines the observed state of AwsNfsVolume

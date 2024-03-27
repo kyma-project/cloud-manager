@@ -1,6 +1,7 @@
 package cloudresources
 
 import (
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
@@ -49,6 +50,16 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		awsNfsVolumeCapacity := "100G"
 
+		const (
+			pvName = "4e0a550e-a247-44b1-8232-cb973ba053b3"
+		)
+		pvLabels := map[string]string{
+			"foo": "1",
+		}
+		pvAnnotations := map[string]string{
+			"bar": "2",
+		}
+
 		By("When AwsNfsVolume is created", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(
@@ -56,6 +67,9 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					WithName(awsNfsVolumeName),
 					WithNfsVolumeIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
+					WithAwsNfsVolumePvName(pvName),
+					WithAwsNfsVolumePvLabels(pvLabels),
+					WithAwsNfsVolumePvAnnotations(pvAnnotations),
 				).
 				Should(Succeed())
 		})
@@ -141,10 +155,17 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pv,
 					NewObjActions(
-						WithName(awsNfsVolume.Status.Id),
+						WithName(pvName),
 					),
 				).
 				Should(Succeed())
+
+			for k, v := range pvLabels {
+				Expect(pv.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have label %s=%s", k, v))
+			}
+			for k, v := range pvAnnotations {
+				Expect(pv.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have annotation %s=%s", k, v))
+			}
 		})
 
 	})
@@ -259,7 +280,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pv,
 					NewObjActions(
-						WithName(awsNfsVolume.Status.Id),
+						WithName(awsNfsVolume.Name),
 					),
 				).
 				Should(Succeed(), "failed creating PV")
