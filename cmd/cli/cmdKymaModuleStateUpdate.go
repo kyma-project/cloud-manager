@@ -37,7 +37,7 @@ var cmdKymaModuleStateUpdate = &cobra.Command{
 			return
 		}
 
-		err = util.SetKymaModuleStateFromStatus(kymaCR, kymaModuleName, util.KymaModuleState(moduleState))
+		err = util.SetKymaModuleStateToStatus(kymaCR, kymaModuleName, util.KymaModuleState(moduleState))
 		if err != nil {
 			return fmt.Errorf("error setting kyma module %s state to %s: %w", kymaModuleName, moduleState, err)
 		}

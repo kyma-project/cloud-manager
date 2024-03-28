@@ -1,10 +1,19 @@
 package testinfra
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"github.com/onsi/ginkgo/v2"
+	"io"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
+	"os"
+	"path"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
@@ -69,4 +78,76 @@ func (c *clusterInfo) Client() client.Client {
 
 func (c *clusterInfo) Cfg() *rest.Config {
 	return c.cfg
+}
+
+func (c *clusterInfo) EnsureCrds(ctx context.Context) error {
+	var files []string
+	rx := regexp.MustCompile(".+\\.yaml")
+	for _, dir := range c.crdDirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return fmt.Errorf("error reading dir %s: %w", dir, err)
+		}
+		for _, en := range entries {
+			if rx.Match([]byte(en.Name())) {
+				files = append(files, path.Join(dir, en.Name()))
+			}
+		}
+	}
+
+	for _, fn := range files {
+		b, err := os.ReadFile(fn)
+		if err != nil {
+			return fmt.Errorf("error reading CRD manifest %s: %w", fn, err)
+		}
+
+		decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 1000)
+		docCount := 0
+		for {
+			docCount++
+			var rawObj runtime.RawExtension
+			if err := decoder.Decode(&rawObj); err != nil {
+				if err == io.EOF {
+					break
+				}
+				return fmt.Errorf("error deconding document #%d in %s: %w", docCount, fn, err)
+			}
+			if rawObj.Raw == nil {
+				// empty yaml doc
+				continue
+			}
+
+			obj, _, err := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
+			if err != nil {
+				return fmt.Errorf("error deconding rawObj into UnstructuredJSONScheme in document #%d in %s: %w", docCount, fn, err)
+			}
+			u, ok := obj.(*unstructured.Unstructured)
+			if !ok {
+				unstructuredData, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+				if err != nil {
+					return fmt.Errorf("error converting obj to unstructured in document #%d in %s: %w", docCount, fn, err)
+				}
+
+				u = &unstructured.Unstructured{Object: unstructuredData}
+			}
+
+			uu := u.DeepCopy()
+			err = c.client.Get(ctx, client.ObjectKeyFromObject(uu), uu)
+			if client.IgnoreNotFound(err) != nil {
+				return fmt.Errorf("error getting obj %s of kind %s/%s to check if it exist: %w", uu.GetName(), uu.GetAPIVersion(), uu.GetKind(), err)
+			}
+
+			if err == nil {
+				// this object exist
+				continue
+			}
+
+			err = c.client.Create(ctx, u)
+			if err != nil {
+				return fmt.Errorf("error creating %s/%s/%s: %w", u.GetAPIVersion(), u.GetKind(), u.GetName(), err)
+			}
+		}
+	}
+
+	return nil
 }

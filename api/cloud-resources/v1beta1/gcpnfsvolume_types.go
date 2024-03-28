@@ -17,7 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/elliotchance/pie/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Additional error reasons
@@ -106,6 +108,12 @@ type GcpNfsVolumeList struct {
 
 func (l *GcpNfsVolumeList) GetItemCount() int {
 	return len(l.Items)
+}
+
+func (l *GcpNfsVolumeList) GetItems() []client.Object {
+	return pie.Map(l.Items, func(item GcpNfsVolume) client.Object {
+		return &item
+	})
 }
 
 func init() {

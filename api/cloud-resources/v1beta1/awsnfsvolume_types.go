@@ -17,8 +17,10 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/elliotchance/pie/v2"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // +kubebuilder:validation:Enum=generalPurpose;maxIO
@@ -111,6 +113,12 @@ type AwsNfsVolumeList struct {
 
 func (l *AwsNfsVolumeList) GetItemCount() int {
 	return len(l.Items)
+}
+
+func (l *AwsNfsVolumeList) GetItems() []client.Object {
+	return pie.Map(l.Items, func(item AwsNfsVolume) client.Object {
+		return &item
+	})
 }
 
 func init() {

@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"time"
 )
 
@@ -104,6 +105,71 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Expect(infra.ActiveSkrCollection().Contains(kymaName)).
 				To(BeTrue(), "expected SKR to be active, but it is not active")
 		})
+
+		By("And Then Kyma CR has finalizer", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
+				Should(Succeed())
+			Expect(controllerutil.ContainsFinalizer(kymaCR, cloudcontrolv1beta1.FinalizerName)).
+				To(BeTrue(), "expected Kyma CR to have finalizer, but it does not")
+		})
+	})
+
+	It("Scenario: KCP AWS Scope is deleted when module is deactivated in Kyma CR", func() {
+		const (
+			kymaName = "d55ac1aa-288c-4af4-a0b7-96ce5b81046b"
+		)
+
+		shoot := &gardenerTypes.Shoot{}
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Shoot exists", func() {
+			Eventually(CreateShootAws).
+				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
+				Should(Succeed(), "failed creating garden shoot for aws")
+		})
+
+		kymaCR := util.NewKymaUnstructured()
+		By("And Given Kyma CR exists", func() {
+			Eventually(CreateKymaCR).
+				WithArguments(infra.Ctx(), infra, kymaCR, WithName(kymaName), WithKymaSpecChannel("dev")).
+				Should(Succeed(), "failed creating kyma cr")
+		})
+
+		By("And Given module is active", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateReady)).
+				Should(Succeed(), "failed updating KymaCR module state to Processing")
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(WithName(kymaName)), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
+				Should(Succeed(), "expected Scope to be created and have Ready condition")
+		})
+
+		By("When module is deactivated", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
+				Should(Succeed(), "failed reloading Kyma CR")
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateNotPresent)).
+				Should(Succeed(), "failed updating KymaCR module state to NotPresent")
+		})
+
+		By("Then Scope is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed(), "expected Scope to be deleted, but it still exists")
+		})
+
+		By("And Then Kyma CR does not have finalizer", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
+				Should(Succeed(), "failed reloading Kyma CR")
+
+			Expect(controllerutil.ContainsFinalizer(kymaCR, cloudcontrolv1beta1.FinalizerName)).
+				To(BeFalse(), "expected Kyma CR not to have finalizer, but it still has it")
+		})
+
 	})
 
 })

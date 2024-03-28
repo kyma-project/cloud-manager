@@ -81,7 +81,6 @@ func (r *scopeReconciler) newAction() composed.Action {
 				predicateShouldDisable(),
 				composed.ComposeActions(
 					"scope-disable",
-					// TODO remove Kyma finalizer
 					removeKymaFinalizer,
 					skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
 				),
