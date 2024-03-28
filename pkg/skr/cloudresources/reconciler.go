@@ -51,6 +51,7 @@ func (r *reconciler) newAction() composed.Action {
 				"cloudResources-delete",
 
 				checkIfResourcesExist,
+				deleteCrds,
 				removeFinalizer,
 
 				composed.StopAndForgetAction,

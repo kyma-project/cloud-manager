@@ -188,7 +188,10 @@ func RemoveKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName st
 	return unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 }
 
-func SetKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
+func SetKymaModuleStateToStatus(k *unstructured.Unstructured, moduleName string, state KymaModuleState) error {
+	if state == KymaModuleStateNotPresent {
+		return RemoveKymaModuleStateFromStatus(k, moduleName)
+	}
 	modules, exists, err := unstructured.NestedSlice(k.Object, "status", "modules")
 	if err != nil {
 		return err

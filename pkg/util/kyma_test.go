@@ -156,7 +156,7 @@ func Test_StatusE2E(t *testing.T) {
 
 	assert.Equal(t, KymaModuleStateNotPresent, GetKymaModuleStateFromStatus(k, moduleName))
 
-	assert.NoError(t, SetKymaModuleStateFromStatus(k, moduleName, KymaModuleStateReady))
+	assert.NoError(t, SetKymaModuleStateToStatus(k, moduleName, KymaModuleStateReady))
 	assert.Equal(t, KymaModuleStateReady, GetKymaModuleStateFromStatus(k, moduleName))
 
 	assert.NoError(t, RemoveKymaModuleStateFromStatus(k, moduleName))

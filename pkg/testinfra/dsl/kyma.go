@@ -74,7 +74,7 @@ func WithKymaStatusModuleState(state util.KymaModuleState) ObjStatusAction {
 		f: func(obj client.Object) {
 			x, ok := obj.(*unstructured.Unstructured)
 			if ok {
-				err := util.SetKymaModuleStateFromStatus(x, DefaultModuleName, state)
+				err := util.SetKymaModuleStateToStatus(x, DefaultModuleName, state)
 				if err != nil {
 					panic(err)
 				}

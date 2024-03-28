@@ -35,7 +35,7 @@ func (dsl *infraDSL) WhenKymaModuleStateUpdates(kymaName string, state util.Kyma
 		return err
 	}
 
-	err = util.SetKymaModuleStateFromStatus(kymaCR, "cloud-manager", state)
+	err = util.SetKymaModuleStateToStatus(kymaCR, "cloud-manager", state)
 	if err != nil {
 		return err
 	}
