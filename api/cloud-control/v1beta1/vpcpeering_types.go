@@ -60,12 +60,17 @@ type AzureVpcPeering struct {
 }
 
 type AwsVpcPeering struct {
-	Foo string `json:"foo,omitempty"`
+	RemoteVpcId     string `json:"remoteVpcId"`
+	RemoteRegion    string `json:"remoteRegion,omitempty"`
+	RemoteAccountId string `json:"remoteAccountId"`
 }
 
 // VpcPeeringStatus defines the observed state of VpcPeering
 type VpcPeeringStatus struct {
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	VpcId string `json:"vpcId,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional

@@ -18,36 +18,43 @@ package cloudcontrol
 
 import (
 	"context"
-	"k8s.io/client-go/tools/record"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	awsVpCPeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 )
 
 func SetupVpcPeeringReconciler(
 	kcpManager manager.Manager,
+	awsSkrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 ) error {
 	return NewVpcPeeringReconciler(
-		kcpManager,
+		vpcpeering.NewVpcPeeringReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
+			focal.NewStateFactory(),
+			awsVpCPeering.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
+		),
 	).SetupWithManager(kcpManager)
 }
 
-func NewVpcPeeringReconciler(mgr manager.Manager) *VpcPeeringReconciler {
+func NewVpcPeeringReconciler(
+	reconciler vpcpeering.VPCPeeringReconciler,
+) *VpcPeeringReconciler {
 	return &VpcPeeringReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Reconciler: reconciler,
 	}
 }
 
 type VpcPeeringReconciler struct {
-	client.Client
-	record.EventRecorder
-	Scheme *runtime.Scheme
+	Reconciler vpcpeering.VPCPeeringReconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=vpcpeerings,verbs=get;list;watch;create;update;patch;delete
@@ -64,24 +71,12 @@ type VpcPeeringReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *VpcPeeringReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	//// TODO: this should be moved into separate reconciler package
-	//state := scope.NewState(
-	//	focal.NewState(
-	//		composed.NewState(r.K8sClient, r.EventRecorder, r.Scheme, req.NamespacedName, &cloudresourcesv1beta1.VpcPeering{}),
-	//	),
-	//	abstractions.NewFileReader(),
-	//)
-	//action := actions.New()
-	//err, _ := action(ctx, state)
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *VpcPeeringReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cloudresourcesv1beta1.VpcPeering{}).
+		For(&cloudcontrolv1beta1.VpcPeering{}).
 		Complete(r)
 }
