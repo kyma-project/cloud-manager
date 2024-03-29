@@ -9,6 +9,7 @@ configMapGenerator:
   literals:
   - GARDENER_NAMESPACE=garden-spm-test01
   - SKR_PROVIDERS=/var/kyma/cloud-manager/skr/providers/
+  - GCP_CLIENT_RENEW_DURATION=5m
   name: manager-env
 
 secretGenerator:
