@@ -42,6 +42,7 @@ type ClusterInfo interface {
 	Scheme() *runtime.Scheme
 	Client() ctrlclient.Client
 	Cfg() *rest.Config
+	EnsureCrds(ctx context.Context) error
 }
 
 type InfraEnv interface {
