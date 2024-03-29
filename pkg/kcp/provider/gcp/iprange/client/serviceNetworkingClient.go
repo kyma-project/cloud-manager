@@ -65,7 +65,7 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 
 func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	ProjectNumber, err := client.GetCachedProjectNumber(ctx, projectId, c.crmService)
+	ProjectNumber, err := client.GetCachedProjectNumber(projectId, c.crmService)
 	if err != nil {
 		return nil, err
 	}
