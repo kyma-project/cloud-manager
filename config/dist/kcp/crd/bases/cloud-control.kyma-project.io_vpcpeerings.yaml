@@ -57,8 +57,15 @@ spec:
                 properties:
                   aws:
                     properties:
-                      foo:
+                      remoteAccountId:
                         type: string
+                      remoteRegion:
+                        type: string
+                      remoteVpcId:
+                        type: string
+                    required:
+                    - remoteAccountId
+                    - remoteVpcId
                     type: object
                   azure:
                     properties:
@@ -159,6 +166,8 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               state:
+                type: string
+              vpcId:
                 type: string
             type: object
         type: object

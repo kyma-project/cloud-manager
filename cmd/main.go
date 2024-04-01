@@ -21,6 +21,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -162,7 +163,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.SetupVpcPeeringReconciler(mgr); err != nil {
+	if err = cloudcontrolcontroller.SetupVpcPeeringReconciler(
+		mgr,
+		awsvpcpeeringclient.NewClientProvider(),
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
 	}
