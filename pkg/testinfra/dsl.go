@@ -203,7 +203,7 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 			Provider:  cloudcontrolv1beta1.ProviderGCP,
 			Scope: cloudcontrolv1beta1.ScopeInfo{
 				Gcp: &cloudcontrolv1beta1.GcpScope{
-					Project:    dsl.i.AwsMock().GetAccount(),
+					Project:    project,
 					VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, name),
 				},
 			},

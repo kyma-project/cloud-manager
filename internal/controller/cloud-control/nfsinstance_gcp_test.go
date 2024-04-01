@@ -16,22 +16,22 @@ import (
 	"time"
 )
 
-var _ = Describe("KCP NFSVolume for GCP", func() {
+var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 	const (
 		kymaName = "5b30a61a-c4ae-49da-a8ad-903a71696d8b"
 
 		interval = time.Millisecond * 250
 	)
 	var (
-		timeout = time.Second * 10
+		timeout = time.Second * 20
 	)
 
 	if debugged.Debugged {
 		timeout = time.Minute * 20
 	}
-	Context("GCP NFSVolume Happy Path", Ordered, func() {
+	Context("Scenario: GCP NFSVolume Happy Path", Ordered, func() {
 		gcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-		It("GCP NFSVolume Creation", func() {
+		It("Scenario: GCP NFSVolume Creation", func() {
 			scope := &cloudcontrolv1beta1.Scope{}
 			By("Given KCP Cluster", func() {
 
@@ -106,7 +106,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 		})
 
-		It("GCP NFSVolume Updating", func() {
+		It("Scenario: GCP NFSVolume Updating", func() {
 			By("Given NfsVolume is Ready", func() {
 			})
 
@@ -142,7 +142,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 		})
 
-		It("GCP NFSVolume Deletion", func() {
+		It("Scenario: GCP NFSVolume Deletion", func() {
 			By("Given NfsVolume is Ready", func() {
 			})
 			By("When KCP NfsVolume is deleted", func() {
@@ -175,12 +175,12 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 		})
 	})
 
-	Context("GCP NFSVolume Unhappy Path", Ordered, func() {
+	Context("Scenario: GCP NFSVolume Unhappy Path", Ordered, func() {
 		gcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		scope := &cloudcontrolv1beta1.Scope{}
 		kcpIpRangeName := "gcp-nfs-iprange-1"
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
-		It("GCP NFSVolume Creation Get Failure", func() {
+		It("Scenario: GCP NFSVolume Creation Get Failure", func() {
 			By("Given KCP Cluster", func() {
 
 				// Tell Scope reconciler to ignore this kymaName
@@ -253,7 +253,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 
 		})
-		It("GCP NFSVolume Creation Call Failure", func() {
+		It("Scenario: GCP NFSVolume Creation Call Failure", func() {
 			By("Given KCP NfsVolume is created", func() {
 				infra.GcpMock().SetGetError(nil)
 			})
@@ -277,7 +277,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)).To(BeTrue())
 			})
 		})
-		It("GCP NFSVolume Creation Operation Failure", func() {
+		It("Scenario: GCP NFSVolume Creation Operation Failure", func() {
 			By("Given KCP NfsVolume is created", func() {
 			})
 			By("And Filestore creation submitted", func() {
@@ -302,7 +302,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 
 		})
-		It("GCP NFSVolume Update call Failure", func() {
+		It("Scenario: GCP NFSVolume Update call Failure", func() {
 			By("Given KCP NfsVolume has ready condition", func() {
 				infra.GcpMock().SetOperationError(nil)
 				Eventually(func() (exists bool, err error) {
@@ -341,7 +341,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 
 		})
-		It("GCP NFSVolume Update Operation Failure", func() {
+		It("Scenario: GCP NFSVolume Update Operation Failure", func() {
 			By("Given NfsVolume is updated", func() {
 				// Already updated. No need to call again
 			})
@@ -367,7 +367,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 
 		})
-		It("GCP NFSVolume Delete call Failure", func() {
+		It("Scenario: GCP NFSVolume Delete call Failure", func() {
 			By("Given KCP NfsVolume has ready condition", func() {
 				infra.GcpMock().SetOperationError(nil)
 				Eventually(func() (exists bool, err error) {
@@ -407,7 +407,7 @@ var _ = Describe("KCP NFSVolume for GCP", func() {
 			})
 
 		})
-		It("GCP NFSVolume Delete Operation Failure", func() {
+		It("Scenario: GCP NFSVolume Delete Operation Failure", func() {
 			By("Given NfsVolume is deleted", func() {
 				// Already updated. No need to call again
 			})

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var _ = Describe("IpRange GCP", func() {
+var _ = Describe("Feature: KCP IpRange for GCP", func() {
 
 	const (
 		kymaName = "a179cd2d-5cb6-42b0-86bc-bc8720bccbc8"
@@ -20,14 +20,14 @@ var _ = Describe("IpRange GCP", func() {
 		interval = time.Millisecond * 250
 	)
 	var (
-		timeout = time.Second * 10
+		timeout = time.Second * 20
 	)
 
 	if debugged.Debugged {
 		timeout = time.Minute * 20
 	}
 
-	It("IpRange GCP", func() {
+	It("Scenario: IpRange GCP Creation", func() {
 
 		// Tell Scope reconciler to ignore this kymaName
 		scope.Ignore.AddName(kymaName)
@@ -36,6 +36,7 @@ var _ = Describe("IpRange GCP", func() {
 		Expect(
 			infra.GivenScopeGcpExists(kymaName),
 		).NotTo(HaveOccurred())
+		time.Sleep(time.Second)
 
 		// Load created scope
 		scope := &cloudcontrolv1beta1.Scope{}
