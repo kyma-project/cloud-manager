@@ -52,21 +52,28 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	maxOnes := 30
 	if ones > maxOnes {
 		return composed.UpdateStatus(state.ObjAsIpRange()).
-			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionFalse,
-				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
-				Message: fmt.Sprintf("CIDR %s block size must not be greater than %d", state.ObjAsIpRange().Spec.Cidr, maxOnes),
-			}).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
-				Message: "Invalid CIDR",
+				Message: fmt.Sprintf("CIDR %s block size must not be greater than %d", state.ObjAsIpRange().Spec.Cidr, maxOnes),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-			ErrorLogMessage("Error updating IpRange status with invalid CIDR mask").
-			SuccessLogMsg("Forgetting IpRange with invalid Cidr mask").
+			ErrorLogMessage("Error updating IpRange status with too big CIDR mask").
+			SuccessLogMsg("Forgetting IpRange with too big Cidr mask").
+			Run(ctx, state)
+	}
+
+	minOnes := 16
+	if ones < minOnes {
+		return composed.UpdateStatus(state.ObjAsIpRange()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
+				Message: fmt.Sprintf("CIDR %s block size must not be less than %d", state.ObjAsIpRange().Spec.Cidr, minOnes),
+			}).
+			ErrorLogMessage("Error updating IpRange status with too small CIDR mask").
+			SuccessLogMsg("Forgetting IpRange with too small Cidr mask").
 			Run(ctx, state)
 	}
 

@@ -8,19 +8,26 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"time"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
 
-	It("Scenario: SKR IpRange is created", func() {
+	const (
+		consistentlyDuration = 500 * time.Millisecond
+	)
 
+	BeforeEach(func() {
 		By("Given SKR namespace exists", func() {
 			Eventually(CreateNamespace).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 				Should(Succeed())
 		})
+	})
 
+	It("Scenario: SKR IpRange is created", func() {
 		const (
 			skrIpRangeName = "b75c4076-3230-4890-8bd0-c1c84c109675"
 		)
@@ -117,6 +124,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 
 		By("And Then SKR IpRange does not have Error condition", func() {
 			Expect(meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)).To(BeNil())
+
+			// CleanUp -------------------
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
@@ -130,7 +142,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		})
 
 		const (
-			skrIpRangeName = "b75c4076-3230-4890-8bd0-c1c84c109675"
+			skrIpRangeName = "1261ba97-f4f0-4465-a339-f8691aee8c48"
 		)
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
@@ -217,4 +229,211 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Should(Succeed(), "expected SKR IpRange not to exist")
 		})
 	})
+
+	It("Scenario: SKR IpRange can be created with max size /30", func() {
+
+		skrIpRangeName := "4fa01092-2527-4b3d-a22a-b0eaf63d3b3e"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr("10.251.0.0/30"),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+		})
+
+		By("Then KCP IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected KCP IpRange to exists, but none found")
+
+			// CleanUp -------------------
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
+	})
+
+	It("Scenario: SKR IpRange can be created with min size /16", func() {
+
+		skrIpRangeName := "cdede000-3a4b-4054-bad7-941761282968"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr("10.251.0.0/16"),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+		})
+
+		By("Then KCP IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected KCP IpRange to exists, but none found")
+
+			// CleanUp -------------------
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
+	})
+
+	It("Scenario: SKR IpRange can not be created with size greater then /30", func() {
+
+		skrIpRangeName := "5851ab1a-d0ef-474e-bb1a-749909d61a4e"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr("10.251.0.0/31"),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+		})
+
+		By("Then KCP IpRange is not created", func() {
+			Consistently(LoadAndCheck, consistentlyDuration).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				ShouldNot(Succeed(), "expected KCP IpRange not to exists, but it is created")
+		})
+
+		By("And Then SKR IpRange has Error condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
+				).
+				Should(Succeed(), "expected SKR IpRange to have error condition, but it has none")
+		})
+
+		var errCond *metav1.Condition
+
+		By("And Then SKR IpRange Error condition has InvalidCidr reason", func() {
+			errCond = meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
+			Expect(errCond).NotTo(BeNil())
+			Expect(errCond.Reason).To(Equal(cloudresourcesv1beta1.ConditionReasonInvalidCidr))
+		})
+
+		By("And Then SKR IpRange Error condition has message", func() {
+			Expect(errCond.Message).To(Equal("CIDR 10.251.0.0/31 block size must not be greater than 30"))
+		})
+	})
+
+	It("Scenario: SKR IpRange can not be created with size smaller then /16", func() {
+
+		skrIpRangeName := "6256f016-d63f-4e4c-af16-9f3174145389"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr("10.251.0.0/15"),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+		})
+
+		By("Then KCP IpRange is not created", func() {
+			Consistently(LoadAndCheck, consistentlyDuration).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				ShouldNot(Succeed(), "expected KCP IpRange not to exists, but it is created")
+		})
+
+		By("And Then SKR IpRange has Error condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
+				).
+				Should(Succeed(), "expected SKR IpRange to have error condition, but it has none")
+		})
+
+		var errCond *metav1.Condition
+
+		By("And Then SKR IpRange Error condition has InvalidCidr reason", func() {
+			errCond = meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
+			Expect(errCond).NotTo(BeNil())
+			Expect(errCond.Reason).To(Equal(cloudresourcesv1beta1.ConditionReasonInvalidCidr))
+		})
+
+		By("And Then SKR IpRange Error condition has message", func() {
+			Expect(errCond.Message).To(Equal("CIDR 10.251.0.0/15 block size must not be less than 16"))
+		})
+	})
+
 })
