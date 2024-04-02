@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-var _ = Describe("KCP Scope", func() {
+var _ = Describe("Feature: KCP Scope for GCP", func() {
 
 	const (
 		kymaName = "51485d74-0e28-44f9-ae80-3088128d8747"
 	)
 	// Set the path to an arbitrary file path to prevent errors
 	os.Setenv("GCP_SA_JSON_KEY_PATH", "testdata/serviceaccount.json")
-	It("Scope GCP", func() {
+	It("Scenario: Scope GCP", func() {
 		shoot := &gardenerTypes.Shoot{}
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootGcp). // for gcp, we don't really read anything of an importance from the shoot, so we can use aws

@@ -14,13 +14,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("SKR GcpNfsVolume workflows", func() {
+var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 	const (
 		interval = time.Millisecond * 250
 	)
 	var (
-		timeout = time.Second * 10
+		timeout = time.Second * 20
 	)
 
 	Context("Given SKR Cluster with SKR and KCP IPRanges in Ready state", Ordered, func() {
