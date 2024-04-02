@@ -40,18 +40,14 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return composed.Handle(action(ctx, state))
 }
 
-func (r *reconciler) newState() *State {
-	return nil
-}
-
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crIpRangeMain",
 		composed.LoadObj,
+		updateId,
 		preventCidrChange,
 		validateCidr,
 		addFinalizer,
-		updateId,
 		loadKcpIpRange,
 		createKcpIpRange,
 		deleteKcpIpRange,

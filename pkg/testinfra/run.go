@@ -154,7 +154,7 @@ func Start() (Infra, error) {
 		ginkgo.By("Setting high GOMEGA timeouts and durations since debug build flag is set!!!")
 		gomega.Default.SetDefaultEventuallyTimeout(5 * time.Minute)
 		gomega.Default.SetDefaultEventuallyPollingInterval(1 * time.Second)
-		gomega.Default.SetDefaultConsistentlyDuration(5 * time.Minute)
+		gomega.Default.SetDefaultConsistentlyDuration(20 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
 	} else {
 		gomega.Default.SetDefaultEventuallyTimeout(3 * time.Second)
