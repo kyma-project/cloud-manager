@@ -26,8 +26,12 @@ func deleteCrds(ctx context.Context, st composed.State) (error, context.Context)
 	logger.Info("Checking CRDs to uninstall")
 
 	suffix := ".cloud-resources.kyma-project.io"
+	skip := "cloudresources.cloud-resources.kyma-project.io"
 	for _, crd := range crdList.Items {
 		if !strings.HasSuffix(crd.GetName(), suffix) {
+			continue
+		}
+		if crd.GetName() == skip {
 			continue
 		}
 
