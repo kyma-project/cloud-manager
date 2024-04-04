@@ -122,17 +122,17 @@ func initCrds(projectRoot string) (dirSkr, dirKcp, dirGarden string, err error) 
 func createDir(dir string) error {
 	_, err := os.Stat(dir)
 	if err != nil && !os.IsNotExist(err) {
-		return err
+		return fmt.Errorf("error getting dir stats: %w", err)
 	}
 	if err == nil {
 		// dir exists, remove it first, so it gets created empty
 		err = os.RemoveAll(dir)
 		if err != nil {
-			return err
+			return fmt.Errorf("error removing dir: %w", err)
 		}
 	}
 	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
+		return fmt.Errorf("error creating dir: %w", err)
 	}
 	return nil
 }
