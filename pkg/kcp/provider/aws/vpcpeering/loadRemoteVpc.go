@@ -12,22 +12,48 @@ import (
 	"strings"
 )
 
-func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
+func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
+	remoteVpcId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteVpcId
+	remoteAccountId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteAccountId
+	remoteRegion := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteRegion
 
-	vpcList, err := state.client.DescribeVpcs(ctx)
+	awsRoleName := ""
+	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, awsRoleName)
+
+	logger.WithValues(
+		"awsRegion", remoteRegion,
+		"awsRole", roleName,
+	).Info("Assuming AWS role")
+
+	awsAccessKeyId := state.awsAccessKeyid
+	awsSecretAccessKey := state.awsSecretAccessKey
+	client, err := state.provider(
+		ctx,
+		remoteRegion,
+		awsAccessKeyId,
+		awsSecretAccessKey,
+		roleName,
+	)
+
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error initializing remote AWS client", composed.StopWithRequeue, ctx)
+	}
+
+	vpcList, err := client.DescribeVpcs(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
 	}
 
 	var vpc *ec2Types.Vpc
+	var remoteVpcName string
 	var allLoadedVpcs []string
-	for _, vv := range vpcList {
-		v := vv
+	// TODO refactor as it is more or less the same as in loadVpc
+
+	for _, v := range vpcList {
 		var sb strings.Builder
 		for _, t := range v.Tags {
 			sb.WriteString(pointer.StringDeref(t.Key, ""))
@@ -35,12 +61,15 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 			sb.WriteString(pointer.StringDeref(t.Value, ""))
 			sb.WriteString(",")
 		}
+
 		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
 			"%s{%s}",
 			pointer.StringDeref(v.VpcId, ""),
 			sb.String(),
 		))
-		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {
+
+		if pointer.StringDeref(v.VpcId, "xxx") == remoteVpcId {
+			remoteVpcName = util.GetEc2TagValue(v.Tags, "Name")
 			vpc = &v
 		}
 	}
@@ -48,7 +77,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	if vpc == nil {
 		logger.
 			WithValues(
-				"vpcName", vpcNetworkName,
+				"remoteVpcId", remoteVpcId,
 				"allLoadedVpcs", fmt.Sprintf("%v", allLoadedVpcs),
 			).
 			Info("VPC not found")
@@ -58,18 +87,19 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudresourcesv1beta1.ReasonVpcNotFound,
-				Message: fmt.Sprintf("AWS VPC %s not found", vpcNetworkName),
+				Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
 			}).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, st)
 	}
 
-	state.vpc = vpc
+	state.remoteVpc = vpc
 
-	state.ObjAsVpcPeering().Status.VpcId = pointer.StringDeref(vpc.VpcId, "")
-
-	logger = logger.WithValues("vpcId", pointer.StringDeref(state.vpc.VpcId, ""))
+	logger = logger.WithValues(
+		"remoteVpcId", pointer.StringDeref(state.vpc.VpcId, ""),
+		"remoteVpcName", remoteVpcName,
+	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	return nil, ctx

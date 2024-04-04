@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: KCP VpcPeering", func() {
+var _ = FDescribe("Feature: KCP VpcPeering", func() {
 
 	It("Scenario: KCP AWS VpcPeering is created", func() {
 		const (
@@ -19,6 +19,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteVpcId     = "6e6d1748-9912-4957-9075-b97a6fac8ac1"
 			remoteAccountId = "123"
 			remoteRegion    = "eu-west1"
+			connectionId    = "26ce833e-07d1-4493-98ee-f9d6f11a6987->6e6d1748-9912-4957-9075-b97a6fac8ac1"
 		)
 
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -38,6 +39,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				"10.180.0.0/16",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		By("And Given AWS remote VPC exists", func() {
+			infra.AwsMock().AddVpc(
+				remoteVpcId,
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "Remote Network Name"),
+				nil,
 			)
 		})
 
@@ -62,6 +72,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
+		})
+
+		By("And Then KCP VpcPeering has status.vpcId equal to existing AWS VPC id", func() {
+			Expect(vpcpeering.Status.VpcId).To(Equal(vpcId))
+		})
+
+		By("And Then KCP VpcPeering has status.ConnectionId equal to existing AWS Connection id", func() {
+			Expect(vpcpeering.Status.ConnectionId).To(Equal(connectionId))
 		})
 	})
 

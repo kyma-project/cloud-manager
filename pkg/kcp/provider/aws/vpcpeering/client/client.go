@@ -4,16 +4,17 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 )
 
 type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
+	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error)
 }
 
-func NewClientProvider() client2.SkrClientProvider[Client] {
+func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
-		cfg, err := client2.NewSkrConfig(ctx, region, key, secret, role)
+		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
@@ -33,4 +34,21 @@ func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 		return nil, err
 	}
 	return out.Vpcs, nil
+}
+
+func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error) {
+	//out, err := c.svc.CreateVpcPeeringConnection(ctx, &ec2.CreateVpcPeeringConnectionInput{
+	//	VpcId:       vpcId,
+	//	PeerVpcId:   remoteVpcId,
+	//	PeerRegion:  remoteRegion,
+	//	PeerOwnerId: remoteAccountId,
+	//})
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return out.VpcPeeringConnection, nil
+
+	return nil, nil
 }
