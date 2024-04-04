@@ -7,7 +7,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
 
@@ -16,9 +16,9 @@ const (
 	NfsPort     = int32(2049)
 )
 
-func NewClientProvider() client2.SkrClientProvider[Client] {
+func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
-		cfg, err := client2.NewSkrConfig(ctx, region, key, secret, role)
+		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}

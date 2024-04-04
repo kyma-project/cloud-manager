@@ -17,7 +17,10 @@ const (
 	ConditionTypeError = "Error"
 
 	// ConditionReasonIpRangeNotFound used with ConditionTypeError in case IpRange specified in object does not exist
-	ConditionReasonIpRangeNotFound = "IpRangeNotFound"
+	ConditionReasonIpRangeNotFound   = "IpRangeNotFound"
+	ConditionReasonMissingScope      = "MissingScope"
+	ConditionReasonMissingNfsVolume  = "MissingNfsVolume"
+	ConditionReasonNfsVolumeNotReady = "NfsVolumeNotReady"
 )
 
 const (
@@ -25,4 +28,12 @@ const (
 
 	ConditionReasonDeletingPV       = "DeletingPersistentVolume"
 	ConditionReasonDeletingInstance = "DeletingInstance"
+)
+
+const (
+	ConditionTypeProcessing = "Processing"
+)
+
+const (
+	ConditionTypeWaitScopeReady = "WaitScopeReady"
 )

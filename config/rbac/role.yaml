@@ -119,6 +119,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awsnfsvolumebackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsvolumebackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsvolumebackups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - awsnfsvolumes
   verbs:
   - create

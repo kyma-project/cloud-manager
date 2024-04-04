@@ -50,7 +50,7 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		})
 
 		By("And Then CloudResources has status.state='Ready'", func() {
-			Expect(cr.Status.State).To(Equal(cloudresourcesv1beta1.StateReady))
+			Expect(cr.Status.State).To(Equal(cloudresourcesv1beta1.ModuleStateReady))
 		})
 
 		By("And Then CloudResources has finalizer", func() {

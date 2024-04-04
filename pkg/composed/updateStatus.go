@@ -8,6 +8,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type ObjWithConditionsAndState interface {
+	ObjWithConditions
+	State() string
+	SetState(v string)
+}
+
 type ObjWithConditions interface {
 	client.Object
 	Conditions() *[]metav1.Condition

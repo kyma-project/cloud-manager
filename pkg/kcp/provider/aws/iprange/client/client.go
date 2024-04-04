@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
 
@@ -18,9 +18,9 @@ type Client interface {
 	DeleteSubnet(ctx context.Context, subnetId string) error
 }
 
-func NewClientProvider() client2.SkrClientProvider[Client] {
+func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
-		cfg, err := client2.NewSkrConfig(ctx, region, key, secret, role)
+		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
