@@ -22,7 +22,6 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
 	}
 
-	var vpc *ec2Types.Vpc
 	var allLoadedVpcs []string
 	for _, vv := range vpcList {
 		v := vv
@@ -38,8 +37,16 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 			pointer.StringDeref(v.VpcId, ""),
 			sb.String(),
 		))
+	}
+
+	var vpc *ec2Types.Vpc
+	for _, vv := range vpcList {
+		// loop var will change it's value, and we're taking a pointer to it below
+		// MUST make a copy to another var that will not change the value
+		v := vv
 		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {
 			vpc = &v
+			break
 		}
 	}
 

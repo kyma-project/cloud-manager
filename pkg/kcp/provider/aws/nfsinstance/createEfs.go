@@ -43,6 +43,10 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 				Key:   pointer.String(common.TagScope),
 				Value: pointer.String(state.ObjAsNfsInstance().Spec.Scope.Name),
 			},
+			{
+				Key:   pointer.String(common.TagShoot),
+				Value: pointer.String(state.Scope().Spec.ShootName),
+			},
 		},
 	)
 

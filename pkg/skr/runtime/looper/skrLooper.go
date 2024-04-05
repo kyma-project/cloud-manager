@@ -10,6 +10,7 @@ import (
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -18,8 +19,8 @@ import (
 )
 
 type ActiveSkrCollection interface {
-	AddKymaName(kymaName string)
-	RemoveKymaName(kymaName string)
+	AddKymaUnstructured(kyma *unstructured.Unstructured)
+	RemoveKymaUnstructured(kyma *unstructured.Unstructured)
 	Contains(kymaName string) bool
 	GetKymaNames() []string
 }
@@ -34,28 +35,74 @@ type activeSkrCollection struct {
 	logger    logr.Logger
 }
 
-func (l *activeSkrCollection) AddKymaName(kymaName string) {
+func (l *activeSkrCollection) AddKymaUnstructured(kyma *unstructured.Unstructured) {
 	l.Lock()
 	defer l.Unlock()
+
+	kymaName := kyma.GetName()
+
 	if pie.Contains(l.kymaNames, kymaName) {
 		return
 	}
-	l.logger.WithValues("kymaName", kymaName).Info("Adding Kyma to SkrLooper")
+
+	labels := kyma.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	globalAccountId := labels["kyma-project.io/global-account-id"]
+	subaccountId := labels["kyma-project.io/subaccount-id"]
+	shootName := labels["kyma-project.io/shoot-name"]
+	region := labels["kyma-project.io/region"]
+	brokerPlanName := labels["kyma-project.io/broker-plan-name"]
+
+	l.logger.WithValues(
+		"kymaName", kymaName,
+		"globalAccountId", globalAccountId,
+		"subaccountId", subaccountId,
+		"shootName", shootName,
+		"region", region,
+		"brokerPlanName", brokerPlanName,
+	).Info("Adding Kyma to SkrLooper")
+
 	l.kymaNames = append(l.kymaNames, kymaName)
-	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName).Add(1)
+
+	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).Add(1)
 }
 
-func (l *activeSkrCollection) RemoveKymaName(kymaName string) {
+func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstructured) {
 	l.Lock()
 	defer l.Unlock()
+
+	kymaName := kyma.GetName()
 	idx := pie.FindFirstUsing(l.kymaNames, func(value string) bool {
 		return value == kymaName
 	})
-	if idx > -1 {
-		l.logger.WithValues("kymaName", kymaName).Info("Removing Kyma from SkrLooper")
-		l.kymaNames = pie.Delete(l.kymaNames, idx)
-		metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName).Add(-1)
+	if idx < 0 {
+		return
 	}
+
+	labels := kyma.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
+	globalAccountId := labels["kyma-project.io/global-account-id"]
+	subaccountId := labels["kyma-project.io/subaccount-id"]
+	shootName := labels["kyma-project.io/shoot-name"]
+	region := labels["kyma-project.io/region"]
+	brokerPlanName := labels["kyma-project.io/broker-plan-name"]
+
+	l.logger.WithValues(
+		"kymaName", kymaName,
+		"globalAccountId", globalAccountId,
+		"subaccountId", subaccountId,
+		"shootName", shootName,
+		"region", region,
+		"brokerPlanName", brokerPlanName,
+	).Info("Removing Kyma from SkrLooper")
+
+	l.kymaNames = pie.Delete(l.kymaNames, idx)
+
+	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).Add(-1)
 }
 
 func (l *activeSkrCollection) Contains(kymaName string) bool {

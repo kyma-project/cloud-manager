@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 var crdsInitialized = false
@@ -127,6 +128,18 @@ func createDir(dir string) error {
 	if err == nil {
 		// dir exists, remove it first, so it gets created empty
 		err = os.RemoveAll(dir)
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			err = os.RemoveAll(dir)
+		}
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			err = os.RemoveAll(dir)
+		}
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			err = os.RemoveAll(dir)
+		}
 		if err != nil {
 			return fmt.Errorf("error removing dir: %w", err)
 		}
