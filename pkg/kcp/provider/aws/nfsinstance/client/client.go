@@ -2,11 +2,13 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/elliotchance/pie/v2"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/pointer"
 )
@@ -30,6 +32,7 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 }
 
 type Client interface {
+	DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error)
 	DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error)
 	CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error)
 	DeleteSecurityGroup(ctx context.Context, id string) error
@@ -60,6 +63,30 @@ func newClient(ec2Svc *ec2.Client, efsSvc *efs.Client) Client {
 type client struct {
 	ec2Svc *ec2.Client
 	efsSvc *efs.Client
+}
+
+func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error) {
+	out, err := c.ec2Svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
+		Filters: []ec2Types.Filter{
+			{
+				Name:   pointer.String("subnet-id"),
+				Values: []string{subnetId},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(out.Subnets) > 1 {
+		return nil, fmt.Errorf("expected at most one subnet by id, but got: %v", pie.Map(out.Subnets, func(s ec2Types.Subnet) string {
+			return pointer.StringDeref(s.SubnetId, "")
+		}))
+	}
+	var result *ec2Types.Subnet
+	if len(out.Subnets) > 0 {
+		result = &out.Subnets[0]
+	}
+	return result, nil
 }
 
 func (c *client) DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
