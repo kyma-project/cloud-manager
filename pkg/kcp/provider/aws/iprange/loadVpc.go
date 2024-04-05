@@ -24,7 +24,8 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 
 	var vpc *ec2Types.Vpc
 	var allLoadedVpcs []string
-	for _, v := range vpcList {
+	for _, vv := range vpcList {
+		v := vv
 		var sb strings.Builder
 		for _, t := range v.Tags {
 			sb.WriteString(pointer.StringDeref(t.Key, ""))

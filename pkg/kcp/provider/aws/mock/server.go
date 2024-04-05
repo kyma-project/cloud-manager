@@ -13,9 +13,10 @@ var _ Server = &server{}
 
 func New() Server {
 	return &server{
-		vpcStore:   &vpcStore{},
-		nfsStore:   &nfsStore{},
-		scopeStore: &scopeStore{},
+		vpcStore:        &vpcStore{},
+		nfsStore:        &nfsStore{},
+		scopeStore:      &scopeStore{},
+		vpcPeeringStore: &vpcPeeringStore{},
 	}
 }
 
@@ -23,6 +24,7 @@ type server struct {
 	*vpcStore
 	*nfsStore
 	*scopeStore
+	*vpcPeeringStore
 }
 
 func (s *server) ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient] {

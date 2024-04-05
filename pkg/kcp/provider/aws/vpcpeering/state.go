@@ -14,12 +14,16 @@ import (
 type State struct {
 	vpcpeeringtypes.State
 
-	client       vpcpeeringclient.Client
-	remoteClient vpcpeeringclient.Client
+	client   vpcpeeringclient.Client
+	provider awsclient.SkrClientProvider[vpcpeeringclient.Client]
 
-	// TODO state
-	vpc       *ec2Types.Vpc
-	remoteVpc *ec2Types.Vpc
+	awsAccessKeyid     string
+	awsSecretAccessKey string
+
+	vpc                  *ec2Types.Vpc
+	vpcPeeringConnection *ec2Types.VpcPeeringConnection
+	remoteVpc            *ec2Types.Vpc
+	remoteRegion         string
 }
 
 type StateFactory interface {
@@ -47,11 +51,13 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 		"awsRole", roleName,
 	).Info("Assuming AWS role")
 
+	awsAccessKeyId := f.env.Get("AWS_ACCESS_KEY_ID")
+	awsSecretAccessKey := f.env.Get("AWS_SECRET_ACCESS_KEY")
 	c, err := f.skrProvider(
 		ctx,
 		vpcPeeringState.Scope().Spec.Region,
-		f.env.Get("AWS_ACCESS_KEY_ID"),
-		f.env.Get("AWS_SECRET_ACCESS_KEY"),
+		awsAccessKeyId,
+		awsSecretAccessKey,
 		roleName,
 	)
 
@@ -59,12 +65,19 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 		return nil, err
 	}
 
-	return newState(vpcPeeringState, c), nil
+	return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey), nil
 }
 
-func newState(vpcPeeringState vpcpeeringtypes.State, c vpcpeeringclient.Client) *State {
+func newState(vpcPeeringState vpcpeeringtypes.State,
+	client vpcpeeringclient.Client,
+	provider awsclient.SkrClientProvider[vpcpeeringclient.Client],
+	key string,
+	secret string) *State {
 	return &State{
-		State:  vpcPeeringState,
-		client: c,
+		State:              vpcPeeringState,
+		client:             client,
+		provider:           provider,
+		awsAccessKeyid:     key,
+		awsSecretAccessKey: secret,
 	}
 }

@@ -72,6 +72,9 @@ type VpcPeeringStatus struct {
 	// +optional
 	VpcId string `json:"vpcId,omitempty"`
 
+	// +optional
+	ConnectionId string `json:"connectionId,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map

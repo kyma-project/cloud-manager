@@ -165,6 +165,8 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              connectionId:
+                type: string
               state:
                 type: string
               vpcId:
