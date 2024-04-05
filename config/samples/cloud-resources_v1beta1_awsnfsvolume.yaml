@@ -1,12 +1,17 @@
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsNfsVolume
 metadata:
-  labels:
-    app.kubernetes.io/name: awsnfsvolume
-    app.kubernetes.io/instance: awsnfsvolume-sample
-    app.kubernetes.io/part-of: cloud-manager
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: cloud-manager
   name: awsnfsvolume-sample
 spec:
-  # TODO(user): Add fields here
+  ipRange:                         # required
+    name: iprange_name
+    namespace: iprange_namespace
+  capacity: 10G                    # required
+  performanceMode: generalPurpose  # generalPurpose or maxIO, defaults to generalPurpose
+  throughput: bursting             # bursting or elastic, defaults to bursting
+  volume:
+    name: pv_name
+    labels:
+      pv/label: value
+    annotations:
+      pv/annotation: value

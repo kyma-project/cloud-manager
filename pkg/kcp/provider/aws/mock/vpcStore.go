@@ -182,6 +182,24 @@ func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Type
 	return item.subnets, nil
 }
 
+func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, item := range s.items {
+		for _, subnet := range item.subnets {
+			if pointer.StringDeref(subnet.SubnetId, "") == subnetId {
+				return &subnet, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
 func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []ec2Types.Tag) (*ec2Types.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

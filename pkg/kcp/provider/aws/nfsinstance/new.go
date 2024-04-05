@@ -36,6 +36,7 @@ func New(stateFactory StateFactory) composed.Action {
 					validateExistingMountTargets,
 					createMountTargets,
 					waitMountTargetsAvailable,
+					removeMountTargetsFromOtherVpcs,
 					updateStatus,
 
 					composed.StopAndForgetAction,
