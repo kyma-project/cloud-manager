@@ -18,9 +18,10 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"os"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

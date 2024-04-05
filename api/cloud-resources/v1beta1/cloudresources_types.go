@@ -34,16 +34,16 @@ type ModuleState string
 
 // Valid Module CR States.
 const (
-	// StateReady signifies Module CR is Ready and has been installed successfully.
-	StateReady ModuleState = "Ready"
+	// ModuleStateReady signifies Module CR is Ready and has been installed successfully.
+	ModuleStateReady ModuleState = "Ready"
 
-	// StateDeleting signifies Module CR is being deleted. This is the state that is used
+	// ModuleStateDeleting signifies Module CR is being deleted. This is the state that is used
 	// when a deletionTimestamp was detected and Finalizers are picked up.
-	StateDeleting ModuleState = "Deleting"
+	ModuleStateDeleting ModuleState = "Deleting"
 
-	// StateWarning signifies specified resource has been deployed, but cannot be used due to misconfiguration,
+	// ModuleStateWarning signifies specified resource has been deployed, but cannot be used due to misconfiguration,
 	// usually it means that user interaction is required.
-	StateWarning ModuleState = "Warning"
+	ModuleStateWarning ModuleState = "Warning"
 )
 
 // CloudResourcesSpec defines the desired state of CloudResources

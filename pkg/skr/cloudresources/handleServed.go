@@ -59,7 +59,7 @@ func handleServed(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Setting CloudResources Served to False")
 	state.ObjAsCloudResources().Status.Served = cloudresourcesv1beta1.ServedFalse
-	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.StateWarning
+	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.ModuleStateWarning
 	return composed.UpdateStatus(state.ObjAsCloudResources()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:   cloudresourcesv1beta1.ConditionTypeError,

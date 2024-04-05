@@ -17,12 +17,12 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	condReady := meta.FindStatusCondition(*state.ObjAsCloudResources().Conditions(), cloudresourcesv1beta1.ConditionTypeReady)
-	if condReady != nil && state.ObjAsCloudResources().Status.State == cloudresourcesv1beta1.StateReady {
+	if condReady != nil && state.ObjAsCloudResources().Status.State == cloudresourcesv1beta1.ModuleStateReady {
 		return nil, nil
 	}
 
 	logger.Info("Setting Ready state and condition to CloudResources CR")
-	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.StateReady
+	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.ModuleStateReady
 
 	return composed.UpdateStatus(state.ObjAsCloudResources()).
 		SetExclusiveConditions(metav1.Condition{

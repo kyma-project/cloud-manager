@@ -50,7 +50,7 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		})
 
 		By("And Then CloudResources has status.state='Ready'", func() {
-			Expect(cr.Status.State).To(Equal(cloudresourcesv1beta1.StateReady))
+			Expect(cr.Status.State).To(Equal(cloudresourcesv1beta1.ModuleStateReady))
 		})
 
 		By("And Then CloudResources has finalizer", func() {
@@ -77,20 +77,26 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		})
 
 		By("And Then CRDs are uninstalled", func() {
-			list := util.NewCrdListUnstructured()
-			err := infra.SKR().Client().List(infra.Ctx(), list)
-			Expect(err).NotTo(HaveOccurred())
+			Eventually(func() error {
+				list := util.NewCrdListUnstructured()
+				err := infra.SKR().Client().List(infra.Ctx(), list)
+				Expect(err).NotTo(HaveOccurred())
 
-			unexpectedList := []string{
-				"awsnfsvolumes.cloud-resources.kyma-project.io",
-				"gcpnfsvolumes.cloud-resources.kyma-project.io",
-				"ipranges.cloud-resources.kyma-project.io",
-			}
-			for _, item := range list.Items {
-				for _, unexpected := range unexpectedList {
-					Expect(item.GetName()).NotTo(Equal(unexpected), fmt.Sprintf("expected CRD %s to be deleted, but it still exists", unexpected))
+				unexpectedList := []string{
+					"awsnfsvolumes.cloud-resources.kyma-project.io",
+					"gcpnfsvolumes.cloud-resources.kyma-project.io",
+					"ipranges.cloud-resources.kyma-project.io",
 				}
-			}
+				for _, item := range list.Items {
+					for _, unexpected := range unexpectedList {
+						if item.GetName() == unexpected {
+							return fmt.Errorf("expected CRD %s to be deleted, but it still exists", unexpected)
+						}
+					}
+				}
+				return nil
+			}).Should(Succeed())
+
 		})
 	})
 
