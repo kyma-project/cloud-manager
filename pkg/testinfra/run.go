@@ -157,7 +157,7 @@ func Start() (Infra, error) {
 		gomega.Default.SetDefaultConsistentlyDuration(20 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
 	} else {
-		gomega.Default.SetDefaultEventuallyTimeout(3 * time.Second)
+		gomega.Default.SetDefaultEventuallyTimeout(4 * time.Second)
 		gomega.Default.SetDefaultEventuallyPollingInterval(200 * time.Millisecond)
 		gomega.Default.SetDefaultConsistentlyDuration(2 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)

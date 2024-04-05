@@ -14,7 +14,7 @@ var (
 	SkrRuntimeModuleActiveCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "cloud_manager_skr_runtime_module_active_count",
 		Help: "Number of SKRs with currently active cloud-manager module per kyma name",
-	}, []string{"kyma"})
+	}, []string{"kymaName", "globalAccountId", "subAccountId", "shootName", "region", "brokerPlanName"})
 )
 
 func init() {

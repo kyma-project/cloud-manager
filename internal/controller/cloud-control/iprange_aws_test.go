@@ -35,11 +35,23 @@ var _ = Describe("Feature: KCP IpRange", func() {
 
 		var theVpc *ec2Types.Vpc
 		By("And Given AWS VPC exists", func() {
+			infra.AwsMock().AddVpc(
+				"wrong1",
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "wrong1"),
+				nil,
+			)
 			theVpc = infra.AwsMock().AddVpc(
 				vpcId,
 				"10.180.0.0/16",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
+			)
+			infra.AwsMock().AddVpc(
+				"wrong2",
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "wrong2"),
+				nil,
 			)
 		})
 
@@ -149,6 +161,12 @@ var _ = Describe("Feature: KCP IpRange", func() {
 
 		var theVpc *ec2Types.Vpc
 		By("And Given AWS VPC exists", func() {
+			infra.AwsMock().AddVpc(
+				"wrong1",
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "wrong1"),
+				nil,
+			)
 			theVpc = infra.AwsMock().AddVpc(
 				vpcId,
 				vpcCidr,
@@ -156,6 +174,12 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				awsmock.VpcSubnetsFromScope(scope),
 			)
 			Expect(theVpc).NotTo(BeNil(), "expected non nil aws vpc to be created")
+			infra.AwsMock().AddVpc(
+				"wrong2",
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "wrong2"),
+				nil,
+			)
 		})
 
 		iprange := &cloudcontrolv1beta1.IpRange{}
