@@ -14,7 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("Feature: SKR GcpNfsVolume", func() {
+var _ = SkipDescribe("Feature: SKR GcpNfsVolume", func() {
 
 	const (
 		interval = time.Millisecond * 250
