@@ -39,14 +39,18 @@ func SetupIpRangeReconciler(
 	awsProvider awsclient.SkrClientProvider[iprangeclient.Client],
 	gcpSvcNetProvider gcpclient.ClientProvider[client.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.ClientProvider[client.ComputeClient],
+	env abstractions.Environment,
 ) error {
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsiprange.NewStateFactory(awsProvider, abstractions.NewOSEnvironment()),
+			awsiprange.NewStateFactory(awsProvider, env),
 			azureiprange.NewStateFactory(nil),
-			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, abstractions.NewOSEnvironment()),
+			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }

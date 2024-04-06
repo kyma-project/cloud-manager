@@ -3,7 +3,6 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -40,7 +39,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
-		return composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If not able to find the operation or it is completed, reset OpIdentifier.

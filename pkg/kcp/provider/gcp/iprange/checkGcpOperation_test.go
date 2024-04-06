@@ -209,7 +209,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
 }
 
 func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
@@ -422,7 +422,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
 }
 
 func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {

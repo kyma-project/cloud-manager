@@ -66,7 +66,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceAddSuccess() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = client.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpOperationWaitTime), err)
 	assert.NotNil(suite.T(), testState.State.ObjAsNfsInstance().Status.Id)
 	assert.Equal(suite.T(), "create-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
 
@@ -113,7 +113,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceAddError() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = client.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Id)
 	// check conditions
 	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
@@ -169,7 +169,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchSuccess() {
 	testState.operation = client.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpOperationWaitTime), err)
 	assert.NotNil(suite.T(), testState.State.ObjAsNfsInstance().Status.Id)
 	assert.Equal(suite.T(), "patch-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
 
@@ -217,7 +217,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchError() {
 	testState.operation = client.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Id)
 	// check conditions
 	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
@@ -264,7 +264,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteSuccess() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = client.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpOperationWaitTime), err)
 	assert.Equal(suite.T(), "delete-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
 
 	updatedObject := &v1beta1.NfsInstance{}
@@ -303,7 +303,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteError() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = client.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpRetryWaitTime), err)
 	// check conditions
 	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
 	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
