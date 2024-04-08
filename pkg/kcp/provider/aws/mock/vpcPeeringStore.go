@@ -2,40 +2,51 @@ package mock
 
 import (
 	"context"
-	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	"k8s.io/utils/pointer"
 	"sync"
 )
 
 type VpcPeeringConfig interface {
-	AddVpcPeering()
+	AddVpcPeering(PeeringConnectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId string) *ec2types.VpcPeeringConnection
 }
 
+type vpcPeeringEntry struct {
+	peering ec2types.VpcPeeringConnection
+}
 type vpcPeeringStore struct {
 	m     sync.Mutex
-	items []string
+	items []*vpcPeeringEntry
+}
+
+func (s *vpcPeeringStore) AddVpcPeering(id, vpcId, remoteVpcId, remoteRegion, remoteAccountId string) *ec2types.VpcPeeringConnection {
+	item := &vpcPeeringEntry{
+		peering: ec2types.VpcPeeringConnection{
+			VpcPeeringConnectionId: pointer.String(id),
+			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId: pointer.String(vpcId),
+			},
+			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId:   pointer.String(remoteVpcId),
+				Region:  pointer.String(remoteRegion),
+				OwnerId: pointer.String(remoteAccountId),
+			},
+		},
+	}
+
+	s.items = append(s.items, item)
+	return &item.peering
 }
 
 func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	c := ec2types.VpcPeeringConnection{
-		VpcPeeringConnectionId: pointer.String(fmt.Sprintf("%s->%s",
-			pointer.StringDeref(vpcId, ""),
-			pointer.StringDeref(remoteVpcId, ""))),
-		RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-			VpcId: vpcId,
-		},
-		AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-			VpcId:   remoteVpcId,
-			Region:  remoteRegion,
-			OwnerId: remoteAccountId,
-		},
-	}
+	idx := pie.FindFirstUsing(s.items, func(e *vpcPeeringEntry) bool {
+		return pointer.StringEqual(e.peering.RequesterVpcInfo.VpcId, vpcId) &&
+			pointer.StringEqual(e.peering.AccepterVpcInfo.VpcId, remoteVpcId)
+	})
 
-	s.items = append(s.items, pointer.StringDeref(c.VpcPeeringConnectionId, ""))
-
-	return &c, nil
+	return &s.items[idx].peering, nil
 }
