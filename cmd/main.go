@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
@@ -151,6 +152,7 @@ func main() {
 	}
 
 	// KCP Controllers
+	env := abstractions.NewOSEnvironment()
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
@@ -159,6 +161,7 @@ func main() {
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
 		gcpFilestoreClient.NewFilestoreClientProvider(),
+		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
 		os.Exit(1)
@@ -175,6 +178,7 @@ func main() {
 		awsiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
+		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)

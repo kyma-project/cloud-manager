@@ -2,12 +2,11 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
-
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"google.golang.org/api/file/v1"
 )
 
@@ -19,6 +18,9 @@ type State struct {
 	validations     []string
 	fsInstance      *file.Instance
 	filestoreClient client.FilestoreClient
+
+	//gcp config
+	gcpConfig *client2.GcpConfig
 }
 
 type StateFactory interface {
@@ -28,12 +30,14 @@ type StateFactory interface {
 type stateFactory struct {
 	filestoreClientProvider client2.ClientProvider[client.FilestoreClient]
 	env                     abstractions.Environment
+	gcpConfig               *client2.GcpConfig
 }
 
 func NewStateFactory(filestoreClientProvider client2.ClientProvider[client.FilestoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		filestoreClientProvider: filestoreClientProvider,
 		env:                     env,
+		gcpConfig:               client2.GetGcpConfig(env),
 	}
 }
 
@@ -46,13 +50,14 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 	if err != nil {
 		return nil, err
 	}
-	return newState(nfsInstanceState, fc), nil
+	return newState(nfsInstanceState, fc, f.gcpConfig), nil
 }
 
-func newState(nfsInstanceState types.State, fc client.FilestoreClient) *State {
+func newState(nfsInstanceState types.State, fc client.FilestoreClient, gcpConfig *client2.GcpConfig) *State {
 	return &State{
 		State:           nfsInstanceState,
 		filestoreClient: fc,
+		gcpConfig:       gcpConfig,
 	}
 }
 

@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -64,6 +65,13 @@ var _ = BeforeSuite(func() {
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
+	// Setup environment variables
+	env := abstractions.NewMockedEnvironment(map[string]string{
+		"GCP_SA_JSON_KEY_PATH":        "test",
+		"GCP_RETRY_WAIT_DURATION":     "300ms",
+		"GCP_OPERATION_WAIT_DURATION": "300ms",
+	})
+
 	// Setup controllers
 	// Scope
 	Expect(SetupScopeReconciler(
@@ -78,12 +86,14 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
+		env,
 	))
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
 		infra.GcpMock().FilestoreClientProvider(),
+		env,
 	))
 	//VpcPeering
 	Expect(SetupVpcPeeringReconciler(

@@ -45,15 +45,15 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(client.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Address object in GCP :%s", err)).
 			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
 		return composed.UpdateStatus(ipRange).
-			SuccessError(composed.StopWithRequeueDelay(client.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
-	return composed.StopWithRequeueDelay(client.GcpOperationWaitTime), nil
+	return composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), nil
 }

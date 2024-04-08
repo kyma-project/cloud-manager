@@ -38,14 +38,18 @@ func SetupNfsInstanceReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
 	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
+	env abstractions.Environment,
 ) error {
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
 	return NewNfsInstanceReconciler(
 		nfsinstance.NewNfsInstanceReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsnfsinstance.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
+			awsnfsinstance.NewStateFactory(awsSkrProvider, env),
 			azurenfsinstance.NewStateFactory(),
-			gcpnfsinstance.NewStateFactory(filestoreClientProvider, abstractions.NewOSEnvironment()),
+			gcpnfsinstance.NewStateFactory(filestoreClientProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }

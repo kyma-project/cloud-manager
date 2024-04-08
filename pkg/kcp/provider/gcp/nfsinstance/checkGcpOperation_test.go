@@ -6,7 +6,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -140,7 +139,7 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.gcpConfig.GcpRetryWaitTime), err)
 }
 
 func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() {

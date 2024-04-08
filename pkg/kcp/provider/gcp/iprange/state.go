@@ -2,15 +2,14 @@ package iprange
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	client3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	"strings"
-
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
+	"strings"
 )
 
 type State struct {
@@ -30,6 +29,9 @@ type State struct {
 
 	serviceNetworkingClient client3.ServiceNetworkingClient
 	computeClient           client3.ComputeClient
+
+	//gcp config
+	gcpConfig *client2.GcpConfig
 }
 
 type StateFactory interface {
@@ -40,6 +42,7 @@ type stateFactory struct {
 	serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient]
 	computeClientProvider           client2.ClientProvider[client3.ComputeClient]
 	env                             abstractions.Environment
+	gcpConfig                       *client2.GcpConfig
 }
 
 func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient], computeClientProvider client2.ClientProvider[client3.ComputeClient], env abstractions.Environment) StateFactory {
@@ -47,6 +50,7 @@ func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[clie
 		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
 		computeClientProvider:           computeClientProvider,
 		env:                             env,
+		gcpConfig:                       client2.GetGcpConfig(env),
 	}
 }
 
@@ -67,14 +71,15 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (
 		return nil, err
 	}
 
-	return newState(ipRangeState, snc, cc), nil
+	return newState(ipRangeState, snc, cc, f.gcpConfig), nil
 }
 
-func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient) *State {
+func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient, gcpConfig *client2.GcpConfig) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,
 		computeClient:           cc,
+		gcpConfig:               gcpConfig,
 	}
 }
 

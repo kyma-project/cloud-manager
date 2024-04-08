@@ -41,7 +41,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && !op.Done {
-			return composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.
@@ -81,7 +81,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && op.Status != "DONE" {
-			return composed.StopWithRequeueDelay(client.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.

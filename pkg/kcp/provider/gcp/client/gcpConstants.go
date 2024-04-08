@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"regexp"
 	"time"
 
@@ -18,6 +19,26 @@ const filestoreParentPattern = "projects/%s/locations/%s"
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
+
+type GcpConfig struct {
+	GcpRetryWaitTime     time.Duration
+	GcpOperationWaitTime time.Duration
+}
+
+func GetGcpConfig(env abstractions.Environment) *GcpConfig {
+	return &GcpConfig{
+		GcpRetryWaitTime:     GetConfigDuration(env, "GCP_RETRY_WAIT_DURATION", GcpRetryWaitTime),
+		GcpOperationWaitTime: GetConfigDuration(env, "GCP_OPERATION_WAIT_DURATION", GcpOperationWaitTime),
+	}
+}
+
+func GetConfigDuration(env abstractions.Environment, key string, defaultValue time.Duration) time.Duration {
+	duration, err := time.ParseDuration(env.Get(key))
+	if err != nil {
+		return defaultValue
+	}
+	return duration
+}
 
 var FilestoreInstanceRegEx *regexp.Regexp = regexp.MustCompile(`^projects\/([^/]+)\/locations\/([^/]+)\/instances\/([^/]+)$`)
 
