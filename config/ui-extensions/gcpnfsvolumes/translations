@@ -1,0 +1,5 @@
+en:
+  spec.tier: Tier
+  spec.location: Location
+  spec.capacityGb: Capacity
+  spec.fileShareName: File Share Name

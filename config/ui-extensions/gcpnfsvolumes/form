@@ -1,0 +1,16 @@
+- path: spec.capacityGb
+  simple: true
+  name: spec.capacityGb
+  required: true
+- path: spec.fileShareName
+  simple: true
+  name: spec.fileShareName
+  required: true
+- path: spec.location
+  simple: true
+  name: spec.location
+  required: true
+- path: spec.tier
+  simple: true
+  name: spec.tier
+  required: true
