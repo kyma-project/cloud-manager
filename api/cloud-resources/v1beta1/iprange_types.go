@@ -26,6 +26,8 @@ const (
 	ConditionReasonInvalidCidr = "InvalidCidr"
 
 	ConditionReasonCidrCanNotBeChanged = "CidrCanNotBeChanged"
+
+	ConditionTypeDeleteWhileUsed = "DeleteWhileUsed"
 )
 
 // IpRangeSpec defines the desired state of IpRange
@@ -36,6 +38,8 @@ type IpRangeSpec struct {
 
 // IpRangeStatus defines the observed state of IpRange
 type IpRangeStatus struct {
+	State string `json:"state,omitempty"`
+
 	// +optional
 	Cidr string `json:"cidr,omitempty"`
 

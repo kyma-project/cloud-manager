@@ -18,11 +18,13 @@ package cloudresources
 
 import (
 	"context"
+	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -65,6 +67,18 @@ func (r *IpRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
+	reg.IndexField(&cloudresourcesv1beta1.AwsNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		nfsVol := object.(*cloudresourcesv1beta1.AwsNfsVolume)
+		if nfsVol.Spec.IpRange.Name == "" {
+			return nil
+		}
+		ns := nfsVol.Spec.IpRange.Namespace
+		if len(ns) == 0 {
+			ns = nfsVol.Namespace
+		}
+		return []string{fmt.Sprintf("%s/%s", ns, nfsVol.Spec.IpRange.Name)}
+	})
+
 	return reg.Register().
 		WithFactory(&IpRangeReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.IpRange{}).

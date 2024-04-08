@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,18 +29,27 @@ func initCrds(projectRoot string) (dirSkr, dirKcp, dirGarden string, err error) 
 		return
 	}
 
-	dirSkr = path.Join(projectRoot, "bin", "cloud-manager", "skr")
-	dirKcp = path.Join(projectRoot, "bin", "cloud-manager", "kcp")
-	dirGarden = path.Join(projectRoot, "bin", "cloud-manager", "garden")
+	prefix := ""
+	if inPipeline, err := strconv.ParseBool(os.Getenv("PIPELINE")); err == nil && inPipeline {
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+		prefix = fmt.Sprintf("-%d", rnd.Uint32())
+	}
+
+	dirSkr = path.Join(projectRoot, "bin", "cloud-manager", "skr"+prefix)
+	dirKcp = path.Join(projectRoot, "bin", "cloud-manager", "kcp"+prefix)
+	dirGarden = path.Join(projectRoot, "bin", "cloud-manager", "garden"+prefix)
 
 	// recreate destination directories
 	if err = createDir(dirSkr); err != nil {
+		err = fmt.Errorf("error creating SKR dir: %w", err)
 		return
 	}
 	if err = createDir(dirKcp); err != nil {
+		err = fmt.Errorf("error creating KCP dir: %w", err)
 		return
 	}
 	if err = createDir(dirGarden); err != nil {
+		err = fmt.Errorf("error creating Garden dir: %w", err)
 		return
 	}
 
@@ -126,23 +137,7 @@ func createDir(dir string) error {
 		return fmt.Errorf("error getting dir stats: %w", err)
 	}
 	if err == nil {
-		// dir exists, remove it first, so it gets created empty
-		err = os.RemoveAll(dir)
-		if err != nil {
-			time.Sleep(500 * time.Millisecond)
-			err = os.RemoveAll(dir)
-		}
-		if err != nil {
-			time.Sleep(500 * time.Millisecond)
-			err = os.RemoveAll(dir)
-		}
-		if err != nil {
-			time.Sleep(500 * time.Millisecond)
-			err = os.RemoveAll(dir)
-		}
-		if err != nil {
-			return fmt.Errorf("error removing dir: %w", err)
-		}
+		return nil
 	}
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return fmt.Errorf("error creating dir: %w", err)
@@ -153,16 +148,26 @@ func createDir(dir string) error {
 func copyFile(src, dest string) error {
 	s, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("error opening file %s: %w", src, err)
 	}
 	defer s.Close()
 
-	d, err := os.Create(dest)
+	dest1 := dest + ".tmp"
+	d, err := os.Create(dest1)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating tmp destination %s: %w", dest1, err)
 	}
 	defer d.Close()
 
 	_, err = io.Copy(d, s)
-	return err
+	if err != nil {
+		return fmt.Errorf("error copying to file %s: %w", dest1, err)
+	}
+
+	err = os.Rename(dest1, dest)
+	if err != nil {
+		return fmt.Errorf("error renaming destination %s: %w", dest, err)
+	}
+
+	return nil
 }
