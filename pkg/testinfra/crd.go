@@ -148,16 +148,26 @@ func createDir(dir string) error {
 func copyFile(src, dest string) error {
 	s, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("error opening file %s: %w", src, err)
 	}
 	defer s.Close()
 
-	d, err := os.Create(dest)
+	dest1 := dest + ".tmp"
+	d, err := os.Create(dest1)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating tmp destination %s: %w", dest1, err)
 	}
 	defer d.Close()
 
 	_, err = io.Copy(d, s)
-	return err
+	if err != nil {
+		return fmt.Errorf("error copying to file %s: %w", dest1, err)
+	}
+
+	err = os.Rename(dest1, dest)
+	if err != nil {
+		return fmt.Errorf("error renaming destination %s: %w", dest, err)
+	}
+
+	return nil
 }
