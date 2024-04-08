@@ -20,6 +20,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 
 	rng, err := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	if err != nil {
+		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -36,6 +37,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	ones, bits := rng.CIDR().Mask.Size()
 
 	if bits != 32 {
+		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -51,6 +53,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 
 	maxOnes := 30
 	if ones > maxOnes {
+		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -65,6 +68,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 
 	minOnes := 16
 	if ones < minOnes {
+		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

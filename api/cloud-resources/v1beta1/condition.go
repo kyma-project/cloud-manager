@@ -37,3 +37,7 @@ const (
 const (
 	ConditionTypeWaitScopeReady = "WaitScopeReady"
 )
+
+const (
+	ConditionTypeWarning = "Warning"
+)

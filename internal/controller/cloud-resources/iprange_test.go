@@ -1,8 +1,10 @@
 package cloudresources
 
 import (
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -114,6 +116,10 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Should(Succeed(), "expected SKR IpRange to has Ready condition, but it does not")
 		})
 
+		By("And Then SKR IpRange has Ready state", func() {
+			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateReady))
+		})
+
 		By("And Then SKR IpRange has finalizer", func() {
 			Expect(controllerutil.ContainsFinalizer(skrIpRange, cloudresourcesv1beta1.Finalizer))
 		})
@@ -135,18 +141,12 @@ var _ = Describe("Feature: SKR IpRange", func() {
 
 	It("Scenario: SKR IpRange is deleted", func() {
 
-		By("Given SKR namespace exists", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed(), "failed creating SKR namespace")
-		})
-
 		const (
 			skrIpRangeName = "1261ba97-f4f0-4465-a339-f8691aee8c48"
 		)
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
-		By("And Given SKR IpRange exists", func() {
+		By("Given SKR IpRange exists", func() {
 			Eventually(CreateSkrIpRange).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -373,6 +373,10 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By("And Then SKR IpRange Error condition has message", func() {
 			Expect(errCond.Message).To(Equal("CIDR 10.251.0.0/31 block size must not be greater than 30"))
 		})
+
+		By("And Then SKR IpRange has Error state", func() {
+			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
+		})
 	})
 
 	It("Scenario: SKR IpRange can not be created with size smaller then /16", func() {
@@ -434,6 +438,115 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By("And Then SKR IpRange Error condition has message", func() {
 			Expect(errCond.Message).To(Equal("CIDR 10.251.0.0/15 block size must not be less than 16"))
 		})
+
+		By("And Then SKR IpRange has Error state", func() {
+			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
+		})
 	})
 
+	It("Scenario: SKR IpRange can not be deleted if used by AwsNfsVolume", func() {
+		const (
+			skrIpRangeName   = "bb4e456c-7a99-44d3-b387-d044c3f42812"
+			awsNfsVolumeName = "3e0b8eee-64e1-402c-8399-619a23b6be0a"
+		)
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+
+		By("Given SKR IpRange exists", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+
+		})
+
+		By("And Given SKR IpRange has Ready condition", func() {
+			// load SKR IpRange to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+			// KCP IpRange is created by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected SKR IpRange to be created, but none found")
+
+			// When Kcp IpRange gets Ready condition
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed updating KCP IpRange status")
+
+			// And when SKR IpRange gets Ready condition by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "exepcted SKR IpRange to get Ready condition, but it did not")
+		})
+
+		By("And Given AwsNfsVolume exists", func() {
+			// tell AwsNfsVolume reconciler to ignore this AwsNfsVolume
+			awsnfsvolume.Ignore.AddName(awsNfsVolumeName)
+
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
+					WithName(awsNfsVolumeName),
+					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithAwsNfsVolumeCapacity("10G"),
+				).
+				Should(Succeed(), "failed creating AwsNfsVolume")
+
+			time.Sleep(50 * time.Millisecond)
+		})
+
+		By("When SKR IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange")
+		})
+
+		By("Then SKR IpRange has Warning condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeWarning)).
+				Should(Succeed(), "expected SKR IpRange to have Warning condition")
+		})
+
+		By("And Then SKR IpRange has DeleteWhileUsed reason", func() {
+			cond := meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeWarning)
+			Expect(cond.Reason).To(Equal(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed))
+			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", skrAwsNfsVolume.Namespace, skrAwsNfsVolume.Name)))
+		})
+
+		// CleanUp -------------------
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
+			Should(Succeed(), "failed deleting SKR AwsNfsVolume to clean up")
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+
+	})
 })

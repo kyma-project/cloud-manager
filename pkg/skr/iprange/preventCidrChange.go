@@ -16,6 +16,7 @@ func preventCidrChange(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	// status.cidr is not empty AND different from spec.cidr
+	state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 	return composed.UpdateStatus(state.ObjAsIpRange()).
 		SetCondition(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,

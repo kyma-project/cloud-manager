@@ -10,6 +10,7 @@ import (
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
 	"time"
@@ -65,6 +66,20 @@ type skrRunner struct {
 	stopped    bool
 }
 
+func (r *skrRunner) isObjectActive(provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
+	if provider == nil {
+		return true
+	}
+	pt, ptDefined := providerSpecificTypes[fmt.Sprintf("%T", obj)]
+	if !ptDefined {
+		return true
+	}
+	if pt == *provider {
+		return true
+	}
+	return false
+}
+
 func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) (err error) {
 	if r.started {
 		return errors.New("already started")
@@ -111,23 +126,36 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			Provider:   options.provider,
 		}
 
-		for _, b := range r.registry.Builders() {
-			shouldRegister := true
-			skipMsg := ""
-			if options.provider != nil {
-				pt, ptDefined := providerSpecificTypes[fmt.Sprintf("%T", b.GetForObj())]
-				if ptDefined && pt != *options.provider {
-					shouldRegister = false
-					skipMsg = fmt.Sprintf("Skipping controller for %T due to non matching provider to %s", b.GetForObj(), *options.provider)
+		for _, indexer := range r.registry.Indexers() {
+			if r.isObjectActive(options.provider, indexer.Obj()) {
+				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
+				if err != nil {
+					return
 				}
+			} else {
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", indexer.Obj()),
+						"field", indexer.Field(),
+						"provider", string(*options.provider),
+					).
+					Info("Not creating indexer of object due to non matching provider")
 			}
-			if shouldRegister {
+		}
+
+		for _, b := range r.registry.Builders() {
+			if r.isObjectActive(options.provider, b.GetForObj()) {
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
 					return
 				}
 			} else {
-				logger.Info(skipMsg)
+				logger.
+					WithValues(
+						"controller", fmt.Sprintf("%T", b.GetForObj()),
+						"provider", string(*options.provider),
+					).
+					Info("Not starting controller due to non matching provider")
 			}
 		}
 
