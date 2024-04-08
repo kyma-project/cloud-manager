@@ -2,6 +2,8 @@ name: PR Checks
 run-name: '${{github.event.pull_request.title}}'
 'on':
   - pull_request
+env:
+  PIPELINE: true
 jobs:
   build:
     runs-on: ubuntu-latest
