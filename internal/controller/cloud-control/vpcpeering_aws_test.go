@@ -21,7 +21,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteVpcId     = "6e6d1748-9912-4957-9075-b97a6fac8ac1"
 			remoteAccountId = "444455556666"
 			remoteRegion    = "eu-west1"
-			connectionId    = "pcx-111aaa111"
 		)
 
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -65,9 +64,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 		})
 
-		var connection *ec2Types.VpcPeeringConnection
-		connection = infra.AwsMock().AddVpcPeering(connectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId)
-
 		vpcpeeringName := "b76ff161-c288-44fa-a295-8df2076af6a5"
 		vpcpeering := &cloudcontrolv1beta1.VpcPeering{}
 
@@ -94,6 +90,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("And Then KCP VpcPeering has status.vpcId equal to existing AWS VPC id", func() {
 			Expect(vpcpeering.Status.VpcId).To(Equal(vpcId))
 		})
+
+		list, _ := infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
+
+		var connection ec2Types.VpcPeeringConnection
+		for _, p := range list {
+			if vpcpeering.Status.ConnectionId == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
+				connection = p
+			}
+		}
 
 		By("And Then KCP VpcPeering has status.ConnectionId equal to existing AWS Connection id", func() {
 			Expect(vpcpeering.Status.ConnectionId).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))

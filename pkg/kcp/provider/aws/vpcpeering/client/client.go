@@ -10,6 +10,7 @@ import (
 type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error)
+	DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -51,4 +52,12 @@ func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVp
 	//return out.VpcPeeringConnection, nil
 
 	return nil, nil
+}
+
+func (c *client) DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error) {
+	out, err := c.svc.DescribeVpcPeeringConnections(ctx, &ec2.DescribeVpcPeeringConnectionsInput{})
+	if err != nil {
+		return nil, err
+	}
+	return out.VpcPeeringConnections, err
 }
