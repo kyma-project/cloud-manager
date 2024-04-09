@@ -70,7 +70,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonUnknown,
-				Message: "Failed creating EFS",
+				Message: "Failed creating VPC Peering",
 			}).
 			ErrorLogMessage("Error updating KCP VPC Peering status after failed loading of just created VPC Peering Connection").
 			Run(ctx, state)
