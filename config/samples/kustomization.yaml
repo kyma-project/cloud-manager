@@ -9,4 +9,5 @@ resources:
 - cloud-resources_v1beta1_iprange.yaml
 - cloud-resources_v1beta1_gcpnfsvolume.yaml
 - cloud-resources_v1beta1_awsnfsvolumebackup.yaml
+- cloud-resources_v1beta1_gcpnfsvolumebackup.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
