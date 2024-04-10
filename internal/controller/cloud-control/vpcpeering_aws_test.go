@@ -62,6 +62,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags("Name", "Remote Network Name"),
 				nil,
 			)
+			infra.AwsMock().AddVpc(
+				"wrong3",
+				"10.200.0.0/16",
+				awsutil.Ec2Tags("Name", "wrong3"),
+				nil,
+			)
 		})
 
 		vpcpeeringName := "b76ff161-c288-44fa-a295-8df2076af6a5"
@@ -99,6 +105,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				connection = p
 			}
 		}
+		By("And Then found VpcPeeringConnection has AccepterVpcInfo.VpcId equals remote vpc id", func() {
+			Expect(*connection.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
+		})
 
 		By("And Then KCP VpcPeering has status.ConnectionId equal to existing AWS Connection id", func() {
 			Expect(vpcpeering.Status.ConnectionId).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))

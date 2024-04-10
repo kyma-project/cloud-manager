@@ -53,7 +53,8 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	var allLoadedVpcs []string
 	// TODO refactor as it is more or less the same as in loadVpc
 
-	for _, v := range vpcList {
+	for _, vv := range vpcList {
+		v := vv
 		var sb strings.Builder
 		for _, t := range v.Tags {
 			sb.WriteString(pointer.StringDeref(t.Key, ""))
