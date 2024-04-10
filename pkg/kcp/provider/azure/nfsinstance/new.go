@@ -8,6 +8,8 @@ import (
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, state composed.State) (error, context.Context) {
-		panic(errors.New("not implemented"))
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Error(errors.New("azure/nfsinstance should not been called"), "Logical error")
+		return nil, nil
 	}
 }
