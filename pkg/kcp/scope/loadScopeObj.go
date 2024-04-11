@@ -9,13 +9,12 @@ import (
 
 func loadScopeObj(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
+
 	err := state.LoadObj(ctx)
 	if apierrors.IsNotFound(err) {
 		list := &cloudcontrolv1beta1.ScopeList{}
 		err = state.Cluster().K8sClient().List(ctx, list)
 
-		logger.Info("Scope object does not exist")
 		// continue to create one
 		return nil, nil
 	}
