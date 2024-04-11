@@ -110,7 +110,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 				continue
 			}
 
-			err = i.copySpec(desired, existing)
+			err = i.copyForUpdate(desired, existing)
 			if err != nil {
 				i.logger.Error(err, fmt.Sprintf("Error copying spec for %s/%s/%s before update", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 				continue
@@ -141,15 +141,28 @@ func (i *installer) getVersion(u *unstructured.Unstructured) string {
 	return result
 }
 
-func (i *installer) copySpec(from, to *unstructured.Unstructured) error {
-	fromSpec, exists, err := unstructured.NestedMap(from.Object, "spec")
+func (i *installer) copyForUpdate(from, to *unstructured.Unstructured) (err error) {
+	if err = i.copyField(from, to, "spec"); err != nil {
+		return fmt.Errorf("error copying spec field: %w", err)
+	}
+	if err = i.copyField(from, to, "metadata.labels"); err != nil {
+		return fmt.Errorf("error copying labels field: %w", err)
+	}
+	if err = i.copyField(from, to, "metadata.annotations"); err != nil {
+		return fmt.Errorf("error copying labels field: %w", err)
+	}
+	return nil
+}
+
+func (i *installer) copyField(from, to *unstructured.Unstructured, fields ...string) error {
+	fromSpec, exists, err := unstructured.NestedMap(from.Object, fields...)
 	if !exists {
 		return errors.New("spec field not found in source")
 	}
 	if err != nil {
 		return fmt.Errorf("error getting spec from source: %w", err)
 	}
-	err = unstructured.SetNestedMap(to.Object, fromSpec, "spec")
+	err = unstructured.SetNestedMap(to.Object, fromSpec, fields...)
 	if err != nil {
 		return fmt.Errorf("error setting spec to destination: %w", err)
 	}
