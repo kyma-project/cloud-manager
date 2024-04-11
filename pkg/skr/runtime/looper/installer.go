@@ -159,11 +159,11 @@ func (i *installer) copyField(from, to *unstructured.Unstructured, fields ...str
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error getting spec from source: %w", err)
+		return fmt.Errorf("error getting fields from source: %w", err)
 	}
 	err = unstructured.SetNestedMap(to.Object, fromSpec, fields...)
 	if err != nil {
-		return fmt.Errorf("error setting spec to destination: %w", err)
+		return fmt.Errorf("error setting fields to destination: %w", err)
 	}
 	return nil
 }
