@@ -48,4 +48,5 @@ type Server interface {
 	VpcConfig
 	NfsConfig
 	ScopeConfig
+	VpcPeeringConfig
 }

@@ -2,40 +2,52 @@ package mock
 
 import (
 	"context"
-	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
+	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
 	"sync"
 )
 
 type VpcPeeringConfig interface {
-	AddVpcPeering()
 }
 
+type vpcPeeringEntry struct {
+	peering ec2types.VpcPeeringConnection
+}
 type vpcPeeringStore struct {
 	m     sync.Mutex
-	items []string
+	items []*vpcPeeringEntry
 }
 
 func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	c := ec2types.VpcPeeringConnection{
-		VpcPeeringConnectionId: pointer.String(fmt.Sprintf("%s->%s",
-			pointer.StringDeref(vpcId, ""),
-			pointer.StringDeref(remoteVpcId, ""))),
-		RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-			VpcId: vpcId,
-		},
-		AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-			VpcId:   remoteVpcId,
-			Region:  remoteRegion,
-			OwnerId: remoteAccountId,
+	item := &vpcPeeringEntry{
+		peering: ec2types.VpcPeeringConnection{
+			VpcPeeringConnectionId: pointer.String("pcx-" + uuid.NewString()[:8]),
+			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId: vpcId,
+			},
+			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId:   remoteVpcId,
+				Region:  remoteRegion,
+				OwnerId: remoteAccountId,
+			},
 		},
 	}
 
-	s.items = append(s.items, pointer.StringDeref(c.VpcPeeringConnectionId, ""))
+	s.items = append(s.items, item)
 
-	return &c, nil
+	return &item.peering, nil
+}
+
+func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]ec2types.VpcPeeringConnection, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return pie.Map(s.items, func(e *vpcPeeringEntry) ec2types.VpcPeeringConnection {
+		return e.peering
+	}), nil
 }

@@ -57,7 +57,6 @@ func (r *vpcPeeringReconciler) newAction() composed.Action {
 					"providerSwitch",
 					nil,
 					composed.NewCase(focal.AwsProviderPredicate, vpcpeering.New(r.awsStateFactory)),
-					composed.NewCase(focal.AwsProviderPredicate, vpcpeering.New(r.awsStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

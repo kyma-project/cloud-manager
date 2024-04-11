@@ -17,6 +17,8 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 			Reason:  cloudcontrol1beta1.ReasonReady,
 			Message: "Additional VpcPeerings(s) are provisioned",
 		}).
-		ErrorLogMessage("Error updating VpcPeering success status").
+		ErrorLogMessage("Error updating VpcPeering success status after setting Ready condition").
+		SuccessLogMsg("KPC VpcPeering is ready").
+		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }
