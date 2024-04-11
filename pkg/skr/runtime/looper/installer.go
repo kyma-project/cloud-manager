@@ -3,6 +3,7 @@ package looper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-logr/logr"
 	"io"
@@ -85,34 +86,72 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 		if err != nil {
 			return docCount - 1, fmt.Errorf("error deconding rawObj into UnstructuredJSONScheme in document #%d in %s: %w", docCount, fn, err)
 		}
-		u, ok := obj.(*unstructured.Unstructured)
+		desired, ok := obj.(*unstructured.Unstructured)
 		if !ok {
 			unstructuredData, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 			if err != nil {
 				return docCount - 1, fmt.Errorf("error converting obj to unstructured in document #%d in %s: %w", docCount, fn, err)
 			}
 
-			u = &unstructured.Unstructured{Object: unstructuredData}
+			desired = &unstructured.Unstructured{Object: unstructuredData}
 		}
 
-		uu := u.DeepCopy()
-		err = skrCluster.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(uu), uu)
+		existing := desired.DeepCopy()
+		err = skrCluster.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(existing), existing)
 		if client.IgnoreNotFound(err) != nil {
-			return docCount - 1, fmt.Errorf("error getting obj %s of kind %s/%s to check if it exist: %w", uu.GetName(), uu.GetAPIVersion(), uu.GetKind(), err)
+			return docCount - 1, fmt.Errorf("error getting obj %s of kind %s/%s to check if it exist: %w", existing.GetName(), existing.GetAPIVersion(), existing.GetKind(), err)
 		}
 
 		if err == nil {
-			i.logger.Info(fmt.Sprintf("Updating %s/%s/%s", u.GetAPIVersion(), u.GetKind(), u.GetName()))
-			err = skrCluster.GetClient().Update(ctx, u)
+			// it already exists
+			desiredVersion := i.getVersion(desired)
+			existingVersion := i.getVersion(existing)
+			if desiredVersion == existingVersion {
+				continue
+			}
+
+			err = i.copySpec(desired, existing)
+			if err != nil {
+				i.logger.Error(err, fmt.Sprintf("Error copying spec for %s/%s/%s before update", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+				continue
+			}
+			i.logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
+			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
-			i.logger.Info(fmt.Sprintf("Creating %s/%s/%s", u.GetAPIVersion(), u.GetKind(), u.GetName()))
-			err = skrCluster.GetClient().Create(ctx, u)
+			i.logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+			err = skrCluster.GetClient().Create(ctx, desired)
 		}
 
 		if err != nil {
-			return docCount - 1, fmt.Errorf("error applying %s/%s/%s: %w", u.GetAPIVersion(), u.GetKind(), u.GetName(), err)
+			return docCount - 1, fmt.Errorf("error applying %s/%s/%s: %w", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), err)
 		}
 	}
 
 	return docCount, nil
+}
+
+func (i *installer) getVersion(u *unstructured.Unstructured) string {
+	if u.GetAnnotations() == nil {
+		return ""
+	}
+	result, ok := u.GetAnnotations()["cloud-resources.kyma-project.io/version"]
+	if !ok {
+		return ""
+	}
+	return result
+}
+
+func (i *installer) copySpec(from, to *unstructured.Unstructured) error {
+	fromSpec, exists, err := unstructured.NestedMap(from.Object, "spec")
+	if !exists {
+		return errors.New("spec field not found in source")
+	}
+	if err != nil {
+		return fmt.Errorf("error getting spec from source: %w", err)
+	}
+	err = unstructured.SetNestedMap(to.Object, fromSpec, "spec")
+	if err != nil {
+		return fmt.Errorf("error setting spec to destination: %w", err)
+	}
+	return nil
 }
