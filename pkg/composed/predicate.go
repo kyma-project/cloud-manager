@@ -66,10 +66,6 @@ func BuildBranchingAction(name string, predicate Predicate, trueAction Action, f
 			return falseAction(ctx, state)
 		}
 
-		logger.
-			WithValues("targetAction", nil).
-			Info("No action called since not supplied")
-
 		return nil, nil
 	}
 }
@@ -126,7 +122,7 @@ func BuildSwitchAction(name string, defaultAction Action, cases ...Case) Action 
 				Info("Running action")
 			return defaultAction(ctx, state)
 		} else {
-			logger.Info("None of case predicates evaluated true, and default action is not provided")
+			//logger.Info("None of case predicates evaluated true, and default action is not provided")
 		}
 
 		return nil, nil

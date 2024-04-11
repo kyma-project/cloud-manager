@@ -25,7 +25,5 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.kyma = kymaUnstructured
 
-	logger.Info("Kyma CR loaded")
-
 	return nil, nil
 }

@@ -21,7 +21,6 @@ func findKymaModuleState(ctx context.Context, st composed.State) (error, context
 		"moduleInSpec", fmt.Sprintf("%v", moduleInSpec),
 		"skrActive", fmt.Sprintf("%v", skrActive),
 	)
-	logger.Info("Module state loaded")
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	state.moduleState = moduleState

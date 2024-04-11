@@ -102,16 +102,15 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 		}
 
 		if err == nil {
-			// this object exist
-			i.logger.Info(fmt.Sprintf("The object %s/%s/%s already exist", u.GetAPIVersion(), u.GetKind(), u.GetName()))
-			continue
+			i.logger.Info(fmt.Sprintf("Updating %s/%s/%s", u.GetAPIVersion(), u.GetKind(), u.GetName()))
+			err = skrCluster.GetClient().Update(ctx, u)
+		} else {
+			i.logger.Info(fmt.Sprintf("Creating %s/%s/%s", u.GetAPIVersion(), u.GetKind(), u.GetName()))
+			err = skrCluster.GetClient().Create(ctx, u)
 		}
 
-		i.logger.Info(fmt.Sprintf("Installing %s/%s/%s", u.GetAPIVersion(), u.GetKind(), u.GetName()))
-
-		err = skrCluster.GetClient().Create(ctx, u)
 		if err != nil {
-			return docCount - 1, fmt.Errorf("error creating %s/%s/%s: %w", u.GetAPIVersion(), u.GetKind(), u.GetName(), err)
+			return docCount - 1, fmt.Errorf("error applying %s/%s/%s: %w", u.GetAPIVersion(), u.GetKind(), u.GetName(), err)
 		}
 	}
 
