@@ -10,7 +10,12 @@
 
 # {Project Title}
 <!--- mandatory --->
-> Modify the title and insert the name of your project. Use Heading 1 (H1).
+>
+
+[![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/cloud-manager)](https://api.reuse.software/info/github.com/kyma-project/cloud-manager)
+
+Modify the title and insert the name of your project. Use Heading 1 (H1).
+
 
 ## Overview
 <!--- mandatory section --->
