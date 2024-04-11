@@ -3,7 +3,6 @@ package looper
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/go-logr/logr"
 	"io"
@@ -157,7 +156,7 @@ func (i *installer) copyForUpdate(from, to *unstructured.Unstructured) (err erro
 func (i *installer) copyField(from, to *unstructured.Unstructured, fields ...string) error {
 	fromSpec, exists, err := unstructured.NestedMap(from.Object, fields...)
 	if !exists {
-		return errors.New("spec field not found in source")
+		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("error getting spec from source: %w", err)
