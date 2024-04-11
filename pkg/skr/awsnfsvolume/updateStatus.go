@@ -25,7 +25,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondReady := meta.FindStatusCondition(state.ObjAsAwsNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	if kcpCondErr != nil && skrCondErr == nil {
-		logger.Info("Updating SKR AwsNfsVolume status with Error condition")
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -35,7 +34,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating KCP AwsNfsVolume status with not ready condition due to KCP error").
-			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("Updated and forgot SKR AwsNfsVolume status with Error condition").
+			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 

@@ -194,16 +194,16 @@ func (l *skrLooper) Start(ctx context.Context) error {
 
 func (l *skrLooper) emitActiveKymaNames() {
 	defer l.wg.Done()
-	l.logger.Info("SKR Looper emitter started")
+	//l.logger.Info("SKR Looper emitter started")
 	for !l.stopped {
-		l.logger.Info("SKR Looper emitter getting active kymas")
+		//l.logger.Info("SKR Looper emitter getting active kymas")
 		kymaNames := l.GetKymaNames()
 		l.logger.Info(fmt.Sprintf("SKR Looper emitter got %d active kymas", len(kymaNames)))
 		for _, kn := range kymaNames {
 			if l.stopped {
 				return
 			}
-			l.logger.WithValues("kymaName", kn).Info("SKR Looper emitter about to write to ch")
+			//l.logger.WithValues("kymaName", kn).Info("SKR Looper emitter about to write to ch")
 			select {
 			case <-l.ctx.Done():
 				l.logger.Info("SKR Looper emitter context closed")

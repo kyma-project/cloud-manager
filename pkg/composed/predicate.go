@@ -66,10 +66,6 @@ func BuildBranchingAction(name string, predicate Predicate, trueAction Action, f
 			return falseAction(ctx, state)
 		}
 
-		logger.
-			WithValues("targetAction", nil).
-			Info("No action called since not supplied")
-
 		return nil, nil
 	}
 }

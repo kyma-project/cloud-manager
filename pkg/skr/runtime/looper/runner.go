@@ -149,13 +149,6 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				if err != nil {
 					return
 				}
-			} else {
-				logger.
-					WithValues(
-						"controller", fmt.Sprintf("%T", b.GetForObj()),
-						"provider", string(*options.provider),
-					).
-					Info("Not starting controller due to non matching provider")
 			}
 		}
 

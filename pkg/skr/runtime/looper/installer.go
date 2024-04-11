@@ -103,7 +103,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 
 		if err == nil {
 			// this object exist
-			i.logger.Info(fmt.Sprintf("The object %s/%s/%s already exist", u.GetAPIVersion(), u.GetKind(), u.GetName()))
+			//i.logger.Info(fmt.Sprintf("The object %s/%s/%s already exist", u.GetAPIVersion(), u.GetKind(), u.GetName()))
 			continue
 		}
 
