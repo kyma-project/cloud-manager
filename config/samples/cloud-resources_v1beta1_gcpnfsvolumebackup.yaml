@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpNfsVolumeBackup
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpnfsvolumebackup
+    app.kubernetes.io/instance: gcpnfsvolumebackup-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: gcpnfsvolumebackup-sample
+spec:
+  # TODO(user): Add fields here

@@ -16,6 +16,7 @@ const networkFilter = "network=\"https://www.googleapis.com/compute/v1/projects/
 const PsaPeeringName = "servicenetworking-googleapis-com"
 const filestoreInstancePattern = "projects/%s/locations/%s/instances/%s"
 const filestoreParentPattern = "projects/%s/locations/%s"
+const fileBackupPattern = "projects/%s/locations/%s/backups/%s"
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
@@ -56,6 +57,10 @@ func GetFilestoreInstancePath(projectId, location, instanceId string) string {
 
 func GetFilestoreParentPath(projectId, location string) string {
 	return fmt.Sprintf(filestoreParentPattern, projectId, location)
+}
+
+func GetFileBackupPath(projectId, location, name string) string {
+	return fmt.Sprintf(fileBackupPattern, projectId, location, name)
 }
 
 type networkTier string

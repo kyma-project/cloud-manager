@@ -197,6 +197,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - gcpnfsvolumebackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpnfsvolumebackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpnfsvolumebackups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - gcpnfsvolumes
   verbs:
   - create

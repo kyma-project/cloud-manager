@@ -18,7 +18,10 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	"github.com/elliotchance/pie/v2"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
@@ -28,10 +31,10 @@ import (
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"os"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -133,6 +136,9 @@ func main() {
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
 	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
 
+	//Get env
+	env := abstractions.NewOSEnvironment()
+
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
@@ -151,8 +157,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
+		os.Exit(1)
+	}
+
 	// KCP Controllers
-	env := abstractions.NewOSEnvironment()
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
