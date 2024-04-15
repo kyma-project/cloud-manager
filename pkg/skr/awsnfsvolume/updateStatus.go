@@ -27,8 +27,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondErr != nil && skrCondErr == nil {
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeReady,
-				Status:  metav1.ConditionFalse,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: kcpCondErr.Message,
 			}).

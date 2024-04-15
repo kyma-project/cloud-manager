@@ -44,6 +44,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr("10.8.0.0/16"),
 				).
 				Should(Succeed())
 

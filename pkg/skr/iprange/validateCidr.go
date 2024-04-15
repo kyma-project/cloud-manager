@@ -24,7 +24,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionFalse,
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
 				Message: fmt.Sprintf("CIDR %s has invalid syntax", state.ObjAsIpRange().Spec.Cidr),
 			}).
@@ -41,7 +41,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionFalse,
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
 				Message: fmt.Sprintf("CIDR %s is not IPv4", state.ObjAsIpRange().Spec.Cidr),
 			}).
