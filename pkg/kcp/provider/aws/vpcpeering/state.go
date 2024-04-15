@@ -19,11 +19,14 @@ type State struct {
 
 	awsAccessKeyid     string
 	awsSecretAccessKey string
+	roleName           string
 
 	vpc                  *ec2Types.Vpc
 	vpcPeeringConnection *ec2Types.VpcPeeringConnection
 	remoteVpc            *ec2Types.Vpc
 	remoteRegion         string
+	remoteVpcId          string
+	remoteAccountId      string
 }
 
 type StateFactory interface {
@@ -44,40 +47,44 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
 
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, f.env.Get("AWS_ROLE_NAME"))
+	roleName := f.env.Get("AWS_ROLE_NAME")
+	awsAccessKeyId := f.env.Get("AWS_ACCESS_KEY_ID")
+	awsSecretAccessKey := f.env.Get("AWS_SECRET_ACCESS_KEY")
+
+	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, roleName)
 
 	logger.WithValues(
 		"awsRegion", vpcPeeringState.Scope().Spec.Region,
-		"awsRole", roleName,
+		"awsRole", roleArn,
 	).Info("Assuming AWS role")
 
-	awsAccessKeyId := f.env.Get("AWS_ACCESS_KEY_ID")
-	awsSecretAccessKey := f.env.Get("AWS_SECRET_ACCESS_KEY")
 	c, err := f.skrProvider(
 		ctx,
 		vpcPeeringState.Scope().Spec.Region,
 		awsAccessKeyId,
 		awsSecretAccessKey,
-		roleName,
+		roleArn,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey), nil
+	return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey, roleName), nil
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
 	client vpcpeeringclient.Client,
 	provider awsclient.SkrClientProvider[vpcpeeringclient.Client],
 	key string,
-	secret string) *State {
+	secret string,
+	roleName string) *State {
 	return &State{
 		State:              vpcPeeringState,
 		client:             client,
 		provider:           provider,
 		awsAccessKeyid:     key,
 		awsSecretAccessKey: secret,
+		roleName:           roleName,
 	}
 }

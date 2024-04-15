@@ -15,27 +15,23 @@ import (
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	state.remoteVpcId = state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteVpcId
+	state.remoteAccountId = state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteAccountId
+	state.remoteRegion = state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteRegion
 
-	remoteVpcId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteVpcId
-	remoteAccountId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteAccountId
-	remoteRegion := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteRegion
-
-	awsRoleName := ""
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, awsRoleName)
+	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", state.remoteAccountId, state.roleName)
 
 	logger.WithValues(
-		"awsRegion", remoteRegion,
-		"awsRole", roleName,
+		"awsRegion", state.remoteRegion,
+		"awsRole", roleArn,
 	).Info("Assuming AWS role")
 
-	awsAccessKeyId := state.awsAccessKeyid
-	awsSecretAccessKey := state.awsSecretAccessKey
 	client, err := state.provider(
 		ctx,
-		remoteRegion,
-		awsAccessKeyId,
-		awsSecretAccessKey,
-		roleName,
+		state.remoteRegion,
+		state.awsAccessKeyid,
+		state.awsSecretAccessKey,
+		roleArn,
 	)
 
 	if err != nil {
@@ -69,7 +65,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			sb.String(),
 		))
 
-		if pointer.StringDeref(v.VpcId, "xxx") == remoteVpcId {
+		if pointer.StringDeref(v.VpcId, "xxx") == state.remoteVpcId {
 			remoteVpcName = util.GetEc2TagValue(v.Tags, "Name")
 			vpc = &v
 		}
@@ -78,7 +74,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	if vpc == nil {
 		logger.
 			WithValues(
-				"remoteVpcId", remoteVpcId,
+				"remoteVpcId", state.remoteVpcId,
 				"allLoadedVpcs", fmt.Sprintf("%v", allLoadedVpcs),
 			).
 			Info("VPC not found")
@@ -88,7 +84,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudresourcesv1beta1.ReasonVpcNotFound,
-				Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
+				Message: fmt.Sprintf("AWS VPC ID %s not found", state.remoteVpcId),
 			}).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
