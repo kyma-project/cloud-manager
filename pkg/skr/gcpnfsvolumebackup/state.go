@@ -2,7 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,8 +18,9 @@ type State struct {
 	KcpCluster composed.StateCluster
 	SkrCluster composed.StateCluster
 
-	Scope       *v1beta1.Scope
-	NfsInstance *v1beta1.NfsInstance
+	Scope        *cloudcontrolv1beta1.Scope
+	NfsInstance  *cloudcontrolv1beta1.NfsInstance
+	GcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 
 	fileBackup *file.Backup
 

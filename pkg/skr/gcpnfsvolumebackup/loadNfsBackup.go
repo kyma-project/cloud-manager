@@ -3,9 +3,11 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"errors"
+	"fmt"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"google.golang.org/api/googleapi"
 )
@@ -35,13 +37,13 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 		}
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    v1beta1.ConditionTypeError,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  v1beta1.ReasonGcpError,
-				Message: "Error getting File Backup from GCP",
+				Reason:  cloudcontrolv1beta1.ReasonGcpError,
+				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg("Error getting File Backup from GCP").
+			SuccessLogMsg(fmt.Sprintf("Error getting GCP backup : %s", err)).
 			Run(ctx, state)
 	}
 

@@ -44,11 +44,15 @@ func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeBackupMain",
 		composed.LoadObj,
+		addFinalizer,
+		loadGcpNfsVolume,
 		loadScope,
 		loadNfsInstance,
 		loadNfsBackup,
 		createNfsBackup,
 		deleteNfsBackup,
+		removeFinalizer,
+		updateStatus,
 		composed.StopAndForgetAction,
 	)
 }

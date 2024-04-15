@@ -12,7 +12,7 @@ import (
 
 func loadScope(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
-	state := st.(State)
+	state := st.(*State)
 	backup := state.ObjAsGcpNfsVolumeBackup()
 
 	logger = logger.WithValues(
