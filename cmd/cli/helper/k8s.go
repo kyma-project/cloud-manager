@@ -17,10 +17,10 @@ import (
 	"strings"
 )
 
-func mustGetRestConfig(envVars []string, contexts []string) *rest.Config {
-	envVars = append(envVars, "KUBECONFIG")
+func mustGetRestConfig(kubeconfigVars []string, contextVars []string) *rest.Config {
+	kubeconfigVars = append(kubeconfigVars, "KUBECONFIG")
 	var kubeconfig string
-	for _, envVarName := range envVars {
+	for _, envVarName := range kubeconfigVars {
 		kubeconfig = os.Getenv(envVarName)
 		if len(kubeconfig) > 0 {
 			break
@@ -36,11 +36,19 @@ func mustGetRestConfig(envVars []string, contexts []string) *rest.Config {
 	}
 
 	var contextToUse string
-	if len(contexts) > 0 {
+	if len(contextVars) > 0 {
 		cfg := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 			&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
 			&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: ""}})
 		raw, _ := cfg.RawConfig()
+
+		var contexts []string
+		for _, envVarName := range contextVars {
+			context := os.Getenv(envVarName)
+			if len(context) != 0 {
+				contexts = append(contexts, context)
+			}
+		}
 	loop:
 		for contextName := range raw.Contexts {
 			for _, cn := range contexts {
