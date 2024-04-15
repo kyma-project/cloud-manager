@@ -24,6 +24,7 @@ import (
 
 const (
 	ConditionReasonInvalidCidr = "InvalidCidr"
+	ConditionReasonCidrOverlap = "CidrOverlap"
 
 	ConditionReasonCidrCanNotBeChanged = "CidrCanNotBeChanged"
 

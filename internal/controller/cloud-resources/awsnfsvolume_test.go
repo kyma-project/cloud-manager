@@ -168,6 +168,13 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			}
 		})
 
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+			Should(Succeed())
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+			Should(Succeed())
 	})
 
 	It("Scenario: SKR AwsNfsVolume is deleted", func() {
@@ -317,5 +324,10 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
 				Should(Succeed(), "expected AwsNfsVolume not to exist")
 		})
+
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+			Should(Succeed())
 	})
 })
