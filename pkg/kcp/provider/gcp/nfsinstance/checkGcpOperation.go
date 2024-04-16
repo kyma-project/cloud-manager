@@ -2,7 +2,9 @@ package nfsinstance
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -25,6 +27,15 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 	project := state.Scope().Spec.Scope.Gcp.Project
 	op, err := state.filestoreClient.GetFilestoreOperation(ctx, project, opName)
 	if err != nil {
+
+		//If the operation is not found, reset the OpIdentifier.
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			if e.Code == 404 {
+				nfsInstance.Status.OpIdentifier = ""
+			}
+		}
+
 		return composed.UpdateStatus(nfsInstance).
 			SetCondition(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,

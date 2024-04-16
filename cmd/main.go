@@ -28,6 +28,7 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -157,10 +158,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	//if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
+		os.Exit(1)
+	}
 
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
