@@ -18,7 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -26,8 +25,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
 // GcpNfsVolumeBackupReconciler reconciles a GcpNfsVolumeBackup object
@@ -63,9 +60,9 @@ func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArgu
 	return nil
 }
 
-func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry) error {
-	return reg.Register().
-		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{}).
-		For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
-		Complete()
-}
+//func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry) error {
+//	return reg.Register().
+//		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{}).
+//		For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
+//		Complete()
+//}
