@@ -11,7 +11,7 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 
 	return composed.UpdateStatus(state.ObjAsVpcPeering()).
-		SetCondition(metav1.Condition{
+		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrol1beta1.ConditionTypeReady,
 			Status:  "True",
 			Reason:  cloudcontrol1beta1.ReasonReady,
