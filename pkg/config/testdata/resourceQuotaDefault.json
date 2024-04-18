@@ -1,0 +1,15 @@
+{
+  "resourceQuota": {
+    "skr": {
+      "defaults": {
+        "ipranges": 1,
+        "awsnfsvolumes": 3
+      },
+      "overrides": {
+        "skr123": {
+          "ipranges": 2
+        }
+      }
+    }
+  }
+}
