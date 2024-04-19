@@ -18,24 +18,29 @@ package main
 import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/tidwall/gjson"
 )
 
-type someData struct {
+type someStruct struct {
 	Field string `mapstructure:"fieldName"`
 }
 
-func main()  {
+func main() {
 	cfg := config.NewConfig(abstractions.NewOSEnvironment())
 	cfg.SourceFile(config.NewFiledPath("some.path"), "/path/to/some/file.yaml")
 	cfg.SourceFile(config.NewFiledPath("other.path"), "/path/to/other/file.json")
 	cfg.SourceFile(config.NewFiledPath("third.path"), "/path/to/scalar/value")
-	obj := &someData{}
-	cfg.Bind(config.NewFiledPath("raw.path.to.bound.struct"), obj)
-    cfg.Read()
+	obj := new(someStruct)
+	cfg.Bind(config.NewFiledPath("raw.path.to.bound"), obj)
+	cfg.Read()
 	if err := cfg.Watch(nil, nil); err != nil {
 		panic(err)
-    }
+	}
 
+	// raw string access
+	a := gjson.Get(cfg.Json(), "some.path.filed").String()
+	
+	// access trough bound struct
+	b := obj.Field
 }
-
 ```
