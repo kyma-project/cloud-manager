@@ -1,0 +1,6 @@
+defaults:
+  iprange.cloud-resources.kyma-project.io/totalCount: 2
+  awsnfsvolume.cloud-resources.kyma-project.io/totalCount: 10
+overrides:
+  skr123:
+    iprange.cloud-resources.kyma-project.io/totalCount: 3

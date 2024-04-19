@@ -18,6 +18,8 @@ package cloudresources
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"os"
 	"testing"
 
@@ -61,6 +63,9 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
+
+	// Quota override
+	quota.SkrQuota.Override(&cloudresourcesv1beta1.IpRange{}, infra.SKR().Scheme(), "", 1000)
 
 	// Setup controllers
 	// Test Only PV Controller

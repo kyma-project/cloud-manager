@@ -10,6 +10,8 @@ type Environment interface {
 	List() map[string]string
 }
 
+var _ Environment = &osEnvironment{}
+
 type osEnvironment struct{}
 
 func NewOSEnvironment() Environment {
@@ -36,6 +38,8 @@ func NewMockedEnvironment(values map[string]string) Environment {
 	}
 	return &MockedEnvironment{Values: values}
 }
+
+var _ Environment = &MockedEnvironment{}
 
 type MockedEnvironment struct {
 	Values map[string]string
