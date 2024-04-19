@@ -1,0 +1,20 @@
+{
+  "arrNum": [
+    1,
+    2
+  ],
+  "arrStr": [
+    "a",
+    "b"
+  ],
+  "map": {
+    "a": "aaa",
+    "b": "bbb",
+    "nested": {
+      "x": "xxx",
+      "y": "yyy"
+    }
+  },
+  "number": 23,
+  "string": "abc"
+}

@@ -1,9 +1,13 @@
 package abstractions
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type Environment interface {
 	Get(k string) string
+	List() map[string]string
 }
 
 type osEnvironment struct{}
@@ -14,6 +18,16 @@ func NewOSEnvironment() Environment {
 
 func (e *osEnvironment) Get(k string) string {
 	return os.Getenv(k)
+}
+
+func (e *osEnvironment) List() map[string]string {
+	allEnvVars := os.Environ()
+	result := make(map[string]string, len(allEnvVars))
+	for _, env := range allEnvVars {
+		k, v, _ := strings.Cut(env, "=")
+		result[k] = v
+	}
+	return result
 }
 
 func NewMockedEnvironment(values map[string]string) Environment {
@@ -29,4 +43,8 @@ type MockedEnvironment struct {
 
 func (e *MockedEnvironment) Get(k string) string {
 	return e.Values[k]
+}
+
+func (e *MockedEnvironment) List() map[string]string {
+	return e.Values
 }

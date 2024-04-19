@@ -1,0 +1,3 @@
+defaults:
+  ipranges: 2
+  awsnfsvolumes: 4
