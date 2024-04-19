@@ -3,14 +3,14 @@
 Main features:
 * Internal CloudManager usage
 * Files and environment variables as sources
-* Supported source file encoding formats: yaml, json, scalar values
+* Supported source file encoding formats: YAML, JSON, scalar values
 * Multiple sources merged into single configuration at predefined field paths
-* Filesystem watch and automatic reload on file changed or symlink replaced (ie: k8s configmap change)
-* Bound golang structs at specified field path with automatic reload on config change
-* Mapping from raw config to bound struct with `github.com/mitchellh/mapstructure`
+* Filesystem watch and automatic reload on file changed or symlink replaced (ie: k8s ConfigMap change)
+* Bound Golang structs at a specified field path with automatic reload on the config change
+* Mapping from raw config to a bound struct with `github.com/mitchellh/mapstructure`
 
 
-# Usage
+## Usage
 
 ```golang
 package main
