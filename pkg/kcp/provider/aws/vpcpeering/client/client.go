@@ -38,20 +38,18 @@ func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 }
 
 func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error) {
-	//out, err := c.svc.CreateVpcPeeringConnection(ctx, &ec2.CreateVpcPeeringConnectionInput{
-	//	VpcId:       vpcId,
-	//	PeerVpcId:   remoteVpcId,
-	//	PeerRegion:  remoteRegion,
-	//	PeerOwnerId: remoteAccountId,
-	//})
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//return out.VpcPeeringConnection, nil
+	out, err := c.svc.CreateVpcPeeringConnection(ctx, &ec2.CreateVpcPeeringConnectionInput{
+		VpcId:       vpcId,
+		PeerVpcId:   remoteVpcId,
+		PeerRegion:  remoteRegion,
+		PeerOwnerId: remoteAccountId,
+	})
 
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VpcPeeringConnection, nil
 }
 
 func (c *client) DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error) {

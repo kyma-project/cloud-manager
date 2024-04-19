@@ -16,7 +16,6 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 		return composed.LogErrorAndReturn(err, "Error listing AWS peering connections", composed.StopWithRequeue, ctx)
 	}
 
-	// TODO use Status.ConnectionId
 	for _, c := range list {
 		if state.ObjAsVpcPeering().Status.ConnectionId == pointer.StringDeref(c.VpcPeeringConnectionId, "") {
 			state.vpcPeeringConnection = &c

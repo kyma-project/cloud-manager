@@ -2,7 +2,6 @@ package vpcpeering
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -29,7 +28,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	if err != nil {
 		logger.Error(err, "Error creating VPC Peering")
 
-		composed.UpdateStatus(state.ObjAsVpcPeering()).
+		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
@@ -42,10 +41,6 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating AWS VPC Peering Connection", composed.StopWithRequeue, ctx)
-	}
-
 	logger = logger.WithValues("connectionId", pointer.StringDeref(con.VpcPeeringConnectionId, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
@@ -54,27 +49,12 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	state.vpcPeeringConnection = con
 
-	state.ObjAsVpcPeering().Status.ConnectionId = *state.vpcPeeringConnection.VpcPeeringConnectionId
+	state.ObjAsVpcPeering().Status.ConnectionId = pointer.StringDeref(con.VpcPeeringConnectionId, "")
 
 	err = state.UpdateObjStatus(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
 	}
-
-	if state.vpcPeeringConnection == nil {
-		logger.Error(errors.New("unable to load just created VPC Peering Connection"), "Logical error!!!")
-
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonUnknown,
-				Message: "Failed creating VPC Peering",
-			}).
-			ErrorLogMessage("Error updating KCP VPC Peering status after failed loading of just created VPC Peering Connection").
-			Run(ctx, state)
-	}
-
 	return nil, ctx
 }
