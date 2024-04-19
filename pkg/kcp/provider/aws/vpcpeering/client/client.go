@@ -11,6 +11,7 @@ type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error)
 	DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error)
+	AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*types.VpcPeeringConnection, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -60,4 +61,16 @@ func (c *client) DescribeVpcPeeringConnections(ctx context.Context) ([]types.Vpc
 		return nil, err
 	}
 	return out.VpcPeeringConnections, err
+}
+
+func (c *client) AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*types.VpcPeeringConnection, error) {
+	out, err := c.svc.AcceptVpcPeeringConnection(ctx, &ec2.AcceptVpcPeeringConnectionInput{
+		VpcPeeringConnectionId: connectionId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VpcPeeringConnection, nil
 }

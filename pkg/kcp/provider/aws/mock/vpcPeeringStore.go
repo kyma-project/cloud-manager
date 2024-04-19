@@ -2,6 +2,8 @@ package mock
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
@@ -50,4 +52,17 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]
 	return pie.Map(s.items, func(e *vpcPeeringEntry) ec2types.VpcPeeringConnection {
 		return e.peering
 	}), nil
+}
+
+func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectonId *string) (*ec2types.VpcPeeringConnection, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, x := range s.items {
+		if pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectonId) {
+			return &x.peering, nil
+		}
+	}
+
+	return nil, errors.New(fmt.Sprintf("Vpc peering with id %s does not exists", *connectonId))
 }
