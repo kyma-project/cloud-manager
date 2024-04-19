@@ -29,7 +29,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	if err != nil {
 		logger.Error(err, "Error creating VPC Peering")
 
-		composed.UpdateStatus(state.ObjAsVpcPeering()).
+		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
