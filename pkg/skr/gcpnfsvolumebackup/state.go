@@ -19,7 +19,6 @@ type State struct {
 	SkrCluster composed.StateCluster
 
 	Scope        *cloudcontrolv1beta1.Scope
-	NfsInstance  *cloudcontrolv1beta1.NfsInstance
 	GcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 
 	fileBackup *file.Backup
