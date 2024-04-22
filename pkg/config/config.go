@@ -6,20 +6,64 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"sync"
 )
 
 func NewConfig(env abstractions.Environment) Config {
 	return &config{
-		env: env,
+		defaults: "{}",
+		env:      env,
 	}
 }
 
+var _ Config = &config{}
+
 type config struct {
+	defaults string
 	env      abstractions.Environment
 	sources  []Source
 	bindings []Binding
 	js       string
+}
+
+func (c *config) Path(path FieldPath) *PathBuilder {
+	return &PathBuilder{
+		cfg:  c,
+		path: path,
+	}
+}
+
+func (c *config) GetAsString(path FieldPath) string {
+	return gjson.Get(c.js, path.String()).String()
+}
+
+func (c *config) DefaultScalar(path FieldPath, scalar interface{}) {
+	changed, err := sjson.Set(c.defaults, path.String(), scalar)
+	if err != nil {
+		return
+	}
+	c.defaults = changed
+}
+
+func (c *config) DefaultObj(path FieldPath, obj interface{}) {
+	js, err := json.Marshal(obj)
+	if err != nil {
+		return
+	}
+	changed, err := sjson.SetRaw(c.defaults, path.String(), string(js))
+	if err != nil {
+		return
+	}
+	c.defaults = changed
+}
+
+func (c *config) DefaultJson(path FieldPath, js string) {
+	changed, err := sjson.SetRaw(c.defaults, path.String(), js)
+	if err != nil {
+		return
+	}
+	c.defaults = changed
 }
 
 func (c *config) SourceFile(fieldPath FieldPath, file string) {
@@ -38,7 +82,11 @@ func (c *config) SourceEnv(fieldPath FieldPath, envVarPrefix string) {
 }
 
 func (c *config) Read() {
-	js := "{\"root\":{}}"
+	emptyRoot := "{\"root\":{}}"
+	js, err := sjson.SetRaw(emptyRoot, "root", c.defaults)
+	if err != nil {
+		return
+	}
 	for _, src := range c.sources {
 		js = src.Read(js)
 	}

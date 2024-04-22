@@ -41,3 +41,7 @@ const (
 const (
 	ConditionTypeWarning = "Warning"
 )
+
+const (
+	ConditionReasonQuotaExceeded = "QuotaExceeded"
+)
