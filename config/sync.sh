@@ -21,6 +21,8 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCR
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumes.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumebackups.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumerestores.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+
 
 # AZURE
 #cp $SCRIPT_DIR/crd/bases/some-file.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure

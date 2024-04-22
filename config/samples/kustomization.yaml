@@ -10,4 +10,5 @@ resources:
 - cloud-resources_v1beta1_gcpnfsvolume.yaml
 - cloud-resources_v1beta1_awsnfsvolumebackup.yaml
 - cloud-resources_v1beta1_gcpnfsvolumebackup.yaml
+- cloud-resources_v1beta1_gcpnfsvolumerestore.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

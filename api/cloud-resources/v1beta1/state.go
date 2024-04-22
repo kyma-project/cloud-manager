@@ -7,3 +7,9 @@ const (
 	StateProcessing        = "Processing"
 	StateWaitingScopeReady = "WaitingScopeReady"
 )
+
+const (
+	JobStateDone       = "Done"
+	JobStateFailed     = "Failed"
+	JobStateInProgress = "InProgress"
+)

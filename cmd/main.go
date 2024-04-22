@@ -162,6 +162,11 @@ func main() {
 	//	os.Exit(1)
 	//}
 
+	//if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(skrRegistry, gcpnfsrestoreclient.NewFileRestoreClientProvider(), env); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
+	//	os.Exit(1)
+	//}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
