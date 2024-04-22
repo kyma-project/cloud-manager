@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	ReasonFailedCreatingVpcPeeringConnection = "FailedCreatingVpcPeeringConnection"
+	ReasonFailedCreatingVpcPeeringConnection  = "FailedCreatingVpcPeeringConnection"
+	ReasonFailedAcceptingVpcPeeringConnection = "FailedAcceptingVpcPeeringConnection"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

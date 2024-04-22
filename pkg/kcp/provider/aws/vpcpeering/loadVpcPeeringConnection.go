@@ -10,6 +10,13 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	connectionId := state.ObjAsVpcPeering().Status.ConnectionId
+
+	// skip loading of vpc peering connections if connectionId is empty
+	if len(connectionId) == 0 {
+		return nil, ctx
+	}
+
 	list, err := state.client.DescribeVpcPeeringConnections(ctx)
 
 	if err != nil {
@@ -17,14 +24,14 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	for _, c := range list {
-		if state.ObjAsVpcPeering().Status.ConnectionId == pointer.StringDeref(c.VpcPeeringConnectionId, "") {
+		if connectionId == pointer.StringDeref(c.VpcPeeringConnectionId, "") {
 			state.vpcPeeringConnection = &c
 			break
 		}
 	}
 
 	if state.vpcPeeringConnection == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger = logger.WithValues(
@@ -32,17 +39,5 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	if len(state.ObjAsVpcPeering().Status.ConnectionId) > 0 {
-		return nil, ctx
-	}
-
-	state.ObjAsVpcPeering().Status.ConnectionId = *state.vpcPeeringConnection.VpcPeeringConnectionId
-
-	err = state.UpdateObjStatus(ctx)
-
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
-	}
-
-	return composed.StopWithRequeue, ctx
+	return nil, ctx
 }
