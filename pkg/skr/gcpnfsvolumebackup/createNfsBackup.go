@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,9 +36,9 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	name := backup.Name
 
 	fileBackup := &file.Backup{
-		SourceFileShare:    state.NfsInstance.Spec.Instance.Gcp.FileShareName,
-		SourceInstance:     state.NfsInstance.Status.Id,
-		SourceInstanceTier: string(state.NfsInstance.Spec.Instance.Gcp.Tier),
+		SourceFileShare:    state.GcpNfsVolume.Spec.FileShareName,
+		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Spec.Location, state.GcpNfsVolume.Name),
+		SourceInstanceTier: string(state.GcpNfsVolume.Spec.Tier),
 	}
 	_, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)
 
