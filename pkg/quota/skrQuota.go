@@ -2,11 +2,21 @@ package quota
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"strings"
 )
+
+func InitConfig(cfg config.Config) {
+	cfg.Path(
+		"resourceQuota.skr",
+		config.SourceFile("resourceQuotaSkr.yaml"),
+		config.DefaultObj(DefaultSkrQuota()),
+		config.Bind(SkrQuota),
+	)
+}
 
 type SkrQuotaIntf interface {
 	TotalCountForObj(obj runtime.Object, scheme *runtime.Scheme, skr string) int

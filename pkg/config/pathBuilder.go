@@ -2,35 +2,71 @@ package config
 
 type PathBuilder struct {
 	cfg  Config
-	path FieldPath
+	path string
 }
 
-func (b *PathBuilder) DefaultScalar(scalar interface{}) *PathBuilder {
-	b.cfg.DefaultScalar(b.path, scalar)
-	return b
+type PathAction func(cfg Config, path string)
+
+func (b *PathBuilder) Apply(actions ...PathAction) {
+	for _, a := range actions {
+		a(b.cfg, b.path)
+	}
 }
 
-func (b *PathBuilder) DefaultObj(obj interface{}) *PathBuilder {
-	b.cfg.DefaultObj(b.path, obj)
-	return b
+func Path(subPath string, actions ...PathAction) PathAction {
+	return func(cfg Config, path string) {
+		thePath := ConcatFieldPath(path, subPath)
+		for _, a := range actions {
+			a(cfg, thePath)
+		}
+	}
 }
 
-func (b *PathBuilder) DefaultJson(js string) *PathBuilder {
-	b.cfg.DefaultJson(b.path, js)
-	return b
+//func x() *PathBuilder {
+//	return &PathBuilder{
+//		cfg:  b.cfg,
+//		path: ConcatFieldPath(b.path, subPath),
+//	}
+//}
+
+func DefaultScalar(scalar interface{}) PathAction {
+	return func(cfg Config, path string) {
+		cfg.DefaultScalar(path, scalar)
+	}
 }
 
-func (b *PathBuilder) SourceFile(file string) *PathBuilder {
-	b.cfg.SourceFile(b.path, file)
-	return b
+func DefaultObj(obj interface{}) PathAction {
+	return func(cfg Config, path string) {
+		cfg.DefaultObj(path, obj)
+	}
 }
 
-func (b *PathBuilder) SourceEnv(envVarPrefix string) *PathBuilder {
-	b.cfg.SourceEnv(b.path, envVarPrefix)
-	return b
+func DefaultJson(js string) PathAction {
+	return func(cfg Config, path string) {
+		cfg.DefaultJson(path, js)
+	}
 }
 
-func (b *PathBuilder) Bind(obj interface{}) *PathBuilder {
-	b.cfg.Bind(b.path, obj)
-	return b
+func SourceFile(file string) PathAction {
+	return func(cfg Config, path string) {
+		cfg.SourceFile(path, file)
+	}
+}
+
+func SourceEnv(envVarPrefix string) PathAction {
+	return func(cfg Config, path string) {
+		cfg.SourceEnv(path, envVarPrefix)
+	}
+}
+
+func Bind(obj interface{}) PathAction {
+	return func(cfg Config, path string) {
+		cfg.Bind(path, obj)
+	}
+}
+
+func Sensitive() PathAction {
+	return func(cfg Config, path string) {
+		cfg.Sensitive(path)
+	}
 }

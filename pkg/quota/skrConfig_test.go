@@ -14,10 +14,11 @@ func TestSkrConfig(t *testing.T) {
 	_ = cloudresourcesv1beta1.AddToScheme(skrScheme)
 
 	cfg := config.NewConfig(abstractions.NewMockedEnvironment(nil))
-	cfg.Path(config.NewFiledPath("resourceQuota", "skr")).
-		SourceFile("testdata/skrQuotaConfig.yaml").
-		DefaultObj(DefaultSkrQuota()).
-		Bind(SkrQuota)
+	cfg.Path("resourceQuota.skr",
+		config.SourceFile("testdata/skrQuotaConfig.yaml"),
+		config.DefaultObj(DefaultSkrQuota()),
+		config.Bind(SkrQuota),
+	)
 
 	// defaults in case config file is not loaded
 	assert.Equal(t, 1, SkrQuota.TotalCountForObj(&cloudresourcesv1beta1.IpRange{}, skrScheme, "anyskr"))

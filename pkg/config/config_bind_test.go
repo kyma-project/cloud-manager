@@ -37,9 +37,9 @@ func TestConfigBind(t *testing.T) {
 	// When config is created from the file
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(nil, filepath.Join(dir, "file.yaml"))
+	cfg.SourceFile("", filepath.Join(dir, "file.yaml"))
 	obj := &fileStruct{}
-	cfg.Bind(nil, obj)
+	cfg.Bind("", obj)
 	cfg.Read()
 
 	// Then bound object will have values from file

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
@@ -107,7 +107,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		if options.provider != nil {
 			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", *options.provider))
 			instlr := &installer{
-				skrProvidersPath: os.Getenv("SKR_PROVIDERS"),
+				skrProvidersPath: config.SkrRuntimeConfig.ProvidersDir,
 				logger:           logger,
 			}
 			err = instlr.Handle(ctx, string(*options.provider), skrManager)

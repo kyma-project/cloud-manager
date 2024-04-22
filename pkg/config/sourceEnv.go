@@ -9,7 +9,7 @@ import (
 
 type sourceEnv struct {
 	env          abstractions.Environment
-	fieldPath    FieldPath
+	fieldPath    string
 	envVarPrefix string
 }
 
@@ -19,7 +19,7 @@ func (s *sourceEnv) Read(in string) string {
 			continue
 		}
 
-		fieldPath := append(FieldPath{}, s.fieldPath...)
+		fieldPath := s.fieldPath
 		kk := strings.TrimPrefix(k, s.envVarPrefix)
 		kk = strings.TrimPrefix(kk, "_")
 		kk = strings.TrimPrefix(kk, "_")
@@ -34,10 +34,10 @@ func (s *sourceEnv) Read(in string) string {
 				s = strings.ReplaceAll(s, "-", "")
 				return s
 			})
-			fieldPath = append(fieldPath, res)
+			fieldPath = ConcatFieldPath(fieldPath, res)
 		}
 
-		changed, err := sjson.Set(in, fieldPath.String(), v)
+		changed, err := sjson.Set(in, fieldPath, v)
 		if err != nil {
 			continue
 		}

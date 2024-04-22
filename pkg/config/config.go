@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"path/filepath"
 	"sync"
 )
 
@@ -20,65 +21,82 @@ func NewConfig(env abstractions.Environment) Config {
 var _ Config = &config{}
 
 type config struct {
-	defaults string
-	env      abstractions.Environment
-	sources  []Source
-	bindings []Binding
-	js       string
+	baseDir   string
+	defaults  string
+	env       abstractions.Environment
+	sources   []Source
+	bindings  []Binding
+	sensitive []string
+	js        string
 }
 
-func (c *config) Path(path FieldPath) *PathBuilder {
-	return &PathBuilder{
-		cfg:  c,
-		path: path,
+func (c *config) BaseDir(baseDir string) {
+	c.baseDir = baseDir
+}
+
+func (c *config) GetEnv(key string) string {
+	return c.env.Get(key)
+}
+
+func (c *config) Path(path string, actions ...PathAction) Config {
+	for _, a := range actions {
+		a(c, path)
 	}
+	return c
 }
 
-func (c *config) GetAsString(path FieldPath) string {
-	return gjson.Get(c.js, path.String()).String()
+func (c *config) GetAsString(path string) string {
+	return gjson.Get(c.js, path).String()
 }
 
-func (c *config) DefaultScalar(path FieldPath, scalar interface{}) {
-	changed, err := sjson.Set(c.defaults, path.String(), scalar)
+func (c *config) DefaultScalar(path string, scalar interface{}) {
+	changed, err := sjson.Set(c.defaults, path, scalar)
 	if err != nil {
 		return
 	}
 	c.defaults = changed
 }
 
-func (c *config) DefaultObj(path FieldPath, obj interface{}) {
+func (c *config) DefaultObj(path string, obj interface{}) {
 	js, err := json.Marshal(obj)
 	if err != nil {
 		return
 	}
-	changed, err := sjson.SetRaw(c.defaults, path.String(), string(js))
+	changed, err := sjson.SetRaw(c.defaults, path, string(js))
 	if err != nil {
 		return
 	}
 	c.defaults = changed
 }
 
-func (c *config) DefaultJson(path FieldPath, js string) {
-	changed, err := sjson.SetRaw(c.defaults, path.String(), js)
+func (c *config) DefaultJson(path string, js string) {
+	changed, err := sjson.SetRaw(c.defaults, path, js)
 	if err != nil {
 		return
 	}
 	c.defaults = changed
 }
 
-func (c *config) SourceFile(fieldPath FieldPath, file string) {
+func (c *config) SourceFile(fieldPath string, file string) {
+	if len(c.baseDir) > 0 {
+		file = filepath.Join(c.baseDir, file)
+	}
 	c.sources = append(c.sources, &sourceFile{
-		fieldPath: PrependFieldPath(fieldPath, "root"),
+		fieldPath: ConcatFieldPath("root", fieldPath),
 		file:      file,
 	})
 }
 
-func (c *config) SourceEnv(fieldPath FieldPath, envVarPrefix string) {
+func (c *config) SourceEnv(fieldPath string, envVarPrefix string) {
 	c.sources = append(c.sources, &sourceEnv{
 		env:          c.env,
-		fieldPath:    PrependFieldPath(fieldPath, "root"),
+		fieldPath:    ConcatFieldPath("root", fieldPath),
 		envVarPrefix: envVarPrefix,
 	})
+}
+
+func (c *config) Sensitive(fieldPath string) {
+	c.sensitive = append(c.sensitive, fieldPath)
 }
 
 func (c *config) Read() {
@@ -93,13 +111,8 @@ func (c *config) Read() {
 	c.js = gjson.Get(js, "root").Raw
 
 	if len(c.bindings) > 0 {
-		data := map[string]interface{}{}
-		err := json.Unmarshal([]byte(c.js), &data)
-		if err != nil {
-			return
-		}
 		for _, b := range c.bindings {
-			b.Copy(data)
+			b.Copy(c.js)
 		}
 	}
 }
@@ -182,7 +195,7 @@ func (c *config) Watch(stopCh chan struct{}, onConfigChange func(event fsnotify.
 	return returnErr
 }
 
-func (c *config) Bind(fieldPath FieldPath, obj any) {
+func (c *config) Bind(fieldPath string, obj any) {
 	c.bindings = append(c.bindings, &binding{
 		fieldPath: fieldPath,
 		obj:       obj,
@@ -191,4 +204,16 @@ func (c *config) Bind(fieldPath FieldPath, obj any) {
 
 func (c *config) Json() string {
 	return c.js
+}
+
+func (c *config) PrintJson() string {
+	js := c.js
+	for _, sensitivePath := range c.sensitive {
+		jsjs, err := sjson.Set(js, sensitivePath, "*****")
+		if err != nil {
+			return fmt.Sprintf("error: %s", js)
+		}
+		js = jsjs
+	}
+	return js
 }

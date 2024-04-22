@@ -18,9 +18,12 @@ package main
 
 import (
 	"flag"
-	"os"
-
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	"github.com/kyma-project/cloud-manager/pkg/quota"
+	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
@@ -35,6 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -83,6 +87,9 @@ func main() {
 	flag.BoolVar(&gcpStructuredLogging, "gcp-structured-logging", false, "Enable GCP structured logging")
 	flag.Parse()
 
+	cfg := loadConfig()
+	cfg.Read()
+
 	opts := zap.Options{}
 	if gcpStructuredLogging {
 		opts.EncoderConfigOptions = []zap.EncoderConfigOption{
@@ -103,6 +110,8 @@ func main() {
 		"scheme", "SKR",
 		"kinds", pie.Keys(skrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)),
 	).Info("Schema dump")
+	setupLog.WithValues("config", cfg.PrintJson()).
+		Info("Config dump")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 kcpScheme,
@@ -229,4 +238,23 @@ func main() {
 		os.Exit(1)
 	}
 	// 2024-03-04T14:18
+}
+
+func loadConfig() config.Config {
+	env := abstractions.NewOSEnvironment()
+	configDir := env.Get("CONFIG_DIR")
+	if len(configDir) < 1 {
+		configDir = "./config/config"
+	}
+	cfg := config.NewConfig(env)
+	cfg.BaseDir(configDir)
+
+	awsconfig.InitConfig(cfg)
+	quota.InitConfig(cfg)
+	skrruntimeconfig.InitConfig(cfg)
+	scope.InitConfig(cfg)
+
+	cfg.Read()
+
+	return cfg
 }

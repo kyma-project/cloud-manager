@@ -11,7 +11,7 @@ import (
 )
 
 type sourceFile struct {
-	fieldPath FieldPath
+	fieldPath string
 	file      string
 }
 
@@ -70,16 +70,16 @@ func (s *sourceFile) Read(inJsonString string) string {
 
 		newJsonString = string(jsData)
 	default:
-		changed, err := sjson.Set(inJsonString, s.fieldPath.String(), loadedFileString)
+		changed, err := sjson.Set(inJsonString, s.fieldPath, loadedFileString)
 		if err != nil {
 			return inJsonString
 		}
 		return changed
 	}
 
-	existingGJsonResult := gjson.Get(inJsonString, s.fieldPath.String())
+	existingGJsonResult := gjson.Get(inJsonString, s.fieldPath)
 	if existingGJsonResult.Type == gjson.Null {
-		changedJsonString, err := sjson.SetRaw(inJsonString, s.fieldPath.String(), newJsonString)
+		changedJsonString, err := sjson.SetRaw(inJsonString, s.fieldPath, newJsonString)
 		if err != nil {
 			return inJsonString
 		}
@@ -105,7 +105,7 @@ func (s *sourceFile) Read(inJsonString string) string {
 		return inJsonString
 	}
 	mergedJsonString := string(mergedJsonBytes)
-	changedJsonString, err := sjson.SetRaw(inJsonString, s.fieldPath.String(), mergedJsonString)
+	changedJsonString, err := sjson.SetRaw(inJsonString, s.fieldPath, mergedJsonString)
 	if err != nil {
 		return inJsonString
 	}

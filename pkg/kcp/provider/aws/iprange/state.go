@@ -5,9 +5,9 @@ import (
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 )
 
@@ -29,20 +29,18 @@ type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState types.State, logger logr.Logger) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[iprangeclient.Client], env abstractions.Environment) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[iprangeclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
-		env:         env,
 	}
 }
 
 type stateFactory struct {
 	skrProvider awsclient.SkrClientProvider[iprangeclient.Client]
-	env         abstractions.Environment
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State, logger logr.Logger) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", ipRangeState.Scope().Spec.Scope.Aws.AccountId, f.env.Get("AWS_ROLE_NAME"))
+	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", ipRangeState.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.AssumeRoleName)
 
 	logger.
 		WithValues(
@@ -54,8 +52,8 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State, l
 	c, err := f.skrProvider(
 		ctx,
 		ipRangeState.Scope().Spec.Region,
-		f.env.Get("AWS_ACCESS_KEY_ID"),
-		f.env.Get("AWS_SECRET_ACCESS_KEY"),
+		awsconfig.AwsConfig.AccessKeyId,
+		awsconfig.AwsConfig.SecretAccessKey,
 		roleName,
 	)
 	if err != nil {

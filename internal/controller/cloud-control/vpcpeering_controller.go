@@ -18,7 +18,6 @@ package cloudcontrol
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -40,7 +39,7 @@ func SetupVpcPeeringReconciler(
 		vpcpeering.NewVpcPeeringReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsVpCPeering.NewStateFactory(awsSkrProvider, abstractions.NewOSEnvironment()),
+			awsVpCPeering.NewStateFactory(awsSkrProvider),
 		),
 	).SetupWithManager(kcpManager)
 }
