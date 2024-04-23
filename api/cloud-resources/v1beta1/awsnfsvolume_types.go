@@ -39,10 +39,6 @@ const (
 	AwsThroughputModeElastic  = AwsThroughputMode("elastic")
 )
 
-const (
-	IpRangeField = ".spec.ipRange"
-)
-
 // AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
 type AwsNfsVolumeSpec struct {
 

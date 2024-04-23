@@ -53,6 +53,7 @@ func (r *reconciler) newAction() composed.Action {
 		addFinalizer,
 		createKcpIpRange,
 		preventDeleteOnAwsNfsVolumeUsage,
+		preventDeleteOnGcpNfsVolumeUsage,
 		deleteKcpIpRange,
 		removeFinalizer,
 		updateStatus,
