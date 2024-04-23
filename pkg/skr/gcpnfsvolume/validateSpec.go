@@ -14,6 +14,9 @@ import (
 
 func validateCapacity(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
 	// Capacity hasn't changed. No need to validate
 	if state.ObjAsGcpNfsVolume().Spec.CapacityGb == state.ObjAsGcpNfsVolume().Status.CapacityGb {
 		return nil, nil
@@ -71,7 +74,11 @@ func validateCapacityForTier(ctx context.Context, st composed.State, min, max, c
 }
 
 func validateIpRange(ctx context.Context, st composed.State) (error, context.Context) {
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
 	logger := composed.LoggerFromCtx(ctx)
+
 	state := st.(*State)
 	ipRangeName := state.ObjAsGcpNfsVolume().Spec.IpRange
 	ipRange := &cloudresourcesv1beta1.IpRange{}
@@ -130,6 +137,9 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 
 func validateFileShareName(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
 	tier := state.ObjAsGcpNfsVolume().Spec.Tier
 	fileShareName := state.ObjAsGcpNfsVolume().Spec.FileShareName
 	switch tier {
