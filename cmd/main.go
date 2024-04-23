@@ -218,14 +218,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	//skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
-	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
-	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")
-	//skrLoop.AddKymaName("3f6f5a93-1c75-425a-b07e-4c82a0db1526")
-	//skrLoop.AddKymaName("46059d75-d7b0-4d6a-955d-ce828ec4bb37")
-	//skrLoop.AddKymaName("511d7132-448d-4672-a90d-420ad61b2365")
-	//skrLoop.AddKymaName("eb693381-3e9c-4818-9f5d-378ba0c47314")
-
 	err = mgr.Add(skrLoop)
 	if err != nil {
 		setupLog.Error(err, "error adding SkrLooper to KCP manager")
