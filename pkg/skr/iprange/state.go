@@ -12,15 +12,17 @@ type State struct {
 	composed.State
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
+	Provider   *cloudcontrolv1beta1.ProviderType
 
 	KcpIpRange *cloudcontrolv1beta1.IpRange
 }
 
-func newStateFactory(baseStateFactory composed.StateFactory, kymaRef klog.ObjectRef, kcpCluster composed.StateCluster) *stateFactory {
+func newStateFactory(baseStateFactory composed.StateFactory, kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, provider *cloudcontrolv1beta1.ProviderType) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,
 		kymaRef:          kymaRef,
 		kcpCluster:       kcpCluster,
+		provider:         provider,
 	}
 }
 
@@ -28,6 +30,7 @@ type stateFactory struct {
 	baseStateFactory composed.StateFactory
 	kymaRef          klog.ObjectRef
 	kcpCluster       composed.StateCluster
+	provider         *cloudcontrolv1beta1.ProviderType
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -35,6 +38,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.IpRange{}),
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
+		Provider:   f.provider,
 	}
 }
 

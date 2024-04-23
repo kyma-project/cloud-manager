@@ -78,6 +78,17 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 		}
 		return []string{fmt.Sprintf("%s/%s", ns, nfsVol.Spec.IpRange.Name)}
 	})
+	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		nfsVol := object.(*cloudresourcesv1beta1.GcpNfsVolume)
+		if nfsVol.Spec.IpRange.Name == "" {
+			return nil
+		}
+		ns := nfsVol.Spec.IpRange.Namespace
+		if len(ns) == 0 {
+			ns = nfsVol.Namespace
+		}
+		return []string{fmt.Sprintf("%s/%s", ns, nfsVol.Spec.IpRange.Name)}
+	})
 
 	return reg.Register().
 		WithFactory(&IpRangeReconcilerFactory{}).

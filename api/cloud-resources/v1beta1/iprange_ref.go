@@ -11,6 +11,10 @@ type IpRangeRef struct {
 	Namespace string `json:"namespace"`
 }
 
+const (
+	IpRangeField = ".spec.ipRange"
+)
+
 func (in *IpRangeRef) ObjKey() types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: in.Namespace,
