@@ -83,8 +83,12 @@ func (b *UpdateStatusBuilder) SetCondition(cond metav1.Condition) *UpdateStatusB
 }
 
 func (b *UpdateStatusBuilder) SetExclusiveConditions(conditions ...metav1.Condition) *UpdateStatusBuilder {
-	for _, c := range conditions {
-		b.KeepConditions(c.Type)
+	// Remove all conditions and set the new ones passed as argument
+	if b.conditionsToRemove == nil {
+		b.conditionsToRemove = map[string]struct{}{}
+	}
+	for _, c := range *b.obj.Conditions() {
+		b.conditionsToRemove[c.Type] = struct{}{}
 	}
 	b.conditionsToSet = conditions
 	return b
