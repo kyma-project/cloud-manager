@@ -9,7 +9,6 @@ import (
 	kubernetesClient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"os"
 )
 
 func createGardenerClient(ctx context.Context, st composed.State) (error, context.Context) {
@@ -54,7 +53,7 @@ func createGardenerClient(ctx context.Context, st composed.State) (error, contex
 	if configContext != nil && len(configContext.Namespace) > 0 {
 		state.shootNamespace = configContext.Namespace
 	} else {
-		state.shootNamespace = os.Getenv("GARDENER_NAMESPACE")
+		state.shootNamespace = ScopeConfig.GardenerNamespace
 	}
 
 	logger = logger.WithValues("shootNamespace", state.shootNamespace)

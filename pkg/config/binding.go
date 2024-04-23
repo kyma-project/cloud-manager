@@ -1,25 +1,32 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/mitchellh/mapstructure"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/tidwall/gjson"
 )
 
 type binding struct {
-	fieldPath FieldPath
+	fieldPath string
 	obj       any
 }
 
-func (b *binding) Copy(raw map[string]interface{}) {
-	val, found, err := unstructured.NestedFieldNoCopy(raw, b.fieldPath...)
-	if !found {
-		return
+func (b *binding) Copy(in string) {
+	str := in
+	if len(b.fieldPath) > 0 {
+		res := gjson.Get(in, b.fieldPath)
+		if res.Type != gjson.JSON {
+			return
+		}
+		str = res.String()
 	}
+	data := map[string]interface{}{}
+	err := json.Unmarshal([]byte(str), &data)
 	if err != nil {
 		return
 	}
 
-	err = mapstructure.Decode(val, b.obj)
+	err = mapstructure.Decode(data, b.obj)
 	if err != nil {
 		return
 	}

@@ -47,7 +47,7 @@ func SetupNfsInstanceReconciler(
 		nfsinstance.NewNfsInstanceReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsnfsinstance.NewStateFactory(awsSkrProvider, env),
+			awsnfsinstance.NewStateFactory(awsSkrProvider),
 			azurenfsinstance.NewStateFactory(),
 			gcpnfsinstance.NewStateFactory(filestoreClientProvider, env),
 		),

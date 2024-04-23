@@ -3,6 +3,7 @@ package testinfra
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -28,6 +29,7 @@ type infraEnv struct {
 	skrKymaRef          klog.ObjectRef
 	skrManager          skrmanager.SkrManager
 	runner              skrruntime.SkrRunner
+	config              config.Config
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -59,6 +61,10 @@ func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {
 
 func (ie *infraEnv) SkrRunner() skrruntime.SkrRunner {
 	return ie.runner
+}
+
+func (ie *infraEnv) Config() config.Config {
+	return ie.config
 }
 
 func (ie *infraEnv) StartKcpControllers(ctx context.Context) {

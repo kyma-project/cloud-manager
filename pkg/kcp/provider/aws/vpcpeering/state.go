@@ -5,8 +5,8 @@ import (
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
@@ -31,23 +31,20 @@ type StateFactory interface {
 	NewState(ctx context.Context, state vpcpeeringtypes.State, logger logr.Logger) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[vpcpeeringclient.Client], env abstractions.Environment) *stateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[vpcpeeringclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
-		env:         env,
 	}
 }
 
 type stateFactory struct {
 	skrProvider awsclient.SkrClientProvider[vpcpeeringclient.Client]
-	env         abstractions.Environment
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-
-	roleName := f.env.Get("AWS_ROLE_NAME")
-	awsAccessKeyId := f.env.Get("AWS_ACCESS_KEY_ID")
-	awsSecretAccessKey := f.env.Get("AWS_SECRET_ACCESS_KEY")
+	roleName := awsconfig.AwsConfig.AssumeRoleName
+	awsAccessKeyId := awsconfig.AwsConfig.AccessKeyId
+	awsSecretAccessKey := awsconfig.AwsConfig.SecretAccessKey
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, roleName)
 

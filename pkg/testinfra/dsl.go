@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	scope2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -14,7 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
@@ -189,7 +189,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 }
 
 func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
-	shootNamespace := os.Getenv("GARDENER_NAMESPACE")
+	shootNamespace := scope2.ScopeConfig.GardenerNamespace // os.Getenv("GARDENER_NAMESPACE")
 	project := strings.TrimPrefix(shootNamespace, "garden-")
 	scope := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{

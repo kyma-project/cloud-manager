@@ -16,7 +16,7 @@ type jsonAssertion struct {
 func TestRawConfigAtPathFromOneYamlFile(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(NewFiledPath("root"), "testdata/first.yaml")
+	cfg.SourceFile("root", "testdata/first.yaml")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -44,7 +44,7 @@ func TestRawConfigAtPathFromOneYamlFile(t *testing.T) {
 func TestRawConfigAtPathFromOneJsonFile(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(NewFiledPath("root"), "testdata/first.json")
+	cfg.SourceFile("root", "testdata/first.json")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -77,7 +77,7 @@ func TestRawConfigAtPathFromEnv(t *testing.T) {
 		"TEST_FOO_BAR__BAZ": "fooBar.baz",
 	})
 	cfg := NewConfig(env)
-	cfg.SourceEnv(NewFiledPath("root"), "TEST_")
+	cfg.SourceEnv("root", "TEST_")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -101,7 +101,7 @@ func TestRawConfigAtPathFromEnv(t *testing.T) {
 func TestRawConfigInRootFromOneYamlFile(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(NewFiledPath(), "testdata/first.yaml")
+	cfg.SourceFile("", "testdata/first.yaml")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -128,8 +128,8 @@ func TestRawConfigInRootFromOneYamlFile(t *testing.T) {
 func TestRawConfigInRootFromTwoMergedYamlFiles(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(NewFiledPath(), "testdata/resourceQuotaDefault.yaml")
-	cfg.SourceFile(nil, "testdata/resourceQuotaOverride.yaml")
+	cfg.SourceFile("", "testdata/resourceQuotaDefault.yaml")
+	cfg.SourceFile("", "testdata/resourceQuotaOverride.yaml")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -153,8 +153,8 @@ func TestRawConfigInRootFromTwoMergedYamlFiles(t *testing.T) {
 func TestRawConfigInRootFromTwoMergedJsonFiles(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(NewFiledPath(), "testdata/resourceQuotaDefault.json")
-	cfg.SourceFile(nil, "testdata/resourceQuotaOverride.json")
+	cfg.SourceFile("", "testdata/resourceQuotaDefault.json")
+	cfg.SourceFile("", "testdata/resourceQuotaOverride.json")
 	cfg.Read()
 
 	expected := []jsonAssertion{
@@ -177,7 +177,7 @@ func TestRawConfigInRootFromTwoMergedJsonFiles(t *testing.T) {
 
 func TestRawConfigInRootFromScalarFile(t *testing.T) {
 	cfg := NewConfig(abstractions.NewMockedEnvironment(nil))
-	cfg.SourceFile(NewFiledPath("aaa", "bbb"), "testdata/scalar")
+	cfg.SourceFile("aaa.bbb", "testdata/scalar")
 	cfg.Read()
 
 	res := gjson.Get(cfg.Json(), "aaa.bbb")

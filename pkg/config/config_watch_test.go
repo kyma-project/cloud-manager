@@ -24,9 +24,9 @@ func TestWatchBindWhenFileContentChanges(t *testing.T) {
 	// When config is created from the file
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(nil, filepath.Join(dir, "file.yaml"))
+	cfg.SourceFile("", filepath.Join(dir, "file.yaml"))
 	obj := &fileStruct{}
-	cfg.Bind(nil, obj)
+	cfg.Bind("", obj)
 	cfg.Read()
 
 	stopCh := make(chan struct{})
@@ -78,7 +78,7 @@ func TestWatchRawWhenSymlinkReplaced(t *testing.T) {
 	// When config is created from the watched file
 	env := abstractions.NewMockedEnvironment(nil)
 	cfg := NewConfig(env)
-	cfg.SourceFile(nil, filepath.Join(dir, "file.yaml"))
+	cfg.SourceFile("", filepath.Join(dir, "file.yaml"))
 	cfg.Read()
 
 	reloaded := false

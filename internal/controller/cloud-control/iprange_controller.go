@@ -48,7 +48,7 @@ func SetupIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsiprange.NewStateFactory(awsProvider, env),
+			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(nil),
 			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
 		),
