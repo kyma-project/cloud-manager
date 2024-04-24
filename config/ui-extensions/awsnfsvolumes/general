@@ -1,0 +1,8 @@
+resource:
+    kind: AwsNfsVolume
+    group: cloud-resourcs.kyma-project.io
+    version: v1beta1
+urlPath: awsnfsvolumes
+name: AWS NFS Volume
+description: >-
+    AWS NFS Volume description here

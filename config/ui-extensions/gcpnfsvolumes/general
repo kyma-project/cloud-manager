@@ -1,0 +1,11 @@
+resource:
+    kind: GcpNfsVolume
+    group: cloud-resources.kyma-project.io
+    version: v1
+urlPath: gcpnfsvolumes
+name: GCP Nfs Volume
+scope: namespace
+description: >-
+    GcpNfsVolume description here
+
+

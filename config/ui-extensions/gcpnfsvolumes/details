@@ -1,0 +1,17 @@
+body:
+    - widget: Labels
+      source: spec.fileShareName
+      name: spec.fileShareName
+      visibility: $exists($value)
+    - widget: Labels
+      source: spec.capacityGb
+      name: spec.capacityGb
+      visibility: $exists($value)
+    - widget: Labels
+      source: spec.location
+      name: spec.location
+      visibility: $exists($value)
+    - widget: Labels
+      source: spec.tier
+      name: spec.tier
+      visibility: $exists($value)
