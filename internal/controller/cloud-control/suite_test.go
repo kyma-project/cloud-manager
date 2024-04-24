@@ -99,6 +99,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
+		nil,
 	))
 
 	// Start controllers
