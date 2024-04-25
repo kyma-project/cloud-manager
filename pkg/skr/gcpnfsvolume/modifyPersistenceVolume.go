@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"reflect"
 	"time"
 )
 
@@ -37,6 +38,20 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	if !capacity.Equal(state.PV.Spec.Capacity["storage"]) {
 		changed = true
 		state.PV.Spec.Capacity["storage"] = *capacity
+	}
+
+	//If labels are different, update PV labels.
+	labels := getVolumeLabels(nfsVolume)
+	if !reflect.DeepEqual(state.PV.Labels, labels) {
+		changed = true
+		state.PV.Labels = labels
+	}
+
+	//If annotations are different, update PV annotations.
+	annotations := getVolumeAnnotations(nfsVolume)
+	if !reflect.DeepEqual(state.PV.Annotations, annotations) {
+		changed = true
+		state.PV.Annotations = annotations
 	}
 
 	//No changes to PV, continue.

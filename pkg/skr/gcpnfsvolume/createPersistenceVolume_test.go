@@ -43,7 +43,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	assert.Nil(suite.T(), _ctx)
 
 	//Get the created PV object
-	pvName := fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name)
+	pvName := gcpNfsVolume.Name
 	pv := v1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 

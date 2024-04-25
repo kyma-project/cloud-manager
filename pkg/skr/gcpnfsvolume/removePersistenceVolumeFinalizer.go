@@ -10,8 +10,8 @@ import (
 func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	//If PV doesn't exist OR nfsVolume is not marked for deletion, continue
-	if state.PV == nil || !composed.MarkedForDeletionPredicate(ctx, st) {
+	//If PV doesn't exist OR PV is not marked for deletion, continue
+	if state.PV == nil || !composed.IsMarkedForDeletion(state.PV) {
 		return nil, nil
 	}
 

@@ -85,6 +85,17 @@ func WithGcpNfsVolumeCapacity(capacityGb int) ObjAction {
 		},
 	}
 }
+func WithPvSpec(pvSpec *cloudresourcesv1beta1.GcpNfsVolumePvSpec) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.PersistentVolume = pvSpec
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvSpec", obj))
+		},
+	}
+}
 
 func AssertGcpNfsVolumeHasId() ObjAssertion {
 	return func(obj client.Object) error {
