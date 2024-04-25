@@ -24,11 +24,13 @@ import (
 
 // Additional error reasons
 const (
-	ConditionReasonCapacityInvalid       = "CapacityGbInvalid"
-	ConditionReasonIpRangeNotReady       = "IpRangeNotReady"
-	ConditionReasonFileShareNameInvalid  = "FileShareNameInvalid"
-	ConditionReasonTierInvalid           = "TierInvalid"
-	ConditionReasonPVNotReadyForDeletion = "PVNotReadyForDeletion"
+	ConditionReasonCapacityInvalid         = "CapacityGbInvalid"
+	ConditionReasonIpRangeNotReady         = "IpRangeNotReady"
+	ConditionReasonFileShareNameInvalid    = "FileShareNameInvalid"
+	ConditionReasonTierInvalid             = "TierInvalid"
+	ConditionReasonPVNotReadyForDeletion   = "PVNotReadyForDeletion"
+	ConditionReasonPVNotReadyForNameChange = "PVNotReadyForNameChange"
+	ConditionReasonPVNameInvalid           = "PVNameInvalid"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
@@ -51,6 +53,14 @@ type GcpNfsVolumeSpec struct {
 
 	// +kubebuilder:default=2560
 	CapacityGb int `json:"capacityGb"`
+
+	PersistentVolume *GcpNfsVolumePvSpec `json:"volume,omitempty"`
+}
+
+type GcpNfsVolumePvSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // GcpNfsVolumeStatus defines the observed state of GcpNfsVolume

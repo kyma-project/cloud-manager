@@ -23,22 +23,23 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		timeout = time.Second * 20
 	)
 
-	Context("Given SKR Cluster with SKR and KCP IPRanges in Ready state", Ordered, func() {
+	skrIpRangeName := "gcp-iprange-1"
+	skrIpRange := &cloudresourcesv1beta1.IpRange{}
+	kcpIpRangeName := "513f20b4-7b73-4246-9397-f8dd55344479"
+	kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
-		skrIpRangeName := "gcp-iprange-1"
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		kcpIpRangeName := "513f20b4-7b73-4246-9397-f8dd55344479"
-		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+	BeforeEach(func() {
 
-		BeforeEach(func() {
+		By("Given SKR namespace exists", func() {
 			//Create namespace if it doesn't exist.
 			Eventually(CreateNamespace).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 				Should(Succeed())
+		})
 
+		By("And Given SKR IPRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
-
 			//Create SKR IPRange if it doesn't exist.
 			Eventually(CreateSkrIpRange).
 				WithArguments(
@@ -64,6 +65,8 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					}),
 				).
 				Should(Succeed())
+		})
+		By("And Given SKR IPRange in Ready state", func() {
 
 			//Update SKR IpRange status to Ready
 			Eventually(UpdateStatus).
@@ -84,27 +87,37 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				).
 				Should(Succeed())
 		})
+	})
 
-		Describe("When GcpNfsVolume Create is called", Ordered, func() {
-			//Define variables.
-			gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-			kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-			pv := &corev1.PersistentVolume{}
+	Describe("Scenario: SKR GcpNfsVolume Create", func() {
+		//Define variables.
+		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		pv := &corev1.PersistentVolume{}
 
-			gcpNfsVolumeName := "gcp-nfs-volume-1"
-			nfsIpAddress := "10.11.12.14"
-			pvName := fmt.Sprintf("%s--%s", DefaultSkrNamespace, gcpNfsVolumeName)
+		gcpNfsVolumeName := "gcp-nfs-volume-1"
+		nfsIpAddress := "10.11.12.14"
+		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
+			Name: "gcp-nfs-pv",
+			Labels: map[string]string{
+				"app": "gcp-nfs",
+			},
+			Annotations: map[string]string{
+				"volume": "gcp-nfs-volume-1",
+			},
+		}
 
-			BeforeEach(func() {
-				Eventually(CreateGcpNfsVolume).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-						WithName(gcpNfsVolumeName),
-						WithGcpNfsVolumeIpRange(skrIpRange.Name),
-					).
-					Should(Succeed())
-			})
-			It("Then GcpNfsVolume is created in SKR", func() {
+		It("When GcpNfsVolume Create is called", func() {
+			Eventually(CreateGcpNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					WithName(gcpNfsVolumeName),
+					WithGcpNfsVolumeIpRange(skrIpRange.Name),
+					WithPvSpec(pvSpec),
+				).
+				Should(Succeed())
+
+			By("Then GcpNfsVolume is created in SKR", func() {
 				// load GcpNfsVolume to get ID
 				Eventually(LoadAndCheck).
 					WithArguments(
@@ -117,7 +130,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					Should(Succeed())
 			})
 
-			It("Then NfsInstance is created in KCP", func() {
+			By("Then NfsInstance is created in KCP", func() {
 
 				// check KCP NfsInstance is created with name=gcpNfsVolume.ID
 				Eventually(LoadAndCheck).
@@ -146,86 +159,102 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(kcpNfsInstance.Spec.RemoteRef.Name).To(Equal(gcpNfsVolume.Name))
 			})
 
-			Describe("When KCP NfsInstance is switched to Ready condition", Ordered, func() {
-				BeforeEach(func() {
-					Eventually(LoadAndCheck).
-						WithArguments(
-							infra.Ctx(),
-							infra.KCP().Client(),
-							kcpNfsInstance,
-							NewObjActions(WithName(gcpNfsVolume.Status.Id)),
-						).
-						Should(Succeed())
-					Eventually(UpdateStatus).
-						WithArguments(
-							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
-							WithConditions(KcpReadyCondition()),
-							WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
-							WithKcpNfsStatusHost(nfsIpAddress),
-							WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
-						).
-						Should(Succeed())
-				})
+			By("When KCP NfsInstance is switched to Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+						WithConditions(KcpReadyCondition()),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusHost(nfsIpAddress),
+						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
+					).
+					Should(Succeed())
+			})
 
-				It("Then SKR GcpNfsVolume will get to Ready condition", func() {
+			By("Then SKR GcpNfsVolume will get to Ready condition", func() {
 
-					Eventually(LoadAndCheck).
-						WithArguments(
-							infra.Ctx(),
-							infra.SKR().Client(),
-							gcpNfsVolume,
-							NewObjActions(),
-							HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-						).
-						Should(Succeed())
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed())
 
-					By("And has the File store Host")
-					Expect(gcpNfsVolume.Status.Hosts).To(HaveLen(1))
+				By("And has the File store Host")
+				Expect(gcpNfsVolume.Status.Hosts).To(HaveLen(1))
 
-					By("And has the capacity equal to provisioned value.")
-					Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
-				})
+				By("And has the capacity equal to provisioned value.")
+				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
+			})
 
-				It("Then PersistentVolume is created in SKR", func() {
-					Eventually(LoadAndCheck).
-						WithArguments(
-							infra.Ctx(),
-							infra.SKR().Client(),
-							pv,
-							NewObjActions(
-								WithName(pvName),
-							),
-						).
-						Should(Succeed())
+			By("Then PersistentVolume is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pv,
+						NewObjActions(
+							WithName(pvSpec.Name),
+						),
+					).
+					Should(Succeed())
 
-					By("And has the Server Name matching the provisioned File server host.")
-					Expect(pv.Spec.PersistentVolumeSource.NFS.Server).To(Equal(gcpNfsVolume.Status.Hosts[0]))
+				By("And has the Server Name matching the provisioned File server host.")
+				Expect(pv.Spec.PersistentVolumeSource.NFS.Server).To(Equal(gcpNfsVolume.Status.Hosts[0]))
 
-					By("And has the Volume Name matching the requested FileShare name.")
-					path := fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName)
-					Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
+				By("And has the Volume Name matching the requested FileShare name.")
+				path := fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName)
+				Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
 
-					By("And has the Capacity equal to requested value in GB.")
-					expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
-					quantity, _ := pv.Spec.Capacity["storage"]
-					pvQuantity, _ := quantity.AsInt64()
-					Expect(pvQuantity).To(Equal(expectedCapacity))
-				})
+				By("And has the Capacity equal to requested value in GB.")
+				expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+				quantity, _ := pv.Spec.Capacity["storage"]
+				pvQuantity, _ := quantity.AsInt64()
+				Expect(pvQuantity).To(Equal(expectedCapacity))
+
+				By("And has the Labels matching the requested values in PvSpec.")
+				Expect(pv.Labels).Should(HaveKeyWithValue("app", pvSpec.Labels["app"]))
+
+				By("And has the Annotations matching the requested values in PvSpec.")
+				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
 			})
 		})
+	})
 
-		Describe("When SKR GcpNfsVolume Update is called with increased CapacityGb", Ordered, func() {
-			//Define variable
-			gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-			kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-			pv := &corev1.PersistentVolume{}
+	Describe("Scenario: SKR GcpNfsVolume Update", func() {
+		//Define variable
+		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		pv := &corev1.PersistentVolume{}
 
-			gcpNfsVolumeName := "gcp-nfs-volume-2"
-			nfsIpAddress := "10.11.12.16"
-			pvName := fmt.Sprintf("%s--%s", DefaultSkrNamespace, gcpNfsVolumeName)
-			updatedCapacityGb := 2048
+		gcpNfsVolumeName := "gcp-nfs-volume-2"
+		nfsIpAddress := "10.11.12.16"
+		updatedCapacityGb := 1024
 
-			BeforeEach(func() {
+		prevPv := &corev1.PersistentVolume{}
+		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
+			Name: "gcp-nfs-pv-2",
+			Labels: map[string]string{
+				"app": "gcp-nfs-2",
+			},
+			Annotations: map[string]string{
+				"volume": "gcp-nfs-volume-2",
+			},
+		}
+
+		BeforeEach(func() {
+			By("And Given SKR GcpNfsVolume exists", func() {
 				//Create GcpNfsVolume
 				Eventually(CreateGcpNfsVolume).
 					WithArguments(
@@ -267,33 +296,48 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					).
 					Should(Succeed())
 
-				Eventually(Update).
+				Eventually(LoadAndCheck).
 					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-						WithGcpNfsVolumeCapacity(updatedCapacityGb),
+						infra.Ctx(),
+						infra.SKR().Client(),
+						prevPv,
+						NewObjActions(
+							WithName(gcpNfsVolumeName),
+						),
 					).
 					Should(Succeed())
 			})
+		})
 
-			It("Then SKR GcpNfsVolume is updated ", func() {
-				Eventually(LoadAndCheck).
+		It("When SKR GcpNfsVolume Update is called ", func() {
+
+			Eventually(Update).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					WithGcpNfsVolumeCapacity(updatedCapacityGb),
+					WithPvSpec(pvSpec),
+				).
+				Should(Succeed())
+
+			By("Then GcpNfsVolume is updated with the new values.", func() {
+
+				Eventually(LoadAndCheck, timeout, interval).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 						NewObjActions(),
 					).
 					Should(Succeed())
 
-				By("And has the updated CapacityGb value.")
 				Expect(gcpNfsVolume.Spec.CapacityGb).To(Equal(updatedCapacityGb))
 			})
 
-			It("And Then KCP NfsInstance is updated", func() {
-				Eventually(LoadAndCheck).
+			By("And Then KCP NfsInstance too is updated", func() {
+				Eventually(LoadAndCheck, timeout, interval).
 					WithArguments(
 						infra.Ctx(),
 						infra.KCP().Client(),
 						kcpNfsInstance,
-						NewObjActions(),
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
 					).
 					Should(Succeed())
 
@@ -301,72 +345,86 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(kcpNfsInstance.Spec.Instance.Gcp.CapacityGb).To(Equal(updatedCapacityGb))
 			})
 
-			Describe("When KCP NfsInstance Status is updated with new Capacity.", Ordered, func() {
-				BeforeEach(func() {
-					Eventually(LoadAndCheck).
+			By("When KCP NfsInstance Status is updated with new values.", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+						WithConditions(KcpReadyCondition()),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusHost(nfsIpAddress),
+						WithKcpNfsStatusCapacity(updatedCapacityGb),
+					).
+					Should(Succeed())
+			})
+			By("Then SKR GcpNfsVolume status is updated", func() {
+				Eventually(LoadAndCheck, timeout, interval).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+					).
+					Should(Succeed())
+
+				By("And has status CapacityGb matching that of the SKR GcpNfsVolume Spec.")
+				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(updatedCapacityGb))
+			})
+
+			By("And Then SKR PersistentVolume is updated", func() {
+				Eventually(LoadAndCheck, timeout, interval).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pv,
+						NewObjActions(
+							WithName(pvSpec.Name),
+						),
+					).
+					Should(Succeed())
+
+				By("And has the Capacity matching that of the SKR GcpNfsVolume.")
+				expectedCapacity := int64(updatedCapacityGb) * 1024 * 1024 * 1024
+				quantity, _ := pv.Spec.Capacity["storage"]
+				pvQuantity, _ := quantity.AsInt64()
+				Expect(pvQuantity).To(Equal(expectedCapacity))
+
+				By("And has the Labels matching the requested values in PvSpec.")
+				Expect(pv.Labels).Should(HaveKeyWithValue("app", pvSpec.Labels["app"]))
+
+				By("And has the Annotations matching the requested values in PvSpec.")
+				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
+
+				By("And Then previous PersistentVolume in SKR is deleted.", func() {
+					Eventually(IsDeleted, timeout, interval).
 						WithArguments(
-							infra.Ctx(),
-							infra.KCP().Client(),
-							kcpNfsInstance,
-							NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+							infra.Ctx(), infra.SKR().Client(), prevPv,
 						).
 						Should(Succeed())
-
-					Eventually(UpdateStatus).
-						WithArguments(
-							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
-							WithConditions(KcpReadyCondition()),
-							WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
-							WithKcpNfsStatusHost(nfsIpAddress),
-							WithKcpNfsStatusCapacity(updatedCapacityGb),
-						).
-						Should(Succeed())
-				})
-				It("Then SKR GcpNfsVolume status is updated", func() {
-					Eventually(LoadAndCheck).
-						WithArguments(
-							infra.Ctx(),
-							infra.SKR().Client(),
-							gcpNfsVolume,
-							NewObjActions(),
-						).
-						Should(Succeed())
-
-					By("And has status CapacityGb matching that of the SKR GcpNfsVolume Spec.")
-					Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(updatedCapacityGb))
-				})
-
-				It("And Then SKR PersistentVolume is updated", func() {
-					Eventually(LoadAndCheck).
-						WithArguments(
-							infra.Ctx(),
-							infra.SKR().Client(),
-							pv,
-							NewObjActions(
-								WithName(pvName),
-							),
-						).
-						Should(Succeed())
-
-					By("And has the Capacity matching that of the SKR GcpNfsVolume.")
-					expectedCapacity := int64(updatedCapacityGb) * 1024 * 1024 * 1024
-					quantity, _ := pv.Spec.Capacity["storage"]
-					pvQuantity, _ := quantity.AsInt64()
-					Expect(pvQuantity).To(Equal(expectedCapacity))
 				})
 			})
 		})
+	})
 
-		Describe("When SKR GcpNfsVolume Delete is called", Ordered, func() {
-			gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-			kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-			pv := &corev1.PersistentVolume{}
+	Describe("Scenario: SKR GcpNfsVolume Delete", Ordered, func() {
+		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		pv := &corev1.PersistentVolume{}
 
-			gcpNfsVolumeName := "gcp-nfs-volume-3"
-			nfsIpAddress := "10.11.12.16"
-			pvName := fmt.Sprintf("%s--%s", DefaultSkrNamespace, gcpNfsVolumeName)
+		gcpNfsVolumeName := "gcp-nfs-volume-3"
+		nfsIpAddress := "10.11.12.16"
 
-			BeforeEach(func() {
+		BeforeEach(func() {
+			By("And Given SKR GcpNfsVolume exists", func() {
+
 				//Create GcpNfsVolume
 				Eventually(CreateGcpNfsVolume).
 					WithArguments(
@@ -413,73 +471,55 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), pv,
 						NewObjActions(
-							WithName(pvName),
+							WithName(gcpNfsVolumeName),
 						),
 					).
 					Should(Succeed())
-
-				//Delete SKR GcpNfsVolume
-				Eventually(Delete).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-					).Should(Succeed())
 			})
+		})
+		It("When SKR GcpNfsVolume Delete is called ", func() {
 
-			It("Then SKR GcpNfsVolume is marked for Deletion ", func() {
-				Eventually(LoadAndCheck).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-						NewObjActions(),
-					).
-					Should(Succeed())
+			//Delete SKR GcpNfsVolume
+			Eventually(Delete).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+				).Should(Succeed())
 
-				By("And has DeletionTimestamp set.")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			By("Then DeletionTimestamp is set in GcpNfsVolume", func() {
 				Expect(gcpNfsVolume.DeletionTimestamp.IsZero()).NotTo(BeTrue())
 			})
 
-			Describe("When PV phase changes to Available, and all finalizers removed", Ordered, func() {
-				BeforeEach(func() {
-					//Update PV Phase to Available.
-					Eventually(UpdateStatus).
-						WithArguments(
-							infra.Ctx(),
-							infra.SKR().Client(),
-							pv,
-							WithPvStatusPhase(corev1.VolumeAvailable),
-						).
-						Should(Succeed())
+			By("And Then the PersistentVolume in SKR is deleted.", func() {
+				Eventually(IsDeleted, timeout, interval).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), pv,
+					).
+					Should(Succeed())
+			})
 
-					//Remove pv-protection finalizer
-					Eventually(Update).
-						WithArguments(
-							infra.Ctx(), infra.SKR().Client(), pv,
-							RemoveFinalizer("kubernetes.io/pv-protection"),
-						).
-						Should(Succeed())
-				})
-				It("Then PV, NfsInstance, and GcpNfsVolume are all deleted.", func() {
-					Eventually(IsDeleted, timeout, interval).
-						WithArguments(
-							infra.Ctx(), infra.SKR().Client(), pv,
-						).
-						Should(Succeed())
-					By("And the PersistentVolume in SKR is deleted.")
+			By("And Then the NfsInstance in KCP is deleted.", func() {
+				Eventually(IsDeleted, timeout, interval).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+					).
+					Should(Succeed())
+			})
 
-					Eventually(IsDeleted, timeout, interval).
-						WithArguments(
-							infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
-						).
-						Should(Succeed())
-					By("And the NfsInstance in KCP is deleted.")
-
-					Eventually(IsDeleted, timeout, interval).
-						WithArguments(
-							infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
-						).
-						Should(Succeed())
-					By("And the GcpNfsVolume in SKR is deleted.")
-				})
+			By("And Then the GcpNfsVolume in SKR is deleted.", func() {
+				Eventually(IsDeleted, timeout, interval).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					).
+					Should(Succeed())
 			})
 		})
 	})
+
 })
