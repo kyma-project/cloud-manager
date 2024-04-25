@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sort"
 )
 
 func checkQuota(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,6 +25,12 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing SKR IpRanges for quota check", composed.StopWithRequeue, ctx)
 	}
+
+	// must be sorted by create date since overlap error is set on NEWER and pass-on with OLDER
+	// so quota must allow OLDER resource, and put quota error on NEWER as well
+	sort.Slice(list.Items, func(i, j int) bool {
+		return list.Items[i].CreationTimestamp.Before(&list.Items[j].CreationTimestamp)
+	})
 
 	totalCountQuota := quota.SkrQuota.TotalCountForObj(state.Obj(), state.Cluster().Scheme(), state.KymaRef.Name)
 
