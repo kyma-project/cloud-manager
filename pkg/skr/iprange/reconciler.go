@@ -49,6 +49,7 @@ func (r *reconciler) newAction() composed.Action {
 		preventCidrChange,
 		validateCidr,
 		preventCidrOverlap,
+		removeOverlapCondition,
 		loadKcpIpRange,
 		checkQuota,
 		addFinalizer,

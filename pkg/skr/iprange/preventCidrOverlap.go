@@ -7,7 +7,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,11 +14,15 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	condCidrOverlap := meta.FindStatusCondition(*state.ObjAsIpRange().Conditions(), cloudresourcesv1beta1.ConditionTypeError)
-	if condCidrOverlap != nil && condCidrOverlap.Reason == cloudresourcesv1beta1.ConditionReasonCidrOverlap {
-		logger.Info("Forgetting SKR IpRange with already overlapping CIDR")
-		return composed.StopAndForget, nil
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
 	}
+
+	// WARNING! Overlap is symmetrical!!!
+	// If new iprange overlaps with some old iprange, then the old one also overlaps with the new one
+	// Desired behavior is that old range remains Ready, and only new one to end up with warning
+	// Also, a valid use case would be that user deletes the old range and then the new range
+	// should be able to step out of the overlap warning and become ready
 
 	allIpRanges := &cloudresourcesv1beta1.IpRangeList{}
 	err := state.Cluster().K8sClient().List(ctx, allIpRanges)
@@ -45,10 +48,12 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 		}
 	}
 
+	myDate := state.ObjAsIpRange().CreationTimestamp
+
 	for _, ipRange := range allIpRanges.Items {
 		if ipRange.Name == state.ObjAsIpRange().Name &&
 			ipRange.Namespace == state.ObjAsIpRange().Namespace {
-			// skip the reconciled IpRange
+			// skip me (the reconciled IpRange) - I always overlap with myself
 			continue
 		}
 
@@ -65,6 +70,19 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 				"overlappingCidr", ipRange.Spec.Cidr,
 				"overlappingIpRange", fmt.Sprintf("%s/%s", ipRange.Namespace, ipRange.Name),
 			)
+
+			hisDate := ipRange.CreationTimestamp
+
+			// put error on NEWER range only
+			// pass-on and do not modify the OLDER range
+			if myDate.Before(&hisDate) {
+				// Im older, skip me
+				logger.Info("Letting older range with overlapping CIDR pass")
+				return nil, nil
+			}
+
+			// Im newer, set me overlap error
+
 			ctx = composed.LoggerIntoCtx(ctx, logger)
 
 			state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
