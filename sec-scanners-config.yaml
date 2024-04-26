@@ -1,5 +1,5 @@
 module-name: cloud-manager
-rc-tag: 0.1.7
+rc-tag: 0.1.8
 protecode:
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:0.1.6
 whitesource:
