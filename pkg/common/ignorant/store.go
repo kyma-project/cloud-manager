@@ -6,6 +6,7 @@ import (
 
 type Ignorant interface {
 	AddName(name string)
+	RemoveName(name string)
 	ShouldIgnoreKey(req ctrl.Request) bool
 }
 
@@ -23,6 +24,10 @@ type ignorant struct {
 
 func (i *ignorant) AddName(name string) {
 	i.nameMap[name] = struct{}{}
+}
+
+func (i *ignorant) RemoveName(name string) {
+	delete(i.nameMap, name)
 }
 
 func (i *ignorant) ShouldIgnoreKey(req ctrl.Request) bool {
