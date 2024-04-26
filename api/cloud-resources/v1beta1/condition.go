@@ -48,5 +48,5 @@ const (
 )
 
 const (
-	ConditionReasonQuotaExceeded = "QuotaExceeded"
+	ConditionTypeQuotaExceeded = "QuotaExceeded"
 )

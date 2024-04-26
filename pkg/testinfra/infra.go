@@ -46,7 +46,12 @@ func (i *infra) Stop() error {
 	for name, cluster := range i.clusters {
 		ginkgo.By(fmt.Sprintf("Stopping cluster %s", name))
 		if err := cluster.env.Stop(); err != nil {
-			lastErr = err
+			err = fmt.Errorf("error stopping env %s: %w", name, err)
+			if lastErr == nil {
+				lastErr = err
+			} else {
+				lastErr = fmt.Errorf("; %w", err)
+			}
 		}
 	}
 
