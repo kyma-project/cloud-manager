@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -25,6 +26,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumerestore"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -70,9 +72,15 @@ func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArg
 }
 
 func SetupGcpNfsVolumeRestoreReconciler(reg skrruntime.SkrRegistry, fileRestoreClientProvider gcpclient.ClientProvider[restoreclient.FileRestoreClient],
-	env abstractions.Environment) error {
-	return reg.Register().
-		WithFactory(&GcpNfsVolumeRestoreReconcilerFactory{fileRestoreClientProvider: fileRestoreClientProvider, env: env}).
-		For(&cloudresourcesv1beta1.GcpNfsVolumeRestore{}).
-		Complete()
+	env abstractions.Environment, logger logr.Logger) error {
+	// "_" + crd + ".yaml" should be the suffix for the yaml present in config/crd/bases
+	if util.IsCrdDisabled(env, "GcpNfsVolumeRestores") {
+		logger.Info("GcpNfsVolumeRestore CRD is disabled. Skipping controller setup.")
+		return nil
+	} else {
+		return reg.Register().
+			WithFactory(&GcpNfsVolumeRestoreReconcilerFactory{fileRestoreClientProvider: fileRestoreClientProvider, env: env}).
+			For(&cloudresourcesv1beta1.GcpNfsVolumeRestore{}).
+			Complete()
+	}
 }
