@@ -7,6 +7,7 @@ import (
 
 const (
 	CloudProviderAWS = "aws"
+	CloudProviderGCP = "gcp"
 )
 
 var (
