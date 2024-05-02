@@ -2,8 +2,12 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 	"net/http"
@@ -115,5 +119,41 @@ func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, err
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
+	CheckGcpAuthentication(ctx, client, saJsonKeyPath)
 	return client, nil
+}
+
+func CheckGcpAuthentication(ctx context.Context, client *http.Client, saJsonKeyPath string) {
+	logger := composed.LoggerFromCtx(ctx)
+	cred, err := transport.Creds(ctx, option.WithCredentialsFile(saJsonKeyPath))
+	if err != nil {
+		IncrementCallCounter("Authentication", "Check", "", err)
+		logger.Error(err, "GCP Authentication Check - error obtaining GCP credentials")
+		return
+	}
+	crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		IncrementCallCounter("Authentication", "Check", "", err)
+		logger.Error(err, "GCP Authentication Check - error obtaining GCP CRM client")
+		return
+	}
+	_, err = crmService.Projects.Get(cred.ProjectID).Do()
+	IncrementCallCounter("Authentication", "Check", "", err)
+	if err != nil {
+		logger.Error(err, "GCP Authentication Check - error performing authentication check")
+		return
+	}
+}
+
+func IncrementCallCounter(serviceName, operationName, region string, err error) {
+	responseCode := 200
+	if err != nil {
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			responseCode = e.Code
+		} else {
+			responseCode = 500
+		}
+	}
+	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region).Inc()
 }
