@@ -1,19 +1,27 @@
 package client
 
 import (
+	"bytes"
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/jws"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -125,24 +133,30 @@ func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, err
 
 func CheckGcpAuthentication(ctx context.Context, client *http.Client, saJsonKeyPath string) {
 	logger := composed.LoggerFromCtx(ctx)
-	cred, err := transport.Creds(ctx, option.WithCredentialsFile(saJsonKeyPath))
+	jwtToken, err := GetJwtToken(ctx, saJsonKeyPath, 5*time.Minute, google.Endpoint.TokenURL, "openid")
 	if err != nil {
 		IncrementCallCounter("Authentication", "Check", "", err)
-		logger.Error(err, "GCP Authentication Check - error obtaining GCP credentials")
+		logger.Error(err, "GCP Authentication Check - error getting JWT token")
 		return
 	}
-	crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", err)
-		logger.Error(err, "GCP Authentication Check - error obtaining GCP CRM client")
-		return
+
+	//Create the request body
+	body := fmt.Sprintf("grant_type=%s&assertion=%s",
+		url.QueryEscape("urn:ietf:params:oauth:grant-type:jwt-bearer"), jwtToken)
+	reader := bytes.NewReader([]byte(body))
+
+	//Perform the authentication check
+	resp, err := client.Post(google.Endpoint.TokenURL, "application/x-www-form-urlencoded", reader)
+	if err == nil {
+		err = googleapi.CheckResponse(resp)
 	}
-	_, err = crmService.Projects.Get(cred.ProjectID).Do()
+
 	IncrementCallCounter("Authentication", "Check", "", err)
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error performing authentication check")
 		return
 	}
+	logger.Info("GCP Authentication Check - successful")
 }
 
 func IncrementCallCounter(serviceName, operationName, region string, err error) {
@@ -156,4 +170,70 @@ func IncrementCallCounter(serviceName, operationName, region string, err error) 
 		}
 	}
 	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region).Inc()
+}
+
+func GetJwtToken(ctx context.Context, saJsonKeyPath string, validity time.Duration, audience string, scopes ...string) (string, error) {
+
+	//Get the credentials from the JSON Key file
+	cred, err := transport.Creds(ctx, option.WithCredentialsFile(saJsonKeyPath))
+	if err != nil {
+		return "", err
+	}
+
+	//Parse the contents into a JWT Config
+	jwtCfg, err := google.JWTConfigFromJSON(cred.JSON, scopes...)
+	if err != nil {
+		return "", err
+	}
+	jwtCfg.Audience = audience
+
+	//Parse the Private Key
+	pk, err := ParseKey(jwtCfg.PrivateKey)
+	if err != nil {
+		return "", err
+	}
+
+	//Get issue and expiry times
+	now := time.Now()
+	exp := now.Add(validity)
+
+	//Create the JWT Claim Set
+	cs := &jws.ClaimSet{
+		Iss:   jwtCfg.Email,
+		Sub:   jwtCfg.Email,
+		Aud:   jwtCfg.Audience,
+		Scope: strings.Join(jwtCfg.Scopes, " "),
+		Iat:   now.Unix(),
+		Exp:   exp.Unix(),
+	}
+
+	//Create the JWT Header
+	hdr := &jws.Header{
+		Algorithm: "RS256",
+		Typ:       "JWT",
+		KeyID:     string(jwtCfg.PrivateKeyID),
+	}
+
+	//Generate the JWT Token
+	token, err := jws.Encode(hdr, cs, pk)
+	return token, nil
+}
+
+func ParseKey(key []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(key)
+	if block != nil {
+		key = block.Bytes
+	}
+	parsedKey, err := x509.ParsePKCS8PrivateKey(key)
+	if err != nil {
+		parsedKey, err = x509.ParsePKCS1PrivateKey(key)
+		if err != nil {
+			return nil, fmt.Errorf("private key should be a PEM or plain PKCS1 or PKCS8; parse error: %v", err)
+		}
+	}
+	parsed, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("private key is invalid")
+	}
+	return parsed, nil
 }
