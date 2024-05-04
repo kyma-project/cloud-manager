@@ -47,7 +47,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	volumeReady := meta.FindStatusCondition(nfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	//If the nfsVolume is not ready, return an error
-	if volumeReady != nil && volumeReady.Status != metav1.ConditionTrue {
+	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolume", nfsVolume.Name).Info("GcpNfsVolume is not ready")
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions(metav1.Condition{

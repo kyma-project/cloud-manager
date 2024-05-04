@@ -47,7 +47,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	backupReady := meta.FindStatusCondition(nfsVolumeBackup.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	//If the nfsVolume is not ready, return an error
-	if backupReady != nil && backupReady.Status != metav1.ConditionTrue {
+	if backupReady == nil || backupReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolumeBackup", nfsVolumeBackup.Name).Info("GcpNfsVolumeBackup is not ready")
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions(metav1.Condition{

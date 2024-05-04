@@ -52,6 +52,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
+
 		return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
 	}
 
@@ -82,7 +83,9 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 				Reason:  cloudControl.ReasonGcpError,
 				Message: op.Error.Message,
 			}).
-			SuccessError(nil). //proceed in case deletion is in progress
+			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
+				return nil, nil
+			}). //proceed in case deletion is in progress
 			SuccessLogMsg(fmt.Sprintf("Filestore Operation error : %s", op.Error.Message)).
 			Run(ctx, state)
 	}
@@ -96,7 +99,9 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			Reason:  v1beta1.ConditionReasonReady,
 			Message: fmt.Sprintf("Restore operation finished successfully: %s", opName),
 		}).
-		SuccessError(nil). //proceed in case deletion is in progress
+		OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
+			return nil, nil
+		}). //proceed in case deletion is in progress
 		SuccessLogMsg("GcpNfsVolumeRestore status got updated with Ready condition and Done state.").
 		Run(ctx, state)
 }
