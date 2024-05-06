@@ -16,6 +16,7 @@ func New() Server {
 		iprangeStore:      &iprangeStore{},
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
+		nfsRestoreStore:   &nfsRestoreStore{},
 	}
 }
 
@@ -23,6 +24,7 @@ type server struct {
 	*iprangeStore
 	*nfsStore
 	*serviceUsageStore
+	*nfsRestoreStore
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -59,6 +61,14 @@ func (s *server) SetSuOperationError(error *googleapi.Error) {
 
 func (s *server) SetSuIsEnabledError(error *googleapi.Error) {
 	s.suIsEnabledError = error
+}
+
+func (s *server) setRestoreFileError(error *googleapi.Error) {
+	s.restoreFileError = error
+}
+
+func (s *server) setRestoreOperationError(error *googleapi.Error) {
+	s.restoreOperationError = error
 }
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
