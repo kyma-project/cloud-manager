@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
@@ -83,9 +82,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 	ipRangeName := state.ObjAsGcpNfsVolume().Spec.IpRange
 	ipRange := &cloudresourcesv1beta1.IpRange{}
 	err := st.Cluster().K8sClient().Get(ctx,
-		types.NamespacedName{
-			Namespace: state.Obj().GetNamespace(),
-			Name:      ipRangeName.Name},
+		ipRangeName.ObjKey(),
 		ipRange)
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error loading referred IpRange", composed.StopWithRequeue, ctx)
