@@ -51,8 +51,6 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		"region", scope.Spec.Region,
 		"shootName", scope.Spec.ShootName,
 	)
-
-	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Loaded Scope from Kyma reference")
 
 	state.Scope = scope

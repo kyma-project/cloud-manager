@@ -45,14 +45,11 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//Construct a PV Object
-	pvName := fmt.Sprintf("%s--%s", nfsVolume.Namespace, nfsVolume.Name)
 	state.PV = &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: pvName,
-			Labels: map[string]string{
-				v1beta1.LabelNfsVolName: nfsVolume.Name,
-				v1beta1.LabelNfsVolNS:   nfsVolume.Namespace,
-			},
+			Name:        getVolumeName(nfsVolume),
+			Labels:      getVolumeLabels(nfsVolume),
+			Annotations: getVolumeAnnotations(nfsVolume),
 			Finalizers: []string{
 				v1beta1.Finalizer,
 			},

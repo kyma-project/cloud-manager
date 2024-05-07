@@ -46,6 +46,7 @@ type filestoreClient struct {
 func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, projectId, location, instanceId string) (*file.Instance, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcFilestore.Projects.Locations.Instances.Get(client.GetFilestoreInstancePath(projectId, location, instanceId)).Do()
+	client.IncrementCallCounter("File", "Instances.Get", location, err)
 	if err != nil {
 		logger.V(4).Info("GetFilestoreInstance", "err", err)
 	}
@@ -55,6 +56,7 @@ func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, projectId, l
 func (c *filestoreClient) CreateFilestoreInstance(ctx context.Context, projectId, location, instanceId string, instance *file.Instance) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFilestore.Projects.Locations.Instances.Create(client.GetFilestoreParentPath(projectId, location), instance).InstanceId(instanceId).Do()
+	client.IncrementCallCounter("File", "Instances.Create", location, err)
 	if err != nil {
 		logger.Error(err, "CreateFilestoreInstance", "projectId", projectId, "location", location, "instanceId", instanceId)
 		return nil, err
@@ -65,6 +67,7 @@ func (c *filestoreClient) CreateFilestoreInstance(ctx context.Context, projectId
 func (c *filestoreClient) DeleteFilestoreInstance(ctx context.Context, projectId, location, instanceId string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFilestore.Projects.Locations.Instances.Delete(client.GetFilestoreInstancePath(projectId, location, instanceId)).Do()
+	client.IncrementCallCounter("File", "Instances.Delete", location, err)
 	if err != nil {
 		logger.Error(err, "DeleteFilestoreInstance", "projectId", projectId, "location", location, "instanceId", instanceId)
 		return nil, err
@@ -75,6 +78,7 @@ func (c *filestoreClient) DeleteFilestoreInstance(ctx context.Context, projectId
 func (c *filestoreClient) GetFilestoreOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFilestore.Projects.Locations.Operations.Get(operationName).Do()
+	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetFilestoreOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
@@ -87,6 +91,7 @@ func (c *filestoreClient) GetFilestoreOperation(ctx context.Context, projectId, 
 func (c *filestoreClient) PatchFilestoreInstance(ctx context.Context, projectId, location, instanceId, updateMask string, instance *file.Instance) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFilestore.Projects.Locations.Instances.Patch(client.GetFilestoreInstancePath(projectId, location, instanceId), instance).UpdateMask(updateMask).Do()
+	client.IncrementCallCounter("File", "Instances.Patch", location, err)
 	if err != nil {
 		logger.Error(err, "PatchFilestoreInstance", "projectId", projectId, "location", location, "instanceId", instanceId)
 		return nil, err

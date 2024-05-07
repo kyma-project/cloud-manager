@@ -44,6 +44,7 @@ type fileBackupClient struct {
 func (c *fileBackupClient) GetFileBackup(ctx context.Context, projectId, location, name string) (*file.Backup, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcFile.Projects.Locations.Backups.Get(client.GetFileBackupPath(projectId, location, name)).Do()
+	client.IncrementCallCounter("File", "Backups.Get", location, err)
 	if err != nil {
 		logger.V(4).Info("GetFileBackup", "err", err)
 	}
@@ -52,6 +53,7 @@ func (c *fileBackupClient) GetFileBackup(ctx context.Context, projectId, locatio
 func (c *fileBackupClient) CreateFileBackup(ctx context.Context, projectId, location, name string, backup *file.Backup) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Backups.Create(client.GetFilestoreParentPath(projectId, location), backup).BackupId(name).Do()
+	client.IncrementCallCounter("File", "Backups.Create", location, err)
 	if err != nil {
 		logger.Error(err, "CreateFileBackup", "projectId", projectId, "location", location, "name", name)
 		return nil, err
@@ -60,7 +62,8 @@ func (c *fileBackupClient) CreateFileBackup(ctx context.Context, projectId, loca
 }
 func (c *fileBackupClient) DeleteFileBackup(ctx context.Context, projectId, location, name string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	operation, err := c.svcFile.Projects.Locations.Instances.Delete(client.GetFileBackupPath(projectId, location, name)).Do()
+	operation, err := c.svcFile.Projects.Locations.Backups.Delete(client.GetFileBackupPath(projectId, location, name)).Do()
+	client.IncrementCallCounter("File", "Backups.Delete", location, err)
 	if err != nil {
 		logger.Error(err, "DeleteFileBackup", "projectId", projectId, "location", location, "name", name)
 		return nil, err
@@ -71,6 +74,7 @@ func (c *fileBackupClient) DeleteFileBackup(ctx context.Context, projectId, loca
 func (c *fileBackupClient) GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
+	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetFileOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err

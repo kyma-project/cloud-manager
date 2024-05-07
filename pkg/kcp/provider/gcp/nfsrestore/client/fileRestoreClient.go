@@ -46,6 +46,7 @@ func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFile
 		SourceBackup: srcBackupFullPath,
 	}
 	operation, err := c.svcFile.Projects.Locations.Instances.Restore(destFileFullPath, request).Do()
+	client.IncrementCallCounter("File", "Instances.Restore", "", err)
 	if err != nil {
 		logger.Error(err, "RestoreFile", "projectId", projectId, "destFileFullPath", destFileFullPath, "destFileShareName", destFileShareName, "srcBackupFullPath", srcBackupFullPath)
 		return nil, err
@@ -56,6 +57,7 @@ func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFile
 func (c *fileRestoreClient) GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
+	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetFileOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
