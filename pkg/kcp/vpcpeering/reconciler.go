@@ -5,7 +5,8 @@ import (
 	cloudcontrolb1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
+	aws "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
+	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -18,18 +19,21 @@ type vpcPeeringReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory vpcpeering.StateFactory
+	awsStateFactory   aws.StateFactory
+	azureStateFactory azure.StateFactory
 }
 
 func NewVpcPeeringReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	awsStateFactory vpcpeering.StateFactory,
+	awsStateFactory aws.StateFactory,
+	azureStateFactory azure.StateFactory,
 ) VPCPeeringReconciler {
 	return &vpcPeeringReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
+		azureStateFactory:    azureStateFactory,
 	}
 }
 
@@ -56,7 +60,8 @@ func (r *vpcPeeringReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, vpcpeering.New(r.awsStateFactory)),
+					composed.NewCase(focal.AwsProviderPredicate, aws.New(r.awsStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, azure.New(r.azureStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

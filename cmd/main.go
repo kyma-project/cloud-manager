@@ -21,6 +21,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"os"
@@ -29,6 +30,7 @@ import (
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
@@ -195,6 +197,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupVpcPeeringReconciler(
 		mgr,
 		awsvpcpeeringclient.NewClientProvider(),
+		azurevpcpeeringclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
@@ -244,6 +247,7 @@ func loadConfig() config.Config {
 	cfg.BaseDir(configDir)
 
 	awsconfig.InitConfig(cfg)
+	azureconfig.InitConfig(cfg)
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)
