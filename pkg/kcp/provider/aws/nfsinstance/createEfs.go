@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -60,7 +61,7 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status due failed creating efs", composed.StopWithRequeue, ctx)
+			return awsmeta.LogErrorAndReturn(err, "Error updating NfsInstance status due failed creating efs", ctx)
 		}
 
 		return composed.StopWithRequeueDelay(time.Minute), nil

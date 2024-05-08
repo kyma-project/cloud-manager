@@ -6,6 +6,7 @@ import (
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -41,6 +42,9 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 		subnetId := pointer.StringDeref(mt.SubnetId, "")
 		subnet, err := state.awsClient.DescribeSubnet(ctx, subnetId)
 		if err != nil {
+			if awsmeta.IsErrorRetryable(err) {
+				return awsmeta.LogErrorAndReturn(err, "Retryable error describing subnet", ctx)
+			}
 			logger.
 				WithValues("subnetId", subnetId).
 				Error(err, "Error describing subnet")
@@ -72,6 +76,9 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 			Info("Removing mount target from other VPC")
 		err := state.awsClient.DeleteMountTarget(ctx, mtId)
 		if err != nil {
+			if awsmeta.IsErrorRetryable(err) {
+				return awsmeta.LogErrorAndReturn(err, "Retryable error removing mount target from other VPC", ctx)
+			}
 			logger.
 				WithValues("mountTargetId", mtId).
 				Error(err, "Error removing mount target from other VPC")

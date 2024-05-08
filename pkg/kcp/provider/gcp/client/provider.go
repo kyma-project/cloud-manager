@@ -169,7 +169,8 @@ func IncrementCallCounter(serviceName, operationName, region string, err error) 
 			responseCode = 500
 		}
 	}
-	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region).Inc()
+	gcpProject := ""
+	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region, gcpProject).Inc()
 }
 
 func GetJwtToken(ctx context.Context, saJsonKeyPath string, validity time.Duration, audience string, scopes ...string) (string, error) {

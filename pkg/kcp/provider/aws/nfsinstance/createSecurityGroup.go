@@ -5,6 +5,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -35,7 +36,7 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 		},
 	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating security group", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error creating security group", ctx)
 	}
 
 	state.securityGroupId = sgId

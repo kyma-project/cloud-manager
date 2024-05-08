@@ -4,6 +4,7 @@ import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -71,7 +72,7 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 
 	err := state.awsClient.AuthorizeSecurityGroupIngress(ctx, state.securityGroupId, permissions)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error adding security group ingress", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error adding security group ingress", ctx)
 	}
 
 	return composed.StopWithRequeue, nil

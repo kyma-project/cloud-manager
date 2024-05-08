@@ -18,7 +18,6 @@ func InitConfig(cfg config.Config) {
 		config.Bind(AwsConfig),
 		config.Path(
 			"accessKeyId",
-			config.Sensitive(),
 			config.SourceEnv("AWS_ACCESS_KEY_ID"),
 			config.SourceFile("AWS_ACCESS_KEY_ID"),
 		),

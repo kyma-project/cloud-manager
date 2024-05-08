@@ -6,6 +6,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -32,7 +33,7 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		},
 	}, nil)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing security groups", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error listing security groups", ctx)
 	}
 
 	if len(list) > 0 {
