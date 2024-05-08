@@ -15,6 +15,16 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	//If marked for deletion, return
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
+	//If the GCP backup already exists, return
+	if state.fileBackup != nil {
+		return nil, nil
+	}
+
 	backup := state.ObjAsGcpNfsVolumeBackup()
 	logger.WithValues("Nfs Backup :", backup.Name).Info("Loading GCPNfsVolume")
 
@@ -42,7 +52,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	volumeReady := meta.FindStatusCondition(nfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	//If the nfsVolume is not ready, return an error
-	if volumeReady != nil && volumeReady.Status != metav1.ConditionTrue {
+	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolume", nfsVolume.Name).Info("GcpNfsVolume is ready")
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
