@@ -32,20 +32,22 @@ var (
 )
 
 func IsFlowControl(err error) bool {
-	_, ok := err.(FlowControlError)
+	var eee FlowControlError
+	ok := errors.As(err, &eee)
 	return ok
 }
 
 func IsStopAndForget(err error) bool {
-	return err == StopAndForget
+	return errors.Is(err, StopAndForget)
 }
 
 func IsStopWithRequeue(err error) bool {
-	return err == StopWithRequeue
+	return errors.Is(err, StopWithRequeue)
 }
 
 func IsStopWithRequeueDelay(err error) bool {
-	_, ok := err.(*stopWithRequeueDelay)
+	var eee *stopWithRequeueDelay
+	ok := errors.As(err, &eee)
 	return ok
 }
 
