@@ -57,9 +57,8 @@ type IpRangeStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="cidr",type="string",JSONPath=".spec.cidr"
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status"
-// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.conditions[?(@.type==\"Error\")].status"
+// +kubebuilder:printcolumn:name="CIDR",type="string",JSONPath=".spec.cidr"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // IpRange is the Schema for the ipranges API
 type IpRange struct {
