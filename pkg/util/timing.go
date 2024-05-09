@@ -33,6 +33,7 @@ type TimingIntf interface {
 	T1000ms() time.Duration
 	T10000ms() time.Duration
 	T60000ms() time.Duration
+	T300000ms() time.Duration
 }
 
 func divideDuration(dur time.Duration, div int64) time.Duration {
@@ -71,5 +72,9 @@ func (t *timingStruct) T10000ms() time.Duration {
 }
 
 func (t *timingStruct) T60000ms() time.Duration {
-	return divideDuration(10000*time.Millisecond, t.divider)
+	return divideDuration(60000*time.Millisecond, t.divider)
+}
+
+func (t *timingStruct) T300000ms() time.Duration {
+	return divideDuration(300000*time.Millisecond, t.divider)
 }
