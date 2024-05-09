@@ -5,6 +5,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -44,7 +45,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		[]string{state.securityGroupId},
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading security group", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error loading security group", ctx)
 	}
 	if len(sg) < 1 {
 		logger.Info("Security group with id not found!!!")

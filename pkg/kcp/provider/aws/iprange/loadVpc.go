@@ -6,6 +6,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -19,7 +20,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 	vpcList, err := state.client.DescribeVpcs(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error loading AWS VPC Networks", ctx)
 	}
 
 	var allLoadedVpcs []string

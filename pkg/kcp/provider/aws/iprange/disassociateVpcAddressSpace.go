@@ -4,6 +4,7 @@ import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/pointer"
 	"time"
@@ -53,8 +54,8 @@ func disassociateVpcAddressSpace(ctx context.Context, st composed.State) (error,
 
 	err := state.client.DisassociateVpcCidrBlockInput(ctx, pointer.StringDeref(theBlock.AssociationId, ""))
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error disassociating VPC Cidr block", composed.StopWithRequeueDelay(300*time.Millisecond), ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error disassociating VPC Cidr block", ctx)
 	}
 
-	return composed.StopWithRequeueDelay(300 * time.Millisecond), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }

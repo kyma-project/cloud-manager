@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -12,7 +13,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 
 	list, err := state.awsClient.DescribeFileSystems(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing AWS file systems", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error listing AWS file systems", ctx)
 	}
 
 	for _, fs := range list {

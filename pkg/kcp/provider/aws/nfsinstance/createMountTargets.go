@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -35,7 +36,7 @@ func createMountTargets(ctx context.Context, st composed.State) (error, context.
 			[]string{state.securityGroupId},
 		)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error creating Mount point", composed.StopWithRequeue, ctx)
+			return awsmeta.LogErrorAndReturn(err, "Error creating Mount point", ctx)
 		}
 	}
 

@@ -14,7 +14,7 @@ var (
 	CloudProviderCallCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "cloud_manager_cloud_provider_api_call_total",
 		Help: "Total number of cloud provider API calls per provider, method, response code, and region",
-	}, []string{"provider", "method", "response_code", "region"})
+	}, []string{"provider", "method", "response_code", "region", "subscription"})
 )
 
 func init() {
