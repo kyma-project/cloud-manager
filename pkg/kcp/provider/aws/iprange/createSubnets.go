@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/pointer"
 )
@@ -86,7 +87,7 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 			tagKey, "1",
 		))
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error creating subnet", composed.StopWithRequeue, ctx)
+			return awsmeta.LogErrorAndReturn(err, "Error creating subnet", ctx)
 		}
 		logger.WithValues("subnetId", subnet.SubnetId).Info("Subnet created")
 
