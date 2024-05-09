@@ -1,0 +1,9 @@
+resource:
+    kind: GcpNfsVolumeRestore
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpnfsvolumerestores
+name: Gcp Nfs Volume Restore
+scope: namespace
+description: >-
+    GcpNfsVolumeRestore describes a request to restore a GCP NFS volume.
