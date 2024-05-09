@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
@@ -21,6 +22,9 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	mtList, err := state.awsClient.DescribeMountTargets(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
+	if errors.Is(err, &efsTypes.FileSystemNotFound{}) {
+		return nil, nil
+	}
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error loading mount targets", ctx)
 	}
