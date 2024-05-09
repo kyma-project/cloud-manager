@@ -20,13 +20,10 @@ spec:
           name: Age
           type: date
         - jsonPath: .spec.cidr
-          name: cidr
+          name: CIDR
           type: string
-        - jsonPath: .status.conditions[?(@.type=="Ready")].status
-          name: Ready
-          type: string
-        - jsonPath: .status.conditions[?(@.type=="Error")].status
-          name: Error
+        - jsonPath: .status.state
+          name: State
           type: string
       name: v1beta1
       schema:
