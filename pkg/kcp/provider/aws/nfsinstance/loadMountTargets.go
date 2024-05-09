@@ -38,6 +38,10 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		time.Sleep(util.Timing.T10000ms())
 		mtID := pointer.StringDeref(mt.MountTargetId, "")
 		sgList, err := state.awsClient.DescribeMountTargetSecurityGroups(ctx, mtID)
+		if errors.Is(err, &efsTypes.MountTargetNotFound{}) {
+			state.mountTargetSecurityGroups[mtID] = []string{}
+			continue
+		}
 		if err != nil {
 			return awsmeta.LogErrorAndReturn(err, "Error loading mount target security groups", ctx)
 		}
