@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
@@ -138,6 +139,7 @@ func Start() (Infra, error) {
 		activeSkrCollection: activeSkrCollection,
 		awsMock:             awsMock,
 		gcpMock:             gcpmock.New(),
+		azureMock:           azuremock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),

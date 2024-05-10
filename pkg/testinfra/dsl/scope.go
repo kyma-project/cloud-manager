@@ -66,3 +66,38 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 
 	return nil
 }
+
+func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+	if scope == nil {
+		scope = &cloudcontrolv1beta1.Scope{}
+	}
+
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(scope)
+
+	project := strings.TrimPrefix(scope.Namespace, "garden-")
+
+	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
+		KymaName:  scope.Name,
+		ShootName: scope.Name,
+		Region:    "eu-west-1",
+		Provider:  cloudcontrolv1beta1.ProviderAzure,
+		Scope: cloudcontrolv1beta1.ScopeInfo{
+			Azure: &cloudcontrolv1beta1.AzureScope{
+				TenantId:       "fdd97055-c316-462f-8769-f99b670c2c4d",
+				SubscriptionId: "44753ea6-98e9-4e46-b6db-8e03e790e10e",
+				VpcNetwork:     fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+			},
+		},
+	}
+
+	err := infra.KCP().Client().Create(ctx, scope)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

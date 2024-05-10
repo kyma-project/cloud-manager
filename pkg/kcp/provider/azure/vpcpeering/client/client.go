@@ -14,7 +14,7 @@ type Client interface {
 		virtualNetworkName,
 		virtualNetworkPeeringName,
 		remoteVnetId string,
-		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeeringsClientCreateOrUpdateResponse, error)
+		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error)
 }
 
 func NewClientProvider() azureclient.SkrClientProvider[Client] {
@@ -50,7 +50,7 @@ func (c *client) BeginCreateOrUpdate(
 	virtualNetworkName,
 	virtualNetworkPeeringName,
 	remoteVnetId string,
-	allowVnetAccess bool) (*armnetwork.VirtualNetworkPeeringsClientCreateOrUpdateResponse, error) {
+	allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error) {
 	poller, err := c.svc.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,
@@ -66,7 +66,6 @@ func (c *client) BeginCreateOrUpdate(
 					ID: pointer.String(remoteVnetId),
 				},
 			},
-			Type: nil, // TODO Is this needed?
 		},
 		nil,
 	)
@@ -81,5 +80,5 @@ func (c *client) BeginCreateOrUpdate(
 		return nil, err
 	}
 
-	return &res, nil
+	return &res.VirtualNetworkPeering, nil
 }
