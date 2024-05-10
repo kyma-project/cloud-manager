@@ -5,6 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"os"
 	"testing"
 
@@ -51,6 +52,8 @@ var _ = BeforeSuite(func() {
 
 	// Quota override
 	quota.SkrQuota.Override(&cloudresourcesv1beta1.IpRange{}, infra.SKR().Scheme(), "", 1)
+
+	util.SetSpeedyTimingForTests()
 
 	// Setup controllers
 	// IpRange
