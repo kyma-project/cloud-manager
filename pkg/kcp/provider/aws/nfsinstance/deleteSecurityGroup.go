@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/pointer"
 )
 
@@ -24,5 +25,5 @@ func deleteSecurityGroup(ctx context.Context, st composed.State) (error, context
 		return awsmeta.LogErrorAndReturn(err, "Error deleting security group", ctx)
 	}
 
-	return nil, nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 }
