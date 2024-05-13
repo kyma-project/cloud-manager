@@ -1,0 +1,74 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - widget: Labels
+          source: spec.destination.volume.name
+          name: spec.destination.volume.name
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.destination.volume.namespace
+          name: spec.destination.volume.namespace
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.source.backup.name
+          name: spec.source.backup.name
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.source.backup.namespace
+          name: spec.source.backup.namespace
+          visibility: $exists($value)
+        - widget: Labels
+          source: status.state
+          name: status.state
+          visibility: $exists($value)
+  form: |-
+    - path: spec.destination.volume.name
+      simple: true
+      name: spec.destination.volume.name
+      required: true
+    - path: spec.destination.volume.namespace
+      simple: true
+      name: spec.destination.volume.namespace
+      required: false
+    - path: spec.source.backup.name
+      simple: true
+      name: spec.source.backup.name
+      required: true
+    - path: spec.source.backup.namespace
+      simple: true
+      name: spec.source.backup.namespace
+      required: true
+  general: |-
+    resource:
+        kind: GcpNfsVolumeRestore
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpnfsvolumerestores
+    name: Gcp Nfs Volume Restore
+    scope: namespace
+    description: >-
+        GcpNfsVolumeRestore describes a request to restore a GCP NFS volume.
+  list: |-
+    - source: spec.destination.volume.name
+      name: spec.destination.volume.name
+      sort: true
+    - source: spec.destination.volume.namespace
+      name: spec.destination.volume.namespace
+      sort: true
+    - source: spec.source.backup.name
+      name: spec.source.backup.name
+      sort: true
+    - source: spec.source.backup.namespace
+      name: spec.source.backup.namespace
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: ""
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+  name: gcpnfsvolumerestores-ui.operator.kyma-project.io
