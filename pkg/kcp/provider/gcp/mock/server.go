@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -99,6 +100,14 @@ func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.Servi
 	return func(ctx context.Context, saJsonKeyPath string) (client.ServiceUsageClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (restoreclient.FileRestoreClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
 		return s, nil
 	}
 }

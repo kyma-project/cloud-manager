@@ -16,6 +16,9 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if Ignore.ShouldIgnoreKey(req) {
+		return ctrl.Result{}, nil
+	}
 	state := r.newState(req.NamespacedName)
 	action := r.newAction()
 
