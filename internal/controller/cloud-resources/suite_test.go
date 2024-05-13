@@ -19,9 +19,11 @@ package cloudresources
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"os"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"testing"
 
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
@@ -68,6 +70,15 @@ var _ = BeforeSuite(func() {
 	// Quota override
 	quota.SkrQuota.Override(&cloudresourcesv1beta1.IpRange{}, infra.SKR().Scheme(), "", 1000)
 
+	// Setup environment variables
+	env := abstractions.NewMockedEnvironment(map[string]string{
+		"GCP_SA_JSON_KEY_PATH":        "test",
+		"GCP_RETRY_WAIT_DURATION":     "300ms",
+		"GCP_OPERATION_WAIT_DURATION": "300ms",
+	})
+
+	testSetupLog := ctrl.Log.WithName("testSetup")
+
 	util.SetSpeedyTimingForTests()
 
 	// Setup controllers
@@ -85,6 +96,9 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred())
 	// GcpNfsVolume
 	Expect(SetupGcpNfsVolumeReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+	// GcpNfsVolumeRestore
+	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), env, testSetupLog)).
 		NotTo(HaveOccurred())
 
 	// Start controllers

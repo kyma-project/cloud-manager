@@ -24,7 +24,9 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 		actions = actions.Append(WithNamespace(DefaultKcpNamespace))
 	case *cloudresourcesv1beta1.IpRange,
 		*cloudresourcesv1beta1.AwsNfsVolume,
-		*cloudresourcesv1beta1.GcpNfsVolume:
+		*cloudresourcesv1beta1.GcpNfsVolume,
+		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
+		*cloudresourcesv1beta1.GcpNfsVolumeRestore:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 
@@ -54,7 +56,9 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 		actions = actions.Append(WithNamespace(DefaultKcpNamespace))
 	case *cloudresourcesv1beta1.IpRange,
 		*cloudresourcesv1beta1.AwsNfsVolume,
-		*cloudresourcesv1beta1.GcpNfsVolume:
+		*cloudresourcesv1beta1.GcpNfsVolume,
+		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
+		*cloudresourcesv1beta1.GcpNfsVolumeRestore:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 

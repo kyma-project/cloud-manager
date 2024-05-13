@@ -4,6 +4,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -26,6 +27,7 @@ type Providers interface {
 	ComputeClientProvider() client.ClientProvider[iprangeclient.ComputeClient]
 	FilestoreClientProvider() client.ClientProvider[nfsclient.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
+	FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
