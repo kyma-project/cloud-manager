@@ -36,6 +36,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	_, err := state.fileBackupClient.DeleteFileBackup(ctx, project, location, name)
 
 	if err != nil {
+		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -48,5 +49,9 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	backup.Status.State = cloudresourcesv1beta1.ConditionTypeDeleting
+	return composed.UpdateStatus(backup).
+		SetExclusiveConditions().
+		SuccessErrorNil().
+		Run(ctx, state)
 }

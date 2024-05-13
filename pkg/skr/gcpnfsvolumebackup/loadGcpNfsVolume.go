@@ -36,6 +36,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	}
 	err := state.SkrCluster.K8sClient().Get(ctx, nfsVolumeKey, nfsVolume)
 	if err != nil {
+		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -54,6 +55,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	//If the nfsVolume is not ready, return an error
 	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolume", nfsVolume.Name).Info("GcpNfsVolume is ready")
+		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
