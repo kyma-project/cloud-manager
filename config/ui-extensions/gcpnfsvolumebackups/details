@@ -1,0 +1,17 @@
+body:
+    - widget: Labels
+      source: spec.location
+      name: spec.location
+      visibility: $exists($value)
+    - widget: Labels
+      source: spec.source.volume.name
+      name: spec.source.volume.name
+      visibility: $exists($value)
+    - widget: Labels
+      source: spec.source.volume.namespace
+      name: spec.source.volume.namespace
+      visibility: $exists($value)
+    - widget: Labels
+      source: status.state
+      name: status.state
+      visibility: $exists($value)
