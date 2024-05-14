@@ -3,9 +3,16 @@ package testinfra
 import (
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -132,10 +139,12 @@ func Start() (Infra, error) {
 		activeSkrCollection: activeSkrCollection,
 		awsMock:             awsMock,
 		gcpMock:             gcpmock.New(),
+		azureMock:           azuremock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),
 		},
+		config: config.NewConfig(abstractions.NewOSEnvironment()),
 	}
 
 	// Create DSL
@@ -162,6 +171,14 @@ func Start() (Infra, error) {
 		gomega.Default.SetDefaultConsistentlyDuration(2 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 	}
+
+	// init config
+	awsconfig.InitConfig(infra.Config())
+	quota.InitConfig(infra.Config())
+	skrruntimeconfig.InitConfig(infra.Config())
+	scope.InitConfig(infra.Config())
+	infra.Config().Read()
+	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
 
 	return infra, nil
 }

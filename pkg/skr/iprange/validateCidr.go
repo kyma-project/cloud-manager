@@ -13,6 +13,10 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
 	if len(state.ObjAsIpRange().Status.Cidr) > 0 {
 		logger.Info("Cidr already checked and valid")
 		return nil, nil

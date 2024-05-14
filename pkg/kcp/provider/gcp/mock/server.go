@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -16,6 +17,7 @@ func New() Server {
 		iprangeStore:      &iprangeStore{},
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
+		nfsRestoreStore:   &nfsRestoreStore{},
 	}
 }
 
@@ -23,6 +25,7 @@ type server struct {
 	*iprangeStore
 	*nfsStore
 	*serviceUsageStore
+	*nfsRestoreStore
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -61,6 +64,14 @@ func (s *server) SetSuIsEnabledError(error *googleapi.Error) {
 	s.suIsEnabledError = error
 }
 
+func (s *server) setRestoreFileError(error *googleapi.Error) {
+	s.restoreFileError = error
+}
+
+func (s *server) setRestoreOperationError(error *googleapi.Error) {
+	s.restoreOperationError = error
+}
+
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ServiceNetworkingClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
@@ -89,6 +100,14 @@ func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.Servi
 	return func(ctx context.Context, saJsonKeyPath string) (client.ServiceUsageClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (restoreclient.FileRestoreClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
 		return s, nil
 	}
 }

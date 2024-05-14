@@ -1,0 +1,9 @@
+- source: spec.fileShareName
+  name: spec.fileShareName
+  sort: true
+- source: spec.location
+  name: spec.location
+  sort: true
+- source: spec.tier
+  name: spec.tier
+  sort: true

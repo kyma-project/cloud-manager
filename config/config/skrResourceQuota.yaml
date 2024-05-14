@@ -1,0 +1,3 @@
+defaults:
+  iprange.cloud-resources.kyma-project.io/totalCount: 1
+  awsnfsvolume.cloud-resources.kyma-project.io/totalCount: 5

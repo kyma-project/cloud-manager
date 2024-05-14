@@ -4,6 +4,7 @@ import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/pointer"
 )
 
@@ -27,7 +28,7 @@ func deleteSubnets(ctx context.Context, st composed.State) (error, context.Conte
 
 		err := state.client.DeleteSubnet(ctx, subnetId)
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error deleting subnet", composed.StopWithRequeue, composed.LoggerIntoCtx(ctx, lll))
+			return awsmeta.LogErrorAndReturn(err, "Error deleting subnet", composed.LoggerIntoCtx(ctx, lll))
 		}
 	}
 

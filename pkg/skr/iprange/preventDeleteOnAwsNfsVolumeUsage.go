@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,11 @@ func preventDeleteOnAwsNfsVolumeUsage(ctx context.Context, st composed.State) (e
 		// SKR IpRange is NOT marked for deletion, do not delete mirror in KCP
 		return nil, nil
 	}
-
+	if state.Provider != nil && *state.Provider != cloudcontrolv1beta1.ProviderAws {
+		// SKR IpRange is NOT AWS, skip check for AwsNfsVolume usage
+		logger.WithValues("provider", state.Provider).Info("Skipping preventDeleteOnAwsNfsVolumeUsage.")
+		return nil, nil
+	}
 	awsNfsVolumesUsingThisIpRange := &cloudresourcesv1beta1.AwsNfsVolumeList{}
 	listOps := &client.ListOptions{
 		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().String()),

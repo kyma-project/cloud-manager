@@ -18,22 +18,26 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/go-logr/logr"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
 // GcpNfsVolumeBackupReconciler reconciles a GcpNfsVolumeBackup object
 type GcpNfsVolumeBackupReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Reconciler gcpnfsvolumebackup.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsvolumebackups,verbs=get;list;watch;create;update;patch;delete
@@ -52,20 +56,30 @@ type GcpNfsVolumeBackupReconciler struct {
 func (r *GcpNfsVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Run(ctx, req)
 }
 
-type GcpNfsVolumeBackupReconcilerFactory struct{}
+type GcpNfsVolumeBackupReconcilerFactory struct {
+	fileBackupClientProvider gcpclient.ClientProvider[backupclient.FileBackupClient]
+	env                      abstractions.Environment
+}
 
 func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	return nil
+	return &GcpNfsVolumeBackupReconciler{
+		Reconciler: gcpnfsvolumebackup.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider, f.env),
+	}
 }
 
-func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry) error {
-	return reg.Register().
-		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{}).
-		For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
-		Complete()
+func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.ClientProvider[backupclient.FileBackupClient],
+	env abstractions.Environment, logger logr.Logger) error {
+	// "_" + crd + ".yaml" should be the suffix for the yaml present in config/crd/bases
+	if util.IsCrdDisabled(env, "GcpNfsVolumeBackups") {
+		logger.Info("GcpNfsVolumeBackup CRD is disabled. Skipping controller setup.")
+		return nil
+	} else {
+		return reg.Register().
+			WithFactory(&GcpNfsVolumeBackupReconcilerFactory{fileBackupClientProvider: fileBackupClientProvider, env: env}).
+			For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
+			Complete()
+	}
 }

@@ -6,7 +6,10 @@ import (
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/pointer"
+	"time"
 )
 
 func loadMountTargets(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,18 +21,28 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	mtList, err := state.awsClient.DescribeMountTargets(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
+	if awsmeta.IsNotFound(err) {
+		return nil, nil
+	}
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading mount targets", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error loading mount targets", ctx)
 	}
 
 	state.mountTargets = mtList
 
 	state.mountTargetSecurityGroups = make(map[string][]string, len(mtList))
 	for _, mt := range mtList {
+		// in order not to exhaust rate limit have to slow down
+		// in this place usually we get ThrottlingException
+		time.Sleep(util.Timing.T10000ms())
 		mtID := pointer.StringDeref(mt.MountTargetId, "")
 		sgList, err := state.awsClient.DescribeMountTargetSecurityGroups(ctx, mtID)
+		if awsmeta.IsNotFound(err) {
+			state.mountTargetSecurityGroups[mtID] = []string{}
+			continue
+		}
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error loading mount target security groups", composed.StopWithRequeue, ctx)
+			return awsmeta.LogErrorAndReturn(err, "Error loading mount target security groups", ctx)
 		}
 		state.mountTargetSecurityGroups[mtID] = sgList
 	}

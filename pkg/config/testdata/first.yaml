@@ -1,0 +1,10 @@
+string: abc
+number: 23
+arrStr: ["a", "b"]
+arrNum: [1, 2]
+map:
+  a: aaa
+  b: bbb
+  nested:
+    x: xxx
+    y: yyy

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 	roleName := fmt.Sprintf(
 		"arn:aws:iam::%s:role/%s",
 		state.Scope().Spec.Scope.Aws.AccountId,
-		state.env.Get("AWS_ROLE_NAME"),
+		awsconfig.AwsConfig.AssumeRoleName,
 	)
 
 	logger.

@@ -52,7 +52,7 @@ func ComposeActions(name string, actions ...Action) Action {
 
 		if lastError == nil {
 			//l.Info("Reconciliation finished")
-			return nil, nil
+			return nil, currentCtx
 		} else if fce, ok := lastError.(FlowControlError); ok {
 			l.Info(fmt.Sprintf("Reconciliation finished with flow control: %s", fce))
 			if !fce.ShouldReturnError() {

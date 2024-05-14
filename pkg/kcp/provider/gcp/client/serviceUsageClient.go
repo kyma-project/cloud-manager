@@ -43,6 +43,7 @@ type serviceUsageClient struct {
 func (s serviceUsageClient) GetServiceUsageOperation(ctx context.Context, operationName string) (*serviceusage.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := s.svcServiceUsage.Operations.Get(operationName).Do()
+	IncrementCallCounter("ServiceUsage", "Operations.Get", "", err)
 	if err != nil {
 		logger.V(4).Info("GetOperation", "err", err)
 		return nil, err
@@ -55,6 +56,7 @@ func (s serviceUsageClient) EnableService(ctx context.Context, projectId string,
 	completeServiceName := GetCompleteServiceName(projectId, serviceName)
 	enableServiceRequest := &serviceusage.EnableServiceRequest{}
 	operation, err := s.svcServiceUsage.Services.Enable(completeServiceName, enableServiceRequest).Do()
+	IncrementCallCounter("ServiceUsage", "Services.Enable", "", err)
 	if err != nil {
 		logger.V(4).Info("EnableService", "err", err)
 	}
@@ -66,6 +68,7 @@ func (s serviceUsageClient) DisableService(ctx context.Context, projectId string
 	completeServiceName := GetCompleteServiceName(projectId, serviceName)
 	disableServiceRequest := &serviceusage.DisableServiceRequest{}
 	operation, err := s.svcServiceUsage.Services.Disable(completeServiceName, disableServiceRequest).Do()
+	IncrementCallCounter("ServiceUsage", "Services.Disable", "", err)
 	if err != nil {
 		logger.V(4).Info("DisableService", "err", err)
 	}
@@ -76,6 +79,7 @@ func (s serviceUsageClient) IsServiceEnabled(ctx context.Context, projectId stri
 	logger := composed.LoggerFromCtx(ctx)
 	completeServiceName := GetCompleteServiceName(projectId, serviceName)
 	service, err := s.svcServiceUsage.Services.Get(completeServiceName).Do()
+	IncrementCallCounter("ServiceUsage", "Services.Get", "", err)
 	if err != nil {
 		logger.V(4).Info("isServiceEnabled", "err", err)
 		return false, err

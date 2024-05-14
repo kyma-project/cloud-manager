@@ -1,0 +1,7 @@
+resourceQuota:
+  skr:
+    defaults:
+      ipranges: 2
+    overrides:
+      skr789:
+        ipranges: 4

@@ -18,23 +18,31 @@ package main
 
 import (
 	"flag"
-	"os"
-
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	"github.com/kyma-project/cloud-manager/pkg/quota"
+	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -83,6 +91,9 @@ func main() {
 	flag.BoolVar(&gcpStructuredLogging, "gcp-structured-logging", false, "Enable GCP structured logging")
 	flag.Parse()
 
+	cfg := loadConfig()
+	cfg.Read()
+
 	opts := zap.Options{}
 	if gcpStructuredLogging {
 		opts.EncoderConfigOptions = []zap.EncoderConfigOption{
@@ -103,6 +114,8 @@ func main() {
 		"scheme", "SKR",
 		"kinds", pie.Keys(skrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)),
 	).Info("Schema dump")
+	setupLog.WithValues("config", cfg.PrintJson()).
+		Info("Config dump")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 kcpScheme,
@@ -157,8 +170,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env, setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(skrRegistry, gcpnfsrestoreclient.NewFileRestoreClientProvider(), env, setupLog); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
 		os.Exit(1)
 	}
 
@@ -179,6 +197,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupVpcPeeringReconciler(
 		mgr,
 		awsvpcpeeringclient.NewClientProvider(),
+		azurevpcpeeringclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
@@ -204,14 +223,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	//skrLoop.AddKymaName("dffb0722-a18c-11ee-8c90-0242ac120002")
-	//skrLoop.AddKymaName("134c0a3c-873d-436a-81c3-9b830a27b73a")
-	//skrLoop.AddKymaName("264bb633-80f7-455b-83b2-f86630a57635")
-	//skrLoop.AddKymaName("3f6f5a93-1c75-425a-b07e-4c82a0db1526")
-	//skrLoop.AddKymaName("46059d75-d7b0-4d6a-955d-ce828ec4bb37")
-	//skrLoop.AddKymaName("511d7132-448d-4672-a90d-420ad61b2365")
-	//skrLoop.AddKymaName("eb693381-3e9c-4818-9f5d-378ba0c47314")
-
 	err = mgr.Add(skrLoop)
 	if err != nil {
 		setupLog.Error(err, "error adding SkrLooper to KCP manager")
@@ -224,4 +235,24 @@ func main() {
 		os.Exit(1)
 	}
 	// 2024-03-04T14:18
+}
+
+func loadConfig() config.Config {
+	env := abstractions.NewOSEnvironment()
+	configDir := env.Get("CONFIG_DIR")
+	if len(configDir) < 1 {
+		configDir = "./config/config"
+	}
+	cfg := config.NewConfig(env)
+	cfg.BaseDir(configDir)
+
+	awsconfig.InitConfig(cfg)
+	azureconfig.InitConfig(cfg)
+	quota.InitConfig(cfg)
+	skrruntimeconfig.InitConfig(cfg)
+	scope.InitConfig(cfg)
+
+	cfg.Read()
+
+	return cfg
 }

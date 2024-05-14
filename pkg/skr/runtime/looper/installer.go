@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"io"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,6 +41,25 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 	for _, en := range entries {
 		if rx.Match([]byte(en.Name())) {
 			files = append(files, path.Join(dir, en.Name()))
+		}
+	}
+
+	// exclude disabled CRDs
+	prefix := "cloud-resources.kyma-project.io_"
+	suffix := ".yaml"
+	disabledCrds := util.GetDisabledCrds(nil)
+	for i, crd := range disabledCrds {
+		disabledCrds[i] = prefix + crd + suffix
+	}
+
+	// remove any file in files that endswith disabledCrds
+	for i := 0; i < len(files); i++ {
+		for _, crd := range disabledCrds {
+			if files[i] == path.Join(dir, crd) {
+				files = append(files[:i], files[i+1:]...)
+				i--
+				break
+			}
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	sdkmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	smithymiddleware "github.com/aws/smithy-go/middleware"
 	"github.com/aws/smithy-go/transport/http"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type awsRequestMetricTuple struct {
 	Region        string
 	Latency       time.Duration
 	ResponseCode  int
+	Subscription  string
 }
 
 func awsReportMetrics(metrics *awsRequestMetricTuple) {
@@ -23,6 +25,7 @@ func awsReportMetrics(metrics *awsRequestMetricTuple) {
 		fmt.Sprintf("%s/%s", metrics.ServiceName, metrics.OperationName),
 		fmt.Sprintf("%d", metrics.ResponseCode),
 		metrics.Region,
+		metrics.Subscription,
 	).Inc()
 }
 
@@ -52,6 +55,7 @@ func AwsReportMetricsMiddleware() smithymiddleware.DeserializeMiddleware {
 			Region:        sdkmiddleware.GetRegion(ctx),
 			Latency:       latency,
 			ResponseCode:  responseStatusCode,
+			Subscription:  awsmeta.GetAwsAccountId(ctx),
 		}
 		awsReportMetrics(&metrics)
 

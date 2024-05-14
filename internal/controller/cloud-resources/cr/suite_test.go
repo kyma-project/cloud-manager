@@ -20,6 +20,7 @@ import (
 	"context"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"os"
 	"testing"
 
@@ -61,6 +62,8 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
+
+	util.SetSpeedyTimingForTests()
 
 	// Setup controllers
 	// Test Only PV Controller

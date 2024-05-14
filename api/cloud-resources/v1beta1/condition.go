@@ -10,17 +10,22 @@ const (
 const (
 	ConditionTypeReady = "Ready"
 
-	ConditionReasonError = "Error"
+	ConditionReasonReady = "Ready"
 )
 
 const (
 	ConditionTypeError = "Error"
 
 	// ConditionReasonIpRangeNotFound used with ConditionTypeError in case IpRange specified in object does not exist
-	ConditionReasonIpRangeNotFound   = "IpRangeNotFound"
-	ConditionReasonMissingScope      = "MissingScope"
-	ConditionReasonMissingNfsVolume  = "MissingNfsVolume"
-	ConditionReasonNfsVolumeNotReady = "NfsVolumeNotReady"
+	ConditionReasonIpRangeNotFound         = "IpRangeNotFound"
+	ConditionReasonMissingScope            = "MissingScope"
+	ConditionReasonMissingNfsVolume        = "MissingNfsVolume"
+	ConditionReasonNfsVolumeNotReady       = "NfsVolumeNotReady"
+	ConditionReasonMissingNfsVolumeBackup  = "MissingNfsVolumeBackup"
+	ConditionReasonNfsVolumeBackupNotReady = "NfsVolumeBackupNotReady"
+	ConditionReasonNfsRestoreInProgress    = "NfsRestoreInProgress"
+	ConditionReasonNfsRestoreFailed        = "NfsRestoreFailed"
+	ConditionReasonError                   = "Error"
 )
 
 const (
@@ -40,4 +45,8 @@ const (
 
 const (
 	ConditionTypeWarning = "Warning"
+)
+
+const (
+	ConditionTypeQuotaExceeded = "QuotaExceeded"
 )

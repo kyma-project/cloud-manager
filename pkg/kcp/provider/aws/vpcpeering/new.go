@@ -29,6 +29,7 @@ func New(stateFactory StateFactory) composed.Action {
 					loadRemoteVpc,
 					loadVpcPeeringConnection,
 					createVpcPeeringConnection,
+					acceptVpcPeeringConnection,
 					updateSuccessStatus,
 					composed.StopAndForgetAction),
 			), // switch

@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
@@ -72,6 +73,8 @@ var _ = BeforeSuite(func() {
 		"GCP_OPERATION_WAIT_DURATION": "300ms",
 	})
 
+	util.SetSpeedyTimingForTests()
+
 	// Setup controllers
 	// Scope
 	Expect(SetupScopeReconciler(
@@ -99,6 +102,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
+		infra.AzureMock().VpcPeeringSkrProvider(),
 	))
 
 	// Start controllers

@@ -45,6 +45,7 @@ type computeClient struct {
 func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcCompute.GlobalAddresses.Get(projectId, name).Do()
+	client.IncrementCallCounter("Compute", "GlobalAddresses.Get", "", err)
 	if err != nil {
 		logger.V(4).Info("GetIpRange", "err", err)
 	}
@@ -54,6 +55,7 @@ func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) 
 func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcCompute.GlobalAddresses.Delete(projectId, name).Do()
+	client.IncrementCallCounter("Compute", "GlobalAddresses.Delete", "", err)
 	logger.V(4).Info("DeleteIpRange", "operation", operation, "err", err)
 	return operation, err
 }
@@ -69,6 +71,7 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 		AddressType:  string(client.AddressTypeInternal),
 		Purpose:      string(client.IpRangePurposeVPCPeering),
 	}).Do()
+	client.IncrementCallCounter("Compute", "GlobalAddresses.Insert", "", err)
 	logger.V(4).Info("CreatePscIpRange", "operation", operation, "err", err)
 	return operation, err
 }
@@ -77,6 +80,7 @@ func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc 
 	logger := composed.LoggerFromCtx(ctx)
 	filter := client.GetNetworkFilter(projectId, vpc)
 	out, err := c.svcCompute.GlobalAddresses.List(projectId).Filter(filter).Do()
+	client.IncrementCallCounter("Compute", "GlobalAddresses.List", "", err)
 	if err != nil {
 		logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
 		return nil, err
@@ -87,6 +91,7 @@ func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc 
 func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcCompute.GlobalOperations.Get(projectId, operationName).Do()
+	client.IncrementCallCounter("Compute", "GlobalOperations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err

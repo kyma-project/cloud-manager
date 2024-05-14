@@ -2,10 +2,12 @@ package iprange
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +29,15 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		ipRange.Status.State == client.DeletePsaConnection {
 		op, err := state.serviceNetworkingClient.GetServiceNetworkingOperation(ctx, opName)
 		if err != nil {
+
+			//If the operation is not found, reset the OpIdentifier.
+			var e *googleapi.Error
+			if ok := errors.As(err, &e); ok {
+				if e.Code == 404 {
+					ipRange.Status.OpIdentifier = ""
+				}
+			}
+
 			return composed.UpdateStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,

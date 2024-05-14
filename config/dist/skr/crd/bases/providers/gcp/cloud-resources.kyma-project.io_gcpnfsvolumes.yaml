@@ -78,6 +78,19 @@ spec:
                 x-kubernetes-validations:
                 - message: Tier is immutable.
                   rule: (self == oldSelf)
+              volume:
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  name:
+                    type: string
+                type: object
             required:
             - capacityGb
             - fileShareName
