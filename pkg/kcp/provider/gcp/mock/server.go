@@ -5,6 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/googleapi"
@@ -18,6 +19,7 @@ func New() Server {
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
 		nfsRestoreStore:   &nfsRestoreStore{},
+		nfsBackupStore:    &nfsBackupStore{},
 	}
 }
 
@@ -26,6 +28,7 @@ type server struct {
 	*nfsStore
 	*serviceUsageStore
 	*nfsRestoreStore
+	*nfsBackupStore
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -108,6 +111,14 @@ func (s *server) FilerestoreClientProvider() client.ClientProvider[restoreclient
 	return func(ctx context.Context, saJsonKeyPath string) (restoreclient.FileRestoreClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) FileBackupClientProvider() client.ClientProvider[backupclient.FileBackupClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (backupclient.FileBackupClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP FileBackupClientProvider mock...")
 		return s, nil
 	}
 }

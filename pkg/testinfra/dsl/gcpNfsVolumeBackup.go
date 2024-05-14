@@ -69,7 +69,7 @@ func WithGcpNfsVolumeBackupValues() ObjAction {
 	}
 }
 
-func AssertGcpNfsVolumeBackupHasStatus() ObjAssertion {
+func AssertGcpNfsVolumeBackupHasState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
 		if !ok {
@@ -77,6 +77,9 @@ func AssertGcpNfsVolumeBackupHasStatus() ObjAssertion {
 		}
 		if x.Status.State == "" {
 			return errors.New("the GcpNfsVolumeBackup state not set")
+		}
+		if x.Status.State != cloudresourcesv1beta1.GcpNfsBackupState(state) {
+			return fmt.Errorf("the GcpNfsVolumeBackup state is %s, expected %s", x.Status.State, state)
 		}
 		return nil
 	}

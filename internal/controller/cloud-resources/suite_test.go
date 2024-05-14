@@ -100,6 +100,9 @@ var _ = BeforeSuite(func() {
 	// GcpNfsVolumeRestore
 	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), env, testSetupLog)).
 		NotTo(HaveOccurred())
+	// GcpNfsVolumeBackup
+	Expect(SetupGcpNfsVolumeBackupReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
+		NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
