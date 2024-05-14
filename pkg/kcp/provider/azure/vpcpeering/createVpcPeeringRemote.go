@@ -3,28 +3,47 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"time"
 )
 
-func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
+func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
-	virtualNetworkPeeringName := uuid.NewString()
-	virtualNetworkPeeringName = fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name)
+	resource, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
-	peering, err := state.client.BeginCreateOrUpdate(ctx,
+	if err != nil {
+		logger.Error(err, "Error parsing remoteVnet")
+	}
+
+	clientId := azureconfig.AzureConfig.ClientId
+	clientSecret := azureconfig.AzureConfig.ClientSecret
+	subscriptionId := resource.Subscription
+	tenantId := azureconfig.AzureConfig.TenantId
+
+	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+
+	if err != nil {
+		return err, ctx
+	}
+
+	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
+	virtualNetworkPeeringName := fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name)
+
+	remoteVnet := "/subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
+
+	peering, err := c.BeginCreateOrUpdate(ctx,
 		resourceGroupName,
 		state.Scope().Spec.Scope.Azure.VpcNetwork,
 		virtualNetworkPeeringName,
-		obj.Spec.VpcPeering.Azure.RemoteVnet,
+		remoteVnet,
 		obj.Spec.VpcPeering.Azure.AllowVnetAccess,
 	)
 
@@ -45,19 +64,11 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	}
 
 	// TODO should we have different logger values for different providers like connectionId and ID
-	logger = logger.WithValues("connectionId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("remotePeeringId", pointer.StringDeref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	logger.Info("Azure VPC Peering created")
-
-	state.ObjAsVpcPeering().Status.ConnectionId = pointer.StringDeref(peering.ID, "")
-
-	err = state.UpdateObjStatus(ctx)
-
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
-	}
+	logger.Info("Azure remote VPC Peering created")
 
 	return nil, ctx
 }

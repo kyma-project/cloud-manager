@@ -26,6 +26,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions("azureVpcPeering-non-delete",
 					addFinalizer,
 					createVpcPeeringConnection,
+					createVpcPeeringRemote,
 					updateSuccessStatus,
 					composed.StopAndForgetAction),
 			), // switch
