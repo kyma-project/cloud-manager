@@ -5,5 +5,7 @@ resource:
 urlPath: ipranges
 name: Ip Ranges
 scope: namespace
+category: Cloud Manager
+icon: cloud
 description: >-
     IpRange description here
