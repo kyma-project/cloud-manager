@@ -5,5 +5,7 @@ resource:
 urlPath: gcpnfsvolumebackups
 name: Gcp Nfs Volume Backup
 scope: namespace
+category: Cloud Manager
+icon: cloud
 description: >-
     GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API

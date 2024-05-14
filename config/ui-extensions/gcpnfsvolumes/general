@@ -1,10 +1,12 @@
 resource:
     kind: GcpNfsVolume
     group: cloud-resources.kyma-project.io
-    version: v1
+    version: v1beta1
 urlPath: gcpnfsvolumes
 name: GCP Nfs Volume
 scope: namespace
+category: Cloud Manager
+icon: cloud
 description: >-
     GcpNfsVolume description here
 

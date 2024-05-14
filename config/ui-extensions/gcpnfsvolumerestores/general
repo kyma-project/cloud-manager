@@ -5,5 +5,7 @@ resource:
 urlPath: gcpnfsvolumerestores
 name: Gcp Nfs Volume Restore
 scope: namespace
+category: Cloud Manager
+icon: cloud
 description: >-
     GcpNfsVolumeRestore describes a request to restore a GCP NFS volume.

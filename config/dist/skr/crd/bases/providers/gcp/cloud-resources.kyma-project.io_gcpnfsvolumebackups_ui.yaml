@@ -39,6 +39,8 @@ data:
     urlPath: gcpnfsvolumebackups
     name: Gcp Nfs Volume Backup
     scope: namespace
+    category: Cloud Manager
+    icon: cloud
     description: >-
         GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
   list: |-
@@ -58,3 +60,4 @@ metadata:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
   name: gcpnfsvolumebackups-ui.operator.kyma-project.io
+  namespace: kyma-system
