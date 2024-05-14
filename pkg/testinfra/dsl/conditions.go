@@ -71,3 +71,19 @@ func HavingConditionTrue(conditionType string) ObjAssertion {
 		return nil
 	}
 }
+
+func HaveFinalizer(finalizer string) ObjAssertion {
+	return func(obj client.Object) error {
+		if len(obj.GetFinalizers()) == 0 {
+			return fmt.Errorf(
+				"expected object %T %s/%s to have status condition %s true, but following conditions found: %v",
+				obj,
+				obj.GetNamespace(),
+				obj.GetName(),
+				finalizer,
+				obj.GetFinalizers(),
+			)
+		}
+		return nil
+	}
+}
