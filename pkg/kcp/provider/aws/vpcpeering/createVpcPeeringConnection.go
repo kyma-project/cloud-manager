@@ -41,7 +41,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("connectionId", pointer.StringDeref(con.VpcPeeringConnectionId, ""))
+	logger = logger.WithValues("id", pointer.StringDeref(con.VpcPeeringConnectionId, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
@@ -49,7 +49,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	state.vpcPeeringConnection = con
 
-	state.ObjAsVpcPeering().Status.ConnectionId = pointer.StringDeref(con.VpcPeeringConnectionId, "")
+	state.ObjAsVpcPeering().Status.Id = pointer.StringDeref(con.VpcPeeringConnectionId, "")
 
 	err = state.UpdateObjStatus(ctx)
 

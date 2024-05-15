@@ -101,7 +101,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var connection ec2Types.VpcPeeringConnection
 		for _, p := range list {
-			if vpcpeering.Status.ConnectionId == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
+			if vpcpeering.Status.Id == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
 				connection = p
 			}
 		}
@@ -109,8 +109,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(*connection.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
 		})
 
-		By("And Then KCP VpcPeering has status.ConnectionId equal to existing AWS Connection id", func() {
-			Expect(vpcpeering.Status.ConnectionId).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))
+		By("And Then KCP VpcPeering has status.Id equal to existing AWS Connection id", func() {
+			Expect(vpcpeering.Status.Id).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))
 		})
 	})
 

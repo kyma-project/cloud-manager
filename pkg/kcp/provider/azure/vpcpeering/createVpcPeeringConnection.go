@@ -16,7 +16,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	if len(state.ObjAsVpcPeering().Status.ConnectionId) > 0 {
+	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
 		return nil, nil
 	}
 
@@ -47,14 +47,13 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	// TODO should we have different logger values for different providers like connectionId and ID
-	logger = logger.WithValues("connectionId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("id", pointer.StringDeref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("Azure VPC Peering created")
 
-	obj.Status.ConnectionId = pointer.StringDeref(peering.ID, "")
+	obj.Status.Id = pointer.StringDeref(peering.ID, "")
 
 	err = state.UpdateObjStatus(ctx)
 

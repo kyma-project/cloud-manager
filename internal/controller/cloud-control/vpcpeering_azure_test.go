@@ -71,7 +71,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var peering *armnetwork.VirtualNetworkPeering
 
 		for _, p := range list {
-			if vpcpeering.Status.ConnectionId == pointer.StringDeref(p.ID, "xxx") {
+			if vpcpeering.Status.Id == pointer.StringDeref(p.ID, "xxx") {
 				peering = p
 			}
 		}

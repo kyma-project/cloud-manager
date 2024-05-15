@@ -70,7 +70,6 @@ func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, cont
 			Run(ctx, state)
 	}
 
-	// TODO should we have different logger values for different providers like connectionId and ID
 	logger = logger.WithValues("remotePeeringId", pointer.StringDeref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
