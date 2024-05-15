@@ -17,16 +17,18 @@ func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	resource, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
+	clientId := azureconfig.AzureConfig.ClientId
+	clientSecret := azureconfig.AzureConfig.ClientSecret
+	tenantId := azureconfig.AzureConfig.TenantId
+
+	// We are creating virtual network peering in remote subscription therefore we are decomposing remoteVnetID
+	remote, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		logger.Error(err, "Error parsing remoteVnet")
 	}
 
-	clientId := azureconfig.AzureConfig.ClientId
-	clientSecret := azureconfig.AzureConfig.ClientSecret
-	subscriptionId := resource.Subscription
-	tenantId := azureconfig.AzureConfig.TenantId
+	subscriptionId := remote.Subscription
 
 	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 
@@ -34,21 +36,26 @@ func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, cont
 		return err, ctx
 	}
 
+	virtualNetworkName := remote.ResourceName
 	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
 	virtualNetworkPeeringName := fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name)
 
-	remoteVnet := "/subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
+	// Since we are creating virtual network peering connection from remote to shoot we need to build shootNetworkID
+	virtualNetworkId := util.VirtualNetworkResourceId(
+		state.Scope().Spec.Scope.Azure.SubscriptionId,
+		state.Scope().Spec.Scope.Azure.VpcNetwork, // ResourceGroup name is the same as VPC network name.
+		state.Scope().Spec.Scope.Azure.VpcNetwork)
 
 	peering, err := c.BeginCreateOrUpdate(ctx,
 		resourceGroupName,
-		state.Scope().Spec.Scope.Azure.VpcNetwork,
+		virtualNetworkName,
 		virtualNetworkPeeringName,
-		remoteVnet,
+		virtualNetworkId,
 		obj.Spec.VpcPeering.Azure.AllowVnetAccess,
 	)
 
 	if err != nil {
-		logger.Error(err, "Error creating VPC Peering")
+		logger.Error(err, "Error creating remote VPC Peering")
 
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{

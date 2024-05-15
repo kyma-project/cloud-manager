@@ -16,9 +16,12 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
+	if len(state.ObjAsVpcPeering().Status.ConnectionId) > 0 {
+		return nil, nil
+	}
+
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
 	virtualNetworkPeeringName := uuid.NewString()
-	virtualNetworkPeeringName = fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name)
 
 	peering, err := state.client.BeginCreateOrUpdate(ctx,
 		resourceGroupName,
@@ -51,7 +54,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("Azure VPC Peering created")
 
-	state.ObjAsVpcPeering().Status.ConnectionId = pointer.StringDeref(peering.ID, "")
+	obj.Status.ConnectionId = pointer.StringDeref(peering.ID, "")
 
 	err = state.UpdateObjStatus(ctx)
 

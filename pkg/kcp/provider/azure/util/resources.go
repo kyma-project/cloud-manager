@@ -73,3 +73,13 @@ func VirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetwork
 		SubResourceName: virtualNetworkPeeringName,
 	})
 }
+
+func VirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName string) string {
+	return ResourceID(ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "virtualNetworks",
+		ResourceName:  virtualNetworkName,
+	})
+}
