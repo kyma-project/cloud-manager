@@ -10,7 +10,7 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	connectionId := state.ObjAsVpcPeering().Status.ConnectionId
+	connectionId := state.ObjAsVpcPeering().Status.Id
 
 	// skip loading of vpc peering connections if connectionId is empty
 	if len(connectionId) == 0 {

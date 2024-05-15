@@ -13,7 +13,7 @@ func New(stateFactory StateFactory) composed.Action {
 		state, err := stateFactory.NewState(ctx, st.(types.State), logger)
 
 		if err != nil {
-			err = fmt.Errorf("error creating new aws vpcpeering state %w", err)
+			err = fmt.Errorf("error creating new azure vpcpeering state %w", err)
 			logger.Error(err, "Error")
 			return composed.StopAndForget, nil
 		}
@@ -26,6 +26,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions("azureVpcPeering-non-delete",
 					addFinalizer,
 					createVpcPeeringConnection,
+					createVpcPeeringRemote,
 					updateSuccessStatus,
 					composed.StopAndForgetAction),
 			), // switch

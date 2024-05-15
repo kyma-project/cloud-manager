@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/elliotchance/pie/v2"
 	"k8s.io/utils/pointer"
 	"sync"
 )
@@ -63,4 +64,10 @@ func (s *vpcPeeringStore) BeginCreateOrUpdate(
 	s.items = append(s.items, item)
 
 	return &item.peering, nil
+}
+
+func (s *vpcPeeringStore) List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
+	return pie.Map(s.items, func(e *vpcPeeringEntry) *armnetwork.VirtualNetworkPeering {
+		return &e.peering
+	}), nil
 }

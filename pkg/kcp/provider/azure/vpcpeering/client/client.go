@@ -15,6 +15,8 @@ type Client interface {
 		virtualNetworkPeeringName,
 		remoteVnetId string,
 		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error)
+
+	List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
 }
 
 func NewClientProvider() azureclient.SkrClientProvider[Client] {
@@ -81,4 +83,26 @@ func (c *client) BeginCreateOrUpdate(
 	}
 
 	return &res.VirtualNetworkPeering, nil
+}
+
+func (c *client) List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
+
+	pager := c.svc.NewListPager(resourceGroupName, virtualNetworkName, nil)
+
+	var items []*armnetwork.VirtualNetworkPeering
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+
+		// there are more pages but getting next page failed
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Value {
+			items = append(items, v)
+		}
+	}
+
+	return items, nil
 }

@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,8 +16,12 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
+	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
+		return nil, nil
+	}
+
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
-	virtualNetworkPeeringName := fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name)
+	virtualNetworkPeeringName := uuid.NewString()
 
 	peering, err := state.client.BeginCreateOrUpdate(ctx,
 		resourceGroupName,
@@ -42,14 +47,13 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	// TODO should we have different logger values for different providers like connectionId and ID
-	logger = logger.WithValues("connectionId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("id", pointer.StringDeref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("Azure VPC Peering created")
 
-	state.ObjAsVpcPeering().Status.ConnectionId = pointer.StringDeref(peering.ID, "")
+	obj.Status.Id = pointer.StringDeref(peering.ID, "")
 
 	err = state.UpdateObjStatus(ctx)
 

@@ -2,11 +2,14 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/pointer"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -15,11 +18,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		const (
 			kymaName            = "6a62936d-aa6e-4d5b-aaaa-5eae646d1bd5"
 			vpcpeeringName      = "281bc581-8635-4d56-ba52-fa48ec6f7c69"
-			remoteVnet          = "/subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
-			remoteResourceGroup = "MyResourceGroup"
 			subscriptionId      = "3f1d2fbd-117a-4742-8bde-6edbcdee6a04"
+			remoteSubscription  = "9c05f3c1-314b-4c4b-bfff-b5a0650177cb"
+			remoteResourceGroup = "MyResourceGroup"
+			remoteVnetName      = "MyVnet"
 			remoteRefNamespace  = "skr-namespace"
 			remoteRefName       = "skr-azure-vpcpeering"
+			remoteVnet          = "/subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
 		)
 
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -35,15 +40,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		virtualNetworkName := scope.Spec.Scope.Azure.VpcNetwork
 		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
-		virtualNetworkPeeringName := fmt.Sprintf("%s-%s",
-			remoteRefNamespace,
-			remoteRefName)
-
-		connectionId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/virtualNetworkPeerings/%s",
-			subscriptionId,
-			resourceGroupName,
-			virtualNetworkName,
-			virtualNetworkPeeringName)
 
 		vpcpeering := &cloudcontrolv1beta1.VpcPeering{}
 
@@ -70,9 +66,25 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("And Then KCP VpcPeering has status.ConnectionId equal to existing AWS Connection id", func() {
-			Expect(vpcpeering.Status.ConnectionId).To(Equal(connectionId))
+		list, _ := infra.AzureMock().List(infra.Ctx(), resourceGroupName, virtualNetworkName)
+
+		var peering *armnetwork.VirtualNetworkPeering
+
+		for _, p := range list {
+			if vpcpeering.Status.Id == pointer.StringDeref(p.ID, "xxx") {
+				peering = p
+			}
+		}
+
+		virtualNetworkPeeringName := fmt.Sprintf("%s-%s",
+			remoteRefNamespace,
+			remoteRefName)
+
+		remoteConnectionId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+		By("And Then found VirtualNetworkPeering has RemoteVirtualNetwork.ID equal remote vpc id", func() {
+			Expect(peering.Properties.RemoteVirtualNetwork.ID, remoteConnectionId)
 		})
+
 	})
 
 })

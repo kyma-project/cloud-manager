@@ -9,4 +9,13 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: vpcpeering-sample
 spec:
-  # TODO(user): Add fields here
+  scopeRef:
+    name: phx-azr-02
+  remoteRef:
+    namespace: skr-namespace
+    name: skr-vpcpeering-sample
+  vpcPeering:
+    azure:
+      allowVnetAccess: True
+      remoteResourceGroup: MyResourceGroup
+      remoteVnet: /subscriptions/e492e533-1d28-4dde-85f7-0399ec55565f/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet
