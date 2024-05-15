@@ -115,7 +115,7 @@ This section presents a draft list of quality evidence artifacts that can be cre
 | Performance                  | ● Module expected Service Level Agreements (SLAs) <br />● Performance testing strategy and approach<br />● Performance testing report which includes time behaviour and resource utilization |
 | Maintainability & Modularity | ● Code review code of conduct <br />● Code-style agreement<br />● Project structure description<br />● Modular metrics and expectations |
 | Reusability                  | ● TBD. How reusable is the codebase?                         |
-| Testability                  | ● TBD. How Testable os the codebase?                         |
+| Testability                  | ● TBD. How testable is the codebase?                         |
 | Interoperability             | ● Supported cloud providers list<br />                       |
 | Faultlessness                | ● The report with the trend of the Mean Time Between Failures (MTBF) <br /> |
 | TBD...                       |                                                              |
