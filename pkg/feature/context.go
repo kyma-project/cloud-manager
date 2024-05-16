@@ -40,6 +40,7 @@ type ContextBuilder interface {
 	LoadFromMap(m map[string]interface{}) ContextBuilder
 	Landscape(v string) ContextBuilder
 	Feature(v string) ContextBuilder
+	FeatureFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder
 	Plane(v string) ContextBuilder
 	Provider(v string) ContextBuilder
 	BrokerPlan(v string) ContextBuilder
@@ -52,10 +53,12 @@ type ContextBuilder interface {
 	KindGroup(v string) ContextBuilder
 	CrdKindGroup(v string) ContextBuilder
 	BusolaKindGroup(v string) ContextBuilder
-	// Object finds the obj in the scheme and sets KindGroup key to lower(kind).lower(group) of the obj's GVK
+
+	// KindsFromObject finds the obj's GVK and sets kindGroup, crdKindGroup, and busolaKindGroup keys
+	// to lower(kind).lower(group) of the GVK.
 	// If the obj is CustomResourceDefinition, it will set KindGroup to the CRD defining values
-	// lower(spec.names.kind).lower(spec.group)
-	Object(obj client.Object, scheme *runtime.Scheme) ContextBuilder
+	// lower(spec.names.kind).lower(spec.group).
+	KindsFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder
 
 	Custom(key string, value interface{}) ContextBuilder
 	Std(key Key, value string) ContextBuilder
@@ -137,6 +140,10 @@ func (b *contextBuilderImpl) Feature(v string) ContextBuilder {
 	return b
 }
 
+func (b *contextBuilderImpl) FeatureFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder {
+	return b.Feature(ObjectToFeature(obj, scheme))
+}
+
 func (b *contextBuilderImpl) Plane(v string) ContextBuilder {
 	b.builder = b.builder.AddCustom(KeyPlane, v)
 	return b
@@ -192,7 +199,7 @@ func (b *contextBuilderImpl) BusolaKindGroup(v string) ContextBuilder {
 	return b
 }
 
-func (b *contextBuilderImpl) Object(obj client.Object, scheme *runtime.Scheme) ContextBuilder {
+func (b *contextBuilderImpl) KindsFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder {
 	b.KindGroup("")
 	b.CrdKindGroup("")
 	b.BusolaKindGroup("")

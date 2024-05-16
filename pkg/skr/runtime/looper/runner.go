@@ -6,10 +6,12 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
@@ -127,7 +129,14 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 
 		for _, indexer := range r.registry.Indexers() {
-			if r.isObjectActive(options.provider, indexer.Obj()) {
+			ctx := feature.ContextBuilderFromCtx(ctx).
+				Provider(util.CaseInterfaceToString(options.provider)).
+				KindsFromObject(indexer.Obj(), skrManager.GetScheme()).
+				FeatureFromObject(indexer.Obj(), skrManager.GetScheme()).
+				Build(ctx)
+			logger := feature.DecorateLogger(ctx, logger)
+
+			if !feature.ApiDisabled.Value(ctx) {
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
 					return
@@ -139,16 +148,30 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 						"field", indexer.Field(),
 						"provider", string(*options.provider),
 					).
-					Info("Not creating indexer of object due to non matching provider")
+					Info("Not creating indexer due to disabled API")
 			}
 		}
 
 		for _, b := range r.registry.Builders() {
-			if r.isObjectActive(options.provider, b.GetForObj()) {
+			ctx := feature.ContextBuilderFromCtx(ctx).
+				Provider(util.CaseInterfaceToString(options.provider)).
+				KindsFromObject(b.GetForObj(), skrManager.GetScheme()).
+				FeatureFromObject(b.GetForObj(), skrManager.GetScheme()).
+				Build(ctx)
+			logger := feature.DecorateLogger(ctx, logger)
+
+			if !feature.ApiDisabled.Value(ctx) {
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
 					return
 				}
+			} else {
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", b.GetForObj()),
+						"provider", string(*options.provider),
+					).
+					Info("Not starting controller due to disabled API")
 			}
 		}
 

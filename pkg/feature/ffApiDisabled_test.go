@@ -2,7 +2,12 @@ package feature
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"testing"
 )
 
@@ -13,11 +18,21 @@ func TestApiDisabled(t *testing.T) {
 	err := Initialize(ctx, WithFile("testdata/apiDisabled.yaml"), WithEvaluateAllFlagsState())
 	assert.NoError(t, err)
 
+	sch := runtime.NewScheme()
+	utilruntime.Must(scheme.AddToScheme(sch))
+	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(sch))
+	utilruntime.Must(apiextensions.AddToScheme(sch))
+
 	cases := []struct {
 		t string
 		c context.Context
 		v bool
 	}{
+		{
+			t: "cloudresources is enabled regardless of landscape and feature",
+			c: ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
 		// NFS ====================================================
 		{
 			t: "nfs feature is enabled on dev",

@@ -64,9 +64,9 @@ func featureDeterminatorByBusolaKindGroup(mi *manifestInfo) (bool, FeatureName) 
 	return ok, f
 }
 
-func ManifestResourceToFeature(obj client.Object, scheme *runtime.Scheme) FeatureName {
+func ObjectToFeature(obj client.Object, scheme *runtime.Scheme) FeatureName {
 	ffCtx := ContextBuilderFromCtx(context.Background()).
-		Object(obj, scheme).
+		KindsFromObject(obj, scheme).
 		FFCtx()
 
 	intfToString := func(x interface{}) string {
@@ -96,82 +96,3 @@ func ManifestResourceToFeature(obj client.Object, scheme *runtime.Scheme) Featur
 
 	return ""
 }
-
-//func ManifestResourceToFeature_OLD(obj client.Object, scheme *runtime.Scheme) FeatureName {
-//	var err error
-//	gvk := obj.GetObjectKind().GroupVersionKind()
-//	if gvk.Kind == "" {
-//		gvk, err = apiutil.GVKForObject(obj, scheme)
-//		if err != nil {
-//			return ""
-//		}
-//	}
-//
-//	mi := &manifestInfo{
-//		obj:         obj,
-//		name:        obj.GetName(),
-//		namespace:   obj.GetNamespace(),
-//		group:       gvk.Group,
-//		kind:        strings.ToLower(gvk.Kind),
-//		labels:      obj.GetLabels(),
-//		annotations: obj.GetAnnotations(),
-//		crdGroup:    "",
-//		crdKind:     "",
-//	}
-//
-//	if mi.group == "apiextensions.k8s.io" && mi.kind == "customresourcedefinition" {
-//		if u, ok := obj.(*unstructured.Unstructured); ok {
-//			crdGroup, groupFound, groupErr := unstructured.NestedString(u.Object, "spec", "group")
-//			crdKind, kindFound, kindErr := unstructured.NestedString(u.Object, "spec", "names", "kind")
-//			if groupFound && kindFound && groupErr == nil && kindErr == nil {
-//				mi.crdGroup = crdGroup
-//				mi.crdKind = strings.ToLower(crdKind)
-//			}
-//		}
-//		if crd, ok := obj.(*apiextensions.CustomResourceDefinition); ok {
-//			crdGroup := crd.Spec.Group
-//			crdKind := crd.Spec.Names.Kind
-//			mi.crdGroup = crdGroup
-//			mi.crdKind = strings.ToLower(crdKind)
-//		}
-//	}
-//
-//	if mi.group == "" && mi.kind == "configmap" &&
-//		obj.GetLabels() != nil && obj.GetLabels()["busola.io/extension"] != "" {
-//
-//		var general string
-//		if cm, ok := obj.(*unstructured.Unstructured); ok {
-//			gen, found, err := unstructured.NestedString(cm.Object, "data", "general")
-//			if found && err == nil {
-//				general = gen
-//			}
-//		}
-//		if cm, ok := obj.(*corev1.ConfigMap); ok {
-//			gen, found := cm.Data["general"]
-//			if found {
-//				general = gen
-//			}
-//		}
-//
-//		if len(general) > 0 {
-//			obj := map[string]interface{}{}
-//			if err := yaml.Unmarshal([]byte(general), &obj); err == nil {
-//				cmGroup, groupFound, groupErr := unstructured.NestedString(obj, "resource", "group")
-//				cmKind, kindFound, kindErr := unstructured.NestedString(obj, "resource", "kind")
-//				if groupFound && kindFound && groupErr == nil && kindErr == nil {
-//					mi.busolaGroup = cmGroup
-//					mi.busolaKind = strings.ToLower(cmKind)
-//				}
-//			}
-//		}
-//	}
-//
-//	for _, det := range featureDeterminators {
-//		ok, f := det(mi)
-//		if ok {
-//			return f
-//		}
-//	}
-//
-//	return ""
-//}

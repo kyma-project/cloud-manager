@@ -10,7 +10,7 @@ import (
 
 func AddFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 
-	//Object is being deleted, don't add finalizer
+	//KindsFromObject is being deleted, don't add finalizer
 	if composed.MarkedForDeletionPredicate(ctx, state) {
 		return nil, nil
 	}

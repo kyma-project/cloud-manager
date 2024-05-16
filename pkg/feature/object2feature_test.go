@@ -62,7 +62,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ManifestResourceToFeature(info.obj, info.scheme)
+				actual := ObjectToFeature(info.obj, info.scheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}
@@ -107,90 +107,41 @@ func TestManifestResourceToFeature(t *testing.T) {
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ManifestResourceToFeature(info.obj, info.scheme)
+				actual := ObjectToFeature(info.obj, info.scheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}
 	})
 
 	t.Run("Busola UI", func(t *testing.T) {
-		uiCmTypedKindGroup := func(t *testing.T, k string) *corev1.ConfigMap {
-			data := map[string]interface{}{}
-			err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
-			assert.NoError(t, err)
-			err = unstructured.SetNestedField(data, k, "resource", "kind")
-			assert.NoError(t, err)
-
-			b, err := yaml.Marshal(data)
-			assert.NoError(t, err)
-
-			return &corev1.ConfigMap{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "ConfigMap",
-					APIVersion: "v1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"busola.io/extension": "resource",
-					},
-				},
-				Data: map[string]string{
-					"general": string(b),
-				},
-			}
-		}
-
-		uiCmUnsstructuredKindGroup := func(t *testing.T, k string) *unstructured.Unstructured {
-			data := map[string]interface{}{}
-			err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
-			assert.NoError(t, err)
-			err = unstructured.SetNestedField(data, k, "resource", "kind")
-			assert.NoError(t, err)
-
-			b, err := yaml.Marshal(data)
-			assert.NoError(t, err)
-
-			u := &unstructured.Unstructured{Object: map[string]interface{}{}}
-			u.SetAPIVersion("v1")
-			u.SetKind("ConfigMap")
-			u.SetLabels(map[string]string{
-				"busola.io/extension": "resource",
-			})
-			err = unstructured.SetNestedMap(u.Object, map[string]interface{}{
-				"general": string(b),
-			}, "data")
-			assert.NoError(t, err)
-
-			return u
-		}
 
 		objList := []struct {
 			title    string
 			obj      client.Object
 			expected FeatureName
 		}{
-			{"Busola Typed AwsNfsVolumeBackup", uiCmTypedKindGroup(t, "AwsNfsVolumeBackup"), FeatureNfsBackup},
-			{"Busola Typed AwsNfsVolume", uiCmTypedKindGroup(t, "AwsNfsVolume"), FeatureNfs},
-			{"Busola Typed CloudResources", uiCmTypedKindGroup(t, "CloudResources"), ""},
-			{"Busola Typed GcpNfsVolumeBackup", uiCmTypedKindGroup(t, "GcpNfsVolumeBackup"), FeatureNfsBackup},
-			{"Busola Typed GcpNfsVolumeRestore", uiCmTypedKindGroup(t, "GcpNfsVolumeRestore"), FeatureNfsBackup},
-			{"Busola Typed GcpNfsVolume", uiCmTypedKindGroup(t, "GcpNfsVolume"), FeatureNfs},
-			{"Busola Typed IpRange", uiCmTypedKindGroup(t, "IpRange"), ""},
+			{"Busola Typed AwsNfsVolumeBackup", busolaCmTypedKindGroup(t, "AwsNfsVolumeBackup"), FeatureNfsBackup},
+			{"Busola Typed AwsNfsVolume", busolaCmTypedKindGroup(t, "AwsNfsVolume"), FeatureNfs},
+			{"Busola Typed CloudResources", busolaCmTypedKindGroup(t, "CloudResources"), ""},
+			{"Busola Typed GcpNfsVolumeBackup", busolaCmTypedKindGroup(t, "GcpNfsVolumeBackup"), FeatureNfsBackup},
+			{"Busola Typed GcpNfsVolumeRestore", busolaCmTypedKindGroup(t, "GcpNfsVolumeRestore"), FeatureNfsBackup},
+			{"Busola Typed GcpNfsVolume", busolaCmTypedKindGroup(t, "GcpNfsVolume"), FeatureNfs},
+			{"Busola Typed IpRange", busolaCmTypedKindGroup(t, "IpRange"), ""},
 
-			{"Busola Unstructured AwsNfsVolumeBackup", uiCmUnsstructuredKindGroup(t, "AwsNfsVolumeBackup"), FeatureNfsBackup},
-			{"Busola Unstructured AwsNfsVolume", uiCmUnsstructuredKindGroup(t, "AwsNfsVolume"), FeatureNfs},
-			{"Busola Unstructured CloudResources", uiCmUnsstructuredKindGroup(t, "CloudResources"), ""},
-			{"Busola Unstructured GcpNfsVolumeBackup", uiCmUnsstructuredKindGroup(t, "GcpNfsVolumeBackup"), FeatureNfsBackup},
-			{"Busola Unstructured GcpNfsVolumeRestore", uiCmUnsstructuredKindGroup(t, "GcpNfsVolumeRestore"), FeatureNfsBackup},
-			{"Busola Unstructured GcpNfsVolume", uiCmUnsstructuredKindGroup(t, "GcpNfsVolume"), FeatureNfs},
-			{"Busola Unstructured IpRange", uiCmUnsstructuredKindGroup(t, "IpRange"), ""},
+			{"Busola Unstructured AwsNfsVolumeBackup", busolaCmUnstructuredKindGroup(t, "AwsNfsVolumeBackup"), FeatureNfsBackup},
+			{"Busola Unstructured AwsNfsVolume", busolaCmUnstructuredKindGroup(t, "AwsNfsVolume"), FeatureNfs},
+			{"Busola Unstructured CloudResources", busolaCmUnstructuredKindGroup(t, "CloudResources"), ""},
+			{"Busola Unstructured GcpNfsVolumeBackup", busolaCmUnstructuredKindGroup(t, "GcpNfsVolumeBackup"), FeatureNfsBackup},
+			{"Busola Unstructured GcpNfsVolumeRestore", busolaCmUnstructuredKindGroup(t, "GcpNfsVolumeRestore"), FeatureNfsBackup},
+			{"Busola Unstructured GcpNfsVolume", busolaCmUnstructuredKindGroup(t, "GcpNfsVolume"), FeatureNfs},
+			{"Busola Unstructured IpRange", busolaCmUnstructuredKindGroup(t, "IpRange"), ""},
 		}
 
 		emptyScheme := runtime.NewScheme()
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ManifestResourceToFeature(info.obj, emptyScheme)
+				actual := ObjectToFeature(info.obj, emptyScheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}
@@ -211,4 +162,54 @@ func crdTypedWithKindGroup(t *testing.T, baseCrd *apiextensions.CustomResourceDe
 	crd.Spec.Names.Kind = k
 	crd.Spec.Group = g
 	return crd
+}
+
+func busolaCmTypedKindGroup(t *testing.T, k string) *corev1.ConfigMap {
+	data := map[string]interface{}{}
+	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
+	assert.NoError(t, err)
+	err = unstructured.SetNestedField(data, k, "resource", "kind")
+	assert.NoError(t, err)
+
+	b, err := yaml.Marshal(data)
+	assert.NoError(t, err)
+
+	return &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: map[string]string{
+				"busola.io/extension": "resource",
+			},
+		},
+		Data: map[string]string{
+			"general": string(b),
+		},
+	}
+}
+
+func busolaCmUnstructuredKindGroup(t *testing.T, k string) *unstructured.Unstructured {
+	data := map[string]interface{}{}
+	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
+	assert.NoError(t, err)
+	err = unstructured.SetNestedField(data, k, "resource", "kind")
+	assert.NoError(t, err)
+
+	b, err := yaml.Marshal(data)
+	assert.NoError(t, err)
+
+	u := &unstructured.Unstructured{Object: map[string]interface{}{}}
+	u.SetAPIVersion("v1")
+	u.SetKind("ConfigMap")
+	u.SetLabels(map[string]string{
+		"busola.io/extension": "resource",
+	})
+	err = unstructured.SetNestedMap(u.Object, map[string]interface{}{
+		"general": string(b),
+	}, "data")
+	assert.NoError(t, err)
+
+	return u
 }

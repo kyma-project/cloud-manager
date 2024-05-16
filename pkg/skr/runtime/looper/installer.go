@@ -33,6 +33,9 @@ type installer struct {
 }
 
 func (i *installer) Handle(ctx context.Context, provider string, skrCluster cluster.Cluster) error {
+	ctx = feature.ContextBuilderFromCtx(ctx).
+		Provider(provider).
+		Build(ctx)
 	dir := path.Join(i.skrProvidersPath, provider)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -118,7 +121,8 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 		}
 
 		objCtx := feature.ContextBuilderFromCtx(ctx).
-			Object(desired, skrCluster.GetScheme()).
+			KindsFromObject(desired, skrCluster.GetScheme()).
+			FeatureFromObject(desired, skrCluster.GetScheme()).
 			Build(ctx)
 
 		logger := feature.DecorateLogger(objCtx, i.logger).
@@ -137,6 +141,8 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 		if err == nil {
 			// It already exists
 			// Even if desired belongs to disabled API, since it's already applied we must update it
+			// so feature flag will be checked in create branch only
+
 			desiredVersion := i.getVersion(desired)
 			existingVersion := i.getVersion(existing)
 			if desiredVersion == existingVersion {
@@ -152,7 +158,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
 			if feature.ApiDisabled.Value(objCtx) {
-				logger.Info("")
+				logger.Info(fmt.Sprintf("Skipping installation of disabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 			} else {
 				logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 				err = skrCluster.GetClient().Create(ctx, desired)
