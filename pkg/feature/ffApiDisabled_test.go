@@ -28,9 +28,35 @@ func TestApiDisabled(t *testing.T) {
 		c context.Context
 		v bool
 	}{
+		// CloudResources
 		{
 			t: "cloudresources is enabled regardless of landscape and feature",
 			c: ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
+		{
+			t: "cloudresources is enabled on dev",
+			c: ContextBuilderFromCtx(ctx).Landscape("dev").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
+		{
+			t: "cloudresources is enabled on stage",
+			c: ContextBuilderFromCtx(ctx).Landscape("stage").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
+		{
+			t: "cloudresources is enabled on prod",
+			c: ContextBuilderFromCtx(ctx).Landscape("prod").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
+		{
+			t: "cloudresources is enabled on prod even for disabled feature",
+			c: ContextBuilderFromCtx(ctx).Landscape("prod").Feature(FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			v: false,
+		},
+		{
+			t: "cloudresources is enabled on trial",
+			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("prod").Feature(FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
 			v: false,
 		},
 		// NFS ====================================================
