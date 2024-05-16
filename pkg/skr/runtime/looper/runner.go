@@ -114,6 +114,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			}
 			err = instlr.Handle(ctx, string(*options.provider), skrManager)
 			if err != nil {
+				err = fmt.Errorf("installer error: %w", err)
 				logger.
 					WithValues("provider", options.provider).
 					Error(err, "Error installing dependencies")
@@ -139,6 +140,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			if !feature.ApiDisabled.Value(ctx) {
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
+					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
 					return
 				}
 			} else {
@@ -163,6 +165,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			if !feature.ApiDisabled.Value(ctx) {
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
+					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
 					return
 				}
 			} else {
