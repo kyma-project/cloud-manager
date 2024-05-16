@@ -24,7 +24,9 @@ var (
 		fmt.Sprintf("%T", &cloudresourcesv1beta1.AwsNfsVolume{}): cloudcontrolv1beta1.ProviderAws,
 
 		// GCP
-		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolume{}): cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolume{}):        cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolumeBackup{}):  cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolumeRestore{}): cloudcontrolv1beta1.ProviderGCP,
 	}
 )
 
@@ -68,7 +70,7 @@ type skrRunner struct {
 	stopped    bool
 }
 
-func (r *skrRunner) isObjectActive(provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
+func (r *skrRunner) isObjectActiveForProvider(provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
 	if provider == nil {
 		return true
 	}
@@ -137,7 +139,8 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				Build(ctx)
 			logger := feature.DecorateLogger(ctx, logger)
 
-			if !feature.ApiDisabled.Value(ctx) {
+			if r.isObjectActiveForProvider(options.provider, indexer.Obj()) &&
+				!feature.ApiDisabled.Value(ctx) {
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
 					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
@@ -162,7 +165,8 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				Build(ctx)
 			logger := feature.DecorateLogger(ctx, logger)
 
-			if !feature.ApiDisabled.Value(ctx) {
+			if r.isObjectActiveForProvider(options.provider, b.GetForObj()) &&
+				!feature.ApiDisabled.Value(ctx) {
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
 					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
