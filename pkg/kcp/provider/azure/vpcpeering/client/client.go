@@ -17,6 +17,7 @@ type Client interface {
 		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error)
 
 	List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
+	Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
 }
 
 func NewClientProvider() azureclient.SkrClientProvider[Client] {
@@ -105,4 +106,15 @@ func (c *client) List(ctx context.Context, resourceGroupName string, virtualNetw
 	}
 
 	return items, nil
+}
+
+func (c *client) Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
+
+	response, err := c.svc.Get(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.VirtualNetworkPeering, nil
 }

@@ -18,13 +18,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		const (
 			kymaName            = "6a62936d-aa6e-4d5b-aaaa-5eae646d1bd5"
 			vpcpeeringName      = "281bc581-8635-4d56-ba52-fa48ec6f7c69"
-			subscriptionId      = "3f1d2fbd-117a-4742-8bde-6edbcdee6a04"
-			remoteSubscription  = "9c05f3c1-314b-4c4b-bfff-b5a0650177cb"
+			subscriptionId      = "2bfba5a4-c5d1-4b03-a7db-4ead64232fd6"
+			remoteSubscription  = "afdbc79f-de19-4df4-94cd-6be2739dc0e0"
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
 			remoteRefNamespace  = "skr-namespace"
 			remoteRefName       = "skr-azure-vpcpeering"
-			remoteVnet          = "/subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
+			remoteVnet          = "/subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
 		)
 
 		scope := &cloudcontrolv1beta1.Scope{}

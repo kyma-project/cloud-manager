@@ -3,7 +3,6 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +20,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	}
 
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
-	virtualNetworkPeeringName := uuid.NewString()
+	virtualNetworkPeeringName := obj.Name
 
 	peering, err := state.client.BeginCreateOrUpdate(ctx,
 		resourceGroupName,
