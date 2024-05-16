@@ -27,9 +27,9 @@ data:
         version: v1beta1
     urlPath: ipranges
     name: Ip Ranges
-    scope: namespace
-    category: Cloud Manager
-    icon: cloud
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
     description: >-
         IpRange description here
   list: |-

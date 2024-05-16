@@ -41,10 +41,10 @@ data:
         group: cloud-resources.kyma-project.io
         version: v1beta1
     urlPath: gcpnfsvolumes
-    name: GCP Nfs Volume
+    name: GCP NFS Volumes
     scope: namespace
-    category: Cloud Manager
-    icon: cloud
+    category: Storage
+    icon: shelf
     description: >-
         GcpNfsVolume description here
 
