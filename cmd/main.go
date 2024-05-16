@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -109,6 +110,24 @@ func main() {
 
 	rootLogger := zap.New(zap.UseFlagOptions(&opts))
 	ctrl.SetLogger(rootLogger)
+
+	func() {
+		env := abstractions.NewOSEnvironment()
+		configDir := env.Get("CONFIG_DIR")
+		rootLogger.Info("ConfigDir: " + configDir)
+		list, err := os.ReadDir(configDir)
+		if err != nil {
+			rootLogger.Error(err, "Error listing config dir")
+			return
+		}
+		var files []string
+		for _, item := range list {
+			files = append(files, fmt.Sprintf("%s/%s", item.Name(), item.IsDir()))
+		}
+		rootLogger.
+			WithValues("files", fmt.Sprintf("%v", files)).
+			Info("Config files")
+	}()
 
 	setupLog.WithValues(
 		"scheme", "KCP",
