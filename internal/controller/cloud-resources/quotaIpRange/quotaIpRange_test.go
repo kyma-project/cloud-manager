@@ -42,12 +42,14 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 						return fmt.Errorf("error getting KCP IpRange for %s: %w", name, err)
 					}
 					if kcpIpRange.Name == skrIpRange.Status.Id {
+						By(fmt.Sprintf("// cleanup: KCP IpRange deleting %s because of %s", kcpIpRange.Name, skrIpRange.Name), func() {})
 						if err := infra.KCP().Client().Delete(infra.Ctx(), kcpIpRange); client.IgnoreNotFound(err) != nil {
 							return fmt.Errorf("error deleting KCP IpRange for %s: %w", name, err)
 						}
 					}
 				}
 				if len(skrIpRange.Finalizers) > 0 {
+					By(fmt.Sprintf("// cleanup: SKR IpRange removing finalizers %s", skrIpRange.Name), func() {})
 					skrIpRange.Finalizers = nil
 					if err := infra.SKR().Client().Update(infra.Ctx(), skrIpRange); client.IgnoreNotFound(err) != nil {
 						return fmt.Errorf("error updating SKR IpRange %s: %w", name, err)
@@ -56,6 +58,7 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 						return fmt.Errorf("error getting SKR IpRange %s: %w", name, err)
 					}
 				}
+				By(fmt.Sprintf("// cleanup: SKR IpRange deleting %s", skrIpRange.Name), func() {})
 				if err := infra.SKR().Client().Delete(infra.Ctx(), skrIpRange); client.IgnoreNotFound(err) != nil {
 					return fmt.Errorf("error deleting SKR IpRange %s: %w", name, err)
 				}
@@ -144,6 +147,7 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 
 		By("Given first SKR IpRange is created and has Ready condition", func() {
 			createSkrIpRangeWithReadyStatus(firstSkrIpRangeName, cidr, firstSkrIpRange)
+			time.Sleep(time.Second) // one second mast pass since obj.metadata.creationTimestamp has no nano part
 		})
 
 		By("When second SKR IpRange is created with same CIDR", func() {
@@ -204,6 +208,7 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 
 		By("Given first SKR IpRange is created and has Ready condition", func() {
 			createSkrIpRangeWithReadyStatus(firstSkrIpRangeName, firstCidr, firstSkrIpRange)
+			time.Sleep(time.Second)
 		})
 
 		By("When second SKR IpRange is created", func() {
@@ -215,6 +220,7 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 					WithSkrIpRangeSpecCidr(secondCidr),
 				).
 				Should(Succeed(), "failed creating second SKR IpRange")
+			time.Sleep(time.Second)
 		})
 
 		By("Then second SKR IpRange has QuotaExceed condition", func() {
@@ -227,6 +233,7 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeQuotaExceeded),
 				).
 				Should(Succeed(), "expected second SKR IpRange to have QuotaExceeded condition, but it does not")
+			time.Sleep(time.Second)
 		})
 
 		By("When third SKR IpRange is created", func() {

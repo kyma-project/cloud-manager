@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
@@ -237,12 +238,19 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 		metrics.SkrRuntimeReconcileTotal.WithLabelValues(kymaName).Inc()
 	}()
 	logger := l.logger.WithValues("skrKymaName", kymaName)
-	skrManager, scope, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
+	skrManager, scope, kyma, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
 	if err != nil {
 		logger.Error(err, "error creating Manager")
 		time.Sleep(5 * time.Second)
 		return
 	}
+	skrManager.GetScheme()
+
+	ctx := feature.ContextBuilderFromCtx(l.ctx).
+		LoadFromScope(scope).
+		LoadFromKyma(kyma).
+		Plane(feature.PlaneSkr).
+		Build(l.ctx)
 
 	logger.Info("Starting SKR Runner")
 	runner := NewSkrRunner(l.registry, l.kcpCluster)
@@ -251,7 +259,7 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 		to = 15 * time.Minute
 	}
 
-	err = runner.Run(l.ctx, skrManager, WithTimeout(to), WithProvider(scope.Spec.Provider))
+	err = runner.Run(ctx, skrManager, WithTimeout(to), WithProvider(scope.Spec.Provider))
 	if err != nil {
 		logger.Error(err, "Error running SKR Runner")
 	}

@@ -68,6 +68,9 @@ func (n *node) maxNameLen() int {
 
 func (n *node) coloredName() string {
 	txt := n.name
+	if strings.HasPrefix(txt, "//") || strings.HasPrefix(txt, "--") || strings.HasPrefix(txt, "#") {
+		return color.HiBlackString(txt)
+	}
 	txt = strings.ReplaceAll(txt, "SKIPPED:", color.RedString("SKIPPED:"))
 	txt = strings.ReplaceAll(txt, "Feature:", color.MagentaString("Feature:"))
 	txt = strings.ReplaceAll(txt, "Scenario:", color.YellowString("Scenario:"))

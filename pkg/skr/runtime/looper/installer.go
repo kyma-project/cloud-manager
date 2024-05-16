@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"io"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -13,6 +14,7 @@ import (
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -115,6 +117,17 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			desired = &unstructured.Unstructured{Object: unstructuredData}
 		}
 
+		objCtx := feature.ContextBuilderFromCtx(ctx).
+			Object(desired, skrCluster.GetScheme()).
+			Build(ctx)
+
+		logger := feature.DecorateLogger(objCtx, i.logger).
+			WithValues(
+				"manifestName", desired.GetName(),
+				"manifestNamespace", desired.GetNamespace(),
+				"manifestFile", filepath.Base(fn),
+			)
+
 		existing := desired.DeepCopy()
 		err = skrCluster.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(existing), existing)
 		if client.IgnoreNotFound(err) != nil {
@@ -122,7 +135,8 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 		}
 
 		if err == nil {
-			// it already exists
+			// It already exists
+			// Even if desired belongs to disabled API, since it's already applied we must update it
 			desiredVersion := i.getVersion(desired)
 			existingVersion := i.getVersion(existing)
 			if desiredVersion == existingVersion {
@@ -131,14 +145,18 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 
 			err = i.copyForUpdate(desired, existing)
 			if err != nil {
-				i.logger.Error(err, fmt.Sprintf("Error copying spec for %s/%s/%s before update", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+				logger.Error(err, fmt.Sprintf("Error copying spec for %s/%s/%s before update", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 				continue
 			}
-			i.logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
+			logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
 			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
-			i.logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
-			err = skrCluster.GetClient().Create(ctx, desired)
+			if feature.ApiDisabled.Value(objCtx) {
+				logger.Info("")
+			} else {
+				logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+				err = skrCluster.GetClient().Create(ctx, desired)
+			}
 		}
 
 		if err != nil {

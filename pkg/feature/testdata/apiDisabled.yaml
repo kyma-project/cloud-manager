@@ -1,0 +1,14 @@
+
+apiDisabled:
+  variations:
+    enabled: false
+    disabled: true
+  targeting:
+    - name: All APIs are disabled for trial SKR
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Disabled APIs on stage and prod
+      query: feature in ["nfsBackup", "peering"] and landscape != "dev"
+      variation: disabled
+  defaultRule:
+    variation: enabled

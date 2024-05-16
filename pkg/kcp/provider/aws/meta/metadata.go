@@ -12,10 +12,12 @@ import (
 	"net/http"
 )
 
-type awsAccountKey struct{}
+type awsAccountKeyType struct{}
+
+var awsAccountKey = awsAccountKeyType{}
 
 func GetAwsAccountId(ctx context.Context) string {
-	x := ctx.Value(awsAccountKey{})
+	x := ctx.Value(awsAccountKey)
 	s, ok := x.(string)
 	if ok {
 		return s
@@ -24,7 +26,7 @@ func GetAwsAccountId(ctx context.Context) string {
 }
 
 func SetAwsAccountId(ctx context.Context, val string) context.Context {
-	return context.WithValue(ctx, awsAccountKey{}, val)
+	return context.WithValue(ctx, awsAccountKey, val)
 }
 
 var retryStandard = retry.NewStandard()
