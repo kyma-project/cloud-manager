@@ -2,14 +2,12 @@ package cloudcontrol
 
 import (
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -41,13 +39,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		virtualNetworkName := scope.Spec.Scope.Azure.VpcNetwork
 		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
 
-		vpcpeering := &cloudcontrolv1beta1.VpcPeering{}
+		obj := &cloudcontrolv1beta1.VpcPeering{}
 
 		infra.AzureMock().SetSubscription(subscriptionId)
 
 		By("When KCP VpcPeering is created", func() {
 			Eventually(CreateKcpVpcPeering).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					WithName(vpcpeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
 					WithKcpVpcPeeringSpecScope(kymaName),
@@ -58,7 +56,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					NewObjActions(),
 					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
@@ -66,15 +64,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		list, _ := infra.AzureMock().List(infra.Ctx(), resourceGroupName, virtualNetworkName)
+		peering, _ := infra.AzureMock().Get(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
 
-		var peering *armnetwork.VirtualNetworkPeering
-
-		for _, p := range list {
-			if vpcpeering.Status.Id == pointer.StringDeref(p.ID, "xxx") {
-				peering = p
-			}
-		}
+		By("And Then found VirtualNetworkPeering has ID equal to Status.Id", func() {
+			Expect(peering.ID, obj.Status.Id)
+		})
 
 		virtualNetworkPeeringName := fmt.Sprintf("%s-%s",
 			remoteRefNamespace,
