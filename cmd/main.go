@@ -122,7 +122,7 @@ func main() {
 		}
 		var files []string
 		for _, item := range list {
-			files = append(files, fmt.Sprintf("%s/%s", item.Name(), item.IsDir()))
+			files = append(files, fmt.Sprintf("%s/%v", item.Name(), item.IsDir()))
 		}
 		rootLogger.
 			WithValues("files", fmt.Sprintf("%v", files)).
