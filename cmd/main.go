@@ -236,13 +236,13 @@ func main() {
 	setupLog.Info("starting manager")
 	ctx := ctrl.SetupSignalHandler()
 
-	ctx = feature.ContextBuilderFromCtx(ctx).
-		Landscape(os.Getenv("LANDSCAPE")).
-		Build(ctx)
-
 	if err := feature.Initialize(ctx); err != nil {
 		setupLog.Error(err, "problem initializing feature flags")
 	}
+
+	ctx = feature.ContextBuilderFromCtx(ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Build(ctx)
 
 	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")

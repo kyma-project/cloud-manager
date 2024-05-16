@@ -37,9 +37,9 @@ func Initialize(ctx context.Context, opts ...ProviderOption) (err error) {
 		x(o)
 	}
 	if len(o.filename) == 0 {
-		o.filename = os.Getenv("FEATURE_FLAG_FILE_CONFIG")
+		o.filename = os.Getenv("FEATURE_FLAG_CONFIG_FILE")
 		if len(o.filename) == 0 {
-			o.filename = "/var/cloud-manager.kyma-project.io/featureFlags.yaml"
+			o.filename = "/var/cloud-manager.kyma-project.io/config/featureFlags.yaml"
 		}
 	}
 	ff, errLoading := ffclient.New(ffclient.Config{
