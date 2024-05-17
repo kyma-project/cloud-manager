@@ -7,6 +7,9 @@ import (
 )
 
 func Handle(err error, _ context.Context) (ctrl.Result, error) {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ctrl.Result{}, nil
+	}
 	if IsTerminal(err) {
 		return ctrl.Result{}, err
 	}
