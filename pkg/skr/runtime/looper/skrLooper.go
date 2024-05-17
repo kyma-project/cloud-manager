@@ -11,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -240,9 +241,16 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	}()
 	logger := l.logger.WithValues("skrKymaName", kymaName)
 	skrManager, scope, kyma, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
+	if errors.Is(err, &skrmanager.ScopeNotFoundError{}) {
+		logger.
+			WithValues("error", err.Error()).
+			Info("SKR scope not found")
+		time.Sleep(util.Timing.T1000ms())
+		return
+	}
 	if err != nil {
 		logger.Error(err, "error creating Manager")
-		time.Sleep(5 * time.Second)
+		time.Sleep(util.Timing.T1000ms())
 		return
 	}
 	skrManager.GetScheme()
