@@ -3,6 +3,7 @@
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.28.0
+JV_VERSION = v0.5.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -61,8 +62,12 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: test-ff
+test-ff: jv
+	$(LOCALBIN)/jv -assertcontent -assertformat ./config/featureToggles/flag-schema.json ./config/featureToggles/featureToggles.yaml
+
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: manifests generate fmt vet envtest test-ff ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
@@ -156,6 +161,7 @@ KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+JV ?= $(LOCALBIN)/jv
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.2.1
@@ -180,3 +186,9 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: jv
+jv:$(JV)
+$(JV): $(LOCALBIN)
+	test -s $(LOCALBIN)/jv  || \
+	GOBIN=$(LOCALBIN) go install github.com/santhosh-tekuri/jsonschema/cmd/jv@$(JV_VERSION)

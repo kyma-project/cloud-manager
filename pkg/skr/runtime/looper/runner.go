@@ -6,10 +6,12 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
@@ -22,7 +24,9 @@ var (
 		fmt.Sprintf("%T", &cloudresourcesv1beta1.AwsNfsVolume{}): cloudcontrolv1beta1.ProviderAws,
 
 		// GCP
-		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolume{}): cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolume{}):        cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolumeBackup{}):  cloudcontrolv1beta1.ProviderGCP,
+		fmt.Sprintf("%T", &cloudresourcesv1beta1.GcpNfsVolumeRestore{}): cloudcontrolv1beta1.ProviderGCP,
 	}
 )
 
@@ -66,7 +70,7 @@ type skrRunner struct {
 	stopped    bool
 }
 
-func (r *skrRunner) isObjectActive(provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
+func (r *skrRunner) isObjectActiveForProvider(provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
 	if provider == nil {
 		return true
 	}
@@ -112,6 +116,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			}
 			err = instlr.Handle(ctx, string(*options.provider), skrManager)
 			if err != nil {
+				err = fmt.Errorf("installer error: %w", err)
 				logger.
 					WithValues("provider", options.provider).
 					Error(err, "Error installing dependencies")
@@ -127,9 +132,18 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 
 		for _, indexer := range r.registry.Indexers() {
-			if r.isObjectActive(options.provider, indexer.Obj()) {
+			ctx := feature.ContextBuilderFromCtx(ctx).
+				Provider(util.CaseInterfaceToString(options.provider)).
+				KindsFromObject(indexer.Obj(), skrManager.GetScheme()).
+				FeatureFromObject(indexer.Obj(), skrManager.GetScheme()).
+				Build(ctx)
+			logger := feature.DecorateLogger(ctx, logger)
+
+			if r.isObjectActiveForProvider(options.provider, indexer.Obj()) &&
+				!feature.ApiDisabled.Value(ctx) {
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
+					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
 					return
 				}
 			} else {
@@ -139,16 +153,32 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 						"field", indexer.Field(),
 						"provider", string(*options.provider),
 					).
-					Info("Not creating indexer of object due to non matching provider")
+					Info("Not creating indexer due to disabled API")
 			}
 		}
 
 		for _, b := range r.registry.Builders() {
-			if r.isObjectActive(options.provider, b.GetForObj()) {
+			ctx := feature.ContextBuilderFromCtx(ctx).
+				Provider(util.CaseInterfaceToString(options.provider)).
+				KindsFromObject(b.GetForObj(), skrManager.GetScheme()).
+				FeatureFromObject(b.GetForObj(), skrManager.GetScheme()).
+				Build(ctx)
+			logger := feature.DecorateLogger(ctx, logger)
+
+			if r.isObjectActiveForProvider(options.provider, b.GetForObj()) &&
+				!feature.ApiDisabled.Value(ctx) {
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
+					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
 					return
 				}
+			} else {
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", b.GetForObj()),
+						"provider", string(*options.provider),
+					).
+					Info("Not starting controller due to disabled API")
 			}
 		}
 

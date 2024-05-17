@@ -15,6 +15,7 @@ import (
 
 func checkQuota(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpIpRange != nil {
 		// Can not enforce quota on SKR IpRanges with already created KCP IpRanges
@@ -38,6 +39,9 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 	// Must be sorted by create date since overlap error is set on NEWER and pass-on with OLDER
 	// so quota must allow OLDER resource, and put quota error on NEWER as well
 	sort.Slice(list.Items, func(i, j int) bool {
+		if list.Items[i].CreationTimestamp.Equal(&list.Items[j].CreationTimestamp) {
+			return list.Items[i].Name < list.Items[j].Name
+		}
 		return list.Items[i].CreationTimestamp.Before(&list.Items[j].CreationTimestamp)
 	})
 
@@ -80,6 +84,15 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 			return nil, nil
 		}
 
+		logger.
+			WithValues(
+				"totalCountQuota", totalCountQuota,
+				"resources", fmt.Sprintf("%v", pie.Map(list.Items, func(obj cloudresourcesv1beta1.IpRange) string {
+					return fmt.Sprintf("%s/%s/%s", obj.Namespace, obj.Name, obj.CreationTimestamp.Format(time.RFC3339Nano))
+				})),
+			).
+			Info("Clearing SKR IpRange QuotaExceeded condition back to processing")
+
 		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateProcessing
 
 		return composed.UpdateStatus(state.ObjAsIpRange()).
@@ -91,12 +104,11 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	// Put QuotaExceeded on this object
-	logger := composed.LoggerFromCtx(ctx)
 	logger.
 		WithValues(
 			"totalCountQuota", totalCountQuota,
 			"resources", fmt.Sprintf("%v", pie.Map(list.Items, func(obj cloudresourcesv1beta1.IpRange) string {
-				return fmt.Sprintf("%s/%s", obj.Namespace, obj.Name)
+				return fmt.Sprintf("%s/%s/%s", obj.Namespace, obj.Name, obj.CreationTimestamp.Format(time.RFC3339Nano))
 			})),
 		).
 		Info("Quota exceeded")

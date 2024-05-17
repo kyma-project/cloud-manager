@@ -20,10 +20,12 @@ import (
 	"flag"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -72,9 +74,11 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+	utilruntime.Must(apiextensions.AddToScheme(kcpScheme))
 
 	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
+	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -230,7 +234,17 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	ctx := ctrl.SetupSignalHandler()
+
+	if err := feature.Initialize(ctx); err != nil {
+		setupLog.Error(err, "problem initializing feature flags")
+	}
+
+	ctx = feature.ContextBuilderFromCtx(ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Build(ctx)
+
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
