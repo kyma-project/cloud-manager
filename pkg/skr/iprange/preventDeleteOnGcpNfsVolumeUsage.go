@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +32,9 @@ func preventDeleteOnGcpNfsVolumeUsage(ctx context.Context, st composed.State) (e
 		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().String()),
 	}
 	err := state.Cluster().K8sClient().List(ctx, gcpNfsVolumesUsingThisIpRange, listOps)
+	if meta.IsNoMatchError(err) {
+		return nil, nil
+	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing GcpNfsVolumes using IpRange", composed.StopWithRequeue, ctx)
 	}
