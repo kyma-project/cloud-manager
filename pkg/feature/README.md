@@ -5,12 +5,12 @@ it loads single toggle configuration yaml and stores an instance of the `*ffclie
 in the [`provider`](./init.go) singleton variable. 
 
 Each feature flag implemented in Cloud Manager should provide an anti corruption layer implementing 
-the [`Feature`](./types.go) interface. In its implementation the actual flag value should be
+the [`Feature`](./types/types.go) interface. In its implementation the actual flag value should be
 obtained using the singleton instance in the [`provider`](./init.go) variable.
 
 ## Common evaluation context
 
-Common evaluation context keys are defined as instances of the [`Key`](./types.go) type.
+Common evaluation context keys are defined as instances of the [`Key`](./types/types.go) type.
 
 | Variable        | Description                                                                                                                                                         |
 |-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
