@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	"github.com/elliotchance/pie/v2"
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -105,6 +106,14 @@ func (in *GcpNfsVolume) Conditions() *[]metav1.Condition {
 
 func (in *GcpNfsVolume) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *GcpNfsVolume) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfs
+}
+
+func (in *GcpNfsVolume) SpecificToProviders() []string {
+	return []string{"gcp"}
 }
 
 //+kubebuilder:object:root=true

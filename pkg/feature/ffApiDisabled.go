@@ -2,6 +2,9 @@ package feature
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	"strings"
 )
 
 const apiDisabledFlagName = "apiDisabled"
@@ -12,7 +15,10 @@ type ApiDisabledInfo struct{}
 
 func (f *ApiDisabledInfo) Value(ctx context.Context) bool {
 	ffCtx := MustContextFromCtx(ctx)
-	if ffCtx.GetCustom()[KeyKindGroup] == "cloudresources.cloud-resources.kyma-project.io" {
+	if strings.Contains(
+		util.CastInterfaceToString(ffCtx.GetCustom()[types.KeyAllKindGroups]),
+		"cloudresources.cloud-resources.kyma-project.io",
+	) {
 		return false
 	}
 	v, err := provider.BoolVariation(apiDisabledFlagName, ffCtx, false)

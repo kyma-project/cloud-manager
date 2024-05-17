@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +17,24 @@ import (
 )
 
 var _ Factory = &skrManagerFactory{}
+
+func NewScopeNotFoundError(err error) *ScopeNotFoundError {
+	return &ScopeNotFoundError{err: err}
+}
+
+var _ error = &ScopeNotFoundError{}
+
+type ScopeNotFoundError struct {
+	err error
+}
+
+func (e *ScopeNotFoundError) Unwrap() error {
+	return e.err
+}
+
+func (e *ScopeNotFoundError) Error() string {
+	return fmt.Sprintf("Scope not found: %s", e.err.Error())
+}
 
 type Factory interface {
 	CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, *cloudcontrolv1beta1.Scope, *unstructured.Unstructured, error)
@@ -64,6 +83,9 @@ func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, 
 	}
 	scope := &cloudcontrolv1beta1.Scope{}
 	err = f.kcpClient.Get(ctx, nn, scope)
+	if apierrors.IsNotFound(err) {
+		return nil, nil, nil, NewScopeNotFoundError(err)
+	}
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("error loading Scope for kyma %s: %w", kymaName, err)
 	}

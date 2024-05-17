@@ -1,6 +1,9 @@
-package feature
+package types
 
-import "context"
+import (
+	"context"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 type LandscapeName = string
 
@@ -38,24 +41,22 @@ const (
 	KeyKyma            Key = "kyma"
 	KeyShoot           Key = "shoot"
 	KeyRegion          Key = "region"
-	KeyKindGroup       Key = "kindGroup"
+	KeyAllKindGroups   Key = "allKindGroups"
+	KeyObjKindGroup    Key = "objKindGroup"
 	KeyCrdKindGroup    Key = "crdKindGroup"
 	KeyBusolaKindGroup Key = "busolaKindGroup"
 )
 
-var loggerKeys = []Key{
-	KeyFeature,
-	KeyPlane,
-	KeyProvider,
-	KeyBrokerPlan,
-	KeyGlobalAccount,
-	KeySubAccount,
-	KeyKyma,
-	KeyShoot,
-	KeyRegion,
-	KeyKindGroup,
-}
-
 type Feature[T any] interface {
 	Value(ctx context.Context) T
+}
+
+type FeatureAwareObject interface {
+	client.Object
+	SpecificToFeature() FeatureName
+}
+
+type ProviderAwareObject interface {
+	client.Object
+	SpecificToProviders() []string
 }

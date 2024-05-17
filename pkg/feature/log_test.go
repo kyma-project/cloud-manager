@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-logr/logr/funcr"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,7 +21,7 @@ func TestLog(t *testing.T) {
 
 	ctx := context.Background()
 	ctx = ContextBuilderFromCtx(ctx).
-		Feature(FeaturePeering).
+		Feature(types.FeaturePeering).
 		Provider("aws").
 		BrokerPlan("trial").
 		Build(ctx)
@@ -31,7 +32,7 @@ func TestLog(t *testing.T) {
 	logger.Info("second")
 
 	assert.Len(t, savedLogs, 2)
-	assert.Equal(t, FeaturePeering, savedLogs[0][KeyFeature])
-	assert.Equal(t, "aws", savedLogs[0][KeyProvider])
-	assert.Equal(t, "trial", savedLogs[0][KeyBrokerPlan])
+	assert.Equal(t, types.FeaturePeering, savedLogs[0][types.KeyFeature])
+	assert.Equal(t, "aws", savedLogs[0][types.KeyProvider])
+	assert.Equal(t, "trial", savedLogs[0][types.KeyBrokerPlan])
 }

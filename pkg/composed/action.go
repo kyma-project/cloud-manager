@@ -2,6 +2,7 @@ package composed
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -59,6 +60,9 @@ func ComposeActions(name string, actions ...Action) Action {
 				lastError = nil
 			}
 			return lastError, currentCtx
+		} else if errors.Is(lastError, context.DeadlineExceeded) {
+			l.Info("Reconciliation finished with DeadlineExceeded")
+			return nil, currentCtx
 		}
 
 		l.Error(lastError, "Reconciliation finished with error")

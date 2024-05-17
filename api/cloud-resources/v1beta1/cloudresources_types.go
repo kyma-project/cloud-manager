@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -87,6 +88,14 @@ func (in *CloudResources) Conditions() *[]metav1.Condition {
 
 func (in *CloudResources) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *CloudResources) SpecificToFeature() featuretypes.FeatureName {
+	return ""
+}
+
+func (in *CloudResources) SpecificToProviders() []string {
+	return nil
 }
 
 //+kubebuilder:object:root=true
