@@ -137,6 +137,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
 			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
+			err = nil // clear the not found error, so we only return Create error if any, and not this not found
 			if feature.ApiDisabled.Value(objCtx) {
 				logger.Info(fmt.Sprintf("Skipping installation of disabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 			} else {
