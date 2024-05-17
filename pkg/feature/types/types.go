@@ -1,4 +1,4 @@
-package feature
+package types
 
 import "context"
 
@@ -38,24 +38,20 @@ const (
 	KeyKyma            Key = "kyma"
 	KeyShoot           Key = "shoot"
 	KeyRegion          Key = "region"
-	KeyKindGroup       Key = "kindGroup"
+	KeyAllKindGroups   Key = "allKindGroups"
+	KeyObjKindGroup    Key = "objKindGroup"
 	KeyCrdKindGroup    Key = "crdKindGroup"
 	KeyBusolaKindGroup Key = "busolaKindGroup"
 )
 
-var loggerKeys = []Key{
-	KeyFeature,
-	KeyPlane,
-	KeyProvider,
-	KeyBrokerPlan,
-	KeyGlobalAccount,
-	KeySubAccount,
-	KeyKyma,
-	KeyShoot,
-	KeyRegion,
-	KeyKindGroup,
-}
-
 type Feature[T any] interface {
 	Value(ctx context.Context) T
+}
+
+type FeatureAware interface {
+	SpecificToFeature() FeatureName
+}
+
+type ProviderAware interface {
+	SpecificToProviders() []string
 }

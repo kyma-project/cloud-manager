@@ -4,9 +4,6 @@ apiDisabled:
     enabled: false
     disabled: true
   targeting:
-    - name: CloudResources module CR is always enabled
-      query: kindGroup == "cloudresources.cloud-resources.kyma-project.io"
-      variation: enabled
     - name: All APIs are disabled for trial SKR
       query: brokerPlan == "trial"
       variation: disabled

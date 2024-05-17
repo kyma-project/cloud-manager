@@ -2,8 +2,10 @@ package feature
 
 import (
 	"context"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
@@ -24,44 +26,44 @@ func TestContextBuilder(t *testing.T) {
 
 		ctx = ContextBuilderFromCtx(ctx).
 			Landscape("stage").
-			Feature(FeatureNfs).
+			Feature(types.FeatureNfs).
 			Build(ctx)
 		ffCtxAttr := ContextFromCtx(ctx).GetCustom()
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyLandscape, "stage"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyFeature, FeatureNfs))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyLandscape, "stage"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyFeature, types.FeatureNfs))
 
 		ctx = ContextBuilderFromCtx(ctx).
-			Feature(string(FeatureNfsBackup)).
-			Plane(PlaneKcp).
+			Feature(string(types.FeatureNfsBackup)).
+			Plane(types.PlaneKcp).
 			Provider("aws").
 			Build(ctx)
 		ffCtxAttr = ContextFromCtx(ctx).GetCustom()
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyFeature, FeatureNfsBackup))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyPlane, PlaneKcp))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyProvider, "aws"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyFeature, types.FeatureNfsBackup))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyPlane, types.PlaneKcp))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyProvider, "aws"))
 
 		ctx = ContextBuilderFromCtx(ctx).
-			Feature(string(FeaturePeering)).
-			Plane(PlaneSkr).
+			Feature(string(types.FeaturePeering)).
+			Plane(types.PlaneSkr).
 			Provider("gcp").
 			BrokerPlan("trial").
 			GlobalAccount("glob-123").
 			SubAccount("sub-456").
 			Kyma("kyma-789").
 			Shoot("shoot-34567").
-			KindGroup("vpcpeering.cloud-control.kyma-project.io").
+			ObjKindGroup("vpcpeering.cloud-control.kyma-project.io").
 			Custom("foo", "bar").
 			Build(ctx)
 		ffCtxAttr = ContextFromCtx(ctx).GetCustom()
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyFeature, string(FeaturePeering)))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyPlane, PlaneSkr))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyProvider, "gcp"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyBrokerPlan, "trial"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyGlobalAccount, "glob-123"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeySubAccount, "sub-456"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyKyma, "kyma-789"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyShoot, "shoot-34567"))
-		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(KeyKindGroup, "vpcpeering.cloud-control.kyma-project.io"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyFeature, string(types.FeaturePeering)))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyPlane, types.PlaneSkr))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyProvider, "gcp"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyBrokerPlan, "trial"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyGlobalAccount, "glob-123"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeySubAccount, "sub-456"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyKyma, "kyma-789"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyShoot, "shoot-34567"))
+		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue(types.KeyObjKindGroup, "vpcpeering.cloud-control.kyma-project.io"))
 		gomega.Expect(ffCtxAttr).To(gomega.HaveKeyWithValue("foo", "bar"))
 	})
 
@@ -73,7 +75,7 @@ func TestContextBuilder(t *testing.T) {
 		utilruntime.Must(cloudresourcesv1beta1.AddToScheme(sch))
 		utilruntime.Must(apiextensions.AddToScheme(sch))
 
-		t.Run("KindGroup", func(t *testing.T) {
+		t.Run("All KindGroups", func(t *testing.T) {
 			baseCrdTyped := &apiextensions.CustomResourceDefinition{}
 			objList := []struct {
 				title    string
@@ -90,15 +92,20 @@ func TestContextBuilder(t *testing.T) {
 			}
 
 			for _, info := range objList {
-				ffCtx := ContextBuilderFromCtx(context.Background()).
-					KindsFromObject(info.obj, sch).
-					FFCtx()
-				kg := ffCtx.GetCustom()["kindGroup"]
-				crdKg := ffCtx.GetCustom()["crdKindGroup"]
-				busolaKg := ffCtx.GetCustom()["busolaKindGroup"]
-				assert.Equal(t, info.kg, kg)
-				assert.Equal(t, info.crdKg, crdKg)
-				assert.Equal(t, info.busolaKg, busolaKg)
+				t.Run(info.title, func(t *testing.T) {
+					ffCtx := ContextBuilderFromCtx(context.Background()).
+						KindsFromObject(info.obj, sch).
+						FFCtx()
+					objKg := ffCtx.GetCustom()[types.KeyObjKindGroup]
+					crdKg := ffCtx.GetCustom()[types.KeyCrdKindGroup]
+					busolaKg := ffCtx.GetCustom()[types.KeyBusolaKindGroup]
+					allKg := ffCtx.GetCustom()[types.KeyAllKindGroups]
+					assert.Equal(t, info.kg, objKg)
+					assert.Equal(t, info.crdKg, crdKg)
+					assert.Equal(t, info.busolaKg, busolaKg)
+					expectedAllKg := fmt.Sprintf("%s,%s,%s", objKg, crdKg, busolaKg)
+					assert.Equal(t, expectedAllKg, allKg)
+				})
 			}
 		})
 	})
@@ -117,11 +124,11 @@ func TestContextBuilder(t *testing.T) {
 			LoadFromKyma(kyma).
 			FFCtx()
 
-		assert.Equal(t, "trial", ffCtx.GetCustom()[KeyBrokerPlan])
-		assert.Equal(t, "glob-123", ffCtx.GetCustom()[KeyGlobalAccount])
-		assert.Equal(t, "sub-456", ffCtx.GetCustom()[KeySubAccount])
-		assert.Equal(t, "us-east-1", ffCtx.GetCustom()[KeyRegion])
-		assert.Equal(t, "shoot-67890", ffCtx.GetCustom()[KeyShoot])
+		assert.Equal(t, "trial", ffCtx.GetCustom()[types.KeyBrokerPlan])
+		assert.Equal(t, "glob-123", ffCtx.GetCustom()[types.KeyGlobalAccount])
+		assert.Equal(t, "sub-456", ffCtx.GetCustom()[types.KeySubAccount])
+		assert.Equal(t, "us-east-1", ffCtx.GetCustom()[types.KeyRegion])
+		assert.Equal(t, "shoot-67890", ffCtx.GetCustom()[types.KeyShoot])
 	})
 
 	t.Run("LoadFromScope", func(t *testing.T) {
@@ -132,6 +139,6 @@ func TestContextBuilder(t *testing.T) {
 			LoadFromScope(scope).
 			FFCtx()
 
-		assert.Equal(t, "aws", ffCtx.GetCustom()[KeyProvider])
+		assert.Equal(t, "aws", ffCtx.GetCustom()[types.KeyProvider])
 	})
 }

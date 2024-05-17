@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -113,6 +114,14 @@ func (in *AwsNfsVolumeBackup) Conditions() *[]metav1.Condition {
 
 func (in *AwsNfsVolumeBackup) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *AwsNfsVolumeBackup) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfsBackup
+}
+
+func (in *AwsNfsVolumeBackup) SpecificToProviders() []string {
+	return []string{"aws"}
 }
 
 //+kubebuilder:object:root=true

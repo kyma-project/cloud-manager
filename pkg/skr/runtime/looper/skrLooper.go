@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
@@ -249,7 +250,7 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	ctx := feature.ContextBuilderFromCtx(l.ctx).
 		LoadFromScope(scope).
 		LoadFromKyma(kyma).
-		Plane(feature.PlaneSkr).
+		Plane(types.PlaneSkr).
 		Build(l.ctx)
 
 	logger.Info("Starting SKR Runner")

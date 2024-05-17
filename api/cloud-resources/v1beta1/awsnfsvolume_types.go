@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	"github.com/elliotchance/pie/v2"
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -100,6 +101,14 @@ func (in *AwsNfsVolume) Conditions() *[]metav1.Condition {
 
 func (in *AwsNfsVolume) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *AwsNfsVolume) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfs
+}
+
+func (in *AwsNfsVolume) SpecificToProviders() []string {
+	return []string{"aws"}
 }
 
 //+kubebuilder:object:root=true

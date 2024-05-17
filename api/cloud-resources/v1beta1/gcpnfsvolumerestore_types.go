@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -102,6 +103,14 @@ func (in *GcpNfsVolumeRestore) Conditions() *[]metav1.Condition {
 
 func (in *GcpNfsVolumeRestore) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *GcpNfsVolumeRestore) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfsBackup
+}
+
+func (in *GcpNfsVolumeRestore) SpecificToProviders() []string {
+	return []string{"gcp"}
 }
 
 //+kubebuilder:object:root=true

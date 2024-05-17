@@ -133,7 +133,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 
 		for _, indexer := range r.registry.Indexers() {
 			ctx := feature.ContextBuilderFromCtx(ctx).
-				Provider(util.CaseInterfaceToString(options.provider)).
+				Provider(util.CastInterfaceToString(options.provider)).
 				KindsFromObject(indexer.Obj(), skrManager.GetScheme()).
 				FeatureFromObject(indexer.Obj(), skrManager.GetScheme()).
 				Build(ctx)
@@ -159,7 +159,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 
 		for _, b := range r.registry.Builders() {
 			ctx := feature.ContextBuilderFromCtx(ctx).
-				Provider(util.CaseInterfaceToString(options.provider)).
+				Provider(util.CastInterfaceToString(options.provider)).
 				KindsFromObject(b.GetForObj(), skrManager.GetScheme()).
 				FeatureFromObject(b.GetForObj(), skrManager.GetScheme()).
 				Build(ctx)
