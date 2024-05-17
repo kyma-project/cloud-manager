@@ -3,22 +3,16 @@ package cloudresources
 import (
 	"context"
 	"fmt"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
-
-type checkItem struct {
-	kind     string
-	provider cloudcontrolv1beta1.ProviderType
-	list     composed.ObjectList
-}
 
 func checkIfResourcesExist(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
@@ -42,10 +36,19 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			Version: gvk.Version,
 			Kind:    gvk.Kind + "List",
 		}
+		if !state.Cluster().Scheme().Recognizes(listGvk) {
+			continue
+		}
 		listObj, err := state.Cluster().Scheme().New(listGvk)
+		if runtime.IsNotRegisteredError(err) {
+			continue
+		}
 		if err != nil {
 			logger.
-				WithValues("gvk", listGvk.String()).
+				WithValues(
+					"errorType", fmt.Errorf("%T", err),
+					"gvk", listGvk.String(),
+				).
 				Error(err, "Error instantiating GVK list object")
 			continue
 		}
@@ -64,6 +67,10 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 					"listGvk", listGvk.String(),
 				).
 				Error(err, "Error listing GVK")
+			continue
+		}
+
+		if meta.LenList(list) == 0 {
 			continue
 		}
 
