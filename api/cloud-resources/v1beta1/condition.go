@@ -45,6 +45,8 @@ const (
 
 const (
 	ConditionTypeWarning = "Warning"
+
+	ConditionReasonResourcesExist = "ResourcesExist"
 )
 
 const (

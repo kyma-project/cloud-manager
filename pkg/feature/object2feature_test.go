@@ -20,7 +20,7 @@ import (
 
 func TestManifestResourceToFeature(t *testing.T) {
 
-	t.Run("ObjectToFeature from FeatureAware", func(t *testing.T) {
+	t.Run("ObjectToFeature from FeatureAwareObject", func(t *testing.T) {
 		emptyScheme := runtime.NewScheme()
 		objList := []struct {
 			title    string

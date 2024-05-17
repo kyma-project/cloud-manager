@@ -1,6 +1,9 @@
 package types
 
-import "context"
+import (
+	"context"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 type LandscapeName = string
 
@@ -48,10 +51,12 @@ type Feature[T any] interface {
 	Value(ctx context.Context) T
 }
 
-type FeatureAware interface {
+type FeatureAwareObject interface {
+	client.Object
 	SpecificToFeature() FeatureName
 }
 
-type ProviderAware interface {
+type ProviderAwareObject interface {
+	client.Object
 	SpecificToProviders() []string
 }

@@ -9,7 +9,7 @@ import (
 
 /*
 All feature determination implementation in this file is used only in case
-object does not implement types.FeatureAware interface
+object does not implement types.FeatureAwareObject interface
 */
 
 type featureDeterminator func(mi *manifestInfo) (bool, types.FeatureName)
@@ -74,11 +74,11 @@ func featureDeterminatorByBusolaKindGroup(mi *manifestInfo) (bool, types.Feature
 
 // ObjectToFeature returns FeatureName specific to the object. It can return empty string
 // which means object is not specific to one certain feature, but to many or all.
-// It first checks if object implements types.FeatureAware. If not then feature is determined
+// It first checks if object implements types.FeatureAwareObject. If not then feature is determined
 // by fixed, hard coded determinations by its kind and group. If object has TypeMeta it will
 // be used to find GVK, otherwise provided scheme is looked up.
 func ObjectToFeature(obj client.Object, scheme *runtime.Scheme) types.FeatureName {
-	if fa, ok := obj.(types.FeatureAware); ok {
+	if fa, ok := obj.(types.FeatureAwareObject); ok {
 		return fa.SpecificToFeature()
 	}
 	return objectToFeaturePredetermined(obj, scheme)
