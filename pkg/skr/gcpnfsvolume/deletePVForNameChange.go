@@ -31,6 +31,7 @@ func deletePVForNameChange(ctx context.Context, st composed.State) (error, conte
 
 	if state.PV.Status.Phase != "Released" && state.PV.Status.Phase != "Available" {
 		// Only PV in Released or Available state can be changed
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -64,5 +65,8 @@ func deletePVForNameChange(ctx context.Context, st composed.State) (error, conte
 	}
 
 	// give some time, and then run again
-	return composed.StopWithRequeueDelay(3 * time.Second), nil
+	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeProcessing
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SuccessError(composed.StopWithRequeueDelay(3*time.Second)).
+		Run(ctx, state)
 }

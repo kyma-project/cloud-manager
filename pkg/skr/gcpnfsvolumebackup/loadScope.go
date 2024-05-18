@@ -32,7 +32,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	if apierrors.IsNotFound(err) {
 		logger.Info("Scope not found")
 
-		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
+		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

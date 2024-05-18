@@ -123,7 +123,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.SyncFilestore
+					exists = gcpNfsInstance.Status.State == client2.Updating
 					return exists, nil
 				}, timeout, interval)
 			})
@@ -261,16 +261,16 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				infra.GcpMock().SetCreateError(sample500Error())
 				// CreateNfsInstance is already called in previous test case
 			})
-			By("Then KCP NfsVolume has SyncFilestore state", func() {
+			By("Then KCP NfsVolume has Creating state", func() {
 				Eventually(func() (exists bool, err error) {
 					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.SyncFilestore
+					exists = gcpNfsInstance.Status.State == client2.Creating
 					return exists, nil
 				}, timeout, interval).
-					Should(BeTrue(), "expected NfsInstance for GCP with SyncFilestore state")
+					Should(BeTrue(), "expected NfsInstance for GCP with Creating state")
 				//Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
 			})
 			By("And KCP NfsVolume will get Error condition", func() {
@@ -297,8 +297,8 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
-			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
+			By("And KCP NfsVolume has Creating state", func() {
+				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Creating))
 			})
 
 		})
@@ -336,8 +336,8 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
-			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
+			By("And KCP NfsVolume has Updating state", func() {
+				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Updating))
 			})
 
 		})
@@ -363,7 +363,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
+				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Updating))
 			})
 
 		})
@@ -402,8 +402,8 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
-			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
+			By("And KCP NfsVolume has Deleting state", func() {
+				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Deleting))
 			})
 
 		})
@@ -428,8 +428,8 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
-			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
+			By("And KCP NfsVolume has Deleting state", func() {
+				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Deleting))
 			})
 			// Let it be deleted
 			infra.GcpMock().SetOperationError(nil)

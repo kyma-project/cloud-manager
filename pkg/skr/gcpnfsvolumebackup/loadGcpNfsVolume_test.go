@@ -129,7 +129,7 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "Error", string(fromK8s.Status.State))
+	assert.Equal(suite.T(), v1beta1.GcpNfsBackupError, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }

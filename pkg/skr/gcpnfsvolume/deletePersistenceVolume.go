@@ -26,6 +26,7 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	if state.PV.Status.Phase != "Released" && state.PV.Status.Phase != "Available" {
 		// Only PV in Released or Available state can be deleted
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

@@ -27,17 +27,17 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 		} else if state.fsInstance.State != string(client.DELETING) {
 			//If the filestore exists and not DELETING, delete it.
 			state.operation = client.DELETE
-			state.curState = client.SyncFilestore
+			state.curState = client.Deleting
 		}
 	} else {
 		if state.fsInstance == nil {
 			//If filestore doesn't exist, add it.
 			state.operation = client.ADD
-			state.curState = client.SyncFilestore
+			state.curState = client.Creating
 		} else if !state.doesFilestoreMatch() {
 			//If the filestore exists, but does not match, update it.
 			state.operation = client.MODIFY
-			state.curState = client.SyncFilestore
+			state.curState = client.Updating
 		} else if state.fsInstance.State == string(client.READY) {
 			state.curState = v1beta1.ReadyState
 		}

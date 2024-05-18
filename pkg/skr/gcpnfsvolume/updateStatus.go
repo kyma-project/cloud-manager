@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
@@ -31,6 +32,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpCondErr != nil && skrCondErr == nil {
 		logger.Info("Updating SKR GcpNfsVolume status with Error condition")
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -52,6 +54,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		logger.Info("Updating SKR GcpNfsVolume status with Ready condition")
 		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Status.CapacityGb
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -73,5 +76,18 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	// no conditions on KCP NfsInstance
 	// keep looping until KCP NfsInstance gets some condition
-	return composed.StopWithRequeueDelay(200 * time.Millisecond), nil
+	switch state.KcpNfsInstance.Status.State {
+	case client.Creating:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeCreating
+	case client.Updating:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeUpdating
+	case client.Deleting:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeDeleting
+	default:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeProcessing
+
+	}
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SuccessError(composed.StopWithRequeueDelay(200*time.Millisecond)).
+		Run(ctx, state)
 }

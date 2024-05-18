@@ -99,7 +99,7 @@ func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
 
-	suite.Equal(v1beta1.ConditionTypeReady, string(fromK8s.Status.State))
+	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	suite.Equal(cloudresourcesv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }
@@ -138,7 +138,7 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
 
-	suite.Equal(v1beta1.ConditionTypeReady, string(fromK8s.Status.State))
+	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	suite.Equal(cloudresourcesv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }

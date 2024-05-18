@@ -34,6 +34,7 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 	case cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
 		return validateCapacityForTier(ctx, st, 1024, 65400, capacity)
 	default:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -50,6 +51,7 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 func validateCapacityForTier(ctx context.Context, st composed.State, min, max, capacity int) (error, context.Context) {
 	state := st.(*State)
 	if capacity < min || capacity > max {
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -91,6 +93,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 		logger.
 			WithValues("ipRange", ipRangeName).
 			Error(err, "Referred IpRange does not exist")
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -107,6 +110,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 		logger.
 			WithValues("ipRange", ipRangeName).
 			Error(err, "Referred IpRange is not Ready")
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -142,6 +146,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 	switch tier {
 	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.PREMIUM, cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
 		if len(fileShareName) > 16 {
+			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 				SetCondition(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -158,6 +163,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 		}
 	default:
 		if len(fileShareName) > 64 {
+			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 				SetCondition(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,

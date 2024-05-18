@@ -76,13 +76,13 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateNotDeleting() {
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.DELETE, testState.State.operation)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.curState)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.Deleting, testState.State.curState)
+	assert.Equal(suite.T(), client.Deleting, testState.State.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), client.SyncFilestore, updatedObject.Status.State)
+	assert.Equal(suite.T(), client.Deleting, updatedObject.Status.State)
 }
 
 func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateDeleting() {
@@ -132,13 +132,13 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateCreate() {
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.ADD, testState.State.operation)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.curState)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.Creating, testState.State.curState)
+	assert.Equal(suite.T(), client.Creating, testState.State.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), client.SyncFilestore, updatedObject.Status.State)
+	assert.Equal(suite.T(), client.Creating, updatedObject.Status.State)
 }
 
 func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateUpdate() {
@@ -171,13 +171,13 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateUpdate() {
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
 	assert.Equal(suite.T(), client.MODIFY, testState.State.operation)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.curState)
-	assert.Equal(suite.T(), client.SyncFilestore, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.Updating, testState.State.curState)
+	assert.Equal(suite.T(), client.Updating, testState.State.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), client.SyncFilestore, updatedObject.Status.State)
+	assert.Equal(suite.T(), client.Updating, updatedObject.Status.State)
 }
 
 func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {

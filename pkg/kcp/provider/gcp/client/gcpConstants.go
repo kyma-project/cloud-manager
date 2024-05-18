@@ -100,17 +100,16 @@ const (
 
 const (
 	//Common States
-	Deleted v1beta1.StatusState = "Deleted"
+	Deleted  v1beta1.StatusState = "Deleted"
+	Creating v1beta1.StatusState = "Creating"
+	Updating v1beta1.StatusState = "Updating"
+	Deleting v1beta1.StatusState = "Deleting"
 
 	//IPRange States
 	SyncAddress         v1beta1.StatusState = "SyncAddress"
 	SyncPsaConnection   v1beta1.StatusState = "SyncPSAConnection"
 	DeletePsaConnection v1beta1.StatusState = "DeletePSAConnection"
 	DeleteAddress       v1beta1.StatusState = "DeleteAddress"
-
-	//Filestore States
-	SyncFilestore   v1beta1.StatusState = "SyncFilestore"
-	DeleteFilestore v1beta1.StatusState = "DeleteFilestore"
 )
 
 type FilestoreState string

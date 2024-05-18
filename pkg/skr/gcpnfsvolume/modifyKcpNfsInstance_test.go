@@ -71,6 +71,9 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
 	assert.Equal(suite.T(), gcpNfsVolume.Spec.Location, nfsInstance.Spec.Instance.Gcp.Location)
 	assert.Equal(suite.T(), gcpNfsVolume.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
 	assert.Equal(suite.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
+
+	//Validate GcpNfsVolume status.
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
 func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
@@ -105,6 +108,9 @@ func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 
 	//Validate KCPNfsInstance attributes.
 	assert.Equal(suite.T(), nfsVol.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+
+	//Validate GcpNfsVolume status.
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
 func (suite *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {

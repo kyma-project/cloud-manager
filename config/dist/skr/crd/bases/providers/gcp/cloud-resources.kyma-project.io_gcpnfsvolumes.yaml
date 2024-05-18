@@ -15,14 +15,20 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.hosts
+      name: Server
+      type: string
+    - jsonPath: .spec.fileShareName
+      name: Path
+      type: string
+    - jsonPath: .status.capacityGb
+      name: Capacity (GB)
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    - jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - jsonPath: .status.conditions[?(@.type=="Error")].status
-      name: Error
+    - jsonPath: .status.state
+      name: State
       type: string
     name: v1beta1
     schema:
@@ -183,6 +189,9 @@ spec:
                   type: string
                 type: array
               id:
+                type: string
+              state:
+                description: State of the GcpNfsVolume
                 type: string
             type: object
         type: object

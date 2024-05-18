@@ -35,7 +35,7 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 				return nil, nil
 			}
 		}
-		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
+		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
