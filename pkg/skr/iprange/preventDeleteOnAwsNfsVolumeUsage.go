@@ -50,7 +50,6 @@ func preventDeleteOnAwsNfsVolumeUsage(ctx context.Context, st composed.State) (e
 		WithValues("usedByAwsNfsVolumes", usedByAwsNfsVolumes).
 		Info("IpRange marked for deleting used by AwsNfsVolume")
 
-	state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateWarning
 	return composed.UpdateStatus(state.ObjAsIpRange()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeWarning,
@@ -58,6 +57,7 @@ func preventDeleteOnAwsNfsVolumeUsage(ctx context.Context, st composed.State) (e
 			Reason:  cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed,
 			Message: fmt.Sprintf("Can not be deleted while used by: %s", usedByAwsNfsVolumes),
 		}).
+		DeriveStateFromConditions(state.MapConditionToState()).
 		ErrorLogMessage("Error updating IpRange status with Warning condition for delete while in use").
 		SuccessLogMsg("Forgetting SKR IpRange marked for deleting that is in use").
 		SuccessError(composed.StopAndForget).

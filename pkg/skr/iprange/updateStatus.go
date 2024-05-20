@@ -22,10 +22,10 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	condErr := meta.FindStatusCondition(state.KcpIpRange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	condReady := meta.FindStatusCondition(state.KcpIpRange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+	kcpMarkedForDeletion := composed.IsMarkedForDeletion(state.KcpIpRange)
 
 	if condErr != nil {
 		logger.Info("Updating IpRange status with Error condition")
-		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -33,14 +33,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: condErr.Message,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeSubmitted).
+			DeriveStateFromConditions(state.MapConditionToState()).
 			ErrorLogMessage("Error updating IpRange status with not ready condition due to KCP error").
 			Run(ctx, state)
 	}
 
-	if condReady != nil {
+	if condReady != nil && !kcpMarkedForDeletion {
 		logger.Info("Updating IpRange status with Ready condition")
-		state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateReady
 		return composed.UpdateStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
@@ -48,8 +47,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
 				Message: condReady.Message,
 			}).
+			DeriveStateFromConditions(state.MapConditionToState()).
 			ErrorLogMessage("Error updating IpRange status with ready condition").
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeSubmitted).
 			Run(ctx, state)
 	}
 

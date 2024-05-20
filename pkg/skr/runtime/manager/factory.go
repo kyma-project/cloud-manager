@@ -87,13 +87,13 @@ func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, 
 		return nil, nil, nil, NewScopeNotFoundError(err)
 	}
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error loading Scope for kyma %s: %w", kymaName, err)
+		return nil, nil, nil, fmt.Errorf("error loading Scope for kyma %s: %w", nn, err)
 	}
 
 	kyma := util.NewKymaUnstructured()
 	err = f.kcpClient.Get(ctx, nn, kyma)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error loading Kyma for kyma %s: %w", kymaName, err)
+		return nil, nil, nil, fmt.Errorf("error loading Kyma for kyma %s: %w", nn, err)
 	}
 
 	mngr, err := New(restConfig, f.skrScheme, klog.ObjectRef{

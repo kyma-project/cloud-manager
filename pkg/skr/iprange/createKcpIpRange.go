@@ -57,12 +57,13 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 		Info("KCP IpRange created")
 
 	return composed.UpdateStatus(state.ObjAsIpRange()).
-		SetCondition(metav1.Condition{
+		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeSubmitted,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonSubmissionSucceeded,
 			Message: "Resource is submitted for provisioning",
 		}).
+		DeriveStateFromConditions(state.MapConditionToState()).
 		ErrorLogMessage("Error updating IpRange status with submitted condition").
 		SuccessError(composed.StopWithRequeueDelay(100*time.Millisecond)).
 		Run(ctx, state)
