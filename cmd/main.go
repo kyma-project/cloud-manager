@@ -38,6 +38,7 @@ import (
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -202,6 +203,7 @@ func main() {
 		mgr,
 		awsvpcpeeringclient.NewClientProvider(),
 		azurevpcpeeringclient.NewClientProvider(),
+		gcpvpcpeeringclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)

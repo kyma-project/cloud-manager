@@ -1,0 +1,16 @@
+# SKR API
+# https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpVpcPeering
+metadata:
+  name: "vpcpeering-sample"
+  namespace: "default"
+spec:
+  name: "vpcpeering-sample"
+  remoteProject: "12345678"
+  remoteVpc: "my-vpc"
+  # Default is false.
+  # When one VPC network exports static and dynamic routes and the other VPC network imports those routes,
+  # the importing network can send packets directly to the next hop for each imported static or dynamic route whose next hop is in the peer VPC network.
+  # We just need to ensure there won't be an IP clash between the two VPCs.
+  "importCustomRoutes": false

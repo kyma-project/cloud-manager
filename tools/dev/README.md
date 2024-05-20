@@ -1,5 +1,20 @@
 # Dev
 
+# Required tools
+Before setting up garden, the following tools are required:
+ - brew
+ - awscli
+ - kind
+ - npm
+ - aws-azure-login
+
+If you already have brew installed you can install the others requirements by running:
+
+```shell
+brew install awscli kind npm
+sudo npm install -g aws-azure-login --unsafe-perm
+```
+
 # Setup Garden
 
 Generate Gardener core CRDs
@@ -19,6 +34,11 @@ Create Garden cluster
 tools/dev/kind/create-garden.sh
 ```
 
+Create SKR cluster
+```shell
+tools/dev/kind/create-skr.sh
+```
+
 Note the exported kubeconfig files for both created clusters:
 * `tools/dev/kind/kubeconfig-kcp.yaml`
 * `tools/dev/kind/kubeconfig-garden.yaml`
@@ -31,6 +51,17 @@ KUBECONFIG=tools/dev/kind/kubeconfig-garden.yaml \
 KUBECONFIG=tools/dev/kind/kubeconfig-garden.yaml \
   kubectl apply \
   -f tools/dev/gardener/core.gardener.cloud_secretbindings.yaml
+```
+
+Check if your kind-kcp cluster has the kcp-system namespace
+```shell
+kubectl config use kind-kcp
+kubectl get ns kcp-system
+```
+
+if it does not, then we create it
+```shell
+kubectl create ns kcp-system
 ```
 
 Create the `gardener-credentials` secret in KCP cluster so you can mount it if running operator in the kind cluster.
