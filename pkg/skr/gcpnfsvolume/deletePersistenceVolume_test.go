@@ -134,6 +134,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 		&nfsVolume)
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 1, len(nfsVolume.Status.Conditions))
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVolume.Status.State)
 }
 
 func (suite *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {

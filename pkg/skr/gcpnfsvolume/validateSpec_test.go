@@ -223,6 +223,7 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotReady() {
 	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonIpRangeNotReady, nfsVol.Status.Conditions[0].Reason)
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
 }
 
 func (suite *validateSpecSuite) TestIpRangeWhenReady() {
@@ -322,6 +323,7 @@ func (suite *validateSpecSuite) checkFileShare(fsName string, tier cloudresource
 		assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
 		assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
 		assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid, nfsVol.Status.Conditions[0].Reason)
+		assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
 	}
 }
 

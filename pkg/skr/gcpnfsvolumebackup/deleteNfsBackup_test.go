@@ -122,7 +122,7 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 		fromK8s)
 
 	//Validate expected status
-	suite.Equal(v1beta1.ConditionTypeError, string(fromK8s.Status.State))
+	suite.Equal(v1beta1.GcpNfsBackupError, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	suite.Equal(cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 	suite.Equal(cloudresourcesv1beta1.ReasonGcpError, fromK8s.Status.Conditions[0].Reason)
@@ -175,7 +175,7 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
 		fromK8s)
 
 	//Validate expected status
-	suite.Equal(v1beta1.ConditionTypeDeleting, string(fromK8s.Status.State))
+	suite.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)
 	suite.Equal(0, len(fromK8s.Status.Conditions))
 }
 

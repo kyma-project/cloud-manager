@@ -43,6 +43,7 @@ func validatePV(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	//If PV exists with the same name, but does not belong to this NfsVolume, then mark it as an error
+	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,

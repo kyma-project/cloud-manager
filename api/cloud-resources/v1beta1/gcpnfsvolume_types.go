@@ -23,6 +23,29 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type GcpNfsVolumeState string
+
+// Valid GcpNfsVolume States.
+const (
+	// GcpNfsVolumeReady signifies GcpNfsVolume is completed and is Ready for use.
+	GcpNfsVolumeReady GcpNfsVolumeState = "Ready"
+
+	// GcpNfsVolumeError signifies the GcpNfsVolume operation resulted in error.
+	GcpNfsVolumeError GcpNfsVolumeState = "Error"
+
+	// GcpNfsVolumeProcessing signifies nfs GcpNfsVolume operation is in-progress.
+	GcpNfsVolumeProcessing GcpNfsVolumeState = "Processing"
+
+	// GcpNfsVolumeCreating signifies nfs create operation is in-progress.
+	GcpNfsVolumeCreating GcpNfsVolumeState = "Creating"
+
+	// GcpNfsVolumeUpdating signifies nfs update operation is in-progress.
+	GcpNfsVolumeUpdating GcpNfsVolumeState = "Updating"
+
+	// GcpNfsVolumeDeleting signifies nfs delete operation is in-progress.
+	GcpNfsVolumeDeleting GcpNfsVolumeState = "Deleting"
+)
+
 // Additional error reasons
 const (
 	ConditionReasonCapacityInvalid         = "CapacityGbInvalid"
@@ -83,13 +106,18 @@ type GcpNfsVolumeStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	//State of the GcpNfsVolume
+	State GcpNfsVolumeState `json:"state,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Server",type="string",JSONPath=".status.hosts"
+// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.fileShareName"
+// +kubebuilder:printcolumn:name="Capacity (GB)",type="string",JSONPath=".status.capacityGb"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status"
-// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.conditions[?(@.type==\"Error\")].status"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // GcpNfsVolume is the Schema for the gcpnfsvolumes API
 type GcpNfsVolume struct {

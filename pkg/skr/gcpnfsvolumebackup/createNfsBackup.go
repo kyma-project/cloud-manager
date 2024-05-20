@@ -43,7 +43,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	_, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)
 
 	if err != nil {
-		backup.Status.State = cloudresourcesv1beta1.ConditionTypeError
+		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
 		return composed.UpdateStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -56,7 +56,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	backup.Status.State = cloudresourcesv1beta1.ConditionTypeProcessing
+	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
 	return composed.UpdateStatus(backup).
 		SetExclusiveConditions().
 		SuccessErrorNil().

@@ -29,11 +29,17 @@ const (
 	// GcpNfsBackupReady signifies Backup is completed and is Ready for use.
 	GcpNfsBackupReady GcpNfsBackupState = "Ready"
 
-	// GcpNfsBackupInProgress signifies nfs backup is in-progress.
-	GcpNfsBackupInProgress GcpNfsBackupState = "InProgress"
-
 	// GcpNfsBackupError signifies the backup operation resulted in error.
 	GcpNfsBackupError GcpNfsBackupState = "Error"
+
+	// GcpNfsBackupProcessing signifies backup operation is in-progress.
+	GcpNfsBackupProcessing GcpNfsBackupState = "Processing"
+
+	// GcpNfsBackupCreating signifies backup create operation is in-progress.
+	GcpNfsBackupCreating GcpNfsBackupState = "Creating"
+
+	// GcpNfsBackupDeleting signifies backup delete operation is in-progress.
+	GcpNfsBackupDeleting GcpNfsBackupState = "Deleting"
 )
 
 type GcpNfsVolumeBackupSource struct {
@@ -89,6 +95,10 @@ type GcpNfsVolumeBackupStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="GCP NFS Volume",type="string",JSONPath=".spec.source.volume.name"
+// +kubebuilder:printcolumn:name="Location",type="string",JSONPath=".spec.location"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
 type GcpNfsVolumeBackup struct {

@@ -57,6 +57,7 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
 	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeReady, nfsVol.Status.State)
 }
 
 func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
@@ -88,6 +89,7 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
 	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
 	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeReady, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), gcpNfsVolume.Status.State, nfsVol.Status.State)
 }
 
 func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
@@ -137,6 +139,7 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
 	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
 }
 
 func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
@@ -225,7 +228,7 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrConditionsEmpty() {
 
 	//validate expected return values
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(200*time.Millisecond), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.NotNil(suite.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
