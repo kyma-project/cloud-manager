@@ -54,6 +54,7 @@ func (r *reconciler) newAction() composed.Action {
 		checkQuota,
 		addFinalizer,
 		createKcpIpRange,
+		setProcessingStateForDeletion,
 		preventDeleteOnAwsNfsVolumeUsage,
 		preventDeleteOnGcpNfsVolumeUsage,
 		deleteKcpIpRange,

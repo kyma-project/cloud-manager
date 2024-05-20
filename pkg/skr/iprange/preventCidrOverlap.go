@@ -33,15 +33,14 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 	myCidr, err := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	if err != nil {
 		if err != nil {
-			state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 			return composed.UpdateStatus(state.ObjAsIpRange()).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
 					Message: fmt.Sprintf("CIDR %s has invalid syntax", state.ObjAsIpRange().Spec.Cidr),
 				}).
-				RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+				DeriveStateFromConditions(state.MapConditionToState()).
 				ErrorLogMessage("Error updating IpRange status with invalid CIDR syntax").
 				SuccessLogMsg("Forgetting IpRange with invalid Cidr syntax").
 				Run(ctx, state)
@@ -87,13 +86,13 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 
 			state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.StateError
 			return composed.UpdateStatus(state.ObjAsIpRange()).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonCidrOverlap,
 					Message: fmt.Sprintf("CIDR overlaps with %s/%s", ipRange.Namespace, ipRange.Name),
 				}).
-				RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+				DeriveStateFromConditions(state.MapConditionToState()).
 				ErrorLogMessage("Error updating IpRange status with CIDR overlap error").
 				SuccessLogMsg("Forgetting IpRange with Cidr overlap").
 				SuccessError(composed.StopAndForget).

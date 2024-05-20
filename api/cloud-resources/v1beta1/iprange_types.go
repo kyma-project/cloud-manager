@@ -70,6 +70,14 @@ type IpRange struct {
 	Status IpRangeStatus `json:"status,omitempty"`
 }
 
+func (in *IpRange) State() string {
+	return in.Status.State
+}
+
+func (in *IpRange) SetState(v string) {
+	in.Status.State = v
+}
+
 func (in *IpRange) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }

@@ -113,7 +113,6 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 		).
 		Info("Quota exceeded")
 
-	state.ObjAsIpRange().Status.State = cloudresourcesv1beta1.ConditionTypeQuotaExceeded
 	return composed.UpdateStatus(state.ObjAsIpRange()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeQuotaExceeded,
@@ -121,6 +120,7 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 			Reason:  cloudresourcesv1beta1.ConditionTypeQuotaExceeded,
 			Message: fmt.Sprintf("Maximum number of %d resources exceeded", totalCountQuota),
 		}).
+		DeriveStateFromConditions(state.MapConditionToState()).
 		ErrorLogMessage("Error updating SKR IpRange status with quota exceeded status").
 		SuccessLogMsg("Forgetting SKR IpRange with quota exceeded status").
 		SuccessError(composed.StopWithRequeueDelay(300*time.Millisecond)).

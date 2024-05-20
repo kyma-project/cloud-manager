@@ -6,6 +6,9 @@ const (
 	StateWarning           = "Warning"
 	StateProcessing        = "Processing"
 	StateWaitingScopeReady = "WaitingScopeReady"
+	StateCreating          = "Creating"
+	StateDeleting          = "Deleting"
+	StateUpdating          = "Updating"
 )
 
 const (

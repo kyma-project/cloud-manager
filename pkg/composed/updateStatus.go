@@ -39,6 +39,7 @@ type UpdateStatusBuilder struct {
 	updateErrorWrapper func(err error) error
 	onUpdateError      func(ctx context.Context, err error) (error, context.Context)
 	onUpdateSuccess    func(ctx context.Context) (error, context.Context)
+	conditionsToState  func(obj ObjWithConditions) (string, bool)
 }
 
 func (b *UpdateStatusBuilder) KeepConditions(conditionTypes ...string) *UpdateStatusBuilder {
@@ -134,6 +135,10 @@ func (b *UpdateStatusBuilder) SuccessErrorNil() *UpdateStatusBuilder {
 	b.successError = nil
 	return b
 }
+func (b *UpdateStatusBuilder) DeriveStateFromConditions(f func(obj ObjWithConditions) (string, bool)) *UpdateStatusBuilder {
+	b.conditionsToState = f
+	return b
+}
 
 func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, context.Context) {
 	b.setDefaults()
@@ -160,6 +165,14 @@ func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, cont
 		_ = meta.SetStatusCondition(b.obj.Conditions(), c)
 	}
 
+	//Set state based on conditions
+	withState, ok := b.obj.(ObjWithConditionsAndState)
+	if b.conditionsToState != nil && ok {
+		newState, ok := b.conditionsToState(b.obj)
+		if ok {
+			withState.SetState(newState)
+		}
+	}
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		err = b.updateErrorWrapper(err)

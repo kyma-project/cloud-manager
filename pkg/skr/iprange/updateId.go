@@ -30,6 +30,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger.Info("SKR IpRange updated with ID label")
 
 	state.ObjAsIpRange().Status.Id = id
+	state.ObjAsIpRange().SetState(cloudresourcesv1beta1.StateProcessing)
 	err = state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR IpRange status with ID label", composed.StopWithRequeue, ctx)
