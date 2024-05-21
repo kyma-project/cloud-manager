@@ -1,4 +1,4 @@
-package iprange
+package v1
 
 import (
 	"context"
