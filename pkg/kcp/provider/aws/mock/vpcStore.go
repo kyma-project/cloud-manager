@@ -106,6 +106,22 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 
 // Client implementation ========================================
 
+func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, item := range s.items {
+		if pointer.StringDeref(item.vpc.VpcId, "") == vpcId {
+			return &item.vpc, nil
+		}
+	}
+
+	return nil, nil
+}
+
 func (s *vpcStore) DescribeVpcs(ctx context.Context) ([]ec2Types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

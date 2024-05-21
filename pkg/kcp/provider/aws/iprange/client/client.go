@@ -10,6 +10,7 @@ import (
 )
 
 type Client interface {
+	DescribeVpc(ctx context.Context, vpcId string) (*types.Vpc, error)
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
 	AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*types.VpcCidrBlockAssociation, error)
 	DisassociateVpcCidrBlockInput(ctx context.Context, associationId string) error
@@ -34,6 +35,19 @@ func newClient(svc *ec2.Client) Client {
 
 type client struct {
 	svc *ec2.Client
+}
+
+func (c *client) DescribeVpc(ctx context.Context, vpcId string) (*types.Vpc, error) {
+	out, err := c.svc.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{
+		VpcIds: []string{vpcId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(out.Vpcs) > 0 {
+		return &out.Vpcs[0], nil
+	}
+	return nil, nil
 }
 
 func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
