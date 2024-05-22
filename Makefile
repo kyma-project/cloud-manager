@@ -134,6 +134,16 @@ endif
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/dist/kcp/crd | $(KUBECTL) apply -f -
 
+.PHONY: build_ui
+build_ui: manifests kustomize # Build CRDS test
+	#$(KUSTOMIZE) build config/ui-extensions
+	# kustomize build all the ConfigMaps and output to their own file
+	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumerestores > config/ui-extensions/gcpnfsvolumerestores/cloud-resources.kyma-project.io_gcpnfsvolumerestores_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
+
+
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/dist/kcp/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
