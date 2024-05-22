@@ -1,3 +1,6 @@
 - source: spec.cidr
   name: spec.cidr
   sort: true
+- source: metadata.namespace
+  name: metadata.namespace
+  sort: true

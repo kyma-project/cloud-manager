@@ -1,0 +1,16 @@
+- path: spec.destination.volume.name
+  simple: true
+  name: spec.destination.volume.name
+  required: true
+- path: spec.destination.volume.namespace
+  simple: true
+  name: spec.destination.volume.namespace
+  required: false
+- path: spec.source.backup.name
+  simple: true
+  name: spec.source.backup.name
+  required: true
+- path: spec.source.backup.namespace
+  simple: true
+  name: spec.source.backup.namespace
+  required: true

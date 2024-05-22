@@ -4,6 +4,8 @@ resource:
     version: v1beta1
 urlPath: ipranges
 name: Ip Ranges
-scope: namespace
+scope: cluster
+category: Discovery and Network
+icon: tnt/network
 description: >-
     IpRange description here

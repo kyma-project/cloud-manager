@@ -1,0 +1,11 @@
+resource:
+    kind: GcpNfsVolumeBackup
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpnfsvolumebackups
+name: GCP NFS Volume Backups
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API

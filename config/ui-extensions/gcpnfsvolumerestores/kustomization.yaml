@@ -1,5 +1,5 @@
 configMapGenerator:
-  - name: ipranges-ui.operator.kyma-project.io
+  - name: gcpnfsvolumerestores-ui.operator.kyma-project.io
     files:
       - details
       - form
