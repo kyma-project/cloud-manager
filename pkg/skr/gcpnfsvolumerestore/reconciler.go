@@ -44,6 +44,7 @@ func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeRestoreMain",
 		composed.LoadObj,
+		setProcessing,
 		addFinalizer,
 		loadGcpNfsVolume,
 		loadGcpNfsVolumeBackup,

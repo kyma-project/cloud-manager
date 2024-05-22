@@ -47,6 +47,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	operation, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, srcFullPath)
 
 	if err != nil {
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
