@@ -14,7 +14,10 @@ type VpcPeeringConfig interface {
 }
 
 type vpcPeeringEntry struct {
-	peering armnetwork.VirtualNetworkPeering
+	subscription       string
+	resourceGroupName  string
+	virtualNetworkName string
+	peering            armnetwork.VirtualNetworkPeering
 }
 type vpcPeeringStore struct {
 	m              sync.Mutex
@@ -46,6 +49,9 @@ func (s *vpcPeeringStore) BeginCreateOrUpdate(
 		virtualNetworkPeeringName)
 
 	item := &vpcPeeringEntry{
+		subscription:       s.subscriptionId,
+		resourceGroupName:  resourceGroupName,
+		virtualNetworkName: virtualNetworkName,
 		peering: armnetwork.VirtualNetworkPeering{
 			ID:   pointer.String(id),
 			Name: pointer.String(virtualNetworkPeeringName),
@@ -67,7 +73,21 @@ func (s *vpcPeeringStore) BeginCreateOrUpdate(
 }
 
 func (s *vpcPeeringStore) List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
-	return pie.Map(s.items, func(e *vpcPeeringEntry) *armnetwork.VirtualNetworkPeering {
+	items := pie.Filter(s.items, func(e *vpcPeeringEntry) bool {
+		return e.resourceGroupName == resourceGroupName && e.virtualNetworkName == virtualNetworkName
+	})
+	return pie.Map(items, func(e *vpcPeeringEntry) *armnetwork.VirtualNetworkPeering {
 		return &e.peering
 	}), nil
+}
+
+func (s *vpcPeeringStore) Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
+	for _, x := range s.items {
+		if virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, "") &&
+			resourceGroupName == x.resourceGroupName &&
+			virtualNetworkName == x.virtualNetworkName {
+			return &x.peering, nil
+		}
+	}
+	return nil, nil
 }
