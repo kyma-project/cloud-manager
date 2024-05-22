@@ -16,16 +16,16 @@ import (
 	"testing"
 )
 
-type checkStatesSuite struct {
+type setProcessingSuite struct {
 	suite.Suite
 	ctx context.Context
 }
 
-func (suite *checkStatesSuite) SetupTest() {
+func (suite *setProcessingSuite) SetupTest() {
 	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenDeleting() {
+func (suite *setProcessingSuite) TestSetProcessingWhenDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -41,12 +41,12 @@ func (suite *checkStatesSuite) TestCheckStatesWhenDeleting() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
+	err, ctx = setProcessing(ctx, state)
 	suite.Nil(err)
 	suite.Nil(ctx)
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenStateDone() {
+func (suite *setProcessingSuite) TestSetProcessingWhenStateDone() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -69,12 +69,12 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateDone() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
+	err, ctx = setProcessing(ctx, state)
 	suite.Equal(composed.StopAndForget, err)
 	suite.Nil(ctx)
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenStateFailed() {
+func (suite *setProcessingSuite) TestSetProcessingWhenStateFailed() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -97,12 +97,12 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateFailed() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
+	err, ctx = setProcessing(ctx, state)
 	suite.Equal(composed.StopAndForget, err)
 	suite.Nil(ctx)
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenStateInProgress() {
+func (suite *setProcessingSuite) TestSetProcessingWhenStateInProgress() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -119,12 +119,12 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateInProgress() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
+	err, ctx = setProcessing(ctx, state)
 	suite.Nil(err)
 	suite.Nil(ctx)
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenStateError() {
+func (suite *setProcessingSuite) TestSetProcessingWhenStateError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -147,20 +147,12 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateError() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
-	suite.Equal(composed.StopWithRequeue, err)
-	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
-		types.NamespacedName{Name: obj.Name,
-			Namespace: obj.Namespace},
-		fromK8s)
+	err, ctx = setProcessing(ctx, state)
 	suite.Nil(err)
-	suite.Equal("", fromK8s.Status.OpIdentifier)
-	suite.Equal(v1beta1.JobStateProcessing, fromK8s.Status.State)
-	suite.Nil(fromK8s.Status.Conditions)
+	suite.Nil(ctx)
 }
 
-func (suite *checkStatesSuite) TestCheckStatesWhenStateEmpty() {
+func (suite *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -176,7 +168,7 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateEmpty() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	err, ctx = checkStates(ctx, state)
+	err, ctx = setProcessing(ctx, state)
 	suite.Equal(composed.StopWithRequeue, err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
@@ -189,6 +181,6 @@ func (suite *checkStatesSuite) TestCheckStatesWhenStateEmpty() {
 	suite.Nil(fromK8s.Status.Conditions)
 }
 
-func TestCheckStates(t *testing.T) {
-	suite.Run(t, new(checkStatesSuite))
+func TestSetProcessing(t *testing.T) {
+	suite.Run(t, new(setProcessingSuite))
 }

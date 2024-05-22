@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func checkStates(ctx context.Context, st composed.State) (error, context.Context) {
+func setProcessing(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	restore := state.ObjAsGcpNfsVolumeRestore()
@@ -26,7 +26,7 @@ func checkStates(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	//If state is empty or error, Reset the error conditions, and restart with processing state
-	if restore.Status.State == "" || restore.Status.State == cloudresourcesv1beta1.JobStateError {
+	if restore.Status.State == "" {
 		restore.Status.State = cloudresourcesv1beta1.JobStateProcessing
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions().
