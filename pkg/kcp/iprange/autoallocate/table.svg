@@ -15,7 +15,6 @@
             .calc td {
             border: 1px solid black !important;
             padding: 1px 5px 1px 5px !important;
-            background-color: #ffffff !important;
             }
             .calc thead {
             font-weight: bold !important;
