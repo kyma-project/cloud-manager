@@ -21,13 +21,12 @@
             font-weight: bold !important;
             background-color: #eeeeee !important;
             }
-            .hi1 {
+            .calc .hi1 {
             background-color: #ffdddd !important;
             }
-            .hi2 {
+            .calc .hi2 {
             background-color: #ddffdd !important;
             }
-
         </style>
         <table class="calc" cellspacing="0" cellpadding="0">
             <thead>
