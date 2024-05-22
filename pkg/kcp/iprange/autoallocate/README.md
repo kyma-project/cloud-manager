@@ -2,26 +2,29 @@
 
 <style>
 .calc {
-  font-family: Arial, Verdana, sans-serif;
-  font-size: 80%;
-  border-collapse: collapse; 
+  font-family: Arial, Verdana, sans-serif !important;
+  font-size: 80% !important;
+  border-collapse: collapse !important; 
 }
 .calc th {
-  display: table-cell;
+  display: table-cell !important;
+  border: 1px solid black !important;
+  padding: 1px 5px 1px 5px !important;
 }
-.calc td, .calc th {
-  border: 1px solid black;
-  padding: 1px 5px 1px 5px;
+.calc td {
+  border: 1px solid black !important;
+  padding: 1px 5px 1px 5px !important;
+  background-color: #ffffff !important;
 }
 .calc thead {
-  font-weight: bold;
-  background-color: #eeeeee;
+  font-weight: bold !important;
+  background-color: #eeeeee !important;
 }
 .hi1 {
-  background-color: #ffdddd;
+  background-color: #ffdddd !important;
 }
 .hi2 {
-  background-color: #ddffdd;
+  background-color: #ddffdd !important;
 }
 
 </style>
