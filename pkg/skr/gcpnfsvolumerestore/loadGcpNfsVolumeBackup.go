@@ -31,6 +31,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 		return composed.LogErrorAndReturn(err, "Error loading SKR GcpNfsVolumeRestore", composed.StopWithRequeue, ctx)
 	}
 	if err != nil {
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -49,6 +50,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	//If the nfsVolume is not ready, return an error
 	if backupReady == nil || backupReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolumeBackup", nfsVolumeBackup.Name).Info("GcpNfsVolumeBackup is not ready")
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
 		return composed.UpdateStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

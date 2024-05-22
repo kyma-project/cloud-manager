@@ -67,7 +67,7 @@ type GcpNfsVolumeRestoreDestination struct {
 
 // GcpNfsVolumeRestoreStatus defines the observed state of GcpNfsVolumeRestore
 type GcpNfsVolumeRestoreStatus struct {
-	// +kubebuilder:validation:Enum=InProgress;Done;Failed
+	// +kubebuilder:validation:Enum=Processing;InProgress;Done;Failed;Error
 	State string `json:"state,omitempty"`
 
 	// List of status conditions
