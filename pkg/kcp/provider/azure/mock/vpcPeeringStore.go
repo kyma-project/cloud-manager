@@ -83,7 +83,8 @@ func (s *vpcPeeringStore) List(ctx context.Context, resourceGroupName string, vi
 
 func (s *vpcPeeringStore) Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
 	for _, x := range s.items {
-		if virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, "") &&
+		if s.subscriptionId == x.subscription &&
+			virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, "") &&
 			resourceGroupName == x.resourceGroupName &&
 			virtualNetworkName == x.virtualNetworkName {
 			return &x.peering, nil

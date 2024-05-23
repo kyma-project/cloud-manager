@@ -19,7 +19,8 @@ type server struct {
 }
 
 func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client] {
-	return func(ctx context.Context, region, key, secret, role string) (client.Client, error) {
+	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (client.Client, error) {
+		s.subscriptionId = subscriptionId
 		return s, nil
 	}
 }

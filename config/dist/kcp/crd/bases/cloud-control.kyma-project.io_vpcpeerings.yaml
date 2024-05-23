@@ -167,6 +167,8 @@ spec:
                 x-kubernetes-list-type: map
               id:
                 type: string
+              remoteId:
+                type: string
               state:
                 type: string
               vpcId:
