@@ -80,6 +80,9 @@ type VpcPeeringStatus struct {
 	// +optional
 	Id string `json:"id,omitempty"`
 
+	// +optional
+	RemoteId string `json:"remoteId,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map

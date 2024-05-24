@@ -19,13 +19,14 @@ func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, cont
 
 	clientId := azureconfig.AzureConfig.ClientId
 	clientSecret := azureconfig.AzureConfig.ClientSecret
-	tenantId := azureconfig.AzureConfig.TenantId
+	tenantId := state.tenantId
 
 	// We are creating virtual network peering in remote subscription therefore we are decomposing remoteVnetID
 	remote, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		logger.Error(err, "Error parsing remoteVnet")
+		return err, ctx
 	}
 
 	subscriptionId := remote.Subscription
@@ -75,6 +76,14 @@ func createVpcPeeringRemote(ctx context.Context, st composed.State) (error, cont
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("Azure remote VPC Peering created")
+
+	obj.Status.RemoteId = pointer.StringDeref(peering.ID, "")
+
+	err = state.UpdateObjStatus(ctx)
+
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
+	}
 
 	return nil, ctx
 }

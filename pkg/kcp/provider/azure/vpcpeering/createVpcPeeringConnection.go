@@ -15,7 +15,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
+	if state.peering != nil {
 		return nil, nil
 	}
 
