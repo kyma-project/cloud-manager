@@ -3,6 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,5 +59,11 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("Created KCP NfsInstance")
 
-	return nil, nil
+	//Set the state to creating
+	state.ObjAsAwsNfsVolume().Status.State = cloudresourcesv1beta1.StateCreating
+	return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
+		ErrorLogMessage("Error setting Creating state on AwsNfsVolume").
+		SuccessErrorNil().
+		FailedError(composed.StopWithRequeue).
+		Run(ctx, state)
 }
