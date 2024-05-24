@@ -1,0 +1,76 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+        - widget: Labels
+          source: spec.fileShareName
+          name: spec.fileShareName
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.capacityGb
+          name: spec.capacityGb
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.location
+          name: spec.location
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.tier
+          name: spec.tier
+          visibility: $exists($value)
+  form: |-
+    - path: spec.capacityGb
+      simple: true
+      name: spec.capacityGb
+      required: true
+    - path: spec.fileShareName
+      simple: true
+      name: spec.fileShareName
+      required: true
+    - path: spec.location
+      simple: true
+      name: spec.location
+      required: true
+    - path: spec.tier
+      simple: true
+      name: spec.tier
+      required: true
+  general: |+
+    resource:
+        kind: GcpNfsVolume
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpnfsvolumes
+    name: GCP NFS Volumes
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        GcpNfsVolume description here
+
+
+  list: |
+    - source: spec.fileShareName
+      name: spec.fileShareName
+      sort: true
+    - source: spec.location
+      name: spec.location
+      sort: true
+    - source: spec.tier
+      name: spec.tier
+      sort: true
+  translations: |-
+    en:
+      spec.tier: Tier
+      spec.location: Location
+      spec.capacityGb: Capacity
+      spec.fileShareName: File Share Name
+      spec.capacityGb: Capacity (Gb)
+      spec.ipRange: IP Range
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+  name: gcpnfsvolumes-ui.operator.kyma-project.io
+  namespace: kyma-system

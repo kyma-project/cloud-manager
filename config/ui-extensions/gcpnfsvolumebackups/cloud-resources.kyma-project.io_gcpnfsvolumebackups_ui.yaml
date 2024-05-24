@@ -1,0 +1,63 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - widget: Labels
+          source: spec.location
+          name: spec.location
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.source.volume.name
+          name: spec.source.volume.name
+          visibility: $exists($value)
+        - widget: Labels
+          source: spec.source.volume.namespace
+          name: spec.source.volume.namespace
+          visibility: $exists($value)
+        - widget: Labels
+          source: status.state
+          name: status.state
+          visibility: $exists($value)
+  form: |-
+    - path: spec.location
+      simple: true
+      name: spec.location
+      required: true
+    - path: spec.source.volume.name
+      simple: true
+      name: spec.source.volume.name
+      required: true
+    - path: spec.source.volume.namespace
+      simple: true
+      name: spec.source.volume.namespace
+      required: false
+  general: |-
+    resource:
+        kind: GcpNfsVolumeBackup
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpnfsvolumebackups
+    name: GCP NFS Volume Backups
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
+  list: |-
+    - source: spec.location
+      name: spec.location
+      sort: true
+    - source: spec.source.volume.name
+      name: spec.source.volume.name
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: ""
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+  name: gcpnfsvolumebackups-ui.operator.kyma-project.io
+  namespace: kyma-system

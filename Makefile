@@ -136,7 +136,6 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 
 .PHONY: build_ui
 build_ui: manifests kustomize # Build CRDS test
-	#$(KUSTOMIZE) build config/ui-extensions
 	# kustomize build all the ConfigMaps and output to their own file
 	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
