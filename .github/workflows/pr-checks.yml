@@ -18,7 +18,6 @@ jobs:
         run: go version
       - name: Build and test
         run: |
-          make build_ui
           ./config/sync.sh
           go mod tidy
           go mod download
