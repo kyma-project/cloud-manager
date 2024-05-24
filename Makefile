@@ -67,7 +67,7 @@ test-ff: jv
 	$(LOCALBIN)/jv -assertcontent -assertformat ./config/featureToggles/flag-schema.json ./config/featureToggles/featureToggles.yaml
 
 .PHONY: test
-test: manifests generate fmt vet envtest test-ff ## Run tests.
+test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
@@ -89,7 +89,7 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 ##@ Build
 
 .PHONY: build
-build: manifests generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet build_ui ## Build manager binary.
 	go build -o bin/manager cmd/main.go
 
 .PHONY: run
