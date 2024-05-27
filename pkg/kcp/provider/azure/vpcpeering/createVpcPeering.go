@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
+func createVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()

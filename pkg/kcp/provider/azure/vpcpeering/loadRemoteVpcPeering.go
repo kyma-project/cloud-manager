@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"k8s.io/utils/pointer"
@@ -13,7 +14,11 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	if state.remotePeering == nil {
+	clientId := azureconfig.AzureConfig.ClientId
+	clientSecret := azureconfig.AzureConfig.ClientSecret
+	tenantId := state.tenantId
+
+	if len(obj.Status.RemoteId) == 0 {
 		return nil, nil
 	}
 
@@ -23,7 +28,11 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return azuremeta.LogErrorAndReturn(err, "Error parsing remote virtual network peering ID", nil)
 	}
 
-	peering, err := state.client.Get(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
+	subscriptionId := resource.Subscription
+
+	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+
+	peering, err := c.Get(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error loading remote VPC Peering", nil)
