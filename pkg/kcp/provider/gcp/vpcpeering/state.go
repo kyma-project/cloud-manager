@@ -4,6 +4,7 @@ import (
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
@@ -15,63 +16,59 @@ type State struct {
 	client   vpcpeeringclient.Client
 	provider gcpclient.SkrClientProvider[vpcpeeringclient.Client]
 
-	saJsonKeyPath string
+	//gcp config
+	gcpConfig *gcpclient.GcpConfig
 
-	vpc                  *computepb.Network
+	peeringName          *string
 	vpcPeeringConnection *computepb.NetworkPeering
-	remoteVpc            *computepb.Network
+	remoteVpc            *string
+	remoteProject        *string
+	importCustomRoutes   *bool
 }
 
 type StateFactory interface {
 	NewState(ctx context.Context, state vpcpeeringtypes.State, logger logr.Logger) (*State, error)
 }
 
-func NewStateFactory(skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client]) StateFactory {
+type stateFactory struct {
+	skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client]
+	env         abstractions.Environment
+	gcpConfig   *gcpclient.GcpConfig
+}
+
+func NewStateFactory(skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
+		env:         env,
+		gcpConfig:   gcpclient.GetGcpConfig(env),
 	}
 }
 
-type stateFactory struct {
-	skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client]
-}
-
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-	//roleName := awsconfig.AwsConfig.AssumeRoleName
-	//awsAccessKeyId := awsconfig.AwsConfig.AccessKeyId
-	//awsSecretAccessKey := awsconfig.AwsConfig.SecretAccessKey
+	c, err := f.skrProvider(
+		ctx,
+		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+	)
 
-	//roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, roleName)
+	if err != nil {
+		return nil, err
+	}
 
-	//logger.WithValues(
-	//	"awsRegion", vpcPeeringState.Scope().Spec.Region,
-	//	"awsRole", roleArn,
-	//).Info("Assuming AWS role")
-
-	//c, err := f.skrProvider(
-	//	ctx,
-	//	vpcPeeringState.Scope().Spec.Region,
-	//	awsAccessKeyId,
-	//	awsSecretAccessKey,
-	//	roleArn,
-	//)
-
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey, roleName), nil
-	return nil, nil
+	return newState(vpcPeeringState, c, f.skrProvider, f.gcpConfig), nil
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
 	client vpcpeeringclient.Client,
 	provider gcpclient.SkrClientProvider[vpcpeeringclient.Client],
-	saJsonKeyPath string) *State {
+	gcpConfig *gcpclient.GcpConfig) *State {
 	return &State{
-		State:         vpcPeeringState,
-		client:        client,
-		provider:      provider,
-		saJsonKeyPath: saJsonKeyPath,
+		State:              vpcPeeringState,
+		client:             client,
+		provider:           provider,
+		gcpConfig:          gcpConfig,
+		peeringName:        &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.PeeringName,
+		remoteVpc:          &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteVpc,
+		remoteProject:      &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteProject,
+		importCustomRoutes: &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.ImportCustomRoutes,
 	}
 }

@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpvpccpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -20,6 +22,7 @@ func New() Server {
 		serviceUsageStore: &serviceUsageStore{},
 		nfsRestoreStore:   &nfsRestoreStore{},
 		nfsBackupStore:    &nfsBackupStore{},
+		vpcPeeringStore:   &vpcPeeringStore{},
 	}
 }
 
@@ -29,6 +32,7 @@ type server struct {
 	*serviceUsageStore
 	*nfsRestoreStore
 	*nfsBackupStore
+	*vpcPeeringStore
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -119,6 +123,14 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[backupclient.F
 	return func(ctx context.Context, saJsonKeyPath string) (backupclient.FileBackupClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FileBackupClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) VpcPeeringSkrProvider() cloudclient.SkrClientProvider[gcpvpccpeering.Client] {
+	return func(ctx context.Context, saJsonKeyPath string) (gcpvpccpeering.Client, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP VPCPeeringProvider mock...")
 		return s, nil
 	}
 }

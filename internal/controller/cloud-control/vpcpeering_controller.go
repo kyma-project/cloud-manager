@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -44,15 +45,18 @@ func SetupVpcPeeringReconciler(
 	awsSkrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 	azureSkrProvider azureclient.SkrClientProvider[azurevpcpeeringclient.Client],
 	gcpSkrProvider gcpclient.SkrClientProvider[gcpvpcpeeringclient.Client],
-
+	env abstractions.Environment,
 ) error {
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
 	return NewVpcPeeringReconciler(
 		vpcpeering.NewVpcPeeringReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsVpCPeering.NewStateFactory(awsSkrProvider),
 			azurevpcpeering.NewStateFactory(azureSkrProvider),
-			gcpvpcpeering.NewStateFactory(gcpSkrProvider),
+			gcpvpcpeering.NewStateFactory(gcpSkrProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }

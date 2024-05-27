@@ -23,11 +23,12 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	con, err := state.client.CreateVpcPeeringConnection(
 		ctx,
-		state.vpc.Name,
-		state.remoteVpc.Name,
-		true,
-		project,
-		vpc)
+		state.peeringName,
+		state.remoteVpc,
+		state.remoteProject,
+		state.importCustomRoutes,
+		&project,
+		&vpc)
 
 	if err != nil {
 		logger.Error(err, "Error creating VPC Peering")

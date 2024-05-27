@@ -204,6 +204,7 @@ func main() {
 		awsvpcpeeringclient.NewClientProvider(),
 		azurevpcpeeringclient.NewClientProvider(),
 		gcpvpcpeeringclient.NewClientProvider(),
+		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
 		os.Exit(1)
