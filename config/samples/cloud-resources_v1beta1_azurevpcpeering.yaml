@@ -1,0 +1,14 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AzureVpcPeering
+metadata:
+  labels:
+    app.kubernetes.io/name: azurevpcpeering
+    app.kubernetes.io/instance: azurevpcpeering-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: azurevpcpeering-sample
+spec:
+  allowVnetAccess: true
+  remoteResourceGroup: MyResourceGroup
+  remoteVnet: /subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet
