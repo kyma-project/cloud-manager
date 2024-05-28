@@ -78,6 +78,10 @@ spec:
                     type: object
                   gcp:
                     properties:
+                      importCustomRoutes:
+                        type: boolean
+                      peeringName:
+                        type: string
                       remoteProject:
                         type: string
                       remoteVpc:
