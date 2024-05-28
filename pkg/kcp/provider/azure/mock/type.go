@@ -1,6 +1,5 @@
 package mock
 
-import "C"
 import (
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
