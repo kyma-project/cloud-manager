@@ -50,7 +50,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("GCP VPC Peering Connection created")
 
-	state.vpcPeeringConnection = &con
+	state.vpcPeeringConnection = con
 
 	err = state.UpdateObjStatus(ctx)
 

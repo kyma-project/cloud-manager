@@ -5,9 +5,9 @@ import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	"google.golang.org/api/option"
+	"k8s.io/utils/ptr"
 )
 
 /*
@@ -37,11 +37,10 @@ type networkClient struct {
 }
 
 type Client interface {
-	CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (pb.NetworkPeering, error)
+	CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error)
 }
 
-func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (pb.NetworkPeering, error) {
-	networkPeering := pb.NetworkPeering{}
+func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error) {
 
 	kymaNetwork := getFullNetworkUrl(*kymaProject, *kymaVpc)
 	remoteNetwork := getFullNetworkUrl(*remoteProject, *remoteVpc)
@@ -55,25 +54,26 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 				Name:                 name,
 				Network:              &remoteNetwork,
 				ImportCustomRoutes:   importCustomRoutes,
-				ExchangeSubnetRoutes: to.Ptr(true),
+				ExchangeSubnetRoutes: ptr.To(true),
 			},
 		},
 	}
 
 	peeringOperationFromKyma, err := c.cnc.AddPeering(ctx, peeringRequestFromKyma)
 	if err != nil {
-		return networkPeering, err
+		return nil, err
 	}
 	err = peeringOperationFromKyma.Wait(ctx)
 	if err != nil {
-		return networkPeering, err
+		return nil, err
 	}
 
+	var networkPeering *pb.NetworkPeering
 	net, err := c.cnc.Get(ctx, &pb.GetNetworkRequest{Network: *kymaVpc, Project: *kymaProject})
 	nps := net.GetPeerings()
 	for _, np := range nps {
 		if *np.Network == remoteNetwork {
-			networkPeering = *np
+			networkPeering = np
 			break
 		}
 	}
@@ -92,7 +92,7 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 				Name:                 name,
 				Network:              &kymaNetwork,
 				ExportCustomRoutes:   &exportCustomRoutes,
-				ExchangeSubnetRoutes: Pointer(true),
+				ExchangeSubnetRoutes: ptr.To(true),
 			},
 		},
 	}
@@ -110,8 +110,4 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 
 func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
-}
-
-func Pointer[T any](d T) *T {
-	return &d
 }
