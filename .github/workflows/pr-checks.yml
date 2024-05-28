@@ -25,3 +25,5 @@ jobs:
           make test
       - name: Check modified files
         run: git diff --exit-code
+      - name: Check if test GUIDs are unique
+        run: x=$(grep -rEho '[[:xdigit:]]{8}(-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12}'  ./internal | sort | uniq -d); [ -z "${x}" ] || ( echo duplicated GUID detected $x; exit 1; )
