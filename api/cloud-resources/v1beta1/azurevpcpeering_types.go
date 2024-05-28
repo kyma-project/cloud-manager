@@ -39,6 +39,7 @@ type AzureVpcPeeringStatus struct {
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:scope=Cluster
 //+kubebuilder:subresource:status
 
 // AzureVpcPeering is the Schema for the azurevpcpeerings API
