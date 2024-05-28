@@ -95,6 +95,21 @@ func (cs *CaseStruct) Action(ctx context.Context, state State) (error, context.C
 	return cs.A(ctx, state)
 }
 
+func IfElse(condition Predicate, trueAction Action, falseAction Action) Action {
+	return func(ctx context.Context, state State) (error, context.Context) {
+		if condition(ctx, state) {
+			if trueAction != nil {
+				return trueAction(ctx, state)
+			}
+		} else {
+			if falseAction != nil {
+				return falseAction(ctx, state)
+			}
+		}
+		return nil, nil
+	}
+}
+
 func BuildSwitchAction(name string, defaultAction Action, cases ...Case) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		logger := LoggerFromCtx(ctx).WithValues("action", name)

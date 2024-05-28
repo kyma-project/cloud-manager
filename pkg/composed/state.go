@@ -2,11 +2,14 @@ package composed
 
 import (
 	"context"
+	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func NewStateClusterFromCluster(cluster cluster.Cluster) StateCluster {
@@ -83,6 +86,10 @@ type State interface {
 	LoadObj(ctx context.Context, opts ...client.GetOption) error
 	UpdateObj(ctx context.Context, opts ...client.UpdateOption) error
 	UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error
+	PatchObjStatus(ctx context.Context) error
+
+	PatchObjAddFinalizer(ctx context.Context, f string) (bool, error)
+	PatchObjRemoveFinalizer(ctx context.Context, f string) (bool, error)
 }
 
 type StateFactory interface {
@@ -155,4 +162,44 @@ func (s *baseState) UpdateObj(ctx context.Context, opts ...client.UpdateOption) 
 
 func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResourceUpdateOption) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj(), opts...)
+}
+
+func (s *baseState) PatchObjStatus(ctx context.Context) error {
+	objToPatch := s.Obj()
+	if objClonable, ok := s.obj.(ObjWithCloneForPatchStatus); ok {
+		objToPatch = objClonable.CloneForPatchStatus()
+	}
+	return s.Cluster().K8sClient().Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+}
+
+// PatchObjAddFinalizer uses controllerutil.AddFinalizer() to add finalizer, if it returns false
+// meaning that object already had that finalizer and that object is not modified it returns nil,
+// if the finalizer didn't exist and object is modified, then it
+// patches obj with MergePatchType. Finalizer name f must consist of alphanumeric
+// characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',
+// or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"}
+func (s *baseState) PatchObjAddFinalizer(ctx context.Context, f string) (bool, error) {
+	added := controllerutil.AddFinalizer(s.Obj(), f)
+	if !added {
+		return false, nil
+	}
+	p := []byte(fmt.Sprintf(`{"metadata": {"finalizers":["%s"]}}`, f))
+	return true, s.Cluster().K8sClient().Patch(ctx, s.Obj(), client.RawPatch(types.MergePatchType, p))
+}
+
+// PatchObjRemoveFinalizer patches obj with JSONPatchType removing the specified finalizer name
+func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool, error) {
+	idx := -1
+	for i, s := range s.Obj().GetFinalizers() {
+		if s == f {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return false, nil
+	}
+	controllerutil.RemoveFinalizer(s.Obj(), f)
+	p := []byte(fmt.Sprintf(`[{"op": "remove", "path": "/metadata/finalizers/%d"}]`, idx))
+	return true, s.Cluster().K8sClient().Patch(ctx, s.Obj(), client.RawPatch(types.JSONPatchType, p))
 }

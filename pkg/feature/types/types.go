@@ -5,6 +5,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type Provider interface {
+	BoolVariation(ctx context.Context, flagKey string, defaultValue bool) bool
+	IntVariation(ctx context.Context, flagKey string, defaultValue int) int
+	Float64Variation(ctx context.Context, flagKey string, defaultValue float64) float64
+	StringVariation(ctx context.Context, flagKey string, defaultValue string) string
+	JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []interface{}) []interface{}
+	JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]interface{}) map[string]interface{}
+}
+
 type LandscapeName = string
 
 const (

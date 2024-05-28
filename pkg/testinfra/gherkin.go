@@ -1,8 +1,10 @@
 package testinfra
 
 import (
+	"context"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	"strings"
@@ -10,7 +12,7 @@ import (
 )
 
 func ReportAfterSuite(report ginkgo.Report) {
-	root := &node{name: "root"}
+	root := &node{name: "root", root: true}
 	for _, spec := range report.SpecReports {
 		if spec.LeafNodeText != "" && len(spec.ContainerHierarchyTexts) > 0 {
 			path := append(spec.ContainerHierarchyTexts, spec.LeafNodeText)
@@ -29,6 +31,7 @@ func ReportAfterSuite(report ginkgo.Report) {
 var spaces = strings.Repeat(" ", 1000)
 
 type node struct {
+	root     bool
 	state    types.SpecState
 	name     string
 	items    []*node
@@ -67,23 +70,7 @@ func (n *node) maxNameLen() int {
 }
 
 func (n *node) coloredName() string {
-	txt := n.name
-	if strings.HasPrefix(txt, "//") || strings.HasPrefix(txt, "--") || strings.HasPrefix(txt, "#") {
-		return color.HiBlackString(txt)
-	}
-	txt = strings.ReplaceAll(txt, "SKIPPED:", color.RedString("SKIPPED:"))
-	txt = strings.ReplaceAll(txt, "Feature:", color.MagentaString("Feature:"))
-	txt = strings.ReplaceAll(txt, "Scenario:", color.YellowString("Scenario:"))
-	txt = strings.ReplaceAll(txt, "And Given ", color.CyanString("And Given "))
-	txt = strings.ReplaceAll(txt, "And When ", color.CyanString("And When "))
-	txt = strings.ReplaceAll(txt, "And Then ", color.CyanString("And Then "))
-	txt = strings.ReplaceAll(txt, "Given ", color.CyanString("Given "))
-	txt = strings.ReplaceAll(txt, "When ", color.CyanString("When "))
-	txt = strings.ReplaceAll(txt, "Then ", color.CyanString("Then "))
-	txt = strings.ReplaceAll(txt, "And ", color.CyanString("And "))
-	txt = strings.ReplaceAll(txt, "By ", color.CyanString("By "))
-
-	return txt
+	return coloredText(n.name)
 }
 
 func (n *node) coloredDuration() (string, int) {
@@ -115,19 +102,29 @@ func (n *node) coloredState() string {
 
 func (n *node) printInternal(level int, paddingRight int) {
 	nameTxt := n.coloredName()
-	durationTxt, durationLen := n.coloredDuration()
+	if n.root {
+		fmt.Println(color.BlueString("Feature flags:"))
+		ctx := context.Background()
+		fmt.Printf("    ipRangeAutomaticCidrAllocation: %v\n", feature.IpRangeAutomaticCidrAllocation.Value(ctx))
 
-	indent := level * 4
-	padding := ""
-	cnt := paddingRight - len(n.name) - indent - durationLen
-	if cnt > 0 {
-		padding = spaces[:cnt]
-	}
+		for _, child := range n.items {
+			child.printInternal(0, paddingRight)
+		}
+	} else {
+		durationTxt, durationLen := n.coloredDuration()
 
-	fmt.Printf("%s%v   %s  %v %v\n", spaces[:indent], nameTxt, padding, durationTxt, n.coloredState())
+		indent := level * 4
+		padding := ""
+		cnt := paddingRight - len(n.name) - indent - durationLen
+		if cnt > 0 {
+			padding = spaces[:cnt]
+		}
 
-	for _, child := range n.items {
-		child.printInternal(level+1, paddingRight)
+		fmt.Printf("%s%v   %s  %v %v\n", spaces[:indent], nameTxt, padding, durationTxt, n.coloredState())
+
+		for _, child := range n.items {
+			child.printInternal(level+1, paddingRight)
+		}
 	}
 }
 
@@ -149,4 +146,23 @@ func (n *node) add(path []string, state types.SpecState, duration time.Duration)
 		return
 	}
 	child.add(restOfThePath, state, duration)
+}
+
+func coloredText(txt string) string {
+	if strings.HasPrefix(txt, "//") || strings.HasPrefix(txt, "--") || strings.HasPrefix(txt, "#") {
+		return color.HiBlackString(txt)
+	}
+	txt = strings.ReplaceAll(txt, "SKIPPED:", color.RedString("SKIPPED:"))
+	txt = strings.ReplaceAll(txt, "Feature:", color.MagentaString("Feature:"))
+	txt = strings.ReplaceAll(txt, "Scenario:", color.YellowString("Scenario:"))
+	txt = strings.ReplaceAll(txt, "And Given ", color.CyanString("And Given "))
+	txt = strings.ReplaceAll(txt, "And When ", color.CyanString("And When "))
+	txt = strings.ReplaceAll(txt, "And Then ", color.CyanString("And Then "))
+	txt = strings.ReplaceAll(txt, "Given ", color.CyanString("Given "))
+	txt = strings.ReplaceAll(txt, "When ", color.CyanString("When "))
+	txt = strings.ReplaceAll(txt, "Then ", color.CyanString("Then "))
+	txt = strings.ReplaceAll(txt, "And ", color.CyanString("And "))
+	txt = strings.ReplaceAll(txt, "By ", color.CyanString("By "))
+
+	return txt
 }

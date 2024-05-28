@@ -1,4 +1,4 @@
-package autoallocate
+package allocate
 
 import "errors"
 
@@ -15,6 +15,8 @@ var reserved = []string{
 
 const DefaultMaskSize = 22
 
+// AllocateCidr finds an IP range with given maskOnes size such that does not overlap with any
+// of the existing ranges. It starts from the first existing range upwards.
 func AllocateCidr(maskOnes int, existingRanges []string) (string, error) {
 	if len(reserved) == 0 {
 		return "10.250.4.0/22", nil

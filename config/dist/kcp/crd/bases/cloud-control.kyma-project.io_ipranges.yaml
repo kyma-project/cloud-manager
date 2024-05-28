@@ -80,13 +80,14 @@ spec:
                 - name
                 type: object
             required:
-            - cidr
             - remoteRef
             - scope
             type: object
           status:
             description: IpRangeStatus defines the observed state of IpRange
             properties:
+              addressSpaceId:
+                type: string
               cidr:
                 type: string
               conditions:

@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -13,7 +14,12 @@ import (
 type State struct {
 	iprangetypes.State
 
-	client iprangeclient.Client
+	awsClient iprangeclient.Client
+
+	vpc                  *ec2Types.Vpc
+	associatedCidrBlock  *ec2Types.VpcCidrBlockAssociation
+	allSubnets           []ec2Types.Subnet
+	cloudResourceSubnets []ec2Types.Subnet
 }
 
 type StateFactory interface {
@@ -56,7 +62,7 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 
 func newState(ipRangeState iprangetypes.State, c iprangeclient.Client) *State {
 	return &State{
-		State:  ipRangeState,
-		client: c,
+		State:     ipRangeState,
+		awsClient: c,
 	}
 }

@@ -21,6 +21,39 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"awsIpRangeI2-main",
+			finalizerAdd,
+			vpcLoad,
+			vpcFind,
+			subnetsLoadAll,
+			subnetsFindCloudResources,
+			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
+				composed.ComposeActions(
+					"kcpIpRangeI2-create",
+					preventCidrEdit,
+					//allocateIpRange,
+					copyCidrToStatus,
+					splitRangeByZones,
+					ensureShootZonesAndRangeSubnetsMatch,
+					rangeCheckOverlap,
+					rangeCheckBlockStatus,
+					rangeCheckSubnetOverlap,
+					rangeExtendVpcAddressSpace,
+					subnetsCreate,
+					subnetsCheckState,
+					statusSuccess,
+					composed.StopAndForgetAction,
+				),
+				composed.ComposeActions(
+					"kcpIpRangeI2-delete",
+					statusRemoveReadyCondition,
+					subnetsDelete,
+					subnetsWaitDeleted,
+					rangeDisassociateVpcAddressSpace,
+					rangeWaitCidrBlockDisassociated,
+					finalizerRemove,
+					composed.StopAndForgetAction,
+				),
+			),
 		)(awsmeta.SetAwsAccountId(ctx, ipRangeState.Scope().Spec.Scope.Aws.AccountId), state)
 	}
 }

@@ -5,6 +5,9 @@ run-name: '${{github.event.pull_request.title}}'
 env:
   PIPELINE: true
 jobs:
+  strategy:
+    matrix:
+      ipRangeAutomaticCidrAllocation: ["false", "true"]
   build:
     runs-on: ubuntu-latest
     steps:
@@ -17,6 +20,8 @@ jobs:
       - name: Display Go version
         run: go version
       - name: Build and test
+        env:
+          FF_IP_RANGE_AUTOMATIC_CIDR_ALLOCATION: ${{ matrix.ipRangeAutomaticCidrAllocation }}
         run: |
           ./config/sync.sh
           go mod tidy

@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Error reasons
@@ -27,6 +28,7 @@ const (
 	ReasonCidrCanNotSplit                = "CidrCanNotSplit"
 	ReasonCidrOverlap                    = "CidrOverlap"
 	ReasonCidrAssociationFailed          = "CidrAssociationFailed"
+	ReasonCidrAllocationFailed           = "CidrAllocationFailed"
 	ReasonVpcNotFound                    = "VpcNotFound"
 	ReasonShootAndVpcMismatch            = "ShootAndVpcMismatch"
 	ReasonFailedExtendingVpcAddressSpace = "FailedExtendingVpcAddressSpace"
@@ -41,7 +43,7 @@ type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
 
-	// +kubebuilder:validation:Required
+	// +optional
 	Cidr string `json:"cidr"`
 
 	// +optional
@@ -100,6 +102,9 @@ type IpRangeStatus struct {
 
 	// +optional
 	VpcId string `json:"vpcId,omitempty"`
+
+	// +optional
+	AddressSpaceId string `json:"addressSpaceId,omitempty"`
 
 	// +optional
 	Subnets IpRangeSubnets `json:"subnets,omitempty"`
@@ -167,6 +172,21 @@ func (in *IpRange) Conditions() *[]metav1.Condition {
 
 func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *IpRange) CloneForPatchStatus() client.Object {
+	out := &IpRange{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "IpRange",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
+	return out
 }
 
 //+kubebuilder:object:root=true

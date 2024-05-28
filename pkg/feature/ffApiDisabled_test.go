@@ -16,7 +16,7 @@ func TestApiDisabled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := Initialize(ctx, WithFile("testdata/apiDisabled.yaml"), WithEvaluateAllFlagsState())
+	err := Initialize(ctx, WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)
 
 	sch := runtime.NewScheme()

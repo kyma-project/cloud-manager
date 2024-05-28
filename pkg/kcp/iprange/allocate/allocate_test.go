@@ -1,4 +1,4 @@
-package autoallocate
+package allocate
 
 import (
 	"github.com/stretchr/testify/assert"

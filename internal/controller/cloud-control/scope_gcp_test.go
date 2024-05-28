@@ -17,13 +17,14 @@ var _ = Describe("Feature: KCP Scope for GCP", func() {
 		kymaName = "51485d74-0e28-44f9-ae80-3088128d8747"
 	)
 	// Set the path to an arbitrary file path to prevent errors
-	os.Setenv("GCP_SA_JSON_KEY_PATH", "testdata/serviceaccount.json")
+	_ = os.Setenv("GCP_SA_JSON_KEY_PATH", "testdata/serviceaccount.json")
 	It("Scenario: Scope GCP", func() {
 		shoot := &gardenerTypes.Shoot{}
 		By("Given Shoot exists", func() {
-			Eventually(CreateShootGcp). // for gcp, we don't really read anything of an importance from the shoot, so we can use aws
-							WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-							Should(Succeed(), "failed creating garden shoot for gcp")
+			// for gcp, we don't really read anything of an importance from the shoot, so we can use aws
+			Eventually(CreateShootGcp).
+				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
+				Should(Succeed(), "failed creating garden shoot for gcp")
 		})
 
 		kymaCR := util.NewKymaUnstructured()
@@ -55,24 +56,26 @@ var _ = Describe("Feature: KCP Scope for GCP", func() {
 				Should(Succeed(), "expected Scope to be created")
 		})
 
-		By("And has provider gcp", func() {
+		By("And Then Scope has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed(), "expected Scope to have Ready condition")
+		})
+
+		By("And Then Scope has provider gcp", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderGCP))
 		})
 
-		By("And has spec.kymaName to equal shoot.name", func() {
+		By("And Then Scope has spec.kymaName to equal shoot.name", func() {
 			Expect(scope.Spec.KymaName).To(Equal(shoot.Name), "expected Scope.spec.kymaName to equal shoot.name")
 		})
 
-		By("And has nil spec.scope.azure", func() {
+		By("And Then Scope has nil spec.scope.azure", func() {
 			Expect(scope.Spec.Scope.Azure).To(BeNil(), "expected Shoot.spec.scope.azure to be nil")
 		})
 
-		By("And has nil spec.scope.aws", func() {
+		By("And Then Scope has nil spec.scope.aws", func() {
 			Expect(scope.Spec.Scope.Aws).To(BeNil(), "expected Shoot.spec.scope.aws to be nil")
-		})
-		By("And has Ready condition", func() {
-			Expect(scope.Status.Conditions).To(HaveLen(1))
-			Expect(scope.Status.Conditions[0].Type).To(Equal(cloudcontrolv1beta1.ConditionTypeReady))
 		})
 	})
 

@@ -71,7 +71,17 @@ func IsNotFound(err error) bool {
 	return false
 }
 
+func RetryableErrorToRequeueResponse(err error) error {
+	if IsErrorRetryable(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
+	}
+	return nil
+}
+
 func ErrorToRequeueResponse(err error) error {
+	if err == nil {
+		return nil
+	}
 	if IsErrorRetryable(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
 	}

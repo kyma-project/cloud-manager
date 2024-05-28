@@ -20,7 +20,6 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
@@ -72,8 +71,6 @@ var _ = BeforeSuite(func() {
 		"GCP_RETRY_WAIT_DURATION":     "300ms",
 		"GCP_OPERATION_WAIT_DURATION": "300ms",
 	})
-
-	util.SetSpeedyTimingForTests()
 
 	// Setup controllers
 	// Scope

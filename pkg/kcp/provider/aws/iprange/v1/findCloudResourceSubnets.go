@@ -6,7 +6,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/pointer"
 )
 
@@ -15,7 +15,7 @@ func findCloudResourceSubnets(ctx context.Context, st composed.State) (error, co
 
 	var cloudResourcesSubnets []ec2Types.Subnet
 	for _, sub := range state.allSubnets {
-		val := util.GetEc2TagValue(sub.Tags, tagKey)
+		val := awsutil.GetEc2TagValue(sub.Tags, tagKey)
 		if len(val) > 0 {
 			cloudResourcesSubnets = append(cloudResourcesSubnets, sub)
 		}
