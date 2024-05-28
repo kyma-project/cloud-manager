@@ -80,13 +80,11 @@ type AwsNfsVolumeStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:Enum=Processing;Creating;Updating;Deleting;Ready;Error
 	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Server",type="string",JSONPath=".status.server"
 // +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".spec.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"

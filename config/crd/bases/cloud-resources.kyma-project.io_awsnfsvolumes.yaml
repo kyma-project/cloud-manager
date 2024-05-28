@@ -15,9 +15,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.server
-      name: Server
-      type: string
     - jsonPath: .spec.capacity
       name: Capacity
       type: string
@@ -172,13 +169,6 @@ spec:
               server:
                 type: string
               state:
-                enum:
-                - Processing
-                - Creating
-                - Updating
-                - Deleting
-                - Ready
-                - Error
                 type: string
             type: object
         type: object
