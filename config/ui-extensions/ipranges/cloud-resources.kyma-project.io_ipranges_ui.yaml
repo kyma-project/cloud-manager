@@ -1,0 +1,49 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - widget: Labels
+          source: metadata.name
+          name: metadata.name
+        - widget: Labels
+          source: spec.cidr
+          name: spec.cidr
+        - widget: Labels
+          source: status.cidr
+          name: status.cidr
+        - widget: Labels
+          source: status.state
+          name: status.state
+  form: |-
+    - path: spec.cidr
+      name: spec.cidr
+      widget: Text
+      simple: true
+      required: true
+  general: |
+    resource:
+        kind: IpRange
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: ipranges
+    name: Ip Ranges
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        IpRange description here
+  list: |-
+    - source: spec.cidr
+      name: spec.cidr
+      sort: true
+    - source: metadata.namespace
+      name: metadata.namespace
+      sort: true
+  translations: ""
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+  name: ipranges-ui.operator.kyma-project.io
+  namespace: kyma-system

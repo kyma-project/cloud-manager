@@ -1,7 +1,9 @@
 resources:
-  - awsnfsvolumes
-  - cloudresources
+#  - awsnfsvolumes
+#  - cloudresources
   - gcpnfsvolumes
+  - gcpnfsvolumebackups
+  - gcpnfsvolumerestores
   - ipranges
 #  - nfsshares
 #  - scopes
