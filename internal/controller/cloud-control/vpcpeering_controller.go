@@ -18,13 +18,16 @@ package cloudcontrol
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -33,6 +36,7 @@ import (
 
 	awsVpCPeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azurevpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
+	gcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 )
 
@@ -40,14 +44,19 @@ func SetupVpcPeeringReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 	azureSkrProvider azureclient.SkrClientProvider[azurevpcpeeringclient.Client],
-
+	gcpSkrProvider gcpclient.SkrClientProvider[gcpvpcpeeringclient.Client],
+	env abstractions.Environment,
 ) error {
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
 	return NewVpcPeeringReconciler(
 		vpcpeering.NewVpcPeeringReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsVpCPeering.NewStateFactory(awsSkrProvider),
 			azurevpcpeering.NewStateFactory(azureSkrProvider),
+			gcpvpcpeering.NewStateFactory(gcpSkrProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	aws "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
+	gcp "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -21,6 +22,7 @@ type vpcPeeringReconciler struct {
 
 	awsStateFactory   aws.StateFactory
 	azureStateFactory azure.StateFactory
+	gcpStateFactory   gcp.StateFactory
 }
 
 func NewVpcPeeringReconciler(
@@ -28,12 +30,14 @@ func NewVpcPeeringReconciler(
 	focalStateFactory focal.StateFactory,
 	awsStateFactory aws.StateFactory,
 	azureStateFactory azure.StateFactory,
+	gcpStateFactory gcp.StateFactory,
 ) VPCPeeringReconciler {
 	return &vpcPeeringReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
+		gcpStateFactory:      gcpStateFactory,
 	}
 }
 
@@ -62,6 +66,7 @@ func (r *vpcPeeringReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(focal.AwsProviderPredicate, aws.New(r.awsStateFactory)),
 					composed.NewCase(focal.AzureProviderPredicate, azure.New(r.azureStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, gcp.New(r.gcpStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

@@ -100,6 +100,8 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
 		infra.AzureMock().VpcPeeringSkrProvider(),
+		infra.GcpMock().VpcPeeringSkrProvider(),
+		env,
 	))
 
 	// Start controllers
