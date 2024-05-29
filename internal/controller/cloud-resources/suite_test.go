@@ -18,13 +18,14 @@ package cloudresources
 
 import (
 	"context"
+	"os"
+	"testing"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
-	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"testing"
-
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"

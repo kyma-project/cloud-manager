@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/go-logr/logr"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -18,6 +19,9 @@ type State struct {
 	clientSecret   string
 	subscriptionId string
 	tenantId       string
+
+	peering       *armnetwork.VirtualNetworkPeering
+	remotePeering *armnetwork.VirtualNetworkPeering
 }
 
 // goes to new.go
@@ -39,12 +43,8 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 
 	clientId := azureconfig.AzureConfig.ClientId
 	clientSecret := azureconfig.AzureConfig.ClientSecret
-	subscriptionId := azureconfig.AzureConfig.SubscriptionId
-	tenantId := azureconfig.AzureConfig.TenantId
-
-	logger.WithValues(
-		"awsRegion", vpcPeeringState.Scope().Spec.Region,
-	).Info("Assuming AWS role")
+	subscriptionId := vpcPeeringState.Scope().Spec.Scope.Azure.SubscriptionId
+	tenantId := vpcPeeringState.Scope().Spec.Scope.Azure.TenantId
 
 	c, err := f.skrProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 

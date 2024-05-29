@@ -1,0 +1,13 @@
+body:
+    - widget: Labels
+      source: metadata.name
+      name: metadata.name
+    - widget: Labels
+      source: spec.cidr
+      name: spec.cidr
+    - widget: Labels
+      source: status.cidr
+      name: status.cidr
+    - widget: Labels
+      source: status.state
+      name: status.state

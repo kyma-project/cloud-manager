@@ -35,7 +35,7 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 					Pods:     "10.96.0.0/13",
 					Services: "10.104.0.0/13",
 					VPC: cloudcontrolv1beta1.AwsVPC{
-						CIDR: "10.180.0.0/16",
+						CIDR: "10.250.0.0/22",
 					},
 					Zones: []cloudcontrolv1beta1.AwsZone{
 						{
@@ -91,7 +91,7 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			Azure: &cloudcontrolv1beta1.AzureScope{
 				TenantId:       "fdd97055-c316-462f-8769-f99b670c2c4d",
-				SubscriptionId: "44753ea6-98e9-4e46-b6db-8e03e790e10e",
+				SubscriptionId: "2bfba5a4-c5d1-4b03-a7db-4ead64232fd6",
 				VpcNetwork:     fmt.Sprintf("shoot--%s--%s", project, scope.Name),
 			},
 		},

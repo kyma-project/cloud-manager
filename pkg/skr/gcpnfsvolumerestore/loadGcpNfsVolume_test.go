@@ -76,7 +76,7 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 			Namespace: gcpNfsVolumeRestore.Namespace},
 		fromK8s)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "", fromK8s.Status.State)
+	assert.Equal(suite.T(), v1beta1.JobStateError, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }

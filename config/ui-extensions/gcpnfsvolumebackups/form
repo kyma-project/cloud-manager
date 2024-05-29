@@ -1,0 +1,12 @@
+- path: spec.location
+  simple: true
+  name: spec.location
+  required: true
+- path: spec.source.volume.name
+  simple: true
+  name: spec.source.volume.name
+  required: true
+- path: spec.source.volume.namespace
+  simple: true
+  name: spec.source.volume.namespace
+  required: false
