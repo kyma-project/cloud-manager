@@ -12,7 +12,7 @@ func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		autoCidrAllocationEnabled := feature.IpRangeAutomaticCidrAllocation.Value(ctx)
 		logger := composed.LoggerFromCtx(ctx)
-		logger.WithValues("autoCidrAllocationEnabled", autoCidrAllocationEnabled).Info("KcpIpRangeImplementation")
+		logger.WithValues("autoCidrAllocationEnabled", autoCidrAllocationEnabled).Info("Auto CIDR allocation flag")
 		if !autoCidrAllocationEnabled {
 			return v1.New(stateFactory.(*generealStateFactory).v1StateFactory)(ctx, st)
 		} else {
