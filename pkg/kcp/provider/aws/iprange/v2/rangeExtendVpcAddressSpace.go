@@ -18,7 +18,7 @@ func rangeExtendVpcAddressSpace(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("Associating vpc cidr block")
 
-	block, err := state.awsClient.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.ObjAsIpRange().Spec.Cidr)
+	block, err := state.awsClient.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.ObjAsIpRange().Status.Cidr)
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on associate vpc cidr block",
 		cloudresourcesv1beta1.ReasonFailedExtendingVpcAddressSpace, "Failed extending vpc address space"); x != nil {
 		return x, nil

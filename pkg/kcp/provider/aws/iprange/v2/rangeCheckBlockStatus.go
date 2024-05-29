@@ -18,11 +18,11 @@ func rangeCheckBlockStatus(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
+	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Status.Cidr)
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
-			logger.Error(err, "Error parsing AWS CIDR: %w", err)
+			logger.Error(err, "Error parsing AWS CIDR")
 			continue
 		}
 

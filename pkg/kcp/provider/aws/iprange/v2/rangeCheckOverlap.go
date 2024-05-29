@@ -19,7 +19,7 @@ func rangeCheckOverlap(ctx context.Context, st composed.State) (error, context.C
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
-			logger.Error(err, "Error parsing AWS CIDR: %w", err)
+			logger.Error(err, "Error parsing AWS CIDR")
 			continue
 		}
 

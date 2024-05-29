@@ -63,7 +63,6 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 				"ipRangeCommon",
 				// common IpRange common actions here
 				cidrRequiredWhenAutoAllocationDisabled,
-				allocateIpRange,
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",

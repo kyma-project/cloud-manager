@@ -16,7 +16,7 @@ func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (er
 
 	var theBlock *ec2Types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
-		if pointer.StringDeref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Spec.Cidr {
+		if pointer.StringDeref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
 			theBlock = &cidrBlock
 		}
 	}

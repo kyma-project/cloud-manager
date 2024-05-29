@@ -18,7 +18,7 @@ func allocateIpRange(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 	if len(state.ObjAsIpRange().Spec.Cidr) > 0 {
-		// already allocated
+		// specified, no need to allocate
 		return nil, nil
 	}
 

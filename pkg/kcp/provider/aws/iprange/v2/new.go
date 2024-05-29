@@ -30,7 +30,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"kcpIpRangeI2-create",
 					preventCidrEdit,
-					//allocateIpRange,
+					allocateIpRange,
 					copyCidrToStatus,
 					splitRangeByZones,
 					ensureShootZonesAndRangeSubnetsMatch,
