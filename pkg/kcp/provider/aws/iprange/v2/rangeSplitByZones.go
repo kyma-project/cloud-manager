@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/3th1nk/cidr"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func splitRangeByZones(ctx context.Context, st composed.State) (error, context.Context) {
+func rangeSplitByZones(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 	ipRangeObj := state.ObjAsIpRange()
@@ -27,9 +27,9 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudresourcesv1beta1.ReasonInvalidCidr,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonInvalidCidr,
 				Message: "Can not parse CIDR",
 			}).
 			ErrorLogMessage("Error patching KCP IpRange status with can not parse CIDR condition").
@@ -49,9 +49,9 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ReasonCidrCanNotSplit,
+				Reason:  cloudcontrolv1beta1.ReasonCidrCanNotSplit,
 				Message: fmt.Sprintf("Can not split CIDR to %d subnets", numberOfSubnets),
 			}).
 			ErrorLogMessage("Error patching KCP IpRange status after failed cidr splitting").

@@ -32,7 +32,7 @@ func New(stateFactory StateFactory) composed.Action {
 					preventCidrEdit,
 					allocateIpRange,
 					copyCidrToStatus,
-					splitRangeByZones,
+					rangeSplitByZones,
 					ensureShootZonesAndRangeSubnetsMatch,
 					rangeCheckOverlap,
 					rangeCheckBlockStatus,

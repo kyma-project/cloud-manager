@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/3th1nk/cidr"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,9 +26,9 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 		err = fmt.Errorf("error parsing IpRange CIDR: %w", err)
 		logger.Error(err, "Error splitting IpRange by zones")
 		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
-			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonInvalidCidr,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonInvalidCidr,
 			Message: "Can not parse CIDR",
 		})
 		err = state.UpdateObjStatus(ctx)
@@ -48,8 +49,8 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 		err = fmt.Errorf("error splitting IpRange cidr: %w", err)
 		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
-			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonCidrCanNotSplit,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonCidrCanNotSplit,
 			Message: fmt.Sprintf("Can not split CIDR to %d subnets", numberOfSubnets),
 		})
 		err = state.UpdateObjStatus(ctx)

@@ -3,7 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +77,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationErrorNotFound(
 	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), "", fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationOtherError() {
@@ -110,7 +110,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationOtherError() {
 	assert.Equal(suite.T(), "op-123", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), "", fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted() {
@@ -193,7 +193,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNil() {
 	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), "", fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFailed() {
@@ -242,7 +242,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFaile
 	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), v1beta1.JobStateFailed, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucceeded() {
@@ -287,7 +287,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucce
 	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), v1beta1.JobStateDone, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }
 
 func TestCheckRestoreOperation(t *testing.T) {

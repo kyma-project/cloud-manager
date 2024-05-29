@@ -2,12 +2,13 @@ package iprange
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/types"
@@ -57,6 +58,7 @@ func (r *ipRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *ipRangeReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.IpRange{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
@@ -78,6 +80,6 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 
 func (r *ipRangeReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
-		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.IpRange{}),
+		r.composedStateFactory.NewState(name, &cloudcontrolv1beta1.IpRange{}),
 	)
 }

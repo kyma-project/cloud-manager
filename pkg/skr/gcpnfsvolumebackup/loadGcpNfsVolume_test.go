@@ -2,7 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
@@ -131,7 +131,7 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), v1beta1.GcpNfsBackupError, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *loadGcpNfsVolumeSuite) TestVolumeReady() {

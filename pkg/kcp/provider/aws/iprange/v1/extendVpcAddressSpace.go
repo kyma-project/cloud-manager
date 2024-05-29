@@ -2,7 +2,7 @@ package v1
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -25,9 +25,9 @@ func extendVpcAddressSpace(ctx context.Context, st composed.State) (error, conte
 	if err != nil {
 		logger.Error(err, "Error associating vpc cidr block")
 		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonFailedExtendingVpcAddressSpace,
+			Reason:  cloudcontrolv1beta1.ReasonFailedExtendingVpcAddressSpace,
 			Message: "Failed extending vpc address space",
 		})
 		err = state.UpdateObjStatus(ctx)

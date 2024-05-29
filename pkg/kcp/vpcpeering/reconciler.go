@@ -5,6 +5,7 @@ import (
 	cloudcontrolb1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	aws "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	gcp "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
@@ -57,6 +58,7 @@ func (r *vpcPeeringReconciler) newFocalState(name types.NamespacedName) focal.St
 func (r *vpcPeeringReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolb1beta1.VpcPeering{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(

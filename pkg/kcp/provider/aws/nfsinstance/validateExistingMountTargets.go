@@ -5,7 +5,7 @@ import (
 	"fmt"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,9 +54,9 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		Info("Invalid mount targets")
 
 	meta.SetStatusCondition(state.ObjAsNfsInstance().Conditions(), metav1.Condition{
-		Type:   cloudresourcesv1beta1.ConditionTypeError,
-		Status: "True",
-		Reason: cloudresourcesv1beta1.ReasonInvalidMountTargetsAlreadyExist,
+		Type:   cloudcontrolv1beta1.ConditionTypeError,
+		Status: metav1.ConditionTrue,
+		Reason: cloudcontrolv1beta1.ReasonInvalidMountTargetsAlreadyExist,
 		Message: fmt.Sprintf("Invalid mount targets already exist: %v", pie.Map(invalidMountTargets, func(mt efsTypes.MountTargetDescription) string {
 			return pointer.StringDeref(mt.MountTargetId, "")
 		})),
@@ -66,7 +66,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status conditions after invalid mount targets found", composed.StopWithRequeue, ctx)
 	}
 
-	state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
+	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
 	err = state.UpdateObj(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status state after invalid mount targets found", composed.StopWithRequeue, ctx)

@@ -4,6 +4,7 @@ import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -34,6 +35,7 @@ func (r *Reconciler) newState(name types.NamespacedName) *State {
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
