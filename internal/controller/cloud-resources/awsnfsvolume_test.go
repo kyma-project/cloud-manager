@@ -85,6 +85,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingAwsNfsVolumeStatusId(),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -143,6 +144,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
 		})
@@ -236,6 +238,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingAwsNfsVolumeStatusId(),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -275,6 +278,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed(), "expected AwsNfsVolume to exist and have Ready condition")
 		})
@@ -299,6 +303,19 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
 				Should(Succeed(), "failed deleting PV")
+		})
+
+		By("Then SKR AwsNfsVolume has Deleting state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateDeleting),
+				).
+				Should(Succeed(), "expected AwsNfsVolume to have Deleting state")
 		})
 
 		By("Then SKR PersistentVolume is deleted", func() {

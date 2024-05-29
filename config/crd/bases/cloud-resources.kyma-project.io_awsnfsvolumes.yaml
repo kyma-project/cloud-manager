@@ -15,14 +15,14 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.capacity
+      name: Capacity
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    - jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - jsonPath: .status.conditions[?(@.type=="Error")].status
-      name: Error
+    - jsonPath: .status.state
+      name: State
       type: string
     name: v1beta1
     schema:
@@ -167,6 +167,8 @@ spec:
               id:
                 type: string
               server:
+                type: string
+              state:
                 type: string
             type: object
         type: object

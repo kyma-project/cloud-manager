@@ -24,6 +24,7 @@ func deletePv(ctx context.Context, st composed.State) (error, context.Context) {
 		return nil, nil
 	}
 
+	state.ObjAsAwsNfsVolume().Status.State = cloudresourcesv1beta1.StateDeleting
 	err, _ := composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 		SetCondition(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,

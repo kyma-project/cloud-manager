@@ -18,6 +18,7 @@ func loadSkrIpRange(ctx context.Context, st composed.State) (error, context.Cont
 	err := state.Cluster().K8sClient().Get(ctx, state.ObjAsAwsNfsVolume().Spec.IpRange.ObjKey(), state.SkrIpRange)
 	if apierrors.IsNotFound(err) {
 		logger.Info("SKR IpRange referred from AwsNfsVolume does not exist")
+		state.ObjAsAwsNfsVolume().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

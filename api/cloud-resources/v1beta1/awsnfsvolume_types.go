@@ -78,14 +78,16 @@ type AwsNfsVolumeStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
+
+	// +optional
+	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".spec.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type==\"Ready\")].status"
-// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.conditions[?(@.type==\"Error\")].status"
-
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 // AwsNfsVolume is the Schema for the awsnfsvolumes API
 type AwsNfsVolume struct {
 	metav1.TypeMeta   `json:",inline"`

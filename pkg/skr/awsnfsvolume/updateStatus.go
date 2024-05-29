@@ -25,6 +25,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondReady := meta.FindStatusCondition(state.ObjAsAwsNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	if kcpCondErr != nil && skrCondErr == nil {
+		state.ObjAsAwsNfsVolume().Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -44,6 +45,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		if len(state.KcpNfsInstance.Status.Hosts) > 0 {
 			state.ObjAsAwsNfsVolume().Status.Server = state.KcpNfsInstance.Status.Hosts[0]
 		}
+		state.ObjAsAwsNfsVolume().Status.State = cloudresourcesv1beta1.StateReady
 		return composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
