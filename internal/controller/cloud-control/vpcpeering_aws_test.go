@@ -70,7 +70,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 		})
 
-		vpcpeeringName := "b76ff161-c288-44fa-a295-8df2076af6a5"
+		vpcpeeringName := "1839c399-c52e-4b43-b156-4b51027508cd"
 		vpcpeering := &cloudcontrolv1beta1.VpcPeering{}
 
 		By("When KCP VpcPeering is created", func() {
