@@ -25,6 +25,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -249,6 +250,7 @@ func main() {
 
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Landscape(os.Getenv("LANDSCAPE")).
+		Plane(featuretypes.PlaneKcp).
 		Build(ctx)
 
 	if err := mgr.Start(ctx); err != nil {

@@ -3,27 +3,25 @@ package feature
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	ffclient "github.com/thomaspoignant/go-feature-flag"
-	"github.com/thomaspoignant/go-feature-flag/ffcontext"
 	"github.com/thomaspoignant/go-feature-flag/retriever/fileretriever"
 	"os"
 	"time"
 )
 
-var provider *ffclient.GoFeatureFlag
+var provider types.Provider
+
+func init() {
+	InitializeFromStaticConfig(nil)
+}
 
 type ProviderOptions struct {
-	filename              string
-	evaluateAllFlagsState bool
+	filename string
 }
 
 type ProviderOption func(o *ProviderOptions)
-
-func WithEvaluateAllFlagsState() ProviderOption {
-	return func(o *ProviderOptions) {
-		o.evaluateAllFlagsState = true
-	}
-}
 
 func WithFile(file string) ProviderOption {
 	return func(o *ProviderOptions) {
@@ -59,24 +57,14 @@ func Initialize(ctx context.Context, opts ...ProviderOption) (err error) {
 		ff.Close()
 	}()
 
-	if o.evaluateAllFlagsState {
-		allFlags := ff.AllFlagsState(ffcontext.NewEvaluationContext(""))
-		var failures []string
-		for name, flag := range allFlags.GetFlags() {
-			if flag.Failed {
-				failures = append(failures, fmt.Sprintf("%s: %s", name, flag.ErrorCode))
-			}
-		}
-		if len(failures) > 0 {
-			errFlag := fmt.Errorf("failed flags: %v", failures)
-			if err == nil {
-				err = errFlag
-			} else {
-				err = fmt.Errorf("errors: %w, %w", err, errFlag)
-			}
-		}
-	}
-	provider = ff
+	provider = &providerGoFF{ff: ff}
 
 	return
+}
+
+func InitializeFromStaticConfig(env abstractions.Environment) {
+	if env == nil {
+		env = abstractions.NewMockedEnvironment(map[string]string{})
+	}
+	provider = NewProviderConfig(env)
 }

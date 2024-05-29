@@ -31,8 +31,11 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 				AccountId:  infra.AwsMock().GetAccount(),
 				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
 				Network: cloudcontrolv1beta1.AwsNetwork{
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
 					VPC: cloudcontrolv1beta1.AwsVPC{
-						CIDR: "10.180.0.0/16",
+						CIDR: "10.250.0.0/22",
 					},
 					Zones: []cloudcontrolv1beta1.AwsZone{
 						{

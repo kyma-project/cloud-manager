@@ -8,6 +8,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type applyType int
+
+const (
+	applyUpdate     applyType = 1
+	applyServerSide applyType = 2
+)
+
 type ObjWithConditionsAndState interface {
 	ObjWithConditions
 	State() string
@@ -20,13 +27,27 @@ type ObjWithConditions interface {
 	GetObjectMeta() *metav1.ObjectMeta
 }
 
+type ObjWithCloneForPatchStatus interface {
+	ObjWithConditions
+	CloneForPatchStatus() client.Object
+}
+
+func PatchStatus(obj ObjWithConditions) *UpdateStatusBuilder {
+	return &UpdateStatusBuilder{
+		applyType: applyServerSide,
+		obj:       obj,
+	}
+}
+
 func UpdateStatus(obj ObjWithConditions) *UpdateStatusBuilder {
 	return &UpdateStatusBuilder{
-		obj: obj,
+		applyType: applyUpdate,
+		obj:       obj,
 	}
 }
 
 type UpdateStatusBuilder struct {
+	applyType          applyType
 	obj                ObjWithConditions
 	conditionsToKeep   map[string]struct{}
 	conditionsToRemove map[string]struct{}
@@ -173,7 +194,12 @@ func (b *UpdateStatusBuilder) Run(ctx context.Context, state State) (error, cont
 			withState.SetState(newState)
 		}
 	}
-	err := state.UpdateObjStatus(ctx)
+	var err error
+	if b.applyType == applyUpdate {
+		err = state.UpdateObjStatus(ctx)
+	} else {
+		err = state.PatchObjStatus(ctx)
+	}
 	if err != nil {
 		err = b.updateErrorWrapper(err)
 		return b.onUpdateError(ctx, err)

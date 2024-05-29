@@ -9,11 +9,11 @@ import (
 
 const apiDisabledFlagName = "apiDisabled"
 
-var ApiDisabled = &ApiDisabledInfo{}
+var ApiDisabled = &apiDisabledInfo{}
 
-type ApiDisabledInfo struct{}
+type apiDisabledInfo struct{}
 
-func (f *ApiDisabledInfo) Value(ctx context.Context) bool {
+func (f *apiDisabledInfo) Value(ctx context.Context) bool {
 	ffCtx := MustContextFromCtx(ctx)
 	if strings.Contains(
 		util.CastInterfaceToString(ffCtx.GetCustom()[types.KeyAllKindGroups]),
@@ -21,9 +21,6 @@ func (f *ApiDisabledInfo) Value(ctx context.Context) bool {
 	) {
 		return false
 	}
-	v, err := provider.BoolVariation(apiDisabledFlagName, ffCtx, false)
-	if err != nil {
-		return false
-	}
+	v := provider.BoolVariation(ctx, apiDisabledFlagName, false)
 	return v
 }

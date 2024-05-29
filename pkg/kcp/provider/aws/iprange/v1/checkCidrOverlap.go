@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/3th1nk/cidr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -30,9 +30,9 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 
 		if util.CidrOverlap(rangeCidr.CIDR(), cdr.CIDR()) {
 			meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
-				Reason:  cloudresourcesv1beta1.ReasonCidrOverlap,
+				Reason:  cloudcontrolv1beta1.ReasonCidrOverlap,
 				Message: fmt.Sprintf("CIDR overlaps with VPC adress range cidr %s", pointer.StringDeref(set.CidrBlock, "")),
 			})
 			err := state.UpdateObjStatus(ctx)

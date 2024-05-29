@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
@@ -13,6 +14,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -179,6 +181,10 @@ func Start() (Infra, error) {
 	scope.InitConfig(infra.Config())
 	infra.Config().Read()
 	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
+
+	util.SetSpeedyTimingForTests()
+
+	feature.InitializeFromStaticConfig(abstractions.NewOSEnvironment())
 
 	return infra, nil
 }

@@ -12,6 +12,7 @@ func saveScope(ctx context.Context, st composed.State) (error, context.Context) 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating scope", composed.StopWithRequeue, ctx)
 	}
+	composed.LoggerFromCtx(ctx).Info("Scope created")
 
 	return nil, nil
 }

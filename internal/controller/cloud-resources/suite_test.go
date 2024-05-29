@@ -26,8 +26,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
-	"github.com/kyma-project/cloud-manager/pkg/util"
-
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -80,8 +78,6 @@ var _ = BeforeSuite(func() {
 	})
 
 	testSetupLog := ctrl.Log.WithName("testSetup")
-
-	util.SetSpeedyTimingForTests()
 
 	// Setup controllers
 	// Test Only PV Controller

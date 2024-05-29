@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -58,12 +59,12 @@ func CreateKcpIpRange(ctx context.Context, clnt client.Client, obj *cloudcontrol
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.IpRange{}
 	}
-	NewObjActions(opts...).
-		Append(
-			WithNamespace(DefaultKcpNamespace),
-			WithKcpIpRangeSpecCidr(DefaultIpRangeCidr),
-		).
-		ApplyOnObject(obj)
+	acts := NewObjActions(opts...).
+		Append(WithNamespace(DefaultKcpNamespace))
+	if !feature.IpRangeAutomaticCidrAllocation.Value(ctx) {
+		acts = acts.Append(WithKcpIpRangeSpecCidr(DefaultIpRangeCidr))
+	}
+	acts.ApplyOnObject(obj)
 
 	if obj.Name == "" {
 		return errors.New("the KCP IpRange must have name set")

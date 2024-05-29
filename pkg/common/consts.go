@@ -6,3 +6,5 @@ const (
 	TagScope                  = "cloud-manager.kyma-project.io/scope"
 	TagShoot                  = "cloud-manager.kyma-project.io/shoot"
 )
+
+const FieldOwner = "cloud-manager"

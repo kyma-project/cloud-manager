@@ -1,9 +1,11 @@
 package cloudcontrol
 
 import (
+	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -43,7 +45,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			)
 			theVpc = infra.AwsMock().AddVpc(
 				vpcId,
-				"10.180.0.0/16",
+				"10.250.0.0/22",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
@@ -259,6 +261,125 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			}
 		})
 
+	})
+
+	It("Scenario: KCP AWS IpRange CIDR is automatically allocated", func() {
+		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+			Skip("IpRange CIDR auto allocation is disabled")
+		}
+
+		const (
+			kymaName    = "446dda67-dd5b-4af4-9860-70557a5a1160"
+			vpcId       = "f79a4690-a580-43c9-bb02-b71f4e03a346"
+			iprangeName = "d968c855-7de8-4e33-84b2-15510d9865a7"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+		iprange := &cloudcontrolv1beta1.IpRange{}
+		var theVpc *ec2Types.Vpc
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			scopePkg.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		By("And Given AWS VPC exists", func() {
+			theVpc = infra.AwsMock().AddVpc(
+				vpcId,
+				"10.250.0.0/22",
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		By("When KCP IpRange is created", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					WithName(iprangeName),
+					WithKcpIpRangeRemoteRef("skr-namespace", iprangeName),
+					WithKcpIpRangeSpecScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then KCP IpRange has empty spec.cidr", func() {
+			Expect(iprange.Spec.Cidr).To(Equal(""), "expected IpRange spec.cidr to be empty")
+		})
+
+		By("And Then KCP IpRange has allocated status.cidr", func() {
+			Expect(iprange.Status.Cidr).To(Equal("10.250.4.0/22"), "expected IpRange status.cidr to be allocated")
+		})
+
+		By("And Then KCP IpRange has count(status.ranges) equal to Scope zones count", func() {
+			Expect(iprange.Status.Ranges).To(HaveLen(3), "expected three IpRange status.ranges")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.250.4.0/24"), "expected IpRange status range to have 10.181.0.0/18")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.250.5.0/24"), "expected IpRange status range to have 10.181.64.0/18")
+			Expect(iprange.Status.Ranges).To(ContainElement("10.250.6.0/24"), "expected IpRange status range to have 10.181.128.0/18")
+		})
+
+		By("And Then KCP IpRange has status.vpcId equal to existing AWS VPC id", func() {
+			Expect(iprange.Status.VpcId).To(Equal(vpcId))
+		})
+
+		By("And Then KCP IpRange has status.subnets as Scope has zones", func() {
+			Expect(iprange.Status.Subnets).To(HaveLen(3))
+
+			Expect(iprange.Status.Subnets).To(HaveLen(3))
+			expectedZones := map[string]struct{}{
+				"eu-west-1a": {},
+				"eu-west-1b": {},
+				"eu-west-1c": {},
+			}
+			for i, subnet := range iprange.Status.Subnets {
+				Expect(subnet.Id).NotTo(BeEmpty(), fmt.Sprintf("expected IpRange.status.subnets[%d].id not to be empty", i))
+				Expect(iprange.Status.Ranges).To(ContainElement(subnet.Range), fmt.Sprintf("expected IpRange.status.subnets[%d].range %s to be listed in IpRange.status.ranges", i, subnet.Range))
+				Expect(expectedZones).To(HaveKey(subnet.Zone), fmt.Sprintf("expected IpRange.status.subnets[%d].zone %s to be one of %v", i, subnet.Zone, expectedZones))
+				delete(expectedZones, subnet.Zone)
+			}
+		})
+
+		By("And Then KCP IpRange AWS Subnets are created", func() {
+			subnets, err := infra.AwsMock().DescribeSubnets(infra.Ctx(), vpcId)
+			Expect(err).NotTo(HaveOccurred())
+			for _, iprangeSubnet := range iprange.Status.Subnets {
+				found := false
+				for _, awsSubnet := range subnets {
+					if iprangeSubnet.Id == pointer.StringDeref(awsSubnet.SubnetId, "") {
+						Expect(pointer.StringDeref(awsSubnet.AvailabilityZone, "")).To(Equal(iprangeSubnet.Zone))
+						Expect(pointer.StringDeref(awsSubnet.CidrBlock, "")).To(Equal(iprangeSubnet.Range))
+						found = true
+						break
+					}
+				}
+				Expect(found).To(BeTrue(), fmt.Sprintf("Expected AWS subnet %s %s %s to exist, but none found", iprangeSubnet.Id, iprangeSubnet.Zone, iprangeSubnet.Range))
+			}
+		})
+
+		By("And Then KCP IpRange AWS VPC Cidr block is created", func() {
+			found := false
+			var allBlocks []string
+			for _, cidrBlock := range theVpc.CidrBlockAssociationSet {
+				cidr := pointer.StringDeref(cidrBlock.CidrBlock, "")
+				allBlocks = append(allBlocks, cidr)
+				if cidr == iprange.Status.Cidr {
+					found = true
+				}
+			}
+			Expect(found).To(BeTrue(), fmt.Sprintf("expected KCP IpRange VPC Cidr block to be created, but none found: %#v", allBlocks))
+		})
 	})
 
 })
