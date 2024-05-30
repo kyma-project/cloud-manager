@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,6 +20,10 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return nil, nil
 	}
 
+	if state.Volume == nil {
+		return composed.LogErrorAndReturn(nil, "Error creating PVC for PV", composed.StopWithRequeue, ctx)
+	}
+
 	//lbls := map[string]string{
 	//	"whatever-label": "additional-lebels-from-the-ticket",
 	//	"storageGB":      state.ObjAsAwsNfsVolume().Spec.Capacity.String(),
@@ -31,13 +36,13 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			// Labels:    lbls,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
-			VolumeName:  state.Volume.GetObjectMeta().GetName(), // connection to PV
+			VolumeName:  state.Volume.ObjectMeta.Name, // connection to PV
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
-			//Resources: corev1.VolumeResourceRequirements{
-			//	Requests: corev1.ResourceList{
-			//		"storage": *state.Volume.Spec.Capacity.Storage(),
-			//	},
-			//},
+			Resources: corev1.VolumeResourceRequirements{
+				Requests: corev1.ResourceList{
+					"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
+				},
+			},
 		},
 	}
 	err := state.Cluster().K8sClient().Create(ctx, pvc)
