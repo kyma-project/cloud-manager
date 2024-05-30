@@ -7,9 +7,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -53,5 +53,5 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	// keep looping until KCP IpRange gets some condition
-	return composed.StopWithRequeueDelay(250 * time.Millisecond), nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 }

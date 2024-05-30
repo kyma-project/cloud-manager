@@ -34,7 +34,7 @@ const (
 
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
-	// +kubebuilder:validation:Required
+	// +optional
 	Cidr string `json:"cidr"`
 }
 

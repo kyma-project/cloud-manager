@@ -34,11 +34,13 @@ type objStatusAction struct {
 }
 
 func (o *objStatusAction) Apply(obj client.Object) {
-	o.ApplyOnStatus(obj)
+	if o != nil {
+		o.ApplyOnStatus(obj)
+	}
 }
 
 func (o *objStatusAction) ApplyOnStatus(obj client.Object) {
-	if o.f != nil {
+	if o != nil && o.f != nil {
 		o.f(obj)
 	}
 }
