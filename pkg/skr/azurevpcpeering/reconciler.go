@@ -43,6 +43,10 @@ func (r *reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureVpcPeering{}),
 		composed.LoadObj,
 		addFinalizer,
+		updateId,
+		loadKcpAzureVpcPeering,
+		createKcpVpcPeering,
+		updateStatus,
 		composed.StopAndForgetAction,
 	)
 }
