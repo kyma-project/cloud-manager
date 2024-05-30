@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,8 +35,15 @@ type AzureVpcPeeringSpec struct {
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
 type AzureVpcPeeringStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +optional
+	Id string `json:"id,omitempty"`
+
+	// List of status conditions to indicate the status of a Peering.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -50,6 +58,16 @@ type AzureVpcPeering struct {
 	Spec   AzureVpcPeeringSpec   `json:"spec,omitempty"`
 	Status AzureVpcPeeringStatus `json:"status,omitempty"`
 }
+
+func (in *AzureVpcPeering) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
+
+func (in *AzureVpcPeering) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }
+
+func (in *AzureVpcPeering) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeaturePeering
+}
+
+func (in *AzureVpcPeering) SpecificToProviders() []string { return []string{"azure"} }
 
 //+kubebuilder:object:root=true
 
