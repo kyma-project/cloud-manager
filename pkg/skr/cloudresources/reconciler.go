@@ -2,7 +2,9 @@ package cloudresources
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -42,6 +44,7 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"cloudResources-main",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.CloudResources{}),
 		composed.LoadObj,
 
 		composed.BuildBranchingAction(

@@ -6,7 +6,7 @@ import (
 	"github.com/3th1nk/cidr"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,9 +63,9 @@ func rangeCheckBlockStatus(ctx context.Context, st composed.State) (error, conte
 
 	return composed.PatchStatus(state.ObjAsIpRange()).
 		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
-			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonCidrAssociationFailed,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonCidrAssociationFailed,
 			Message: fmt.Sprintf("CIDR block status state is %s", state.associatedCidrBlock.CidrBlockState.State),
 		}).
 		ErrorLogMessage("Failed patching KCP IpRange CidrAssociationFailed status").

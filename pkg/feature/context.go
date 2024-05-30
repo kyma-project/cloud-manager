@@ -37,7 +37,7 @@ type ContextBuilder interface {
 	Build(ctx context.Context) context.Context
 	FFCtx() ffcontext.Context
 
-	LoadFromKyma(o client.Object) ContextBuilder
+	LoadFromKyma(u *unstructured.Unstructured) ContextBuilder
 	LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder
 	LoadFromMap(m map[string]interface{}) ContextBuilder
 	Landscape(v string) ContextBuilder
@@ -115,20 +115,32 @@ func (b *contextBuilderImpl) FFCtx() ffcontext.Context {
 	return ffCtx
 }
 
-func (b *contextBuilderImpl) LoadFromKyma(o client.Object) ContextBuilder {
-	b.Kyma(o.GetName())
-	if labels := o.GetLabels(); len(labels) > 0 {
-		b.BrokerPlan(labels["kyma-project.io/broker-plan-name"])
-		b.GlobalAccount(labels["kyma-project.io/global-account-id"])
-		b.SubAccount(labels["kyma-project.io/subaccount-id"])
-		b.Region(labels["kyma-project.io/region"])
-		b.Shoot(labels["kyma-project.io/shoot-name"])
+func (b *contextBuilderImpl) LoadFromKyma(u *unstructured.Unstructured) ContextBuilder {
+	b.Kyma("")
+	b.BrokerPlan("")
+	b.GlobalAccount("")
+	b.SubAccount("")
+	b.Region("")
+	b.Shoot("")
+
+	if u != nil && u.Object != nil {
+		b.Kyma(u.GetName())
+		if labels := u.GetLabels(); len(labels) > 0 {
+			b.BrokerPlan(labels["kyma-project.io/broker-plan-name"])
+			b.GlobalAccount(labels["kyma-project.io/global-account-id"])
+			b.SubAccount(labels["kyma-project.io/subaccount-id"])
+			b.Region(labels["kyma-project.io/region"])
+			b.Shoot(labels["kyma-project.io/shoot-name"])
+		}
 	}
 	return b
 }
 
 func (b *contextBuilderImpl) LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder {
-	b.Provider(string(scope.Spec.Provider))
+	b.Provider("")
+	if scope != nil {
+		b.Provider(string(scope.Spec.Provider))
+	}
 	return b
 }
 

@@ -3,7 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
@@ -101,7 +101,7 @@ func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 
 	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	suite.Equal(cloudresourcesv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
+	suite.Equal(cloudcontrolv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
@@ -140,7 +140,7 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 
 	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	suite.Equal(cloudresourcesv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
+	suite.Equal(cloudcontrolv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }
 
 func (suite *updateStatusSuite) TestNotReadyAndBackupNotReady() {

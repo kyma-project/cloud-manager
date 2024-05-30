@@ -5,6 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,6 +44,7 @@ func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeRestoreMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeRestore{}),
 		composed.LoadObj,
 		setProcessing,
 		addFinalizer,

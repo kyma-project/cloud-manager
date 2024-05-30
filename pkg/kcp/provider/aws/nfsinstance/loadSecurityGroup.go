@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -21,12 +21,12 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 	if len(state.securityGroupId) == 0 {
 		logger.Info("Missing security group id!!!")
 		meta.SetStatusCondition(state.ObjAsNfsInstance().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
-			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonUnknown,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonUnknown,
 			Message: "Unable to load security group",
 		})
-		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing security group id", composed.StopWithRequeue, ctx)
@@ -50,12 +50,12 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 	if len(sg) < 1 {
 		logger.Info("Security group with id not found!!!")
 		meta.SetStatusCondition(state.ObjAsNfsInstance().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
-			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonUnknown,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonUnknown,
 			Message: "Unable to load security group",
 		})
-		state.ObjAsNfsInstance().Status.State = cloudresourcesv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing created security group", composed.StopWithRequeue, ctx)

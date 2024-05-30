@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,9 +24,9 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 			Info("RangeSubnetCount different then shootZonesCount")
 
 		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonShootAndVpcMismatch,
+			Reason:  cloudcontrolv1beta1.ReasonShootAndVpcMismatch,
 			Message: fmt.Sprintf("RangeSubnetCount %d different then shootZonesCount %d", rangeSubnetCount, shootZonesCount),
 		})
 

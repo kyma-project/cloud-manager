@@ -3,7 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
@@ -61,7 +61,7 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateDone() {
 	//Get state object with GcpNfsVolume
 	obj.Status.State = v1beta1.JobStateDone
 	meta.SetStatusCondition(&obj.Status.Conditions, metav1.Condition{
-		Type:    cloudresourcesv1beta1.ConditionTypeReady,
+		Type:    cloudcontrolv1beta1.ConditionTypeReady,
 		Status:  metav1.ConditionTrue,
 		Reason:  "test",
 		Message: "test",
@@ -89,7 +89,7 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateFailed() {
 	//Get state object with GcpNfsVolume
 	obj.Status.State = v1beta1.JobStateFailed
 	meta.SetStatusCondition(&obj.Status.Conditions, metav1.Condition{
-		Type:    cloudresourcesv1beta1.ConditionTypeError,
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
 		Status:  metav1.ConditionTrue,
 		Reason:  "test",
 		Message: "test",
@@ -139,7 +139,7 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateError() {
 	//Get state object with GcpNfsVolume
 	obj.Status.State = v1beta1.JobStateError
 	meta.SetStatusCondition(&obj.Status.Conditions, metav1.Condition{
-		Type:    cloudresourcesv1beta1.ConditionTypeError,
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
 		Status:  metav1.ConditionTrue,
 		Reason:  "test",
 		Message: "test",

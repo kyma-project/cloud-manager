@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -81,9 +81,9 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudresourcesv1beta1.ReasonVpcNotFound,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
 				Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
 			}).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").

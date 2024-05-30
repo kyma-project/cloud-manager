@@ -5,6 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"k8s.io/apimachinery/pkg/types"
@@ -46,6 +47,7 @@ func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpNfsVolumeBackupMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}),
 		composed.LoadObj,
 		addFinalizer,
 		loadScope,
