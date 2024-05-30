@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 	"os"
 	"testing"
 
@@ -40,6 +41,8 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var infra testinfra.Infra
+
+var addressSpace = iprangeallocate.NewAddressSpace()
 
 func TestControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -101,6 +104,8 @@ var _ = BeforeSuite(func() {
 	// GcpNfsVolumeBackup
 	Expect(SetupGcpNfsVolumeBackupReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
 		NotTo(HaveOccurred())
+
+	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())

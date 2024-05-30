@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"time"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Context) {
@@ -38,5 +38,5 @@ func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	// give some time to cloud-control and cloud providers to delete it, and then run again
-	return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 }

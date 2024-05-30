@@ -1,9 +1,11 @@
 package cloudresources
 
 import (
+	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -23,214 +25,271 @@ var _ = Describe("Feature: SKR IpRange", func() {
 	)
 
 	BeforeEach(func() {
-		By("Given SKR namespace exists", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
+		Eventually(CreateNamespace).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
+			Should(Succeed())
 	})
 
-	It("Scenario: SKR IpRange is created", func() {
-		const (
-			skrIpRangeName = "b75c4076-3230-4890-8bd0-c1c84c109675"
-		)
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+	// since Describe() calls are random this might execute before features are initialized from static test config
+	// so this must be a function that will be called during spec execution, which is run
+	// after features are initialized
 
-		By("When SKR IpRange is created", func() {
-			Eventually(CreateSkrIpRange).
-				WithArguments(
+	shouldSkipForIpRangeAutomaticCidrAllocation := func() string {
+		if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+			return ""
+		}
+		return "IpRangeAutomaticCidrAllocation is disabled"
+	}
+
+	runSkrIpRangeCreateScenario := func(shouldSkip func() string, titleSuffix, skrIpRangeName string, cidrAction ObjAction) {
+
+		It("Scenario: SKR IpRange is created "+titleSuffix, func() {
+
+			if shouldSkip != nil {
+				if msg := shouldSkip(); msg != "" {
+					Skip(msg)
+				}
+			}
+
+			skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+			By("When SKR IpRange is created", func() {
+				args := []interface{}{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.7.0.0/24"),
-				).
-				Should(Succeed(), "failed creating SKR IpRange")
+				}
+				if cidrAction != nil {
+					args = append(args, cidrAction)
+				}
+				Eventually(CreateSkrIpRange).
+					WithArguments(args...).
+					Should(Succeed(), "failed creating SKR IpRange")
+			})
+
+			kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+			By("Then KCP IpRange is created", func() {
+				// load SKR IpRange to get ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						skrIpRange,
+						NewObjActions(),
+						AssertSkrIpRangeHasId(),
+					).
+					Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpIpRange,
+						NewObjActions(WithName(skrIpRange.Status.Id)),
+					).
+					Should(Succeed(), "expected KCP IpRange to exists, but none found")
+			})
+
+			By("And Then KCP IpRange has label cloud-manager.kyma-project.io/kymaName", func() {
+				Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			})
+
+			By("And Then KCP IpRange has label cloud-manager.kyma-project.io/remoteName", func() {
+				Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(skrIpRange.Name))
+			})
+
+			By("And Then KCP IpRange has label cloud-manager.kyma-project.io/remoteNamespace", func() {
+				Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(skrIpRange.Namespace))
+			})
+
+			By("And Then KCP IpRange has spec.scope.name equal to SKR Cluster kyma name", func() {
+				Expect(kcpIpRange.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+			})
+
+			By("And Then KCP IpRange has spec.cidr equal to SKR IpRange cidr", func() {
+				Expect(kcpIpRange.Spec.Cidr).To(Equal(skrIpRange.Spec.Cidr))
+			})
+
+			By("And Then KCP IpRange has spec.remoteRef matching to to SKR IpRange", func() {
+				Expect(kcpIpRange.Spec.RemoteRef.Namespace).To(Equal(skrIpRange.Namespace))
+				Expect(kcpIpRange.Spec.RemoteRef.Name).To(Equal(skrIpRange.Name))
+			})
+
+			By("When KCP IpRange gets Ready condition", func() {
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpIpRange,
+						WithConditions(KcpReadyCondition()),
+					).
+					Should(Succeed(), "failed updating KCP IpRange status with Ready condition")
+			})
+
+			By("Then SKR IpRange has Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						skrIpRange,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed(), "expected SKR IpRange to has Ready condition, but it does not")
+			})
+
+			By("And Then SKR IpRange has Ready state", func() {
+				Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateReady))
+			})
+
+			By("And Then SKR IpRange has finalizer", func() {
+				Expect(controllerutil.ContainsFinalizer(skrIpRange, cloudresourcesv1beta1.Finalizer))
+			})
+
+			By("And Then SKR IpRange has spec.cidr copy in status", func() {
+				if len(skrIpRange.Status.Cidr) > 0 {
+					Expect(skrIpRange.Status.Cidr).To(Equal(skrIpRange.Spec.Cidr))
+				}
+			})
+
+			By("And Then SKR IpRange does not have Error condition", func() {
+				Expect(meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)).To(BeNil())
+			})
+
+			By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+				Eventually(Delete).
+					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+					Should(Succeed(), "failed deleting SKR IpRange to clean up")
+			})
 		})
+	}
 
-		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+	runSkrIpRangeCreateScenario(
+		nil,
+		"with specified CIDR",
+		"b75c4076-3230-4890-8bd0-c1c84c109675",
+		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
+	)
+	runSkrIpRangeCreateScenario(
+		shouldSkipForIpRangeAutomaticCidrAllocation,
+		"with empty CIDR",
+		"a7c8cbf9-56f4-4ef2-bc41-98f5c6133ab0",
+		nil,
+	)
 
-		By("Then KCP IpRange is created", func() {
-			// load SKR IpRange to get ID
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					AssertSkrIpRangeHasId(),
-				).
-				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+	runSkrIpRangeDeleteScenario := func(shouldSkip func() string, titleSuffix, skrIpRangeName string, cidrAction ObjAction) {
 
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					NewObjActions(WithName(skrIpRange.Status.Id)),
-				).
-				Should(Succeed(), "expected KCP IpRange to exists, but none found")
-		})
+		It("Scenario: SKR IpRange is deleted "+titleSuffix, func() {
 
-		By("And Then KCP IpRange has label cloud-manager.kyma-project.io/kymaName", func() {
-			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
-		})
+			if shouldSkip != nil {
+				if msg := shouldSkip(); msg != "" {
+					Skip(msg)
+				}
+			}
 
-		By("And Then KCP IpRange has label cloud-manager.kyma-project.io/remoteName", func() {
-			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(skrIpRange.Name))
-		})
+			skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
-		By("And Then KCP IpRange has label cloud-manager.kyma-project.io/remoteNamespace", func() {
-			Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(skrIpRange.Namespace))
-		})
-
-		By("And Then KCP IpRange has spec.scope.name equal to SKR Cluster kyma name", func() {
-			Expect(kcpIpRange.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
-		})
-
-		By("And Then KCP IpRange has spec.cidr equal to SKR IpRange cidr", func() {
-			Expect(kcpIpRange.Spec.Cidr).To(Equal(skrIpRange.Spec.Cidr))
-		})
-
-		By("And Then KCP IpRange has spec.remoteRef matching to to SKR IpRange", func() {
-			Expect(kcpIpRange.Spec.RemoteRef.Namespace).To(Equal(skrIpRange.Namespace))
-			Expect(kcpIpRange.Spec.RemoteRef.Name).To(Equal(skrIpRange.Name))
-		})
-
-		By("When KCP IpRange gets Ready condition", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					WithConditions(KcpReadyCondition()),
-				).
-				Should(Succeed(), "failed updating KCP IpRange status with Ready condition")
-		})
-
-		By("Then SKR IpRange has Ready condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed(), "expected SKR IpRange to has Ready condition, but it does not")
-		})
-
-		By("And Then SKR IpRange has Ready state", func() {
-			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateReady))
-		})
-
-		By("And Then SKR IpRange has finalizer", func() {
-			Expect(controllerutil.ContainsFinalizer(skrIpRange, cloudresourcesv1beta1.Finalizer))
-		})
-
-		By("And Then SKR IpRange has spec.cidr copy in status", func() {
-			Expect(skrIpRange.Status.Cidr).To(Equal(skrIpRange.Spec.Cidr))
-		})
-
-		By("And Then SKR IpRange does not have Error condition", func() {
-			Expect(meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)).To(BeNil())
-		})
-
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
-	})
-
-	It("Scenario: SKR IpRange is deleted", func() {
-
-		const (
-			skrIpRangeName = "1261ba97-f4f0-4465-a339-f8691aee8c48"
-		)
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-
-		By("Given SKR IpRange exists", func() {
-			Eventually(CreateSkrIpRange).
-				WithArguments(
+			By("Given SKR IpRange exists", func() {
+				args := []interface{}{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.7.1.0/24"),
-				).
-				Should(Succeed(), "failed creating SKR IpRange")
+				}
+				if cidrAction != nil {
+					args = append(args, cidrAction)
+				}
+				Eventually(CreateSkrIpRange).
+					WithArguments(args...).
+					Should(Succeed(), "failed creating SKR IpRange")
+			})
+
+			kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+			By("And Given KCP IpRange exists", func() {
+				// load SKR IpRange to get ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						skrIpRange,
+						NewObjActions(),
+						AssertSkrIpRangeHasId(),
+					).
+					Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+				// KCP IpRange is created by manager
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpIpRange,
+						NewObjActions(WithName(skrIpRange.Status.Id)),
+					).
+					Should(Succeed(), "expected SKR IpRange to be created, but none found")
+
+				Eventually(Update).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
+					Should(Succeed(), "failed adding finalizer to KCP IpRange")
+
+				// When Kcp IpRange gets Ready condition
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpIpRange,
+						WithConditions(KcpReadyCondition()),
+					).
+					Should(Succeed(), "failed updating KCP IpRange status")
+
+				// And when SKR IpRange gets Ready condition by manager
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						skrIpRange,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed(), "exepcted SKR IpRange to get Ready condition, but it did not")
+			})
+
+			By("When SKR IpRange is deleted", func() {
+				Eventually(Delete).
+					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+					Should(Succeed(), "failed deleted SKR IpRange")
+			})
+
+			By("Then KCP IpRange is marked for deletion", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, NewObjActions(), HavingDeletionTimestamp()).
+					Should(Succeed(), "expected KCP IpRange to marked for deletion")
+			})
+
+			By("When KCP IpRange finalizer is removed and it is deleted", func() {
+				Eventually(Update).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
+					Should(Succeed(), "failed removing finalizer on KCP IpRange")
+			})
+
+			By("Then SKR IpRange is deleted", func() {
+				Eventually(IsDeleted).
+					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+					Should(Succeed(), "expected SKR IpRange not to exist")
+			})
 		})
+	}
 
-		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
-
-		By("And Given KCP IpRange exists", func() {
-			// load SKR IpRange to get ID
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					AssertSkrIpRangeHasId(),
-				).
-				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
-
-			// KCP IpRange is created by manager
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					NewObjActions(WithName(skrIpRange.Status.Id)),
-				).
-				Should(Succeed(), "expected SKR IpRange to be created, but none found")
-
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
-				Should(Succeed(), "failed adding finalizer to KCP IpRange")
-
-			// When Kcp IpRange gets Ready condition
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					WithConditions(KcpReadyCondition()),
-				).
-				Should(Succeed(), "failed updating KCP IpRange status")
-
-			// And when SKR IpRange gets Ready condition by manager
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed(), "exepcted SKR IpRange to get Ready condition, but it did not")
-		})
-
-		By("When SKR IpRange is deleted", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleted SKR IpRange")
-		})
-
-		By("Then KCP IpRange is marked for deletion", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, NewObjActions(), HavingDeletionTimestamp()).
-				Should(Succeed(), "expected KCP IpRange to marked for deletion")
-		})
-
-		By("When KCP IpRange finalizer is removed and it is deleted", func() {
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
-				Should(Succeed(), "failed removing finalizer on KCP IpRange")
-		})
-
-		By("Then SKR IpRange is deleted", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "expected SKR IpRange not to exist")
-		})
-	})
+	runSkrIpRangeDeleteScenario(
+		nil,
+		"with specified CIDR",
+		"1261ba97-f4f0-4465-a339-f8691aee8c48",
+		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
+	)
+	runSkrIpRangeDeleteScenario(
+		shouldSkipForIpRangeAutomaticCidrAllocation,
+		"with empty CIDR",
+		"a05b3025-0874-455a-a852-80bf4f706192",
+		nil,
+	)
 
 	It("Scenario: SKR IpRange can be created with max size /30", func() {
 
@@ -243,7 +302,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.7.2.0/30"),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(30)),
 				).
 				Should(Succeed(), "failed creating SKR IpRange")
 			Eventually(LoadAndCheck).
@@ -268,10 +327,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Should(Succeed(), "expected KCP IpRange to exists, but none found")
 		})
 
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
 	})
 
 	It("Scenario: SKR IpRange can be created with min size /16", func() {
@@ -285,7 +345,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.6.0.0/16"),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(16)),
 				).
 				Should(Succeed(), "failed creating SKR IpRange")
 			Eventually(LoadAndCheck).
@@ -310,10 +370,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Should(Succeed(), "expected KCP IpRange to exists, but none found")
 		})
 
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
 	})
 
 	It("Scenario: SKR IpRange can not be created with size greater then /30", func() {
@@ -327,7 +388,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.7.3.0/31"),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(31)),
 				).
 				Should(Succeed(), "failed creating SKR IpRange")
 			Eventually(LoadAndCheck).
@@ -380,10 +441,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
 		})
 
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
 	})
 
 	It("Scenario: SKR IpRange can not be created with size smaller then /16", func() {
@@ -397,7 +459,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.5.0.0/15"),
+					WithSkrIpRangeSpecCidr("10.128.0.0/15"),
 				).
 				Should(Succeed(), "failed creating SKR IpRange")
 			Eventually(LoadAndCheck).
@@ -450,10 +512,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Expect(skrIpRange.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
 		})
 
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
 	})
 
 	It("Scenario: SKR IpRange can not be deleted if used by AwsNfsVolume", func() {
@@ -470,7 +533,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
-					WithSkrIpRangeSpecCidr("10.7.4.0/24"),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
 				).
 				Should(Succeed(), "failed creating SKR IpRange")
 
@@ -553,22 +616,26 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", skrAwsNfsVolume.Namespace, skrAwsNfsVolume.Name)))
 		})
 
-		// CleanUp -------------------
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
-			Should(Succeed(), "failed deleting SKR AwsNfsVolume to clean up")
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		By(fmt.Sprintf("// cleanup: delete SKR AwsNfsVolume %s", skrAwsNfsVolume.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
+				Should(Succeed(), "failed deleting SKR AwsNfsVolume to clean up")
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
 
 	})
 
 	It("Scenario: SKR IpRange can not have CIDR overlapping with other IpRange", func() {
 		const (
 			iprange1Name = "da30273b-4775-40ac-91e4-0784091976f1"
-			cidr1        = "10.4.1.0/22"
+			cidr1        = "10.130.1.0/22"
 			iprange2Name = "33c48765-941e-45a7-81cd-1960eab3cd9f"
-			cidr2        = "10.4.2.0/25"
+			cidr2        = "10.130.2.0/25"
 		)
 
 		iprange1 := &cloudresourcesv1beta1.IpRange{}
@@ -586,6 +653,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		})
 
 		By("When SKR IpRange with overlapping CIDR is created", func() {
+			time.Sleep(time.Second) // must sleep 1s so first IpRange is older
 			Eventually(CreateSkrIpRange).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), iprange2,
@@ -610,21 +678,23 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s/%s", DefaultSkrNamespace, iprange1Name)))
 		})
 
-		// cleanup
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
-			Should(Succeed())
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
-			Should(Succeed())
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
+				Should(Succeed())
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange2.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR IpRange can not have same CIDR as other IpRange", func() {
-		const (
-			iprange1Name = "7ccb2b7a-fbd7-4613-94e9-f7a2c09d243b"
-			cidr         = "10.7.5.0/24"
-			iprange2Name = "166968b9-8a54-4fee-b268-54b33333487c"
-		)
+		iprange1Name := "7ccb2b7a-fbd7-4613-94e9-f7a2c09d243b"
+		cidr := addressSpace.MustAllocate(24)
+		iprange2Name := "166968b9-8a54-4fee-b268-54b33333487c"
 
 		iprange1 := &cloudresourcesv1beta1.IpRange{}
 		iprange2 := &cloudresourcesv1beta1.IpRange{}
@@ -641,6 +711,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		})
 
 		By("When SKR IpRange with overlapping CIDR is created", func() {
+			time.Sleep(time.Second) // must sleep 1s so first IpRange is older
 			Eventually(CreateSkrIpRange).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), iprange2,
@@ -665,12 +736,58 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s/%s", DefaultSkrNamespace, iprange1Name)))
 		})
 
-		// cleanup
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
-			Should(Succeed())
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
-			Should(Succeed())
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
+				Should(Succeed())
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange2.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR IpRange can be created with empty CIDR", func() {
+		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+			Skip("IpRangeAutomaticCidrAllocation is disabled")
+		}
+
+		skrIpRangeName := "db19ab47-8361-448d-a841-227b686982e8"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created with empty spec.cidr", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+		})
+
+		By("Then KCP IpRange is created", func() {
+			// load SKR IpRange to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected KCP IpRange to exists, but none found")
+		})
+
 	})
 })

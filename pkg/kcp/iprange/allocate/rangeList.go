@@ -2,6 +2,7 @@ package allocate
 
 import (
 	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"strings"
 )
 
@@ -50,6 +51,12 @@ func (l *rngList) addStrings(items ...string) error {
 
 func (l *rngList) add(items ...*rng) {
 	l.items = append(l.items, items...)
+}
+
+func (l *rngList) removeString(s string) {
+	l.items = pie.Filter(l.items, func(r *rng) bool {
+		return r.s != s
+	})
 }
 
 func (l *rngList) overlaps(o *rng) bool {
