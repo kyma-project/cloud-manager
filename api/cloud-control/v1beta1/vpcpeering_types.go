@@ -90,10 +90,6 @@ type VpcPeeringStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-
-	// Status connected
-	// RemoveStatus Connected
-	// TODO do we need two connection statuses
 }
 
 //+kubebuilder:object:root=true
