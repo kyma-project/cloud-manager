@@ -18,6 +18,7 @@ type State struct {
 	SkrIpRange     *cloudresourcesv1beta1.IpRange
 	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
 	Volume         *corev1.PersistentVolume
+	PVC            *corev1.PersistentVolumeClaim
 }
 
 func newStateFactory(

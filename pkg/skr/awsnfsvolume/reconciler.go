@@ -47,12 +47,15 @@ func (r *reconciler) newAction() composed.Action {
 		defaultiprange.New(),
 
 		loadVolume,
+		sanitizeReleasedVolume,
+		loadPersistentVolumeClaim,
 		addFinalizer,
 		updateId,
 		loadKcpNfsInstance,
 		createKcpNfsInstance,
 		updateStatus,
 		createVolume,
+		createPersistentVolumeClaim,
 		requeueWaitKcpStatus,
 		stopIfNotBeingDeleted,
 
