@@ -19,12 +19,6 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return nil, nil
 	}
 
-	//kcpCondReady := meta.FindStatusCondition(state.P.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-	//if kcpCondReady == nil {
-	//	// not yet ready, PVC will be created only once PV is ready
-	//	return nil, nil
-	//}
-
 	//lbls := map[string]string{
 	//	"whatever-label": "additional-lebels-from-the-ticket",
 	//	"storageGB":      state.ObjAsAwsNfsVolume().Spec.Capacity.String(),
@@ -37,13 +31,13 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			// Labels:    lbls,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
-			VolumeName:  getVolumeName(state.ObjAsAwsNfsVolume()), // connection to PV
+			VolumeName:  state.Volume.GetObjectMeta().GetName(), // connection to PV
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
-			Resources: corev1.VolumeResourceRequirements{
-				Requests: corev1.ResourceList{
-					"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
-				},
-			},
+			//Resources: corev1.VolumeResourceRequirements{
+			//	Requests: corev1.ResourceList{
+			//		"storage": *state.Volume.Spec.Capacity.Storage(),
+			//	},
+			//},
 		},
 	}
 	err := state.Cluster().K8sClient().Create(ctx, pvc)

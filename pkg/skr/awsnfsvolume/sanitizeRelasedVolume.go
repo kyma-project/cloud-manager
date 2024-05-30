@@ -28,13 +28,11 @@ func sanitizeReleasedVolume(ctx context.Context, st composed.State) (error, cont
 	}
 
 	if state.Volume.Spec.ClaimRef == nil {
-		// waiting for PV controller to update status.Phase to AVAILABLE
-		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+		return nil, nil
 	}
 
-	volumeCopy := state.Volume.DeepCopy()
-	volumeCopy.Spec.ClaimRef = nil
-	err := state.Cluster().K8sClient().Update(ctx, volumeCopy)
+	state.Volume.Spec.ClaimRef = nil
+	err := state.Cluster().K8sClient().Update(ctx, state.Volume)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error removing claimRef from PV", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)

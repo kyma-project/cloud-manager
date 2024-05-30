@@ -55,6 +55,7 @@ func (r *reconciler) newAction() composed.Action {
 		createKcpNfsInstance,
 		updateStatus,
 		createVolume,
+		loadVolume,
 		createPersistentVolumeClaim,
 		requeueWaitKcpStatus,
 		stopIfNotBeingDeleted,
