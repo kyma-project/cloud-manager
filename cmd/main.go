@@ -188,10 +188,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAzureVpcPeeringReconciler(skrRegistry); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcPeering")
-		os.Exit(1)
-	}
+	//if err = cloudresourcescontroller.SetupAzureVpcPeeringReconciler(skrRegistry); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "AzureVpcPeering")
+	//	os.Exit(1)
+	//}
 
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
