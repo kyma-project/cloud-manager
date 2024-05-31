@@ -12,3 +12,13 @@ apiDisabled:
       variation: disabled
   defaultRule:
     variation: enabled
+ipRangeAutomaticCidrAllocation:
+  variations:
+    enabled: false
+    disabled: true
+  targeting:
+    - name: Enabled on dev 059dbc39-fd2b-4186-b0e5-8a1bc8ede5b8
+      query: landscape == "dev" and kyma == "059dbc39-fd2b-4186-b0e5-8a1bc8ede5b8"
+      variation: enabled
+  defaultRule:
+    variation: disabled

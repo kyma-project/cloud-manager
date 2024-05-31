@@ -5,6 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,7 +18,10 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 
 	kyma := util.NewKymaUnstructured()
 	kymaUnstructured := util.NewKymaUnstructured()
-	err := state.Cluster().K8sClient().Get(ctx, state.Name(), kymaUnstructured)
+	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
+		Namespace: state.Scope().Namespace,
+		Name:      state.Scope().Name,
+	}, kymaUnstructured)
 	if apierrors.IsNotFound(err) {
 		logger.Info("Kyma CR does not exist")
 		return nil, nil
