@@ -314,7 +314,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		})
 
 		pvc := &corev1.PersistentVolumeClaim{}
-		By("And Then SKR PersistentVolumeClaim is created", func() {
+		By("And Given SKR PersistentVolumeClaim is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),

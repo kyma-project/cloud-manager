@@ -66,6 +66,9 @@ var _ = BeforeSuite(func() {
 	// Test Only PV Controller
 	Expect(testinfra.SetupPvController(infra.Registry())).
 		NotTo(HaveOccurred())
+	// Test Only PVC Controller
+	Expect(testinfra.SetupPVCController(infra.Registry())).
+		NotTo(HaveOccurred())
 	// CloudResources
 	Expect(cloudresourcescontroller.SetupCloudResourcesReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
