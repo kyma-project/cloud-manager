@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,7 +22,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	if state.Volume == nil {
-		return composed.LogErrorAndReturn(nil, "Error creating PVC for PV", composed.StopWithRequeue, ctx)
+		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
 	}
 
 	//lbls := map[string]string{
@@ -36,13 +37,16 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			// Labels:    lbls,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
-			VolumeName:  state.Volume.ObjectMeta.Name, // connection to PV
+			VolumeName:  state.Volume.GetName(), // connection to PV
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
 					"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
 				},
 			},
+			StorageClassName: func() *string { v := "standard"; return &v }(),                                             // Set the desired StorageClass
+			VolumeMode:       func() *corev1.PersistentVolumeMode { v := corev1.PersistentVolumeFilesystem; return &v }(), // Set the VolumeMode
+
 		},
 	}
 	err := state.Cluster().K8sClient().Create(ctx, pvc)

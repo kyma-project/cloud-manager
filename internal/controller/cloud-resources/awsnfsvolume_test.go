@@ -3,6 +3,7 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -176,7 +177,8 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pvc,
 					NewObjActions(
-						WithName(awsNfsVolumeName),
+						WithName(pvName),
+						WithNamespace(awsNfsVolume.Namespace),
 					),
 				).
 				Should(Succeed())
