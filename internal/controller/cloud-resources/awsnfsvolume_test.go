@@ -183,7 +183,18 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				).
 				Should(Succeed())
 
-			Expect(pvc.Spec.VolumeName).To(Equal(pvName))
+			By("And its .spec.volumeName is PV name", func() {
+				Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
+			})
+
+			By("And it has same Name as the PV", func() {
+				Expect(pvc.GetName()).To(Equal(pv.GetName()))
+			})
+
+			By("And it has defined label for capacity", func() {
+				Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).ToNot(BeNil())
+			})
+
 			// for k, v := range pvLabels {
 			// 	Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
 			// }
