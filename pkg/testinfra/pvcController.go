@@ -2,6 +2,7 @@ package testinfra
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -32,9 +33,6 @@ func (c *pvcController) Reconcile(ctx context.Context, request reconcile.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if pvc.Spec.VolumeName == "" {
-		return ctrl.Result{}, nil
-	}
 	isLabeled := false
 	if pvc.Labels != nil {
 		_, isLabeled = pvc.Labels[cloudresourcesv1beta1.LabelCloudManaged]
