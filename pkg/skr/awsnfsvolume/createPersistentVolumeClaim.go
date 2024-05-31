@@ -2,7 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
-
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -25,16 +25,14 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
 	}
 
-	//lbls := map[string]string{
-	//	"whatever-label": "additional-lebels-from-the-ticket",
-	//	"storageGB":      state.ObjAsAwsNfsVolume().Spec.Capacity.String(),
-	//}
+	pvcLabels := getVolumeLabels(state.ObjAsAwsNfsVolume())
+	pvcLabels[cloudresourcesv1beta1.LabelStorageCapacity] = state.ObjAsAwsNfsVolume().Spec.Capacity.String()
 
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: state.Obj().GetNamespace(),
 			Name:      getVolumeName(state.ObjAsAwsNfsVolume()),
-			// Labels:    lbls,
+			Labels:    pvcLabels,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			VolumeName:  state.Volume.GetName(), // connection to PV
