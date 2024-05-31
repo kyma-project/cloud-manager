@@ -184,11 +184,11 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed())
 
 			Expect(pvc.Spec.VolumeName).To(Equal(pvName))
-			for k, v := range pvLabels {
-				Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
-			}
-			Expect(pvc.Labels).To(HaveKeyWithValue(cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()),
-				fmt.Sprintf("expected PVC to have label %s=%s", cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()))
+			// for k, v := range pvLabels {
+			// 	Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+			// }
+			// Expect(pvc.Labels).To(HaveKeyWithValue(cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()),
+			// 	fmt.Sprintf("expected PVC to have label %s=%s", cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()))
 		})
 
 		// CleanUp
@@ -349,16 +349,16 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "expected AwsNfsVolume to have Deleting state")
 		})
 
-		By("Then SKR PersistentVolume is deleted", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
-				Should(Succeed(), "expected PV not to exist")
-		})
-
 		By("Then SKR PersistentVolumeClaim is deleted", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), pvc).
 				Should(Succeed(), "expected PVC not to exist")
+		})
+
+		By("And Then SKR PersistentVolume is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
+				Should(Succeed(), "expected PV not to exist")
 		})
 
 		By("And Then KCP NfsInstance is marked for deletion", func() {

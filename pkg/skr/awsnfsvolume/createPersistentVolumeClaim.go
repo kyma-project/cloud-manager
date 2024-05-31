@@ -2,11 +2,13 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error, context.Context) {
@@ -42,9 +44,8 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 					"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
 				},
 			},
-			StorageClassName: func() *string { v := "standard"; return &v }(),                                             // Set the desired StorageClass
-			VolumeMode:       func() *corev1.PersistentVolumeMode { v := corev1.PersistentVolumeFilesystem; return &v }(), // Set the VolumeMode
-
+			StorageClassName: ptr.To(""),
+			VolumeMode:       ptr.To(corev1.PersistentVolumeFilesystem),
 		},
 	}
 	err := state.Cluster().K8sClient().Create(ctx, pvc)
