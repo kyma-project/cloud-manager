@@ -313,6 +313,21 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "failed creating PV")
 		})
 
+		pvc := &corev1.PersistentVolumeClaim{}
+		By("And Then SKR PersistentVolumeClaim is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pvc,
+					NewObjActions(
+						WithName(pv.Name),
+						WithNamespace(awsNfsVolume.Namespace),
+					),
+				).
+				Should(Succeed())
+		})
+
 		// DELETE START HERE
 
 		By("When AwsNfsVolume is deleted", func() {
@@ -338,6 +353,12 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
 				Should(Succeed(), "expected PV not to exist")
+		})
+
+		By("Then SKR PersistentVolumeClaim is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pvc).
+				Should(Succeed(), "expected PVC not to exist")
 		})
 
 		By("And Then KCP NfsInstance is marked for deletion", func() {

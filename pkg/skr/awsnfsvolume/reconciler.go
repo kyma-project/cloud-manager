@@ -62,6 +62,9 @@ func (r *reconciler) newAction() composed.Action {
 
 		// this below executes only when marked for deletion
 
+		deletePVC,
+		waitPVCDeleted,
+
 		deletePv,
 		waitPvDeleted,
 
