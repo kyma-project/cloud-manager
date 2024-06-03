@@ -18,14 +18,14 @@ func InitConfig(cfg config.Config) {
 		config.Path(
 			"clientId",
 			config.Sensitive(),
-			config.SourceEnv("AZ_CLIENT_ID"),
-			config.SourceFile("AZ_CLIENT_ID"),
+			config.SourceEnv("AZURE_CLIENT_ID"),
+			config.SourceFile("AZURE_CLIENT_ID"),
 		),
 		config.Path(
 			"clientSecret",
 			config.Sensitive(),
-			config.SourceEnv("AZ_CLIENT_SECRET"),
-			config.SourceFile("AZ_CLIENT_SECRET"),
+			config.SourceEnv("AZURE_CLIENT_SECRET"),
+			config.SourceFile("AZURE_CLIENT_SECRET"),
 		),
 	)
 }
