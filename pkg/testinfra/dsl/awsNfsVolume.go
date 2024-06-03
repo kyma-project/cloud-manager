@@ -117,10 +117,7 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 	if obj.Name == "" {
 		return errors.New("the SKR AwsNfsVolume must have name set")
 	}
-	if obj.Spec.IpRange.Name == "" {
-		return errors.New("the SKR AwsNfsVolume must have spec.iprange.name set")
-	}
-	if obj.Spec.IpRange.Namespace == "" {
+	if obj.Spec.IpRange.Name != "" && obj.Spec.IpRange.Namespace == "" {
 		obj.Spec.IpRange.Namespace = DefaultSkrNamespace
 	}
 

@@ -43,7 +43,7 @@ const (
 // AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
 type AwsNfsVolumeSpec struct {
 
-	// +kubebuilder:validation:Required
+	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
@@ -111,6 +111,32 @@ func (in *AwsNfsVolume) SpecificToFeature() featuretypes.FeatureName {
 
 func (in *AwsNfsVolume) SpecificToProviders() []string {
 	return []string{"aws"}
+}
+
+func (in *AwsNfsVolume) GetIpRangeRef() IpRangeRef {
+	return in.Spec.IpRange
+}
+
+func (in *AwsNfsVolume) State() string {
+	return in.Status.State
+}
+
+func (in *AwsNfsVolume) SetState(v string) {
+	in.Status.State = v
+}
+
+func (in *AwsNfsVolume) CloneForPatchStatus() client.Object {
+	return &AwsNfsVolume{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AwsNfsVolume",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true
