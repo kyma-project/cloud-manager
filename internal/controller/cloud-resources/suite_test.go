@@ -28,6 +28,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	testinfradsl "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -65,7 +66,11 @@ var _ = BeforeSuite(func() {
 
 	Expect(infra.KCP().GivenNamespaceExists(infra.KCP().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())
+	Expect(infra.KCP().GivenNamespaceExists(testinfradsl.DefaultKcpNamespace)).
+		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())
 	Expect(infra.SKR().GivenNamespaceExists(infra.SKR().Namespace())).
+		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
+	Expect(infra.SKR().GivenNamespaceExists(testinfradsl.DefaultSkrNamespace)).
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())

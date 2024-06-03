@@ -4,6 +4,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,4 +48,16 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 func (s *State) ObjAsAwsNfsVolume() *cloudresourcesv1beta1.AwsNfsVolume {
 	return s.Obj().(*cloudresourcesv1beta1.AwsNfsVolume)
+}
+
+func (s *State) GetSkrIpRange() *cloudresourcesv1beta1.IpRange {
+	return s.SkrIpRange
+}
+
+func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
+	s.SkrIpRange = skrIpRange
+}
+
+func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
+	return s.ObjAsAwsNfsVolume()
 }

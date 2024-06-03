@@ -1,29 +1,27 @@
 package cloudresources
 
 import (
+	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
-	It("Scenario: SKR AwsNfsVolume is created", func() {
+	It("Scenario: SKR AwsNfsVolume is created with specified IpRange", func() {
 
-		skrIpRangeName := "aws-nfs-iprange-1"
+		skrIpRangeName := "3ef3cbbc-b347-4762-b63a-c1ec9555be65"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		skrIpRangeId := "db018167-dd48-4d8c-aa3c-ea9e2ed05307"
 
-		By("Given SKR namespace exists", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
 		By("And Given SKR IpRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
@@ -46,7 +44,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed())
 		})
 
-		awsNfsVolumeName := "aws-nfs-volume-1"
+		awsNfsVolumeName := "b0fe166e-917c-4dd0-8bb3-978190b6661d"
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		awsNfsVolumeCapacity := "100G"
 
@@ -185,11 +183,6 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		skrIpRangeId := "034fd495-3222-465c-8dc9-4617f7ff0013"
 
-		By("Given SKR namespace exists", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
 		By("And Given SKR IpRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
 			skriprange.Ignore.AddName(skrIpRangeName)
@@ -347,4 +340,352 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 			Should(Succeed())
 	})
+
+	It("Scenario: SKR AwsNfsVolume is created with empty IpRange when default IpRange does not exist", func() {
+
+		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
+			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+				Skip("IpRangeAutomaticCidrAllocation is disabled")
+			}
+		})
+
+		awsNfsVolumeName := "10359994-aed2-4454-bb5f-7c246fa4d9e2"
+		skrIpRangeId := "ca4a3f9a-5539-4383-8e0a-3e7c86577a09"
+		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("When AwsNfsVolume is created with empty IpRange", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					WithName(awsNfsVolumeName),
+					WithAwsNfsVolumeCapacity("100G"),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("And Then default SKR IpRange has label app.kubernetes.io/managed-by: cloud-manager", func() {
+			Expect(skrIpRange.Labels["app.kubernetes.io/managed-by"]).To(Equal("cloud-manager"))
+		})
+
+		By("And Then default SKR IpRange has label app.kubernetes.io/part-of: kyma", func() {
+			Expect(skrIpRange.Labels["app.kubernetes.io/part-of"]).To(Equal("kyma"))
+		})
+
+		By("And Then AwsNfsVolume is not ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume, NewObjActions()).
+				Should(Succeed())
+			Expect(meta.IsStatusConditionTrue(awsNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
+				To(BeFalse(), "expected AwsNfsVolume not to have Ready condition, but it has")
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP NfsInstance is created", func() {
+			// load SKR AwsNfsVolume to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					HavingAwsNfsVolumeStatusId(),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id and status creating")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					NewObjActions(
+						WithName(awsNfsVolume.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When KCP NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					WithNfsInstanceStatusHost(""),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR AwsNfsVolume has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		pv := &corev1.PersistentVolume{}
+		By("And Then SKR PersistentVolume is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pv,
+					NewObjActions(WithName(awsNfsVolume.Name)),
+				).
+				Should(Succeed())
+		})
+
+		By("When AwsNfsVolume is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed(), "expected AwsNfsVolume not to exist, but it still does")
+		})
+
+		By("Then PersistentVolume does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
+				Should(Succeed(), "expected PersistentVolume not to exist, but it still does")
+		})
+
+		By("And Then KCP NfsInstance does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance).
+				Should(Succeed(), "expected KCP NfsInstance not to exist, but it still does")
+		})
+
+		By("And Then SKR default IpRange exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions()).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR AwsNfsVolume is created with empty IpRangeRef when default IpRange already exist", func() {
+
+		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
+			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+				Skip("IpRangeAutomaticCidrAllocation is disabled")
+			}
+		})
+
+		awsNfsVolumeName := "50c9827a-76b7-4790-9343-d4ed457a3d25"
+		skrIpRangeId := "b42613aa-ece1-4c3d-84fc-a2467fc38cc6"
+		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		By("Given default SKR IpRange exists", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, WithName("default"), WithNamespace("kyma-system")).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("When AwsNfsVolume is created with empty IpRangeRef", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					WithName(awsNfsVolumeName),
+					WithAwsNfsVolumeCapacity("100G"),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP NfsInstance is created", func() {
+			// load SKR AwsNfsVolume to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					HavingAwsNfsVolumeStatusId(),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id and status creating")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					NewObjActions(
+						WithName(awsNfsVolume.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When KCP NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					WithNfsInstanceStatusHost(""),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR AwsNfsVolume has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsNfsVolume,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		pv := &corev1.PersistentVolume{}
+		By("And Then SKR PersistentVolume is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pv,
+					NewObjActions(WithName(awsNfsVolume.Name)),
+				).
+				Should(Succeed())
+		})
+
+		By("When AwsNfsVolume is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
+				Should(Succeed(), "expected AwsNfsVolume not to exist, but it still does")
+		})
+
+		By("Then PersistentVolume does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
+				Should(Succeed(), "expected PersistentVolume not to exist, but it still does")
+		})
+
+		By("And Then KCP NfsInstance does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance).
+				Should(Succeed(), "expected KCP NfsInstance not to exist, but it still does")
+		})
+
+		By("And Then SKR default IpRange exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions()).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: AwsNfsVolume IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
+
+		By("Given ff IpRangeAutomaticCidrAllocation is disabled", func() {
+			if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+				Skip("IpRangeAutomaticCidrAllocation is enabled")
+			}
+		})
+
+		awsNfsVolumeName := "d67cb9e9-3ac0-4205-be15-866aeedfeddd"
+		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+
+		By("When AwsNfsVolume is created with empty IpRangeRef", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					WithName(awsNfsVolumeName),
+					WithAwsNfsVolumeCapacity("100G"),
+				).
+				Should(Succeed())
+		})
+
+		By("Then AwsNfsVolume has Error condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then AwsNfsVolume has Error state", func() {
+			Expect(awsNfsVolume.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
+		})
+
+		By("And Then AwsNfsVolume Error condition message is: IpRangeRef is required", func() {
+			Expect(meta.FindStatusCondition(awsNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError).Message).
+				To(Equal("IpRangeRef is required"))
+		})
+	})
+
 })

@@ -5,6 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -42,8 +43,9 @@ func (r *reconciler) newAction() composed.Action {
 		"crAwsNfsVolumeMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolume{}),
 		composed.LoadObj,
-		loadSkrIpRange,
-		waitIpRangeReady,
+
+		defaultiprange.New(),
+
 		loadVolume,
 		addFinalizer,
 		updateId,
