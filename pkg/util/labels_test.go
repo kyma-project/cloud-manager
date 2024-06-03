@@ -15,7 +15,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithName(nameValue).Build()
 
-			assert.Equal(t, labels[WellKnownK8sNameLabel], nameValue, "name label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelName], nameValue, "name label equals expected value")
 		})
 
 		t.Run("should define provided instance label", func(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithInstance(instanceValue).Build()
 
-			assert.Equal(t, labels[WellKnownK8sInstanceLabel], instanceValue, "instance label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelInstance], instanceValue, "instance label equals expected value")
 		})
 
 		t.Run("should define provided version label", func(t *testing.T) {
@@ -33,7 +33,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithVersion(versionValue).Build()
 
-			assert.Equal(t, labels[WellKnownK8sVersionLabel], versionValue, "version label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelVersion], versionValue, "version label equals expected value")
 		})
 
 		t.Run("should define provided component label", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithComponent(componentValue).Build()
 
-			assert.Equal(t, labels[WellKnownK8sComponentLabel], componentValue, "component label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelComponent], componentValue, "component label equals expected value")
 		})
 
 		t.Run("should define provided part-of label", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithPartOf(partOfValue).Build()
 
-			assert.Equal(t, labels[WellKnownK8sPartOfLabel], partOfValue, "part-of label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelPartOf], partOfValue, "part-of label equals expected value")
 		})
 
 		t.Run("should define provided managed-by label", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithManagedBy(managedBy).Build()
 
-			assert.Equal(t, labels[WellKnownK8sManagedByLabel], managedBy, "managed-by label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelManagedBy], managedBy, "managed-by label equals expected value")
 		})
 
 		t.Run("should define default cloud manager labels", func(t *testing.T) {
@@ -68,9 +68,9 @@ func TestLabels(t *testing.T) {
 
 			labels := builder.WithCloudManagerDefaults().Build()
 
-			assert.Equal(t, labels[WellKnownK8sComponentLabel], DefaultCloudManagerComponentLabelValue, "component label equals expected value")
-			assert.Equal(t, labels[WellKnownK8sPartOfLabel], DefaultCloudManagerPartOfLabelValue, "part-of label equals expected value")
-			assert.Equal(t, labels[WellKnownK8sManagedByLabel], DefaultCloudManagerManagedByLabelValue, "managed-by label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelComponent], DefaultCloudManagerComponentLabelValue, "component label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelPartOf], DefaultCloudManagerPartOfLabelValue, "part-of label equals expected value")
+			assert.Equal(t, labels[WellKnownK8sLabelManagedBy], DefaultCloudManagerManagedByLabelValue, "managed-by label equals expected value")
 		})
 
 		t.Run("should define custom label", func(t *testing.T) {

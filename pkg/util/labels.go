@@ -1,12 +1,12 @@
 package util
 
 const (
-	WellKnownK8sNameLabel      = "app.kubernetes.io/name"
-	WellKnownK8sInstanceLabel  = "app.kubernetes.io/instance"
-	WellKnownK8sVersionLabel   = "app.kubernetes.io/version"
-	WellKnownK8sComponentLabel = "app.kubernetes.io/component"
-	WellKnownK8sPartOfLabel    = "app.kubernetes.io/part-of"
-	WellKnownK8sManagedByLabel = "app.kubernetes.io/managed-by"
+	WellKnownK8sLabelName      = "app.kubernetes.io/name"
+	WellKnownK8sLabelInstance  = "app.kubernetes.io/instance"
+	WellKnownK8sLabelVersion   = "app.kubernetes.io/version"
+	WellKnownK8sLabelComponent = "app.kubernetes.io/component"
+	WellKnownK8sLabelPartOf    = "app.kubernetes.io/part-of"
+	WellKnownK8sLabelManagedBy = "app.kubernetes.io/managed-by"
 )
 
 const (
@@ -37,32 +37,32 @@ type labelBuilder struct {
 }
 
 func (labelBuilder *labelBuilder) WithName(name string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sNameLabel] = name
+	labelBuilder.labels[WellKnownK8sLabelName] = name
 	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) WithInstance(instance string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sInstanceLabel] = instance
+	labelBuilder.labels[WellKnownK8sLabelInstance] = instance
 	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) WithVersion(version string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sVersionLabel] = version
+	labelBuilder.labels[WellKnownK8sLabelVersion] = version
 	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) WithComponent(component string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sComponentLabel] = component
+	labelBuilder.labels[WellKnownK8sLabelComponent] = component
 	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) WithPartOf(partOf string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sPartOfLabel] = partOf
+	labelBuilder.labels[WellKnownK8sLabelPartOf] = partOf
 	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) WithManagedBy(managedBy string) LabelBuilder {
-	labelBuilder.labels[WellKnownK8sManagedByLabel] = managedBy
+	labelBuilder.labels[WellKnownK8sLabelManagedBy] = managedBy
 	return labelBuilder
 }
 
