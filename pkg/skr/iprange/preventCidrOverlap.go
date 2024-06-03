@@ -69,6 +69,10 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 			}
 		}
 
+		if myCidr == nil && hisCidr != nil ||
+			myCidr != nil && hisCidr == nil {
+			continue
+		}
 		if (myCidr == nil && hisCidr == nil) ||
 			util.CidrEquals(myCidr.CIDR(), hisCidr.CIDR()) ||
 			util.CidrOverlap(myCidr.CIDR(), hisCidr.CIDR()) {
