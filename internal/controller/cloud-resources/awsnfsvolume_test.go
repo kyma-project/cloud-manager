@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -161,9 +162,16 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				).
 				Should(Succeed())
 
+			By("And it has defined cloud-manager default labels")
+			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+			By("And it has user defined custom labels")
 			for k, v := range pvLabels {
 				Expect(pv.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have label %s=%s", k, v))
 			}
+			By("And it has user defined custom annotations")
 			for k, v := range pvAnnotations {
 				Expect(pv.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have annotation %s=%s", k, v))
 			}
@@ -183,23 +191,19 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				).
 				Should(Succeed())
 
-			By("And its .spec.volumeName is PV name", func() {
-				Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
-			})
+			By("And its .spec.volumeName is PV name")
+			Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
 
-			By("And it has same Name as the PV", func() {
-				Expect(pvc.GetName()).To(Equal(pv.GetName()))
-			})
+			By("And it has same Name as the PV")
+			Expect(pvc.GetName()).To(Equal(pv.GetName()))
 
-			By("And it has defined label for capacity", func() {
-				Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).ToNot(BeNil())
-			})
+			By("And it has defined cloud-manager default labels")
+			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
 
-			// for k, v := range pvLabels {
-			// 	Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
-			// }
-			// Expect(pvc.Labels).To(HaveKeyWithValue(cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()),
-			// 	fmt.Sprintf("expected PVC to have label %s=%s", cloudresourcesv1beta1.LabelStorageCapacity, awsNfsVolume.Spec.Capacity.String()))
+			By("And it has defined custom label for capacity")
+			Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(awsNfsVolumeCapacity))
 		})
 
 		// CleanUp
