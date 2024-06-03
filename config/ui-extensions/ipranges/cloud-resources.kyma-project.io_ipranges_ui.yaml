@@ -39,7 +39,12 @@ data:
     - source: metadata.namespace
       name: metadata.namespace
       sort: true
-  translations: ""
+  translations: |-
+    en:
+      spec.cidr: CIDR
+      metadata.namespace: Namespace
+      status.cidr: Current CIDR
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
