@@ -67,7 +67,13 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: ""
+  translations: |
+    en:
+      spec.destination.volume.name: Destination Volume Name
+      spec.destination.volume.namespace: Destination Volume Namespace
+      spec.source.backup.name: Source Backup Name
+      spec.source.backup.namespace: Source Backup Namespace
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
