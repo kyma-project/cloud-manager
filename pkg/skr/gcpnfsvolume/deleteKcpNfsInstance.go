@@ -18,6 +18,10 @@ func deleteKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		// SKR GcpNfsVolume is marked for deletion, but none found in KCP, probably already deleted
 		return nil, nil
 	}
+	if composed.IsMarkedForDeletion(state.KcpNfsInstance) {
+		// KCP GcpNfsVolume is already marked for deletion, move forward to update the status in SKR if deletion failed
+		return nil, nil
+	}
 
 	err := state.KcpCluster.K8sClient().Delete(ctx, state.KcpNfsInstance)
 	if err != nil {

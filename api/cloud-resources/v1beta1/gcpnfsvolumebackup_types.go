@@ -40,6 +40,9 @@ const (
 
 	// GcpNfsBackupDeleting signifies backup delete operation is in-progress.
 	GcpNfsBackupDeleting GcpNfsBackupState = "Deleting"
+
+	// GcpNfsBackupDeleted signifies backup delete operation is complete.
+	GcpNfsBackupDeleted GcpNfsBackupState = "Deleted"
 )
 
 type GcpNfsVolumeBackupSource struct {
@@ -91,6 +94,10 @@ type GcpNfsVolumeBackupStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
+
+	// Operation Identifier to track the Hyperscaler Restore Operation
+	// +optional
+	OpIdentifier string `json:"opIdentifier,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -25,6 +25,11 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
+	//If a backup operation already exists, skip
+	if backup.Status.OpIdentifier != "" {
+		return nil, nil
+	}
+
 	logger.WithValues("NfsBackup :", backup.Name).Info("Deleting GCP File Backup")
 
 	//Get GCP details.
@@ -33,7 +38,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	location := backup.Spec.Location
 	name := backup.Name
 
-	_, err := state.fileBackupClient.DeleteFileBackup(ctx, project, location, name)
+	op, err := state.fileBackupClient.DeleteFileBackup(ctx, project, location, name)
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
@@ -50,6 +55,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupDeleting
+	backup.Status.OpIdentifier = op.Name
 	return composed.UpdateStatus(backup).
 		SetExclusiveConditions().
 		SuccessErrorNil().

@@ -156,6 +156,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              opIdentifier:
+                description: Operation Identifier to track the Hyperscaler Restore
+                  Operation
+                type: string
               state:
                 type: string
             type: object

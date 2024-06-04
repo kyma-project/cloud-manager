@@ -9,6 +9,7 @@ const (
 	StateCreating          = "Creating"
 	StateDeleting          = "Deleting"
 	StateUpdating          = "Updating"
+	StateDeleted           = "Deleted"
 )
 
 const (

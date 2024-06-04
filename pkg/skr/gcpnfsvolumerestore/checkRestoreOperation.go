@@ -27,7 +27,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	}
 
 	project := state.Scope.Spec.Scope.Gcp.Project
-	op, err := state.fileRestoreClient.GetFileOperation(ctx, project, opName)
+	op, err := state.fileRestoreClient.GetRestoreOperation(ctx, project, opName)
 	if err != nil {
 
 		//If the operation is not found, reset the OpIdentifier.
@@ -35,11 +35,11 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 		if ok := errors.As(err, &e); ok {
 			if e.Code == 404 {
 				restore.Status.OpIdentifier = ""
-				restore.Status.State = ""
 			}
 		}
+		restore.Status.State = v1beta1.JobStateError
 		return composed.UpdateStatus(restore).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ConditionReasonNfsRestoreFailed,
@@ -59,10 +59,9 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	//If not able to find the operation or it is completed, reset OpIdentifier.
 	restore.Status.OpIdentifier = ""
 	if op == nil {
-		//removing the state so if it is getting deleted, do not retry.
-		restore.Status.State = ""
+		restore.Status.State = v1beta1.JobStateError
 		return composed.UpdateStatus(restore).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ConditionReasonNfsRestoreFailed,

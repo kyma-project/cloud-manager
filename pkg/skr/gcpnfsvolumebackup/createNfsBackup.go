@@ -21,6 +21,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
+	//If a backup operation already exists, skip
+	if backup.Status.OpIdentifier != "" {
+		return nil, nil
+	}
+
 	//If deleting, return.
 	deleting := !state.Obj().GetDeletionTimestamp().IsZero()
 	if deleting {
@@ -40,7 +45,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Spec.Location, state.GcpNfsVolume.Name),
 		SourceInstanceTier: string(state.GcpNfsVolume.Spec.Tier),
 	}
-	_, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)
+	op, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
@@ -57,6 +62,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
+	backup.Status.OpIdentifier = op.Name
 	return composed.UpdateStatus(backup).
 		SetExclusiveConditions().
 		SuccessErrorNil().
