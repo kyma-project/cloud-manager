@@ -1,5 +1,5 @@
 en:
-  spec.cidr: CIDR
+  spec.cidr: Requested CIDR
   metadata.namespace: Namespace
-  status.cidr: Current CIDR
+  status.cidr: Reserved CIDR
   status.state: State

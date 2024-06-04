@@ -33,17 +33,17 @@ data:
     description: >-
         IpRange description here
   list: |-
-    - source: spec.cidr
-      name: spec.cidr
+    - source: status.cidr
+      name: status.cidr
       sort: true
     - source: metadata.namespace
       name: metadata.namespace
       sort: true
   translations: |-
     en:
-      spec.cidr: CIDR
+      spec.cidr: Requested CIDR
       metadata.namespace: Namespace
-      status.cidr: Current CIDR
+      status.cidr: Reserved CIDR
       status.state: State
 kind: ConfigMap
 metadata:
