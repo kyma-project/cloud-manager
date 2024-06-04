@@ -113,7 +113,6 @@ type GcpNfsVolumeStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Server",type="string",JSONPath=".status.hosts"
 // +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.fileShareName"
 // +kubebuilder:printcolumn:name="Capacity (GB)",type="string",JSONPath=".status.capacityGb"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
