@@ -1,0 +1,21 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.capacity
+        source: capacity
+        widget: Labels
+      - name: spec.performanceMode
+        source: performanceMode
+        widget: Labels
+      - name: spec.volume.name
+        source: volume.name
+        widget: Labels
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels
