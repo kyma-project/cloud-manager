@@ -56,9 +56,17 @@ type AwsNfsVolumeSpec struct {
 	Throughput AwsThroughputMode `json:"throughput,omitempty"`
 
 	PersistentVolume *AwsNfsVolumePvSpec `json:"volume,omitempty"`
+
+	PersistentVolumeClaim *AwsNfsVolumePvcSpec `json:"volumeClaim,omitempty"`
 }
 
 type AwsNfsVolumePvSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type AwsNfsVolumePvcSpec struct {
 	Name        string            `json:"name,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`

@@ -28,17 +28,18 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	labelsBuilder := util.NewLabelBuilder()
+	labelsBuilder.WithCustomLabels(getVolumeClaimLabels(state.ObjAsAwsNfsVolume()))
 	labelsBuilder.WithCloudManagerDefaults()
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, state.ObjAsAwsNfsVolume().Spec.Capacity.String())
-	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
 
 	pvcLabels := labelsBuilder.Build()
 
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.Obj().GetNamespace(),
-			Name:      getVolumeName(state.ObjAsAwsNfsVolume()),
-			Labels:    pvcLabels,
+			Namespace:   state.Obj().GetNamespace(),
+			Name:        getVolumeClaimName(state.ObjAsAwsNfsVolume()),
+			Labels:      pvcLabels,
+			Annotations: getVolumeClaimAnnotations(state.ObjAsAwsNfsVolume()),
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			VolumeName:  state.Volume.GetName(), // connection to PV

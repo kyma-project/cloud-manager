@@ -3,7 +3,6 @@ package cloudresources
 import (
 	"context"
 	"fmt"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -65,7 +64,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		)
 
 		pvcLabels := map[string]string{
-			"baz": "3",
+			"buz": "3",
 		}
 		pvcAnnotations := map[string]string{
 			"qux": "4",
@@ -206,7 +205,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed())
 
 			By("And its .spec.volumeName is PV name")
-			Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
+			Expect(pvc.Spec.VolumeName).To(Equal(pvName))
 
 			By("And it has defined cloud-manager default labels")
 			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())

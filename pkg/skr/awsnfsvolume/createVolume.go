@@ -30,8 +30,8 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	labelsBuilder := util.NewLabelBuilder()
-	labelsBuilder.WithCloudManagerDefaults()
 	labelsBuilder.WithCustomLabels(getVolumeLabels(state.ObjAsAwsNfsVolume()))
+	labelsBuilder.WithCloudManagerDefaults()
 
 	pvLabels := labelsBuilder.Build()
 
