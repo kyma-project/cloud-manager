@@ -2,18 +2,23 @@ apiVersion: v1
 data:
   details: |-
     body:
-        - widget: Labels
-          source: metadata.name
-          name: metadata.name
-        - widget: Labels
-          source: spec.cidr
-          name: spec.cidr
-        - widget: Labels
-          source: status.cidr
-          name: status.cidr
-        - widget: Labels
-          source: status.state
-          name: status.state
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: cidr
+              name: spec.cidr
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: cidr
+              name: status.cidr
   form: |-
     - path: spec.cidr
       name: spec.cidr
@@ -45,6 +50,8 @@ data:
       metadata.namespace: Namespace
       status.cidr: Reserved CIDR
       status.state: State
+      configuration: Configuration
+      status: Status
 kind: ConfigMap
 metadata:
   labels:
