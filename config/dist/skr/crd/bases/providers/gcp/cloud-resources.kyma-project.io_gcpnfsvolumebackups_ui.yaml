@@ -1,23 +1,28 @@
 apiVersion: v1
 data:
-  details: |-
+  details: |
     body:
-        - widget: Labels
-          source: spec.location
-          name: spec.location
-          visibility: $exists($value)
-        - widget: Labels
-          source: spec.source.volume.name
-          name: spec.source.volume.name
-          visibility: $exists($value)
-        - widget: Labels
-          source: spec.source.volume.namespace
-          name: spec.source.volume.namespace
-          visibility: $exists($value)
-        - widget: Labels
-          source: status.state
-          name: status.state
-          visibility: $exists($value)
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: location
+              name: spec.location
+            - widget: Labels
+              source: source.volume.name
+              name: spec.source.volume.name
+            - widget: Labels
+              source: source.volume.namespace
+              name: spec.source.volume.namespace
+
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
   form: |-
     - path: spec.location
       simple: true
@@ -59,6 +64,8 @@ data:
       spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Volume Namespace
       status.state: State
+      configuration: Configuration
+      status: Status
 kind: ConfigMap
 metadata:
   labels:

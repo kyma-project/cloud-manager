@@ -3,3 +3,5 @@ en:
   spec.source.volume.name: Volume Name
   spec.source.volume.namespace: Volume Namespace
   status.state: State
+  configuration: Configuration
+  status: Status

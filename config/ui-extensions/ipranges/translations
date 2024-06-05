@@ -3,3 +3,5 @@ en:
   metadata.namespace: Namespace
   status.cidr: Reserved CIDR
   status.state: State
+  configuration: Configuration
+  status: Status
