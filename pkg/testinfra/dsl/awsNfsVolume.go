@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -86,6 +87,61 @@ func WithAwsNfsVolumePvAnnotations(annotations map[string]string) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvAnnotations", obj))
+		},
+	}
+}
+
+func WithAwsNfsVolumePvcName(name string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolumeClaim == nil {
+					x.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.AwsNfsVolumePvcSpec{}
+				}
+				x.Spec.PersistentVolumeClaim.Name = name
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvcName", obj))
+		},
+	}
+}
+
+func WithAwsNfsVolumePvcLabels(labels map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolumeClaim == nil {
+					x.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.AwsNfsVolumePvcSpec{}
+				}
+				if x.Spec.PersistentVolumeClaim.Labels == nil {
+					x.Spec.PersistentVolumeClaim.Labels = map[string]string{}
+				}
+				for k, v := range labels {
+					x.Spec.PersistentVolumeClaim.Labels[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvcLabels", obj))
+		},
+	}
+}
+
+func WithAwsNfsVolumePvcAnnotations(annotations map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if x.Spec.PersistentVolumeClaim == nil {
+					x.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.AwsNfsVolumePvcSpec{}
+				}
+				if x.Spec.PersistentVolumeClaim.Annotations == nil {
+					x.Spec.PersistentVolumeClaim.Annotations = map[string]string{}
+				}
+				for k, v := range annotations {
+					x.Spec.PersistentVolumeClaim.Annotations[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvcAnnotations", obj))
 		},
 	}
 }

@@ -60,6 +60,17 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			"bar": "2",
 		}
 
+		const (
+			pvcName = "some-pvc-custom-name"
+		)
+
+		pvcLabels := map[string]string{
+			"baz": "3",
+		}
+		pvcAnnotations := map[string]string{
+			"qux": "4",
+		}
+
 		By("When AwsNfsVolume is created", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(
@@ -70,6 +81,9 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					WithAwsNfsVolumePvName(pvName),
 					WithAwsNfsVolumePvLabels(pvLabels),
 					WithAwsNfsVolumePvAnnotations(pvAnnotations),
+					WithAwsNfsVolumePvcName(pvcName),
+					WithAwsNfsVolumePvcLabels(pvcLabels),
+					WithAwsNfsVolumePvcAnnotations(pvcAnnotations),
 				).
 				Should(Succeed())
 		})
@@ -185,7 +199,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pvc,
 					NewObjActions(
-						WithName(pvName),
+						WithName(pvcName),
 						WithNamespace(awsNfsVolume.Namespace),
 					),
 				).
@@ -194,9 +208,6 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			By("And its .spec.volumeName is PV name")
 			Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
 
-			By("And it has same Name as the PV")
-			Expect(pvc.GetName()).To(Equal(pv.GetName()))
-
 			By("And it has defined cloud-manager default labels")
 			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
 			Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
@@ -204,6 +215,15 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
 			By("And it has defined custom label for capacity")
 			Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(awsNfsVolumeCapacity))
+
+			By("And it has user defined custom labels")
+			for k, v := range pvcLabels {
+				Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+			}
+			By("And it has user defined custom annotations")
+			for k, v := range pvcAnnotations {
+				Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
+			}
 		})
 
 		// CleanUp
