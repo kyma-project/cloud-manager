@@ -15,108 +15,39 @@ spec:
     singular: awsnfsvolume
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .spec.capacity
-      name: Capacity
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    - jsonPath: .status.state
-      name: State
-      type: string
-    name: v1beta1
-    schema:
-      openAPIV3Schema:
-        description: AwsNfsVolume is the Schema for the awsnfsvolumes API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
-            properties:
-              capacity:
-                anyOf:
-                - type: integer
-                - type: string
-                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                x-kubernetes-int-or-string: true
-              ipRange:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
-                type: object
-              performanceMode:
-                default: generalPurpose
-                enum:
-                - generalPurpose
-                - maxIO
-                type: string
-              throughput:
-                default: bursting
-                enum:
-                - bursting
-                - elastic
-                type: string
-              volume:
-                properties:
-                  annotations:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  labels:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  name:
-                    type: string
-                type: object
-              volumeClaim:
-                properties:
-                  annotations:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  labels:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  name:
-                    type: string
-                type: object
-            required:
-            - capacity
-            type: object
-          status:
-            description: AwsNfsVolumeStatus defines the observed state of AwsNfsVolume
-            properties:
-              conditions:
-                description: List of status conditions
-                items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    \n type FooStatus struct{ // Represents the observations of a
-                    foo's current state. // Known .status.conditions.type are: \"Available\",
-                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
-                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
-                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
+    - additionalPrinterColumns:
+        - jsonPath: .spec.capacity
+          name: Capacity
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+        - jsonPath: .status.state
+          name: State
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: AwsNfsVolume is the Schema for the awsnfsvolumes API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: AwsNfsVolumeSpec defines the desired state of AwsNfsVolume
+              properties:
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
+                ipRange:
                   properties:
                     name:
                       type: string
@@ -139,6 +70,19 @@ spec:
                     - elastic
                   type: string
                 volume:
+                  properties:
+                    annotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    labels:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                  type: object
+                volumeClaim:
                   properties:
                     annotations:
                       additionalProperties:
