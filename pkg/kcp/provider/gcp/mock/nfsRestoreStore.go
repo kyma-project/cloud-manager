@@ -24,7 +24,7 @@ func (s *nfsRestoreStore) RestoreFile(ctx context.Context, projectId, destFileFu
 	return newOperation("", false), nil
 }
 
-func (s *nfsRestoreStore) GetFileOperation(ctx context.Context, _, operationName string) (*file.Operation, error) {
+func (s *nfsRestoreStore) GetRestoreOperation(ctx context.Context, _, operationName string) (*file.Operation, error) {
 	if s.restoreOperationError != nil {
 		return nil, s.restoreOperationError
 	}

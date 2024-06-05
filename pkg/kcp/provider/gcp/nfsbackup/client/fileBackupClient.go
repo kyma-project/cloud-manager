@@ -13,7 +13,7 @@ type FileBackupClient interface {
 	GetFileBackup(ctx context.Context, projectId, location, name string) (*file.Backup, error)
 	CreateFileBackup(ctx context.Context, projectId, location, name string, backup *file.Backup) (*file.Operation, error)
 	DeleteFileBackup(ctx context.Context, projectId, location, name string) (*file.Operation, error)
-	GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
+	GetBackupOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
 }
 
 func NewFileBackupClientProvider() client.ClientProvider[FileBackupClient] {
@@ -71,12 +71,12 @@ func (c *fileBackupClient) DeleteFileBackup(ctx context.Context, projectId, loca
 	return operation, nil
 }
 
-func (c *fileBackupClient) GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
+func (c *fileBackupClient) GetBackupOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
 	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
-		logger.Error(err, "GetFileOperation", "projectId", projectId, "operationName", operationName)
+		logger.Error(err, "GetBackupOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
 	}
 	return operation, nil

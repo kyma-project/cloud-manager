@@ -9,7 +9,8 @@ import (
 )
 
 type nfsBackupStore struct {
-	backups []*file.Backup
+	backups              []*file.Backup
+	backupOperationError *googleapi.Error
 }
 
 func (s *nfsBackupStore) GetFileBackup(ctx context.Context, projectId, location, name string) (*file.Backup, error) {
@@ -75,4 +76,14 @@ func (s *nfsBackupStore) DeleteFileBackup(ctx context.Context, projectId, locati
 		Message: "Resource not found",
 	}
 
+}
+
+func (s *nfsBackupStore) GetBackupOperation(ctx context.Context, _, operationName string) (*file.Operation, error) {
+	if s.backupOperationError != nil {
+		return nil, s.backupOperationError
+	}
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	return &file.Operation{Name: operationName, Done: true}, nil
 }

@@ -14,6 +14,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
+	// This shouldn't be reached, but just in case
 	if state.fileBackup != nil {
 		// GCP backup is not yet deleted
 		return nil, nil

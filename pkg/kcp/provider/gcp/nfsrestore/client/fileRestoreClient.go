@@ -11,7 +11,7 @@ import (
 
 type FileRestoreClient interface {
 	RestoreFile(ctx context.Context, projectId, destFileFullPath, destFileShareName, srcBackupFullPath string) (*file.Operation, error)
-	GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
+	GetRestoreOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
 }
 
 func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
@@ -54,12 +54,12 @@ func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFile
 	return operation, nil
 }
 
-func (c *fileRestoreClient) GetFileOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
+func (c *fileRestoreClient) GetRestoreOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
 	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
-		logger.Error(err, "GetFileOperation", "projectId", projectId, "operationName", operationName)
+		logger.Error(err, "GetRestoreOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
 	}
 	return operation, nil
