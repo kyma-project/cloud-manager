@@ -1,20 +1,22 @@
 body:
     - name: configuration
       widget: Panel
+      source: spec
       children:
         - widget: Labels
-          source: spec.location
+          source: location
           name: spec.location
-          visibility: $exists($value)
         - widget: Labels
-          source: spec.source.volume.name
+          source: source.volume.name
           name: spec.source.volume.name
-          visibility: $exists($value)
         - widget: Labels
-          source: spec.source.volume.namespace
+          source: source.volume.namespace
           name: spec.source.volume.namespace
-          visibility: $exists($value)
+
+    - name: status
+      widget: Panel
+      source: status
+      children:
         - widget: Labels
-          source: status.state
+          source: state
           name: status.state
-          visibility: $exists($value)

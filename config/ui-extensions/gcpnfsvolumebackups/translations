@@ -4,3 +4,4 @@ en:
   spec.source.volume.namespace: Volume Namespace
   status.state: State
   configuration: Configuration
+  status: Status

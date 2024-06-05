@@ -5,3 +5,4 @@ en:
   spec.source.backup.namespace: Source Backup Namespace
   status.state: State
   configuration: Configuration
+  status: Status
