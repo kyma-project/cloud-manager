@@ -4,33 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
-  name: gcpnfsvolumes.cloud-resources.kyma-project.io
+  name: azurevpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
-    kind: GcpNfsVolume
-    listKind: GcpNfsVolumeList
-    plural: gcpnfsvolumes
-    singular: gcpnfsvolume
-  scope: Namespaced
+    kind: AzureVpcPeering
+    listKind: AzureVpcPeeringList
+    plural: azurevpcpeerings
+    singular: azurevpcpeering
+  scope: Cluster
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .spec.fileShareName
-      name: Path
-      type: string
-    - jsonPath: .status.capacityGb
-      name: Capacity (GB)
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    - jsonPath: .status.state
-      name: State
-      type: string
-    name: v1beta1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: GcpNfsVolume is the Schema for the gcpnfsvolumes API
+        description: AzureVpcPeering is the Schema for the azurevpcpeerings API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -45,70 +32,23 @@ spec:
           metadata:
             type: object
           spec:
-            description: GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
+            description: AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
             properties:
-              capacityGb:
-                default: 2560
-                type: integer
-              fileShareName:
-                default: vol1
-                pattern: ^[a-z][a-z0-9_]*[a-z0-9]$
+              allowVnetAccess:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: boolean
+              remoteResourceGroup:
                 type: string
-                x-kubernetes-validations:
-                - message: FileShareName is immutable.
-                  rule: (self == oldSelf)
-              ipRange:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
-                type: object
-                x-kubernetes-validations:
-                - message: IpRange is immutable.
-                  rule: (self == oldSelf)
-              location:
+              remoteVnet:
                 type: string
-                x-kubernetes-validations:
-                - message: Location is immutable.
-                  rule: (self == oldSelf)
-              tier:
-                default: BASIC_HDD
-                type: string
-                x-kubernetes-validations:
-                - message: Tier is immutable.
-                  rule: (self == oldSelf)
-              volume:
-                properties:
-                  annotations:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  labels:
-                    additionalProperties:
-                      type: string
-                    type: object
-                  name:
-                    type: string
-                type: object
-            required:
-            - capacityGb
-            - fileShareName
-            - ipRange
-            - location
-            - tier
             type: object
           status:
-            description: GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
+            description: AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
             properties:
-              capacityGb:
-                description: Capacity of the volume with Ready Condition
-                type: integer
               conditions:
-                description: List of status conditions
+                description: List of status conditions to indicate the status of a
+                  Peering.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -179,16 +119,7 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              hosts:
-                description: List of NFS Hosts (DNS Names or IP Addresses) that clients
-                  can use to connect
-                items:
-                  type: string
-                type: array
               id:
-                type: string
-              state:
-                description: State of the GcpNfsVolume
                 type: string
             type: object
         type: object

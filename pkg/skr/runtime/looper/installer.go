@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"io"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -28,6 +29,7 @@ var _ Installer = &installer{}
 
 type installer struct {
 	skrProvidersPath string
+	scheme           *runtime.Scheme
 	logger           logr.Logger
 }
 
@@ -50,7 +52,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 
 	docCount := 0
 	for _, f := range files {
-		cnt, err := i.applyFile(ctx, skrCluster, f)
+		cnt, err := i.applyFile(ctx, skrCluster, f, provider)
 		if err != nil {
 			return fmt.Errorf("error installing SKR provider dependencies: %w", err)
 		}
@@ -64,7 +66,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 	return nil
 }
 
-func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, fn string) (int, error) {
+func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, fn string, provider string) (int, error) {
 	b, err := os.ReadFile(fn)
 	if err != nil {
 		return 0, fmt.Errorf("error reading SKR install manifest %s: %w", fn, err)
@@ -111,6 +113,11 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 				"manifestNamespace", desired.GetNamespace(),
 				"manifestFile", filepath.Base(fn),
 			)
+
+		if !common.ObjSupportsProvider(desired, i.scheme, provider) {
+			logger.Info("Object Kind does not support this provider")
+			continue
+		}
 
 		existing := desired.DeepCopy()
 		err = skrCluster.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(existing), existing)

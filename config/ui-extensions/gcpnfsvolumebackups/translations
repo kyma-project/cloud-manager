@@ -1,0 +1,5 @@
+en:
+  spec.location: Location
+  spec.source.volume.name: Volume Name
+  spec.source.volume.namespace: Volume Namespace
+  status.state: State

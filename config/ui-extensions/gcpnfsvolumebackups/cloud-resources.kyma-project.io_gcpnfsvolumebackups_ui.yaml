@@ -53,11 +53,17 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: ""
+  translations: |-
+    en:
+      spec.location: Location
+      spec.source.volume.name: Volume Name
+      spec.source.volume.namespace: Volume Namespace
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
   name: gcpnfsvolumebackups-ui.operator.kyma-project.io
   namespace: kyma-system

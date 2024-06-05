@@ -17,6 +17,10 @@ import (
 func subnetsCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	logger = logger.
+		WithValues("statusSubnets", fmt.Sprintf("%v", pie.Map(state.ObjAsIpRange().Status.Subnets, func(s cloudcontrolv1beta1.IpRangeSubnet) string {
+			return fmt.Sprintf("(%s %s %s)", s.Id, s.Zone, s.Range)
+		})))
 
 	count := len(state.ObjAsIpRange().Status.Ranges)
 
@@ -106,11 +110,22 @@ func subnetsCreate(ctx context.Context, st composed.State) (error, context.Conte
 			SuccessErrorNil().
 			Run(ctx, state)
 		if x != nil {
+			logger.
+				WithValues(
+					"error", x.Error(),
+					"errorType", fmt.Sprintf("%T", x),
+				).
+				Info("KCP IpRange patch status error")
 			return x, ctx
 		}
 	}
 
 	if anyCreated {
+		logger.
+			WithValues("statusSubnets", fmt.Sprintf("%v", pie.Map(state.ObjAsIpRange().Status.Subnets, func(s cloudcontrolv1beta1.IpRangeSubnet) string {
+				return fmt.Sprintf("(%s %s %s)", s.Id, s.Zone, s.Range)
+			}))).
+			Info("Requeue delay after AWS subnets created")
 		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 	}
 

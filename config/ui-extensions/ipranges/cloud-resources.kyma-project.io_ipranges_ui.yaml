@@ -33,17 +33,23 @@ data:
     description: >-
         IpRange description here
   list: |-
-    - source: spec.cidr
-      name: spec.cidr
+    - source: status.cidr
+      name: status.cidr
       sort: true
     - source: metadata.namespace
       name: metadata.namespace
       sort: true
-  translations: ""
+  translations: |-
+    en:
+      spec.cidr: Requested CIDR
+      metadata.namespace: Namespace
+      status.cidr: Reserved CIDR
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
   name: ipranges-ui.operator.kyma-project.io
   namespace: kyma-system

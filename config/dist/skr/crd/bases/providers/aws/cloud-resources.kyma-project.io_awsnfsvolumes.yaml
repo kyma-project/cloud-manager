@@ -50,51 +50,6 @@ spec:
                 ipRange:
                   properties:
                     name:
-                      type: string
-                    namespace:
-                      type: string
-                  required:
-                    - name
-                    - namespace
-                  type: object
-                performanceMode:
-                  default: generalPurpose
-                  enum:
-                    - generalPurpose
-                    - maxIO
-                  type: string
-                throughput:
-                  default: bursting
-                  enum:
-                    - bursting
-                    - elastic
-                  type: string
-                volume:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
-                      type: string
-                  type: object
-                volumeClaim:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
-                      type: string
-                  type: object
               required:
                 - capacity
               type: object
