@@ -1,30 +1,33 @@
 apiVersion: v1
 data:
-  details: |-
+  details: |
     body:
         - name: configuration
           widget: Panel
+          source: spec
           children:
             - widget: Labels
-              source: spec.destination.volume.name
+              source: destination.volume.name
               name: spec.destination.volume.name
-              visibility: $exists($value)
             - widget: Labels
-              source: spec.destination.volume.namespace
+              source: destination.volume.namespace
               name: spec.destination.volume.namespace
-              visibility: $exists($value)
             - widget: Labels
-              source: spec.source.backup.name
+              source: source.backup.name
               name: spec.source.backup.name
-              visibility: $exists($value)
             - widget: Labels
-              source: spec.source.backup.namespace
+              source: source.backup.namespace
               name: spec.source.backup.namespace
-              visibility: $exists($value)
             - widget: Labels
               source: status.state
               name: status.state
-              visibility: $exists($value)
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
   form: |-
     - path: spec.destination.volume.name
       simple: true
@@ -78,6 +81,7 @@ data:
       spec.source.backup.namespace: Source Backup Namespace
       status.state: State
       configuration: Configuration
+      status: Status
 kind: ConfigMap
 metadata:
   labels:

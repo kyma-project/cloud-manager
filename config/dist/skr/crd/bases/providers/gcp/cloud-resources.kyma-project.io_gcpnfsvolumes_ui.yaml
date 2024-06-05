@@ -9,19 +9,15 @@ data:
             - name: spec.fileShareName
               source: fileShareName
               widget: Labels
-              visibility: $exists($value)
             - name: spec.capacityGb
               source: capacityGb
               widget: Labels
-              visibility: $exists($value)
             - name: spec.location
               source: location
               widget: Labels
-              visibility: $exists($value)
             - name: spec.tier
               source: tier
               widget: Labels
-              visibility: $exists($value)
   form: |-
     - path: spec.capacityGb
       simple: true
