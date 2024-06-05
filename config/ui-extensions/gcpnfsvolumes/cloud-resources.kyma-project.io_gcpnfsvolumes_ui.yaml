@@ -2,22 +2,26 @@ apiVersion: v1
 data:
   details: |
     body:
-        - widget: Labels
-          source: spec.fileShareName
-          name: spec.fileShareName
-          visibility: $exists($value)
-        - widget: Labels
-          source: spec.capacityGb
-          name: spec.capacityGb
-          visibility: $exists($value)
-        - widget: Labels
-          source: spec.location
-          name: spec.location
-          visibility: $exists($value)
-        - widget: Labels
-          source: spec.tier
-          name: spec.tier
-          visibility: $exists($value)
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - name: spec.fileShareName
+              source: fileShareName
+              widget: Labels
+              visibility: $exists($value)
+            - name: spec.capacityGb
+              source: capacityGb
+              widget: Labels
+              visibility: $exists($value)
+            - name: spec.location
+              source: location
+              widget: Labels
+              visibility: $exists($value)
+            - name: spec.tier
+              source: tier
+              widget: Labels
+              visibility: $exists($value)
   form: |-
     - path: spec.capacityGb
       simple: true
@@ -67,6 +71,7 @@ data:
       spec.fileShareName: File Share Name
       spec.capacityGb: Capacity (Gb)
       spec.ipRange: IP Range
+      configuration: Configuration
 kind: ConfigMap
 metadata:
   labels:
