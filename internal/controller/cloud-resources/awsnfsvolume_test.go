@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -58,6 +59,17 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			"bar": "2",
 		}
 
+		const (
+			pvcName = "some-pvc-custom-name"
+		)
+
+		pvcLabels := map[string]string{
+			"buz": "3",
+		}
+		pvcAnnotations := map[string]string{
+			"qux": "4",
+		}
+
 		By("When AwsNfsVolume is created", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(
@@ -68,6 +80,9 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					WithAwsNfsVolumePvName(pvName),
 					WithAwsNfsVolumePvLabels(pvLabels),
 					WithAwsNfsVolumePvAnnotations(pvAnnotations),
+					WithAwsNfsVolumePvcName(pvcName),
+					WithAwsNfsVolumePvcLabels(pvcLabels),
+					WithAwsNfsVolumePvcAnnotations(pvcAnnotations),
 				).
 				Should(Succeed())
 		})
@@ -160,11 +175,53 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				).
 				Should(Succeed())
 
+			By("And it has defined cloud-manager default labels")
+			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+			By("And it has user defined custom labels")
 			for k, v := range pvLabels {
 				Expect(pv.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have label %s=%s", k, v))
 			}
+			By("And it has user defined custom annotations")
 			for k, v := range pvAnnotations {
 				Expect(pv.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PV to have annotation %s=%s", k, v))
+			}
+		})
+
+		pvc := &corev1.PersistentVolumeClaim{}
+		By("And Then SKR PersistentVolumeClaim is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pvc,
+					NewObjActions(
+						WithName(pvcName),
+						WithNamespace(awsNfsVolume.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			By("And its .spec.volumeName is PV name")
+			Expect(pvc.Spec.VolumeName).To(Equal(pvName))
+
+			By("And it has defined cloud-manager default labels")
+			Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+			Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+			By("And it has defined custom label for capacity")
+			Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(awsNfsVolumeCapacity))
+
+			By("And it has user defined custom labels")
+			for k, v := range pvcLabels {
+				Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+			}
+			By("And it has user defined custom annotations")
+			for k, v := range pvcAnnotations {
+				Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
 			}
 		})
 
@@ -290,6 +347,21 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "failed creating PV")
 		})
 
+		pvc := &corev1.PersistentVolumeClaim{}
+		By("And Given SKR PersistentVolumeClaim is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					pvc,
+					NewObjActions(
+						WithName(pv.Name),
+						WithNamespace(awsNfsVolume.Namespace),
+					),
+				).
+				Should(Succeed())
+		})
+
 		// DELETE START HERE
 
 		By("When AwsNfsVolume is deleted", func() {
@@ -311,7 +383,13 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "expected AwsNfsVolume to have Deleting state")
 		})
 
-		By("Then SKR PersistentVolume is deleted", func() {
+		By("Then SKR PersistentVolumeClaim is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), pvc).
+				Should(Succeed(), "expected PVC not to exist")
+		})
+
+		By("And Then SKR PersistentVolume is deleted", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), pv).
 				Should(Succeed(), "expected PV not to exist")

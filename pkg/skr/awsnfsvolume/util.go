@@ -32,3 +32,34 @@ func getVolumeAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string
 	}
 	return result
 }
+
+func getVolumeClaimName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
+	if awsVol.Spec.PersistentVolumeClaim != nil &&
+		len(awsVol.Spec.PersistentVolumeClaim.Name) > 0 {
+		return awsVol.Spec.PersistentVolumeClaim.Name
+	}
+
+	return awsVol.Name
+}
+
+func getVolumeClaimLabels(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
+	result := map[string]string{}
+	if awsVol.Spec.PersistentVolumeClaim != nil {
+		for k, v := range awsVol.Spec.PersistentVolumeClaim.Labels {
+			result[k] = v
+		}
+	}
+	result[cloudresourcesv1beta1.LabelCloudManaged] = "true"
+	return result
+}
+
+func getVolumeClaimAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
+	if awsVol.Spec.PersistentVolumeClaim == nil {
+		return nil
+	}
+	result := map[string]string{}
+	for k, v := range awsVol.Spec.PersistentVolumeClaim.Annotations {
+		result[k] = v
+	}
+	return result
+}

@@ -32,6 +32,7 @@ const (
 	ConditionTypeDeleting = "Deleting"
 
 	ConditionReasonDeletingPV       = "DeletingPersistentVolume"
+	ConditionReasonDeletingPVC      = "DeletingPersistentVolumeClaim"
 	ConditionReasonDeletingInstance = "DeletingInstance"
 )
 

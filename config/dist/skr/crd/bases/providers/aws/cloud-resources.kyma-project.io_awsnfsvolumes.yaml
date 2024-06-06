@@ -82,6 +82,19 @@ spec:
                     name:
                       type: string
                   type: object
+                volumeClaim:
+                  properties:
+                    annotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    labels:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                  type: object
               required:
                 - capacity
               type: object

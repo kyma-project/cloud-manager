@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -47,16 +48,22 @@ func (r *reconciler) newAction() composed.Action {
 		defaultiprange.New(),
 
 		loadVolume,
+		sanitizeReleasedVolume,
+		loadPersistentVolumeClaim,
 		addFinalizer,
 		updateId,
 		loadKcpNfsInstance,
 		createKcpNfsInstance,
 		updateStatus,
 		createVolume,
+		createPersistentVolumeClaim,
 		requeueWaitKcpStatus,
 		stopIfNotBeingDeleted,
 
 		// this below executes only when marked for deletion
+
+		deletePVC,
+		waitPVCDeleted,
 
 		deletePv,
 		waitPvDeleted,
