@@ -3,12 +3,12 @@
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: GcpVpcPeering
 metadata:
-  name: "vpcpeering-sample"
-  namespace: "default"
+  name: "vpcpeering-test"
+  namespace: "kube-public"
 spec:
-  name: "vpcpeering-sample"
-  remoteProject: "12345678"
-  remoteVpc: "my-vpc"
+  peeringName: "vpcpeering-sap-gcp-skr-dev-cust-00002-sap-sc-learn"
+  remoteProject: "sap-sc-learn"
+  remoteVpc: "default"
   # Default is false.
   # When one VPC network exports static and dynamic routes and the other VPC network imports those routes,
   # the importing network can send packets directly to the next hop for each imported static or dynamic route whose next hop is in the peer VPC network.

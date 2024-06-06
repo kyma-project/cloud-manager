@@ -1,0 +1,15 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpVpcPeering
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpvpcpeering
+    app.kubernetes.io/instance: gcpvpcpeering-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: gcpvpcpeering-sample
+spec:
+  name: "vpcpeering-sap-gcp-skr-dev-cust-00002-sap-sc-learn"
+  remoteProject: "sap-sc-learn"
+  remoteVpc: "default"
+  importCustomRoutes: false
