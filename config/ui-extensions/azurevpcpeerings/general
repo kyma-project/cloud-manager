@@ -1,0 +1,11 @@
+resource:
+    kind: AzureVpcPeering
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: azurevpcpeerings
+name: Azure VPC Peerings
+scope: cluster
+category: Discovery and Network
+icon: tnt/network
+description: >-
+    Description here

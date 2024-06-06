@@ -1,0 +1,9 @@
+- source: spec.allowVnetAccess
+  name: spec.allowVnetAccess
+  sort: true
+- source: spec.remoteResourceGroup
+  name: spec.remoteResourceGroup
+  sort: true
+- source: spec.remoteVnet
+  name: spec.remoteVnet
+  sort: true
