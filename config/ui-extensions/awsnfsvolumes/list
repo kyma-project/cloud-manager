@@ -1,0 +1,12 @@
+- source: spec.capacity
+  name: spec.capacity
+  sort: true
+- source: spec.performanceMode
+  name: spec.performanceMode
+  sort: true
+- source: spec.throughput
+  name: spec.throughput
+  sort: true
+- source: spec.volume.name
+  name: spec.volume.name
+  sort: true

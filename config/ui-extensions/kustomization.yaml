@@ -1,5 +1,5 @@
 resources:
-#  - awsnfsvolumes
+  - awsnfsvolumes
 #  - cloudresources
   - gcpnfsvolumes
   - gcpnfsvolumebackups

@@ -1,0 +1,8 @@
+en:
+  spec.capacity: Capacity
+  spec.performanceMode: Performance Mode
+  spec.throughput: Throughput
+  spec.volume.name: Volume Name
+  configuration: Configuration
+  status: Status
+  status.state: State
