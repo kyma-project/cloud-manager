@@ -12,7 +12,6 @@ configMapGenerator:
   - GCP_CLIENT_RENEW_DURATION=5m
   - GCP_RETRY_WAIT_DURATION=5s
   - GCP_OPERATION_WAIT_DURATION=5s
-  - DISABLED_CRDS=GcpNfsVolumeBackups,GcpNfsVolumeRestores,GcpNfsVolumes_UI # "_" + crd + ".yaml" should be the suffix for the yaml present in config/crd/bases. Case-insensitive
   name: manager-env
 
 secretGenerator:
