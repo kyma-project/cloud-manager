@@ -3,15 +3,16 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
-	"time"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -88,6 +89,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	}
 	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-		SuccessError(composed.StopWithRequeueDelay(200*time.Millisecond)).
+		SuccessError(composed.StopWithRequeueDelay(2*util.Timing.T100ms())).
 		Run(ctx, state)
 }
