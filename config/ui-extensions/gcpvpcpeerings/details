@@ -1,0 +1,24 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: Labels
+          source: importCustomRoutes
+          name: spec.importCustomRoutes
+        - widget: Labels
+          source: peeringName
+          name: spec.peeringName
+        - widget: Labels
+          source: remoteProject
+          name: spec.remoteProject
+        - widget: Labels
+          source: remoteVpc
+          name: spec.remoteVpc
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: id
+          name: status.id
