@@ -1,0 +1,63 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: allowVnetAccess
+              name: spec.allowVnetAccess
+            - widget: Labels
+              source: remoteResourceGroup
+              name: spec.remoteResourceGroup
+            - widget: Labels
+              source: remoteVnet
+              name: spec.remoteVnet
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: id
+              name: status.id
+  form: ""
+  general: |-
+    resource:
+        kind: AzureVpcPeering
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: azurevpcpeerings
+    name: Azure VPC Peerings
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        Description here
+  list: |-
+    - source: spec.allowVnetAccess
+      name: spec.allowVnetAccess
+      sort: true
+    - source: spec.remoteResourceGroup
+      name: spec.remoteResourceGroup
+      sort: true
+    - source: spec.remoteVnet
+      name: spec.remoteVnet
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      spec.allowVnetAccess: Allow Vnet Access
+      spec.remoteResourceGroup: Remote Resource Group
+      spec.remoteVnet: Remote Vnet
+      status.id: ID
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: azurevpcpeerings-ui.operator.kyma-project.io
+  namespace: kyma-system

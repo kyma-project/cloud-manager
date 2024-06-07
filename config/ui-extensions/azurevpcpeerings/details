@@ -1,0 +1,21 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: Labels
+          source: allowVnetAccess
+          name: spec.allowVnetAccess
+        - widget: Labels
+          source: remoteResourceGroup
+          name: spec.remoteResourceGroup
+        - widget: Labels
+          source: remoteVnet
+          name: spec.remoteVnet
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: id
+          name: status.id
