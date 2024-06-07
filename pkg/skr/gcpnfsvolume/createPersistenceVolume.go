@@ -45,17 +45,11 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 		return nil, nil
 	}
 
-	labelsBuilder := util.NewLabelBuilder()
-	labelsBuilder.WithCustomLabels(getVolumeLabels(state.ObjAsGcpNfsVolume()))
-	labelsBuilder.WithCloudManagerDefaults()
-
-	pvLabels := labelsBuilder.Build()
-
 	//Construct a PV Object
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        getVolumeName(nfsVolume),
-			Labels:      pvLabels,
+			Labels:      getVolumeLabels(state.ObjAsGcpNfsVolume()),
 			Annotations: getVolumeAnnotations(nfsVolume),
 			Finalizers: []string{
 				v1beta1.Finalizer,

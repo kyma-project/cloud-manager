@@ -3,9 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -28,20 +26,11 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return nil, nil
 	}
 
-	labelsBuilder := util.NewLabelBuilder()
-	labelsBuilder.WithCustomLabels(getVolumeClaimLabels(state.ObjAsGcpNfsVolume()))
-	labelsBuilder.WithCloudManagerDefaults()
-
-	storage := state.PV.Spec.Capacity["storage"]
-	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, storage.String())
-
-	pvcLabels := labelsBuilder.Build()
-
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
 			Name:        getVolumeClaimName(state.ObjAsGcpNfsVolume()),
-			Labels:      pvcLabels,
+			Labels:      getVolumeClaimLabels(state.ObjAsGcpNfsVolume(), state),
 			Annotations: getVolumeClaimAnnotations(state.ObjAsGcpNfsVolume()),
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
@@ -49,7 +38,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
-					"storage": storage,
+					"storage": state.PV.Spec.Capacity["storage"],
 				},
 			},
 			StorageClassName: ptr.To(""),
