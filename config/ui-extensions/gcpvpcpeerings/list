@@ -1,0 +1,12 @@
+- source: spec.importCustomRoutes
+  name: spec.importCustomRoutes
+  sort: true
+- source: spec.peeringName
+  name: spec.peeringName
+  sort: true
+- source: spec.remoteProject
+  name: spec.remoteProject
+  sort: true
+- source: spec.remoteVpc
+  name: spec.remoteVpc
+  sort: true
