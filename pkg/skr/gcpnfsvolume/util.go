@@ -14,12 +14,12 @@ func getVolumeName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
 }
 
 func getVolumeClaimName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
-	if gcpVol.Spec.PersistentVolume != nil &&
-		len(gcpVol.Spec.PersistentVolume.Name) > 0 {
-		return gcpVol.Spec.PersistentVolume.Name
+	if gcpVol.Spec.PersistentVolumeClaim != nil &&
+		len(gcpVol.Spec.PersistentVolumeClaim.Name) > 0 {
+		return gcpVol.Spec.PersistentVolumeClaim.Name
 	}
 
-	return "dusan"
+	return gcpVol.Name
 }
 
 func getVolumeLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {

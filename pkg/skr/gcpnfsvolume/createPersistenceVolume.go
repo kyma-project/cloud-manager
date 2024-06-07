@@ -83,5 +83,5 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+	return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), nil
 }
