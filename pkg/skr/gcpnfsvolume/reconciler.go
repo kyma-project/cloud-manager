@@ -56,6 +56,7 @@ func (r *Reconciler) newAction() composed.Action {
 		createPersistenceVolume,
 		modifyPersistenceVolume,
 		createPersistentVolumeClaim,
+		modifyPersistentVolumeClaim,
 		updateStatus,
 		composed.StopAndForgetAction,
 	)

@@ -306,6 +306,18 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 
+		prevPvc := &corev1.PersistentVolumeClaim{}
+		pvc := &corev1.PersistentVolumeClaim{}
+		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+			Name: "gcp-nfs-pvc",
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+			Annotations: map[string]string{
+				"baz": "qux",
+			},
+		}
+
 		BeforeEach(func() {
 			By("And Given SKR GcpNfsVolume exists", func() {
 				//Create GcpNfsVolume
@@ -359,6 +371,18 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						),
 					).
 					Should(Succeed())
+
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						prevPvc,
+						NewObjActions(
+							WithName(gcpNfsVolumeName),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
 			})
 		})
 
@@ -369,6 +393,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 					WithGcpNfsVolumeCapacity(updatedCapacityGb),
 					WithPvSpec(pvSpec),
+					WithPvcSpec(pvcSpec),
 				).
 				Should(Succeed())
 
@@ -460,6 +485,46 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					Eventually(IsDeleted, timeout, interval).
 						WithArguments(
 							infra.Ctx(), infra.SKR().Client(), prevPv,
+						).
+						Should(Succeed())
+				})
+			})
+
+			By("And Then SKR PersistentVolumeClaim is updated", func() {
+				Eventually(LoadAndCheck, timeout, interval).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pvc,
+						NewObjActions(
+							WithName(pvcSpec.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
+
+				By("And it has defined cloud-manager default labels")
+				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+				By("And it has defined custom label for capacity")
+				storageCapacity := pv.Spec.Capacity["storage"]
+				Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(storageCapacity.String()))
+
+				By("And it has user defined custom labels")
+				for k, v := range pvcSpec.Labels {
+					Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+				}
+				By("And it has user defined custom annotations")
+				for k, v := range pvcSpec.Annotations {
+					Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
+				}
+
+				By("And previous PersistentVolumeClaim in SKR is deleted.", func() {
+					Eventually(IsDeleted, timeout, interval).
+						WithArguments(
+							infra.Ctx(), infra.SKR().Client(), prevPvc,
 						).
 						Should(Succeed())
 				})
