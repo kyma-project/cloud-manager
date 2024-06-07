@@ -79,9 +79,17 @@ type GcpNfsVolumeSpec struct {
 	CapacityGb int `json:"capacityGb"`
 
 	PersistentVolume *GcpNfsVolumePvSpec `json:"volume,omitempty"`
+
+	PersistentVolumeClaim *GcpNfsVolumePvcSpec `json:"volumeClaim,omitempty"`
 }
 
 type GcpNfsVolumePvSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type GcpNfsVolumePvcSpec struct {
 	Name        string            `json:"name,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`

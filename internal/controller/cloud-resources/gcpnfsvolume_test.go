@@ -9,6 +9,7 @@ import (
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -107,6 +108,17 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 
+		pvc := &corev1.PersistentVolumeClaim{}
+		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+			Name: "gcp-nfs-pvc",
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+			Annotations: map[string]string{
+				"baz": "qux",
+			},
+		}
+
 		It("When GcpNfsVolume Create is called", func() {
 			Eventually(CreateGcpNfsVolume).
 				WithArguments(
@@ -114,6 +126,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithName(gcpNfsVolumeName),
 					WithGcpNfsVolumeIpRange(skrIpRange.Name),
 					WithPvSpec(pvSpec),
+					WithPvcSpec(pvcSpec),
 				).
 				Should(Succeed())
 
@@ -219,15 +232,55 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has the Capacity equal to requested value in GB.")
 				expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
-				quantity, _ := pv.Spec.Capacity["storage"]
+				quantity := pv.Spec.Capacity["storage"]
 				pvQuantity, _ := quantity.AsInt64()
 				Expect(pvQuantity).To(Equal(expectedCapacity))
+
+				By("And has defined cloud-manager default labels")
+				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
 
 				By("And has the Labels matching the requested values in PvSpec.")
 				Expect(pv.Labels).Should(HaveKeyWithValue("app", pvSpec.Labels["app"]))
 
 				By("And has the Annotations matching the requested values in PvSpec.")
 				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
+			})
+
+			By("Then PersistantVolumeClaim is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pvc,
+						NewObjActions(
+							WithName(pvcSpec.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
+
+				By("And its .spec.volumeName is PV name")
+				Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
+
+				By("And it has defined cloud-manager default labels")
+				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+				By("And it has defined custom label for capacity")
+				storageCapacity := pv.Spec.Capacity["storage"]
+				Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(storageCapacity.String()))
+
+				By("And it has user defined custom labels")
+				for k, v := range pvcSpec.Labels {
+					Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+				}
+				By("And it has user defined custom annotations")
+				for k, v := range pvcSpec.Annotations {
+					Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
+				}
 			})
 		})
 	})
@@ -418,6 +471,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		pv := &corev1.PersistentVolume{}
+		pvc := &corev1.PersistentVolumeClaim{}
 
 		gcpNfsVolumeName := "gcp-nfs-volume-3"
 		nfsIpAddress := "10.11.12.16"
@@ -475,6 +529,17 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						),
 					).
 					Should(Succeed())
+
+				//Load PVC
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), pvc,
+						NewObjActions(
+							WithName(gcpNfsVolume.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
 			})
 		})
 		It("When SKR GcpNfsVolume Delete is called ", func() {
@@ -494,6 +559,14 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 			By("Then DeletionTimestamp is set in GcpNfsVolume", func() {
 				Expect(gcpNfsVolume.DeletionTimestamp.IsZero()).NotTo(BeTrue())
+			})
+
+			By("And Then the PersistentVolumeClaim in SKR is deleted.", func() {
+				Eventually(IsDeleted, timeout, interval).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), pvc,
+					).
+					Should(Succeed())
 			})
 
 			By("And Then the PersistentVolume in SKR is deleted.", func() {
