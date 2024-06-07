@@ -1,0 +1,70 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: importCustomRoutes
+              name: spec.importCustomRoutes
+            - widget: Labels
+              source: peeringName
+              name: spec.peeringName
+            - widget: Labels
+              source: remoteProject
+              name: spec.remoteProject
+            - widget: Labels
+              source: remoteVpc
+              name: spec.remoteVpc
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: id
+              name: status.id
+  form: ""
+  general: |-
+    resource:
+        kind: GcpVpcPeering
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpvpcpeerings
+    name: GCP VPC Peerings
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        Description here
+  list: |-
+    - source: spec.importCustomRoutes
+      name: spec.importCustomRoutes
+      sort: true
+    - source: spec.peeringName
+      name: spec.peeringName
+      sort: true
+    - source: spec.remoteProject
+      name: spec.remoteProject
+      sort: true
+    - source: spec.remoteVpc
+      name: spec.remoteVpc
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      spec.importCustomRoutes: Import Custom Routes
+      spec.peeringName: Peering Name
+      spec.remoteProject: Remote Project
+      spec.remoteVpc: Remote VPC
+      status.id: ID
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: gcpvpcpeerings-ui.operator.kyma-project.io
+  namespace: kyma-system
