@@ -49,7 +49,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        getVolumeName(nfsVolume),
-			Labels:      getVolumeLabels(state.ObjAsGcpNfsVolume()),
+			Labels:      getVolumeLabels(nfsVolume),
 			Annotations: getVolumeAnnotations(nfsVolume),
 			Finalizers: []string{
 				v1beta1.Finalizer,

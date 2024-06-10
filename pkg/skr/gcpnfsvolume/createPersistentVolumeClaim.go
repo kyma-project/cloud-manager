@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,12 +27,17 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return nil, nil
 	}
 
+	nfsVolume := state.ObjAsGcpNfsVolume()
+
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
-			Name:        getVolumeClaimName(state.ObjAsGcpNfsVolume()),
-			Labels:      getVolumeClaimLabels(state.ObjAsGcpNfsVolume(), state),
-			Annotations: getVolumeClaimAnnotations(state.ObjAsGcpNfsVolume()),
+			Name:        getVolumeClaimName(nfsVolume),
+			Labels:      getVolumeClaimLabels(nfsVolume, state),
+			Annotations: getVolumeClaimAnnotations(nfsVolume),
+			Finalizers: []string{
+				v1beta1.Finalizer,
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			VolumeName:  state.PV.GetName(), // connection to PV
