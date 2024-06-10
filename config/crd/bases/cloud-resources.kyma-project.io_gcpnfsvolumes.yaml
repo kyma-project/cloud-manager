@@ -106,6 +106,9 @@ spec:
                     type: object
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Name is immutable.
+                      rule: (self == oldSelf)
                 type: object
             required:
             - capacityGb

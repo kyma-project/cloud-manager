@@ -389,7 +389,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						infra.SKR().Client(),
 						pvc,
 						NewObjActions(
-							WithName("gcp-nfs-pvc"),
+							WithName(pvcSpec.Name),
 							WithNamespace(gcpNfsVolume.Namespace),
 						),
 					).
@@ -502,6 +502,17 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			})
 
 			By("And Then SKR PersistentVolumeClaim is updated", func() {
+				Eventually(LoadAndCheck, timeout, interval).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pvc,
+						NewObjActions(
+							WithName(pvcSpec.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
 
 				By("And it has defined cloud-manager default labels")
 				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
