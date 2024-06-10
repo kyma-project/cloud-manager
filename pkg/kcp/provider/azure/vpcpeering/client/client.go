@@ -9,15 +9,16 @@ import (
 )
 
 type Client interface {
-	BeginCreateOrUpdate(ctx context.Context,
+	CreatePeering(ctx context.Context,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,
 		remoteVnetId string,
 		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error)
 
-	List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
-	Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
+	ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
+	GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
+	GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error)
 }
 
 func NewClientProvider() azureclient.SkrClientProvider[Client] {
@@ -35,26 +36,31 @@ func NewClientProvider() azureclient.SkrClientProvider[Client] {
 			return nil, err
 		}
 
-		return newClient(clientFactory.NewVirtualNetworkPeeringsClient()), nil
+		clientFactory.NewVirtualNetworksClient()
+		return newClient(clientFactory.NewVirtualNetworkPeeringsClient(), clientFactory.NewVirtualNetworksClient()), nil
 	}
 }
 
 type client struct {
-	svc *armnetwork.VirtualNetworkPeeringsClient
+	peering *armnetwork.VirtualNetworkPeeringsClient
+	network *armnetwork.VirtualNetworksClient
 }
 
-func newClient(svc *armnetwork.VirtualNetworkPeeringsClient) Client {
-	return &client{svc: svc}
+func newClient(peeringClient *armnetwork.VirtualNetworkPeeringsClient, networkClient *armnetwork.VirtualNetworksClient) Client {
+	return &client{
+		peering: peeringClient,
+		network: networkClient,
+	}
 }
 
-func (c *client) BeginCreateOrUpdate(
+func (c *client) CreatePeering(
 	ctx context.Context,
 	resourceGroupName,
 	virtualNetworkName,
 	virtualNetworkPeeringName,
 	remoteVnetId string,
 	allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error) {
-	poller, err := c.svc.BeginCreateOrUpdate(
+	poller, err := c.peering.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,
 		virtualNetworkName,
@@ -86,9 +92,9 @@ func (c *client) BeginCreateOrUpdate(
 	return &res.VirtualNetworkPeering, nil
 }
 
-func (c *client) List(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
+func (c *client) ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
 
-	pager := c.svc.NewListPager(resourceGroupName, virtualNetworkName, nil)
+	pager := c.peering.NewListPager(resourceGroupName, virtualNetworkName, nil)
 
 	var items []*armnetwork.VirtualNetworkPeering
 
@@ -108,13 +114,25 @@ func (c *client) List(ctx context.Context, resourceGroupName string, virtualNetw
 	return items, nil
 }
 
-func (c *client) Get(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
+func (c *client) GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
 
-	response, err := c.svc.Get(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
+	response, err := c.peering.Get(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &response.VirtualNetworkPeering, nil
+}
+
+func (c *client) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
+
+	// options := armnetwork.VirtualNetworksClientGetOptions{Expand: nil}
+	response, err := c.network.Get(ctx, resourceGroupName, virtualNetworkName, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.VirtualNetwork, nil
 }

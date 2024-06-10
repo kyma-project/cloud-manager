@@ -23,7 +23,7 @@ func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Cont
 		return azuremeta.LogErrorAndReturn(err, "Error parsing virtual network peering ID", ctx)
 	}
 
-	peering, err := state.client.Get(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
+	peering, err := state.client.GetPeering(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error loading VPC Peering", ctx)

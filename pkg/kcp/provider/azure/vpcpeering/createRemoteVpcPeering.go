@@ -52,7 +52,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		state.Scope().Spec.Scope.Azure.VpcNetwork, // ResourceGroup name is the same as VPC network name.
 		state.Scope().Spec.Scope.Azure.VpcNetwork)
 
-	peering, err := c.BeginCreateOrUpdate(ctx,
+	peering, err := c.CreatePeering(ctx,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,

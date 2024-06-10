@@ -32,7 +32,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 
-	peering, err := c.Get(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
+	peering, err := c.GetPeering(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error loading remote VPC Peering", nil)

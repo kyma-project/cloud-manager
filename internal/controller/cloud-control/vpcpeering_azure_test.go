@@ -40,6 +40,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		subscriptionId := scope.Spec.Scope.Azure.SubscriptionId
 		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
 
+		infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{"shoot-name": pointer.String(kymaName)})
+
 		obj := &cloudcontrolv1beta1.VpcPeering{}
 
 		By("When KCP VpcPeering is created", func() {
@@ -63,8 +65,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		infra.AzureMock().SetSubscription(subscriptionId)
-		peering, _ := infra.AzureMock().Get(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
+		c, _ := infra.AzureMock().VpcPeeringSkrProvider()(infra.Ctx(), "", "", subscriptionId, "")
+
+		peering, _ := c.GetPeering(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
 
 		By("And Then found VirtualNetworkPeering has ID equal to Status.Id", func() {
 			Expect(pointer.StringDeref(peering.ID, "xxx")).To(Equal(obj.Status.Id))
@@ -74,8 +77,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteRefNamespace,
 			remoteRefName)
 
-		infra.AzureMock().SetSubscription(remoteSubscription)
-		remotePeering, _ := infra.AzureMock().Get(infra.Ctx(), remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
+		r, _ := infra.AzureMock().VpcPeeringSkrProvider()(infra.Ctx(), "", "", remoteSubscription, "")
+
+		remotePeering, _ := r.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to Status.RemoteId", func() {
 			Expect(pointer.StringDeref(remotePeering.ID, "xxx")).To(Equal(obj.Status.RemoteId))
