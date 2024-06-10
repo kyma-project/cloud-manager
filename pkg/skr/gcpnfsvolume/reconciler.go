@@ -45,6 +45,7 @@ func (r *Reconciler) newAction() composed.Action {
 		loadKcpIpRange,
 		loadKcpNfsInstance,
 		loadPersistenceVolume,
+		sanitizeReleasedVolume,
 		loadPersistentVolumeClaim,
 		modifyKcpNfsInstance,
 		removePersistenceVolumeFinalizer,
