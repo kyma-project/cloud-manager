@@ -40,7 +40,7 @@ func (r *Reconciler) newAction() composed.Action {
 		composed.LoadObj,
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
-			validateIpRange, validateFileShareName, validateCapacity, validatePV),
+			validateIpRange, validateFileShareName, validateCapacity, validatePV, validatePVC),
 		addFinalizer,
 		loadKcpIpRange,
 		loadKcpNfsInstance,

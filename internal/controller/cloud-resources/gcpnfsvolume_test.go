@@ -306,15 +306,25 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 
-		prevPvc := &corev1.PersistentVolumeClaim{}
 		pvc := &corev1.PersistentVolumeClaim{}
-		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+		prevPvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
 			Name: "gcp-nfs-pvc",
 			Labels: map[string]string{
 				"foo": "bar",
 			},
 			Annotations: map[string]string{
 				"baz": "qux",
+			},
+		}
+		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+			Name: "gcp-nfs-pvc",
+			Labels: map[string]string{
+				"foo":  "bar-changed",
+				"foo2": "bar2",
+			},
+			Annotations: map[string]string{
+				"baz":  "qux-changed",
+				"baz2": "qux2",
 			},
 		}
 
@@ -326,6 +336,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 						WithName(gcpNfsVolumeName),
 						WithGcpNfsVolumeIpRange(skrIpRange.Name),
+						WithPvcSpec(prevPvcSpec),
 					).
 					Should(Succeed())
 
@@ -376,9 +387,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(),
 						infra.SKR().Client(),
-						prevPvc,
+						pvc,
 						NewObjActions(
-							WithName(gcpNfsVolumeName),
+							WithName("gcp-nfs-pvc"),
 							WithNamespace(gcpNfsVolume.Namespace),
 						),
 					).
@@ -491,17 +502,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			})
 
 			By("And Then SKR PersistentVolumeClaim is updated", func() {
-				Eventually(LoadAndCheck, timeout, interval).
-					WithArguments(
-						infra.Ctx(),
-						infra.SKR().Client(),
-						pvc,
-						NewObjActions(
-							WithName(pvcSpec.Name),
-							WithNamespace(gcpNfsVolume.Namespace),
-						),
-					).
-					Should(Succeed())
 
 				By("And it has defined cloud-manager default labels")
 				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
@@ -520,14 +520,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				for k, v := range pvcSpec.Annotations {
 					Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
 				}
-
-				By("And previous PersistentVolumeClaim in SKR is deleted.", func() {
-					Eventually(IsDeleted, timeout, interval).
-						WithArguments(
-							infra.Ctx(), infra.SKR().Client(), prevPvc,
-						).
-						Should(Succeed())
-				})
 			})
 		})
 	})
