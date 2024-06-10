@@ -28,14 +28,17 @@ data:
       simple: true
       name: spec.location
       required: true
+      widget: Text
     - path: spec.source.volume.name
       simple: true
       name: spec.source.volume.name
       required: true
+      widget: Text
     - path: spec.source.volume.namespace
       simple: true
       name: spec.source.volume.namespace
       required: false
+      widget: Text
   general: |-
     resource:
         kind: GcpNfsVolumeBackup
