@@ -32,18 +32,22 @@ data:
     - path: spec.destination.volume.name
       simple: true
       name: spec.destination.volume.name
+      widget: Text
       required: true
     - path: spec.destination.volume.namespace
       simple: true
       name: spec.destination.volume.namespace
+      widget: Text
       required: false
     - path: spec.source.backup.name
       simple: true
+      widget: Text
       name: spec.source.backup.name
       required: true
     - path: spec.source.backup.namespace
       simple: true
       name: spec.source.backup.namespace
+      widget: Text
       required: true
   general: |-
     resource:
