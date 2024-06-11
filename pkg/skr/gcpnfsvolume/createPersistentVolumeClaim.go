@@ -47,7 +47,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 					"storage": state.PV.Spec.Capacity["storage"],
 				},
 			},
-			StorageClassName: ptr.To(""),
+			StorageClassName: ptr.To(state.PV.Spec.StorageClassName),
 			VolumeMode:       ptr.To(corev1.PersistentVolumeFilesystem),
 		},
 	}
