@@ -10,7 +10,6 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -54,7 +53,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 				Spec: corev1.PersistentVolumeSpec{
 					ClaimRef: nil,
 					Capacity: corev1.ResourceList{
-						"storage": *resource.NewScaledQuantity(int64(gcpNfsVolume.Spec.CapacityGb), resource.Giga),
+						"storage": *gcpNfsVolumeCapacityToResourceQuantity(gcpNfsVolume),
 					},
 					StorageClassName: "",
 				},
@@ -101,9 +100,9 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 			assert.Equal(t, pv.Spec.StorageClassName, *createdPvc.Spec.StorageClassName, "created PVC should have same StorageClassName as PV")
 			createdPVCCapacity := pv.Spec.Capacity["storage"]
 			createdPVCCapacityInt64, _ := createdPVCCapacity.AsInt64()
-			PVCapacity := createdPvc.Spec.Resources.Requests["storage"]
-			PVCapacityInt64, _ := PVCapacity.AsInt64()
-			assert.Equal(t, createdPVCCapacityInt64, PVCapacityInt64, "created PVC have same storage as paired PV")
+			gcpNfsVolCapacity := gcpNfsVolumeCapacityToResourceQuantity(gcpNfsVolume)
+			gcpNfsVolCapacityInt64, _ := gcpNfsVolCapacity.AsInt64()
+			assert.Equal(t, createdPVCCapacityInt64, gcpNfsVolCapacityInt64, "created PVC have same storage as parent GcpNfsVolume")
 		})
 
 		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {

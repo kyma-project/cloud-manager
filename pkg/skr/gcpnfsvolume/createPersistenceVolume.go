@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,7 +24,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//Get GcpNfsVolume object
 	nfsVolume := state.ObjAsGcpNfsVolume()
-	capacity := resource.NewQuantity(int64(nfsVolume.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
+	capacity := gcpNfsVolumeCapacityToResourceQuantity(nfsVolume)
 
 	//If GcpNfsVolume is not Ready state, continue.
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {

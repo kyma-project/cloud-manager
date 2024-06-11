@@ -2,12 +2,12 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"reflect"
 )
 
 func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,7 +19,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	nfsVolume := state.ObjAsGcpNfsVolume()
-	capacity := resource.NewQuantity(int64(nfsVolume.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
+	capacity := gcpNfsVolumeCapacityToResourceQuantity(nfsVolume)
 
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
 		return nil, nil
@@ -34,7 +34,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		state.PVC.Spec.Resources.Requests["storage"] = *capacity
 	}
 
-	labels := getVolumeClaimLabels(nfsVolume, state)
+	labels := getVolumeClaimLabels(nfsVolume)
 	labelsChanged := !reflect.DeepEqual(state.PVC.Labels, labels)
 	if labelsChanged {
 		state.PVC.Labels = labels
@@ -50,7 +50,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return nil, nil
 	}
 
-	err := state.SkrCluster.K8sClient().Update(ctx, state.PVC)
+	err := state.Cluster().K8sClient().Update(ctx, state.PVC)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating PersistentVolumeClaim", composed.StopWithRequeue, ctx)

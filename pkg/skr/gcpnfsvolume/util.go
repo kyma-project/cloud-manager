@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func getVolumeName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
@@ -52,7 +53,7 @@ func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string
 	return result
 }
 
-func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume, state *State) map[string]string {
+func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
 	labelsBuilder := util.NewLabelBuilder()
 
 	if gcpVol.Spec.PersistentVolumeClaim != nil {
@@ -65,7 +66,7 @@ func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume, state *Sta
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, gcpVol.Namespace)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
 	labelsBuilder.WithCloudManagerDefaults()
-	storage := state.PV.Spec.Capacity["storage"]
+	storage := gcpNfsVolumeCapacityToResourceQuantity(gcpVol)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, storage.String())
 
 	pvcLabels := labelsBuilder.Build()
@@ -81,4 +82,8 @@ func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[s
 		result[k] = v
 	}
 	return result
+}
+
+func gcpNfsVolumeCapacityToResourceQuantity(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) *resource.Quantity {
+	return resource.NewQuantity(int64(gcpVol.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
 }

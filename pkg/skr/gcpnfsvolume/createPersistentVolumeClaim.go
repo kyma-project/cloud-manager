@@ -33,7 +33,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
 			Name:        getVolumeClaimName(nfsVolume),
-			Labels:      getVolumeClaimLabels(nfsVolume, state),
+			Labels:      getVolumeClaimLabels(nfsVolume),
 			Annotations: getVolumeClaimAnnotations(nfsVolume),
 			Finalizers: []string{
 				v1beta1.Finalizer,
@@ -44,7 +44,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
-					"storage": state.PV.Spec.Capacity["storage"],
+					"storage": *gcpNfsVolumeCapacityToResourceQuantity(nfsVolume),
 				},
 			},
 			StorageClassName: ptr.To(state.PV.Spec.StorageClassName),
