@@ -34,7 +34,7 @@ func (clientSpy *clientSpy) Create(ctx context.Context, obj client.Object, opts 
 
 func (clientSpy *clientSpy) Delete(ctx context.Context, obj client.Object, opts ...client.DeleteOption) error {
 	clientSpy.deleteCallCount++
-	return clientSpy.Delete(ctx, obj, opts...)
+	return clientSpy.client.Delete(ctx, obj, opts...)
 }
 
 func (clientSpy *clientSpy) Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
