@@ -1,0 +1,50 @@
+- path: spec.capacity
+  simple: true
+  name: spec.capacity
+  required: true
+  widget: Text
+- path: spec.performanceMode
+  simple: true
+  name: spec.performanceMode
+  required: true
+  placeholder: placeholders.dropdown
+- path: spec.throughput
+  simple: true
+  name: spec.throughput
+  required: true
+  placeholder: placeholders.dropdown
+- path: spec.ipRange
+  simple: true
+  name: spec.ipRange
+  widget: FormGroup
+  children:
+    - path: name
+      name: name
+      simple: true
+      required: true
+      widget: Text
+    - path: namespace
+      name: namespace
+      simple: true
+      required: true
+      widget: Text
+- path: spec.volume
+  simple: true
+  name: spec.volume
+  widget: FormGroup
+  children:
+    - path: name
+      simple: true
+      name: name
+      required: true
+      widget: Text
+    - path: labels
+      simple: true
+      name: labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      simple: true
+      name: annotations
+      required: false
+      widget: KeyValuePair

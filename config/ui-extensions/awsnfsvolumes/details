@@ -12,6 +12,29 @@ body:
       - name: spec.volume.name
         source: volume.name
         widget: Labels
+  - name: ipRange
+    widget: Panel
+    source: spec.ipRange
+    children:
+      - name: name
+        source: name
+        widget: Labels
+      - name: namespace
+        source: namespace
+        widget: Labels
+  - name: volume
+    source: spec.volume
+    widget: Panel
+    children:
+      - name: name
+        source: name
+        widget: Labels
+      - name: labels
+        source: labels
+        widget: Labels
+      - name: annotations
+        source: annotations
+        widget: Labels
   - name: status
     widget: Panel
     source: status
