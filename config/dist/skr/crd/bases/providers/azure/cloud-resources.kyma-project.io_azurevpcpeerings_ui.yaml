@@ -22,7 +22,18 @@ data:
             - widget: Labels
               source: id
               name: status.id
-  form: ""
+  form: |-
+    - path: spec.allowVnetAccess
+      simple: true
+      name: spec.allowVnetAccess
+    - path: spec.remoteResourceGroup
+      simple: true
+      name: remoteResourceGroup
+      widget: Text
+    - path: spec.remoteVnet
+      simple: true
+      name: remoteVnet
+      widget: Text
   general: |-
     resource:
         kind: AzureVpcPeering
