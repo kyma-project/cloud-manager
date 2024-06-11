@@ -61,7 +61,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	// If VpcNetwork is not found user can not recover from this error without updating the resource so, we are doing
 	// stop and forget.
 	if network == nil {
-		logger.Error(err, "Remote VPC Network not found")
+		logger.Info("Remote VPC Network not found")
 
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
@@ -80,7 +80,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	//adding stop with requeue delay of one minute.
 	if pointer.StringDeref(network.Tags["shoot-name"], "") != state.Scope().Spec.ShootName {
 
-		logger.Error(err, "Loaded remote VPC Network have no matching tags")
+		logger.Info("Loaded remote VPC Network have no matching tags")
 
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
