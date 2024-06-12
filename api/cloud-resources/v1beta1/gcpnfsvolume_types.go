@@ -176,6 +176,7 @@ func init() {
 	SchemeBuilder.Register(&GcpNfsVolume{}, &GcpNfsVolumeList{})
 }
 
+// +kubebuilder:validation:Enum=BASIC_HDD;BASIC_SSD;HIGH_SCALE_SSD;ENTERPRISE;ZONAL;REGIONAL
 type GcpFileTier string
 
 const (

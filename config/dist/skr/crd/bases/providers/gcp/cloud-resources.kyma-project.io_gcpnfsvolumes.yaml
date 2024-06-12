@@ -74,6 +74,13 @@ spec:
                       rule: (self == oldSelf)
                 tier:
                   default: BASIC_HDD
+                  enum:
+                    - BASIC_HDD
+                    - BASIC_SSD
+                    - HIGH_SCALE_SSD
+                    - ENTERPRISE
+                    - ZONAL
+                    - REGIONAL
                   type: string
                   x-kubernetes-validations:
                     - message: Tier is immutable.
