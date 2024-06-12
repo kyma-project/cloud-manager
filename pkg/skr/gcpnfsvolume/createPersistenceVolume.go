@@ -3,13 +3,13 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func createPersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,7 +24,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//Get GcpNfsVolume object
 	nfsVolume := state.ObjAsGcpNfsVolume()
-	capacity := resource.NewQuantity(int64(nfsVolume.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
+	capacity := gcpNfsVolumeCapacityToResourceQuantity(nfsVolume)
 
 	//If GcpNfsVolume is not Ready state, continue.
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
@@ -45,7 +45,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//Construct a PV Object
-	state.PV = &v1.PersistentVolume{
+	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        getVolumeName(nfsVolume),
 			Labels:      getVolumeLabels(nfsVolume),
@@ -70,11 +70,11 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//Create PV
-	err := state.SkrCluster.K8sClient().Create(ctx, state.PV)
+	err := state.Cluster().K8sClient().Create(ctx, pv)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating PersistentVolume", composed.StopWithRequeue, ctx)
 	}
 
 	//continue
-	return composed.StopWithRequeueDelay(3 * time.Second), nil
+	return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), nil
 }

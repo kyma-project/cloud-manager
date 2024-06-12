@@ -1,4 +1,4 @@
-package awsnfsvolume
+package gcpnfsvolume
 
 import (
 	"context"
@@ -23,20 +23,20 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 	t.Run("sanitizeReleasedVolume", func(t *testing.T) {
 
-		var awsNfsVolume *cloudresourcesv1beta1.AwsNfsVolume
+		var gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 		var pv *corev1.PersistentVolume
 		var state *State
 		var k8sClient client.WithWatch
 
-		createEmptyAwsNfsVolumeState := func(k8sClient client.WithWatch, awsNfsVolume *cloudresourcesv1beta1.AwsNfsVolume) *State {
+		createEmptyGcpNfsVolumeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
-				State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, awsNfsVolume),
+				State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, gcpNfsVolume),
 			}
 		}
 
 		setupTest := func() {
-			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
+			gcpNfsVolume = &cloudresourcesv1beta1.GcpNfsVolume{}
 
 			pv = &corev1.PersistentVolume{
 				ObjectMeta: v1.ObjectMeta{
@@ -44,7 +44,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 				},
 				Spec: corev1.PersistentVolumeSpec{
 					ClaimRef: &corev1.ObjectReference{
-						UID: "013d3f5e-e780-4979-a5b9-a740aae7187c",
+						UID: "d004f326-ca6e-4d22-9a02-a9493a13b3f6",
 					},
 				},
 				Status: corev1.PersistentVolumeStatus{
@@ -60,8 +60,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 			k8sClient = spy.NewClientSpy(fakeClient)
 
-			state = createEmptyAwsNfsVolumeState(k8sClient, awsNfsVolume)
-			state.Volume = pv
+			state = createEmptyGcpNfsVolumeState(k8sClient, gcpNfsVolume)
+			state.PV = pv
 		}
 
 		t.Run("Should: sanitize released PV and remove PVC ref", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			awsNfsVolume.ObjectMeta = v1.ObjectMeta{
+			gcpNfsVolume.ObjectMeta = v1.ObjectMeta{
 				DeletionTimestamp: &v1.Time{
 					Time: time.Now(),
 				},
@@ -98,7 +98,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			state.Volume = nil
+			state.PV = nil
 
 			err, res := sanitizeReleasedVolume(ctx, state)
 
@@ -111,7 +111,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			state.Volume.Status.Phase = corev1.VolumeBound
+			state.PV.Status.Phase = corev1.VolumeBound
 
 			err, res := sanitizeReleasedVolume(ctx, state)
 
@@ -124,7 +124,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			state.Volume.Spec.ClaimRef = nil
+			state.PV.Spec.ClaimRef = nil
 
 			err, res := sanitizeReleasedVolume(ctx, state)
 

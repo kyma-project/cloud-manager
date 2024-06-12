@@ -1,0 +1,179 @@
+package gcpnfsvolume
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	composed "github.com/kyma-project/cloud-manager/pkg/composed"
+	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
+	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+)
+
+func TestModifyPersistentVolumeClaim(t *testing.T) {
+
+	t.Run("modifyPersistentVolumeClaim", func(t *testing.T) {
+
+		var gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
+		var state *State
+		var k8sClient client.WithWatch
+
+		createEmptyGcpNfsVolumeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume) *State {
+			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
+			return &State{
+				State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, gcpNfsVolume),
+			}
+		}
+
+		setupTest := func() {
+			gcpNfsVolume = &cloudresourcesv1beta1.GcpNfsVolume{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "test-gcpnfsvol",
+					Namespace: "test-ns",
+				},
+				Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
+					CapacityGb: 1000,
+					PersistentVolumeClaim: &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						Annotations: map[string]string{
+							"baz": "qux",
+						},
+					},
+				},
+				Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
+					Conditions: []v1.Condition{
+						{
+							Type:    v1beta1.ConditionTypeReady,
+							Status:  metav1.ConditionTrue,
+							Reason:  v1beta1.ConditionReasonReady,
+							Message: "Volume is ready",
+						},
+					},
+				},
+			}
+
+			actualPVC := &corev1.PersistentVolumeClaim{
+				ObjectMeta: v1.ObjectMeta{
+					Name:        "test-gcpnfsvol",
+					Namespace:   "test-ns",
+					Labels:      getVolumeClaimLabels(gcpNfsVolume),
+					Annotations: getVolumeClaimAnnotations(gcpNfsVolume),
+				},
+				Spec: corev1.PersistentVolumeClaimSpec{
+					Resources: corev1.VolumeResourceRequirements{
+						Requests: corev1.ResourceList{
+							"storage": *gcpNfsVolumeCapacityToResourceQuantity(gcpNfsVolume),
+						},
+					},
+				},
+			}
+
+			scheme := runtime.NewScheme()
+			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(actualPVC).
+				WithStatusSubresource(actualPVC).
+				Build()
+
+			k8sClient = spy.NewClientSpy(fakeClient)
+
+			state = createEmptyGcpNfsVolumeState(k8sClient, gcpNfsVolume)
+			state.PVC = actualPVC
+		}
+
+		t.Run("Should: modify PVC when actual state diverges from desired state", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			gcpNfsVolume.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+				Labels: map[string]string{
+					"foo": "bar-modified",
+					"oof": "rab",
+				},
+				Annotations: map[string]string{
+					"baz": "qux-modified",
+					"zab": "xuq",
+				},
+			}
+			gcpNfsVolume.Spec.CapacityGb = 2000
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.NotNil(t, err, "should return not-nil err") // not an actual error, but StopWithRequeueDelay
+			assert.Nil(t, res, "should return nil res")
+			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should be called")
+		})
+
+		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			gcpNfsVolume.ObjectMeta = v1.ObjectMeta{
+				DeletionTimestamp: &v1.Time{
+					Time: time.Now(),
+				},
+			}
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.Nil(t, res, "should return nil res")
+			assert.Nil(t, err, "should return nil err")
+			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
+		})
+
+		t.Run("Should: do nothing if NFS is not ready", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			state.PVC = nil
+			gcpNfsVolume.Status.Conditions = []v1.Condition{}
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.Nil(t, res, "should return nil res")
+			assert.Nil(t, err, "should return nil err")
+			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
+		})
+
+		t.Run("Should: do nothing if PVC is not loaded", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			state.PVC = nil
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.Nil(t, res, "should return nil res")
+			assert.Nil(t, err, "should return nil err")
+			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
+		})
+
+		t.Run("Should: do nothing if PVC actual and desired PVC state is same", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.Nil(t, res, "should return nil res")
+			assert.Nil(t, err, "should return nil err")
+			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
+		})
+
+	})
+}

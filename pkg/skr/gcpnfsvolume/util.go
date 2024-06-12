@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func getVolumeName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
@@ -13,18 +15,31 @@ func getVolumeName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
 	return gcpVol.Name
 }
 
-func getVolumeLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
-	result := map[string]string{
-		cloudresourcesv1beta1.LabelNfsVolName: gcpVol.Name,
-		cloudresourcesv1beta1.LabelNfsVolNS:   gcpVol.Namespace,
+func getVolumeClaimName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
+	if gcpVol.Spec.PersistentVolumeClaim != nil &&
+		len(gcpVol.Spec.PersistentVolumeClaim.Name) > 0 {
+		return gcpVol.Spec.PersistentVolumeClaim.Name
 	}
+
+	return gcpVol.Name
+}
+
+func getVolumeLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
+	labelsBuilder := util.NewLabelBuilder()
+
 	if gcpVol.Spec.PersistentVolume != nil {
-		for k, v := range gcpVol.Spec.PersistentVolume.Labels {
-			result[k] = v
+		for labelName, labelValue := range gcpVol.Spec.PersistentVolume.Labels {
+			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
-	result[cloudresourcesv1beta1.LabelCloudManaged] = "true"
-	return result
+
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, gcpVol.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, gcpVol.Namespace)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
+	labelsBuilder.WithCloudManagerDefaults()
+	pvLabels := labelsBuilder.Build()
+
+	return pvLabels
 }
 
 func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
@@ -36,4 +51,39 @@ func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string
 		result[k] = v
 	}
 	return result
+}
+
+func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
+	labelsBuilder := util.NewLabelBuilder()
+
+	if gcpVol.Spec.PersistentVolumeClaim != nil {
+		for labelName, labelValue := range gcpVol.Spec.PersistentVolumeClaim.Labels {
+			labelsBuilder.WithCustomLabel(labelName, labelValue)
+		}
+	}
+
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, gcpVol.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, gcpVol.Namespace)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
+	labelsBuilder.WithCloudManagerDefaults()
+	storage := gcpNfsVolumeCapacityToResourceQuantity(gcpVol)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, storage.String())
+
+	pvcLabels := labelsBuilder.Build()
+	return pvcLabels
+}
+
+func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
+	if gcpVol.Spec.PersistentVolumeClaim == nil {
+		return nil
+	}
+	result := map[string]string{}
+	for k, v := range gcpVol.Spec.PersistentVolumeClaim.Annotations {
+		result[k] = v
+	}
+	return result
+}
+
+func gcpNfsVolumeCapacityToResourceQuantity(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) *resource.Quantity {
+	return resource.NewQuantity(int64(gcpVol.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
 }

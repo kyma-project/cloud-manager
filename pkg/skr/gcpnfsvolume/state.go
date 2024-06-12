@@ -16,6 +16,7 @@ type State struct {
 	KcpIpRange     *cloudcontrolv1beta1.IpRange
 	SkrCluster     composed.StateCluster
 	PV             *v1.PersistentVolume
+	PVC            *v1.PersistentVolumeClaim
 }
 
 type StateFactory interface {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	v1 "k8s.io/api/core/v1"
@@ -85,6 +86,7 @@ func WithGcpNfsVolumeCapacity(capacityGb int) ObjAction {
 		},
 	}
 }
+
 func WithPvSpec(pvSpec *cloudresourcesv1beta1.GcpNfsVolumePvSpec) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -93,6 +95,18 @@ func WithPvSpec(pvSpec *cloudresourcesv1beta1.GcpNfsVolumePvSpec) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithPvSpec", obj))
+		},
+	}
+}
+
+func WithPvcSpec(pvcSpec *cloudresourcesv1beta1.GcpNfsVolumePvcSpec) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.PersistentVolumeClaim = pvcSpec
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvcSpec", obj))
 		},
 	}
 }

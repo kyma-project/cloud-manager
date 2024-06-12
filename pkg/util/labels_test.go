@@ -100,5 +100,16 @@ func TestLabels(t *testing.T) {
 			assert.Equal(t, otherCustomLabelValue, labels[otherCustomLabelName], "other custom label is defined and has expecteed value")
 		})
 
+		t.Run("should keep only last value defined for some label name", func(t *testing.T) {
+			builder := NewLabelBuilder()
+			customLabelName := "custom-test-label"
+
+			builder.WithCustomLabel(customLabelName, "firstValue")
+			builder.WithCustomLabel(customLabelName, "secondValue")
+			labels := builder.Build()
+
+			assert.Equal(t, "secondValue", labels[customLabelName], "only latest assignement is kept")
+		})
+
 	})
 }

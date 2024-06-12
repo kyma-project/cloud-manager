@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -39,19 +40,25 @@ func (r *Reconciler) newAction() composed.Action {
 		composed.LoadObj,
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
-			validateIpRange, validateFileShareName, validateCapacity, validatePV),
+			validateIpRange, validateFileShareName, validateCapacity, validatePV, validatePVC),
 		addFinalizer,
 		loadKcpIpRange,
 		loadKcpNfsInstance,
 		loadPersistenceVolume,
+		sanitizeReleasedVolume,
+		loadPersistentVolumeClaim,
 		modifyKcpNfsInstance,
+		removePersistenceVolumeClaimFinalizer,
 		removePersistenceVolumeFinalizer,
+		deletePersistentVolumeClaim,
 		deletePVForNameChange,
 		deletePersistenceVolume,
 		deleteKcpNfsInstance,
 		removeFinalizer,
 		createPersistenceVolume,
 		modifyPersistenceVolume,
+		createPersistentVolumeClaim,
+		modifyPersistentVolumeClaim,
 		updateStatus,
 		composed.StopAndForgetAction,
 	)

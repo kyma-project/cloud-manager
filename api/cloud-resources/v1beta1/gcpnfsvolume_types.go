@@ -55,6 +55,7 @@ const (
 	ConditionReasonPVNotReadyForDeletion   = "PVNotReadyForDeletion"
 	ConditionReasonPVNotReadyForNameChange = "PVNotReadyForNameChange"
 	ConditionReasonPVNameInvalid           = "PVNameInvalid"
+	ConditionReasonPVCNameInvalid          = "PVCNameInvalid"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
@@ -79,9 +80,18 @@ type GcpNfsVolumeSpec struct {
 	CapacityGb int `json:"capacityGb"`
 
 	PersistentVolume *GcpNfsVolumePvSpec `json:"volume,omitempty"`
+
+	PersistentVolumeClaim *GcpNfsVolumePvcSpec `json:"volumeClaim,omitempty"`
 }
 
 type GcpNfsVolumePvSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+type GcpNfsVolumePvcSpec struct {
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Name is immutable."
 	Name        string            `json:"name,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
