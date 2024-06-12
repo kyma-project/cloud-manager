@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+
 	"github.com/3th1nk/cidr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,7 +17,11 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
+	rangeCidr, err := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error parsing IpRange .spec.cidr", composed.StopWithRequeue, ctx)
+	}
+
 	for _, set := range state.vpc.CidrBlockAssociationSet {
 		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
 		if err != nil {
