@@ -43,10 +43,10 @@ func getVolumeLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]stri
 }
 
 func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
-	if gcpVol.Spec.PersistentVolume == nil {
-		return nil
-	}
 	result := map[string]string{}
+	if gcpVol.Spec.PersistentVolume == nil {
+		return result
+	}
 	for k, v := range gcpVol.Spec.PersistentVolume.Annotations {
 		result[k] = v
 	}
@@ -74,10 +74,10 @@ func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string
 }
 
 func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
-	if gcpVol.Spec.PersistentVolumeClaim == nil {
-		return nil
-	}
 	result := map[string]string{}
+	if gcpVol.Spec.PersistentVolumeClaim == nil {
+		return result
+	}
 	for k, v := range gcpVol.Spec.PersistentVolumeClaim.Annotations {
 		result[k] = v
 	}
