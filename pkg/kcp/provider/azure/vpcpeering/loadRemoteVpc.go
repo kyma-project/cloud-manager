@@ -8,7 +8,6 @@ import (
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"time"
 )
 
@@ -76,24 +75,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
-	//adding stop with requeue delay of one minute.
-	if pointer.StringDeref(network.Tags["shoot-name"], "") != state.Scope().Spec.ShootName {
-
-		logger.Info("Loaded remote VPC Network have no matching tags")
-
-		return composed.UpdateStatus(obj).
-			SetCondition(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: fmt.Sprintf("Loaded remote Vpc network has no matching tags"),
-			}).
-			ErrorLogMessage("Error updating VpcPeering status due to remote vpc network tag mismatch").
-			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
-			Run(ctx, state)
-	}
+	state.remoteVpc = network
 
 	return nil, nil
 }

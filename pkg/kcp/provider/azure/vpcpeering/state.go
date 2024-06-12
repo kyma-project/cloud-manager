@@ -22,6 +22,7 @@ type State struct {
 
 	peering       *armnetwork.VirtualNetworkPeering
 	remotePeering *armnetwork.VirtualNetworkPeering
+	remoteVpc     *armnetwork.VirtualNetwork
 }
 
 // goes to new.go
