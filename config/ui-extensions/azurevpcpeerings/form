@@ -1,0 +1,11 @@
+- path: spec.allowVnetAccess
+  simple: true
+  name: spec.allowVnetAccess
+- path: spec.remoteResourceGroup
+  simple: true
+  name: spec.remoteResourceGroup
+  widget: Text
+- path: spec.remoteVnet
+  simple: true
+  name: spec.remoteVnet
+  widget: Text

@@ -15,6 +15,29 @@ data:
           - name: spec.volume.name
             source: volume.name
             widget: Labels
+      - name: ipRange
+        widget: Panel
+        source: spec.ipRange
+        children:
+          - name: name
+            source: name
+            widget: Labels
+          - name: namespace
+            source: namespace
+            widget: Labels
+      - name: volume
+        source: spec.volume
+        widget: Panel
+        children:
+          - name: name
+            source: name
+            widget: Labels
+          - name: labels
+            source: labels
+            widget: Labels
+          - name: annotations
+            source: annotations
+            widget: Labels
       - name: status
         widget: Panel
         source: status
@@ -22,7 +45,57 @@ data:
           - name: status.state
             source: state
             widget: Labels
-  form: ""
+  form: |
+    - path: spec.capacity
+      simple: true
+      name: spec.capacity
+      required: true
+      widget: Text
+    - path: spec.performanceMode
+      simple: true
+      name: spec.performanceMode
+      required: true
+      placeholder: placeholders.dropdown
+    - path: spec.throughput
+      simple: true
+      name: spec.throughput
+      required: true
+      placeholder: placeholders.dropdown
+    - path: spec.ipRange
+      simple: true
+      name: spec.ipRange
+      widget: FormGroup
+      children:
+        - path: name
+          name: name
+          simple: true
+          required: true
+          widget: Text
+        - path: namespace
+          name: namespace
+          simple: true
+          required: true
+          widget: Text
+    - path: spec.volume
+      simple: true
+      name: spec.volume
+      widget: FormGroup
+      children:
+        - path: name
+          simple: true
+          name: name
+          required: true
+          widget: Text
+        - path: labels
+          simple: true
+          name: labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          simple: true
+          name: annotations
+          required: false
+          widget: KeyValuePair
   general: |-
     resource:
         kind: AwsNfsVolume
@@ -57,6 +130,14 @@ data:
       configuration: Configuration
       status: Status
       status.state: State
+      placeholders.dropdown: Type or choose an option
+      ipRange: IP Range
+      name: Name
+      namespace: Namespace
+      spec.volume: Volume
+      labels: Labels
+      annotations: Annotations
+      spec.ipRange: IP Range
 kind: ConfigMap
 metadata:
   labels:

@@ -6,3 +6,5 @@ en:
   status.state: State
   configuration: Configuration
   status: Status
+  spec.destination: Destination
+  spec.source: Source

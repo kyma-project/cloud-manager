@@ -6,3 +6,11 @@ en:
   configuration: Configuration
   status: Status
   status.state: State
+  placeholders.dropdown: Type or choose an option
+  ipRange: IP Range
+  name: Name
+  namespace: Namespace
+  spec.volume: Volume
+  labels: Labels
+  annotations: Annotations
+  spec.ipRange: IP Range
