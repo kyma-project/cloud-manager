@@ -1,6 +1,8 @@
 package gcpnfsvolume
 
 import (
+	"reflect"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -43,10 +45,10 @@ func getVolumeLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]stri
 }
 
 func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
-	if gcpVol.Spec.PersistentVolume == nil {
-		return nil
-	}
 	result := map[string]string{}
+	if gcpVol.Spec.PersistentVolume == nil {
+		return result
+	}
 	for k, v := range gcpVol.Spec.PersistentVolume.Annotations {
 		result[k] = v
 	}
@@ -74,10 +76,10 @@ func getVolumeClaimLabels(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string
 }
 
 func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string]string {
-	if gcpVol.Spec.PersistentVolumeClaim == nil {
-		return nil
-	}
 	result := map[string]string{}
+	if gcpVol.Spec.PersistentVolumeClaim == nil {
+		return result
+	}
 	for k, v := range gcpVol.Spec.PersistentVolumeClaim.Annotations {
 		result[k] = v
 	}
@@ -86,4 +88,26 @@ func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[s
 
 func gcpNfsVolumeCapacityToResourceQuantity(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) *resource.Quantity {
 	return resource.NewQuantity(int64(gcpVol.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
+}
+
+func areMapsEqual(first, second map[string]string) bool {
+	x := first
+	y := second
+
+	if x == nil {
+		x = map[string]string{}
+	}
+	if y == nil {
+		y = map[string]string{}
+	}
+
+	return reflect.DeepEqual(x, y)
+}
+
+func areLabelsEqual(first, second map[string]string) bool {
+	return areMapsEqual(first, second)
+}
+
+func areAnnotationsEqual(first, second map[string]string) bool {
+	return areMapsEqual(first, second)
 }
