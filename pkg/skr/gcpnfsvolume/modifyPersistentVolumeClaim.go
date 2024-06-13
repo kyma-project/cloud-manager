@@ -35,21 +35,21 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		logger.Info("Detected modified PVC capacity")
 	}
 
-	labels := getVolumeClaimLabels(nfsVolume)
-	labelsChanged := !areLabelsEqual(state.PVC.Labels, labels)
+	expectedLabels := getVolumeClaimLabels(nfsVolume)
+	labelsChanged := !areLabelsEqual(state.PVC.Labels, expectedLabels)
 	if labelsChanged {
-		state.PVC.Labels = labels
+		state.PVC.Labels = expectedLabels
 		logger.Info("Detected modified PVC labels")
 	}
 
-	annotations := getVolumeClaimAnnotations(nfsVolume)
-	annotationsChanged := !areAnnotationsEqual(state.PVC.Annotations, annotations)
-	if annotationsChanged {
-		state.PVC.Annotations = annotations
-		logger.Info("Detected modified PVC annotations")
+	expectedAnnotations := getVolumeClaimAnnotations(nfsVolume)
+	annotationsDesynced := !areAnnotationsSuperset(state.PVC.Annotations, expectedAnnotations) // PVC controller will keep adding "pv.kubernetes.io/bind-completed=yes" annotation, so we must check if we are actual is superset of expected
+	if annotationsDesynced {
+		state.PVC.Annotations = expectedAnnotations
+		logger.Info("Detected desynced PVC annotations")
 	}
 
-	if !(capacityChanged || labelsChanged || annotationsChanged) {
+	if !(capacityChanged || labelsChanged || annotationsDesynced) {
 		return nil, nil
 	}
 
