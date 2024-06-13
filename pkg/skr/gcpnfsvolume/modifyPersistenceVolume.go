@@ -2,7 +2,6 @@ package gcpnfsvolume
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -44,7 +43,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//If labels are different, update PV labels.
 	labels := getVolumeLabels(nfsVolume)
-	if !reflect.DeepEqual(state.PV.Labels, labels) {
+	if !areLabelsEqual(state.PV.Labels, labels) {
 		changed = true
 		state.PV.Labels = labels
 		logger.Info("Detected modified PV labels")
@@ -52,7 +51,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//If annotations are different, update PV annotations.
 	annotations := getVolumeAnnotations(nfsVolume)
-	if !reflect.DeepEqual(state.PV.Annotations, annotations) {
+	if !areAnnotationsEqual(state.PV.Annotations, annotations) {
 		changed = true
 		state.PV.Annotations = annotations
 		logger.Info("Detected modified PV annotations")
