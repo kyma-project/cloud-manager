@@ -90,7 +90,7 @@ func gcpNfsVolumeCapacityToResourceQuantity(gcpVol *cloudresourcesv1beta1.GcpNfs
 	return resource.NewQuantity(int64(gcpVol.Spec.CapacityGb)*1024*1024*1024, resource.BinarySI)
 }
 
-func areMapsEqual(first, second map[string]string) bool {
+func areLabelsEqual(first, second map[string]string) bool {
 	x := first
 	y := second
 
@@ -104,10 +104,11 @@ func areMapsEqual(first, second map[string]string) bool {
 	return reflect.DeepEqual(x, y)
 }
 
-func areLabelsEqual(first, second map[string]string) bool {
-	return areMapsEqual(first, second)
-}
-
-func areAnnotationsEqual(first, second map[string]string) bool {
-	return areMapsEqual(first, second)
+func areAnnotationsSuperset(superset, subset map[string]string) bool {
+	for key, value := range subset {
+		if superset[key] != value {
+			return false
+		}
+	}
+	return true
 }

@@ -41,20 +41,18 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 		logger.Info("Detected modified PV capacity")
 	}
 
-	//If labels are different, update PV labels.
-	labels := getVolumeLabels(nfsVolume)
-	if !areLabelsEqual(state.PV.Labels, labels) {
+	expectedLabels := getVolumeLabels(nfsVolume)
+	if !areLabelsEqual(state.PV.Labels, expectedLabels) {
 		changed = true
-		state.PV.Labels = labels
+		state.PV.Labels = expectedLabels
 		logger.Info("Detected modified PV labels")
 	}
 
-	//If annotations are different, update PV annotations.
-	annotations := getVolumeAnnotations(nfsVolume)
-	if !areAnnotationsEqual(state.PV.Annotations, annotations) {
+	expectedAnnotations := getVolumeAnnotations(nfsVolume)
+	if !areAnnotationsSuperset(state.PV.Annotations, expectedAnnotations) {
 		changed = true
-		state.PV.Annotations = annotations
-		logger.Info("Detected modified PV annotations")
+		state.PV.Annotations = expectedAnnotations
+		logger.Info("Detected desynced PV annotations")
 	}
 
 	//No changes to PV, continue.
