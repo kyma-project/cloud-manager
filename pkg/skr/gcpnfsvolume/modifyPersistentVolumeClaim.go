@@ -2,7 +2,6 @@ package gcpnfsvolume
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -12,6 +11,7 @@ import (
 
 func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
@@ -32,18 +32,21 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	capacityChanged := !capacity.Equal(state.PVC.Spec.Resources.Requests["storage"])
 	if capacityChanged {
 		state.PVC.Spec.Resources.Requests["storage"] = *capacity
+		logger.Info("Detected modified PVC capacity")
 	}
 
 	labels := getVolumeClaimLabels(nfsVolume)
-	labelsChanged := !reflect.DeepEqual(state.PVC.Labels, labels)
+	labelsChanged := !areLabelsEqual(state.PVC.Labels, labels)
 	if labelsChanged {
 		state.PVC.Labels = labels
+		logger.Info("Detected modified PVC labels")
 	}
 
 	annotations := getVolumeClaimAnnotations(nfsVolume)
-	annotationsChanged := !reflect.DeepEqual(state.PVC.Annotations, annotations)
+	annotationsChanged := !areAnnotationsEqual(state.PVC.Annotations, annotations)
 	if annotationsChanged {
 		state.PVC.Annotations = annotations
+		logger.Info("Detected modified PVC annotations")
 	}
 
 	if !(capacityChanged || labelsChanged || annotationsChanged) {
