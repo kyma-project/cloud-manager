@@ -22,7 +22,7 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
 	virtualNetworkPeeringName := obj.Name
 
-	peering, err := state.client.BeginCreateOrUpdate(ctx,
+	peering, err := state.client.CreatePeering(ctx,
 		resourceGroupName,
 		state.Scope().Spec.Scope.Azure.VpcNetwork,
 		virtualNetworkPeeringName,
