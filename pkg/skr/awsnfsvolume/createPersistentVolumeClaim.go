@@ -3,6 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -40,6 +41,9 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			Name:        getVolumeClaimName(state.ObjAsAwsNfsVolume()),
 			Labels:      pvcLabels,
 			Annotations: getVolumeClaimAnnotations(state.ObjAsAwsNfsVolume()),
+			Finalizers: []string{
+				v1beta1.Finalizer,
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			VolumeName:  state.Volume.GetName(), // connection to PV
