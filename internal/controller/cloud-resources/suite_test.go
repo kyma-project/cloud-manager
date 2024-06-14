@@ -18,9 +18,10 @@ package cloudresources
 
 import (
 	"context"
-	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 	"os"
 	"testing"
+
+	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
