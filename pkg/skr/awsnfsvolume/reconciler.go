@@ -62,9 +62,11 @@ func (r *reconciler) newAction() composed.Action {
 
 		// this below executes only when marked for deletion
 
+		removePersistenceVolumeClaimFinalizer,
 		deletePVC,
 		waitPVCDeleted,
 
+		removePersistenceVolumeFinalizer,
 		deletePv,
 		waitPvDeleted,
 
