@@ -1,7 +1,7 @@
 module-name: cloud-manager
-rc-tag: 0.1.9
+rc-tag: 0.1.10
 protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:0.1.9
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:0.1.10
 whitesource:
   language: golang-mod
   subprojects: false
