@@ -246,6 +246,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has the Annotations matching the requested values in PvSpec.")
 				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
+
+				By("And it has defined cloud-manager finalizer")
+				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
 			})
 
 			By("Then PersistantVolumeClaim is created in SKR", func() {
@@ -281,6 +284,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				for k, v := range pvcSpec.Annotations {
 					Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
 				}
+
+				By("And it has defined cloud-manager finalizer")
+				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
 			})
 		})
 	})
