@@ -110,7 +110,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 		pvc := &corev1.PersistentVolumeClaim{}
 		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc",
+			Name: "gcp-nfs-pvc-1",
 			Labels: map[string]string{
 				"foo": "bar",
 			},
@@ -308,7 +308,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 		pvc := &corev1.PersistentVolumeClaim{}
 		prevPvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc",
+			Name: "gcp-nfs-pvc-2",
 			Labels: map[string]string{
 				"foo": "bar",
 			},
@@ -317,7 +317,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc",
+			Name: "gcp-nfs-pvc-2",
 			Labels: map[string]string{
 				"foo":  "bar-changed",
 				"foo2": "bar2",

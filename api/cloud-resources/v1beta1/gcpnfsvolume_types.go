@@ -48,14 +48,15 @@ const (
 
 // Additional error reasons
 const (
-	ConditionReasonCapacityInvalid         = "CapacityGbInvalid"
-	ConditionReasonIpRangeNotReady         = "IpRangeNotReady"
-	ConditionReasonFileShareNameInvalid    = "FileShareNameInvalid"
-	ConditionReasonTierInvalid             = "TierInvalid"
-	ConditionReasonPVNotReadyForDeletion   = "PVNotReadyForDeletion"
-	ConditionReasonPVNotReadyForNameChange = "PVNotReadyForNameChange"
-	ConditionReasonPVNameInvalid           = "PVNameInvalid"
-	ConditionReasonPVCNameInvalid          = "PVCNameInvalid"
+	ConditionReasonCapacityInvalid           = "CapacityGbInvalid"
+	ConditionReasonIpRangeNotReady           = "IpRangeNotReady"
+	ConditionReasonFileShareNameInvalid      = "FileShareNameInvalid"
+	ConditionReasonTierInvalid               = "TierInvalid"
+	ConditionReasonPVNotReadyForDeletion     = "PVNotReadyForDeletion"
+	ConditionReasonPVNotReadyForNameChange   = "PVNotReadyForNameChange"
+	ConditionReasonPVNameInvalid             = "PVNameInvalid"
+	ConditionReasonPVCNameInvalid            = "PVCNameInvalid"
+	ConditionPVCBelongsToAnotherGcpNfsVolume = "PVCNameAlreadyUsed"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume

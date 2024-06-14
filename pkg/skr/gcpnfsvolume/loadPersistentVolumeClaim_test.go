@@ -9,6 +9,7 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,7 +24,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 	t.Run("loadPersistentVolumeClaim", func(t *testing.T) {
 
 		var gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
-		var pv *corev1.PersistentVolume
+		var pvc *corev1.PersistentVolumeClaim
 		var state *State
 		var k8sClient client.WithWatch
 
@@ -45,10 +46,11 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 				},
 			}
 
-			pvc := &corev1.PersistentVolumeClaim{
+			pvc = &corev1.PersistentVolumeClaim{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "test-gcpnfsvol",
 					Namespace: "test-ns",
+					Labels:    getVolumeClaimLabels(gcpNfsVolume),
 				},
 			}
 
@@ -64,7 +66,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 			k8sClient = spy.NewClientSpy(fakeClient)
 
 			state = createEmptyGcpNfsVolumeState(k8sClient, gcpNfsVolume)
-			state.PV = pv
+			state.PV = &corev1.PersistentVolume{}
 		}
 
 		t.Run("Should: load existing PVC", func(t *testing.T) {
@@ -100,5 +102,26 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 			assert.Nil(t, state.PVC, "pvc should remain nil in state as it is not found in APIServer")
 		})
 
+		t.Run("Should: set Status to Error and returns error when PVC belongs to another GcpNfsVolume", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName] = "another-owner-name"
+			scheme := runtime.NewScheme()
+			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(pvc).
+				WithStatusSubresource(pvc).
+				Build()
+			k8sClient.(spy.ClientSpy).SetClient(fakeClient)
+
+			err, _ := loadPersistentVolumeClaim(ctx, state)
+
+			assert.NotNilf(t, err, "error should be returned")
+			errorConditions := meta.FindStatusCondition(gcpNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
+			assert.NotEmpty(t, errorConditions, "error condition should be added")
+		})
 	})
 }
