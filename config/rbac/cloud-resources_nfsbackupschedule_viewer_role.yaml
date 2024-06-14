@@ -1,0 +1,27 @@
+# permissions for end users to view nfsbackupschedules.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: nfsbackupschedule-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: cloud-manager
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: nfsbackupschedule-viewer-role
+rules:
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - nfsbackupschedules
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - nfsbackupschedules/status
+  verbs:
+  - get
