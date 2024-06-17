@@ -59,6 +59,9 @@ data:
     - source: spec.tier
       name: spec.tier
       sort: true
+    - source: status.state
+      name: status.state
+      sort: true
   translations: |-
     en:
       spec.tier: Tier
@@ -68,6 +71,7 @@ data:
       spec.capacityGb: Capacity (Gb)
       spec.ipRange: IP Range
       configuration: Configuration
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:

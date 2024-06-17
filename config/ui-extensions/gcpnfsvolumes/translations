@@ -6,3 +6,4 @@ en:
   spec.capacityGb: Capacity (Gb)
   spec.ipRange: IP Range
   configuration: Configuration
+  status.state: State

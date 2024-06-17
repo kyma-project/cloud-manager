@@ -5,3 +5,4 @@ en:
   status.state: State
   configuration: Configuration
   status: Status
+  status.state: State

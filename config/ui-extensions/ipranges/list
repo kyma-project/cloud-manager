@@ -4,3 +4,6 @@
 - source: metadata.namespace
   name: metadata.namespace
   sort: true
+- source: status.state
+  name: status.state
+  sort: true
