@@ -7,3 +7,6 @@
 - source: spec.tier
   name: spec.tier
   sort: true
+- source: status.state
+  name: status.state
+  sort: true

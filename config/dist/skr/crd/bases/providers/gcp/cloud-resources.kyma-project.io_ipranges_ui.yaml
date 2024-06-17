@@ -44,6 +44,9 @@ data:
     - source: metadata.namespace
       name: metadata.namespace
       sort: true
+    - source: status.state
+      name: status.state
+      sort: true
   translations: |-
     en:
       spec.cidr: Requested CIDR
@@ -52,6 +55,7 @@ data:
       status.state: State
       configuration: Configuration
       status: Status
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
