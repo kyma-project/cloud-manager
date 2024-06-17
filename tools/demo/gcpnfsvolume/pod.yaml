@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cloud1
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: share1
+  containers:
+    - name: cloud1
+      image: ubuntu
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: "/mnt/data1"
+          name: data
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "--"
+      args:
+        - "sleep 86400 & wait"
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cloud2
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: share1
+  containers:
+    - name: cloud1
+      image: ubuntu
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: "/mnt/data2"
+          name: data
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "--"
+      args:
+        - "sleep 86400 & wait"
+  restartPolicy: Never

@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpNfsVolume
+metadata:
+  name: share1
+  namespace: default
+spec:
+  capacityGb: 1024
+  ipRange:
+    name: nfs-range-1
+    namespace: default
+  location: europe-west3-a
+  tier: BASIC_HDD
