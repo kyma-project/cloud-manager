@@ -7,3 +7,4 @@ en:
   spec.ipRange: IP Range
   configuration: Configuration
   status.state: State
+  status: Status

@@ -18,6 +18,13 @@ data:
             - name: spec.tier
               source: tier
               widget: Labels
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
   form: |-
     - path: spec.capacityGb
       simple: true
@@ -72,6 +79,7 @@ data:
       spec.ipRange: IP Range
       configuration: Configuration
       status.state: State
+      status: Status
 kind: ConfigMap
 metadata:
   labels:
