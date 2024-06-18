@@ -107,6 +107,15 @@ spec:
                     type: object
                   gcp:
                     properties:
+                      network:
+                        properties:
+                          nodes:
+                            type: string
+                          pods:
+                            type: string
+                          services:
+                            type: string
+                        type: object
                       project:
                         type: string
                       vpcNetwork:

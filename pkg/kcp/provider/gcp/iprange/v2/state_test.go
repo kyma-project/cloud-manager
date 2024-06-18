@@ -1,4 +1,4 @@
-package iprange
+package v2
 
 import (
 	"context"
@@ -99,6 +99,10 @@ func (f *testStateFactory) newState(ctx context.Context) (*State, error) {
 }
 
 func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontrolv1beta1.IpRange) (*State, error) {
+	return f.newStateWithScope(ctx, ipRange, gcpScope)
+}
+
+func (f *testStateFactory) newStateWithScope(ctx context.Context, ipRange *cloudcontrolv1beta1.IpRange, scope *cloudcontrolv1beta1.Scope) (*State, error) {
 	snc, _ := f.serviceNetworkingClientProvider(ctx, "test")
 	cc, _ := f.computeClientProvider(ctx, "test")
 
@@ -110,21 +114,7 @@ func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontr
 			},
 			ipRange))
 
-	focalState.SetScope(&cloudcontrolv1beta1.Scope{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      kymaRef.Name,
-			Namespace: kymaRef.Namespace,
-		},
-		Spec: cloudcontrolv1beta1.ScopeSpec{
-			Region: "us-west1",
-			Scope: cloudcontrolv1beta1.ScopeInfo{
-				Gcp: &cloudcontrolv1beta1.GcpScope{
-					Project:    "test-project",
-					VpcNetwork: "test-vpc",
-				},
-			},
-		},
-	})
+	focalState.SetScope(scope)
 
 	return newState(newTypesState(focalState), snc, cc, f.gcpConfig), nil
 
@@ -173,6 +163,22 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 		Options: cloudcontrolv1beta1.IpRangeOptions{
 			Gcp: &cloudcontrolv1beta1.IpRangeGcp{
 				Purpose: cloudcontrolv1beta1.GcpPurposePSA,
+			},
+		},
+	},
+}
+
+var gcpScope = &cloudcontrolv1beta1.Scope{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      kymaRef.Name,
+		Namespace: kymaRef.Namespace,
+	},
+	Spec: cloudcontrolv1beta1.ScopeSpec{
+		Region: "us-west1",
+		Scope: cloudcontrolv1beta1.ScopeInfo{
+			Gcp: &cloudcontrolv1beta1.GcpScope{
+				Project:    "test-project",
+				VpcNetwork: "test-vpc",
 			},
 		},
 	},

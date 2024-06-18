@@ -7,6 +7,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/utils/ptr"
 )
 
 func createScopeGcp(ctx context.Context, st composed.State) (error, context.Context) {
@@ -42,6 +43,11 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 				Gcp: &cloudcontrolv1beta1.GcpScope{
 					Project:    project,
 					VpcNetwork: commonVpcName(state.shootNamespace, state.shootName),
+					Network: cloudcontrolv1beta1.GcpNetwork{
+						Nodes:    ptr.Deref(state.shoot.Spec.Networking.Nodes, ""),
+						Pods:     ptr.Deref(state.shoot.Spec.Networking.Pods, ""),
+						Services: ptr.Deref(state.shoot.Spec.Networking.Services, ""),
+					},
 				},
 			},
 		},

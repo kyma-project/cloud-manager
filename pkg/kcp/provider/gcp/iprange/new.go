@@ -2,56 +2,21 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	v1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v1"
+	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 )
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-
-		state, err := stateFactory.NewState(ctx, st.(types.State))
-		if err != nil {
-			ipRange := st.Obj().(*v1beta1.IpRange)
-			return composed.UpdateStatus(ipRange).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    v1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  v1beta1.ReasonGcpError,
-					Message: err.Error(),
-				}).
-				SuccessError(composed.StopAndForget).
-				SuccessLogMsg(err.Error()).
-				Run(ctx, st)
+		autoCidrAllocationEnabled := feature.IpRangeAutomaticCidrAllocation.Value(ctx)
+		logger := composed.LoggerFromCtx(ctx)
+		logger.WithValues("autoCidrAllocationEnabled", autoCidrAllocationEnabled).Info("Auto CIDR allocation flag")
+		if !autoCidrAllocationEnabled {
+			return v1.New(stateFactory.(*generalStateFactory).v1StateFactory)(ctx, st)
+		} else {
+			return v2.New(stateFactory.(*generalStateFactory).v2StateFactory)(ctx, st)
 		}
-		return composed.ComposeActions(
-			"gcpIpRange",
-			validateCidr,
-			actions.AddFinalizer,
-			checkGcpOperation,
-			loadAddress,
-			loadPsaConnection,
-			compareStates,
-			updateState,
-			composed.BuildSwitchAction(
-				"gcpIpRangeSwitch",
-				nil,
-				composed.NewCase(StatePredicate(client.SyncAddress, ctx, state), syncAddress),
-				composed.NewCase(StatePredicate(client.SyncPsaConnection, ctx, state), syncPsaConnection),
-				composed.NewCase(StatePredicate(client.DeletePsaConnection, ctx, state), syncPsaConnection),
-				composed.NewCase(StatePredicate(client.DeleteAddress, ctx, state), syncAddress),
-				composed.NewCase(StatePredicate(client.Deleted, ctx, state), actions.RemoveFinalizer),
-			),
-		)(ctx, state)
-	}
-}
-
-func StatePredicate(status v1beta1.StatusState, ctx context.Context, state *State) composed.Predicate {
-	return func(ctx context.Context, st composed.State) bool {
-		return status == state.curState
 	}
 }

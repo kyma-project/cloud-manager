@@ -1,4 +1,4 @@
-package iprange
+package v2
 
 import (
 	"context"
@@ -15,7 +15,6 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 	ipRange.Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
-		ipRange.Status.Cidr = ipRange.Spec.Cidr
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,

@@ -1,4 +1,4 @@
-package iprange
+package v2
 
 import (
 	"context"
@@ -41,7 +41,9 @@ func (suite *validateCidrSuite) TestValidCidr() {
 	defer cancel()
 
 	//Get state object using factory
-	state, err := factory.newState(ctx)
+	obj := gcpIpRange.DeepCopy()
+	obj.Status.Cidr = obj.Spec.Cidr
+	state, err := factory.newStateWith(ctx, obj)
 	assert.Nil(suite.T(), err)
 
 	//Invoke validateCidr
