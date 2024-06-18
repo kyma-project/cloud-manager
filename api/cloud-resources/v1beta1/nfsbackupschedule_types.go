@@ -25,6 +25,14 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+const (
+	ReasonTimeParseError     = "TimeParseError"
+	ReasonScheduleError      = "ScheduleError"
+	ReasonNfsVolumeNotFound  = "NfsVolumeNotFound"
+	ReasonNfsVolumeNotReady  = "NfsVolumeNotReady"
+	ReasonBackupCreateFailed = "BackupCreateFailed"
+)
+
 // NfsBackupScheduleSpec defines the desired state of NfsBackupSchedule
 type NfsBackupScheduleSpec struct {
 
@@ -33,7 +41,7 @@ type NfsBackupScheduleSpec struct {
 	NfsVolumeRef corev1.ObjectReference `json:"nfsVolumeRef"`
 
 	// Location specifies the location where the backup has to be stored.
-	// +kubebuilder:validation:Required
+	// +optional
 	Location string `json:"location"`
 
 	// Cron expression of the schedule, e.g. "0 0 * * *" for daily at midnight
@@ -49,11 +57,13 @@ type NfsBackupScheduleSpec struct {
 	// StartTime specifies the time when the backup should start
 	// If not provided, schedule will start immediately
 	// +optional
+	// +kubebuilder:validation:Format=date-time
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 
 	// EndTime specifies the time when the backup should end
 	// If not provided, schedule will run indefinitely
 	// +optional
+	// +kubebuilder:validation:Format=date-time
 	EndTime *metav1.Time `json:"endTime,omitempty"`
 
 	// MaxRetentionDays specifies the maximum number of days to retain the backup
@@ -78,13 +88,21 @@ type NfsBackupScheduleStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// NextRunTimes contains 0 or more entries of time when the next backup will be created
+	// NextRunTimes contains the time when the next backup will be created
 	// +optional
-	NextRunTimes *[]metav1.Time `json:"nextRunTimes,omitempty"`
+	NextRunTimes []string `json:"nextRunTimes,omitempty"`
 
-	// LastRunTime specifies the time when the last backup was created
+	// LastCreateRun specifies the time when the last backup was created
 	// +optional
-	LastRunTime *metav1.Time `json:"lastRunTime,omitempty"`
+	LastCreateRun *metav1.Time `json:"lastCreateRun,omitempty"`
+
+	// LastDeleteRun specifies the time when the backups exceeding the retention period were deleted
+	// +optional
+	LastDeleteRun *metav1.Time `json:"lastDeleteRun,omitempty"`
+
+	// Schedule specifies the cron expression of the current active schedule
+	// +optional
+	Schedule string `json:"schedule,omitempty"`
 
 	// BackupIndex specifies the current index of the backup created by this schedule
 	// +kubebuilder:default=0
@@ -97,6 +115,9 @@ type NfsBackupScheduleStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Schedule",type="string",JSONPath=".spec.schedule"
+// +kubebuilder:printcolumn:name="Last Run Time",type="date",JSONPath=".status.lastCreateRun"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // NfsBackupSchedule is the Schema for the nfsbackupschedules API
 type NfsBackupSchedule struct {
@@ -107,12 +128,20 @@ type NfsBackupSchedule struct {
 	Status NfsBackupScheduleStatus `json:"status,omitempty"`
 }
 
-func (in *NfsBackupSchedule) SpecificToProviders() []string {
-	return nil
+func (in *NfsBackupSchedule) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *NfsBackupSchedule) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
 }
 
 func (in *NfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
 	return featuretypes.FeatureNfsBackup
+}
+
+func (in *NfsBackupSchedule) SpecificToProviders() []string {
+	return nil
 }
 
 //+kubebuilder:object:root=true

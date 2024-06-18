@@ -1598,17 +1598,15 @@ func (in *NfsBackupScheduleStatus) DeepCopyInto(out *NfsBackupScheduleStatus) {
 	}
 	if in.NextRunTimes != nil {
 		in, out := &in.NextRunTimes, &out.NextRunTimes
-		*out = new([]v1.Time)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]v1.Time, len(*in))
-			for i := range *in {
-				(*in)[i].DeepCopyInto(&(*out)[i])
-			}
-		}
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
-	if in.LastRunTime != nil {
-		in, out := &in.LastRunTime, &out.LastRunTime
+	if in.LastCreateRun != nil {
+		in, out := &in.LastCreateRun, &out.LastCreateRun
+		*out = (*in).DeepCopy()
+	}
+	if in.LastDeleteRun != nil {
+		in, out := &in.LastDeleteRun, &out.LastDeleteRun
 		*out = (*in).DeepCopy()
 	}
 	if in.Backups != nil {

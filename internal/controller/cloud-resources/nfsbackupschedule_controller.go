@@ -18,10 +18,14 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/skr/nfsbackupschedule"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -29,8 +33,7 @@ import (
 
 // NfsBackupScheduleReconciler reconciles a NfsBackupSchedule object
 type NfsBackupScheduleReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Reconciler nfsbackupschedule.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=nfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
@@ -49,14 +52,24 @@ type NfsBackupScheduleReconciler struct {
 func (r *NfsBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Run(ctx, req)
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *NfsBackupScheduleReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+type NfsBackupScheduleReconcilerFactory struct {
+	env abstractions.Environment
+}
+
+func (f *NfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+	return &NfsBackupScheduleReconciler{
+		Reconciler: nfsbackupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env),
+	}
+}
+
+func SetupNfsBackupScheduleReconciler(reg skrruntime.SkrRegistry,
+	env abstractions.Environment, logger logr.Logger) error {
+
+	return reg.Register().
+		WithFactory(&NfsBackupScheduleReconcilerFactory{env: env}).
 		For(&cloudresourcesv1beta1.NfsBackupSchedule{}).
-		Complete(r)
+		Complete()
 }
