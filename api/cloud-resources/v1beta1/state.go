@@ -18,4 +18,6 @@ const (
 	JobStateInProgress = "InProgress"
 	JobStateProcessing = "Processing"
 	JobStateError      = "Error"
+	JobStateActive     = "Active"
+	JobStateSuspended  = "Suspended"
 )

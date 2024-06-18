@@ -53,6 +53,7 @@ var featuresByKindGroup = map[string]types.FeatureName{
 	"gcpnfsvolumebackup.cloud-resources.kyma-project.io":  types.FeatureNfsBackup,
 	"gcpnfsvolumerestore.cloud-resources.kyma-project.io": types.FeatureNfsBackup,
 	"gcpnfsvolume.cloud-resources.kyma-project.io":        types.FeatureNfs,
+	"nfsbackupschedule.cloud-resources.kyma-project.io":   types.FeatureNfsBackup,
 	// iprange has no feature, see comment from KCP about it
 	"iprange.cloud-resources.kyma-project.io": "",
 }

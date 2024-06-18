@@ -23,6 +23,7 @@ require (
 	github.com/gardener/gardener v1.85.0
 	github.com/go-logr/logr v1.3.0
 	github.com/google/uuid v1.6.0
+	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0

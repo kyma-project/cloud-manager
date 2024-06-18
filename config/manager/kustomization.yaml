@@ -12,6 +12,7 @@ configMapGenerator:
   - GCP_CLIENT_RENEW_DURATION=5m
   - GCP_RETRY_WAIT_DURATION=5s
   - GCP_OPERATION_WAIT_DURATION=5s
+  - NFS_BACKUP_SCHEDULER_DEADLINE=30s
   name: manager-env
 
 secretGenerator:
