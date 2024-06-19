@@ -19,6 +19,7 @@ type Client interface {
 	ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
 	GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
 	GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error)
+	DeletePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) error
 }
 
 func NewClientProvider() azureclient.SkrClientProvider[Client] {
@@ -135,4 +136,20 @@ func (c *client) GetNetwork(ctx context.Context, resourceGroupName, virtualNetwo
 	}
 
 	return &response.VirtualNetwork, nil
+}
+
+func (c *client) DeletePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) error {
+	pooler, err := c.peering.BeginDelete(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = pooler.PollUntilDone(ctx, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

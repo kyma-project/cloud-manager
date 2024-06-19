@@ -75,3 +75,13 @@ func (c *storeSubscriptionContext) GetPeering(ctx context.Context, resourceGroup
 	}
 	return nil, nil
 }
+
+func (c *storeSubscriptionContext) DeletePeering(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error {
+	c.peeringStore.items = pie.Filter(c.peeringStore.items, func(x *peeringEntry) bool {
+		return !(x.resourceGroupName == resourceGroup &&
+			x.virtualNetworkName == virtualNetworkName &&
+			virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, ""))
+	})
+
+	return nil
+}
