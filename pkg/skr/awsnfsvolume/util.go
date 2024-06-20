@@ -53,14 +53,22 @@ func getVolumeClaimName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
 }
 
 func getVolumeClaimLabels(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
-	result := map[string]string{}
+	labelsBuilder := util.NewLabelBuilder()
+
 	if awsVol.Spec.PersistentVolumeClaim != nil {
-		for k, v := range awsVol.Spec.PersistentVolumeClaim.Labels {
-			result[k] = v
+		for labelName, labelValue := range awsVol.Spec.PersistentVolumeClaim.Labels {
+			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
-	result[cloudresourcesv1beta1.LabelCloudManaged] = "true"
-	return result
+
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, awsVol.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, awsVol.Namespace)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
+	labelsBuilder.WithCloudManagerDefaults()
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, awsVol.Spec.Capacity.String())
+
+	pvcLabels := labelsBuilder.Build()
+	return pvcLabels
 }
 
 func getVolumeClaimAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
