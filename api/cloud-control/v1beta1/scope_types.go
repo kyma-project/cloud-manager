@@ -57,6 +57,20 @@ type GcpScope struct {
 
 	// +kubebuilder:validation:Required
 	VpcNetwork string `json:"vpcNetwork"`
+
+	// +optional
+	Network GcpNetwork `json:"network"`
+}
+
+type GcpNetwork struct {
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
 }
 
 type AzureScope struct {

@@ -205,6 +205,11 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 				Gcp: &cloudcontrolv1beta1.GcpScope{
 					Project:    project,
 					VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, name),
+					Network: cloudcontrolv1beta1.GcpNetwork{
+						Nodes:    "10.250.0.0/22",
+						Pods:     "10.96.0.0/13",
+						Services: "10.104.0.0/13",
+					},
 				},
 			},
 		},

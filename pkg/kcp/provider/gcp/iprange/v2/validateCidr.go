@@ -1,4 +1,4 @@
-package iprange
+package v2
 
 import (
 	"context"
@@ -15,9 +15,21 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 
 	ipRange := state.ObjAsIpRange()
 	logger.WithValues("ipRange :", ipRange.Name).Info("Loading GCP Address")
+	if len(ipRange.Status.Cidr) == 0 {
+		return composed.UpdateStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonInvalidCidr,
+				Message: "Cidr is required",
+			}).
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("Error updating IpRange status due to missing cidr.").
+			Run(ctx, state)
+	}
 
 	//Parse CIDR.
-	addr, prefix, err := util.CidrParseIPnPrefix(ipRange.Spec.Cidr)
+	addr, prefix, err := util.CidrParseIPnPrefix(ipRange.Status.Cidr)
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{

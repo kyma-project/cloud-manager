@@ -1,4 +1,4 @@
-package iprange
+package v1
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/api/compute/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"net/http/httptest"
@@ -18,79 +18,23 @@ import (
 	"testing"
 )
 
-type loadPsaConnectionSuite struct {
+type syncAddressSuite struct {
 	suite.Suite
 	ctx context.Context
 }
 
-func (suite *loadPsaConnectionSuite) SetupTest() {
+func (suite *syncAddressSuite) SetupTest() {
 	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
+func (suite *syncAddressSuite) TestCreateSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var resp *servicenetworking.ListConnectionsResponse
-
+		var resp *compute.Operation
 		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlSvcNetworking) {
-				resp = &servicenetworking.ListConnectionsResponse{
-					Connections: nil,
-				}
-			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-			}
-		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		}
-		b, err := json.Marshal(resp)
-		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
-		}
-		_, err = w.Write(b)
-		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
-		}
-		return
-	}))
-	defer fakeHttpServer.Close()
-
-	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	//Get state object with ipRange
-	ipRange := gcpIpRange.DeepCopy()
-	ipRange.Spec.Options.Gcp.Purpose = v1beta1.GcpPurposePSC
-
-	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
-
-	//Invoke the function under test
-	err, resCtx := loadPsaConnection(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
-
-	//Load updated object
-	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
-
-	// check error condition in status
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
-}
-
-func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
-	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var resp *servicenetworking.ListConnectionsResponse
-
-		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlSvcNetworking) {
-				resp = &servicenetworking.ListConnectionsResponse{
-					Connections: nil,
+		case http.MethodPost:
+			if strings.HasSuffix(r.URL.Path, urlGlobalAddress) {
+				resp = &compute.Operation{
+					Name: opIdentifier,
 				}
 			} else {
 				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
@@ -121,27 +65,26 @@ func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
+	state.addressOp = client.ADD
 
 	//Invoke the function under test
-	err, resCtx := loadPsaConnection(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	err, _ = syncAddress(ctx, state)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
 	ipRange = state.ObjAsIpRange()
 
-	// check error condition in status
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
+	// check error operationId  in status
+	assert.Equal(suite.T(), opIdentifier, ipRange.Status.OpIdentifier)
 }
 
-func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
+func (suite *syncAddressSuite) TestCreateFailure() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlSvcNetworking) {
-				//Return 404
+		case http.MethodPost:
+			if strings.HasSuffix(r.URL.Path, urlGlobalAddress) {
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			} else {
 				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
@@ -149,6 +92,7 @@ func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
+		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -163,10 +107,11 @@ func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
 
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
+	state.addressOp = client.ADD
 
 	//Invoke the function under test
-	err, _ = loadPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
+	err, _ = syncAddress(ctx, state)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -174,27 +119,45 @@ func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
 	ipRange = state.ObjAsIpRange()
 
 	// check error condition in status
+	assert.Len(suite.T(), ipRange.Status.Conditions, 1)
 	assert.Equal(suite.T(), v1beta1.ConditionTypeError, ipRange.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), metav1.ConditionTrue, ipRange.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), v1beta1.ReasonGcpError, ipRange.Status.Conditions[0].Reason)
 }
-
-func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
+func (suite *syncAddressSuite) TestUpdate() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var resp *servicenetworking.ListConnectionsResponse
+		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		return
+	}))
+	defer fakeHttpServer.Close()
 
+	factory, err := newTestStateFactory(fakeHttpServer)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with ipRange
+	ipRange := gcpIpRange.DeepCopy()
+
+	state, err := factory.newStateWith(ctx, ipRange)
+	assert.Nil(suite.T(), err)
+	state.addressOp = client.MODIFY
+
+	//Invoke the function under test
+	err, resCtx := syncAddress(ctx, state)
+	assert.Equal(suite.T(), composed.StopAndForget, err)
+	assert.Nil(suite.T(), resCtx)
+}
+
+func (suite *syncAddressSuite) TestDeleteSuccess() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var resp *compute.Operation
 		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlSvcNetworking) {
-				resp = &servicenetworking.ListConnectionsResponse{
-					Connections: []*servicenetworking.Connection{
-						{
-							Network:               "test-vpc",
-							Peering:               client.PsaPeeringName,
-							ReservedPeeringRanges: nil,
-							Service:               client.ServiceNetworkingServiceConnectionName,
-						},
-					},
+		case http.MethodDelete:
+			if strings.HasSuffix(r.URL.Path, getUrlCompute) {
+				resp = &compute.Operation{
+					Name: opIdentifier,
 				}
 			} else {
 				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
@@ -225,11 +188,62 @@ func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
+	state.addressOp = client.DELETE
 
 	//Invoke the function under test
-	err, resCtx := loadPsaConnection(ctx, state)
+	err, _ = syncAddress(ctx, state)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+
+	//Load updated object
+	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	ipRange = state.ObjAsIpRange()
+
+	// check error operationId  in status
+	assert.Equal(suite.T(), opIdentifier, ipRange.Status.OpIdentifier)
+}
+
+func (suite *syncAddressSuite) TestDeleteFailure() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var resp *compute.Operation
+		switch r.Method {
+		case http.MethodDelete:
+			if strings.HasSuffix(r.URL.Path, getUrlCompute) {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			} else {
+				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			}
+		default:
+			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		}
+		b, err := json.Marshal(resp)
+		if err != nil {
+			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+		}
+		_, err = w.Write(b)
+		if err != nil {
+			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+		}
+		return
+	}))
+	defer fakeHttpServer.Close()
+
+	factory, err := newTestStateFactory(fakeHttpServer)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with ipRange
+	ipRange := gcpIpRange.DeepCopy()
+
+	state, err := factory.newStateWith(ctx, ipRange)
+	assert.Nil(suite.T(), err)
+	state.addressOp = client.DELETE
+
+	//Invoke the function under test
+	err, _ = syncAddress(ctx, state)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -237,10 +251,12 @@ func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 	ipRange = state.ObjAsIpRange()
 
 	// check error condition in status
-	assert.NotNil(suite.T(), state.serviceConnection)
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
+	assert.Len(suite.T(), ipRange.Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, ipRange.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, ipRange.Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, ipRange.Status.Conditions[0].Reason)
 }
 
-func TestLoadPsaConnection(t *testing.T) {
-	suite.Run(t, new(loadPsaConnectionSuite))
+func TestSyncAddress(t *testing.T) {
+	suite.Run(t, new(syncAddressSuite))
 }

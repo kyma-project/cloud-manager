@@ -2,105 +2,34 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"errors"
+	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	client3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/servicenetworking/v1"
-	"strings"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	v1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v1"
+	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 )
 
-type State struct {
-	types.State
-
-	inSync    bool
-	ipAddress string
-	prefix    int
-	ipRanges  []string
-
-	addressOp    client2.OperationType
-	connectionOp client2.OperationType
-	curState     v1beta1.StatusState
-
-	address           *compute.Address
-	serviceConnection *servicenetworking.Connection
-
-	serviceNetworkingClient client3.ServiceNetworkingClient
-	computeClient           client3.ComputeClient
-
-	//gcp config
-	gcpConfig *client2.GcpConfig
-}
-
 type StateFactory interface {
-	NewState(ctx context.Context, ipRangeState types.State) (*State, error)
+	NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error)
 }
 
-type stateFactory struct {
-	serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient]
-	computeClientProvider           client2.ClientProvider[client3.ComputeClient]
-	env                             abstractions.Environment
-	gcpConfig                       *client2.GcpConfig
-}
-
-func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient], computeClientProvider client2.ClientProvider[client3.ComputeClient], env abstractions.Environment) StateFactory {
-	return &stateFactory{
-		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
-		computeClientProvider:           computeClientProvider,
-		env:                             env,
-		gcpConfig:                       client2.GetGcpConfig(env),
+func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[iprangeclient.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[iprangeclient.ComputeClient], env abstractions.Environment) StateFactory {
+	return &generalStateFactory{
+		v1StateFactory: v1.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider, env),
+		v2StateFactory: v2.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider, env),
 	}
 }
 
-func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
-
-	snc, err := f.serviceNetworkingClientProvider(
-		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
-	)
-	if err != nil {
-		return nil, err
-	}
-	cc, err := f.computeClientProvider(
-		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return newState(ipRangeState, snc, cc, f.gcpConfig), nil
+type generalStateFactory struct {
+	v1StateFactory v1.StateFactory
+	v2StateFactory v2.StateFactory
 }
 
-func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient, gcpConfig *client2.GcpConfig) *State {
-	return &State{
-		State:                   ipRangeState,
-		serviceNetworkingClient: snc,
-		computeClient:           cc,
-		gcpConfig:               gcpConfig,
-	}
-}
-
-func (s State) doesAddressMatch() bool {
-	vpc := s.Scope().Spec.Scope.Gcp.VpcNetwork
-	return s.address != nil && s.address.Address == s.ipAddress &&
-		s.address.PrefixLength == int64(s.prefix) &&
-		strings.HasSuffix(s.address.Network, vpc)
-}
-
-func (s State) doesConnectionIncludeRange() int {
-
-	if s.serviceConnection == nil {
-		return -1
-	}
-
-	rangeName := s.ObjAsIpRange().Spec.RemoteRef.Name
-	for i, name := range s.serviceConnection.ReservedPeeringRanges {
-		if rangeName == name {
-			return i
-		}
-	}
-	return -1
+func (f *generalStateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error) {
+	return nil, errors.New("logical error - not implemented")
+	//return f.v1StateFactory.NewState(ctx, ipRangeState, logger)
 }
