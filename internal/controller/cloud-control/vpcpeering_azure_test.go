@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var _ = FDescribe("Feature: KCP VpcPeering", func() {
+var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	It("Scenario: KCP Azure VpcPeering is created", func() {
 		const (
