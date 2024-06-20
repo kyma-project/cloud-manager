@@ -39,16 +39,17 @@ func validatePV(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	nfsVolume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
+	errorMsg := fmt.Sprintf("Desired PV(%s) already exists with different owner", pvName)
 
 	return composed.UpdateStatus(nfsVolume).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonPVNameInvalid,
-			Message: fmt.Sprintf("PV with the name %s already exists.", pvName),
+			Message: errorMsg,
 		}).
 		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-		ErrorLogMessage("Error updating GcpNfsVolume status for invalid PV name").
+		ErrorLogMessage(errorMsg).
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

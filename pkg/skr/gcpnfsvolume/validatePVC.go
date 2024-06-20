@@ -40,7 +40,7 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	nfsVolume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-	errorMsg := fmt.Sprintf("Loaded PVC(%s/%s) belongs to another GcpNfsVolume (%s/%s)", pvc.Namespace, pvc.Name, parentNamespace, parentName)
+	errorMsg := fmt.Sprintf("Desired PVC(%s/%s) already exists with different owner", pvc.Namespace, pvc.Name)
 
 	return composed.UpdateStatus(nfsVolume).
 		SetExclusiveConditions(metav1.Condition{
