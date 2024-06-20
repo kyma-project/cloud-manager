@@ -44,7 +44,9 @@ func (r *reconciler) newAction() composed.Action {
 		"crAwsNfsVolumeMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolume{}),
 		composed.LoadObj,
-
+		composed.ComposeActions(
+			"crAwsNfsVolumeValidateSpec",
+			validatePersistentVolume, validatePersistentVolumeClaim),
 		defaultiprange.New(),
 
 		loadVolume,

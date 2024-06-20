@@ -6,7 +6,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,17 +29,11 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	labelsBuilder := util.NewLabelBuilder()
-	labelsBuilder.WithCustomLabels(getVolumeLabels(state.ObjAsAwsNfsVolume()))
-	labelsBuilder.WithCloudManagerDefaults()
-
-	pvLabels := labelsBuilder.Build()
-
 	pv := &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
 			Name:        getVolumeName(state.ObjAsAwsNfsVolume()),
-			Labels:      pvLabels,
+			Labels:      getVolumeLabels(state.ObjAsAwsNfsVolume()),
 			Annotations: getVolumeAnnotations(state.ObjAsAwsNfsVolume()),
 			Finalizers: []string{
 				v1beta1.Finalizer,

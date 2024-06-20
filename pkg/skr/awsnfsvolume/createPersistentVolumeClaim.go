@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -28,18 +27,11 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
 	}
 
-	labelsBuilder := util.NewLabelBuilder()
-	labelsBuilder.WithCustomLabels(getVolumeClaimLabels(state.ObjAsAwsNfsVolume()))
-	labelsBuilder.WithCloudManagerDefaults()
-	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, state.ObjAsAwsNfsVolume().Spec.Capacity.String())
-
-	pvcLabels := labelsBuilder.Build()
-
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
 			Name:        getVolumeClaimName(state.ObjAsAwsNfsVolume()),
-			Labels:      pvcLabels,
+			Labels:      getVolumeClaimLabels(state.ObjAsAwsNfsVolume()),
 			Annotations: getVolumeClaimAnnotations(state.ObjAsAwsNfsVolume()),
 			Finalizers: []string{
 				v1beta1.Finalizer,

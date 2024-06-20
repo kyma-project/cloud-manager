@@ -1,6 +1,9 @@
 package awsnfsvolume
 
-import cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+import (
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+)
 
 func getVolumeName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
 	if awsVol.Spec.PersistentVolume != nil &&
@@ -12,14 +15,21 @@ func getVolumeName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
 }
 
 func getVolumeLabels(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
-	result := map[string]string{}
+	labelsBuilder := util.NewLabelBuilder()
+
 	if awsVol.Spec.PersistentVolume != nil {
-		for k, v := range awsVol.Spec.PersistentVolume.Labels {
-			result[k] = v
+		for labelName, labelValue := range awsVol.Spec.PersistentVolume.Labels {
+			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
-	result[cloudresourcesv1beta1.LabelCloudManaged] = "true"
-	return result
+
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, awsVol.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, awsVol.Namespace)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
+	labelsBuilder.WithCloudManagerDefaults()
+	pvLabels := labelsBuilder.Build()
+
+	return pvLabels
 }
 
 func getVolumeAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
@@ -43,14 +53,22 @@ func getVolumeClaimName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
 }
 
 func getVolumeClaimLabels(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
-	result := map[string]string{}
+	labelsBuilder := util.NewLabelBuilder()
+
 	if awsVol.Spec.PersistentVolumeClaim != nil {
-		for k, v := range awsVol.Spec.PersistentVolumeClaim.Labels {
-			result[k] = v
+		for labelName, labelValue := range awsVol.Spec.PersistentVolumeClaim.Labels {
+			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
-	result[cloudresourcesv1beta1.LabelCloudManaged] = "true"
-	return result
+
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, awsVol.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, awsVol.Namespace)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
+	labelsBuilder.WithCloudManagerDefaults()
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelStorageCapacity, awsVol.Spec.Capacity.String())
+
+	pvcLabels := labelsBuilder.Build()
+	return pvcLabels
 }
 
 func getVolumeClaimAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
