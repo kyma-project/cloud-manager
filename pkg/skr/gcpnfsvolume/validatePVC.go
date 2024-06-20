@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
@@ -16,13 +17,13 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 	nfsVolume := state.ObjAsGcpNfsVolume()
 
-	if !composed.MarkedForDeletionPredicate(ctx, st) {
+	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 
 	pvcName := getVolumeClaimName(nfsVolume)
 	pvc := &corev1.PersistentVolumeClaim{}
-	err := state.SkrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvcName, Namespace: nfsVolume.Namespace}, pvc)
+	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvcName, Namespace: nfsVolume.Namespace}, pvc)
 
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -38,16 +39,18 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 		return nil, nil
 	}
 
-	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+	nfsVolume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
+	errorMsg := fmt.Sprintf("Loaded PVC(%s/%s) belongs to another GcpNfsVolume (%s/%s)", pvc.Namespace, pvc.Name, parentNamespace, parentName)
+
+	return composed.UpdateStatus(nfsVolume).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonPVCNameInvalid,
-			Message: fmt.Sprintf("PVC with the name %s already exists.", pvcName),
+			Message: errorMsg,
 		}).
 		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-		ErrorLogMessage("Error updating GcpNfsVolume status for invalid PVC name").
+		ErrorLogMessage(errorMsg).
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }
