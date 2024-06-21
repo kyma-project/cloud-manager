@@ -60,7 +60,7 @@ const (
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
 type GcpNfsVolumeSpec struct {
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	IpRange IpRangeRef `json:"ipRange"`
 	// +kubebuilder:validation:Required
@@ -137,6 +137,18 @@ type GcpNfsVolume struct {
 	Status GcpNfsVolumeStatus `json:"status,omitempty"`
 }
 
+func (in *GcpNfsVolume) State() string {
+	return string(in.Status.State)
+}
+
+func (in *GcpNfsVolume) SetState(v string) {
+	in.Status.State = GcpNfsVolumeState(v)
+}
+
+func (in *GcpNfsVolume) GetIpRangeRef() IpRangeRef {
+	return in.Spec.IpRange
+}
+
 func (in *GcpNfsVolume) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
@@ -189,3 +201,17 @@ const (
 	ZONAL          = GcpFileTier("ZONAL")
 	REGIONAL       = GcpFileTier("REGIONAL")
 )
+
+func (in *GcpNfsVolume) CloneForPatchStatus() client.Object {
+	return &GcpNfsVolume{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GcpNfsVolume",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
+}

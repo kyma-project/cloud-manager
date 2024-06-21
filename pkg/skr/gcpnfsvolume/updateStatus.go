@@ -35,13 +35,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		logger.Info("Updating SKR GcpNfsVolume status with Error condition")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: kcpCondErr.Message,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with Error condition due to KCP error").
 			SuccessError(composed.StopAndForget). // do not continue further with the flow
 			Run(ctx, state)
@@ -57,13 +56,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
 				Message: kcpCondReady.Message,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
 			ErrorLogMessage("Error updating GcpNfsVolume status with Ready condition").
 			SuccessLogMsg("GcpNfsVolume status got updated with Ready condition "+strconv.Itoa(state.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb)).
 			SuccessError(composed.StopWithRequeue). // have to continue and requeue to create PV

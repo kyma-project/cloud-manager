@@ -4,6 +4,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
@@ -14,6 +15,7 @@ type State struct {
 	KcpCluster     composed.StateCluster
 	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
 	KcpIpRange     *cloudcontrolv1beta1.IpRange
+	SkrIpRange     *cloudresourcesv1beta1.IpRange
 	SkrCluster     composed.StateCluster
 	PV             *v1.PersistentVolume
 	PVC            *v1.PersistentVolumeClaim
@@ -52,4 +54,16 @@ func (s *State) ObjAsGcpNfsVolume() *cloudresourcesv1beta1.GcpNfsVolume {
 
 func (s *State) IsChanged() bool {
 	return s.KcpNfsInstance != nil && s.KcpNfsInstance.Spec.Instance.Gcp.CapacityGb != s.ObjAsGcpNfsVolume().Spec.CapacityGb
+}
+
+func (s *State) GetSkrIpRange() *cloudresourcesv1beta1.IpRange {
+	return s.SkrIpRange
+}
+
+func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
+	s.SkrIpRange = skrIpRange
+}
+
+func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
+	return s.ObjAsGcpNfsVolume()
 }

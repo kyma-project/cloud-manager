@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -41,6 +42,7 @@ func (r *Reconciler) newAction() composed.Action {
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
 			validateIpRange, validateFileShareName, validateCapacity, validatePV, validatePVC),
+		defaultiprange.New(),
 		addFinalizer,
 		loadKcpIpRange,
 		loadKcpNfsInstance,

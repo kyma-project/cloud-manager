@@ -33,13 +33,12 @@ func deletePVForNameChange(ctx context.Context, st composed.State) (error, conte
 		// Only PV in Released or Available state can be changed
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonPVNotReadyForNameChange,
 				Message: fmt.Sprintf("PV[%s] exists with state %s, and it cannot be replaced with a new name. Only PVs in Released or Available state can be replaced.", state.PV.Name, state.PV.Status.Phase),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with Persistent Volume not ready for name change").
 			Run(ctx, state)
 	} else {

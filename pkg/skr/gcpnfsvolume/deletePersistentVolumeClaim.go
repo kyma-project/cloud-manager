@@ -26,7 +26,7 @@ func deletePersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	err, _ := composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-		SetCondition(metav1.Condition{
+		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonDeletingPVC,

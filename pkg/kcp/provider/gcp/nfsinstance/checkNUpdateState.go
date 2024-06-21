@@ -60,7 +60,10 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	} else if prevState != state.curState {
-		return composed.UpdateStatus(nfsInstance).SuccessError(composed.StopWithRequeue).Run(ctx, state)
+		return composed.UpdateStatus(nfsInstance).
+			RemoveConditions(v1beta1.ConditionTypeReady).
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
 	}
 
 	return nil, nil

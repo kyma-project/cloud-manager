@@ -28,13 +28,12 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 		// Only PV in Released or Available state can be deleted
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonPVNotReadyForDeletion,
 				Message: fmt.Sprintf("Deletion failed because associated Persistent Volume %s cannot be deleted. Only Persistent Volumes in Released or Available state can be deleted.", state.PV.Name),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with Persistent Volume not ready for deletion").
 			Run(ctx, state)
 	} else {
