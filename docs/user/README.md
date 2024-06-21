@@ -69,6 +69,59 @@ More info (including the limitations) can be found at official GCP [doc page](ht
 
 #### AWS
 
+Custom resource for provisioning the GCP NFS Volume is `AwsNfsVolume`.
+During creation of `AwsNfsVolume`, `PersistentVolume` and `PersistentVolumeClaim` will be created automatically.
+`PersistentVolumeClaim` can then be used in your Pods to access the underlying NFS.
+
+By default, `PersistentVolume` and `PersistentVolumeClaim` will have the same name as the `AwsNfsVolume`,
+unless specified otherwise (see the example below).
+
+List of `NfsVolume` parameters:
+
+| Param                        | Required | Description                                                                       |
+|------------------------------|----------|-----------------------------------------------------------------------------------|
+| spec.capacity                | Yes      | Size of the cloud volume.                                                         |
+| spec.ipRange                 | No       | Name of existing IP Range. If not specified, default will be used.                |
+| spec.performanceMode         | No       | [PerformanceMode.]( https://docs.aws.amazon.com/efs/latest/ug/performance.html)   |
+| spec.throughput              | No       | [ThroughputMode.](https://docs.aws.amazon.com/efs/latest/ug/performance.html)     |
+| spec.volume.name             | No       | Name of the PersistentVolume that will be created.                                |
+| spec.volume.labels           | No       |                                                                                   |
+| spec.volume.annotations      | No       |                                                                                   |
+| spec.volumeClaim.name        | No       | Name of the PersistentVolumeClaim that will be created.                           |
+| spec.volumeClaim.labels      | No       |                                                                                   |
+| spec.volumeClaim.annotations | No       |                                                                                   |
+
+> **WARNING**
+> Be careful when naming the `volume` and `volumeClaim` resources.
+> Referencing the ones that are already in use will cause the error.
+> Additionally, be aware that `PersistentVolume` is a cluster wide resource, while NFS and `PersitentVolumeClaim` are namespaced.
+
+Example
+```
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsNfsVolume
+metadata:
+  name: aws-nfs-volume-demo
+  namespace: demo 
+spec:
+  capacity: 10G
+  volume:
+    labels:
+      foo: bar
+    annotations:
+      baz: qux
+    name: volume-demo
+  volumeClaim:
+    name: volume-claim-demo
+    labels:
+      foo: bar
+    annotations:
+      baz: qux
+```
+
+More info (including the limitations) can be found at official AWS [doc page](https://docs.aws.amazon.com/filegateway/latest/files3/CreatingAnNFSFileShare.html).
+
+
 #### Azure
 
 Azure is not supported as this Hyperscaler has the NFS `ReadWriteMany` feature already available.
