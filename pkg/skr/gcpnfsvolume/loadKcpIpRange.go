@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"errors"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,19 +11,23 @@ import (
 
 func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	nfsVolume := state.ObjAsGcpNfsVolume()
 	logger := composed.LoggerFromCtx(ctx)
 
 	logger.Info("Loading KCP IpRange")
 
 	list := &cloudcontrolv1beta1.IpRangeList{}
+
+	// This condition should never happen. Adding this check to have proper error handling instead of panic.
+	if state.SkrIpRange == nil {
+		return composed.LogErrorAndReturn(errors.New("SkrIpRange is not set in gcpNfsVolume Status"), "Error loading KCP IpRange", composed.StopWithRequeue, ctx)
+	}
 	err := state.KcpCluster.K8sClient().List(
 		ctx,
 		list,
 		client.MatchingLabels{
 			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      nfsVolume.Spec.IpRange.Name,
-			cloudcontrolv1beta1.LabelRemoteNamespace: nfsVolume.Spec.IpRange.Namespace,
+			cloudcontrolv1beta1.LabelRemoteName:      state.SkrIpRange.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: state.SkrIpRange.Namespace,
 		},
 		client.InNamespace(state.KymaRef.Namespace),
 	)

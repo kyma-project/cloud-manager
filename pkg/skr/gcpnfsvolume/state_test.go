@@ -148,6 +148,16 @@ var kcpIpRange = cloudcontrolv1beta1.IpRange{
 	},
 }
 
+var skrIpRange = cloudresourcesv1beta1.IpRange{
+	ObjectMeta: v1.ObjectMeta{
+		Name:      gcpNfsVolume.Spec.IpRange.Name,
+		Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
+	},
+	Spec: cloudresourcesv1beta1.IpRangeSpec{
+		Cidr: "10.20.30.0/24",
+	},
+}
+
 var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 	ObjectMeta: v1.ObjectMeta{
 		Name:      gcpNfsVolume.Status.Id,

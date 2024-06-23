@@ -29,6 +29,7 @@ func (suite *loadKcpIpRangeSuite) TestWithMatchingIpRange() {
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
+	state.SkrIpRange = skrIpRange.DeepCopy()
 
 	//Add an IPRange to KCP.
 	ipRange := kcpIpRange.DeepCopy()
@@ -65,6 +66,12 @@ func (suite *loadKcpIpRangeSuite) TestWithNotMatchingIpRange() {
 		},
 	}
 	state := factory.newStateWith(&nfsVol)
+	state.SetSkrIpRange(&cloudresourcesv1beta1.IpRange{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "not-matching-ip-range",
+			Namespace: "test",
+		},
+	})
 
 	err, _ctx := loadKcpIpRange(ctx, state)
 
@@ -96,6 +103,7 @@ func (suite *loadKcpIpRangeSuite) TestWithMultipleMatchingIpRanges() {
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
+	state.SkrIpRange = skrIpRange.DeepCopy()
 
 	err, _ctx := loadKcpIpRange(ctx, state)
 

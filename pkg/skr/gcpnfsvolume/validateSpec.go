@@ -36,13 +36,12 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 	default:
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonTierInvalid,
 				Message: fmt.Sprintf("Tier is not valid"),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
 			Run(ctx, state)
 	}
@@ -53,13 +52,12 @@ func validateCapacityForTier(ctx context.Context, st composed.State, min, max, c
 	if capacity < min || capacity > max {
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonCapacityInvalid,
 				Message: fmt.Sprintf("CapacityGb for this tier must be between %d and %d", min, max),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
 			Run(ctx, state)
 	} else {
@@ -82,6 +80,9 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 
 	state := st.(*State)
 	ipRangeName := state.ObjAsGcpNfsVolume().Spec.IpRange
+	if ipRangeName.Name == "" {
+		return nil, nil
+	}
 	ipRange := &cloudresourcesv1beta1.IpRange{}
 	err := st.Cluster().K8sClient().Get(ctx,
 		ipRangeName.ObjKey(),
@@ -95,13 +96,12 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			Error(err, "Referred IpRange does not exist")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonIpRangeNotFound,
 				Message: fmt.Sprintf("IpRange for this GcpNfsVolume does not exist"),
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid ipRange").
 			Run(ctx, state)
 	}
@@ -112,7 +112,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			Error(err, "Referred IpRange is not Ready")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonIpRangeNotReady,
@@ -121,7 +121,6 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 				return composed.StopWithRequeueDelay(3 * time.Second), nil
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid ipRange").
 			Run(ctx, state)
 	}
@@ -148,14 +147,13 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 		if len(fileShareName) > 16 {
 			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
 					Message: fmt.Sprintf("FileShareName for this tier must be 16 characters or less"),
 				}).
 				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
-				RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 				Run(ctx, state)
 		} else {
 			// if validation succeeds, we don't need to update the status
@@ -165,14 +163,13 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 		if len(fileShareName) > 64 {
 			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
 					Message: fmt.Sprintf("FileShareName for this tier must be 64 characters or less"),
 				}).
 				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
-				RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 				Run(ctx, state)
 		} else {
 			// if validation succeeds, we don't need to update the status

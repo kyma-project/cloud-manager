@@ -37,7 +37,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		return composed.UpdateStatus(nfsInstance).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
