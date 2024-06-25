@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type SkrClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, error)
+type ClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, error)
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5

@@ -55,5 +55,16 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
+	if state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].LastTransitionTime.Time.After(state.ObjAsGcpVpcPeering().Status.Conditions[len(state.ObjAsGcpVpcPeering().Status.Conditions)-1].LastTransitionTime.Time) &&
+		state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].Message != state.ObjAsGcpVpcPeering().Status.Conditions[len(state.ObjAsGcpVpcPeering().Status.Conditions)-1].Message &&
+		kcpCondReady != nil &&
+		skrCondReady != nil {
+		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
+			SetCondition(state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1]).
+			ErrorLogMessage(state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].Message).
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
+	}
+
 	return nil, nil
 }
