@@ -3,9 +3,17 @@ package meta
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+)
+
+const (
+	RemotePeeringIsDisconnected                      = "RemotePeeringIsDisconnected"
+	RemotePeeringIsDisconnectedMessage               = "Cannot create or update peering because remote peering referencing parent virtual network is in Disconnected state. Update or re-create the remote peering to get it back to Initiated state. Peering gets Disconnected when remote vnet or remote peering is deleted and re-created"
+	AnotherPeeringAlreadyReferencesRemoteVnet        = "AnotherPeeringAlreadyReferencesRemoteVnet"
+	AnotherPeeringAlreadyReferencesRemoteVnetMessage = "Peering already references remote virtual network. Cannot add another peering referencing the same remote virtual network."
 )
 
 func TooManyRequests(err error) bool {
@@ -25,4 +33,19 @@ func ErrorToRequeueResponse(err error) error {
 func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, context.Context) {
 	result := ErrorToRequeueResponse(err)
 	return composed.LogErrorAndReturn(err, msg, result, ctx)
+}
+
+func GetErrorMessage(err error) string {
+	var respErr *azcore.ResponseError
+
+	if errors.As(err, &respErr) {
+		switch respErr.ErrorCode {
+		case RemotePeeringIsDisconnected:
+			return RemotePeeringIsDisconnectedMessage
+		case AnotherPeeringAlreadyReferencesRemoteVnet:
+			return AnotherPeeringAlreadyReferencesRemoteVnetMessage
+		}
+	}
+
+	return fmt.Sprintf("Failed creating VpcPeerings %s", err)
 }

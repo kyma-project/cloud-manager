@@ -2,9 +2,9 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"time"
@@ -33,12 +33,14 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		logger.Error(err, "Error creating VPC Peering")
 
+		message := azuremeta.GetErrorMessage(err)
+
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Failed creating VpcPeerings %s", err),
+				Message: message,
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).

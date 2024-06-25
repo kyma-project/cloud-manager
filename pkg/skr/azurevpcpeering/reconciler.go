@@ -46,6 +46,8 @@ func (r *reconciler) newAction() composed.Action {
 		updateId,
 		loadKcpAzureVpcPeering,
 		createKcpVpcPeering,
+		deleteKcpVpcPeering,
+		removeFinalizer,
 		updateStatus,
 		composed.StopAndForgetAction,
 	)

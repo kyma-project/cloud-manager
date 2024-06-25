@@ -16,7 +16,7 @@ func loadKcpAzureVpcPeering(ctx context.Context, st composed.State) (error, cont
 	if state.ObjAsAzureVpcPeering().Status.Id == "" {
 		return composed.LogErrorAndReturn(
 			errors.New("missing SKR AzureVpcPeering state.id"),
-			"Logical error in loadKcpNfsInstance",
+			"Logical error in loadKcpAzureVpcPeering",
 			composed.StopAndForget,
 			ctx,
 		)

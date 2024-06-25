@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -9,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
+	"time"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -93,6 +95,25 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to remote vpc peering id", func() {
 			Expect(pointer.StringDeref(remotePeering.ID, "xxx")).To(Equal(remotePeeringId))
+		})
+
+		// DELETE
+
+		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj).
+				Should(Succeed(), "failed deleting VpcPeering")
+		})
+
+		By("Then VpcPeering does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj).
+				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
+		})
+
+		By("And Then VirtualNetworkPeering is deleted", func() {
+			peering, _ = c.GetPeering(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
+			Expect(peering).To(Equal((*armnetwork.VirtualNetworkPeering)(nil)))
 		})
 
 	})
