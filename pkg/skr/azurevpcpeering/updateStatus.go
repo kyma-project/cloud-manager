@@ -24,7 +24,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondErr := meta.FindStatusCondition(state.ObjAsAzureVpcPeering().Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
 	skrCondReady := meta.FindStatusCondition(state.ObjAsAzureVpcPeering().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
-	if kcpCondErr != nil && skrCondErr == nil {
+	if kcpCondErr != nil && (skrCondErr == nil || skrCondErr.Message != kcpCondErr.Message) {
 		return composed.UpdateStatus(state.ObjAsAzureVpcPeering()).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
