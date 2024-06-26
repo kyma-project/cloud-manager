@@ -52,6 +52,7 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 
 	kymaNetwork := getFullNetworkUrl(*kymaProject, *kymaVpc)
 	remoteNetwork := getFullNetworkUrl(*remoteProject, *remoteVpc)
+	defer c.cnc.Close()
 
 	//NetworkPeering will only be created if the remote vpc has a tag with the kyma shoot name
 	remoteNetworkInfo, err := c.cnc.Get(ctx, &pb.GetNetworkRequest{Network: *remoteVpc, Project: *remoteProject})
@@ -120,7 +121,6 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 		return networkPeering, err
 	}
 
-	defer c.cnc.Close()
 	return networkPeering, nil
 }
 
