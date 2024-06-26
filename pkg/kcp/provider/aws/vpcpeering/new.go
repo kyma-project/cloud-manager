@@ -23,7 +23,8 @@ func New(stateFactory StateFactory) composed.Action {
 			composed.BuildSwitchAction(
 				"awsVpcPeering-switch",
 				// default action
-				composed.ComposeActions("awsVpcPeering-non-delete",
+				composed.ComposeActions(
+					"awsVpcPeering-non-delete",
 					addFinalizer,
 					loadVpc,
 					loadRemoteVpc,
@@ -32,7 +33,17 @@ func New(stateFactory StateFactory) composed.Action {
 					createVpcPeeringConnection,
 					acceptVpcPeeringConnection,
 					updateSuccessStatus,
-					composed.StopAndForgetAction),
+					composed.StopAndForgetAction,
+				),
+				composed.NewCase(
+					composed.MarkedForDeletionPredicate,
+					composed.ComposeActions(
+						"awsVpcPeering-delete",
+						removeReadyCondition,
+						deleteVpcPeering,
+						removeFinalizer,
+					),
+				),
 			), // switch
 			composed.StopAndForgetAction,
 		)(ctx, state)

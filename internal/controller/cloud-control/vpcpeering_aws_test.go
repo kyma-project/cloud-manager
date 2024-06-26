@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -10,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
+	"time"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -70,13 +72,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 		})
 
-		vpcpeeringName := "1839c399-c52e-4b43-b156-4b51027508cd"
-		vpcpeering := &cloudcontrolv1beta1.VpcPeering{}
+		obj := &cloudcontrolv1beta1.VpcPeering{}
 
 		By("When KCP VpcPeering is created", func() {
 			Eventually(CreateKcpVpcPeering).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
-					WithName(vpcpeeringName),
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
+					WithName("1839c399-c52e-4b43-b156-4b51027508cd"),
 					WithKcpVpcPeeringRemoteRef("skr-namespace", "skr-aws-ip-range"),
 					WithKcpVpcPeeringSpecScope(kymaName),
 					WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion),
@@ -86,7 +87,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
@@ -94,24 +95,48 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has status.vpcId equal to existing AWS VPC id", func() {
-			Expect(vpcpeering.Status.VpcId).To(Equal(vpcId))
+			Expect(obj.Status.VpcId).To(Equal(vpcId))
 		})
 
 		list, _ := infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
 
 		var connection ec2Types.VpcPeeringConnection
 		for _, p := range list {
-			if vpcpeering.Status.Id == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
+			if obj.Status.Id == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
 				connection = p
 			}
 		}
+
 		By("And Then found VpcPeeringConnection has AccepterVpcInfo.VpcId equals remote vpc id", func() {
 			Expect(*connection.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
 		})
 
 		By("And Then KCP VpcPeering has status.Id equal to existing AWS Connection id", func() {
-			Expect(vpcpeering.Status.Id).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))
+			Expect(obj.Status.Id).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))
+		})
+
+		// DELETE
+
+		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj).
+				Should(Succeed(), "failed deleting VpcPeering")
+		})
+
+		By("Then VpcPeering does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj).
+				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
+		})
+
+		By("And Then VpcPeeringConnection is deleted", func() {
+			list, _ = infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
+
+			found := pie.Any(list, func(x ec2Types.VpcPeeringConnection) bool {
+				return pointer.StringDeref(x.VpcPeeringConnectionId, "xxx") == obj.Status.Id
+			})
+
+			Expect(found).To(Equal(false))
 		})
 	})
-
 })
