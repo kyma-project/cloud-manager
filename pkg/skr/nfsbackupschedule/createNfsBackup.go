@@ -30,7 +30,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	//If the creation for the nextRunTime is already done, return
 	if schedule.Status.LastCreateRun != nil && !schedule.Status.LastCreateRun.IsZero() &&
-		state.nextRunTime.Equal(schedule.Status.LastCreateRun.Time) {
+		state.nextRunTime.Unix() == schedule.Status.LastCreateRun.Time.Unix() {
 		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}

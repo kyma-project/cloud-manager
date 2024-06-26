@@ -7,6 +7,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,7 +32,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	//If the deletion for the nextRunTime is already done, return
 	if schedule.Status.LastDeleteRun != nil && !schedule.Status.LastDeleteRun.IsZero() &&
-		state.nextRunTime.Equal(schedule.Status.LastDeleteRun.Time) {
+		state.nextRunTime.Unix() == schedule.Status.LastDeleteRun.Time.Unix() {
 		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
@@ -52,21 +53,24 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		backup, err := getBackupObject(ctx, state, ref)
 		if err != nil {
 			logger.WithValues("Backup", ref.Name).Info("Error getting backup object")
+			if !errors.IsNotFound(err) {
+				//Adding it back to the list. Can try it next iteration
+				temp = append(temp, ref)
+			}
 			continue
 		}
 
 		//Check if the backup object should be deleted
-		maxDays := time.Duration(schedule.Spec.MaxRetentionDays) * 24 * time.Hour
-		if now.Sub(backup.GetCreationTimestamp().Time) > maxDays {
+		toRetain := time.Duration(schedule.Spec.MaxRetentionDays) * 24 * time.Hour
+		elapsed := time.Since(backup.GetCreationTimestamp().Time)
+		if elapsed > toRetain {
 			logger.WithValues("Backup", ref.Name).Info("Deleting backup object")
 			err = state.Cluster().K8sClient().Delete(ctx, backup)
-			if err != nil {
-				logger.WithValues("Backup", ref.Name).Info("Error deleting backup object")
+			if err == nil {
 				continue
 			}
-		} else {
-			temp = append(temp, ref)
 		}
+		temp = append(temp, ref)
 	}
 
 	//Update the status of the schedule with the list of available backups
@@ -90,6 +94,8 @@ func getBackupObject(ctx context.Context, state *State, ref corev1.ObjectReferen
 	switch state.Scope.Spec.Provider {
 	case cloudcontrolv1beta1.ProviderGCP:
 		obj = &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+	case cloudcontrolv1beta1.ProviderAws:
+		obj = &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 	default:
 		return nil, fmt.Errorf("provider %s not supported", state.Scope.Spec.Provider)
 	}
