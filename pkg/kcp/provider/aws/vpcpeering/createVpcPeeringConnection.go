@@ -14,7 +14,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.vpcPeeringConnection != nil {
+	if state.vpcPeering != nil {
 		return nil, nil
 	}
 
@@ -47,7 +47,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("AWS VPC Peering Connection created")
 
-	state.vpcPeeringConnection = con
+	state.vpcPeering = con
 
 	state.ObjAsVpcPeering().Status.Id = pointer.StringDeref(con.VpcPeeringConnectionId, "")
 

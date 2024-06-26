@@ -27,6 +27,7 @@ func New(stateFactory StateFactory) composed.Action {
 					addFinalizer,
 					loadVpc,
 					loadRemoteVpc,
+					waitNetworkTag,
 					loadVpcPeeringConnection,
 					createVpcPeeringConnection,
 					acceptVpcPeeringConnection,

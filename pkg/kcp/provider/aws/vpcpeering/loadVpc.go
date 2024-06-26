@@ -15,6 +15,11 @@ import (
 func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsVpcPeering()
+
+	if len(obj.Status.Id) != 0 {
+		return nil, nil
+	}
 
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 
