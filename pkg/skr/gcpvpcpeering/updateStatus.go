@@ -26,7 +26,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpCondErr != nil && skrCondErr == nil {
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
@@ -43,7 +43,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		logger.Info("Updating SKR GcpVpcPeering status with Ready condition")
 
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
@@ -55,13 +55,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	if state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].LastTransitionTime.Time.After(state.ObjAsGcpVpcPeering().Status.Conditions[len(state.ObjAsGcpVpcPeering().Status.Conditions)-1].LastTransitionTime.Time) &&
-		state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].Message != state.ObjAsGcpVpcPeering().Status.Conditions[len(state.ObjAsGcpVpcPeering().Status.Conditions)-1].Message &&
+	if state.KcpVpcPeering.Status.Conditions[0].LastTransitionTime.Time.After(state.ObjAsGcpVpcPeering().Status.Conditions[0].LastTransitionTime.Time) &&
+		state.KcpVpcPeering.Status.Conditions[0].Message != state.ObjAsGcpVpcPeering().Status.Conditions[0].Message &&
 		kcpCondReady != nil &&
 		skrCondReady != nil {
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
-			SetCondition(state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1]).
-			ErrorLogMessage(state.KcpVpcPeering.Status.Conditions[len(state.KcpVpcPeering.Status.Conditions)-1].Message).
+			SetExclusiveConditions(state.KcpVpcPeering.Status.Conditions[0]).
+			ErrorLogMessage(state.KcpVpcPeering.Status.Conditions[0].Message).
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}

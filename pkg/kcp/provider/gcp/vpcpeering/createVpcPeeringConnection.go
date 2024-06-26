@@ -35,7 +35,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 		if err.Error() == "remote network "+*state.remoteVpc+" is not tagged with the kyma shoot name "+vpc {
 			return composed.UpdateStatus(state.ObjAsVpcPeering()).
-				SetCondition(metav1.Condition{
+				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  "True",
 					Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork, //I believe we should change it for something like ReasonRemoteNetworkNotTagged
@@ -48,7 +48,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		}
 
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,

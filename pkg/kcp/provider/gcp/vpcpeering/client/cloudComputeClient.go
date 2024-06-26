@@ -81,11 +81,7 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 		},
 	}
 
-	peeringOperationFromKyma, err := c.cnc.AddPeering(ctx, peeringRequestFromKyma)
-	if err != nil {
-		return nil, err
-	}
-	err = peeringOperationFromKyma.Wait(ctx)
+	_, err = c.cnc.AddPeering(ctx, peeringRequestFromKyma)
 	if err != nil {
 		return nil, err
 	}
@@ -119,14 +115,11 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 		},
 	}
 
-	peeringOperationFromRemote, err := c.cnc.AddPeering(ctx, peeringRequestFromRemote)
+	_, err = c.cnc.AddPeering(ctx, peeringRequestFromRemote)
 	if err != nil {
 		return networkPeering, err
 	}
-	err = peeringOperationFromRemote.Wait(ctx)
-	if err != nil {
-		return networkPeering, err
-	}
+
 	defer c.cnc.Close()
 	return networkPeering, nil
 }
