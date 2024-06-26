@@ -26,11 +26,12 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	ReasonTimeParseError     = "TimeParseError"
-	ReasonScheduleError      = "ScheduleError"
-	ReasonNfsVolumeNotFound  = "NfsVolumeNotFound"
-	ReasonNfsVolumeNotReady  = "NfsVolumeNotReady"
-	ReasonBackupCreateFailed = "BackupCreateFailed"
+	ReasonInvalidCronExpression = "InvalidCronExpression"
+	ReasonTimeParseError        = "TimeParseError"
+	ReasonScheduleError         = "ScheduleError"
+	ReasonNfsVolumeNotFound     = "NfsVolumeNotFound"
+	ReasonNfsVolumeNotReady     = "NfsVolumeNotReady"
+	ReasonBackupCreateFailed    = "BackupCreateFailed"
 )
 
 // NfsBackupScheduleSpec defines the desired state of NfsBackupSchedule

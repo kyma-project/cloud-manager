@@ -44,6 +44,7 @@ func (r *Reconciler) newAction() composed.Action {
 		"NfsBackupScheduleMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.NfsBackupSchedule{}),
 		composed.LoadObj,
+		addFinalizer,
 		checkSuspension,
 		validateSchedule,
 		calculateOnetimeSchedule,
@@ -53,6 +54,7 @@ func (r *Reconciler) newAction() composed.Action {
 		loadNfsVolume,
 		createNfsBackup,
 		deleteNfsBackup,
+		removeFinalizer,
 		composed.StopAndForgetAction,
 	)
 }

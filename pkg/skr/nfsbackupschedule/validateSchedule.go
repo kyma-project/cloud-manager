@@ -3,7 +3,6 @@ package nfsbackupschedule
 import (
 	"context"
 	"github.com/gorhill/cronexpr"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,12 +27,12 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		logger.Info("Invalid cron expression")
 
-		schedule.Status.State = cloudresourcesv1beta1.StateError
+		schedule.Status.State = cloudresourcesv1beta1.JobStateError
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonScopeNotFound,
+				Reason:  cloudresourcesv1beta1.ReasonInvalidCronExpression,
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopAndForget).

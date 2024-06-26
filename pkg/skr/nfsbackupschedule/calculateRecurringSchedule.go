@@ -23,10 +23,15 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
+	//If one-time schedule, continue
+	if schedule.Spec.Schedule == "" {
+		return nil, nil
+	}
+
 	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Evaluating next run time")
 
 	//If cron expression has not changed, and the nextRunTime is already set, continue
-	if schedule.Spec.Schedule == schedule.Status.Schedule && len(schedule.Status.NextRunTimes) == MaxSchedules {
+	if schedule.Spec.Schedule == schedule.Status.Schedule && len(schedule.Status.NextRunTimes) > 0 {
 		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}

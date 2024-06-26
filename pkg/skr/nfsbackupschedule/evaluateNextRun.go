@@ -20,6 +20,19 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
+	//If it is a one-time schedule, and the job already ran, stop reconciliation
+	if schedule.Spec.Schedule == "" &&
+		schedule.Status.LastCreateRun != nil &&
+		!schedule.Status.LastCreateRun.IsZero() {
+
+		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("One-time schedule already ran. Stopping reconciliation.")
+		schedule.Status.State = cloudresourcesv1beta1.JobStateDone
+		schedule.Status.NextRunTimes = nil
+		return composed.UpdateStatus(schedule).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
 	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Evaluating next run time")
 
 	if len(schedule.Status.NextRunTimes) == 0 {
@@ -64,24 +77,11 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	//If it is a one-time schedule, and the job already ran, stop reconciliation
-	if schedule.Spec.Schedule == "" &&
-		schedule.Status.LastCreateRun != nil &&
-		!schedule.Status.LastCreateRun.IsZero() {
-
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("One-time schedule already ran. Stopping reconciliation.")
-		schedule.Status.State = cloudresourcesv1beta1.JobStateDone
-		schedule.Status.NextRunTimes = nil
-		return composed.UpdateStatus(schedule).
-			SuccessError(composed.StopAndForget).
-			Run(ctx, state)
-	}
-
 	//If it still not time to run, reconcile with delay
 	if nextRunTime.After(now) {
-		timeLeft := nextRunTime.Sub(now)
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Next Run in : %d seconds", int(timeLeft.Seconds())))
-		return composed.StopWithRequeueDelay(timeLeft), nil
+		timeLeft := nextRunTime.Unix() - now.Unix()
+		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
+		return composed.StopWithRequeueDelay(time.Duration(timeLeft) * time.Second), nil
 	}
 
 	//If create and delete tasks already completed for currentRun, reset the next run times

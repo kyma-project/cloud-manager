@@ -17,7 +17,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	schedule := state.ObjAsNfsBackupSchedule()
 
 	logger = logger.WithValues(
-		"scope", state.KymaRef.Name,
+		"gcpScope", state.KymaRef.Name,
 		"scopeNamespace", state.KymaRef.Namespace,
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
