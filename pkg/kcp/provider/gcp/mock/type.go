@@ -32,7 +32,7 @@ type Providers interface {
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[backupclient.FileBackupClient]
-	VpcPeeringSkrProvider() cloudclient.SkrClientProvider[gcpvpcpeeringclient.Client]
+	VpcPeeringSkrProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.Client]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors

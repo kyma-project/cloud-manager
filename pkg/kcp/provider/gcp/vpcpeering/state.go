@@ -14,7 +14,7 @@ type State struct {
 	vpcpeeringtypes.State
 
 	client   vpcpeeringclient.Client
-	provider gcpclient.SkrClientProvider[vpcpeeringclient.Client]
+	provider gcpclient.ClientProvider[vpcpeeringclient.Client]
 
 	//gcp config
 	gcpConfig *gcpclient.GcpConfig
@@ -31,12 +31,12 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client]
+	skrProvider gcpclient.ClientProvider[vpcpeeringclient.Client]
 	env         abstractions.Environment
 	gcpConfig   *gcpclient.GcpConfig
 }
 
-func NewStateFactory(skrProvider gcpclient.SkrClientProvider[vpcpeeringclient.Client], env abstractions.Environment) StateFactory {
+func NewStateFactory(skrProvider gcpclient.ClientProvider[vpcpeeringclient.Client], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 		env:         env,
@@ -59,7 +59,7 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
 	client vpcpeeringclient.Client,
-	provider gcpclient.SkrClientProvider[vpcpeeringclient.Client],
+	provider gcpclient.ClientProvider[vpcpeeringclient.Client],
 	gcpConfig *gcpclient.GcpConfig) *State {
 	return &State{
 		State:              vpcPeeringState,

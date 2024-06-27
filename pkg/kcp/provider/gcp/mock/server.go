@@ -131,7 +131,7 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[backupclient.F
 	}
 }
 
-func (s *server) VpcPeeringSkrProvider() cloudclient.SkrClientProvider[gcpvpccpeering.Client] {
+func (s *server) VpcPeeringSkrProvider() cloudclient.ClientProvider[gcpvpccpeering.Client] {
 	return func(ctx context.Context, saJsonKeyPath string) (gcpvpccpeering.Client, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP VPCPeeringProvider mock...")
