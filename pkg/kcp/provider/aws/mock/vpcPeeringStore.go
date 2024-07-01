@@ -54,15 +54,32 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]
 	}), nil
 }
 
-func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectonId *string) (*ec2types.VpcPeeringConnection, error) {
+func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	for _, x := range s.items {
-		if pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectonId) {
+		if pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectionId) {
 			return &x.peering, nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("An error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectonId))
+	return nil, errors.New(fmt.Sprintf("An error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectionId))
+}
+
+func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	deleted := false
+	s.items = pie.Filter(s.items, func(x *vpcPeeringEntry) bool {
+		deleted = pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectionId)
+		return !deleted
+	})
+
+	if !deleted {
+		return errors.New("peering connection not found")
+	}
+
+	return nil
 }

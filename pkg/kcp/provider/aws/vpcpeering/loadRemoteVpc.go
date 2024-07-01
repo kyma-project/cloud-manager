@@ -94,7 +94,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	state.remoteVpc = vpc
 
 	logger = logger.WithValues(
-		"remoteVpcId", pointer.StringDeref(state.vpc.VpcId, ""),
+		"remoteVpcId", pointer.StringDeref(state.remoteVpc.VpcId, ""),
 		"remoteVpcName", remoteVpcName,
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
