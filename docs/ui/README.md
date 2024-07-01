@@ -9,9 +9,9 @@ Kyma manages its modules' UI through the use of a ConfigMap. The ConfigMap has f
 * `form` - used to define a GUI form when creating a new resource or editing an existing one. 
 * `translations` - used to define elements in different languages (English, German, etc.)
 
-Examples of each part are below
+Examples and important notes of each part are below
 
-## General
+### General
 ```yaml
 resource:
   kind: GcpNfsVolume
@@ -25,8 +25,11 @@ icon: shelf
 description: >-
   GcpNfsVolume description here
 ```
+It is imperative that `resource.kind` `resource.group` and `resource.version` matches its `CustomResourceDefinition`. If
+there are no matches, Busola will not render the UI and path rendering the resource inaccessible in Busola.
 
-## List
+
+### List
 ```yaml
 - source: spec.fileShareName
   name: spec.fileShareName
@@ -41,11 +44,19 @@ description: >-
   name: status.state
   sort: true
 ```
+
+The `source` field is where busola will pull information from the monitored `CustomResource`.
+
+The `name` field is the human-readable name for the field. This field will look up the value in `Translation` and replace it with its found value.
+If no value is found in `Translation`, it will display as is.
+
+For example, if we have `name: spec.location`, it will go to [translations](#translations), lookup `spec.location` and replace it with `Location`.
+
 [Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/20-list-columns.md)
 
 [Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
 
-## Detail
+### Detail
 ```yaml
 body:
     - name: configuration
@@ -72,10 +83,16 @@ body:
           source: state
           name: status.state
 ```
+
+`widget` refers to the component interfaces built into Busola. See link below for official documentation on widgets.
+
+`children` are an array of child widgets. Note, the `source` in each child is relative to its parent.
+
 [Official Detail Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/30-details-summary.md)
 
 [Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
-## Form
+
+### Form
 ```yaml
 - path: spec.capacityGb
   simple: true
@@ -94,9 +111,13 @@ body:
   name: spec.tier
   required: true
 ```
+
+`simple` is a boolean used to display the field in the simple fom. By default, it is `false`
+
 [Official Forms Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/40-form-fields.md)
 
-## Translations
+<a id="translations"></a>
+### Translations
 ```yaml
 en:
   spec.tier: Tier
@@ -108,6 +129,10 @@ en:
   status.state: State
   status: Status
 ```
+
+`translations` is optional, but it supports languages formatted for [i18next](https://www.i18next.com/). Translations prettify the `name` field of the aformentioned sections.
+They are key-value pairs.
+
 
 [Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/translations-section.md)
 
