@@ -41,6 +41,7 @@ import (
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -230,6 +231,14 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
+		mgr,
+		gcpmemorystoreclient.NewMemorystoreClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

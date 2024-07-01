@@ -67,6 +67,32 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - redisinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - redisinstances/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - redisinstances/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
   - scopes
   verbs:
   - create

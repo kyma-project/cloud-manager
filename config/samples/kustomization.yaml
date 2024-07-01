@@ -13,4 +13,5 @@ resources:
 - cloud-resources_v1beta1_gcpnfsvolumerestore.yaml
 - cloud-resources_v1beta1_azurevpcpeering.yaml
 - cloud-resources_v1beta1_nfsbackupschedule.yaml
+- cloud-control_v1beta1_redisinstance.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
