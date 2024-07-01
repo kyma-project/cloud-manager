@@ -3,11 +3,10 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"time"
 )
 
@@ -22,17 +21,13 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 
 	var kv []any
 
-	var shootNameTag *ec2Types.Tag
 	for _, t := range state.remoteVpc.Tags {
 		kv = append(kv, *t.Key, *t.Value)
-		if pointer.StringDeref(t.Key, "") == "shoot-name" {
-			shootNameTag = &t
-		}
 	}
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	if shootNameTag == nil || pointer.StringDeref(shootNameTag.Value, "") != state.Scope().Spec.ShootName {
+	if util.GetEc2TagValue(state.remoteVpc.Tags, "shoot-name") != state.Scope().Spec.ShootName {
 
 		logger.Info("Loaded remote VPC Network have no matching tags", kv...)
 
