@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Context) {
+func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
