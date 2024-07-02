@@ -197,6 +197,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awsvpcpeerings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsvpcpeerings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsvpcpeerings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - azurevpcpeerings
   verbs:
   - create
