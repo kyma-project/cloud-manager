@@ -137,5 +137,49 @@ They are key-value pairs.
 [Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/translations-section.md)
 
 
+# Generating the ConfigMap
+
+The generation of ConfigMap is handled through `kustomize`. Kustomize  combines general, list, detail, form, and translations
+into a single ConfigMap.
+
+Because each CustomResource will have its own UI that must be generated, there is a single macro in the `Makefile` to generate all the UI.
+
+`make build_ui`
+
+For every new UI component, a new `kustomize` command should be added to the Makefile `build_ui` macro.
+
+[Official kustomize documentation](https://kustomize.io/)
+
+# Deploying to your desired provider (AWS, GCP, Azure)
+
+Currently, the pipeline looks at the presence of ConfigMaps files in specific directories to deploy. They are the following:
+
+AWS - `config/dist/skr/crd/bases/providers/aws`
+
+Azure - `config/dist/skr/crd/bases/providers/azure`
+
+GCP - `config/dist/skr/crd/bases/providers/gcp`
+
+Instead of manually copying over the ConfigMap into the specified directory, use the bash script `sync.sh`  
+
+Like the `Makefile`, any new UI component should be added to `sync.sh`.
+
+
+# Testing your UI changes without using the pipeline
+
+Because the UI is dictated by ConfigMaps, you can deploy directly to a cluster with kyma installed. Just ensure your ConfigMap goes into the `kyma-system`
+namespace. 
+
+You can then `kubectl apply` your ConfigMap
+
+If a matching CustomResource is found, Busola will render the UI and path.
+
+
+You can also spin up a local cluster with kyma installed via k3d.
+
+Official documentation and instructions can be found [here](https://kyma-project.io/#/02-get-started/01-quick-install).
+
+
+
 # Helpful Links
 [Translations](https://github.com/kyma-project/busola/blob/main/docs/extensibility/translations-section.md)
