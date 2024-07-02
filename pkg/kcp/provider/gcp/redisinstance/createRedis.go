@@ -16,7 +16,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.redisInstance != nil {
+	if state.gcpRedisInstance != nil {
 		return nil, nil
 	}
 
@@ -25,9 +25,11 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
+	vpcNetworkFullName := fmt.Sprintf("projects/%s/global/networks/%s", gcpScope.Project, gcpScope.VpcNetwork)
+
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
-		VPCNetworkName: gcpScope.VpcNetwork,
-		IPRangeName:    state.IpRange().Spec.RemoteRef.Name,
+		VPCNetworkFullName: vpcNetworkFullName,
+		IPRangeName:        state.IpRange().Spec.RemoteRef.Name,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)

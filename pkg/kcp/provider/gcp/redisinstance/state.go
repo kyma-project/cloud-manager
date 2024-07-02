@@ -15,8 +15,9 @@ import (
 type State struct {
 	types.State
 
-	redisInstance     *redispb.Instance
-	memorystoreClient client.MemorystoreClient
+	gcpRedisInstance     *redispb.Instance
+	gcpRedisInstanceAuth *redispb.InstanceAuthString
+	memorystoreClient    client.MemorystoreClient
 
 	//gcp config
 	gcpConfig *gcpClient.GcpConfig

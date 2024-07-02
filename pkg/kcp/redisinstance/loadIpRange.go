@@ -20,7 +20,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	redisInstance := state.ObjAsRedisInstance()
-	ipRangeName := state.IpRange().Name
+	ipRangeName := redisInstance.Spec.IpRange.Name
 
 	ipRange := &cloudresourcesv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{

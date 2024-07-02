@@ -89,10 +89,6 @@ type RedisInstanceStatus struct {
 	// +optional
 	AuthString string `json:"authString,omitempty"`
 
-	// Operation Identifier to track the Hyperscaler Operation
-	// +optional
-	OperationId string `json:"operationId,omitempty"`
-
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional
 	// +listType=map

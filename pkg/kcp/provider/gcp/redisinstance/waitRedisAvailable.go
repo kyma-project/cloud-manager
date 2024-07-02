@@ -14,7 +14,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.redisInstance == nil {
+	if state.gcpRedisInstance == nil {
 		errorMsg := "Error: redis instance is not loaded"
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).
@@ -29,7 +29,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 			Run(ctx, st)
 	}
 
-	if state.redisInstance.State == redispb.Instance_READY {
+	if state.gcpRedisInstance.State == redispb.Instance_READY {
 		return nil, nil
 	}
 

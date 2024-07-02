@@ -186,9 +186,6 @@ spec:
                 x-kubernetes-list-type: map
               id:
                 type: string
-              operationId:
-                description: Operation Identifier to track the Hyperscaler Operation
-                type: string
               primaryEndpoint:
                 type: string
               readEndpoint:

@@ -13,59 +13,53 @@ import (
 )
 
 type CreateRedisInstanceOptions struct {
-	VPCNetworkName string
-	IPRangeName    string
+	VPCNetworkFullName string
+	IPRangeName        string
 }
 
 type MemorystoreClient interface {
 	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
-	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, error)
+	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
 func NewMemorystoreClientProvider() client.ClientProvider[MemorystoreClient] {
-	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (MemorystoreClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
-			if err != nil {
-				return nil, err
-			}
-
-			memorystoreClient, err := redis.NewCloudRedisClient(ctx, option.WithHTTPClient(httpClient))
-
-			if err != nil {
-				return nil, fmt.Errorf("error obtaining GCP Memorystore Client: [%w]", err)
-			}
-			return NewMemorystoreClient(memorystoreClient), nil
-		},
-	)
+	return func(ctx context.Context, saJsonKeyPath string) (MemorystoreClient, error) {
+		return NewMemorystoreClient(saJsonKeyPath), nil
+	}
 }
 
-func NewMemorystoreClient(cloudRedisClient *redis.CloudRedisClient) MemorystoreClient {
-	return &memorystoreClient{cloudRedisClient: cloudRedisClient}
+func NewMemorystoreClient(saJsonKeyPath string) MemorystoreClient {
+	return &memorystoreClient{saJsonKeyPath: saJsonKeyPath}
 }
 
 type memorystoreClient struct {
-	cloudRedisClient *redis.CloudRedisClient
+	saJsonKeyPath string
 }
 
 func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if err != nil {
+		return nil, err
+	}
+	defer redisClient.Close()
+
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
 	req := &redispb.CreateInstanceRequest{
 		Parent:     parent,
 		InstanceId: instanceId,
 		Instance: &redispb.Instance{
 			Name:              fmt.Sprintf("%s/%s", parent, instanceId),
-			LocationId:        locationId,
 			MemorySizeGb:      4,
 			Tier:              redispb.Instance_BASIC,
 			ConnectMode:       redispb.Instance_PRIVATE_SERVICE_ACCESS, // always
-			AuthorizedNetwork: options.VPCNetworkName,
+			AuthorizedNetwork: options.VPCNetworkFullName,
 			ReservedIpRange:   options.IPRangeName,
 		},
 	}
 
-	operation, err := memorystoreClient.cloudRedisClient.CreateInstance(ctx, req)
+	operation, err := redisClient.CreateInstance(ctx, req)
+
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "CreateRedisInstance", "projectId", projectId, "locationId", locationId, "instanceId", instanceId)
@@ -75,33 +69,56 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 	return operation, nil
 }
 
-func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, error) {
+func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
+	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer redisClient.Close()
+
 	name := fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locationId, instanceId)
 	req := &redispb.GetInstanceRequest{
 		Name: name,
 	}
 
-	response, err := memorystoreClient.cloudRedisClient.GetInstance(ctx, req)
+	instanceResponse, err := redisClient.GetInstance(ctx, req)
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
-		logger.Error(err, "Failed to get Redis instance: %s", err)
-		return nil, err
+		logger.Error(err, "Failed to get Redis instance")
+		return nil, nil, err
 	}
 
-	return response, nil
+	if !instanceResponse.AuthEnabled {
+		return instanceResponse, nil, err
+	}
+
+	authResponse, err := redisClient.GetInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
+	if err != nil {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Error(err, "Failed to get Redis instance Auth")
+		return nil, nil, err
+	}
+
+	return instanceResponse, authResponse, nil
 }
 
 func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) error {
+	redisClient, redisClientErr := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if redisClientErr != nil {
+		return redisClientErr
+	}
+	defer redisClient.Close()
+
 	name := fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locationId, instanceId)
 	req := &redispb.DeleteInstanceRequest{
 		Name: name,
 	}
 
-	_, err := memorystoreClient.cloudRedisClient.DeleteInstance(ctx, req)
+	_, err := redisClient.DeleteInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
-		logger.Error(err, "Failed to delete Redis instance: %s", err)
+		logger.Error(err, "Failed to delete Redis instance")
 
 		return err
 	}

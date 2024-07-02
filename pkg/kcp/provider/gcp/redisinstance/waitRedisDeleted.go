@@ -14,11 +14,11 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.redisInstance == nil {
+	if state.gcpRedisInstance == nil {
 		return nil, nil
 	}
 
-	if state.redisInstance.State != redispb.Instance_DELETING {
+	if state.gcpRedisInstance.State != redispb.Instance_DELETING {
 		errorMsg := "Error: unexpected gcp redis state"
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).

@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -28,6 +29,7 @@ func loadPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 	list, err := state.serviceNetworkingClient.ListServiceConnections(ctx, project, vpc)
+	logger.Error(err, "Error %v", err)
 	if err != nil {
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
