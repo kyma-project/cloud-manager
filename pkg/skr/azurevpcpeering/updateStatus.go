@@ -33,7 +33,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Message: kcpCondErr.Message,
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-			ErrorLogMessage("Error updating KCP AzureVpcPeering status with not ready condition due to KCP error").
+			ErrorLogMessage("Error updating SKR AzureVpcPeering status with not ready condition due to KCP error").
 			SuccessLogMsg("Updated and forgot SKR AzureVpcPeering status with Error condition").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
@@ -50,7 +50,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Message: kcpCondReady.Message,
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
-			ErrorLogMessage("Error updating KCP AzureVpcPeering status with ready condition").
+			ErrorLogMessage("Error updating SKR AzureVpcPeering status with ready condition").
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
