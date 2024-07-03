@@ -4,11 +4,19 @@ import (
 	"context"
 	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func updateSuccessStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+
+	if meta.IsStatusConditionTrue(
+		*state.ObjAsVpcPeering().Conditions(),
+		cloudcontrol1beta1.ConditionTypeReady,
+	) {
+		return nil, nil
+	}
 
 	return composed.UpdateStatus(state.ObjAsVpcPeering()).
 		SetExclusiveConditions(metav1.Condition{

@@ -27,7 +27,17 @@ func New(stateFactory StateFactory) composed.Action {
 					addFinalizer,
 					createVpcPeeringConnection,
 					updateSuccessStatus,
-					composed.StopAndForgetAction),
+					composed.StopAndForgetAction,
+				),
+				composed.NewCase(
+					composed.MarkedForDeletionPredicate,
+					composed.ComposeActions(
+						"gcpVpcPeering-delete",
+						removeReadyCondition,
+						deleteVpcPeering,
+						removeFinalizer,
+					),
+				),
 			), // switch
 			composed.StopAndForgetAction,
 		)(ctx, state)

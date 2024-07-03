@@ -6,6 +6,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"time"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -52,6 +53,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
+		})
+
+		// DELETE
+		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
+				Should(Succeed(), "deleting VpcPeering failed")
+		})
+
+		By("Then VpcPeering does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
+				Should(Succeed(), "expected VpcPeering does not to exist (being deleted), but it still exists")
 		})
 
 	})

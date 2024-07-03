@@ -42,6 +42,8 @@ func (r *reconciler) newAction() composed.Action {
 		addFinalizer,
 		loadKcpGcpVpcPeering,
 		createKcpVpcPeering,
+		deleteKcpVpcPeering,
+		removeFinalizer,
 		updateStatus,
 		composed.StopAndForgetAction,
 	)

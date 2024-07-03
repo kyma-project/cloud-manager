@@ -30,32 +30,42 @@ required GCP permissions
   compute.networks.ListEffectiveTags => https://cloud.google.com/resource-manager/reference/rest/v3/tagKeys/get
 */
 
-func NewClientProvider() cloudclient.ClientProvider[Client] {
-	return func(ctx context.Context, saJsonKeyPath string) (Client, error) {
-		c, err := compute.NewNetworksRESTClient(ctx, option.WithCredentialsFile(saJsonKeyPath))
-		if err != nil {
-			return nil, err
-		}
-		return &networkClient{cnc: c}, nil
+func createGcpNetworksClient(ctx context.Context) (*compute.NetworksClient, error) {
+	c, err := compute.NewNetworksRESTClient(ctx, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get("GCP_SA_JSON_KEY_PATH")))
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func NewClientProvider() cloudclient.ClientProvider[VpcPeeringClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (VpcPeeringClient, error) {
+		return &networkClient{}, nil
 	}
 }
 
 type networkClient struct {
-	cnc *compute.NetworksClient
 }
 
-type Client interface {
-	CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error)
+type VpcPeeringClient interface {
+	CreateVpcPeering(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error)
+	DeleteVpcPeering(ctx context.Context, name *string, kymaProject *string, kymaVpc *string) (*compute.Operation, error)
 }
 
-func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error) {
+func (c *networkClient) CreateVpcPeering(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error) {
 
 	kymaNetwork := getFullNetworkUrl(*kymaProject, *kymaVpc)
 	remoteNetwork := getFullNetworkUrl(*remoteProject, *remoteVpc)
-	defer c.cnc.Close()
+
+	gcpNetworkClient, err := createGcpNetworksClient(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+	defer gcpNetworkClient.Close()
 
 	//NetworkPeering will only be created if the remote vpc has a tag with the kyma shoot name
-	remoteNetworkInfo, err := c.cnc.Get(ctx, &pb.GetNetworkRequest{Network: *remoteVpc, Project: *remoteProject})
+	remoteNetworkInfo, err := gcpNetworkClient.Get(ctx, &pb.GetNetworkRequest{Network: *remoteVpc, Project: *remoteProject})
 	if err != nil {
 		return nil, err
 	}
@@ -82,16 +92,13 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 		},
 	}
 
-	_, err = c.cnc.AddPeering(ctx, peeringRequestFromKyma)
+	_, err = gcpNetworkClient.AddPeering(ctx, peeringRequestFromKyma)
 	if err != nil {
 		return nil, err
 	}
 
 	var networkPeering *pb.NetworkPeering
-	net, err := c.cnc.Get(ctx, &pb.GetNetworkRequest{Network: *kymaVpc, Project: *kymaProject})
-	if err != nil {
-		return nil, err
-	}
+	net, err := gcpNetworkClient.Get(ctx, &pb.GetNetworkRequest{Network: *kymaVpc, Project: *kymaProject})
 	nps := net.GetPeerings()
 	for _, np := range nps {
 		if *np.Network == remoteNetwork {
@@ -119,7 +126,7 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 		},
 	}
 
-	_, err = c.cnc.AddPeering(ctx, peeringRequestFromRemote)
+	_, err = gcpNetworkClient.AddPeering(ctx, peeringRequestFromRemote)
 	if err != nil {
 		return networkPeering, err
 	}
@@ -127,12 +134,29 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 	return networkPeering, nil
 }
 
+func (c *networkClient) DeleteVpcPeering(ctx context.Context, name *string, kymaProject *string, kymaVpc *string) (*compute.Operation, error) {
+	gcpNetworkClient, err := createGcpNetworksClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer gcpNetworkClient.Close()
+	deleteVpcPeeringOperation, err := gcpNetworkClient.RemovePeering(ctx, &pb.RemovePeeringNetworkRequest{
+		Network:                              *kymaVpc,
+		Project:                              *kymaProject,
+		NetworksRemovePeeringRequestResource: &pb.NetworksRemovePeeringRequest{Name: name},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return deleteVpcPeeringOperation, nil
+}
+
 func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
 
 func (c *networkClient) CheckRemoteNetworkTags(context context.Context, remoteNetwork *pb.Network, desiredTag string) (bool, error) {
-	//Unfortunately get networks doesn't have the tags, so we need to use the resource manager tag bindings client
+	//Unfortunately get networks doesn't return the tags, so we need to use the resource manager tag bindings client
 	tbc, err := resourcemanager.NewTagBindingsClient(context, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get("GCP_SA_JSON_KEY_PATH")))
 	if err != nil {
 		return false, err

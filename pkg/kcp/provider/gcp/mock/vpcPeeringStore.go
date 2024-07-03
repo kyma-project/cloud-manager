@@ -1,6 +1,7 @@
 package mock
 
 import (
+	compute "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"github.com/elliotchance/pie/v2"
@@ -16,7 +17,7 @@ type vpcPeeringStore struct {
 	items []*vpcPeeringEntry
 }
 
-func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error) {
+func (s *vpcPeeringStore) CreateVpcPeering(ctx context.Context, name *string, remoteVpc *string, remoteProject *string, importCustomRoutes *bool, kymaProject *string, kymaVpc *string) (*pb.NetworkPeering, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -32,6 +33,15 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, name *
 	s.items = append(s.items, item)
 
 	return item.peering, nil
+}
+
+func (s *vpcPeeringStore) DeleteVpcPeering(ctx context.Context, name *string, kymaProject *string, kymaVpc *string) (*compute.Operation, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	s.items = pie.Filter(s.items, func(vpe *vpcPeeringEntry) bool {
+		return !(vpe.peering.Name == name && *vpe.peering.Network == "https://www.googleapis.com/compute/v1/projects/"+*kymaProject+"/global/networks/"+*kymaVpc)
+	})
+	return nil, nil
 }
 
 func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]*pb.NetworkPeering, error) {

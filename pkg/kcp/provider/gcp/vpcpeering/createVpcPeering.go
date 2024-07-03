@@ -21,7 +21,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 
-	con, err := state.client.CreateVpcPeeringConnection(
+	con, err := state.client.CreateVpcPeering(
 		ctx,
 		state.peeringName,
 		state.remoteVpc,
