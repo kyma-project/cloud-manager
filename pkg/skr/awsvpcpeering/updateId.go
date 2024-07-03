@@ -43,7 +43,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error updating SKR AwsVpcPeering status with ID label", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("SKR AzureVpcPeering updated with ID status")
+	logger.Info("SKR AwsVpcPeering updated with ID status")
 
 	return composed.StopWithRequeueDelay(100 * time.Millisecond), nil
 }

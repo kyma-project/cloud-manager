@@ -20,7 +20,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.Info("Removing AzureVpcPeering finalizer")
+	logger.Info("Removing AwsVpcPeering finalizer")
 
 	// KCP VpcPeering does not exist, remove the finalizer so SKR AwsVpcPeering is also deleted
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
@@ -28,7 +28,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	err := state.UpdateObj(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error saving SKR AzureVpcPeering after finalizer remove", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error saving SKR AwsVpcPeering after finalizer remove", composed.StopWithRequeue, ctx)
 	}
 
 	// bye, bye AwsVpcPeering

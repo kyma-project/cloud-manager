@@ -15,7 +15,7 @@ func deleteKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	}
 
 	if state.KcpVpcPeering == nil {
-		// SKR AzureVpcPeering is marked for deletion, but none found in KCP, probably already deleted
+		// SKR AwsVpcPeering is marked for deletion, but none found in KCP, probably already deleted
 		return nil, nil
 	}
 
