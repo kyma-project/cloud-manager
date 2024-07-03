@@ -2,10 +2,10 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
@@ -44,34 +44,28 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	if err != nil {
 		logger.Error(err, "Error loading remote network")
 
-		return composed.UpdateStatus(obj).
-			SetCondition(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: fmt.Sprintf("Failed loading VpcNetwork %s", err),
-			}).
-			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote vpc network").
-			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
-			Run(ctx, state)
-	}
+		message := azuremeta.GetErrorMessage(err)
 
-	// If VpcNetwork is not found user can not recover from this error without updating the resource so, we are doing
-	// stop and forget.
-	if network == nil {
-		logger.Info("Remote VPC Network not found")
+		successError := composed.StopWithRequeueDelay(time.Minute)
+
+		// If VpcNetwork is not found user can not recover from this error without updating the resource so, we are doing
+		// stop and forget.
+		if azuremeta.IsNotFound(err) {
+			successError = composed.StopAndForget
+			message = "Remote VPC Network not found"
+			logger.Info(message)
+		}
 
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: fmt.Sprintf("Failed loading VpcNetwork %s", err),
+				Message: message,
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote vpc network").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopAndForget).
+			SuccessError(successError).
 			Run(ctx, state)
 	}
 
