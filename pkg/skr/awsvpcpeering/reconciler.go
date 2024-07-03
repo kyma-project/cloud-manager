@@ -40,6 +40,12 @@ func (r *reconciler) newAction() composed.Action {
 		"crAwsVpcPeeringMain",
 		composed.LoadObj,
 		addFinalizer,
+		updateId,
+		loadKcpAwsVpcPeering,
+		createKcpVpcPeering,
+		deleteKcpVpcPeering,
+		removeFinalizer,
+		updateStatus,
 		composed.StopAndForgetAction,
 	)
 }
