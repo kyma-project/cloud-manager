@@ -34,12 +34,24 @@ spec:
             properties:
               importCustomRoutes:
                 type: boolean
-              peeringName:
+                x-kubernetes-validations:
+                - message: ImportCustomRoutes is immutable.
+                  rule: (self == oldSelf)
+              remotePeeringName:
                 type: string
+                x-kubernetes-validations:
+                - message: RemotePeeringName is immutable.
+                  rule: (self == oldSelf)
               remoteProject:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteNetwork is immutable.
+                  rule: (self == oldSelf)
               remoteVpc:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteVpc is immutable.
+                  rule: (self == oldSelf)
             type: object
           status:
             properties:

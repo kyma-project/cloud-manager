@@ -1,7 +1,7 @@
 package vpcpeering
 
 import (
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -19,11 +19,14 @@ type State struct {
 	//gcp config
 	gcpConfig *gcpclient.GcpConfig
 
-	peeringName          *string
-	vpcPeeringConnection *computepb.NetworkPeering
-	remoteVpc            *string
-	remoteProject        *string
-	importCustomRoutes   *bool
+	remotePeeringName  string
+	remoteVpc          string
+	remoteProject      string
+	importCustomRoutes bool
+
+	//Peerings on both sides
+	remoteVpcPeering *pb.NetworkPeering
+	kymaVpcPeering   *pb.NetworkPeering
 }
 
 type StateFactory interface {
@@ -66,9 +69,9 @@ func newState(vpcPeeringState vpcpeeringtypes.State,
 		client:             client,
 		provider:           provider,
 		gcpConfig:          gcpConfig,
-		peeringName:        &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.PeeringName,
-		remoteVpc:          &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteVpc,
-		remoteProject:      &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteProject,
-		importCustomRoutes: &vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.ImportCustomRoutes,
+		remotePeeringName:  vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemotePeeringName,
+		remoteVpc:          vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteVpc,
+		remoteProject:      vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteProject,
+		importCustomRoutes: vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.ImportCustomRoutes,
 	}
 }

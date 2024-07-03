@@ -6,14 +6,13 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"time"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
 	It("Scenario: KCP GCP VpcPeering is created", func() {
 		const (
 			kymaName           = "57bc9639-d752-4f67-8b9e-7cd12514575f"
-			peeringName        = "peering-sap-gcp-skr-dev-cust-00002-to-sap-sc-learn"
+			remotePeeringName  = "peering-sap-gcp-skr-dev-cust-00002-to-sap-sc-learn"
 			remoteVpc          = "default"
 			remoteProject      = "sap-sc-learn"
 			remoteRefNamespace = "kcp-system"
@@ -37,10 +36,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("When KCP VpcPeering is created", func() {
 			Eventually(CreateKcpVpcPeering).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
-					WithName(peeringName),
+					WithName(remotePeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
 					WithKcpVpcPeeringSpecScope(kymaName),
-					WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, peeringName, importCustomRoutes),
+					WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName, importCustomRoutes),
 				).
 				Should(Succeed())
 		})
@@ -59,13 +58,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("When KCP VpcPeering is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
-				Should(Succeed(), "deleting VpcPeering failed")
+				Should(Succeed(), "Error deleting VPC Peering")
 		})
 
 		By("Then VpcPeering does not exist", func() {
-			Eventually(IsDeleted, 5*time.Second).
+			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
-				Should(Succeed(), "expected VpcPeering does not to exist (being deleted), but it still exists")
+				Should(Succeed(), "VPC Peering was not deleted")
 		})
 
 	})

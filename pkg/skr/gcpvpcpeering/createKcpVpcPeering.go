@@ -22,9 +22,9 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	obj := state.ObjAsGcpVpcPeering()
 
 	//If the peering name is not set, use the object name
-	if obj.Spec.PeeringName == "" {
-		obj.Spec.PeeringName = obj.Name
-	}
+	//if obj.Spec.RemotePeeringName == "" {
+	//	obj.Spec.RemotePeeringName = obj.Name
+	//}
 
 	state.KcpVpcPeering = &cloudcontrolv1beta1.VpcPeering{
 		ObjectMeta: metav1.ObjectMeta{
@@ -49,7 +49,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 					ImportCustomRoutes: obj.Spec.ImportCustomRoutes,
 					RemoteVpc:          obj.Spec.RemoteVpc,
 					RemoteProject:      obj.Spec.RemoteProject,
-					PeeringName:        obj.Spec.PeeringName,
+					RemotePeeringName:  obj.Spec.RemotePeeringName,
 				},
 			},
 		},

@@ -10,8 +10,8 @@ data:
               source: importCustomRoutes
               name: spec.importCustomRoutes
             - widget: Labels
-              source: peeringName
-              name: spec.peeringName
+              source: remotePeeringName
+              name: spec.remotePeeringName
             - widget: Labels
               source: remoteProject
               name: spec.remoteProject
@@ -29,9 +29,9 @@ data:
     - path: spec.importCustomRoutes
       simple: true
       name: spec.importCustomRoutes
-    - path: spec.peeringName
+    - path: spec.remotePeeringName
       simple: true
-      name: spec.peeringName
+      name: spec.remotePeeringName
       widget: Text
     - path: spec.remoteProject
       simple: true
@@ -57,8 +57,8 @@ data:
     - source: spec.importCustomRoutes
       name: spec.importCustomRoutes
       sort: true
-    - source: spec.peeringName
-      name: spec.peeringName
+    - source: spec.remotePeeringName
+      name: spec.remotePeeringName
       sort: true
     - source: spec.remoteProject
       name: spec.remoteProject
@@ -71,7 +71,7 @@ data:
       configuration: Configuration
       status: Status
       spec.importCustomRoutes: Import Custom Routes
-      spec.peeringName: Peering Name
+      spec.remotePeeringName: Remote Peering Name
       spec.remoteProject: Remote Project
       spec.remoteVpc: Remote VPC
       status.id: ID

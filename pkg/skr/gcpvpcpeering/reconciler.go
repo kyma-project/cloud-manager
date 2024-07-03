@@ -2,6 +2,7 @@ package gcpvpcpeering
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -39,12 +40,22 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpVpcPeeringMain",
 		composed.LoadObj,
-		addFinalizer,
 		loadKcpGcpVpcPeering,
-		createKcpVpcPeering,
-		deleteKcpVpcPeering,
-		removeFinalizer,
-		updateStatus,
+		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
+			composed.ComposeActions(
+				"gcpVpcPeering-create",
+				actions.AddFinalizer,
+				createKcpVpcPeering,
+				waitKcpStatusUpdate,
+				updateStatus,
+				waitSkrStatusReady,
+			),
+			composed.ComposeActions(
+				"gcpVpcPeering-delete",
+				deleteKcpVpcPeering,
+				actions.RemoveFinalizer,
+			),
+		),
 		composed.StopAndForgetAction,
 	)
 }
