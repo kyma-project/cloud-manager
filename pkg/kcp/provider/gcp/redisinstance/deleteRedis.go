@@ -26,7 +26,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 		return nil, nil // delete is waited in next action
 	}
 
-	logger.Info("Deleteing GCP Redis")
+	logger.Info("Deleting GCP Redis")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
@@ -39,17 +39,17 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 			}
 		}
 
-		logger.Error(err, "Error deleteing GCP Redis")
+		logger.Error(err, "Error deleting GCP Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
-			Message: fmt.Sprintf("Failed deleteing GcpRedis: %s", err),
+			Message: fmt.Sprintf("Failed deleting GcpRedis: %s", err),
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating RedisInstance status due failed gcp redis deleteing",
+				"Error updating RedisInstance status due failed gcp redis deleting",
 				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
 				ctx,
 			)

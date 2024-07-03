@@ -44,18 +44,42 @@ spec:
                     type: object
                   gcp:
                     properties:
-                      locationId:
-                        type: string
-                        x-kubernetes-validations:
-                        - message: Location is immutable.
-                          rule: (self == oldSelf)
                       memorySizeGb:
+                        format: int32
                         type: integer
                         x-kubernetes-validations:
                         - message: MemorySizeGb is immutable.
                           rule: (self == oldSelf)
+                      redisConfigs:
+                        properties:
+                          activedefrag:
+                            type: string
+                          lfu-decay-time:
+                            type: string
+                          lfu-log-factor:
+                            type: string
+                          maxmemory-gb:
+                            type: string
+                          maxmemory-policy:
+                            type: string
+                          notify-keyspace-events:
+                            type: string
+                          stream-node-max-bytes:
+                            type: string
+                          stream-node-max-entries:
+                            type: string
+                        type: object
+                        x-kubernetes-validations:
+                        - message: RedisConfigs is immutable.
+                          rule: (self == oldSelf)
                       redisVersion:
-                        default: redis_7_0
+                        default: REDIS_7_0
+                        enum:
+                        - REDIS_7_0
+                        - REDIS_6_X
+                        - REDIS_5_0
+                        - REDIS_4_0
+                        - REDIS_3_2
                         type: string
                         x-kubernetes-validations:
                         - message: RedisVersion is immutable.
@@ -67,7 +91,6 @@ spec:
                         - message: Tier is immutable.
                           rule: (self == oldSelf)
                     required:
-                    - locationId
                     - memorySizeGb
                     - redisVersion
                     - tier
