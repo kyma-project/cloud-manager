@@ -18,6 +18,7 @@ type CreateRedisInstanceOptions struct {
 	MemorySizeGb       int32
 	Tier               string
 	RedisVersion       string
+	RedisConfigs       map[string]string
 }
 
 type MemorystoreClient interface {
@@ -59,6 +60,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			ConnectMode:       redispb.Instance_PRIVATE_SERVICE_ACCESS, // always
 			AuthorizedNetwork: options.VPCNetworkFullName,
 			ReservedIpRange:   options.IPRangeName,
+			RedisConfigs:      options.RedisConfigs,
 		},
 	}
 

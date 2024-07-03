@@ -35,6 +35,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		MemorySizeGb:       redisInstance.Spec.Instance.Gcp.MemorySizeGb,
 		Tier:               redisInstance.Spec.Instance.Gcp.Tier,
 		RedisVersion:       redisInstance.Spec.Instance.Gcp.RedisVersion,
+		RedisConfigs:       redisInstance.Spec.Instance.Gcp.RedisConfigs.ToMap(),
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
