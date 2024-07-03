@@ -15,6 +15,9 @@ import (
 type CreateRedisInstanceOptions struct {
 	VPCNetworkFullName string
 	IPRangeName        string
+	MemorySizeGb       int32
+	Tier               string
+	RedisVersion       string
 }
 
 type MemorystoreClient interface {
@@ -50,8 +53,9 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 		InstanceId: instanceId,
 		Instance: &redispb.Instance{
 			Name:              fmt.Sprintf("%s/%s", parent, instanceId),
-			MemorySizeGb:      4,
-			Tier:              redispb.Instance_BASIC,
+			MemorySizeGb:      options.MemorySizeGb,
+			Tier:              redispb.Instance_Tier(redispb.Instance_Tier_value[options.Tier]),
+			RedisVersion:      options.RedisVersion,
 			ConnectMode:       redispb.Instance_PRIVATE_SERVICE_ACCESS, // always
 			AuthorizedNetwork: options.VPCNetworkFullName,
 			ReservedIpRange:   options.IPRangeName,

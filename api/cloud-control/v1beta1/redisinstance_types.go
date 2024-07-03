@@ -50,20 +50,17 @@ type RedisInstanceInfo struct {
 }
 
 type RedisInstanceGcp struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
-	LocationId string `json:"locationId"`
-
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
-	MemorySizeGb int `json:"memorySizeGb"`
+	MemorySizeGb int32 `json:"memorySizeGb"`
 
-	// +kubebuilder:default=redis_7_0
+	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
+	// +kubebuilder:validation:Enum=REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
 	RedisVersion string `json:"redisVersion"`
 }
 
