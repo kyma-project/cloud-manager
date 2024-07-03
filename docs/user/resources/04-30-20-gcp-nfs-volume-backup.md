@@ -1,2 +1,0 @@
-# GcpNfsVolumeBackup Custom Resource
-

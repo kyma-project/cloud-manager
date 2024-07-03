@@ -4,9 +4,9 @@ The `awsnfsvolume.cloud-resources.kyma-project.io` custom resource describes the
 instance that can be used as RWX volume in the cluster. Once the AWS EFS instance is provisioned
 in the underlying cloud provider subscription, also the corresponding PersistentVolume and
 PersistentVolumeClaim are created in RWX mode, so they can be used from multiple cluster workloads. 
-To use it as a volume in the cluster workload, speify the workload volume of the `persistentVolumeClaim` type.
+To use it as a volume in the cluster workload, specify the workload volume of the `persistentVolumeClaim` type.
 A created AwsNfsVolume can be deleted only where there are no workloads that 
-are using it, and PV and PVC are unbound. 
+are using it, and when PV and PVC are unbound. 
 
 The AwsNfsVolume requires an IP address in each zone of the cluster. Those IP addresses are 
 allocated from the [IpRange](./04-10-iprange.md). If IpRange is not specified in the AwsNfsVolume
@@ -71,4 +71,20 @@ metadata:
   name: my-vol
 spec:
   capacity: 10T
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: workload
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: my-vol
+  containers:
+    - name: workload
+      image: nginx
+      volumeMounts:
+        - mountPath: "/mnt/data1"
+          name: data
 ```
