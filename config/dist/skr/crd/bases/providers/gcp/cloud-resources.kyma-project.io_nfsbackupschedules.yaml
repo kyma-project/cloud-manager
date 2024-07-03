@@ -288,6 +288,7 @@ spec:
                 - Pending
                 - Suspended
                 - Active
+                - Done
                 - Error
                 type: string
             type: object

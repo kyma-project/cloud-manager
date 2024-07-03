@@ -64,10 +64,6 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 	}, nil
 }
 
-func (s *State) GetScheduleDeadline() time.Duration {
-	return client.GetConfigDuration(s.env, "NFS_BACKUP_SCHEDULER_DEADLINE", 30*time.Second)
-}
-
 func (s *State) ObjAsNfsBackupSchedule() *cloudresourcesv1beta1.NfsBackupSchedule {
 	return s.Obj().(*cloudresourcesv1beta1.NfsBackupSchedule)
 }

@@ -42,7 +42,7 @@ func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, co
 	}
 
 	schedule.Status.State = cloudresourcesv1beta1.JobStateActive
-	schedule.Status.NextRunTimes = []string{nextRunTime.Format(time.RFC3339)}
+	schedule.Status.NextRunTimes = []string{nextRunTime.UTC().Format(time.RFC3339)}
 
 	return composed.UpdateStatus(schedule).
 		SuccessError(composed.StopWithRequeue).

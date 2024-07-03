@@ -64,8 +64,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
-			Name:      "test-gcp-ip-range",
-			Namespace: "test",
+			Name: "test-gcp-ip-range",
 		},
 		Location:      "us-west1",
 		Tier:          "BASIC_HDD",
@@ -95,8 +94,7 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	},
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
-			Name:      "test-ip-range",
-			Namespace: "test",
+			Name: "test-ip-range",
 		},
 	},
 	Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{

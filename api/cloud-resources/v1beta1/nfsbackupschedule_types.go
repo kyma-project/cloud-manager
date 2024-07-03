@@ -80,7 +80,7 @@ type NfsBackupScheduleSpec struct {
 
 // NfsBackupScheduleStatus defines the observed state of NfsBackupSchedule
 type NfsBackupScheduleStatus struct {
-	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Error
+	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Done;Error
 	State string `json:"state,omitempty"`
 
 	// List of status conditions
@@ -142,7 +142,7 @@ func (in *NfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *NfsBackupSchedule) SpecificToProviders() []string {
-	return nil
+	return []string{"gcp"}
 }
 
 //+kubebuilder:object:root=true

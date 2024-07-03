@@ -113,7 +113,7 @@ func (suite *calculateOnetimeScheduleSuite) TestScheduleWithStartTime() {
 			Namespace: nfsBackupSchedule.Namespace},
 		fromK8s)
 	suite.Equal(1, len(fromK8s.Status.NextRunTimes))
-	suite.Equal(startTime.Format(time.RFC3339), fromK8s.Status.NextRunTimes[0])
+	suite.Equal(startTime.UTC().Format(time.RFC3339), fromK8s.Status.NextRunTimes[0])
 }
 
 func (suite *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
