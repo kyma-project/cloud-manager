@@ -14,7 +14,7 @@ go run ./cmd/cli garden shoot create aws -p skr -s my-shoot
 
 Create new Kyma in KCP
 ```shell
-go run ./cmd/cli kyma create -s my-shoot -k my-kyma.
+go run ./cmd/cli kyma create -s my-shoot -k my-kyma
 ```
 
 Enable Cloud Manager module state to Ready in your kyma.

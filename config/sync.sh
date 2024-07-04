@@ -23,6 +23,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCR
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumebackups.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumerestores.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpvpcpeerings.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 
 # GCP UI
 cp $SCRIPT_DIR/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
