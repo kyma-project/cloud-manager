@@ -353,6 +353,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - gcpredisinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpredisinstances/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpredisinstances/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - gcpvpcpeerings
   verbs:
   - create
