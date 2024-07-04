@@ -1,6 +1,7 @@
 package awsvpcpeering
 
 import (
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/klog/v2"
@@ -11,6 +12,8 @@ type State struct {
 	composed.State
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
+
+	KcpVpcPeering *cloudcontrolv1beta1.VpcPeering
 }
 
 func newStateFactory(
@@ -39,6 +42,6 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 	}
 }
 
-func (s *State) ObjAsAzureVpcPeering() *cloudresourcesv1beta1.AwsVpcPeering {
+func (s *State) ObjAsAwsVpcPeering() *cloudresourcesv1beta1.AwsVpcPeering {
 	return s.Obj().(*cloudresourcesv1beta1.AwsVpcPeering)
 }

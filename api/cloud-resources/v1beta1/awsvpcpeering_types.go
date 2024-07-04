@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,14 +29,24 @@ type AwsVpcPeeringSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of AwsVpcPeering. Edit awsvpcpeering_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	RemoteVpcId     string `json:"remoteVpcId"`
+	RemoteRegion    string `json:"remoteRegion,omitempty"`
+	RemoteAccountId string `json:"remoteAccountId"`
 }
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering
 type AwsVpcPeeringStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// +optional
+	Id string `json:"id,omitempty"`
+
+	// List of status conditions to indicate the status of a Peering.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -50,6 +61,16 @@ type AwsVpcPeering struct {
 	Spec   AwsVpcPeeringSpec   `json:"spec,omitempty"`
 	Status AwsVpcPeeringStatus `json:"status,omitempty"`
 }
+
+func (in *AwsVpcPeering) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
+
+func (in *AwsVpcPeering) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }
+
+func (in *AwsVpcPeering) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeaturePeering
+}
+
+func (in *AwsVpcPeering) SpecificToProviders() []string { return []string{"aws"} }
 
 //+kubebuilder:object:root=true
 
