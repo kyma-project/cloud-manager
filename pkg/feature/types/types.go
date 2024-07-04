@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -28,6 +29,7 @@ const (
 	FeatureNfs       FeatureName = "nfs"
 	FeatureNfsBackup FeatureName = "nfsBackup"
 	FeaturePeering   FeatureName = "peering"
+	FeatureRedis     FeatureName = "redis"
 )
 
 type PlaneName = string

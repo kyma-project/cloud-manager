@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -99,6 +100,14 @@ func (in *GcpRedisInstance) Conditions() *[]metav1.Condition {
 
 func (in *GcpRedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *GcpRedisInstance) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureRedis
+}
+
+func (in *GcpRedisInstance) SpecificToProviders() []string {
+	return []string{"gcp"}
 }
 
 func (in *GcpRedisInstance) GetIpRangeRef() IpRangeRef {
