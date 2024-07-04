@@ -14,6 +14,8 @@ const (
 	RemotePeeringIsDisconnectedMessage               = "Cannot create or update peering because remote peering referencing parent virtual network is in Disconnected state. Update or re-create the remote peering to get it back to Initiated state. Peering gets Disconnected when remote vnet or remote peering is deleted and re-created"
 	AnotherPeeringAlreadyReferencesRemoteVnet        = "AnotherPeeringAlreadyReferencesRemoteVnet"
 	AnotherPeeringAlreadyReferencesRemoteVnetMessage = "Peering already references remote virtual network. Cannot add another peering referencing the same remote virtual network."
+	AuthorizationFailed                              = "AuthorizationFailed"
+	AuthorizationFailedMessage                       = "Not authorized to perform action."
 )
 
 func TooManyRequests(err error) bool {
@@ -21,6 +23,12 @@ func TooManyRequests(err error) bool {
 
 	// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling
 	return errors.As(err, &respErr) && respErr.StatusCode == 429
+}
+
+func IsNotFound(err error) bool {
+	var respErr *azcore.ResponseError
+
+	return errors.As(err, &respErr) && respErr.ErrorCode == "ResourceNotFound"
 }
 
 func ErrorToRequeueResponse(err error) error {
@@ -44,6 +52,8 @@ func GetErrorMessage(err error) string {
 			return RemotePeeringIsDisconnectedMessage
 		case AnotherPeeringAlreadyReferencesRemoteVnet:
 			return AnotherPeeringAlreadyReferencesRemoteVnetMessage
+		case AuthorizationFailed:
+			return AuthorizationFailedMessage
 		}
 	}
 
