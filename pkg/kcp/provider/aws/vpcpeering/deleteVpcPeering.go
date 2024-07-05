@@ -15,7 +15,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	lll := logger.WithValues("vpcPeeringName", obj.Name)
 
 	if len(obj.Status.Id) == 0 {
-		lll.Info("VpcPeering deleted before Azure peering is created")
+		lll.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
