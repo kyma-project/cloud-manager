@@ -9,4 +9,6 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: gcpredisinstance-sample
 spec:
-  # TODO(user): Add fields here
+  memorySizeGb: 1
+  tier: "BASIC"
+  redisVersion: REDIS_7_0

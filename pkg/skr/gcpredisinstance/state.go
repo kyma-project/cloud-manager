@@ -16,8 +16,8 @@ type State struct {
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
 
-	SkrIpRange     *cloudresourcesv1beta1.IpRange
-	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
+	SkrIpRange       *cloudresourcesv1beta1.IpRange
+	KcpRedisInstance *cloudcontrolv1beta1.RedisInstance
 
 	AuthSecret *corev1.Secret
 }

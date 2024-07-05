@@ -14,7 +14,11 @@ spec:
     singular: gcpredisinstance
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: GcpRedisInstance is the Schema for the gcpredisinstances API
@@ -90,6 +94,19 @@ spec:
                 x-kubernetes-validations:
                 - message: Tier is immutable.
                   rule: (self == oldSelf)
+              volume:
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  name:
+                    type: string
+                type: object
             required:
             - memorySizeGb
             - redisVersion
