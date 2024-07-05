@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -21,7 +22,6 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	if state.ObjAsIpRange().Labels == nil {
 		state.ObjAsIpRange().Labels = map[string]string{}
 	}
-	state.ObjAsIpRange().Labels[cloudresourcesv1beta1.LabelId] = id
 
 	err := state.UpdateObj(ctx)
 	if err != nil {

@@ -2,10 +2,11 @@ package awsnfsvolume
 
 import (
 	"context"
+	"time"
+
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"time"
 )
 
 func updateId(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,7 +26,6 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	if state.ObjAsAwsNfsVolume().Labels == nil {
 		state.ObjAsAwsNfsVolume().Labels = map[string]string{}
 	}
-	state.ObjAsAwsNfsVolume().Labels[cloudresourcesv1beta1.LabelId] = id
 
 	err := state.UpdateObj(ctx)
 	if err != nil {
