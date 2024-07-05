@@ -42,6 +42,12 @@ type RedisInstanceGcpConfigs struct {
 	StreamNodeMaxEntries string `json:"stream-node-max-entries,omitempty"`
 }
 
+type AuthSecretSpec struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
 type GcpRedisInstanceSpec struct {
 
@@ -64,6 +70,8 @@ type GcpRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
 	RedisConfigs RedisInstanceGcpConfigs `json:"redisConfigs"`
+
+	AuthSecret *AuthSecretSpec `json:"volume,omitempty"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
@@ -82,9 +90,9 @@ type GcpRedisInstanceStatus struct {
 	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 // GcpRedisInstance is the Schema for the gcpredisinstances API
 type GcpRedisInstance struct {
 	metav1.TypeMeta   `json:",inline"`

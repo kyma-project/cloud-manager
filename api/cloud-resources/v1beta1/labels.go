@@ -6,4 +6,7 @@ const (
 	LabelNfsVolName      = "cloud-resources.kyma-project.io/nfsVolumeName"
 	LabelNfsVolNS        = "cloud-resources.kyma-project.io/nfsVolumeNamespace"
 	LabelStorageCapacity = "cloud-resources.kyma-project.io/nfsVolumeStorageCapacity"
+
+	LabelRedisInstanceName      = "cloud-resources.kyma-project.io/redisInstanceName"
+	LabelRedisInstanceNamespace = "cloud-resources.kyma-project.io/redisInstanceNamespace"
 )
