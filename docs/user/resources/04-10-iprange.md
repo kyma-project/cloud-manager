@@ -1,19 +1,19 @@
 # IpRange Custom Resource
 
-The `iprange.cloud-resources.kyma-project.io` custom resource specifies the VPC network
-IP range that will be used for IP address allocation for cloud resources that require IP address. 
+The `iprange.cloud-resources.kyma-project.io` custom resource (CR) specifies the VPC network
+IP range that is used for IP address allocation for cloud resources that require an IP address. 
 
 You are allowed to have one IpRange CR. If there are multiple IpRange resources in the cluster, the
-oldest one will be reconciled and other will be ignored and put to the Error state.
+oldest one is reconciled and the other is ignored and put into the `Error` state.
 
-Once IpRange is created and reconciled, the Cloud Manager controller reserves the specified IP range
-in the VPC network of the cluster in the underlying cloud provider. IP address from that range will
-be assigned to the provisioned resources of the cloud provider that require IP addresses. Once a 
+Once an IpRange CR is created and reconciled, the Cloud Manager controller reserves the specified IP range
+in the Virtual Private Cloud (VPC) network of the cluster in the underlying cloud provider. The IP address from that range is
+assigned to the provisioned resources of the cloud provider that require IP addresses. Once a 
 cloud resource is assigned the local VPC network IP address it becomes functional and usable from the
 cluster network and from the cluster workloads.
 
-It is not required for the user to create an IpRange resource. Once needed it will be automatically created
-and CIDR range automatically chosen adjacent and with the same size to the cluster nodes IP range. 
+You don't have to create an IpRange resource. Once needed, it is automatically created
+and Classless Inter-Domain Routing (CIDR) range automatically chosen adjacent to and with the same size as the cluster nodes IP range. 
 For most use cases this automatic allocation is sufficient. 
 
 You might be interested in manually creating an IpRange resource with specific CIDR in advanced cases of
@@ -21,7 +21,7 @@ VPC network topology when cluster and cloud resources are not the only resources
 can avoid IP range collisions. 
 
 IpRange can be deleted and deprovisioned only if there are no cloud resources using it. In other words,
-an IpRange and it's underlying VPC network address range can be purged only if there are no cloud resources
+an IpRange and its underlying VPC network address range can be purged only if there are no cloud resources
 using an IP from that range.
 
 
@@ -33,7 +33,7 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter | Type   | Description                                                                          |
 |-----------|--------|--------------------------------------------------------------------------------------|
-| **cidr**  | string | Specifies the CIDR of the IP range that will be allocated. For example 10.250.4.0/22 |
+| **cidr**  | string | Specifies the CIDR of the IP range that will be allocated. For example, 10.250.4.0/22. |
 
 **Status:**
 
@@ -48,9 +48,9 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
 
 
-## Example <!-- {docsify-ignore} -->
+## Sample Custom Resource <!-- {docsify-ignore} -->
 
-Example YAML manifest for IpRange:
+See an exemplary IpRange custom resource:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
