@@ -21,7 +21,9 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	err, _ := composed.UpdateStatus(state.ObjAsGcpRedisInstance()).
+	redisInstance := state.ObjAsGcpRedisInstance()
+
+	err, _ := composed.UpdateStatus(redisInstance).
 		SetCondition(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
 			Status:  metav1.ConditionTrue,
@@ -41,6 +43,13 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	err = state.KcpCluster.K8sClient().Delete(ctx, state.KcpRedisInstance)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error deleting KCP RedisInstance for GcpRedisInstance", composed.StopWithRequeue, ctx)
+	}
+
+	redisInstance.Status.State = cloudresourcesv1beta1.StateDeleting
+	err = state.Cluster().K8sClient().Status().Update(ctx, redisInstance)
+
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Failed status update on GCP RedisInstance", composed.StopWithRequeue, ctx)
 	}
 
 	return nil, nil
