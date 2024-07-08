@@ -42,9 +42,11 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Gcp: &cloudcontrolv1beta1.RedisInstanceGcp{
-					Tier:         gcpRedisInstance.Spec.Tier,
-					MemorySizeGb: gcpRedisInstance.Spec.MemorySizeGb,
-					RedisVersion: gcpRedisInstance.Spec.RedisVersion,
+					Tier:                  gcpRedisInstance.Spec.Tier,
+					MemorySizeGb:          gcpRedisInstance.Spec.MemorySizeGb,
+					RedisVersion:          gcpRedisInstance.Spec.RedisVersion,
+					AuthEnabled:           gcpRedisInstance.Spec.AuthEnabled,
+					TransitEncryptionMode: gcpRedisInstance.Spec.TransitEncryptionMode,
 					RedisConfigs: cloudcontrolv1beta1.RedisInstanceGcpConfigs{
 						MaxmemoryPolicy:      gcpRedisInstance.Spec.RedisConfigs.MaxmemoryPolicy,
 						NotifyKeyspaceEvents: gcpRedisInstance.Spec.RedisConfigs.NotifyKeyspaceEvents,

@@ -13,12 +13,14 @@ import (
 )
 
 type CreateRedisInstanceOptions struct {
-	VPCNetworkFullName string
-	IPRangeName        string
-	MemorySizeGb       int32
-	Tier               string
-	RedisVersion       string
-	RedisConfigs       map[string]string
+	VPCNetworkFullName    string
+	IPRangeName           string
+	MemorySizeGb          int32
+	Tier                  string
+	RedisVersion          string
+	AuthEnabled           bool
+	TransitEncryptionMode string
+	RedisConfigs          map[string]string
 }
 
 type MemorystoreClient interface {
@@ -53,14 +55,16 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 		Parent:     parent,
 		InstanceId: instanceId,
 		Instance: &redispb.Instance{
-			Name:              fmt.Sprintf("%s/%s", parent, instanceId),
-			MemorySizeGb:      options.MemorySizeGb,
-			Tier:              redispb.Instance_Tier(redispb.Instance_Tier_value[options.Tier]),
-			RedisVersion:      options.RedisVersion,
-			ConnectMode:       redispb.Instance_PRIVATE_SERVICE_ACCESS, // always
-			AuthorizedNetwork: options.VPCNetworkFullName,
-			ReservedIpRange:   options.IPRangeName,
-			RedisConfigs:      options.RedisConfigs,
+			Name:                  fmt.Sprintf("%s/%s", parent, instanceId),
+			MemorySizeGb:          options.MemorySizeGb,
+			Tier:                  redispb.Instance_Tier(redispb.Instance_Tier_value[options.Tier]),
+			RedisVersion:          options.RedisVersion,
+			ConnectMode:           redispb.Instance_PRIVATE_SERVICE_ACCESS, // always
+			AuthorizedNetwork:     options.VPCNetworkFullName,
+			ReservedIpRange:       options.IPRangeName,
+			RedisConfigs:          options.RedisConfigs,
+			AuthEnabled:           options.AuthEnabled,
+			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
 		},
 	}
 

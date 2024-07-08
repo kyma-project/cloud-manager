@@ -44,6 +44,12 @@ spec:
                     type: object
                   gcp:
                     properties:
+                      authEnabled:
+                        default: true
+                        type: boolean
+                        x-kubernetes-validations:
+                        - message: AuthEnabled is immutable.
+                          rule: (self == oldSelf)
                       memorySizeGb:
                         format: int32
                         type: integer
@@ -89,6 +95,16 @@ spec:
                         type: string
                         x-kubernetes-validations:
                         - message: Tier is immutable.
+                          rule: (self == oldSelf)
+                      transitEncryptionMode:
+                        default: TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
+                        enum:
+                        - TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
+                        - SERVER_AUTHENTICATION
+                        - DISABLED
+                        type: string
+                        x-kubernetes-validations:
+                        - message: TransitEncryptionMode is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb

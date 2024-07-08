@@ -38,6 +38,12 @@ spec:
           spec:
             description: GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
             properties:
+              authEnabled:
+                default: true
+                type: boolean
+                x-kubernetes-validations:
+                - message: AuthEnabled is immutable.
+                  rule: (self == oldSelf)
               ipRange:
                 properties:
                   name:
@@ -93,6 +99,16 @@ spec:
                 type: string
                 x-kubernetes-validations:
                 - message: Tier is immutable.
+                  rule: (self == oldSelf)
+              transitEncryptionMode:
+                default: TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
+                enum:
+                - TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
+                - SERVER_AUTHENTICATION
+                - DISABLED
+                type: string
+                x-kubernetes-validations:
+                - message: TransitEncryptionMode is immutable.
                   rule: (self == oldSelf)
               volume:
                 properties:
