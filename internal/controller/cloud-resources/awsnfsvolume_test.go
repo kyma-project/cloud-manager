@@ -76,7 +76,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
 					WithName(awsNfsVolumeName),
-					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
 					WithAwsNfsVolumePvName(pvName),
 					WithAwsNfsVolumePvLabels(pvLabels),
@@ -278,7 +278,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
 					WithName(awsNfsVolumeName),
-					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
 				).
 				Should(Succeed())
