@@ -23,7 +23,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 
 	err := CreateKcpIpRange(ctx, infra.KCP().Client(), iprange,
 		WithName(name),
-		WithKcpIpRangeRemoteRef(name, name),
+		WithKcpIpRangeRemoteRef(name),
 		WithKcpIpRangeSpecScope(name),
 		WithKcpIpRangeSpecCidr(iprangeCidr),
 	)

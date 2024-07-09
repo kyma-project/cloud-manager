@@ -19,7 +19,12 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 		"scopeNamespace", state.ObjAsCommonObj().GetNamespace(),
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-	logger.Info("Loading Scope from reference")
+	logger.
+		WithValues(
+			"scopeName", state.ObjAsCommonObj().ScopeRef().Name,
+			"scopeNamespace", state.ObjAsCommonObj().GetNamespace(),
+		).
+		Info("Loading Scope from reference")
 
 	scope := &cloudcontrolv1beta1.Scope{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
