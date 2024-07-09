@@ -13,7 +13,7 @@ spec:
     listKind: IpRangeList
     plural: ipranges
     singular: iprange
-  scope: Namespaced
+  scope: Cluster
   versions:
     - additionalPrinterColumns:
         - jsonPath: .metadata.creationTimestamp
