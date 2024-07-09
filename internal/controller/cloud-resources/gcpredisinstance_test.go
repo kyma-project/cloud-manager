@@ -513,8 +513,10 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.Ctx(),
 					infra.SKR().Client(),
 					authSecret,
-					NewObjActions(WithName(gcpRedisInstance.Name)),
-					NewObjActions(WithNamespace(gcpRedisInstance.Namespace)),
+					NewObjActions(
+						WithName(gcpRedisInstance.Name),
+						WithNamespace(gcpRedisInstance.Namespace),
+					),
 				).
 				Should(Succeed())
 		})
@@ -657,8 +659,10 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.Ctx(),
 					infra.SKR().Client(),
 					authSecret,
-					NewObjActions(WithName(gcpRedisInstance.Name)),
-					NewObjActions(WithNamespace(gcpRedisInstance.Namespace)),
+					NewObjActions(
+						WithName(gcpRedisInstance.Name),
+						WithNamespace(gcpRedisInstance.Namespace),
+					),
 				).
 				Should(Succeed())
 		})
@@ -700,7 +704,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		})
 	})
 
-	It("Scenario: GcpRedisInstance IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
+	It("Scenario: SKR GcpRedisInstance IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
 
 		By("Given ff IpRangeAutomaticCidrAllocation is disabled", func() {
 			if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
