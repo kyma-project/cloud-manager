@@ -56,6 +56,7 @@ func (r *reconciler) newAction() composed.Action {
 				checkIfResourcesExist,
 				deleteCrds,
 				removeFinalizer,
+				// TODO: call deleteUiCms here
 
 				composed.StopAndForgetAction,
 			),
