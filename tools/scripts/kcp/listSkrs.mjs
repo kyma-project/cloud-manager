@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-const argv = minimist(process.argv.slice(2), {
+const argv = minimist(process.argv.slice(3), {
     alias: {
         a: "all",
         o: "output",
