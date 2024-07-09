@@ -16,9 +16,6 @@ func WithGcpNfsVolumeIpRange(ipRangeName string) ObjAction {
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
 				x.Spec.IpRange.Name = ipRangeName
-				if x.Spec.IpRange.Namespace == "" {
-					x.Spec.IpRange.Namespace = DefaultSkrNamespace
-				}
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithNfsVolumeIpRange", obj))
@@ -39,9 +36,6 @@ func CreateGcpNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 
 	if obj.Name == "" {
 		return errors.New("the SKR GcpNfsVolume must have name set")
-	}
-	if obj.Spec.IpRange.Name != "" && obj.Spec.IpRange.Namespace == "" {
-		obj.Spec.IpRange.Namespace = DefaultSkrNamespace
 	}
 
 	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)

@@ -18,7 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -70,24 +69,16 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 	reg.IndexField(&cloudresourcesv1beta1.AwsNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
 		nfsVol := object.(*cloudresourcesv1beta1.AwsNfsVolume)
 		if nfsVol.Spec.IpRange.Name == "" {
-			return nil
+			return []string{"default"}
 		}
-		ns := nfsVol.Spec.IpRange.Namespace
-		if len(ns) == 0 {
-			ns = nfsVol.Namespace
-		}
-		return []string{fmt.Sprintf("%s/%s", ns, nfsVol.Spec.IpRange.Name)}
+		return []string{nfsVol.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
 		nfsVol := object.(*cloudresourcesv1beta1.GcpNfsVolume)
 		if nfsVol.Spec.IpRange.Name == "" {
-			return nil
+			return []string{"default"}
 		}
-		ns := nfsVol.Spec.IpRange.Namespace
-		if len(ns) == 0 {
-			ns = nfsVol.Namespace
-		}
-		return []string{fmt.Sprintf("%s/%s", ns, nfsVol.Spec.IpRange.Name)}
+		return []string{nfsVol.Spec.IpRange.Name}
 	})
 
 	return reg.Register().
