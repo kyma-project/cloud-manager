@@ -21,8 +21,7 @@ func createDefaultSkrIpRange(ctx context.Context, st composed.State) (error, con
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "kyma-system",
-			Name:      "default",
+			Name: "default",
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "default-iprange",
 				"app.kubernetes.io/instance":   "default",

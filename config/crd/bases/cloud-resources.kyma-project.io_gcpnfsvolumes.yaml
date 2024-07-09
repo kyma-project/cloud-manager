@@ -58,11 +58,8 @@ spec:
                   properties:
                     name:
                       type: string
-                    namespace:
-                      type: string
                   required:
                     - name
-                    - namespace
                   type: object
                   x-kubernetes-validations:
                     - message: IpRange is immutable.

@@ -28,7 +28,7 @@ func preventDeleteOnAwsNfsVolumeUsage(ctx context.Context, st composed.State) (e
 	}
 	awsNfsVolumesUsingThisIpRange := &cloudresourcesv1beta1.AwsNfsVolumeList{}
 	listOps := &client.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().String()),
+		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().Name),
 	}
 	err := state.Cluster().K8sClient().List(ctx, awsNfsVolumesUsingThisIpRange, listOps)
 	if meta.IsNoMatchError(err) {

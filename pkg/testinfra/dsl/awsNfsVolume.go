@@ -17,17 +17,11 @@ func WithNfsVolumeIpRange(ipRangeName string) ObjAction {
 				if x.Spec.IpRange.Name == "" {
 					x.Spec.IpRange.Name = ipRangeName
 				}
-				if x.Spec.IpRange.Namespace == "" {
-					x.Spec.IpRange.Namespace = DefaultSkrNamespace
-				}
 				return
 			}
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
 				if x.Spec.IpRange.Name == "" {
 					x.Spec.IpRange.Name = ipRangeName
-				}
-				if x.Spec.IpRange.Namespace == "" {
-					x.Spec.IpRange.Namespace = DefaultSkrNamespace
 				}
 				return
 			}
@@ -172,9 +166,6 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 
 	if obj.Name == "" {
 		return errors.New("the SKR AwsNfsVolume must have name set")
-	}
-	if obj.Spec.IpRange.Name != "" && obj.Spec.IpRange.Namespace == "" {
-		obj.Spec.IpRange.Namespace = DefaultSkrNamespace
 	}
 
 	err := clnt.Create(ctx, obj)

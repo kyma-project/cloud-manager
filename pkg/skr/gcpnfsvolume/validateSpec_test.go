@@ -193,8 +193,7 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotReady() {
 	//Add an IPRange to SKR.
 	ipRange := cloudresourcesv1beta1.IpRange{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      gcpNfsVolume.Spec.IpRange.Name,
-			Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
+			Name: gcpNfsVolume.Spec.IpRange.Name,
 		},
 		Spec: cloudresourcesv1beta1.IpRangeSpec{
 			Cidr: kcpIpRange.Spec.Cidr,
@@ -236,8 +235,7 @@ func (suite *validateSpecSuite) TestIpRangeWhenReady() {
 	//Add an IPRange to SKR.
 	ipRange := cloudresourcesv1beta1.IpRange{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      gcpNfsVolume.Spec.IpRange.Name,
-			Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
+			Name: gcpNfsVolume.Spec.IpRange.Name,
 		},
 		Spec: cloudresourcesv1beta1.IpRangeSpec{
 			Cidr: kcpIpRange.Spec.Cidr,

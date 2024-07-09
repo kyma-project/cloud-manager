@@ -29,8 +29,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
-			Name:      "test-gcp-ip-range",
-			Namespace: "test2",
+			Name: "test-gcp-ip-range",
 		},
 		Location:      "us-west1",
 		Tier:          "BASIC_HDD",
@@ -126,15 +125,13 @@ var kcpIpRange = cloudcontrolv1beta1.IpRange{
 		Name:      "test-ip-range",
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
-			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      gcpNfsVolume.Spec.IpRange.Name,
-			cloudcontrolv1beta1.LabelRemoteNamespace: gcpNfsVolume.Spec.IpRange.Namespace,
+			cloudcontrolv1beta1.LabelKymaName:   kymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName: gcpNfsVolume.Spec.IpRange.Name,
 		},
 	},
 	Spec: cloudcontrolv1beta1.IpRangeSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
-			Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
-			Name:      gcpNfsVolume.Spec.IpRange.Name,
+			Name: gcpNfsVolume.Spec.IpRange.Name,
 		},
 		Scope: cloudcontrolv1beta1.ScopeRef{
 			Name: kymaRef.Name,
@@ -150,8 +147,7 @@ var kcpIpRange = cloudcontrolv1beta1.IpRange{
 
 var skrIpRange = cloudresourcesv1beta1.IpRange{
 	ObjectMeta: v1.ObjectMeta{
-		Name:      gcpNfsVolume.Spec.IpRange.Name,
-		Namespace: gcpNfsVolume.Spec.IpRange.Namespace,
+		Name: gcpNfsVolume.Spec.IpRange.Name,
 	},
 	Spec: cloudresourcesv1beta1.IpRangeSpec{
 		Cidr: "10.20.30.0/24",

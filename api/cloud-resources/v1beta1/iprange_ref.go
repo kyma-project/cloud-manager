@@ -7,8 +7,6 @@ import (
 type IpRangeRef struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-	// +kubebuilder:validation:Required
-	Namespace string `json:"namespace"`
 }
 
 const (
@@ -17,7 +15,6 @@ const (
 
 func (in *IpRangeRef) ObjKey() types.NamespacedName {
 	return types.NamespacedName{
-		Namespace: in.Namespace,
-		Name:      in.Name,
+		Name: in.Name,
 	}
 }

@@ -48,11 +48,8 @@ spec:
                 properties:
                   name:
                     type: string
-                  namespace:
-                    type: string
                 required:
                 - name
-                - namespace
                 type: object
               memorySizeGb:
                 format: int32

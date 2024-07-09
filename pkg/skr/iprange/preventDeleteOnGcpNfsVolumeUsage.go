@@ -29,7 +29,7 @@ func preventDeleteOnGcpNfsVolumeUsage(ctx context.Context, st composed.State) (e
 
 	gcpNfsVolumesUsingThisIpRange := &cloudresourcesv1beta1.GcpNfsVolumeList{}
 	listOps := &client.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().String()),
+		FieldSelector: fields.OneTermEqualSelector(cloudresourcesv1beta1.IpRangeField, st.Name().Name),
 	}
 	err := state.Cluster().K8sClient().List(ctx, gcpNfsVolumesUsingThisIpRange, listOps)
 	if meta.IsNoMatchError(err) {
