@@ -17,17 +17,20 @@
   simple: true
   name: spec.ipRange
   widget: FormGroup
+  required: false
   children:
     - path: name
-      name: name
+      name: formName
       simple: true
       required: true
       widget: Text
+      inputInfo: Leave blank for auto IP Range
     - path: namespace
       name: namespace
       simple: true
       required: true
       widget: Text
+      inputInfo: Leave blank for auto IP Range
 - path: spec.volume
   simple: true
   name: spec.volume
@@ -35,7 +38,7 @@
   children:
     - path: name
       simple: true
-      name: name
+      name: formName
       required: true
       widget: Text
     - path: labels

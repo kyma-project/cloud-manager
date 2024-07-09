@@ -19,7 +19,7 @@ data:
         widget: Panel
         source: spec.ipRange
         children:
-          - name: name
+          - name: formName
             source: name
             widget: Labels
           - name: namespace
@@ -29,7 +29,7 @@ data:
         source: spec.volume
         widget: Panel
         children:
-          - name: name
+          - name: formName
             source: name
             widget: Labels
           - name: labels
@@ -65,17 +65,20 @@ data:
       simple: true
       name: spec.ipRange
       widget: FormGroup
+      required: false
       children:
         - path: name
-          name: name
+          name: formName
           simple: true
           required: true
           widget: Text
+          inputInfo: Leave blank for auto IP Range
         - path: namespace
           name: namespace
           simple: true
           required: true
           widget: Text
+          inputInfo: Leave blank for auto IP Range
     - path: spec.volume
       simple: true
       name: spec.volume
@@ -83,7 +86,7 @@ data:
       children:
         - path: name
           simple: true
-          name: name
+          name: formName
           required: true
           widget: Text
         - path: labels
@@ -132,7 +135,7 @@ data:
       status.state: State
       placeholders.dropdown: Type or choose an option
       ipRange: IP Range
-      name: Name
+      formName: Name
       namespace: Namespace
       spec.volume: Volume
       labels: Labels
