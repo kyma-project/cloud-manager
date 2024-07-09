@@ -65,7 +65,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
 					WithKcpIpRangeSpecScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
@@ -190,7 +190,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
 					WithKcpIpRangeSpecScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
@@ -300,7 +300,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", iprangeName),
+					WithKcpIpRangeRemoteRef(iprangeName),
 					WithKcpIpRangeSpecScope(kymaName),
 				).
 				Should(Succeed())

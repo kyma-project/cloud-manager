@@ -120,7 +120,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 				infra.Ctx(), infra.KCP().Client(), iprange,
 				WithName("gcp-ip-range"),
 				WithNamespace(infra.KCP().Namespace()),
-				WithKcpIpRangeRemoteRef("skr-namespace", "skr-ip-range"),
+				WithKcpIpRangeRemoteRef("skr-ip-range"),
 				WithKcpIpRangeSpecScope(kymaName),
 				WithKcpIpRangeSpecCidr("10.20.30.0/24"),
 			).
