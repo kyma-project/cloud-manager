@@ -70,6 +70,82 @@ type RedisInstanceGcpConfigs struct {
 	StreamNodeMaxEntries string `json:"stream-node-max-entries,omitempty"`
 }
 
+type RedisInstanceAzureConfigs struct {
+	// +optional
+	AadEnabled string `json:"aad-enabled,omitempty"`
+	// +optional
+	AofBackupEnabled string `json:"aof-backup-enabled,omitempty"`
+	// +optional
+	AofStorageConnectionString0 string `json:"aof-storage-connection-string-0,omitempty"`
+	// +optional
+	AofStorageConnectionString1 string `json:"aof-storage-connection-string-1,omitempty"`
+	// +optional
+	AuthNotRequired string `json:"authnotrequired,omitempty"`
+	// +optional
+	MaxClients string `json:"maxclients,omitempty"`
+	// +optional
+	MaxFragmentationMemoryReserved string `json:"maxfragmentationmemory-reserved,omitempty"`
+	// +optional
+	MaxMemoryDelta string `json:"maxmemory-delta,omitempty"`
+	// +optional
+	MaxMemoryPolicy string `json:"maxmemory-policy,omitempty"`
+	// +optional
+	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
+	// +optional
+	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
+	// +optional
+	PreferredDataArchiveAuthMethod string `json:"preferred-data-archive-auth-method,omitempty"`
+	// +optional
+	PreferredDataPersistenceAuthMethod string `json:"preferred-data-persistence-auth-method,omitempty"`
+	// +optional
+	RdbBackupEnabled string `json:"rdb-backup-enabled,omitempty"`
+	// +optional
+	// +kubebuilder:validation:Enum=15;30;60;360;720;1440
+	RdbBackupFrequency string `json:"rdb-backup-frequency,omitempty"`
+	// +optional
+	RdbBackupMaxSnapshotCount string `json:"rdb-backup-max-snapshot-count,omitempty"`
+	// +optional
+	RdbStorageConnectionString string `json:"rdb-storage-connection-string,omitempty"`
+	// +optional
+	StorageSubscriptionId string `json:"storage-subscription-id,omitempty"`
+	// +optional
+	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
+}
+
+type AzureRedisSKU struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=Basic;Standard;Premium
+	Name string `json:"name"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=C;P
+	Family string `json:"family"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=0;1;2;3;4;5;6
+	Capacity int `json:"capacity"`
+}
+
+type RedisInstanceAzureProperties struct {
+	// +kubebuilder:validation:Required
+	SKU AzureRedisSKU `json:"sku,omitempty"`
+
+	// +optional
+	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
+
+	// +optional
+	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
+
+	// +optional
+	RedisVersion string `json:"redisVersion,omitempty"`
+
+	// +optional
+	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
+}
+
 func (redisConfigs *RedisInstanceGcpConfigs) ToMap() map[string]string {
 	result := map[string]string{}
 
@@ -134,6 +210,25 @@ type RedisInstanceGcp struct {
 }
 
 type RedisInstanceAzure struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Name is immutable."
+	Name string `json:"name"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SubscriptionId is immutable."
+	SubscriptionId string `json:"subscriptionId"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ResourceGroupName is immutable."
+	ResourceGroupName string `json:"resourceGroupName"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ApiVersion is immutable."
+	ApiVersion string `json:"apiVersion"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Properties are immutable."
+	Properties RedisInstanceAzureProperties `json:"properties"`
 }
 
 type RedisInstanceAws struct {
