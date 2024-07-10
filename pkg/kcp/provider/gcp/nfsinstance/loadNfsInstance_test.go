@@ -28,7 +28,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 		switch r.Method {
 
 		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				//Return 404
 				http.Error(w, "Not Found", http.StatusNotFound)
 			} else {
@@ -59,7 +59,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceOtherErrors() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				//Return 500
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			} else {
@@ -92,7 +92,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				//Return 200
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume"}`))

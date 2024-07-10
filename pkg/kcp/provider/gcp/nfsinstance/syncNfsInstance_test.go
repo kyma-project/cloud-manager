@@ -137,7 +137,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				b, err := io.ReadAll(r.Body)
 				assert.Nil(suite.T(), err)
 				//create filestore instance from byte[] and check if it is equal to the expected filestore instance
@@ -185,7 +185,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				b, err := io.ReadAll(r.Body)
 				assert.Nil(suite.T(), err)
 				//create filestore instance from byte[] and check if it is equal to the expected filestore instance
@@ -240,7 +240,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				//Return 200
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"delete-instance-operation"}`))
@@ -279,7 +279,7 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/test-gcp-nfs-volume") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
 				//Return 200
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"error"}`))
