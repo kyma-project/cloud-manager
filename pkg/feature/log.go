@@ -28,6 +28,7 @@ var loggerKeys = []types.Key{
 	types.KeyObjKindGroup,
 	types.KeyCrdKindGroup,
 	types.KeyBusolaKindGroup,
+	types.KeyLandscape,
 }
 
 func attributesToLogger(attributes map[string]interface{}, logger logr.Logger) logr.Logger {
