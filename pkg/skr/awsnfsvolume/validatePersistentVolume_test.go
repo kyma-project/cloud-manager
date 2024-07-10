@@ -2,9 +2,10 @@ package awsnfsvolume
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"testing"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-manager/pkg/composed"
@@ -42,14 +43,14 @@ func TestValidatePersistentVolume(t *testing.T) {
 					Name:      "test-awsnfsvol",
 					Namespace: "test-ns",
 				},
-				//Spec: cloudresourcesv1beta1.AwsNfsVolumeSpec{
-				//
-				//},
+				Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{
+					Id: "2b0d615e-7ea2-41e1-88c7-447ca3e34cd5",
+				},
 			}
 
 			pv = &corev1.PersistentVolume{
 				ObjectMeta: v1.ObjectMeta{
-					Name:   "test-awsnfsvol",
+					Name:   awsNfsVolume.Status.Id,
 					Labels: getVolumeLabels(awsNfsVolume),
 				},
 			}

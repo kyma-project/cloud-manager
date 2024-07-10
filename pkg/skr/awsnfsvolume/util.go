@@ -11,7 +11,7 @@ func getVolumeName(awsVol *cloudresourcesv1beta1.AwsNfsVolume) string {
 		return awsVol.Spec.PersistentVolume.Name
 	}
 
-	return awsVol.Name
+	return awsVol.Status.Id
 }
 
 func getVolumeLabels(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string]string {
