@@ -31,20 +31,22 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter                   | Type                | Description                                                                                                                                                                    |
-|-----------------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **ipRange**                 | object              | Optional IpRange reference. If omitted, default IpRange will be used, if default IpRange does not exist, it will be created                                                    |
-| **ipRange.name**            | string              | Name of the existing IpRange to use.                                                                                                                                           |
-| **capacityGb**              | int                 | Capacity of the provisioned volume.                                                                                                                                            |
-| **tier**                    | string              | The GCP Filestore tier configuration option. One of `generalPurpose`, `maxIO`. Defaults to `generalPurpose`.                                                                   |
-| **volume**                  | object              | The PersistentVolume options. Optional.                                                                                                                                        |
-| **volume.name**             | string              | The PersistentVolume name. Optional. Defaults to the name of the AwsNfsVolume resource.                                                                                        |
-| **volume.labels**           | map\[string\]string | The PersistentVolume labels. Optional. Defaults to nil.                                                                                                                        |
-| **volume.annotations**      | map\[string\]string | The PersistentVolume annotations. Optional. Defaults to nil.                                                                                                                   |
-| **volumeClaim**             | object              | The PersistentVolumeClaim options. Optional.                                                                                                                                   |
-| **volumeClaim.name**        | string              | The PersistentVolumeClaim name. Optional. Defaults to the name of the AwsNfsVolume resource.                                                                                   |
-| **volumeClaim.labels**      | map\[string\]string | The PersistentVolumeClaim labels. Optional. Defaults to nil.                                                                                                                   |
-| **volumeClaim.annotations** | map\[string\]string | The PersistentVolumeClaim annotations. Optional. Defaults to nil.                                                                                                              |
+| Parameter                   | Type                | Description                                                                                                                                       |
+|-----------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| **ipRange**                 | object              | Optional IpRange reference. If omitted, default IpRange will be used, if default IpRange does not exist, it will be created.                      |
+| **ipRange.name**            | string              | Name of the existing IpRange to use.                                                                                                              |
+| **capacityGb**              | int                 | Capacity of the provisioned volume in GiB.                                                                                                        |
+| **location**                | string              | The zone (for zonal tiers) or the region (for regional tiers) where GCP Filestore will reside.                                                    |
+| **tier**                    | string              | The GCP Filestore tier configuration option. Defaults to `BASIC_HDD`.                                                                             |
+| **fileShareName**           | string              | The name of the file share option. Defaults to `vol1`. A file share is the directory on a Filestore instance where all shared files are stored.   |
+| **volume**                  | object              | The PersistentVolume options. Optional.                                                                                                           |
+| **volume.name**             | string              | The PersistentVolume name. Optional. Defaults to the name of the AwsNfsVolume resource.                                                           |
+| **volume.labels**           | map\[string\]string | The PersistentVolume labels. Optional. Defaults to nil.                                                                                           |
+| **volume.annotations**      | map\[string\]string | The PersistentVolume annotations. Optional. Defaults to nil.                                                                                      |
+| **volumeClaim**             | object              | The PersistentVolumeClaim options. Optional.                                                                                                      |
+| **volumeClaim.name**        | string              | The PersistentVolumeClaim name. Optional. Defaults to the name of the AwsNfsVolume resource.                                                      |
+| **volumeClaim.labels**      | map\[string\]string | The PersistentVolumeClaim labels. Optional. Defaults to nil.                                                                                      |
+| **volumeClaim.annotations** | map\[string\]string | The PersistentVolumeClaim annotations. Optional. Defaults to nil.                                                                                 |
 
 **Status:**
 
@@ -70,7 +72,7 @@ metadata:
   name: my-vol
 spec:
   capacityGb: 1024
-  tier: ENTERPRISE
+  location: us-west1
 ---
 apiVersion: v1
 kind: Pod
