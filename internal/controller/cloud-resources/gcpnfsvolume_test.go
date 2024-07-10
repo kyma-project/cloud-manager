@@ -384,7 +384,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						infra.SKR().Client(),
 						prevPv,
 						NewObjActions(
-							WithName(gcpNfsVolumeName),
+							WithName(gcpNfsVolume.Status.Id),
 						),
 					).
 					Should(Succeed())
@@ -599,7 +599,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), pv,
 						NewObjActions(
-							WithName(gcpNfsVolumeName),
+							WithName(gcpNfsVolume.Status.Id),
 						),
 					).
 					Should(Succeed())

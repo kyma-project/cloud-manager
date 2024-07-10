@@ -45,11 +45,14 @@ func TestValidatePV(t *testing.T) {
 				Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
 					CapacityGb: 1000,
 				},
+				Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
+					Id: "26c33227-7abb-471d-b5fd-aeb125c50790",
+				},
 			}
 
 			pv = &corev1.PersistentVolume{
 				ObjectMeta: v1.ObjectMeta{
-					Name:   "test-gcpnfsvol",
+					Name:   gcpNfsVolume.Status.Id,
 					Labels: getVolumeLabels(gcpNfsVolume),
 				},
 			}
