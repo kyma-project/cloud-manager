@@ -215,19 +215,15 @@ type RedisInstanceAzure struct {
 	Name string `json:"name"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SubscriptionId is immutable."
 	SubscriptionId string `json:"subscriptionId"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ResourceGroupName is immutable."
 	ResourceGroupName string `json:"resourceGroupName"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ApiVersion is immutable."
 	ApiVersion string `json:"apiVersion"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Properties are immutable."
 	Properties RedisInstanceAzureProperties `json:"properties"`
 }
 

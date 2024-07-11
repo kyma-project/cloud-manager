@@ -44,9 +44,6 @@ spec:
                     properties:
                       apiVersion:
                         type: string
-                        x-kubernetes-validations:
-                        - message: ApiVersion is immutable.
-                          rule: (self == oldSelf)
                       name:
                         type: string
                         x-kubernetes-validations:
@@ -139,19 +136,10 @@ spec:
                             - name
                             type: object
                         type: object
-                        x-kubernetes-validations:
-                        - message: Properties are immutable.
-                          rule: (self == oldSelf)
                       resourceGroupName:
                         type: string
-                        x-kubernetes-validations:
-                        - message: ResourceGroupName is immutable.
-                          rule: (self == oldSelf)
                       subscriptionId:
                         type: string
-                        x-kubernetes-validations:
-                        - message: SubscriptionId is immutable.
-                          rule: (self == oldSelf)
                     required:
                     - apiVersion
                     - name

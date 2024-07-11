@@ -23,6 +23,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -35,7 +38,8 @@ import (
 
 func SetupRedisInstanceReconciler(
 	kcpManager manager.Manager,
-	filestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClient],
+	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClient],
+	azureFilestoreClientProvider azureclient.SkrClientProvider[azureredisinstanceclient.MemorystoreClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -45,7 +49,8 @@ func SetupRedisInstanceReconciler(
 		redisinstance.NewRedisInstanceReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			gcpredisinstance.NewStateFactory(filestoreClientProvider, env),
+			gcpredisinstance.NewStateFactory(gcpFilestoreClientProvider, env),
+			azureredisinstance.NewStateFactory(azureFilestoreClientProvider),
 		),
 	).SetupWithManager(kcpManager)
 }
