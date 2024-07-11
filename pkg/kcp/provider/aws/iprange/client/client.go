@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type Client interface {
@@ -83,7 +83,7 @@ func (c *client) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Sub
 	out, err := c.svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []types.Filter{
 			{
-				Name:   pointer.String("vpc-id"),
+				Name:   ptr.To("vpc-id"),
 				Values: []string{vpcId},
 			},
 		},
@@ -96,9 +96,9 @@ func (c *client) DescribeSubnets(ctx context.Context, vpcId string) ([]types.Sub
 
 func (c *client) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []types.Tag) (*types.Subnet, error) {
 	in := &ec2.CreateSubnetInput{
-		VpcId:            pointer.String(vpcId),
-		AvailabilityZone: pointer.String(az),
-		CidrBlock:        pointer.String(cidr),
+		VpcId:            ptr.To(vpcId),
+		AvailabilityZone: ptr.To(az),
+		CidrBlock:        ptr.To(cidr),
 	}
 	if len(tags) > 0 {
 		in.TagSpecifications = []types.TagSpecification{
@@ -117,7 +117,7 @@ func (c *client) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags 
 
 func (c *client) DeleteSubnet(ctx context.Context, subnetId string) error {
 	_, err := c.svc.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
-		SubnetId: pointer.String(subnetId),
+		SubnetId: ptr.To(subnetId),
 	})
 	if err != nil {
 		return err

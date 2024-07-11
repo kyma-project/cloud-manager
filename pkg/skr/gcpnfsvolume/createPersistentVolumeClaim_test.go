@@ -85,7 +85,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).CreateCallCount(), "should call create")
 			createdPvc := &corev1.PersistentVolumeClaim{}
-			k8sClient.(spy.ClientSpy).Client().Get(
+			_ = k8sClient.(spy.ClientSpy).Client().Get(
 				ctx,
 				types.NamespacedName{
 					Name:      gcpNfsVolume.Name,

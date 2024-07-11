@@ -114,7 +114,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupReturnsError() {
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
+	_ = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
@@ -166,7 +166,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
+	_ = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)

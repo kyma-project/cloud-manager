@@ -3,7 +3,7 @@ package util
 import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func Ec2Tags(args ...string) (result []ec2types.Tag) {
@@ -14,10 +14,10 @@ func Ec2Tags(args ...string) (result []ec2types.Tag) {
 	resultIndex := 0
 	for i := 0; i < ll; i = i + 2 {
 		result = append(result, ec2types.Tag{
-			Key: pointer.String(args[i]),
+			Key: ptr.To(args[i]),
 		})
 		if i < ll-1 {
-			result[resultIndex].Value = pointer.String(args[i+1])
+			result[resultIndex].Value = ptr.To(args[i+1])
 		}
 		resultIndex++
 	}
@@ -26,8 +26,8 @@ func Ec2Tags(args ...string) (result []ec2types.Tag) {
 
 func GetEfsTagValue(tags []efsTypes.Tag, key string) string {
 	for _, t := range tags {
-		if pointer.StringDeref(t.Key, "") == key {
-			return pointer.StringDeref(t.Value, "")
+		if ptr.Deref(t.Key, "") == key {
+			return ptr.Deref(t.Value, "")
 		}
 	}
 	return ""
@@ -35,8 +35,8 @@ func GetEfsTagValue(tags []efsTypes.Tag, key string) string {
 
 func GetEc2TagValue(tags []ec2types.Tag, key string) string {
 	for _, t := range tags {
-		if pointer.StringDeref(t.Key, "") == key {
-			return pointer.StringDeref(t.Value, "")
+		if ptr.Deref(t.Key, "") == key {
+			return ptr.Deref(t.Value, "")
 		}
 	}
 	return ""

@@ -2,7 +2,6 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -12,9 +11,6 @@ func loadScopeObj(ctx context.Context, st composed.State) (error, context.Contex
 
 	err := state.LoadObj(ctx)
 	if apierrors.IsNotFound(err) {
-		list := &cloudcontrolv1beta1.ScopeList{}
-		err = state.Cluster().K8sClient().List(ctx, list)
-
 		// continue to create one
 		return nil, nil
 	}

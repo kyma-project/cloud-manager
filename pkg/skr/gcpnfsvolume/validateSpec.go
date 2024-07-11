@@ -40,7 +40,7 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonTierInvalid,
-				Message: fmt.Sprintf("Tier is not valid"),
+				Message: "Tier is not valid",
 			}).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
 			Run(ctx, state)
@@ -100,7 +100,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonIpRangeNotFound,
-				Message: fmt.Sprintf("IpRange for this GcpNfsVolume does not exist"),
+				Message: "IpRange for this GcpNfsVolume does not exist",
 			}).
 			ErrorLogMessage("Error updating GcpNfsVolume status with invalid ipRange").
 			Run(ctx, state)
@@ -116,7 +116,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonIpRangeNotReady,
-				Message: fmt.Sprintf("IpRange for this GcpNfsVolume is not in Ready condition"),
+				Message: "IpRange for this GcpNfsVolume is not in Ready condition",
 			}).
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 				return composed.StopWithRequeueDelay(3 * time.Second), nil
@@ -151,7 +151,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
-					Message: fmt.Sprintf("FileShareName for this tier must be 16 characters or less"),
+					Message: "FileShareName for this tier must be 16 characters or less",
 				}).
 				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
 				Run(ctx, state)
@@ -167,7 +167,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
-					Message: fmt.Sprintf("FileShareName for this tier must be 64 characters or less"),
+					Message: "FileShareName for this tier must be 64 characters or less",
 				}).
 				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
 				Run(ctx, state)

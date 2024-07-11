@@ -80,18 +80,6 @@ func (s *server) SetSuIsEnabledError(error *googleapi.Error) {
 	s.suIsEnabledError = error
 }
 
-func (s *server) setRestoreFileError(error *googleapi.Error) {
-	s.restoreFileError = error
-}
-
-func (s *server) setRestoreOperationError(error *googleapi.Error) {
-	s.restoreOperationError = error
-}
-
-func (s *server) setBackupOperationError(error *googleapi.Error) {
-	s.backupOperationError = error
-}
-
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ServiceNetworkingClient, error) {
 		logger := composed.LoggerFromCtx(ctx)

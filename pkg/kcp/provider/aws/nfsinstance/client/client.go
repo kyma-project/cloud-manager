@@ -10,7 +10,7 @@ import (
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -69,7 +69,7 @@ func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types
 	out, err := c.ec2Svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []ec2Types.Filter{
 			{
-				Name:   pointer.String("subnet-id"),
+				Name:   ptr.To("subnet-id"),
 				Values: []string{subnetId},
 			},
 		},
@@ -79,7 +79,7 @@ func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types
 	}
 	if len(out.Subnets) > 1 {
 		return nil, fmt.Errorf("expected at most one subnet by id, but got: %v", pie.Map(out.Subnets, func(s ec2Types.Subnet) string {
-			return pointer.StringDeref(s.SubnetId, "")
+			return ptr.Deref(s.SubnetId, "")
 		}))
 	}
 	var result *ec2Types.Subnet
@@ -102,25 +102,25 @@ func (c *client) DescribeSecurityGroups(ctx context.Context, filters []ec2Types.
 
 func (c *client) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error) {
 	out, err := c.ec2Svc.CreateSecurityGroup(ctx, &ec2.CreateSecurityGroupInput{
-		Description: pointer.String(name),
-		GroupName:   pointer.String(name),
+		Description: ptr.To(name),
+		GroupName:   ptr.To(name),
 		TagSpecifications: []ec2Types.TagSpecification{
 			{
 				ResourceType: ec2Types.ResourceTypeSecurityGroup,
 				Tags:         tags,
 			},
 		},
-		VpcId: pointer.String(vpcId),
+		VpcId: ptr.To(vpcId),
 	})
 	if err != nil {
 		return "", err
 	}
-	return pointer.StringDeref(out.GroupId, ""), nil
+	return ptr.Deref(out.GroupId, ""), nil
 }
 
 func (c *client) DeleteSecurityGroup(ctx context.Context, id string) error {
 	in := &ec2.DeleteSecurityGroupInput{
-		GroupId: pointer.String(id),
+		GroupId: ptr.To(id),
 	}
 	_, err := c.ec2Svc.DeleteSecurityGroup(ctx, in)
 	return err
@@ -128,7 +128,7 @@ func (c *client) DeleteSecurityGroup(ctx context.Context, id string) error {
 
 func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
 	_, err := c.ec2Svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
-		GroupId:       pointer.String(groupId),
+		GroupId:       ptr.To(groupId),
 		IpPermissions: ipPermissions,
 	})
 	if err != nil {
@@ -161,14 +161,14 @@ func (c *client) CreateFileSystem(ctx context.Context, performanceMode efsTypes.
 }
 
 func (c *client) DeleteFileSystem(ctx context.Context, fsId string) error {
-	in := &efs.DeleteFileSystemInput{FileSystemId: pointer.String(fsId)}
+	in := &efs.DeleteFileSystemInput{FileSystemId: ptr.To(fsId)}
 	_, err := c.efsSvc.DeleteFileSystem(ctx, in)
 	return err
 }
 
 func (c *client) DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error) {
 	out, err := c.efsSvc.DescribeMountTargets(ctx, &efs.DescribeMountTargetsInput{
-		FileSystemId: pointer.String(fsId),
+		FileSystemId: ptr.To(fsId),
 	})
 	if err != nil {
 		return nil, err
@@ -178,19 +178,19 @@ func (c *client) DescribeMountTargets(ctx context.Context, fsId string) ([]efsTy
 
 func (c *client) CreateMountTarget(ctx context.Context, fsId, subnetId string, securityGroups []string) (string, error) {
 	out, err := c.efsSvc.CreateMountTarget(ctx, &efs.CreateMountTargetInput{
-		FileSystemId:   pointer.String(fsId),
-		SubnetId:       pointer.String(subnetId),
+		FileSystemId:   ptr.To(fsId),
+		SubnetId:       ptr.To(subnetId),
 		SecurityGroups: securityGroups,
 	})
 	if err != nil {
 		return "", err
 	}
-	return pointer.StringDeref(out.MountTargetId, ""), nil
+	return ptr.Deref(out.MountTargetId, ""), nil
 }
 
 func (c *client) DeleteMountTarget(ctx context.Context, mountTargetId string) error {
 	in := &efs.DeleteMountTargetInput{
-		MountTargetId: pointer.String(mountTargetId),
+		MountTargetId: ptr.To(mountTargetId),
 	}
 	_, err := c.efsSvc.DeleteMountTarget(ctx, in)
 	return err
@@ -198,7 +198,7 @@ func (c *client) DeleteMountTarget(ctx context.Context, mountTargetId string) er
 
 func (c *client) DescribeMountTargetSecurityGroups(ctx context.Context, mountTargetId string) ([]string, error) {
 	out, err := c.efsSvc.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
-		MountTargetId: pointer.String(mountTargetId),
+		MountTargetId: ptr.To(mountTargetId),
 	})
 	if err != nil {
 		return nil, err
