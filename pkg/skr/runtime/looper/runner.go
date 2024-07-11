@@ -13,6 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sync"
@@ -129,6 +130,13 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
 					return
 				}
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", indexer.Obj()),
+						"field", indexer.Field(),
+						"provider", ptr.Deref(options.provider, ""),
+					).
+					Info("Starting indexer")
 			} else {
 				logger.
 					WithValues(
@@ -155,6 +163,12 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
 					return
 				}
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", b.GetForObj()),
+						"provider", ptr.Deref(options.provider, ""),
+					).
+					Info("Starting controller")
 			} else {
 				logger.
 					WithValues(
