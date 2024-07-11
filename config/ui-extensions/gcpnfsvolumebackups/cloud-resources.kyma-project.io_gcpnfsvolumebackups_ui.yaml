@@ -23,6 +23,9 @@ data:
             - widget: Labels
               source: state
               name: status.state
+            - widget: Labels
+              source: opIdentifier
+              name: status.opIdentifier
   form: |-
     - path: spec.location
       simple: true
@@ -76,6 +79,7 @@ data:
       status.state: State
       configuration: Configuration
       status: Status
+      status.opIdentifier: Operation Identifier
 kind: ConfigMap
 metadata:
   labels:

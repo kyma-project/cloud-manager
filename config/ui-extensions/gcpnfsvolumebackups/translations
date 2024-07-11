@@ -6,3 +6,4 @@ en:
   status.state: State
   configuration: Configuration
   status: Status
+  status.opIdentifier: Operation Identifier
