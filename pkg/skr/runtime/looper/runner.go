@@ -129,6 +129,13 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
 					return
 				}
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", indexer.Obj()),
+						"field", indexer.Field(),
+						"provider", string(*options.provider),
+					).
+					Info("Starting indexer")
 			} else {
 				logger.
 					WithValues(
@@ -155,6 +162,12 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
 					return
 				}
+				logger.
+					WithValues(
+						"object", fmt.Sprintf("%T", b.GetForObj()),
+						"provider", string(*options.provider),
+					).
+					Info("Starting controller")
 			} else {
 				logger.
 					WithValues(
