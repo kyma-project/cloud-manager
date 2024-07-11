@@ -1,18 +1,10 @@
 name: PR GoLang Lint
 
 on:
-  pull_request:
-    branches:
-      - "main"
-      - "release-*"
-  workflow_dispatch:
-
-permissions:
-  contents: read
+  - pull_request
 
 jobs:
   golangci:
-    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
