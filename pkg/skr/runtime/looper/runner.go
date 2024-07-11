@@ -72,6 +72,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		return errors.New("already started")
 	}
 	logger := skrManager.GetLogger()
+	logger = feature.DecorateLogger(ctx, logger)
 	logger.Info("SKR Runner running")
 	options := &RunOptions{}
 	for _, o := range opts {
