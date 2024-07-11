@@ -1,6 +1,8 @@
 package cloudcontrol
 
 import (
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -13,7 +15,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
@@ -84,7 +85,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-1"),
 						WithRemoteRef("gcp-nfs-instance-1"),
-						WithNfsInstanceScope(scope.Name),
+						WithInstanceScope(scope.Name),
 						WithNfsInstanceIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).
@@ -231,7 +232,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-2"),
 						WithRemoteRef("gcp-nfs-instance-2"),
-						WithNfsInstanceScope(scope.Name),
+						WithInstanceScope(scope.Name),
 						WithNfsInstanceIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).

@@ -2,6 +2,9 @@ package mock
 
 import (
 	"context"
+	"sync"
+
+	"cloud.google.com/go/redis/apiv1/redispb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
@@ -9,6 +12,7 @@ import (
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpccpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
 )
@@ -23,6 +27,10 @@ func New() Server {
 		nfsRestoreStore:   &nfsRestoreStore{},
 		nfsBackupStore:    &nfsBackupStore{},
 		vpcPeeringStore:   &vpcPeeringStore{},
+		memoryStoreClientFake: &memoryStoreClientFake{
+			mutex:          sync.Mutex{},
+			redisInstances: map[string]*redispb.Instance{},
+		},
 	}
 }
 
@@ -33,6 +41,7 @@ type server struct {
 	*nfsRestoreStore
 	*nfsBackupStore
 	*vpcPeeringStore
+	*memoryStoreClientFake
 }
 
 func (s *server) SetCreateError(error *googleapi.Error) {
@@ -135,6 +144,12 @@ func (s *server) VpcPeeringSkrProvider() cloudclient.ClientProvider[gcpvpccpeeri
 	return func(ctx context.Context, saJsonKeyPath string) (gcpvpccpeering.Client, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP VPCPeeringProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) MemoryStoreProviderFake() client.ClientProvider[memoryStoreClient.MemorystoreClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (memoryStoreClient.MemorystoreClient, error) {
 		return s, nil
 	}
 }

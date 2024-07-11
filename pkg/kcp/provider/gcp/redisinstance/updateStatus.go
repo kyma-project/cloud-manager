@@ -18,7 +18,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	redisInstance.Status.Id = state.gcpRedisInstance.Name
 	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf("%s:%d", state.gcpRedisInstance.Host, state.gcpRedisInstance.Port)
 	if state.gcpRedisInstance.ReadEndpoint != "" {
 		redisInstance.Status.ReadEndpoint = fmt.Sprintf("%s:%d", state.gcpRedisInstance.ReadEndpoint, state.gcpRedisInstance.ReadEndpointPort)

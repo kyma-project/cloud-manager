@@ -2,6 +2,8 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"time"
+
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -13,7 +15,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/pointer"
-	"time"
 )
 
 var _ = Describe("Feature: KCP NfsInstance", func() {
@@ -74,7 +75,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),
-					WithNfsInstanceScope(name),
+					WithInstanceScope(name),
 					WithNfsInstanceIpRange(name),
 					WithNfsInstanceAws(),
 				).
