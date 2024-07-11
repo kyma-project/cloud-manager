@@ -2,7 +2,6 @@ package gcpredisinstance
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -22,7 +21,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 		return nil, nil
 	}
 
-	id := fmt.Sprintf("r-%s", uuid.NewString())
+	id := uuid.NewString()
 
 	state.ObjAsGcpRedisInstance().Status.Id = id
 	state.ObjAsGcpRedisInstance().Status.State = cloudresourcesv1beta1.StateProcessing
