@@ -1,7 +1,10 @@
 name: PR GoLang Lint
 
 on:
-  - pull_request
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   golangci:
@@ -12,6 +15,6 @@ jobs:
         with:
           go-version: '1.21'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v3
         with:
           version: v1.59
