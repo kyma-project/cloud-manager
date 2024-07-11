@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	redis "cloud.google.com/go/redis/apiv1"
@@ -39,7 +38,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/%s", projectId, locationId, instanceId)
+	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	redisInstance := &redispb.Instance{
 		Name:             name,
 		State:            redispb.Instance_CREATING,
@@ -50,16 +49,6 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 
-	// go func() {
-	// 	time.Sleep(1 * time.Second)
-	// 	memoryStoreClientFake.mutex.Lock()
-	// 	defer memoryStoreClientFake.mutex.Unlock()
-
-	// 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
-	// 		instance.State = redispb.Instance_READY
-	// 	}
-	// }()
-
 	return &redis.CreateInstanceOperation{}, nil // redis.CreateInstanceOperation is not used in actual code, so empty object is returned
 }
 
@@ -67,19 +56,11 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx cont
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/%s", projectId, locationId, instanceId)
+	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 
 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
 		instance.State = redispb.Instance_DELETING
 	}
-
-	// go func() {
-	// 	time.Sleep(1 * time.Second)
-	// 	memoryStoreClientFake.mutex.Lock()
-	// 	defer memoryStoreClientFake.mutex.Unlock()
-
-	// 	delete(memoryStoreClientFake.redisInstances, name)
-	// }()
 
 	return nil
 }
@@ -88,7 +69,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) GetRedisInstance(ctx context
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/%s", projectId, locationId, instanceId)
+	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 
 	instance := memoryStoreClientFake.redisInstances[name]
 
