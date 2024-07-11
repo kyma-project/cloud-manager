@@ -2,7 +2,6 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +35,7 @@ func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Cont
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: fmt.Sprintf("Loaded remote Vpc network has no matching tags"),
+				Message: "Loaded remote Vpc network has no matching tags",
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to remote vpc network tag mismatch").
 			FailedError(composed.StopWithRequeue).

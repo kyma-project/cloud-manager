@@ -55,10 +55,7 @@ func (c *client) IsNotFound(err error) bool {
 		return false
 	}
 	var resourceNotFoundException *backuptypes.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
-		return true
-	}
-	return false
+	return errors.As(err, &resourceNotFoundException)
 }
 
 func (c *client) IsAlreadyExists(err error) bool {
@@ -66,10 +63,7 @@ func (c *client) IsAlreadyExists(err error) bool {
 		return false
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
-	if errors.As(err, &alreadyExistsException) {
-		return true
-	}
-	return false
+	return errors.As(err, &alreadyExistsException)
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {

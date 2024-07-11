@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	"k8s.io/apimachinery/pkg/util/json"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func createScopeAws(ctx context.Context, st composed.State) (error, context.Context) {
@@ -47,15 +47,15 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 		Spec: cloudcontrolv1beta1.ScopeSpec{
 			Scope: cloudcontrolv1beta1.ScopeInfo{
 				Aws: &cloudcontrolv1beta1.AwsScope{
-					AccountId:  pointer.StringDeref(callerIdentity.Account, ""),
+					AccountId:  ptr.Deref(callerIdentity.Account, ""),
 					VpcNetwork: commonVpcName(state.shootNamespace, state.shootName),
 					Network: cloudcontrolv1beta1.AwsNetwork{
-						Nodes:    pointer.StringDeref(state.shoot.Spec.Networking.Nodes, ""),
-						Pods:     pointer.StringDeref(state.shoot.Spec.Networking.Pods, ""),
-						Services: pointer.StringDeref(state.shoot.Spec.Networking.Services, ""),
+						Nodes:    ptr.Deref(state.shoot.Spec.Networking.Nodes, ""),
+						Pods:     ptr.Deref(state.shoot.Spec.Networking.Pods, ""),
+						Services: ptr.Deref(state.shoot.Spec.Networking.Services, ""),
 						VPC: cloudcontrolv1beta1.AwsVPC{
-							Id:   pointer.StringDeref(infra.Networks.VPC.ID, ""),
-							CIDR: pointer.StringDeref(infra.Networks.VPC.CIDR, ""),
+							Id:   ptr.Deref(infra.Networks.VPC.ID, ""),
+							CIDR: ptr.Deref(infra.Networks.VPC.CIDR, ""),
 						},
 						Zones: pie.Map(infra.Networks.Zones, func(z awsgardener.Zone) cloudcontrolv1beta1.AwsZone {
 							return cloudcontrolv1beta1.AwsZone{

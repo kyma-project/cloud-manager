@@ -48,7 +48,7 @@ func AwsReportMetricsMiddleware() smithymiddleware.DeserializeMiddleware {
 			responseStatusCode = resp.StatusCode
 		}
 
-		latency := time.Now().Sub(requestMadeTime)
+		latency := time.Since(requestMadeTime)
 		metrics := awsRequestMetricTuple{
 			ServiceName:   sdkmiddleware.GetServiceID(ctx),
 			OperationName: sdkmiddleware.GetOperationName(ctx),

@@ -5,7 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 var _ Server = &server{}
@@ -32,7 +32,7 @@ func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName stri
 	entry := &networkEntry{
 		resourceGroup: resourceGroup,
 		network: armnetwork.VirtualNetwork{
-			Name: pointer.String(virtualNetworkName),
+			Name: ptr.To(virtualNetworkName),
 			Tags: tags,
 		},
 	}

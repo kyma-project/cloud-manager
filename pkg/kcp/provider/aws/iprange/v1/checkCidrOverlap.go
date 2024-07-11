@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"k8s.io/utils/ptr"
 
 	"github.com/3th1nk/cidr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -10,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 )
 
 func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Context) {
@@ -23,7 +23,7 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	for _, set := range state.vpc.CidrBlockAssociationSet {
-		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
+		cdr, err := cidr.Parse(ptr.Deref(set.CidrBlock, ""))
 		if err != nil {
 			logger.Error(err, "Error parsing AWS CIDR: %w", err)
 			continue
@@ -38,7 +38,7 @@ func checkCidrOverlap(ctx context.Context, st composed.State) (error, context.Co
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonCidrOverlap,
-				Message: fmt.Sprintf("CIDR overlaps with VPC adress range cidr %s", pointer.StringDeref(set.CidrBlock, "")),
+				Message: fmt.Sprintf("CIDR overlaps with VPC adress range cidr %s", ptr.Deref(set.CidrBlock, "")),
 			})
 			err := state.UpdateObjStatus(ctx)
 			if err != nil {

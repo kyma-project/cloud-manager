@@ -111,20 +111,14 @@ func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstruct
 func (l *activeSkrCollection) Contains(kymaName string) bool {
 	l.Lock()
 	defer l.Unlock()
-	if pie.Contains(l.kymaNames, kymaName) {
-		return true
-	}
-	return false
+	return pie.Contains(l.kymaNames, kymaName)
 }
 
 func (l *activeSkrCollection) GetKymaNames() []string {
 	l.RLock()
 	defer l.RUnlock()
-	var kymaNames []string
-	kymaNames = make([]string, len(l.kymaNames))
-	for x := range l.kymaNames {
-		kymaNames[x] = l.kymaNames[x]
-	}
+	kymaNames := make([]string, len(l.kymaNames))
+	copy(kymaNames, l.kymaNames)
 	return kymaNames
 }
 
@@ -164,9 +158,6 @@ type skrLooper struct {
 
 	// ctx the Context looper was started with
 	ctx context.Context
-
-	// kymaNames slice of active SKRs that have to be looped trough
-	kymaNames []string
 }
 
 func (l *skrLooper) Start(ctx context.Context) error {

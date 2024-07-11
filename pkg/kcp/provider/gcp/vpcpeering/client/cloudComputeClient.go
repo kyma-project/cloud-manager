@@ -62,7 +62,7 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 
 	isRemoteNetworkTagged, err := c.CheckRemoteNetworkTags(ctx, remoteNetworkInfo, *kymaVpc)
 
-	if isRemoteNetworkTagged == false || (err != nil && err.Error() == "no more items in iterator") {
+	if !isRemoteNetworkTagged || (err != nil && err.Error() == "no more items in iterator") {
 		return nil, fmt.Errorf("remote network " + *remoteVpc + " is not tagged with the kyma shoot name " + *kymaVpc)
 	} else if err != nil {
 		return nil, err
@@ -89,6 +89,9 @@ func (c *networkClient) CreateVpcPeeringConnection(ctx context.Context, name *st
 
 	var networkPeering *pb.NetworkPeering
 	net, err := c.cnc.Get(ctx, &pb.GetNetworkRequest{Network: *kymaVpc, Project: *kymaProject})
+	if err != nil {
+		return nil, err
+	}
 	nps := net.GetPeerings()
 	for _, np := range nps {
 		if *np.Network == remoteNetwork {

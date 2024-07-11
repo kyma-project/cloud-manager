@@ -31,7 +31,6 @@ func (suite *checkGcpOperationSuite) SetupTest() {
 func (suite *checkGcpOperationSuite) TestWhenOpIdentifierIsNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -64,7 +63,6 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwGetOperationFailed() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -127,7 +125,6 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationFailed() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -186,7 +183,6 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -236,7 +232,6 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -274,7 +269,6 @@ func (suite *checkGcpOperationSuite) TestWhenComputeGetOperationFailed() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -340,7 +334,6 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationFailed() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -399,7 +392,6 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -449,7 +441,6 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
@@ -28,6 +29,10 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		state.awsSecretAccessKey,
 		roleArn,
 	)
+	if err != nil {
+		logger.Error(err, "Failed to create aws acceptVpcPeeringConnection client")
+		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+	}
 
 	peering, err := client.AcceptVpcPeeringConnection(ctx,
 		state.vpcPeering.VpcPeeringConnectionId)

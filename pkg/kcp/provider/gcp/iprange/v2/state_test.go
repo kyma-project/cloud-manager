@@ -94,10 +94,6 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 
 }
 
-func (f *testStateFactory) newState(ctx context.Context) (*State, error) {
-	return f.newStateWith(ctx, &gcpIpRange)
-}
-
 func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontrolv1beta1.IpRange) (*State, error) {
 	return f.newStateWithScope(ctx, ipRange, gcpScope)
 }

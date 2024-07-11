@@ -46,7 +46,8 @@ func (r *reconciler) newAction() composed.Action {
 		composed.LoadObj,
 		composed.ComposeActions(
 			"crAwsNfsVolumeValidateSpec",
-			validatePersistentVolume, validatePersistentVolumeClaim),
+			validatePersistentVolume, validatePersistentVolumeClaim,
+		),
 		defaultiprange.New(),
 
 		loadVolume,
