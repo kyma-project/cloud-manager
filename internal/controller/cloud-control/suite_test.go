@@ -105,6 +105,12 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().VpcPeeringSkrProvider(),
 		env,
 	))
+	//RedisInstance
+	Expect(SetupRedisInstanceReconciler(
+		infra.KcpManager(),
+		infra.GcpMock().MemoryStoreProviderFake(),
+		env,
+	))
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

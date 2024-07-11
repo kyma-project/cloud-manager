@@ -46,7 +46,7 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 
 	redisInstance.Status.State = cloudresourcesv1beta1.StateDeleting
-	err = state.Cluster().K8sClient().Status().Update(ctx, redisInstance)
+	err = state.UpdateObjStatus(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Failed status update on GCP RedisInstance", composed.StopWithRequeue, ctx)
