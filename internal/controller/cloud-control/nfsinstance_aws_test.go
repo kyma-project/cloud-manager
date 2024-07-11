@@ -76,7 +76,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 					WithName(name),
 					WithRemoteRef("foo"),
 					WithInstanceScope(name),
-					WithNfsInstanceIpRange(name),
+					WithIpRange(name),
 					WithNfsInstanceAws(),
 				).
 				Should(Succeed(), "failed creating NfsInstance")

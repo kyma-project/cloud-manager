@@ -86,7 +86,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						WithName("gcp-nfs-instance-1"),
 						WithRemoteRef("gcp-nfs-instance-1"),
 						WithInstanceScope(scope.Name),
-						WithNfsInstanceIpRange(kcpIpRange.Name),
+						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).
 					Should(Succeed())
@@ -233,7 +233,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						WithName("gcp-nfs-instance-2"),
 						WithRemoteRef("gcp-nfs-instance-2"),
 						WithInstanceScope(scope.Name),
-						WithNfsInstanceIpRange(kcpIpRange.Name),
+						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).
 					Should(Succeed())

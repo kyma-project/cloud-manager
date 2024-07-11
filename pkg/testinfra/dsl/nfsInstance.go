@@ -57,18 +57,6 @@ func WithNfsInstanceGcp(location string) ObjAction {
 	}
 }
 
-func WithNfsInstanceIpRange(ipRangeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
-				x.Spec.IpRange.Name = ipRangeName
-				return
-			}
-			panic("unhandled type in WithNfsInstanceIpRange")
-		},
-	}
-}
-
 func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.NfsInstance{}
