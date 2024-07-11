@@ -15,6 +15,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sync"
@@ -256,10 +257,13 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	skrManager.GetScheme()
 
 	ctx := feature.ContextBuilderFromCtx(l.ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
 		LoadFromScope(scope).
 		LoadFromKyma(kyma).
 		Plane(types.PlaneSkr).
 		Build(l.ctx)
+
+	logger = feature.DecorateLogger(ctx, logger)
 
 	logger.Info("Starting SKR Runner")
 	runner := NewSkrRunner(l.registry, l.kcpCluster)
