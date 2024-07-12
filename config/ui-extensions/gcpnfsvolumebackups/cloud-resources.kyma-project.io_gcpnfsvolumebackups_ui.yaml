@@ -23,6 +23,9 @@ data:
             - widget: Labels
               source: state
               name: status.state
+            - widget: Labels
+              source: opIdentifier
+              name: status.opIdentifier
   form: |-
     - path: spec.location
       simple: true
@@ -71,11 +74,12 @@ data:
     en:
       spec.location: Location
       spec.source.volume: Volume
-      spec.source.volume.name: Name
+      spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Namespace
       status.state: State
       configuration: Configuration
       status: Status
+      status.opIdentifier: Operation Identifier
 kind: ConfigMap
 metadata:
   labels:

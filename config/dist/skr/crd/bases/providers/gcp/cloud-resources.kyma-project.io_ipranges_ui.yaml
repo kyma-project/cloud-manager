@@ -24,7 +24,8 @@ data:
       name: spec.cidr
       widget: Text
       simple: true
-      required: true
+      required: false
+      inputInfo: Leave blank for Auto-CIDR
   general: |
     resource:
         kind: IpRange
@@ -40,9 +41,6 @@ data:
   list: |-
     - source: status.cidr
       name: status.cidr
-      sort: true
-    - source: metadata.namespace
-      name: metadata.namespace
       sort: true
     - source: status.state
       name: status.state

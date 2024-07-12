@@ -16,7 +16,7 @@ body:
     widget: Panel
     source: spec.ipRange
     children:
-      - name: name
+      - name: formName
         source: name
         widget: Labels
       - name: namespace
@@ -26,7 +26,7 @@ body:
     source: spec.volume
     widget: Panel
     children:
-      - name: name
+      - name: formName
         source: name
         widget: Labels
       - name: labels
