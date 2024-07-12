@@ -26,6 +26,8 @@ const (
 type FeatureName = string
 
 const (
+	FeatureUnknown FeatureName = "unknown"
+
 	FeatureNfs       FeatureName = "nfs"
 	FeatureNfsBackup FeatureName = "nfsBackup"
 	FeaturePeering   FeatureName = "peering"
@@ -64,10 +66,14 @@ type Feature[T any] interface {
 
 type FeatureAwareObject interface {
 	client.Object
+	// SpecificToFeature returns FeatureName this resource belongs too. If not specific to certain feature
+	// it should return empty string
 	SpecificToFeature() FeatureName
 }
 
 type ProviderAwareObject interface {
 	client.Object
+	// SpecificToProviders returns slice of supported providers as defined in the Shoot resource
+	// if not specific to certain providers and can work with all providers it should return nil
 	SpecificToProviders() []string
 }
