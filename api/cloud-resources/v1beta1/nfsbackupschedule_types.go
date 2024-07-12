@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -104,6 +105,14 @@ type NfsBackupSchedule struct {
 
 	Spec   NfsBackupScheduleSpec   `json:"spec,omitempty"`
 	Status NfsBackupScheduleStatus `json:"status,omitempty"`
+}
+
+func (in *NfsBackupSchedule) SpecificToProviders() []string {
+	return nil
+}
+
+func (in *NfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfsBackup
 }
 
 //+kubebuilder:object:root=true
