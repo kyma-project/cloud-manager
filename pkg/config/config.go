@@ -117,7 +117,7 @@ func (c *config) Read() {
 	}
 }
 
-func (c *config) Watch(stopCh chan struct{}, onConfigChange func(event fsnotify.Event)) error {
+func (c *config) Watch(stopCh <-chan struct{}, onConfigChange func(event fsnotify.Event)) error {
 	state := &watchedState{}
 
 	// if nil provided, it won't ever be closed, aka watch stopped, make a stub instead

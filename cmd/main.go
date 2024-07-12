@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/fsnotify/fsnotify"
 	"os"
 
 	"github.com/elliotchance/pie/v2"
@@ -279,6 +280,15 @@ func main() {
 		Landscape(os.Getenv("LANDSCAPE")).
 		Plane(featuretypes.PlaneKcp).
 		Build(ctx)
+
+	go func() {
+		err := cfg.Watch(ctx.Done(), func(_ fsnotify.Event) {
+			cfg.Read()
+		})
+		if err != nil {
+			rootLogger.Error(err, "Error from config watcher")
+		}
+	}()
 
 	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
