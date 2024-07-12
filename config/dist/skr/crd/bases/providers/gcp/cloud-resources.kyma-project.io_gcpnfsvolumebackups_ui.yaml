@@ -74,7 +74,7 @@ data:
     en:
       spec.location: Location
       spec.source.volume: Volume
-      spec.source.volume.name: Name
+      spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Namespace
       status.state: State
       configuration: Configuration
