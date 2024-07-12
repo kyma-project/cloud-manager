@@ -14,7 +14,7 @@ func getVolumeName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {
 		return gcpVol.Spec.PersistentVolume.Name
 	}
 
-	return gcpVol.Name
+	return gcpVol.Status.Id
 }
 
 func getVolumeClaimName(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) string {

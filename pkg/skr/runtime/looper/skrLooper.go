@@ -15,6 +15,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sync"
@@ -111,20 +112,14 @@ func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstruct
 func (l *activeSkrCollection) Contains(kymaName string) bool {
 	l.Lock()
 	defer l.Unlock()
-	if pie.Contains(l.kymaNames, kymaName) {
-		return true
-	}
-	return false
+	return pie.Contains(l.kymaNames, kymaName)
 }
 
 func (l *activeSkrCollection) GetKymaNames() []string {
 	l.RLock()
 	defer l.RUnlock()
-	var kymaNames []string
-	kymaNames = make([]string, len(l.kymaNames))
-	for x := range l.kymaNames {
-		kymaNames[x] = l.kymaNames[x]
-	}
+	kymaNames := make([]string, len(l.kymaNames))
+	copy(kymaNames, l.kymaNames)
 	return kymaNames
 }
 
@@ -164,9 +159,6 @@ type skrLooper struct {
 
 	// ctx the Context looper was started with
 	ctx context.Context
-
-	// kymaNames slice of active SKRs that have to be looped trough
-	kymaNames []string
 }
 
 func (l *skrLooper) Start(ctx context.Context) error {
@@ -256,10 +248,13 @@ func (l *skrLooper) handleOneSkr(kymaName string) {
 	skrManager.GetScheme()
 
 	ctx := feature.ContextBuilderFromCtx(l.ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
 		LoadFromScope(scope).
 		LoadFromKyma(kyma).
 		Plane(types.PlaneSkr).
 		Build(l.ctx)
+
+	logger = feature.DecorateLogger(ctx, logger)
 
 	logger.Info("Starting SKR Runner")
 	runner := NewSkrRunner(l.registry, l.kcpCluster)

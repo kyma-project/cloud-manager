@@ -5,7 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type storeSubscriptionContext struct {
@@ -27,15 +27,15 @@ func (c *storeSubscriptionContext) CreatePeering(ctx context.Context, resourceGr
 		resourceGroupName:  resourceGroupName,
 		virtualNetworkName: virtualNetworkName,
 		peering: armnetwork.VirtualNetworkPeering{
-			ID:   pointer.String(id),
-			Name: pointer.String(virtualNetworkPeeringName),
+			ID:   ptr.To(id),
+			Name: ptr.To(virtualNetworkPeeringName),
 			Properties: &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-				AllowForwardedTraffic:     pointer.Bool(true),
-				AllowGatewayTransit:       pointer.Bool(false),
-				AllowVirtualNetworkAccess: pointer.Bool(allowVnetAccess),
-				UseRemoteGateways:         pointer.Bool(false),
+				AllowForwardedTraffic:     ptr.To(true),
+				AllowGatewayTransit:       ptr.To(false),
+				AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
+				UseRemoteGateways:         ptr.To(false),
 				RemoteVirtualNetwork: &armnetwork.SubResource{
-					ID: pointer.String(remoteVnetId),
+					ID: ptr.To(remoteVnetId),
 				},
 			},
 		},
@@ -48,7 +48,7 @@ func (c *storeSubscriptionContext) CreatePeering(ctx context.Context, resourceGr
 
 func (c *storeSubscriptionContext) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
 	for _, x := range c.networkStore.items {
-		if virtualNetworkName == pointer.StringDeref(x.network.Name, "") &&
+		if virtualNetworkName == ptr.Deref(x.network.Name, "") &&
 			resourceGroupName == x.resourceGroup {
 			return &x.network, nil
 		}
@@ -67,7 +67,7 @@ func (c *storeSubscriptionContext) ListPeerings(ctx context.Context, resourceGro
 
 func (c *storeSubscriptionContext) GetPeering(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
 	for _, x := range c.peeringStore.items {
-		if virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, "") &&
+		if virtualNetworkPeeringName == ptr.Deref(x.peering.Name, "") &&
 			resourceGroup == x.resourceGroupName &&
 			virtualNetworkName == x.virtualNetworkName {
 			return &x.peering, nil
@@ -80,7 +80,7 @@ func (c *storeSubscriptionContext) DeletePeering(ctx context.Context, resourceGr
 	c.peeringStore.items = pie.Filter(c.peeringStore.items, func(x *peeringEntry) bool {
 		return !(x.resourceGroupName == resourceGroup &&
 			x.virtualNetworkName == virtualNetworkName &&
-			virtualNetworkPeeringName == pointer.StringDeref(x.peering.Name, ""))
+			virtualNetworkPeeringName == ptr.Deref(x.peering.Name, ""))
 	})
 
 	return nil

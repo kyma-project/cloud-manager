@@ -76,7 +76,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
 					WithName(awsNfsVolumeName),
-					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
 					WithAwsNfsVolumePvName(pvName),
 					WithAwsNfsVolumePvLabels(pvLabels),
@@ -278,7 +278,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
 					WithName(awsNfsVolumeName),
-					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity(awsNfsVolumeCapacity),
 				).
 				Should(Succeed())
@@ -348,7 +348,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pv,
 					NewObjActions(
-						WithName(awsNfsVolume.Name),
+						WithName(awsNfsVolume.Status.Id),
 					),
 				).
 				Should(Succeed(), "failed creating PV")
@@ -362,7 +362,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.SKR().Client(),
 					pvc,
 					NewObjActions(
-						WithName(pv.Name),
+						WithName(awsNfsVolume.Name),
 						WithNamespace(awsNfsVolume.Namespace),
 					),
 				).
@@ -549,7 +549,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.Ctx(),
 					infra.SKR().Client(),
 					pv,
-					NewObjActions(WithName(awsNfsVolume.Name)),
+					NewObjActions(WithName(awsNfsVolume.Status.Id)),
 				).
 				Should(Succeed())
 		})
@@ -690,7 +690,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					infra.Ctx(),
 					infra.SKR().Client(),
 					pv,
-					NewObjActions(WithName(awsNfsVolume.Name)),
+					NewObjActions(WithName(awsNfsVolume.Status.Id)),
 				).
 				Should(Succeed())
 		})

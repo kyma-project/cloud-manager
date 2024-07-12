@@ -115,13 +115,10 @@ func WithKcpIpRangeSpecScope(scopeName string) ObjAction {
 	}
 }
 
-func WithKcpIpRangeRemoteRef(ns, name string) ObjAction {
+func WithKcpIpRangeRemoteRef(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.IpRange)
-			if x.Spec.RemoteRef.Namespace == "" {
-				x.Spec.RemoteRef.Namespace = ns
-			}
 			if x.Spec.RemoteRef.Name == "" {
 				x.Spec.RemoteRef.Name = name
 			}

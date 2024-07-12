@@ -19,6 +19,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 			"rangeSubnetCount", rangeSubnetCount,
 			"shootZonesCount", shootZonesCount,
 		)
+		ctx = composed.LoggerIntoCtx(ctx, logger)
 
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
 		return composed.PatchStatus(state.ObjAsIpRange()).

@@ -43,7 +43,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 		return fmt.Errorf("error listing SKR provider directory %s: %w", dir, err)
 	}
 	var files []string
-	rx := regexp.MustCompile(".+\\.yaml")
+	rx := regexp.MustCompile(`.+\.yaml`)
 	for _, en := range entries {
 		if rx.Match([]byte(en.Name())) {
 			files = append(files, path.Join(dir, en.Name()))

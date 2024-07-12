@@ -3,6 +3,9 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -13,8 +16,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 type createPersistenceVolumeSuite struct {
@@ -43,18 +44,19 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	assert.Nil(suite.T(), _ctx)
 
 	//Get the created PV object
-	pvName := gcpNfsVolume.Name
+	pvName := gcpNfsVolume.Status.Id
 	pv := v1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate NFS attributes of PV
 	assert.Nil(suite.T(), err)
+	assert.True(suite.T(), len(pvName) > 0)
 	assert.Equal(suite.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
 	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
 
 	//Validate PV Capacity
 	expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
-	quantity, _ := pv.Spec.Capacity["storage"]
+	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
 	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
 }

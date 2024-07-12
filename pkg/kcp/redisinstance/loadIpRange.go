@@ -6,7 +6,7 @@ import (
 
 	types2 "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -22,7 +22,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	redisInstance := state.ObjAsRedisInstance()
 	ipRangeName := redisInstance.Spec.IpRange.Name
 
-	ipRange := &cloudresourcesv1beta1.IpRange{}
+	ipRange := &cloudcontrolv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),
 		Name:      ipRangeName,
@@ -37,9 +37,9 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 			WithValues("ipRange", ipRangeName).
 			Error(err, "Referred IpRange does not exist")
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudresourcesv1beta1.ReasonInvalidIpRangeReference,
+			Reason:  cloudcontrolv1beta1.ReasonInvalidIpRangeReference,
 			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), ipRangeName),
 		})
 		redisInstance.SetStatusStateToError()

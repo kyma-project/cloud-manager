@@ -87,7 +87,7 @@ func (c *clusterInfo) Cfg() *rest.Config {
 
 func (c *clusterInfo) EnsureCrds(ctx context.Context) error {
 	var files []string
-	rx := regexp.MustCompile(".+\\.yaml")
+	rx := regexp.MustCompile(`.+\.yaml`)
 	for _, dir := range c.crdDirs {
 		entries, err := os.ReadDir(dir)
 		if err != nil {

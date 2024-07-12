@@ -27,7 +27,6 @@ func (suite *compareStatesSuite) SetupTest() {
 func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -48,7 +47,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists(
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
@@ -65,7 +63,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists(
 func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -86,7 +83,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -110,7 +106,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -154,7 +149,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -205,7 +199,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExis
 func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -224,7 +217,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
@@ -241,7 +233,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists
 func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -288,7 +279,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -334,7 +324,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionNotInclusive() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -387,7 +376,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -406,7 +394,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{

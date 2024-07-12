@@ -11,7 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -21,7 +21,7 @@ func checkCidrBlockStatus(ctx context.Context, st composed.State) (error, contex
 
 	rangeCidr, _ := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
 	for _, set := range state.vpc.CidrBlockAssociationSet {
-		cdr, err := cidr.Parse(pointer.StringDeref(set.CidrBlock, ""))
+		cdr, err := cidr.Parse(ptr.Deref(set.CidrBlock, ""))
 		if err != nil {
 			logger.Error(err, "Error parsing AWS CIDR: %w", err)
 			continue

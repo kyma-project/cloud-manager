@@ -24,7 +24,6 @@ func (suite *addFinalizerSuite) SetupTest() {
 func (suite *addFinalizerSuite) TestAddFinalizer() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
@@ -45,7 +44,6 @@ func (suite *addFinalizerSuite) TestAddFinalizer() {
 func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	deletingObj := deletingGpNfsVolumeRestore.DeepCopy()

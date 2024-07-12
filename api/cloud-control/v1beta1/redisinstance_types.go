@@ -196,13 +196,13 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=true
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
-	AuthEnabled bool `json:"authEnabled"`
+	AuthEnabled bool `json:"authEnabled,omitempty"`
 
 	// +optional
 	// +kubebuilder:default=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
 	// +kubebuilder:validation:Enum=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED;SERVER_AUTHENTICATION;DISABLED
-	TransitEncryptionMode string `json:"transitEncryptionMode"`
+	TransitEncryptionMode string `json:"transitEncryptionMode,omitempty"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."

@@ -107,9 +107,7 @@ func (c *client) ListPeerings(ctx context.Context, resourceGroupName string, vir
 			return nil, err
 		}
 
-		for _, v := range page.Value {
-			items = append(items, v)
-		}
+		items = append(items, page.Value...)
 	}
 
 	return items, nil

@@ -53,9 +53,9 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
 	req := &redispb.CreateInstanceRequest{
 		Parent:     parent,
-		InstanceId: instanceId,
+		InstanceId: GetGcpMemoryStoreRedisInstanceId(instanceId),
 		Instance: &redispb.Instance{
-			Name:                  fmt.Sprintf("%s/%s", parent, instanceId),
+			Name:                  GetGcpMemoryStoreRedisName(projectId, locationId, instanceId),
 			MemorySizeGb:          options.MemorySizeGb,
 			Tier:                  redispb.Instance_Tier(redispb.Instance_Tier_value[options.Tier]),
 			RedisVersion:          options.RedisVersion,
@@ -86,7 +86,7 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 	}
 	defer redisClient.Close()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locationId, instanceId)
+	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	req := &redispb.GetInstanceRequest{
 		Name: name,
 	}
@@ -119,9 +119,8 @@ func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Cont
 	}
 	defer redisClient.Close()
 
-	name := fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locationId, instanceId)
 	req := &redispb.DeleteInstanceRequest{
-		Name: name,
+		Name: GetGcpMemoryStoreRedisName(projectId, locationId, instanceId),
 	}
 
 	_, err := redisClient.DeleteInstance(ctx, req)

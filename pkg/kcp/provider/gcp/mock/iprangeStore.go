@@ -152,7 +152,7 @@ func (s *iprangeStore) GetIpRange(ctx context.Context, projectId, name string) (
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	var result *compute.Address = nil
+	var result *compute.Address
 	id := fmt.Sprintf("projects/%s/address/%s", projectId, name)
 
 	for _, addr := range s.addresses {

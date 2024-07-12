@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"errors"
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -21,7 +22,7 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	location := state.getGcpLocation()
-	name := nfsInstance.Spec.RemoteRef.Name
+	name := fmt.Sprintf("cm-%.60s", nfsInstance.Name)
 
 	inst, err := state.filestoreClient.GetFilestoreInstance(ctx, project, location, name)
 	if err != nil {

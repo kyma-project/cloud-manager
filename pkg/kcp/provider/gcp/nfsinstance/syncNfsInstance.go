@@ -23,7 +23,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	location := state.getGcpLocation()
-	name := nfsInstance.Spec.RemoteRef.Name
+	name := fmt.Sprintf("cm-%.60s", nfsInstance.Name)
 
 	var operation *file.Operation
 	var err error

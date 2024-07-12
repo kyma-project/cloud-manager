@@ -46,7 +46,7 @@ func splitRangeByZones(ctx context.Context, st composed.State) (error, context.C
 	}
 	subnetRanges, err := wholeRange.SubNetting(cidr.MethodSubnetNum, numberOfSubnets)
 	if err != nil {
-		err = fmt.Errorf("error splitting IpRange cidr: %w", err)
+		logger.Error(err, "error splitting IpRange cidr")
 		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,

@@ -74,7 +74,7 @@ func (suite *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 
 	//Validate PV Capacity
 	expectedCapacity := int64(nfsVol.Status.CapacityGb) * 1024 * 1024 * 1024
-	quantity, _ := pv.Spec.Capacity["storage"]
+	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
 	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
 }
