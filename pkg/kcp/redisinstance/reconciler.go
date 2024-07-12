@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/types"
@@ -65,6 +65,6 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 
 func (r *redisInstanceReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
-		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.RedisInstance{}),
+		r.composedStateFactory.NewState(name, &cloudcontrolv1beta1.RedisInstance{}),
 	)
 }
