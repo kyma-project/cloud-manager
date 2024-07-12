@@ -126,26 +126,6 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
-type RedisInstanceAzureProperties struct {
-	// +kubebuilder:validation:Required
-	SKU AzureRedisSKU `json:"sku,omitempty"`
-
-	// +optional
-	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
-
-	// +optional
-	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
-
-	// +optional
-	RedisVersion string `json:"redisVersion,omitempty"`
-
-	// +optional
-	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
-}
-
 func (redisConfigs *RedisInstanceGcpConfigs) ToMap() map[string]string {
 	result := map[string]string{}
 
@@ -211,20 +191,22 @@ type RedisInstanceGcp struct {
 
 type RedisInstanceAzure struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Name is immutable."
-	Name string `json:"name"`
+	SKU AzureRedisSKU `json:"sku"`
 
-	// +kubebuilder:validation:Required
-	SubscriptionId string `json:"subscriptionId"`
+	// +optional
+	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
 
-	// +kubebuilder:validation:Required
-	ResourceGroupName string `json:"resourceGroupName"`
+	// +optional
+	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 
-	// +kubebuilder:validation:Required
-	ApiVersion string `json:"apiVersion"`
+	// +optional
+	RedisVersion string `json:"redisVersion,omitempty"`
 
-	// +kubebuilder:validation:Required
-	Properties RedisInstanceAzureProperties `json:"properties"`
+	// +optional
+	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {

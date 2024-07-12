@@ -42,110 +42,92 @@ spec:
                     type: object
                   azure:
                     properties:
-                      apiVersion:
-                        type: string
-                      name:
-                        type: string
-                        x-kubernetes-validations:
-                        - message: Name is immutable.
-                          rule: (self == oldSelf)
-                      properties:
+                      enableNonSslPort:
+                        type: boolean
+                      redisConfiguration:
                         properties:
-                          enableNonSslPort:
-                            type: boolean
-                          redisConfiguration:
-                            properties:
-                              aad-enabled:
-                                type: string
-                              aof-backup-enabled:
-                                type: string
-                              aof-storage-connection-string-0:
-                                type: string
-                              aof-storage-connection-string-1:
-                                type: string
-                              authnotrequired:
-                                type: string
-                              maxclients:
-                                type: string
-                              maxfragmentationmemory-reserved:
-                                type: string
-                              maxmemory-delta:
-                                type: string
-                              maxmemory-policy:
-                                type: string
-                              maxmemory-reserved:
-                                type: string
-                              notify-keyspace-events:
-                                type: string
-                              preferred-data-archive-auth-method:
-                                type: string
-                              preferred-data-persistence-auth-method:
-                                type: string
-                              rdb-backup-enabled:
-                                type: string
-                              rdb-backup-frequency:
-                                enum:
-                                - 15
-                                - 30
-                                - 60
-                                - 360
-                                - 720
-                                - 1440
-                                type: string
-                              rdb-backup-max-snapshot-count:
-                                type: string
-                              rdb-storage-connection-string:
-                                type: string
-                              storage-subscription-id:
-                                type: string
-                              zonal-configuration:
-                                type: string
-                            type: object
-                          redisVersion:
+                          aad-enabled:
                             type: string
-                          replicasPerPrimary:
-                            type: integer
-                          shardCount:
-                            type: integer
-                          sku:
-                            properties:
-                              capacity:
-                                enum:
-                                - 0
-                                - 1
-                                - 2
-                                - 3
-                                - 4
-                                - 5
-                                - 6
-                                type: integer
-                              family:
-                                enum:
-                                - C
-                                - P
-                                type: string
-                              name:
-                                enum:
-                                - Basic
-                                - Standard
-                                - Premium
-                                type: string
-                            required:
-                            - capacity
-                            - family
-                            - name
-                            type: object
+                          aof-backup-enabled:
+                            type: string
+                          aof-storage-connection-string-0:
+                            type: string
+                          aof-storage-connection-string-1:
+                            type: string
+                          authnotrequired:
+                            type: string
+                          maxclients:
+                            type: string
+                          maxfragmentationmemory-reserved:
+                            type: string
+                          maxmemory-delta:
+                            type: string
+                          maxmemory-policy:
+                            type: string
+                          maxmemory-reserved:
+                            type: string
+                          notify-keyspace-events:
+                            type: string
+                          preferred-data-archive-auth-method:
+                            type: string
+                          preferred-data-persistence-auth-method:
+                            type: string
+                          rdb-backup-enabled:
+                            type: string
+                          rdb-backup-frequency:
+                            enum:
+                            - 15
+                            - 30
+                            - 60
+                            - 360
+                            - 720
+                            - 1440
+                            type: string
+                          rdb-backup-max-snapshot-count:
+                            type: string
+                          rdb-storage-connection-string:
+                            type: string
+                          storage-subscription-id:
+                            type: string
+                          zonal-configuration:
+                            type: string
                         type: object
-                      resourceGroupName:
+                      redisVersion:
                         type: string
-                      subscriptionId:
-                        type: string
+                      replicasPerPrimary:
+                        type: integer
+                      shardCount:
+                        type: integer
+                      sku:
+                        properties:
+                          capacity:
+                            enum:
+                            - 0
+                            - 1
+                            - 2
+                            - 3
+                            - 4
+                            - 5
+                            - 6
+                            type: integer
+                          family:
+                            enum:
+                            - C
+                            - P
+                            type: string
+                          name:
+                            enum:
+                            - Basic
+                            - Standard
+                            - Premium
+                            type: string
+                        required:
+                        - capacity
+                        - family
+                        - name
+                        type: object
                     required:
-                    - apiVersion
-                    - name
-                    - properties
-                    - resourceGroupName
-                    - subscriptionId
+                    - sku
                     type: object
                   gcp:
                     properties:
