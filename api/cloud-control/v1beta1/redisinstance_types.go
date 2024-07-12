@@ -114,15 +114,7 @@ type RedisInstanceAzureConfigs struct {
 
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Basic;Standard;Premium
-	Name string `json:"name"`
-
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=C;P
-	Family string `json:"family"`
-
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=0;1;2;3;4;5;6
+	// +kubebuilder:validation:Enum=1;2;3;4
 	Capacity int `json:"capacity"`
 }
 
