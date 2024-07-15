@@ -56,16 +56,16 @@ A test plan is a document outlining the objectives, resources, and procedures fo
 
 ### Appendix A. Quality Evidence Registry
 
-| Artefact Links                 | Aspect                                                       | Test Plan Document        |
-| ------------------------------ | ------------------------------------------------------------ | ------------------------- |
-| Feature validation report      | Functional correctness and completeness                      | Validation test plan      |
-| System integration test report | System analysis and software design                          |                           |
-| Integration test report        | Testing the interconnection of the <...> components          |                           |
-| Code coverage report           | Unit tests (Ravi, Amir to follow-up)                         | Unit testing test plan    |
-| Code coupling report           | Codebase mainatainability                                    | Maintainability test plan |
-| Availability report            | Faultlessness                                                |                           |
+| Artefact Links                 | Aspect                                                               | Test Plan Document        |
+| ------------------------------ |----------------------------------------------------------------------| ------------------------- |
+| Feature validation report      | Functional correctness and completeness                              | Validation test plan      |
+| System integration test report | System analysis and software design                                  |                           |
+| Integration test report        | Testing the interconnection of the <...> components                  |                           |
+| Code coverage report           | Unit tests                                                           | Unit testing test plan    |
+| Code coupling report           | Codebase mainatainability                                            | Maintainability test plan |
+| Availability report            | Faultlessness                                                        |                           |
 | CI/CD pipeline                 | The list of all the test suites executed for the feature integration |                           |
-| Performance testing report     |                                                              | Performance test plan     |
+| Performance testing report     |                                                                      | Performance test plan     |
 
 ### Appendix B. Team Processes and Guidelines
 
