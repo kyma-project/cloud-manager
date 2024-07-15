@@ -1,6 +1,6 @@
 # Busola UI Documentation
 
-Kyma manages its modules' UI through the use of a ConfigMap. The ConfigMap has five parts. They are:
+Kyma manages its modules' user interfaces (UIs) using ConfigMaps. Each ConfigMap has five parts:
 
 
 * `general` - used to describe the CRD the UI should be looking for as well as a description of the resource in the case none exists on the cluster.
@@ -26,7 +26,7 @@ description: >-
   GcpNfsVolume description here
 ```
 It is imperative that `resource.kind` `resource.group` and `resource.version` matches its `CustomResourceDefinition`. If
-there are no matches, Busola will not render the UI and path rendering the resource inaccessible in Busola.
+there are no matches, Busola doesn't render the UI and path rendering the resource inaccessible in Busola.
 
 
 ### List
@@ -45,12 +45,12 @@ there are no matches, Busola will not render the UI and path rendering the resou
   sort: true
 ```
 
-The `source` field is where busola will pull information from the monitored `CustomResource`.
+The `source` field is where Busola pulls information from the monitored custom resource (CR).
 
-The `name` field is the human-readable name for the field. This field will look up the value in `Translation` and replace it with its found value.
-If no value is found in `Translation`, it will display as is.
+The `name` field is the human-readable name for the field. This field looks up the value in `Translation` and replaces it with its found value.
+If no value is found in `Translation`, it displays as is.
 
-For example, if we have `name: spec.location`, it will go to [translations](#translations), lookup `spec.location` and replace it with `Location`.
+For example, if we have `name: spec.location`, it goes to [translations](#translations), looks up `spec.location` and replaces it with `Location`.
 
 [Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/20-list-columns.md)
 
@@ -139,10 +139,10 @@ They are key-value pairs.
 
 # Generating the ConfigMap
 
-The generation of ConfigMap is handled through `kustomize`. Kustomize  combines general, list, detail, form, and translations
+The generation of a ConfigMap is handled using `kustomize`. Kustomize  combines general, list, detail, form, and translations
 into a single ConfigMap.
 
-Because each CustomResource will have its own UI that must be generated, there is a single macro in the `Makefile` to generate all the UI.
+Because each CustomResource has its own UI that must be generated, there is a single macro in the `Makefile` to generate all the UIs.
 
 `make build_ui`
 
@@ -170,9 +170,9 @@ Like the `Makefile`, any new UI component should be added to `sync.sh`.
 Because the UI is dictated by ConfigMaps, you can deploy directly to a cluster with kyma installed. Just ensure your ConfigMap goes into the `kyma-system`
 namespace. 
 
-You can then `kubectl apply` your ConfigMap
+You can then `kubectl apply` your ConfigMap.
 
-If a matching CustomResource is found, Busola will render the UI and path.
+If a matching CustomResource is found, Busola renders the UI and path.
 
 
 You can also spin up a local cluster with kyma installed via k3d.
