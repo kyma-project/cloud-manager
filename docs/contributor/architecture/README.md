@@ -1,6 +1,6 @@
 # Cloud Manager Architecture Overview
 
-Cloud Manager is a Kyma module managing cloud resources from cloud providers in SAP BTP, Kyma runtimr virtual private cloud (VPC) network. 
+Cloud Manager is a Kyma module managing cloud resources from cloud providers in SAP BTP, Kyma runtime virtual private cloud (VPC) network. 
 
 ## API and Reconcilers
 
