@@ -28,7 +28,7 @@ func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Clien
 	}
 }
 
-func (s *server) MemoryStoreProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
+func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (azureredisinstanceclient.Client, error) {
 
 		return nil, nil

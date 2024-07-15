@@ -45,20 +45,20 @@ func NewClientProvider() azureClient.SkrClientProvider[Client] {
 	}
 }
 
-type memorystoreClient struct {
+type redisClient struct {
 }
 
 func newClient(armRedisClientInstance *armRedis.Client) Client {
-	return &memorystoreClient{}
+	return &redisClient{}
 }
 
-func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+func (redisClient *redisClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
 	return nil, nil
 }
 
-func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
+func (redisClient *redisClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
 	return nil, nil, nil
 }
-func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error {
+func (redisClient *redisClient) DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error {
 	return nil
 }

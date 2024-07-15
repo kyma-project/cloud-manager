@@ -109,7 +109,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupRedisInstanceReconciler(
 		infra.KcpManager(),
 		infra.GcpMock().MemoryStoreProviderFake(),
-		infra.AzureMock().MemoryStoreProvider(),
+		infra.AzureMock().RedisClientProvider(),
 		env,
 	))
 
