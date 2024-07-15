@@ -69,7 +69,7 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
 
    Similarly to PV, note the `RWX` access mode and `Bound` status.
 
-6. Create two workloads that both write to the volume
+6. Create two workloads that both write to the volume. Run:
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -139,7 +139,7 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
    kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=gcpnfsvolume-demo -o=jsonpath='{.items[0].metadata.name}'`
    ```
    
-   The command should print something like:
+   The command should print a result similar to the following one:
    ```
    ...
     Hello from gcpnfsvolume-demo-557dc8cbcb-kwwjt: 19
@@ -154,10 +154,9 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
    ...
    ```
    
-   Note that the content after `File content:` contains prints from both workloads. This 
-   demonstrates the ReadWriteMany capability of the volume.
+   >[!NOTE] The `File content:` contains prints from both workloads. This demonstrates the ReadWriteMany capability of the volume.
 
-8. Clean up
+8. Clean up:
 
    * Remove the created workloads:
      ```shell
