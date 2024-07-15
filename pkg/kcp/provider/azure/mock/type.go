@@ -9,7 +9,7 @@ import (
 type Providers interface {
 	VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client]
 
-	MemoryStoreProvider() provider.SkrClientProvider[azureredisinstanceclient.MemorystoreClient]
+	MemoryStoreProvider() provider.SkrClientProvider[azureredisinstanceclient.Client]
 }
 
 type Server interface {

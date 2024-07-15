@@ -20,14 +20,14 @@ type CreateRedisInstanceOptions struct {
 	RedisConfigs          map[string]string
 }
 
-type MemorystoreClient interface {
+type Client interface {
 	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
-func NewClientProvider() azureClient.SkrClientProvider[MemorystoreClient] {
-	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (MemorystoreClient, error) {
+func NewClientProvider() azureClient.SkrClientProvider[Client] {
+	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
 
 		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
 
@@ -48,7 +48,7 @@ func NewClientProvider() azureClient.SkrClientProvider[MemorystoreClient] {
 type memorystoreClient struct {
 }
 
-func newClient(armRedisClientInstance *armRedis.Client) MemorystoreClient {
+func newClient(armRedisClientInstance *armRedis.Client) Client {
 	return &memorystoreClient{}
 }
 

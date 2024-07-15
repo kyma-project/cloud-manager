@@ -39,7 +39,7 @@ import (
 func SetupRedisInstanceReconciler(
 	kcpManager manager.Manager,
 	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClient],
-	azureFilestoreClientProvider azureclient.SkrClientProvider[azureredisinstanceclient.MemorystoreClient],
+	azureFilestoreClientProvider azureclient.SkrClientProvider[azureredisinstanceclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

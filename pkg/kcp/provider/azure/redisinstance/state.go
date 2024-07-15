@@ -12,8 +12,8 @@ import (
 type State struct {
 	redisinstancetypes.State
 
-	client         azureredisclient.MemorystoreClient
-	provider       azureclient.SkrClientProvider[azureredisclient.MemorystoreClient]
+	client         azureredisclient.Client
+	provider       azureclient.SkrClientProvider[azureredisclient.Client]
 	clientId       string
 	clientSecret   string
 	subscriptionId string
@@ -25,10 +25,10 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	skrProvider azureclient.SkrClientProvider[azureredisclient.MemorystoreClient]
+	skrProvider azureclient.SkrClientProvider[azureredisclient.Client]
 }
 
-func NewStateFactory(skrProvider azureclient.SkrClientProvider[azureredisclient.MemorystoreClient]) StateFactory {
+func NewStateFactory(skrProvider azureclient.SkrClientProvider[azureredisclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
@@ -51,8 +51,8 @@ func (f *stateFactory) NewState(ctx context.Context, redisinstanceState redisins
 }
 
 func newState(state redisinstancetypes.State,
-	client azureredisclient.MemorystoreClient,
-	provider azureclient.SkrClientProvider[azureredisclient.MemorystoreClient],
+	client azureredisclient.Client,
+	provider azureclient.SkrClientProvider[azureredisclient.Client],
 	clientId string,
 	clientSecret string,
 	subscriptionId string,
