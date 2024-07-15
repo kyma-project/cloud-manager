@@ -9,7 +9,7 @@
 
 ## Overview
 
-[Cloud Manager](docs/user/README.md#what-is-cloud-manager) is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. Its responsibility is to bring hyperscaler products/resources into the Kyma cluster in a secure way.
+[Cloud Manager](docs/user/README.md#what-is-cloud-manager) is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. It brings hyperscaler products and resources into the Kyma cluster in a secure way.
 
 ## Usage
 
