@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"k8s.io/utils/ptr"
 )
@@ -24,6 +25,13 @@ func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Clien
 	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (client.Client, error) {
 
 		return s.getStoreSubscriptionContext(subscription), nil
+	}
+}
+
+func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
+	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (azureredisinstanceclient.Client, error) {
+
+		return nil, nil
 	}
 }
 

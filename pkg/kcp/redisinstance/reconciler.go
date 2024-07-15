@@ -2,8 +2,9 @@ package redisinstance
 
 import (
 	"context"
+	azureRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
+	gcpRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -21,18 +22,21 @@ type redisInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	gcpStateFactory redisinstance.StateFactory
+	gcpStateFactory   gcpRedisinstance.StateFactory
+	azureStateFactory azureRedisinstance.StateFactory
 }
 
 func NewRedisInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	gcpStateFactory redisinstance.StateFactory,
+	gcpStateFactory gcpRedisinstance.StateFactory,
+	azureStateFactory azureRedisinstance.StateFactory,
 ) RedisInstanceReconciler {
 	return &redisInstanceReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		gcpStateFactory:      gcpStateFactory,
+		azureStateFactory:    azureStateFactory,
 	}
 }
 
@@ -56,7 +60,8 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.GcpProviderPredicate, redisinstance.New(r.gcpStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, gcpRedisinstance.New(r.gcpStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, azureRedisinstance.New(r.azureStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
