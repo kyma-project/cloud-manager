@@ -2,10 +2,10 @@ package client
 
 import (
 	redis "cloud.google.com/go/redis/apiv1"
-	redispb "cloud.google.com/go/redis/apiv1/redispb"
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
 
@@ -22,7 +22,7 @@ type CreateRedisInstanceOptions struct {
 
 type Client interface {
 	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
-	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
+	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
@@ -46,19 +46,29 @@ func NewClientProvider() azureClient.SkrClientProvider[Client] {
 }
 
 type redisClient struct {
+	RedisClient *armRedis.Client
 }
 
 func newClient(armRedisClientInstance *armRedis.Client) Client {
-	return &redisClient{}
+	return &redisClient{
+		RedisClient: armRedisClientInstance,
+	}
 }
 
-func (redisClient *redisClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+func (c *redisClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
 	return nil, nil
 }
 
-func (redisClient *redisClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
-	return nil, nil, nil
+func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error) {
+	logger := composed.LoggerFromCtx(ctx)
+
+	clientGetResponse, error := c.RedisClient.Get(ctx, resourceGroupName, redisInstanceName, nil)
+	if error != nil {
+		logger.Error(error, "Failed to get Azure Redis instance")
+		return nil, error
+	}
+	return &clientGetResponse.ResourceInfo, nil
 }
-func (redisClient *redisClient) DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error {
+func (c *redisClient) DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error {
 	return nil
 }
