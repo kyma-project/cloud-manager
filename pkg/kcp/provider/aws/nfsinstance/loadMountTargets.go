@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	mtList, err := state.awsClient.DescribeMountTargets(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
+	mtList, err := state.awsClient.DescribeMountTargets(ctx, ptr.Deref(state.efs.FileSystemId, ""))
 	if awsmeta.IsNotFound(err) {
 		return nil, nil
 	}
@@ -35,7 +35,7 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		// in order not to exhaust rate limit have to slow down
 		// in this place usually we get ThrottlingException
 		time.Sleep(util.Timing.T10000ms())
-		mtID := pointer.StringDeref(mt.MountTargetId, "")
+		mtID := ptr.Deref(mt.MountTargetId, "")
 		sgList, err := state.awsClient.DescribeMountTargetSecurityGroups(ctx, mtID)
 		if awsmeta.IsNotFound(err) {
 			state.mountTargetSecurityGroups[mtID] = []string{}
@@ -51,12 +51,12 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		WithValues(
 			"mountTargets",
 			fmt.Sprintf("%v", pie.Map(mtList, func(mt efsTypes.MountTargetDescription) string {
-				mtID := pointer.StringDeref(mt.MountTargetId, "")
+				mtID := ptr.Deref(mt.MountTargetId, "")
 				return fmt.Sprintf(
 					"{id:%s, az:%s, ip: %s, sg: %v}",
 					mtID,
-					pointer.StringDeref(mt.AvailabilityZoneId, ""),
-					pointer.StringDeref(mt.IpAddress, ""),
+					ptr.Deref(mt.AvailabilityZoneId, ""),
+					ptr.Deref(mt.IpAddress, ""),
 					state.mountTargetSecurityGroups[mtID],
 				)
 			})),

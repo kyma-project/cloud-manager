@@ -9,7 +9,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -42,7 +42,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		subscriptionId := scope.Spec.Scope.Azure.SubscriptionId
 		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
 
-		infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{"shoot-name": pointer.String(kymaName)})
+		infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{"shoot-name": ptr.To(kymaName)})
 
 		obj := &cloudcontrolv1beta1.VpcPeering{}
 
@@ -72,7 +72,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		peering, _ := c.GetPeering(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
 
 		By("And Then found VirtualNetworkPeering has ID equal to Status.Id", func() {
-			Expect(pointer.StringDeref(peering.ID, "xxx")).To(Equal(obj.Status.Id))
+			Expect(ptr.Deref(peering.ID, "xxx")).To(Equal(obj.Status.Id))
 		})
 
 		virtualNetworkPeeringName := fmt.Sprintf("%s-%s",
@@ -84,17 +84,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		remotePeering, _ := r.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to Status.RemoteId", func() {
-			Expect(pointer.StringDeref(remotePeering.ID, "xxx")).To(Equal(obj.Status.RemoteId))
+			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(obj.Status.RemoteId))
 		})
 
 		By("And Then found VirtualNetworkPeering has RemoteVirtualNetwork.ID equal remote vpc id", func() {
-			Expect(pointer.StringDeref(peering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnet))
+			Expect(ptr.Deref(peering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnet))
 		})
 
 		remotePeeringId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to remote vpc peering id", func() {
-			Expect(pointer.StringDeref(remotePeering.ID, "xxx")).To(Equal(remotePeeringId))
+			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(remotePeeringId))
 		})
 
 		// DELETE

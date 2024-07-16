@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func createSubnets(ctx context.Context, st composed.State) (error, context.Context) {
@@ -33,8 +33,8 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 
 	for _, subnet := range state.cloudResourceSubnets {
 		subnetName := awsutil.GetEc2TagValue(subnet.Tags, "Name")
-		zoneValue := pointer.StringDeref(subnet.AvailabilityZone, "")
-		rangeValue := pointer.StringDeref(subnet.CidrBlock, "")
+		zoneValue := ptr.Deref(subnet.AvailabilityZone, "")
+		rangeValue := ptr.Deref(subnet.CidrBlock, "")
 		key := fmt.Sprintf("%s/%s", zoneValue, rangeValue)
 		if len(key) <= 3 {
 			logger.
@@ -92,9 +92,9 @@ func createSubnets(ctx context.Context, st composed.State) (error, context.Conte
 		logger.WithValues("subnetId", subnet.SubnetId).Info("Subnet created")
 
 		state.ObjAsIpRange().Status.Subnets = append(state.ObjAsIpRange().Status.Subnets, cloudcontrolv1beta1.IpRangeSubnet{
-			Id:    pointer.StringDeref(subnet.SubnetId, ""),
-			Zone:  pointer.StringDeref(subnet.AvailabilityZone, ""),
-			Range: pointer.StringDeref(subnet.CidrBlock, ""),
+			Id:    ptr.Deref(subnet.SubnetId, ""),
+			Zone:  ptr.Deref(subnet.AvailabilityZone, ""),
+			Range: ptr.Deref(subnet.CidrBlock, ""),
 		})
 	}
 

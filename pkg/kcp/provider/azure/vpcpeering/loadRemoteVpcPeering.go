@@ -7,7 +7,7 @@ import (
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -42,7 +42,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return azuremeta.LogErrorAndReturn(err, "Error loading remote VPC Peering", nil)
 	}
 
-	logger = logger.WithValues("remoteId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("remoteId", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 

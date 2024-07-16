@@ -29,7 +29,6 @@ func (suite *checkGcpOperationSuite) SetupTest() {
 func (suite *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
@@ -76,7 +75,6 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
@@ -123,7 +121,6 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
@@ -166,7 +163,6 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() 
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)

@@ -6,13 +6,13 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func subnetsLoadAll(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	subnetList, err := state.awsClient.DescribeSubnets(ctx, pointer.StringDeref(state.vpc.VpcId, ""))
+	subnetList, err := state.awsClient.DescribeSubnets(ctx, ptr.Deref(state.vpc.VpcId, ""))
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on load subnets",
 		cloudcontrolv1beta1.ReasonUnknown, "Error loading AWS VPC subnets"); x != nil {
 		return x, nil

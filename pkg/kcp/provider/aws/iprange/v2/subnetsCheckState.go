@@ -6,7 +6,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func subnetsCheckState(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,9 +16,9 @@ func subnetsCheckState(ctx context.Context, st composed.State) (error, context.C
 	for _, subnet := range state.cloudResourceSubnets {
 		info = append(info, fmt.Sprintf(
 			"(%s-%s-%s-%s)",
-			pointer.StringDeref(subnet.SubnetId, ""),
-			pointer.StringDeref(subnet.AvailabilityZone, ""),
-			pointer.StringDeref(subnet.CidrBlock, ""),
+			ptr.Deref(subnet.SubnetId, ""),
+			ptr.Deref(subnet.AvailabilityZone, ""),
+			ptr.Deref(subnet.CidrBlock, ""),
 			subnet.State,
 		))
 	}

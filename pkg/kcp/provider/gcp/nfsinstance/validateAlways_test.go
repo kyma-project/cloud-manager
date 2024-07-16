@@ -24,7 +24,7 @@ func (suite *validateAlwaysSuite) SetupTest() {
 
 func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		return // no-op
+		// no-op
 	}))
 	gcpNfsInstanceWithoutStatus := getGcpNfsInstanceWithoutStatus()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstanceWithoutStatus)
@@ -44,7 +44,7 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
 
 func (suite *validateAlwaysSuite) TestValidateAlwaysInvalidCapacity() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		return // no-op
+		// no-op
 	}))
 	gcpNfsInstanceWithoutStatus := getGcpNfsInstanceWithoutStatus()
 	gcpNfsInstanceWithoutStatus.Spec.Instance.Gcp.CapacityGb = 100

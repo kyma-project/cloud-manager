@@ -76,7 +76,7 @@ type NfsBackupScheduleStatus struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// NextRunTimes contains 0 or more entries of time when the next backup will be created
 	// +optional

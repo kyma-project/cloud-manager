@@ -27,7 +27,6 @@ func (suite *compareStatesSuite) SetupTest() {
 func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -64,7 +63,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists(
 func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -108,7 +106,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -152,7 +149,6 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -255,7 +251,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -301,7 +296,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -346,7 +340,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -398,7 +391,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{

@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func createSecurityGroup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,20 +19,20 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 
 	sgId, err := state.awsClient.CreateSecurityGroup(ctx, state.IpRange().Status.VpcId, state.Obj().GetName(), []ec2Types.Tag{
 		{
-			Key:   pointer.String("Name"),
-			Value: pointer.String(state.Obj().GetName()),
+			Key:   ptr.To("Name"),
+			Value: ptr.To(state.Obj().GetName()),
 		},
 		{
-			Key:   pointer.String(common.TagCloudManagerRemoteName),
-			Value: pointer.String(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
+			Key:   ptr.To(common.TagCloudManagerRemoteName),
+			Value: ptr.To(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
 		},
 		{
-			Key:   pointer.String(common.TagCloudManagerName),
-			Value: pointer.String(state.Name().String()),
+			Key:   ptr.To(common.TagCloudManagerName),
+			Value: ptr.To(state.Name().String()),
 		},
 		{
-			Key:   pointer.String(common.TagScope),
-			Value: pointer.String(state.ObjAsNfsInstance().Spec.Scope.Name),
+			Key:   ptr.To(common.TagScope),
+			Value: ptr.To(state.ObjAsNfsInstance().Spec.Scope.Name),
 		},
 	})
 	if err != nil {

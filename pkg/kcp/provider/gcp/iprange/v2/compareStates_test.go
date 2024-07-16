@@ -251,7 +251,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -297,7 +296,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{
@@ -342,7 +340,6 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 	//Get the updated object
 	err = state.LoadObj(ctx)
 	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
 
 	//Set Address
 	address := &compute.Address{

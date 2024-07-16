@@ -11,7 +11,7 @@ import (
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"strings"
 )
 
@@ -34,14 +34,14 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 		v := vv
 		var sb strings.Builder
 		for _, t := range v.Tags {
-			sb.WriteString(pointer.StringDeref(t.Key, ""))
+			sb.WriteString(ptr.Deref(t.Key, ""))
 			sb.WriteString("=")
-			sb.WriteString(pointer.StringDeref(t.Value, ""))
+			sb.WriteString(ptr.Deref(t.Value, ""))
 			sb.WriteString(",")
 		}
 		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
 			"%s{%s}",
-			pointer.StringDeref(v.VpcId, ""),
+			ptr.Deref(v.VpcId, ""),
 			sb.String(),
 		))
 	}
@@ -80,9 +80,9 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	state.vpc = vpc
-	state.ObjAsIpRange().Status.VpcId = pointer.StringDeref(vpc.VpcId, "")
+	state.ObjAsIpRange().Status.VpcId = ptr.Deref(vpc.VpcId, "")
 
-	logger = logger.WithValues("vpcId", pointer.StringDeref(state.vpc.VpcId, ""))
+	logger = logger.WithValues("vpcId", ptr.Deref(state.vpc.VpcId, ""))
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	return composed.PatchStatus(state.ObjAsIpRange()).

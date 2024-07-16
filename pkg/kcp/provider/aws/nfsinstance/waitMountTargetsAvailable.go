@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -26,8 +26,8 @@ func waitMountTargetsAvailable(ctx context.Context, st composed.State) (error, c
 	var mtStates []string
 	for _, mt := range state.mountTargets {
 		mtStates = append(mtStates, fmt.Sprintf("{%s/%s/%s}",
-			pointer.StringDeref(mt.MountTargetId, ""),
-			pointer.StringDeref(mt.AvailabilityZoneName, ""),
+			ptr.Deref(mt.MountTargetId, ""),
+			ptr.Deref(mt.AvailabilityZoneName, ""),
 			mt.LifeCycleState,
 		))
 	}
@@ -58,7 +58,7 @@ func waitMountTargetsAvailable(ctx context.Context, st composed.State) (error, c
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudcontrolv1beta1.ReasonUnknown,
-					Message: fmt.Sprintf("Mount target %s/%s in error state", pointer.StringDeref(mt.MountTargetId, ""), pointer.StringDeref(mt.AvailabilityZoneName, "")),
+					Message: fmt.Sprintf("Mount target %s/%s in error state", ptr.Deref(mt.MountTargetId, ""), ptr.Deref(mt.AvailabilityZoneName, "")),
 				}).
 				SuccessError(composed.StopAndForget).
 				Run(ctx, state)

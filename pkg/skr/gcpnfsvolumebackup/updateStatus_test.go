@@ -29,7 +29,6 @@ func (suite *updateStatusSuite) SetupTest() {
 func (suite *updateStatusSuite) TestDeletingBackupExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -52,7 +51,6 @@ func (suite *updateStatusSuite) TestDeletingBackupExists() {
 func (suite *updateStatusSuite) TestDeletingBackupNotExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -74,7 +72,6 @@ func (suite *updateStatusSuite) TestDeletingBackupNotExists() {
 func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -98,6 +95,7 @@ func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
+	suite.Nil(err)
 
 	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
@@ -107,7 +105,6 @@ func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
@@ -137,6 +134,7 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
+	suite.Nil(err)
 
 	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
 	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
@@ -146,7 +144,6 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 func (suite *updateStatusSuite) TestNotReadyAndBackupNotReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
