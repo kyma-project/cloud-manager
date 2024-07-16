@@ -22,7 +22,7 @@ resources in KCP. At the same time, Cloud Resources reconcilers observe the stat
 project it into the status of the Cloud Control resource group in SKR.
 
 
-![API and Reconcilers](./assets/api-and-reconcilers.drawio.png "API and Reconcilers")]
+![API and Reconcilers](./assets/api-and-reconcilers.drawio.svg "API and Reconcilers")]
 
 ## KCP Cloud Control Controller Manager
 
