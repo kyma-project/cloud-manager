@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -31,9 +31,9 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 	for _, mt := range state.mountTargets {
 		lll := logger.
 			WithValues(
-				"mountTargetId", pointer.StringDeref(mt.MountTargetId, ""),
-				"subnetId", pointer.StringDeref(mt.SubnetId, ""),
-				"availabilityZone", pointer.StringDeref(mt.AvailabilityZoneName, ""),
+				"mountTargetId", ptr.Deref(mt.MountTargetId, ""),
+				"subnetId", ptr.Deref(mt.SubnetId, ""),
+				"availabilityZone", ptr.Deref(mt.AvailabilityZoneName, ""),
 				"lifeCycleState", mt.LifeCycleState,
 			)
 		_, shouldRequeueDelayed := stateRequeueDelayed[mt.LifeCycleState]
@@ -47,7 +47,7 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 		}
 
 		lll.Info("Deleting mount target")
-		err := state.awsClient.DeleteMountTarget(ctx, pointer.StringDeref(mt.MountTargetId, ""))
+		err := state.awsClient.DeleteMountTarget(ctx, ptr.Deref(mt.MountTargetId, ""))
 		if err != nil {
 			return awsmeta.LogErrorAndReturn(err, "Error deleting mount target", ctx)
 		}

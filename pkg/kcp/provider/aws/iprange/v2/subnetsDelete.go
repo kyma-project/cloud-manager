@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func subnetsDelete(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,7 +24,7 @@ func subnetsDelete(ctx context.Context, st composed.State) (error, context.Conte
 			continue
 		}
 
-		subnetId := pointer.StringDeref(subnet.SubnetId, "")
+		subnetId := ptr.Deref(subnet.SubnetId, "")
 
 		lll := logger.WithValues("subnetId", subnetId)
 		lll.Info("Deleting subnet")

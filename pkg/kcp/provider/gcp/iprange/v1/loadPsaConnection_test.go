@@ -51,7 +51,6 @@ func (suite *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -106,7 +105,6 @@ func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -210,7 +208,6 @@ func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 

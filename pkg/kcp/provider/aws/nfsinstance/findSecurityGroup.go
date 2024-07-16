@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func findSecurityGroup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,15 +20,15 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	list, err := state.awsClient.DescribeSecurityGroups(ctx, []ec2Types.Filter{
 		{
-			Name:   pointer.String("vpc-id"),
+			Name:   ptr.To("vpc-id"),
 			Values: []string{state.IpRange().Status.VpcId},
 		},
 		{
-			Name:   pointer.String("tag:Name"),
+			Name:   ptr.To("tag:Name"),
 			Values: []string{state.Obj().GetName()},
 		},
 		{
-			Name:   pointer.String(fmt.Sprintf("tag:%s", common.TagCloudManagerName)),
+			Name:   ptr.To(fmt.Sprintf("tag:%s", common.TagCloudManagerName)),
 			Values: []string{state.Name().String()},
 		},
 	}, nil)
@@ -38,7 +38,7 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	if len(list) > 0 {
 		state.securityGroup = &list[0]
-		state.securityGroupId = pointer.StringDeref(state.securityGroup.GroupId, "")
+		state.securityGroupId = ptr.Deref(state.securityGroup.GroupId, "")
 		logger = logger.WithValues("securityGroupId", state.securityGroupId)
 		logger.Info("NFS security group found")
 		return nil, composed.LoggerIntoCtx(ctx, logger)

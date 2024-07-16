@@ -7,7 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func subnetsWaitDeleted(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,9 +24,9 @@ func subnetsWaitDeleted(ctx context.Context, st composed.State) (error, context.
 			fmt.Sprintf("%v", pie.Map(state.cloudResourceSubnets, func(sn ec2Types.Subnet) string {
 				return fmt.Sprintf(
 					"%s/%s/%s/%s",
-					pointer.StringDeref(sn.SubnetId, ""),
-					pointer.StringDeref(sn.AvailabilityZone, ""),
-					pointer.StringDeref(sn.CidrBlock, ""),
+					ptr.Deref(sn.SubnetId, ""),
+					ptr.Deref(sn.AvailabilityZone, ""),
+					ptr.Deref(sn.CidrBlock, ""),
 					sn.State,
 				)
 			})),

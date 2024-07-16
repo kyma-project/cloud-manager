@@ -7,7 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 // removeMountTargetsFromOtherVpcs is a migration fix for a bug when wrong VPC was choosen to create EFS in.
@@ -25,12 +25,12 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 		WithValues(
 			"mountTargets",
 			fmt.Sprintf("%v", pie.Map(state.mountTargets, func(mt efsTypes.MountTargetDescription) string {
-				mtID := pointer.StringDeref(mt.MountTargetId, "")
+				mtID := ptr.Deref(mt.MountTargetId, "")
 				return fmt.Sprintf(
 					"{id:%s, az:%s, ip: %s, sg: %v}",
 					mtID,
-					pointer.StringDeref(mt.AvailabilityZoneId, ""),
-					pointer.StringDeref(mt.IpAddress, ""),
+					ptr.Deref(mt.AvailabilityZoneId, ""),
+					ptr.Deref(mt.IpAddress, ""),
 					state.mountTargetSecurityGroups[mtID],
 				)
 			})),
@@ -39,7 +39,7 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 
 	var mountTargetsToRemove []string
 	for _, mt := range state.mountTargets {
-		subnetId := pointer.StringDeref(mt.SubnetId, "")
+		subnetId := ptr.Deref(mt.SubnetId, "")
 		subnet, err := state.awsClient.DescribeSubnet(ctx, subnetId)
 		if err != nil {
 			if awsmeta.IsErrorRetryable(err) {
@@ -57,9 +57,9 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 			continue
 		}
 
-		vpcId := pointer.StringDeref(subnet.VpcId, "")
+		vpcId := ptr.Deref(subnet.VpcId, "")
 		if vpcId != "" && vpcId != state.IpRange().Status.VpcId {
-			mountTargetsToRemove = append(mountTargetsToRemove, pointer.StringDeref(mt.MountTargetId, ""))
+			mountTargetsToRemove = append(mountTargetsToRemove, ptr.Deref(mt.MountTargetId, ""))
 		}
 	}
 

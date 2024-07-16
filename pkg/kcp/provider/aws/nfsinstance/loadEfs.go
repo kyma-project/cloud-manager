@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,7 +17,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	for _, fs := range list {
-		if pointer.StringDeref(fs.Name, "") == state.Obj().GetName() {
+		if ptr.Deref(fs.Name, "") == state.Obj().GetName() {
 			state.efs = &fs
 			break
 		}
@@ -28,7 +28,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	logger = logger.WithValues(
-		"efsId", pointer.StringDeref(state.efs.FileSystemId, ""),
+		"efsId", ptr.Deref(state.efs.FileSystemId, ""),
 		"efsLifeCycleState", state.efs.LifeCycleState,
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)

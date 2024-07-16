@@ -26,7 +26,6 @@ func (suite *loadGcpNfsVolumeSuite) SetupTest() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolumeRestore.DeepCopy()
@@ -39,6 +38,7 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(objDiffName)
+	suite.Nil(err)
 	err, _ctx := loadGcpNfsVolume(ctx, state)
 
 	//validate expected return values
@@ -49,7 +49,6 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -61,6 +60,7 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
 	// Remove the conditions from volume
 	notReadyVolume := gcpNfsVolume.DeepCopy()
 	notReadyVolume.Status.Conditions = []metav1.Condition{}
@@ -84,7 +84,6 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()

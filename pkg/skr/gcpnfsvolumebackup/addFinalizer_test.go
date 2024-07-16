@@ -24,7 +24,6 @@ func (suite *addFinalizerSuite) SetupTest() {
 func (suite *addFinalizerSuite) TestAddFinalizer() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeBackup.DeepCopy()
@@ -45,7 +44,6 @@ func (suite *addFinalizerSuite) TestAddFinalizer() {
 func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	deletingObj := deletingGpNfsVolumeBackup.DeepCopy()
@@ -55,8 +53,8 @@ func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(deletingObj)
-	state.Obj().SetFinalizers([]string{})
 	assert.Nil(suite.T(), err)
+	state.Obj().SetFinalizers([]string{})
 
 	//Call addFinalizer
 	err, _ = addFinalizer(ctx, state)

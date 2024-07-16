@@ -50,7 +50,6 @@ func (suite *syncAddressSuite) TestCreateSuccess() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -92,7 +91,6 @@ func (suite *syncAddressSuite) TestCreateFailure() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -127,7 +125,6 @@ func (suite *syncAddressSuite) TestCreateFailure() {
 func (suite *syncAddressSuite) TestUpdate() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -173,7 +170,6 @@ func (suite *syncAddressSuite) TestDeleteSuccess() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -224,7 +220,6 @@ func (suite *syncAddressSuite) TestDeleteFailure() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 

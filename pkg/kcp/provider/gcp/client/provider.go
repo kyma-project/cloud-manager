@@ -217,6 +217,9 @@ func GetJwtToken(ctx context.Context, saJsonKeyPath string, validity time.Durati
 
 	//Generate the JWT Token
 	token, err := jws.Encode(hdr, cs, pk)
+	if err != nil {
+		return "", fmt.Errorf("error encoding jws in GetJwtToken: %w", err)
+	}
 	return token, nil
 }
 

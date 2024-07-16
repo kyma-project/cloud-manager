@@ -5,7 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -29,7 +29,7 @@ func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Cont
 		return azuremeta.LogErrorAndReturn(err, "Error loading VPC Peering", ctx)
 	}
 
-	logger = logger.WithValues("id", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("id", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 

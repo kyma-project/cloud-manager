@@ -52,7 +52,6 @@ func (suite *syncPsaConnectionSuite) TestCreateSuccess() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -103,7 +102,6 @@ func (suite *syncPsaConnectionSuite) TestCreateFailure() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -158,7 +156,6 @@ func (suite *syncPsaConnectionSuite) TestUpdate() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -229,7 +226,6 @@ func (suite *syncPsaConnectionSuite) TestDeleteSuccess() {
 		default:
 			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 

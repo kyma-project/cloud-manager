@@ -137,7 +137,6 @@ func (suite *loadAddressSuite) TestWhenGcpAddressHasWrongVPC() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -194,7 +193,6 @@ func (suite *loadAddressSuite) TestWhenGcpAddressHasCorrectVPC() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 

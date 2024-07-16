@@ -74,7 +74,7 @@ type GcpNfsVolumeRestoreStatus struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// Operation Identifier to track the Hyperscaler Restore Operation
 	// +optional

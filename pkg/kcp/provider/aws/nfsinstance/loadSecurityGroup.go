@@ -8,7 +8,7 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -38,7 +38,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		ctx,
 		[]ec2Types.Filter{
 			{
-				Name:   pointer.String("vpc-id"),
+				Name:   ptr.To("vpc-id"),
 				Values: []string{state.IpRange().Status.VpcId},
 			},
 		},

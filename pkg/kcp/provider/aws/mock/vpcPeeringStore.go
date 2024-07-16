@@ -7,7 +7,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -28,7 +28,7 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 
 	item := &vpcPeeringEntry{
 		peering: ec2types.VpcPeeringConnection{
-			VpcPeeringConnectionId: pointer.String("pcx-" + uuid.NewString()[:8]),
+			VpcPeeringConnectionId: ptr.To("pcx-" + uuid.NewString()[:8]),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
 				VpcId: vpcId,
 			},
@@ -59,7 +59,7 @@ func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connec
 	defer s.m.Unlock()
 
 	for _, x := range s.items {
-		if pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectionId) {
+		if ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId) {
 			return &x.peering, nil
 		}
 	}
@@ -73,7 +73,7 @@ func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connec
 
 	deleted := false
 	s.items = pie.Filter(s.items, func(x *vpcPeeringEntry) bool {
-		deleted = pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectionId)
+		deleted = ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId)
 		return !deleted
 	})
 
