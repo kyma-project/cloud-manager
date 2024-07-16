@@ -25,9 +25,8 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 		ctx,
 		list,
 		client.MatchingLabels{
-			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      state.SkrIpRange.Name,
-			cloudcontrolv1beta1.LabelRemoteNamespace: state.SkrIpRange.Namespace,
+			cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName: state.SkrIpRange.Name,
 		},
 		client.InNamespace(state.KymaRef.Namespace),
 	)

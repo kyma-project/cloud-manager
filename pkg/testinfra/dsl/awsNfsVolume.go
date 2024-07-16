@@ -10,32 +10,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func WithNfsVolumeIpRange(ipRangeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
-				if x.Spec.IpRange.Name == "" {
-					x.Spec.IpRange.Name = ipRangeName
-				}
-				if x.Spec.IpRange.Namespace == "" {
-					x.Spec.IpRange.Namespace = DefaultSkrNamespace
-				}
-				return
-			}
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				if x.Spec.IpRange.Name == "" {
-					x.Spec.IpRange.Name = ipRangeName
-				}
-				if x.Spec.IpRange.Namespace == "" {
-					x.Spec.IpRange.Namespace = DefaultSkrNamespace
-				}
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithNfsVolumeIpRange", obj))
-		},
-	}
-}
-
 func WithAwsNfsVolumePvName(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -172,9 +146,6 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 
 	if obj.Name == "" {
 		return errors.New("the SKR AwsNfsVolume must have name set")
-	}
-	if obj.Spec.IpRange.Name != "" && obj.Spec.IpRange.Namespace == "" {
-		obj.Spec.IpRange.Namespace = DefaultSkrNamespace
 	}
 
 	err := clnt.Create(ctx, obj)

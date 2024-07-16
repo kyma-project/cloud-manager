@@ -2,6 +2,9 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"k8s.io/utils/ptr"
+	"time"
+
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -12,8 +15,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
-	"time"
 )
 
 var _ = Describe("Feature: KCP NfsInstance", func() {
@@ -74,8 +75,8 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),
-					WithNfsInstanceScope(name),
-					WithNfsInstanceIpRange(name),
+					WithInstanceScope(name),
+					WithIpRange(name),
 					WithNfsInstanceAws(),
 				).
 				Should(Succeed(), "failed creating NfsInstance")
@@ -110,11 +111,11 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 		})
 
 		By("And Then EFS has mount targets", func() {
-			list, err := infra.AwsMock().DescribeMountTargets(infra.Ctx(), pointer.StringDeref(theEfs.FileSystemId, ""))
+			list, err := infra.AwsMock().DescribeMountTargets(infra.Ctx(), ptr.Deref(theEfs.FileSystemId, ""))
 			Expect(err).NotTo(HaveOccurred(), "failed listing EFS mount targets")
 			Expect(list).To(HaveLen(3), "expected 3 EFS mount targets to exist")
 			subnetList := pie.Sort(pie.Map(list, func(x efsTypes.MountTargetDescription) string {
-				return pointer.StringDeref(x.SubnetId, "")
+				return ptr.Deref(x.SubnetId, "")
 			}))
 			for _, subnet := range iprange.Status.Subnets {
 				Expect(subnetList).Should(ContainElement(subnet.Id), fmt.Sprintf("expected mount target in %s subnet with id %s, but its missing", subnet.Zone, subnet.Id))
@@ -130,7 +131,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 		})
 
 		By("And When AWS EFS state is deleted", func() {
-			infra.AwsMock().SetFileSystemLifeCycleState(pointer.StringDeref(theEfs.FileSystemId, ""), efsTypes.LifeCycleStateDeleted)
+			infra.AwsMock().SetFileSystemLifeCycleState(ptr.Deref(theEfs.FileSystemId, ""), efsTypes.LifeCycleStateDeleted)
 		})
 
 		By("Then NfsInstance does not exist", func() {

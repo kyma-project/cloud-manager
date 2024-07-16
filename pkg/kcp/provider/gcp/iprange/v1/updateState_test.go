@@ -27,7 +27,6 @@ func (suite *updateStateSuite) SetupTest() {
 func (suite *updateStateSuite) TestStateChangeToReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -65,7 +64,6 @@ func (suite *updateStateSuite) TestStateChangeToReady() {
 func (suite *updateStateSuite) TestStateChangeToOther() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 

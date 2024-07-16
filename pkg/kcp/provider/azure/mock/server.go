@@ -4,8 +4,9 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 var _ Server = &server{}
@@ -27,12 +28,19 @@ func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Clien
 	}
 }
 
+func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
+	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (azureredisinstanceclient.Client, error) {
+
+		return nil, nil
+	}
+}
+
 func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName string, tags map[string]*string) {
 
 	entry := &networkEntry{
 		resourceGroup: resourceGroup,
 		network: armnetwork.VirtualNetwork{
-			Name: pointer.String(virtualNetworkName),
+			Name: ptr.To(virtualNetworkName),
 			Tags: tags,
 		},
 	}

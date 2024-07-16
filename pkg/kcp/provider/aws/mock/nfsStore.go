@@ -9,7 +9,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -32,12 +32,12 @@ type nfsStore struct {
 
 func filterMatchesTags(tags []ec2Types.Tag, filter ec2Types.Filter) bool {
 	for _, t := range tags {
-		tagKey := pointer.StringDeref(t.Key, "")
-		filterName := pointer.StringDeref(filter.Name, "")
+		tagKey := ptr.Deref(t.Key, "")
+		filterName := ptr.Deref(filter.Name, "")
 		if tagKey != filterName {
 			continue
 		}
-		tagValue := pointer.StringDeref(t.Value, "")
+		tagValue := ptr.Deref(t.Value, "")
 		for _, fv := range filter.Values {
 			if tagValue == fv {
 				return true
@@ -71,7 +71,7 @@ func (s *nfsStore) SetFileSystemLifeCycleState(id string, state efsTypes.LifeCyc
 
 func (s *nfsStore) GetFileSystemById(id string) *efsTypes.FileSystemDescription {
 	for _, fs := range s.fs {
-		if pointer.StringDeref(fs.FileSystemId, "") == id {
+		if ptr.Deref(fs.FileSystemId, "") == id {
 			return fs
 		}
 	}
@@ -89,7 +89,7 @@ func (s *nfsStore) DescribeSecurityGroups(ctx context.Context, filters []ec2Type
 	list := append([]*ec2Types.SecurityGroup{}, s.sg...)
 	if groupIds != nil {
 		list = pie.Filter(list, func(sg *ec2Types.SecurityGroup) bool {
-			return pie.Contains(groupIds, pointer.StringDeref(sg.GroupId, ""))
+			return pie.Contains(groupIds, ptr.Deref(sg.GroupId, ""))
 		})
 	}
 	if filters != nil {
@@ -111,18 +111,18 @@ func (s *nfsStore) CreateSecurityGroup(ctx context.Context, vpcId, name string, 
 	s.m.Lock()
 	defer s.m.Unlock()
 	tags = append(tags, ec2Types.Tag{
-		Key:   pointer.String("vpc-id"),
-		Value: pointer.String(vpcId),
+		Key:   ptr.To("vpc-id"),
+		Value: ptr.To(vpcId),
 	})
 	sg := &ec2Types.SecurityGroup{
-		Description: pointer.String(name),
-		GroupId:     pointer.String(uuid.NewString()),
-		GroupName:   pointer.String(name),
+		Description: ptr.To(name),
+		GroupId:     ptr.To(uuid.NewString()),
+		GroupName:   ptr.To(name),
 		Tags:        tags,
-		VpcId:       pointer.String(vpcId),
+		VpcId:       ptr.To(vpcId),
 	}
 	s.sg = append(s.sg, sg)
-	return pointer.StringDeref(sg.GroupId, ""), nil
+	return ptr.Deref(sg.GroupId, ""), nil
 }
 
 func (s *nfsStore) DeleteSecurityGroup(ctx context.Context, id string) error {
@@ -132,7 +132,7 @@ func (s *nfsStore) DeleteSecurityGroup(ctx context.Context, id string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	s.sg = pie.Filter(s.sg, func(sg *ec2Types.SecurityGroup) bool {
-		return pointer.StringDeref(sg.GroupId, "") != id
+		return ptr.Deref(sg.GroupId, "") != id
 	})
 	return nil
 }
@@ -145,7 +145,7 @@ func (s *nfsStore) AuthorizeSecurityGroupIngress(ctx context.Context, groupId st
 	defer s.m.Unlock()
 	var securityGroup *ec2Types.SecurityGroup
 	for _, sg := range s.sg {
-		if pointer.StringDeref(sg.GroupId, "") == groupId {
+		if ptr.Deref(sg.GroupId, "") == groupId {
 			securityGroup = sg
 			break
 		}
@@ -182,12 +182,12 @@ func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efsType
 		name = id
 	}
 	fs := &efsTypes.FileSystemDescription{
-		FileSystemId:         pointer.String(id),
+		FileSystemId:         ptr.To(id),
 		LifeCycleState:       efsTypes.LifeCycleStateAvailable,
 		NumberOfMountTargets: 0,
 		PerformanceMode:      performanceMode,
 		Tags:                 tags,
-		Name:                 pointer.String(name),
+		Name:                 ptr.To(name),
 		ThroughputMode:       throughputMode,
 	}
 	s.fs = append(s.fs, fs)
@@ -221,7 +221,7 @@ func (s *nfsStore) DeleteFileSystem(ctx context.Context, fsId string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	s.fs = pie.Filter(s.fs, func(fs *efsTypes.FileSystemDescription) bool {
-		return pointer.StringDeref(fs.FileSystemId, "") != fsId
+		return ptr.Deref(fs.FileSystemId, "") != fsId
 	})
 	return nil
 }
@@ -257,11 +257,11 @@ func (s *nfsStore) CreateMountTarget(ctx context.Context, fsId, subnetId string,
 	id := uuid.NewString()
 	item := mountTargetItem{
 		desc: efsTypes.MountTargetDescription{
-			FileSystemId:   pointer.String(fsId),
+			FileSystemId:   ptr.To(fsId),
 			LifeCycleState: efsTypes.LifeCycleStateAvailable,
-			MountTargetId:  pointer.String(id),
-			SubnetId:       pointer.String(subnetId),
-			IpAddress:      pointer.String("1.2.3.4"),
+			MountTargetId:  ptr.To(id),
+			SubnetId:       ptr.To(subnetId),
+			IpAddress:      ptr.To("1.2.3.4"),
 		},
 		sg: securityGroups,
 	}
@@ -281,9 +281,9 @@ func (s *nfsStore) DeleteMountTarget(ctx context.Context, mountTargetId string) 
 	}
 	for fsId, list := range s.mountTargets {
 		for _, mt := range list {
-			if pointer.StringDeref(mt.desc.MountTargetId, "") == mountTargetId {
+			if ptr.Deref(mt.desc.MountTargetId, "") == mountTargetId {
 				s.mountTargets[fsId] = pie.Filter(list, func(item mountTargetItem) bool {
-					return pointer.StringDeref(item.desc.MountTargetId, "") != mountTargetId
+					return ptr.Deref(item.desc.MountTargetId, "") != mountTargetId
 				})
 				return nil
 			}
@@ -303,7 +303,7 @@ func (s *nfsStore) DescribeMountTargetSecurityGroups(ctx context.Context, mountT
 	}
 	for _, list := range s.mountTargets {
 		for _, item := range list {
-			if pointer.StringDeref(item.desc.MountTargetId, "") == mountTargetId {
+			if ptr.Deref(item.desc.MountTargetId, "") == mountTargetId {
 				return item.sg, nil
 			}
 		}

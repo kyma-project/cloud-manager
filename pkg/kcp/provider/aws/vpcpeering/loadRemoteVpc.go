@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"strings"
 )
 
@@ -53,19 +53,19 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 		v := vv
 		var sb strings.Builder
 		for _, t := range v.Tags {
-			sb.WriteString(pointer.StringDeref(t.Key, ""))
+			sb.WriteString(ptr.Deref(t.Key, ""))
 			sb.WriteString("=")
-			sb.WriteString(pointer.StringDeref(t.Value, ""))
+			sb.WriteString(ptr.Deref(t.Value, ""))
 			sb.WriteString(",")
 		}
 
 		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
 			"%s{%s}",
-			pointer.StringDeref(v.VpcId, ""),
+			ptr.Deref(v.VpcId, ""),
 			sb.String(),
 		))
 
-		if pointer.StringDeref(v.VpcId, "xxx") == remoteVpcId {
+		if ptr.Deref(v.VpcId, "xxx") == remoteVpcId {
 			remoteVpcName = util.GetEc2TagValue(v.Tags, "Name")
 			vpc = &v
 		}
@@ -94,7 +94,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	state.remoteVpc = vpc
 
 	logger = logger.WithValues(
-		"remoteVpcId", pointer.StringDeref(state.vpc.VpcId, ""),
+		"remoteVpcId", ptr.Deref(state.remoteVpc.VpcId, ""),
 		"remoteVpcName", remoteVpcName,
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)

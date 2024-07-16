@@ -18,6 +18,39 @@ data:
             - name: spec.tier
               source: tier
               widget: Labels
+        - name: spec.ipRange
+          widget: Panel
+          source: spec
+          children:
+            - name: spec.ipRange.name
+              source: ipRange.name
+              widget: Labels
+        - name: spec.volume
+          widget: Panel
+          source: spec
+          children:
+            - source: volume.name
+              name: spec.volume.name
+              widget: Labels
+            - source: volume.labels
+              name: spec.volume.labels
+              widget: Labels
+            - source: volume.annotations
+              name: spec.volume.annotations
+              widget: Labels
+        - name: spec.volumeClaim
+          widget: Panel
+          source: spec
+          children:
+            - source: volumeClaim.name
+              name: spec.volumeClaim.name
+              widget: Labels
+            - source: volumeClaim.labels
+              name: spec.volumeClaim.labels
+              widget: Labels
+            - source: volumeClaim.annotations
+              name: spec.volumeClaim.annotations
+              widget: Labels
         - name: status
           widget: Panel
           source: status
@@ -42,6 +75,53 @@ data:
       simple: true
       name: spec.tier
       required: true
+
+    - path: spec.ipRange
+      simple: false
+      name: spec.ipRange
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.ipRange.name
+          widget: Text
+          required: true
+    - path: spec.volume
+      simple: false
+      name: spec.volume
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volume.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.volume.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volume.annotations
+          required: false
+          widget: KeyValuePair
+    - path: spec.volumeClaim
+      simple: false
+      name: spec.volumeClaim
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volumeClaim.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.volumeClaim.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volumeClaim.annotations
+          required: false
+          widget: KeyValuePair
   general: |+
     resource:
         kind: GcpNfsVolume
@@ -77,9 +157,18 @@ data:
       spec.fileShareName: File Share Name
       spec.capacityGb: Capacity (Gb)
       spec.ipRange: IP Range
+      spec.ipRange.name: Name
       configuration: Configuration
       status.state: State
       status: Status
+      spec.volume: Volume
+      spec.volume.name: Name
+      spec.volume.labels: Labels
+      spec.volume.annotations: Annotations
+      spec.volumeClaim: Volume Claim
+      spec.volumeClaim.name: Name
+      spec.volumeClaim.labels: Labels
+      spec.volumeClaim.annotations: Annotations
 kind: ConfigMap
 metadata:
   labels:

@@ -5,8 +5,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"k8s.io/utils/pointer"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/utils/ptr"
 )
 
 func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -22,7 +23,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	resource, err := util.ParseResourceID(obj.Status.RemoteId)
+	resource, err := azureutil.ParseResourceID(obj.Status.RemoteId)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error parsing remote virtual network peering ID", nil)
@@ -31,14 +32,17 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	subscriptionId := resource.Subscription
 
 	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
-
+	if err != nil {
+		logger.Error(err, "Failed to create azure loadRemoteVpcPeering client")
+		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+	}
 	peering, err := c.GetPeering(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error loading remote VPC Peering", nil)
 	}
 
-	logger = logger.WithValues("remoteId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("remoteId", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 

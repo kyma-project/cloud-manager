@@ -2,4 +2,5 @@
   name: spec.cidr
   widget: Text
   simple: true
-  required: true
+  required: false
+  inputInfo: Leave blank for Auto-CIDR

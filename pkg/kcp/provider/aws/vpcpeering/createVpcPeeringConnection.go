@@ -6,7 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -14,7 +14,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.vpcPeeringConnection != nil {
+	if state.vpcPeering != nil {
 		return nil, nil
 	}
 
@@ -22,7 +22,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		ctx,
 		state.vpc.VpcId,
 		state.remoteVpc.VpcId,
-		pointer.String(state.remoteRegion),
+		ptr.To(state.remoteRegion),
 		state.remoteVpc.OwnerId)
 
 	if err != nil {
@@ -41,15 +41,15 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("id", pointer.StringDeref(con.VpcPeeringConnectionId, ""))
+	logger = logger.WithValues("id", ptr.Deref(con.VpcPeeringConnectionId, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("AWS VPC Peering Connection created")
 
-	state.vpcPeeringConnection = con
+	state.vpcPeering = con
 
-	state.ObjAsVpcPeering().Status.Id = pointer.StringDeref(con.VpcPeeringConnectionId, "")
+	state.ObjAsVpcPeering().Status.Id = ptr.Deref(con.VpcPeeringConnectionId, "")
 
 	err = state.UpdateObjStatus(ctx)
 

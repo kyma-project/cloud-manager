@@ -5,13 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/3th1nk/cidr"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, iprange *cloudcontrolv1beta1.IpRange,
@@ -23,7 +22,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 
 	err := CreateKcpIpRange(ctx, infra.KCP().Client(), iprange,
 		WithName(name),
-		WithKcpIpRangeRemoteRef(name, name),
+		WithKcpIpRangeRemoteRef(name),
 		WithKcpIpRangeSpecScope(name),
 		WithKcpIpRangeSpecCidr(iprangeCidr),
 	)
@@ -50,7 +49,6 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 	})
 
 	zones := []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"}
-	var subnets []*ec2Types.Subnet
 	for x, zone := range zones {
 		rng := iprange.Status.Ranges[x]
 		subnet, err := infra.AwsMock().CreateSubnet(infra.Ctx(), vpcId, zone, rng, awsutil.Ec2Tags(
@@ -63,10 +61,9 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 		if err != nil {
 			return err
 		}
-		subnets = append(subnets, subnet)
 
 		iprange.Status.Subnets = append(iprange.Status.Subnets, cloudcontrolv1beta1.IpRangeSubnet{
-			Id:    pointer.StringDeref(subnet.SubnetId, ""),
+			Id:    ptr.Deref(subnet.SubnetId, ""),
 			Zone:  zone,
 			Range: rng,
 		})

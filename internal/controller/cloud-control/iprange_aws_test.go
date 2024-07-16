@@ -12,7 +12,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP IpRange", func() {
@@ -65,7 +65,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
 					WithKcpIpRangeSpecScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
@@ -119,9 +119,9 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				found := false
 				for _, awsSubnet := range subnets {
-					if iprangeSubnet.Id == pointer.StringDeref(awsSubnet.SubnetId, "") {
-						Expect(pointer.StringDeref(awsSubnet.AvailabilityZone, "")).To(Equal(iprangeSubnet.Zone))
-						Expect(pointer.StringDeref(awsSubnet.CidrBlock, "")).To(Equal(iprangeSubnet.Range))
+					if iprangeSubnet.Id == ptr.Deref(awsSubnet.SubnetId, "") {
+						Expect(ptr.Deref(awsSubnet.AvailabilityZone, "")).To(Equal(iprangeSubnet.Zone))
+						Expect(ptr.Deref(awsSubnet.CidrBlock, "")).To(Equal(iprangeSubnet.Range))
 						found = true
 						break
 					}
@@ -133,7 +133,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 		By("And Then KCP IpRange AWS VPC Cidr block is created", func() {
 			found := false
 			for _, cidrBlock := range theVpc.CidrBlockAssociationSet {
-				if pointer.StringDeref(cidrBlock.CidrBlock, "") == iprange.Spec.Cidr {
+				if ptr.Deref(cidrBlock.CidrBlock, "") == iprange.Spec.Cidr {
 					found = true
 				}
 			}
@@ -190,7 +190,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", "skr-aws-ip-range"),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
 					WithKcpIpRangeSpecScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
@@ -212,7 +212,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Expect(err).NotTo(HaveOccurred())
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				for _, awsSubnet := range awsSubnets {
-					if iprangeSubnet.Id == pointer.StringDeref(awsSubnet.SubnetId, "") {
+					if iprangeSubnet.Id == ptr.Deref(awsSubnet.SubnetId, "") {
 						theAwsSubnets = append(theAwsSubnets, awsSubnet)
 						break
 					}
@@ -238,14 +238,14 @@ var _ = Describe("Feature: KCP IpRange", func() {
 
 			for _, deletedSubnet := range theAwsSubnets {
 				for _, existingSubnet := range subnets {
-					Expect(pointer.StringDeref(deletedSubnet.SubnetId, "")).
+					Expect(ptr.Deref(deletedSubnet.SubnetId, "")).
 						NotTo(
-							Equal(pointer.StringDeref(existingSubnet.SubnetId, "")),
+							Equal(ptr.Deref(existingSubnet.SubnetId, "")),
 							fmt.Sprintf(
 								"expected subnet %s/%s/%s to be deleted, but it still exists",
-								pointer.StringDeref(deletedSubnet.SubnetId, ""),
-								pointer.StringDeref(deletedSubnet.AvailabilityZone, ""),
-								pointer.StringDeref(deletedSubnet.CidrBlock, ""),
+								ptr.Deref(deletedSubnet.SubnetId, ""),
+								ptr.Deref(deletedSubnet.AvailabilityZone, ""),
+								ptr.Deref(deletedSubnet.CidrBlock, ""),
 							),
 						)
 				}
@@ -254,10 +254,8 @@ var _ = Describe("Feature: KCP IpRange", func() {
 
 		By("And Then KCP IpRange Cidr block does not exist", func() {
 			for _, cidrBlock := range theVpc.CidrBlockAssociationSet {
-				Expect(pointer.StringDeref(cidrBlock.CidrBlock, "")).
-					NotTo(Equal(iprangeCidr),
-						fmt.Sprintf("expected VPC Cidr block not to exist, but it still exists"),
-					)
+				Expect(ptr.Deref(cidrBlock.CidrBlock, "")).
+					NotTo(Equal(iprangeCidr), "expected VPC Cidr block not to exist, but it still exists")
 			}
 		})
 
@@ -300,7 +298,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-namespace", iprangeName),
+					WithKcpIpRangeRemoteRef(iprangeName),
 					WithKcpIpRangeSpecScope(kymaName),
 				).
 				Should(Succeed())
@@ -357,9 +355,9 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				found := false
 				for _, awsSubnet := range subnets {
-					if iprangeSubnet.Id == pointer.StringDeref(awsSubnet.SubnetId, "") {
-						Expect(pointer.StringDeref(awsSubnet.AvailabilityZone, "")).To(Equal(iprangeSubnet.Zone))
-						Expect(pointer.StringDeref(awsSubnet.CidrBlock, "")).To(Equal(iprangeSubnet.Range))
+					if iprangeSubnet.Id == ptr.Deref(awsSubnet.SubnetId, "") {
+						Expect(ptr.Deref(awsSubnet.AvailabilityZone, "")).To(Equal(iprangeSubnet.Zone))
+						Expect(ptr.Deref(awsSubnet.CidrBlock, "")).To(Equal(iprangeSubnet.Range))
 						found = true
 						break
 					}
@@ -372,7 +370,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			found := false
 			var allBlocks []string
 			for _, cidrBlock := range theVpc.CidrBlockAssociationSet {
-				cidr := pointer.StringDeref(cidrBlock.CidrBlock, "")
+				cidr := ptr.Deref(cidrBlock.CidrBlock, "")
 				allBlocks = append(allBlocks, cidr)
 				if cidr == iprange.Status.Cidr {
 					found = true

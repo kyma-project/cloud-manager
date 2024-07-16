@@ -15,7 +15,7 @@ type Config interface {
 	SourceEnv(fieldPath string, envVarPrefix string)
 	Sensitive(fieldPath string)
 	Read()
-	Watch(stopCh chan struct{}, onConfigChange func(event fsnotify.Event)) error
+	Watch(stopCh <-chan struct{}, onConfigChange func(event fsnotify.Event)) error
 	Bind(fieldPath string, obj any)
 	Json() string
 	PrintJson() string

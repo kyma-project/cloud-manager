@@ -8,13 +8,6 @@ import (
 	"testing"
 )
 
-func must[T any](obj T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
 type fileStruct struct {
 	Defaults *fileStructDefaults `mapstructure:"defaults"`
 }

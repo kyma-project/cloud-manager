@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 // validateExistingMountTargets validates if there are any mount targets referring to a subnet not
@@ -30,7 +30,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 	var invalidMountTargets []efsTypes.MountTargetDescription
 
 	for _, mt := range state.mountTargets {
-		x := state.IpRange().Status.Subnets.SubnetById(pointer.StringDeref(mt.SubnetId, ""))
+		x := state.IpRange().Status.Subnets.SubnetById(ptr.Deref(mt.SubnetId, ""))
 		if x == nil {
 			invalidMountTargets = append(invalidMountTargets, mt)
 		}
@@ -45,9 +45,9 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		fmt.Sprintf("%v", pie.Map(invalidMountTargets, func(mt efsTypes.MountTargetDescription) string {
 			return fmt.Sprintf(
 				"(%s %s %s)",
-				pointer.StringDeref(mt.MountTargetId, ""),
-				pointer.StringDeref(mt.AvailabilityZoneName, ""),
-				pointer.StringDeref(mt.SubnetId, ""),
+				ptr.Deref(mt.MountTargetId, ""),
+				ptr.Deref(mt.AvailabilityZoneName, ""),
+				ptr.Deref(mt.SubnetId, ""),
 			)
 		})),
 	).
@@ -58,7 +58,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		Status: metav1.ConditionTrue,
 		Reason: cloudcontrolv1beta1.ReasonInvalidMountTargetsAlreadyExist,
 		Message: fmt.Sprintf("Invalid mount targets already exist: %v", pie.Map(invalidMountTargets, func(mt efsTypes.MountTargetDescription) string {
-			return pointer.StringDeref(mt.MountTargetId, "")
+			return ptr.Deref(mt.MountTargetId, "")
 		})),
 	})
 	err := state.UpdateObjStatus(ctx)

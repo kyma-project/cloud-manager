@@ -21,10 +21,11 @@ type State struct {
 	awsSecretAccessKey string
 	roleName           string
 
-	vpc                  *ec2Types.Vpc
-	vpcPeeringConnection *ec2Types.VpcPeeringConnection
-	remoteVpc            *ec2Types.Vpc
-	remoteRegion         string
+	vpc              *ec2Types.Vpc
+	vpcPeering       *ec2Types.VpcPeeringConnection
+	remoteVpc        *ec2Types.Vpc
+	remoteVpcPeering *ec2Types.VpcPeeringConnection
+	remoteRegion     string
 }
 
 type StateFactory interface {

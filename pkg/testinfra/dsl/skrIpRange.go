@@ -52,7 +52,6 @@ func CreateSkrIpRange(ctx context.Context, clnt client.Client, obj *cloudresourc
 	}
 	NewObjActions(opts...).
 		Append(
-			WithNamespace(DefaultSkrNamespace),
 			WithSkrIpRangeSpecCidr(DefaultIpRangeCidr),
 		).
 		ApplyOnObject(obj)

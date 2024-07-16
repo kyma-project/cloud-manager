@@ -31,16 +31,16 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 
 	err := state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating SKR AwsNfsVolume with ID label", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating SKR AzureVpcPeering with ID label", composed.StopWithRequeue, ctx)
 	}
-	logger.Info("SKR AwsNfsVolume updated with ID label")
+	logger.Info("SKR AzureVpcPeering updated with ID label")
 
 	obj.Status.Id = id
 
 	err = state.UpdateObjStatus(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating SKR AwsNfsVolume status with ID label", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating SKR AzureVpcPeering status with ID label", composed.StopWithRequeue, ctx)
 	}
 
 	logger.Info("SKR AzureVpcPeering updated with ID status")

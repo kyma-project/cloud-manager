@@ -105,7 +105,7 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionReasonCidrOverlap,
-					Message: fmt.Sprintf("CIDR overlaps with %s/%s", ipRange.Namespace, ipRange.Name),
+					Message: fmt.Sprintf("CIDR overlaps with %s", ipRange.Name),
 				}).
 				ErrorLogMessage("Error updating IpRange status with CIDR overlap error").
 				SuccessLogMsg("Forgetting IpRange with Cidr overlap").

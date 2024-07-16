@@ -136,8 +136,6 @@ func BuildSwitchAction(name string, defaultAction Action, cases ...Case) Action 
 				).
 				Info("Running action")
 			return defaultAction(ctx, state)
-		} else {
-			//logger.Info("None of case predicates evaluated true, and default action is not provided")
 		}
 
 		return nil, nil

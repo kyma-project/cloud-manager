@@ -1,0 +1,14 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsVpcPeering
+metadata:
+  labels:
+    app.kubernetes.io/name: awsvpcpeering
+    app.kubernetes.io/instance: awsvpcpeering-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: awsvpcpeering-sample
+spec:
+  remoteVpcId: vpc-11122233
+  remoteRegion: us-west-2
+  remoteAccountId: '123456789012'

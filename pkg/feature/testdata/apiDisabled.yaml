@@ -7,8 +7,11 @@ apiDisabled:
     - name: All APIs are disabled for trial SKR
       query: brokerPlan == "trial"
       variation: disabled
+    - name: Enabled on stage for global account 6034adc9-3441-494c-b438-a0eba4c5045a
+      query: landscape == "stage" and globalAccount == "6034adc9-3441-494c-b438-a0eba4c5045a"
+      variation: enabled
     - name: Disabled APIs on stage and prod
-      query: feature in ["nfsBackup", "peering"] and landscape != "dev"
+      query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
       variation: disabled
   defaultRule:
     variation: enabled

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
@@ -12,14 +13,14 @@ import (
 func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsVpcPeering()
 
-	remoteAccountId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteAccountId
+	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
-	logger.WithValues(
-		"awsRegion", state.remoteRegion,
-		"awsRole", roleArn,
-	).Info("Assuming AWS role")
+	logger = logger.WithValues("awsRegion", state.remoteRegion, "awsRole", roleArn)
+
+	logger.Info("Assuming AWS role")
 
 	client, err := state.provider(
 		ctx,
@@ -28,16 +29,18 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		state.awsSecretAccessKey,
 		roleArn,
 	)
+	if err != nil {
+		logger.Error(err, "Failed to create aws acceptVpcPeeringConnection client")
+		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+	}
 
-	con, err := client.AcceptVpcPeeringConnection(
-		ctx,
-		state.vpcPeeringConnection.VpcPeeringConnectionId,
-	)
+	peering, err := client.AcceptVpcPeeringConnection(ctx,
+		state.vpcPeering.VpcPeeringConnectionId)
 
 	if err != nil {
 		logger.Error(err, "Error accepting VPC Peering")
 
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
+		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
@@ -50,7 +53,19 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	logger.Info(fmt.Sprintf("AWS VPC Peering Connection %s accepted", *con.VpcPeeringConnectionId))
+	logger = logger.WithValues("remotePeeringId", *peering.VpcPeeringConnectionId)
 
-	return nil, ctx
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+
+	logger.Info("AWS VPC Peering Connection accepted")
+
+	state.remoteVpcPeering = peering
+
+	obj.Status.RemoteId = *peering.VpcPeeringConnectionId
+
+	return composed.UpdateStatus(obj).
+		ErrorLogMessage("Error updating VpcPeering status with remote connection id").
+		FailedError(composed.StopWithRequeue).
+		SuccessErrorNil().
+		Run(ctx, state)
 }

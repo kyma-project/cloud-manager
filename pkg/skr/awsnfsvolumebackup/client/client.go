@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type Client interface {
@@ -55,10 +55,7 @@ func (c *client) IsNotFound(err error) bool {
 		return false
 	}
 	var resourceNotFoundException *backuptypes.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
-		return true
-	}
-	return false
+	return errors.As(err, &resourceNotFoundException)
 }
 
 func (c *client) IsAlreadyExists(err error) bool {
@@ -66,15 +63,12 @@ func (c *client) IsAlreadyExists(err error) bool {
 		return false
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
-	if errors.As(err, &alreadyExistsException) {
-		return true
-	}
-	return false
+	return errors.As(err, &alreadyExistsException)
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
 	in := &backup.ListTagsInput{
-		ResourceArn: pointer.String(resourceArn),
+		ResourceArn: ptr.To(resourceArn),
 	}
 	out, err := c.svc.ListTags(ctx, in)
 	if err != nil {
@@ -94,7 +88,7 @@ func (c *client) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaul
 
 func (c *client) DescribeBackupVault(ctx context.Context, backupVaultName string) (*backup.DescribeBackupVaultOutput, error) {
 	in := &backup.DescribeBackupVaultInput{
-		BackupVaultName: pointer.String(backupVaultName),
+		BackupVaultName: ptr.To(backupVaultName),
 	}
 	out, err := c.svc.DescribeBackupVault(ctx, in)
 	if err != nil {
@@ -105,20 +99,20 @@ func (c *client) DescribeBackupVault(ctx context.Context, backupVaultName string
 
 func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	in := &backup.CreateBackupVaultInput{
-		BackupVaultName:  pointer.String(name),
+		BackupVaultName:  ptr.To(name),
 		BackupVaultTags:  tags,
-		CreatorRequestId: pointer.String(name),
+		CreatorRequestId: ptr.To(name),
 	}
 	out, err := c.svc.CreateBackupVault(ctx, in)
 	if err != nil {
 		return "", err
 	}
-	return pointer.StringDeref(out.BackupVaultArn, ""), nil
+	return ptr.Deref(out.BackupVaultArn, ""), nil
 }
 
 func (c *client) DeleteBackupVault(ctx context.Context, name string) error {
 	in := &backup.DeleteBackupVaultInput{
-		BackupVaultName: pointer.String(name),
+		BackupVaultName: ptr.To(name),
 	}
 	_, err := c.svc.DeleteBackupVault(ctx, in)
 	return err
@@ -133,9 +127,9 @@ func (c *client) StartBackupJob(ctx context.Context, params *StartBackupJobInput
 		}
 	}
 	in := &backup.StartBackupJobInput{
-		BackupVaultName:   pointer.String(params.BackupValueName),
-		IamRoleArn:        pointer.String(params.IamRoleArn),
-		ResourceArn:       pointer.String(params.ResourceArn),
+		BackupVaultName:   ptr.To(params.BackupValueName),
+		IamRoleArn:        ptr.To(params.IamRoleArn),
+		ResourceArn:       ptr.To(params.ResourceArn),
 		BackupOptions:     nil, // ???
 		IdempotencyToken:  params.IdempotencyToken,
 		Lifecycle:         lifecycle,
@@ -158,7 +152,7 @@ func (c *client) ListBackupJobs(ctx context.Context, in *backup.ListBackupJobsIn
 
 func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error) {
 	in := &backup.DescribeBackupJobInput{
-		BackupJobId: pointer.String(backupJobId),
+		BackupJobId: ptr.To(backupJobId),
 	}
 	out, err := c.svc.DescribeBackupJob(ctx, in)
 	if err != nil {

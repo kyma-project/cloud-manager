@@ -64,7 +64,7 @@ resources:
   version: v1beta1
 - api:
     crdVersion: v1
-    namespaced: true
+    namespaced: false
   controller: true
   domain: kyma-project.io
   group: cloud-resources
@@ -109,7 +109,6 @@ resources:
   version: v1beta1
 - api:
     crdVersion: v1
-    namespaced: false
   controller: true
   domain: kyma-project.io
   group: cloud-resources
@@ -123,6 +122,32 @@ resources:
   domain: kyma-project.io
   group: cloud-resources
   kind: NfsBackupSchedule
+  path: github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1
+  version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kyma-project.io
+  group: cloud-control
+  kind: RedisInstance
+  path: github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1
+  version: v1beta1
+- api:
+    crdVersion: v1
+  controller: true
+  domain: kyma-project.io
+  group: cloud-resources
+  kind: AwsVpcPeering
+  path: github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1
+  version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kyma-project.io
+  group: cloud-resources
+  kind: GcpRedisInstance
   path: github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1
   version: v1beta1
 version: "3"

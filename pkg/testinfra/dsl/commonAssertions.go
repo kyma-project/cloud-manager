@@ -2,6 +2,8 @@ package dsl
 
 import (
 	"fmt"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -15,5 +17,41 @@ func HavingDeletionTimestamp() ObjAssertion {
 			)
 		}
 		return nil
+	}
+}
+
+func WithRemoteRef(name string) ObjAction {
+	remoteRef := &cloudcontrolv1beta1.RemoteRef{
+		Name:      name,
+		Namespace: DefaultSkrNamespace,
+	}
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.RemoteRef = *remoteRef
+				return
+			}
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				x.Spec.RemoteRef = *remoteRef
+				return
+			}
+			panic("unhandled type in WithRemoteRef")
+		},
+	}
+}
+
+func WithInstanceScope(scopeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Scope.Name = scopeName
+				return
+			}
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				x.Spec.Scope.Name = scopeName
+				return
+			}
+			panic("unhandled type in WithInstanceScope")
+		},
 	}
 }

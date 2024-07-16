@@ -384,7 +384,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 						infra.SKR().Client(),
 						prevPv,
 						NewObjActions(
-							WithName(gcpNfsVolumeName),
+							WithName(gcpNfsVolume.Status.Id),
 						),
 					).
 					Should(Succeed())
@@ -488,7 +488,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has the Capacity matching that of the SKR GcpNfsVolume.")
 				expectedCapacity := int64(updatedCapacityGb) * 1024 * 1024 * 1024
-				quantity, _ := pv.Spec.Capacity["storage"]
+				quantity := pv.Spec.Capacity["storage"]
 				pvQuantity, _ := quantity.AsInt64()
 				Expect(pvQuantity).To(Equal(expectedCapacity))
 
@@ -599,7 +599,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), pv,
 						NewObjActions(
-							WithName(gcpNfsVolumeName),
+							WithName(gcpNfsVolume.Status.Id),
 						),
 					).
 					Should(Succeed())

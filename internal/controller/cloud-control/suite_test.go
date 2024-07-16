@@ -18,11 +18,13 @@ package cloudcontrol
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
+
+	"go.uber.org/zap/zapcore"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -101,6 +103,13 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().VpcPeeringSkrProvider(),
 		infra.AzureMock().VpcPeeringSkrProvider(),
 		infra.GcpMock().VpcPeeringSkrProvider(),
+		env,
+	))
+	//RedisInstance
+	Expect(SetupRedisInstanceReconciler(
+		infra.KcpManager(),
+		infra.GcpMock().MemoryStoreProviderFake(),
+		infra.AzureMock().RedisClientProvider(),
 		env,
 	))
 

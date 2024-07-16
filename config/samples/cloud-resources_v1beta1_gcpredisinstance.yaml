@@ -1,0 +1,14 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpRedisInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: gcpredisinstance
+    app.kubernetes.io/instance: gcpredisinstance-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: gcpredisinstance-sample
+spec:
+  memorySizeGb: 1
+  tier: "BASIC"
+  redisVersion: REDIS_7_0

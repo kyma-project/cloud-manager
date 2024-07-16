@@ -7,7 +7,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -28,7 +28,7 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 
 	item := &vpcPeeringEntry{
 		peering: ec2types.VpcPeeringConnection{
-			VpcPeeringConnectionId: pointer.String("pcx-" + uuid.NewString()[:8]),
+			VpcPeeringConnectionId: ptr.To("pcx-" + uuid.NewString()[:8]),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
 				VpcId: vpcId,
 			},
@@ -54,15 +54,32 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]
 	}), nil
 }
 
-func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectonId *string) (*ec2types.VpcPeeringConnection, error) {
+func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	for _, x := range s.items {
-		if pointer.StringEqual(x.peering.VpcPeeringConnectionId, connectonId) {
+		if ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId) {
 			return &x.peering, nil
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("An error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectonId))
+	return nil, fmt.Errorf("an error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectionId)
+}
+
+func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	deleted := false
+	s.items = pie.Filter(s.items, func(x *vpcPeeringEntry) bool {
+		deleted = ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId)
+		return !deleted
+	})
+
+	if !deleted {
+		return errors.New("peering connection not found")
+	}
+
+	return nil
 }

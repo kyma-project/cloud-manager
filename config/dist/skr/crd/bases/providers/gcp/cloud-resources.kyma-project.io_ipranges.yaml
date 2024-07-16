@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.1.0
   name: ipranges.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -13,7 +13,7 @@ spec:
     listKind: IpRangeList
     plural: ipranges
     singular: iprange
-  scope: Namespaced
+  scope: Cluster
   versions:
     - additionalPrinterColumns:
         - jsonPath: .metadata.creationTimestamp

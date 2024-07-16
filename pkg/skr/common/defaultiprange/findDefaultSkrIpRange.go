@@ -18,8 +18,7 @@ func findDefaultSkrIpRange(ctx context.Context, st composed.State) (error, conte
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
-		Namespace: "kyma-system",
-		Name:      "default",
+		Name: "default",
 	}, skrIpRange)
 	if apierrors.IsNotFound(err) {
 		logger.Info("Default SKR IpRange does not exist")

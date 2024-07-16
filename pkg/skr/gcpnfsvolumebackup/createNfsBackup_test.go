@@ -31,7 +31,6 @@ func (suite *createNfsBackupSuite) SetupTest() {
 func (suite *createNfsBackupSuite) TestWhenBackupIsDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -55,7 +54,6 @@ func (suite *createNfsBackupSuite) TestWhenBackupIsDeleting() {
 func (suite *createNfsBackupSuite) TestWhenGcpBackupExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -114,7 +112,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupReturnsError() {
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
+	_ = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)
@@ -166,7 +164,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
+	_ = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
 			Namespace: gcpNfsVolumeBackup.Namespace},
 		fromK8s)

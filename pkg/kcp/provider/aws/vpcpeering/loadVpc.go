@@ -8,13 +8,18 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"strings"
 )
 
 func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsVpcPeering()
+
+	if len(obj.Status.Id) != 0 {
+		return nil, nil
+	}
 
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 
@@ -30,14 +35,14 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 		v := vv
 		var sb strings.Builder
 		for _, t := range v.Tags {
-			sb.WriteString(pointer.StringDeref(t.Key, ""))
+			sb.WriteString(ptr.Deref(t.Key, ""))
 			sb.WriteString("=")
-			sb.WriteString(pointer.StringDeref(t.Value, ""))
+			sb.WriteString(ptr.Deref(t.Value, ""))
 			sb.WriteString(",")
 		}
 		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
 			"%s{%s}",
-			pointer.StringDeref(v.VpcId, ""),
+			ptr.Deref(v.VpcId, ""),
 			sb.String(),
 		))
 		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {
@@ -67,9 +72,9 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.vpc = vpc
 
-	state.ObjAsVpcPeering().Status.VpcId = pointer.StringDeref(vpc.VpcId, "")
+	state.ObjAsVpcPeering().Status.VpcId = ptr.Deref(vpc.VpcId, "")
 
-	logger = logger.WithValues("vpcId", pointer.StringDeref(state.vpc.VpcId, ""))
+	logger = logger.WithValues("vpcId", ptr.Deref(state.vpc.VpcId, ""))
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	return nil, ctx

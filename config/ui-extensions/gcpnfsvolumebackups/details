@@ -20,3 +20,6 @@ body:
         - widget: Labels
           source: state
           name: status.state
+        - widget: Labels
+          source: opIdentifier
+          name: status.opIdentifier

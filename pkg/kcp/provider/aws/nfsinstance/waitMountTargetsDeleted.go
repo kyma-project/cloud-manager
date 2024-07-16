@@ -7,7 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -30,7 +30,7 @@ func waitMountTargetsDeleted(ctx context.Context, st composed.State) (error, con
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudcontrolv1beta1.ReasonUnknown,
-					Message: fmt.Sprintf("Mount target %s in error state", pointer.StringDeref(mt.MountTargetId, "")),
+					Message: fmt.Sprintf("Mount target %s in error state", ptr.Deref(mt.MountTargetId, "")),
 				}).
 				SuccessError(composed.StopAndForget).
 				Run(ctx, st)

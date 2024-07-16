@@ -7,7 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func findCloudResourceSubnets(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,9 +25,9 @@ func findCloudResourceSubnets(ctx context.Context, st composed.State) (error, co
 
 	state.ObjAsIpRange().Status.Subnets = pie.Map(cloudResourcesSubnets, func(subnet ec2Types.Subnet) cloudcontrolv1beta1.IpRangeSubnet {
 		return cloudcontrolv1beta1.IpRangeSubnet{
-			Id:    pointer.StringDeref(subnet.SubnetId, ""),
-			Zone:  pointer.StringDeref(subnet.AvailabilityZone, ""),
-			Range: pointer.StringDeref(subnet.CidrBlock, ""),
+			Id:    ptr.Deref(subnet.SubnetId, ""),
+			Zone:  ptr.Deref(subnet.AvailabilityZone, ""),
+			Range: ptr.Deref(subnet.CidrBlock, ""),
 		}
 	})
 

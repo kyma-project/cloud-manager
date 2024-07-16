@@ -6,9 +6,11 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	"k8s.io/utils/ptr"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"strings"
 	"time"
 )
@@ -63,12 +65,14 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	if err != nil {
 		logger.Error(err, "Error creating remote VPC Peering")
 
+		message := azuremeta.GetErrorMessage(err)
+
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Failed creating VpcPeerings %s", err),
+				Message: message,
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
@@ -76,19 +80,17 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("remotePeeringId", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("remotePeeringId", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("Azure remote VPC Peering created")
 
-	obj.Status.RemoteId = pointer.StringDeref(peering.ID, "")
+	obj.Status.RemoteId = ptr.Deref(peering.ID, "")
 
-	err = state.UpdateObjStatus(ctx)
-
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
-	}
-
-	return nil, ctx
+	return composed.UpdateStatus(obj).
+		ErrorLogMessage("Error updating VpcPeering status with remote connection id").
+		FailedError(composed.StopWithRequeue).
+		SuccessErrorNil().
+		Run(ctx, state)
 }

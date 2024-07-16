@@ -31,7 +31,6 @@ func (suite *deleteNfsBackupSuite) SetupTest() {
 func (suite *deleteNfsBackupSuite) TestWhenBackupIsNotDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -56,7 +55,6 @@ func (suite *deleteNfsBackupSuite) TestWhenBackupIsNotDeleting() {
 func (suite *deleteNfsBackupSuite) TestWhenGcpBackupNotExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -116,7 +114,7 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
-	err = factory.skrCluster.K8sClient().Get(ctx,
+	_ = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletingGpNfsVolumeBackup.Name,
 			Namespace: deletingGpNfsVolumeBackup.Namespace},
 		fromK8s)
@@ -173,6 +171,7 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
 		types.NamespacedName{Name: deletingGpNfsVolumeBackup.Name,
 			Namespace: deletingGpNfsVolumeBackup.Namespace},
 		fromK8s)
+	suite.Nil(err, "unexpected error")
 
 	//Validate expected status
 	suite.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)

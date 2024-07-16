@@ -30,7 +30,6 @@ func (suite *checkRestoreOperationSuite) SetupTest() {
 func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNoOpId() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
@@ -127,7 +126,6 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted()
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	//Get state object with GcpNfsVolume
@@ -167,7 +165,6 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNil() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
@@ -214,7 +211,6 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFaile
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	//Get state object with GcpNfsVolume
@@ -259,7 +255,6 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucce
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	//Get state object with GcpNfsVolume

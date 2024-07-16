@@ -2,6 +2,8 @@ package feature
 
 import (
 	"context"
+	"testing"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
@@ -9,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"testing"
 )
 
 func TestApiDisabled(t *testing.T) {
@@ -108,6 +109,22 @@ func TestApiDisabled(t *testing.T) {
 			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeaturePeering).Build(ctx),
 			v: true,
 		},
+		// REDIS ====================================================
+		{
+			t: "redis feature is enabled on dev",
+			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureRedis).Build(ctx),
+			v: false,
+		},
+		{
+			t: "redis feature is disabled on stage",
+			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureRedis).Build(ctx),
+			v: true,
+		},
+		{
+			t: "redis feature is disabled on prod",
+			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureRedis).Build(ctx),
+			v: true,
+		},
 		// TRIAL ====================================================
 		{
 			t: "nfs feature is disabled on trial",
@@ -122,6 +139,11 @@ func TestApiDisabled(t *testing.T) {
 		{
 			t: "peering feature is disabled on trial",
 			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+			v: true,
+		},
+		{
+			t: "redis feature is disabled on trial",
+			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
 			v: true,
 		},
 	}

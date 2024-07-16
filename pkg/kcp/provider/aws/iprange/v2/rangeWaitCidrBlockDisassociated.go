@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,7 +16,7 @@ func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (er
 
 	var theBlock *ec2Types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
-		if pointer.StringDeref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
+		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
 			theBlock = &cidrBlock
 		}
 	}

@@ -8,8 +8,8 @@ import (
 
 // New returns a composed.Action that implements the following flow:
 // * load IpRange specified in the reconciled object
-// * if no IpRange found, find default SKR IpRange kyma-system/default
-// * if no IpRange found, create default SKR IpRange kyma-system/default with empty cidr
+// * if no IpRange found, find default SKR IpRange
+// * if no IpRange found, create default SKR IpRange with empty cidr
 // * requeue until found or created IpRange has Ready condition
 // The provided state MUST implement State interface and object in the state
 // MUST implement ObjWithIpRangeRef.

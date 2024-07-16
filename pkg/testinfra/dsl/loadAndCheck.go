@@ -3,6 +3,7 @@ package dsl
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -20,13 +21,15 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 	case *cloudcontrolv1beta1.IpRange,
 		*cloudcontrolv1beta1.NfsInstance,
 		*cloudcontrolv1beta1.Scope,
-		*cloudcontrolv1beta1.VpcPeering:
+		*cloudcontrolv1beta1.VpcPeering,
+		*cloudcontrolv1beta1.RedisInstance:
 		actions = actions.Append(WithNamespace(DefaultKcpNamespace))
 	case *cloudresourcesv1beta1.IpRange,
 		*cloudresourcesv1beta1.AwsNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
-		*cloudresourcesv1beta1.GcpNfsVolumeRestore:
+		*cloudresourcesv1beta1.GcpNfsVolumeRestore,
+		*cloudresourcesv1beta1.GcpRedisInstance:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 
@@ -52,13 +55,15 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 	case *cloudcontrolv1beta1.IpRange,
 		*cloudcontrolv1beta1.NfsInstance,
 		*cloudcontrolv1beta1.Scope,
-		*cloudcontrolv1beta1.VpcPeering:
+		*cloudcontrolv1beta1.VpcPeering,
+		*cloudcontrolv1beta1.RedisInstance:
 		actions = actions.Append(WithNamespace(DefaultKcpNamespace))
 	case *cloudresourcesv1beta1.IpRange,
 		*cloudresourcesv1beta1.AwsNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
-		*cloudresourcesv1beta1.GcpNfsVolumeRestore:
+		*cloudresourcesv1beta1.GcpNfsVolumeRestore,
+		*cloudresourcesv1beta1.GcpRedisInstance:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 

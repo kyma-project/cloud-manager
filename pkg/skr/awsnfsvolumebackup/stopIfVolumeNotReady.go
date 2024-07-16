@@ -2,7 +2,6 @@ package awsnfsvolumebackup
 
 import (
 	"context"
-	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -24,7 +23,7 @@ func stopIfVolumeNotReady(ctx context.Context, st composed.State) (error, contex
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonNfsVolumeNotReady,
-			Message: fmt.Sprintf("The AwsNfsVolume is not ready"),
+			Message: "The AwsNfsVolume is not ready",
 		}).
 		ErrorLogMessage("Failed updating AwsNfsVolumeBackup error status with NfsVolumeNotReady condition").
 		SuccessLogMsg("Forgeting AwsNfsVolumeBackup with NfsVolume not ready").

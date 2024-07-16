@@ -3,6 +3,8 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -15,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"time"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
@@ -590,7 +591,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Eventually(CreateAwsNfsVolume).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
 					WithName(awsNfsVolumeName),
-					WithNfsVolumeIpRange(skrIpRange.Name),
+					WithIpRange(skrIpRange.Name),
 					WithAwsNfsVolumeCapacity("10G"),
 				).
 				Should(Succeed(), "failed creating AwsNfsVolume")
@@ -675,7 +676,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 
 		By("And Then SKR IpRange Error condition has CidrOverlap reason", func() {
 			Expect(condErr.Reason).To(Equal(cloudresourcesv1beta1.ConditionReasonCidrOverlap))
-			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s/%s", DefaultSkrNamespace, iprange1Name)))
+			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s", iprange1Name)))
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {
@@ -733,7 +734,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 
 		By("And Then SKR IpRange Error condition has CidrOverlap reason", func() {
 			Expect(condErr.Reason).To(Equal(cloudresourcesv1beta1.ConditionReasonCidrOverlap))
-			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s/%s", DefaultSkrNamespace, iprange1Name)))
+			Expect(condErr.Message).To(Equal(fmt.Sprintf("CIDR overlaps with %s", iprange1Name)))
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {

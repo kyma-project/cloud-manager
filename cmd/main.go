@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/fsnotify/fsnotify"
 	"os"
 
 	"github.com/elliotchance/pie/v2"
@@ -35,12 +36,14 @@ import (
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -193,6 +196,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupGcpRedisInstanceReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisInstance")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupGcpVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpVpcPeering")
 		os.Exit(1)
@@ -232,6 +245,15 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)
 	}
+	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
+		mgr,
+		gcpmemorystoreclient.NewMemorystoreClientProvider(),
+		azureredisclient.NewClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -260,6 +282,15 @@ func main() {
 		Landscape(os.Getenv("LANDSCAPE")).
 		Plane(featuretypes.PlaneKcp).
 		Build(ctx)
+
+	go func() {
+		err := cfg.Watch(ctx.Done(), func(_ fsnotify.Event) {
+			cfg.Read()
+		})
+		if err != nil {
+			rootLogger.Error(err, "Error from config watcher")
+		}
+	}()
 
 	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")

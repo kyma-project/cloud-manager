@@ -30,9 +30,8 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Name:      state.ObjAsIpRange().Status.Id,
 			Namespace: state.KymaRef.Namespace,
 			Labels: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
+				cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
+				cloudcontrolv1beta1.LabelRemoteName: state.Name().Name,
 			},
 		},
 		Spec: cloudcontrolv1beta1.IpRangeSpec{

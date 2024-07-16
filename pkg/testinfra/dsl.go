@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
@@ -138,7 +138,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 				Provider: gardenerTypes.Provider{
 					Type: "gcp",
 				},
-				SecretBindingName: pointer.String(name),
+				SecretBindingName: ptr.To(name),
 			},
 		}
 		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), shoot)

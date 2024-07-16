@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type ScopeConfig interface {
@@ -28,7 +28,7 @@ func (s *scopeStore) GetCallerIdentity(ctx context.Context) (*sts.GetCallerIdent
 		return nil, context.Canceled
 	}
 	return &sts.GetCallerIdentityOutput{
-		Account: pointer.String(s.account),
+		Account: ptr.To(s.account),
 		Arn:     nil,
 		UserId:  nil,
 	}, nil

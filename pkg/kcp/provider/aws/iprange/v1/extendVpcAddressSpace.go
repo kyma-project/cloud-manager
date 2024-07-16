@@ -7,7 +7,7 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func extendVpcAddressSpace(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,7 +20,7 @@ func extendVpcAddressSpace(ctx context.Context, st composed.State) (error, conte
 
 	logger.Info("Associating vpc cidr block")
 
-	_, err := state.client.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.ObjAsIpRange().Spec.Cidr)
+	_, err := state.client.AssociateVpcCidrBlock(ctx, ptr.Deref(state.vpc.VpcId, ""), state.ObjAsIpRange().Spec.Cidr)
 
 	if err != nil {
 		logger.Error(err, "Error associating vpc cidr block")

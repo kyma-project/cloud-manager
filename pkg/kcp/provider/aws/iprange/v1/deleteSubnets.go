@@ -5,7 +5,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func deleteSubnets(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,7 +21,7 @@ func deleteSubnets(ctx context.Context, st composed.State) (error, context.Conte
 			continue
 		}
 
-		subnetId := pointer.StringDeref(subnet.SubnetId, "")
+		subnetId := ptr.Deref(subnet.SubnetId, "")
 
 		lll := logger.WithValues("subnetId", subnetId)
 		lll.Info("Deleting subnet")

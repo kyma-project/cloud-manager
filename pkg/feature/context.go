@@ -7,13 +7,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/thomaspoignant/go-feature-flag/ffcontext"
-	"gopkg.in/yaml.v3"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"strings"
 )
 
@@ -225,66 +221,17 @@ func (b *contextBuilderImpl) KindsFromObject(obj client.Object, scheme *runtime.
 	b.CrdKindGroup("")
 	b.BusolaKindGroup("")
 
-	var err error
-	gvk := obj.GetObjectKind().GroupVersionKind()
-	if gvk.Kind == "" {
-		gvk, err = apiutil.GVKForObject(obj, scheme)
-		if err != nil {
-			return b
-		}
+	kindInfo := ObjectKinds(obj, scheme)
+	if !kindInfo.ObjOK {
+		return b
 	}
 
-	kg := strings.ToLower(gvk.Kind)
-	if gvk.Group != "" {
-		kg = fmt.Sprintf("%s.%s", strings.ToLower(gvk.Kind), strings.ToLower(gvk.Group))
+	b.ObjKindGroup(strings.ToLower(kindInfo.ObjGK.String()))
+	if kindInfo.CrdOK {
+		b.CrdKindGroup(strings.ToLower(kindInfo.CrdGK.String()))
 	}
-	b.ObjKindGroup(kg)
-
-	if kg == "customresourcedefinition.apiextensions.k8s.io" {
-		if u, ok := obj.(*unstructured.Unstructured); ok {
-			crdGroup, groupFound, groupErr := unstructured.NestedString(u.Object, "spec", "group")
-			crdKind, kindFound, kindErr := unstructured.NestedString(u.Object, "spec", "names", "kind")
-			if groupFound && kindFound && groupErr == nil && kindErr == nil {
-				crdKg := fmt.Sprintf("%s.%s", strings.ToLower(crdKind), strings.ToLower(crdGroup))
-				b.CrdKindGroup(crdKg)
-			}
-		}
-		if crd, ok := obj.(*apiextensions.CustomResourceDefinition); ok {
-			crdGroup := crd.Spec.Group
-			crdKind := crd.Spec.Names.Kind
-			crdKg := fmt.Sprintf("%s.%s", strings.ToLower(crdKind), strings.ToLower(crdGroup))
-			b.CrdKindGroup(crdKg)
-		}
-	}
-
-	if kg == "configmap" &&
-		obj.GetLabels() != nil && obj.GetLabels()["busola.io/extension"] != "" {
-
-		var general string
-		if cm, ok := obj.(*unstructured.Unstructured); ok {
-			gen, found, err := unstructured.NestedString(cm.Object, "data", "general")
-			if found && err == nil {
-				general = gen
-			}
-		}
-		if cm, ok := obj.(*corev1.ConfigMap); ok {
-			gen, found := cm.Data["general"]
-			if found {
-				general = gen
-			}
-		}
-
-		if len(general) > 0 {
-			obj := map[string]interface{}{}
-			if err := yaml.Unmarshal([]byte(general), &obj); err == nil {
-				cmGroup, groupFound, groupErr := unstructured.NestedString(obj, "resource", "group")
-				cmKind, kindFound, kindErr := unstructured.NestedString(obj, "resource", "kind")
-				if groupFound && kindFound && groupErr == nil && kindErr == nil {
-					busolaKg := fmt.Sprintf("%s.%s", strings.ToLower(cmKind), strings.ToLower(cmGroup))
-					b.BusolaKindGroup(busolaKg)
-				}
-			}
-		}
+	if kindInfo.BusolaOK {
+		b.BusolaKindGroup(strings.ToLower(kindInfo.BusolaGK.String()))
 	}
 
 	return b
