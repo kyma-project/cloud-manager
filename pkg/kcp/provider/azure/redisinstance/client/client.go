@@ -21,7 +21,7 @@ type CreateRedisInstanceOptions struct {
 }
 
 type Client interface {
-	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
+	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
@@ -55,7 +55,19 @@ func newClient(armRedisClientInstance *armRedis.Client) Client {
 	}
 }
 
-func (c *redisClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	_, error := c.RedisClient.BeginCreate(
+		ctx,
+		resourceGroupName,
+		redisInstanceName,
+		parameters,
+		nil)
+
+	if error != nil {
+		logger.Error(error, "Failed to create Azure Redis instance")
+		return nil, error
+	}
 	return nil, nil
 }
 
