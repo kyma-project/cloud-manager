@@ -12,7 +12,7 @@ The validation test suite is the highest-level test suite, which tests the fully
 
 Functional testing — a type of software testing where the basic functionalities of an application are tested against a predetermined set of specifications.
 
-Gherkin — non-technical and human readable language for writing software requirements.
+Gherkin — non-technical and human-readable language for writing software requirements.
 
 Black box testing — a form of testing that is performed with no knowledge of a system's internals.
 
@@ -20,7 +20,7 @@ SDLC (software development life cycle) — is a process for planning, creating, 
 
 ## Audience
 
-The key stakeholder for the validation testing is the `Product Owner` who elicits and formalises the requirements in the `Gherkin` format.
+The key stakeholder for the validation testing is the `Product Owner` who elicits and formalizes the requirements in the `Gherkin` format.
 
 `Software engineers` implement a test suite to automatically test the fully integrated system against the acceptance criteria defined by the product owner.
 
@@ -28,7 +28,7 @@ The key stakeholder for the validation testing is the `Product Owner` who elicit
 
 ### Objective
 
-The objective of validation testing is to ensure that the system provides all functionality requested by user in a consistend and predictable manner.
+The objective of validation testing is to ensure that the system provides all functionality requested by a user in a consistent and predictable manner.
 
 ### Test scope
 
@@ -48,11 +48,11 @@ The software requirements location is the issue-tracking system.
 
 ### Test deliverables
 
-The validation test suite provides a report with a listing of all defined user requirements and a current status of checking the systen's conformity to them.
+The validation test suite provides a report with a listing of all defined user requirements and the current status of checking the system's conformity to them.
 
 ### Environment description
 
-Descripton goes here...
+Description goes here...
 
 ### Entry and exit criteria to each phase
 

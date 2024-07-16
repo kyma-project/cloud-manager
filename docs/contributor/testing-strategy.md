@@ -2,7 +2,7 @@
 
 ### Overview
 
-This testing strategy document outlines the testing activities for the Cloud Manager Kyma component. It is meant to be a guide for all specific testing-related processes. The document details the approaches, processes, and methodologies used to prioritise testing throughout the software development life-cycle.
+This testing strategy document outlines the testing activities for the Cloud Manager Kyma component. It is meant to be a guide for all specific testing-related processes. The document details the approaches, processes, and methodologies used to prioritize testing throughout the software development lifecycle.
 
 The testing strategy aims to achieve the following quality characteristics for the Cloud Manager component:
 
@@ -14,16 +14,16 @@ The testing strategy aims to achieve the following quality characteristics for t
 
 This document is refined by Test Plan documents, which define the testing approach for each particular testing activity.
 
-### Out of Scope Quality Characteristics
+### Out-of-Scope Quality Characteristics
 
 This list of quality characteristics has not yet been defined as part of the testing strategy for the current iteration. It is yet to be refined in collaboration with respective stakeholders.
 
 | Quality Characteristic | Description                                                  | Justification                                                |
 | ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Compatibility          | Degree to which a product, system or component can exchange information with other products, systems or components, and/or perform its required functions while sharing the same common environment and resources. | To define a comprehensive set of compatibility requirements, we need a centralised systems engineering approach and guidelines for the interconnection and integration of Kyma components. |
-| Interaction Capability | Degree to which a product or system can be interacted with by specified users to exchange information ia the user interfaceto complete specific tasks in a variety of contexts of use. | We need to create a centralised Kyma user guide focused on user-friendliness and user engagement first. |
-| Security               | Degree to which a product or system defends against attack patterns by malicious actos and protects information and data so that persons or other products or systems have the degree of data access appropriate to their types and levels of authorisation. | We need a stakeholder to define the security expectations and to provide the testing scenarios for the different security aspects. |
-| Flexibility            | Degree to which a product can be adapted to changes in its requirements, contexts of use or system environment. This characteristic is composed of the adaptability, scalability and installability. | These quality characteristics are the higher-level test suites compared to the performance efficiency ones and will be added gradually. |
+| Compatibility          | Degree to which a product, system, or component can exchange information with other products, systems or components, and/or perform its required functions while sharing the same common environment and resources. | To define a comprehensive set of compatibility requirements, we need a centralized systems engineering approach and guidelines for the interconnection and integration of Kyma components. |
+| Interaction Capability | Degree to which a product or system can be interacted with by specified users to exchange information via the user interface to complete specific tasks in a variety of contexts of use. | We need to create a centralized Kyma user guide focused on user-friendliness and user engagement first. |
+| Security               | Degree to which a product or system defends against attack patterns by malicious acts and protects information and data so that persons or other products or systems have the degree of data access appropriate to their types and levels of authorization. | We need a stakeholder to define the security expectations and to provide the testing scenarios for the different security aspects. |
+| Flexibility            | Degree to which a product can be adapted to changes in its requirements, contexts of use, or system environment. This characteristic is composed of adaptability, scalability, and installability. | These quality characteristics are the higher-level test suites compared to the performance efficiency ones and will be added gradually. |
 
 
 
@@ -62,7 +62,7 @@ A test plan is a document outlining the objectives, resources, and procedures fo
 | System integration test report | System analysis and software design                                  |                           |
 | Integration test report        | Testing the interconnection of the <...> components                  |                           |
 | Code coverage report           | Unit tests                                                           | Unit testing test plan    |
-| Code coupling report           | Codebase mainatainability                                            | Maintainability test plan |
+| Code coupling report           | Codebase maintainability                                             | Maintainability test plan |
 | Availability report            | Faultlessness                                                        |                           |
 | CI/CD pipeline                 | The list of all the test suites executed for the feature integration |                           |
 | Performance testing report     |                                                                      | Performance test plan     |
