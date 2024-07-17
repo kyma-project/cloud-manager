@@ -45,6 +45,8 @@ func New(stateFactory StateFactory) composed.Action {
 				),
 				composed.ComposeActions(
 					"azure-redisInstance-delete",
+					deleteRedis,
+					waitRedisDeleted,
 					actions.RemoveFinalizer,
 				),
 			),

@@ -23,7 +23,7 @@ type CreateRedisInstanceOptions struct {
 type Client interface {
 	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
-	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
+	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 }
 
 func NewClientProvider() azureClient.SkrClientProvider[Client] {
@@ -81,6 +81,13 @@ func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, r
 	}
 	return &clientGetResponse.ResourceInfo, nil
 }
-func (c *redisClient) DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error {
+func (c *redisClient) DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error {
+	logger := composed.LoggerFromCtx(ctx)
+
+	_, error := c.RedisClient.BeginDelete(ctx, resourceGroupName, redisInstanceName, nil)
+	if error != nil {
+		logger.Error(error, "Failed to delete Azure Redis instance")
+		return error
+	}
 	return nil
 }

@@ -20,7 +20,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf(
 		"%s:%d",
-		state.azureRedisInstance.Properties.HostName,
+		*state.azureRedisInstance.Properties.HostName,
 		state.azureRedisInstance.Properties.Port,
 	)
 	//if state.azureRedisInstance.ReadEndpoint != "" {
