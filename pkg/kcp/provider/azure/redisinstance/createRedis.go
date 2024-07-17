@@ -32,9 +32,9 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			Properties: &armRedis.CreateProperties{
 				RedisVersion: to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion),
 				SKU: &armRedis.SKU{
-					Name:     to.Ptr(armRedis.SKUNamePremium),
+					Name:     to.Ptr(armRedis.SKUNameBasic), //to.Ptr(armRedis.SKUNamePremium),
 					Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-					Family:   to.Ptr(armRedis.SKUFamilyP),
+					Family:   to.Ptr(armRedis.SKUFamilyC), //to.Ptr(armRedis.SKUFamilyP),
 				},
 			},
 		},

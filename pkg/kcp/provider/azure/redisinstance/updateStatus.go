@@ -21,14 +21,17 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf(
 		"%s:%d",
 		*state.azureRedisInstance.Properties.HostName,
-		state.azureRedisInstance.Properties.Port,
+		*state.azureRedisInstance.Properties.Port,
 	)
-	//if state.azureRedisInstance.ReadEndpoint != "" {
-	//	redisInstance.Status.ReadEndpoint = fmt.Sprintf("%s:%d", state.gcpRedisInstance.ReadEndpoint, state.gcpRedisInstance.ReadEndpointPort)
-	//}
-	//if state.azureRedisInstance != nil {
-	//	redisInstance.Status.AuthString = state.gcpRedisInstanceAuth.AuthString
-	//}
+	primaryAccessKey, error := state.client.GetRedisInstanceAccessKeys(ctx, "phoenix-resource-group-1", state.ObjAsRedisInstance().Name)
+
+	if error != nil {
+		return composed.LogErrorAndReturn(error, "Error retrieving Azure RedisInstance access keys", composed.StopWithRequeue, ctx)
+	}
+
+	if state.azureRedisInstance != nil {
+		redisInstance.Status.AuthString = primaryAccessKey
+	}
 
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{

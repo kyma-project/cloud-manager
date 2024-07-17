@@ -24,6 +24,7 @@ type Client interface {
 	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
+	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
 }
 
 func NewClientProvider() azureClient.SkrClientProvider[Client] {
@@ -90,4 +91,16 @@ func (c *redisClient) DeleteRedisInstance(ctx context.Context, resourceGroupName
 		return error
 	}
 	return nil
+}
+
+func (c *redisClient) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error) {
+	logger := composed.LoggerFromCtx(ctx)
+
+	redisAccessKeys, error := c.RedisClient.ListKeys(ctx, resourceGroupName, redisInstanceName, nil)
+
+	if error != nil {
+		logger.Error(error, "Failed to get Azure Redis access keys")
+		return "", error
+	}
+	return *redisAccessKeys.PrimaryKey, nil
 }
