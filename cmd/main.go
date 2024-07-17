@@ -18,8 +18,9 @@ package main
 
 import (
 	"flag"
-	"github.com/fsnotify/fsnotify"
 	"os"
+
+	"github.com/fsnotify/fsnotify"
 
 	"github.com/elliotchance/pie/v2"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
@@ -35,6 +36,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
@@ -249,6 +251,7 @@ func main() {
 		mgr,
 		gcpmemorystoreclient.NewMemorystoreClientProvider(),
 		azureredisclient.NewClientProvider(),
+		awsredisinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")

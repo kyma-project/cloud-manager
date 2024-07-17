@@ -4,9 +4,9 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scope "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
-	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 )
 
 type IpRangeClient interface {
@@ -30,14 +30,15 @@ type Clients interface {
 	NfsClient
 	ScopeClient
 	VpcPeeringClient
+	redisinstanceclient.ElastiCacheClient
 }
 
 type Providers interface {
-	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient]
+	ScopeGardenProvider() awsclient.GardenClientProvider[scope.AwsStsClient]
 	IpRangeSkrProvider() awsclient.SkrClientProvider[iprangeclient.Client]
 	NfsInstanceSkrProvider() awsclient.SkrClientProvider[nfsinstanceclient.Client]
 	VpcPeeringSkrProvider() awsclient.SkrClientProvider[vpcpeeringclient.Client]
-	//SkrProvider() awsclient.SkrClientProvider[Clients]
+	ElastiCacheProviderFake() awsclient.SkrClientProvider[redisinstanceclient.ElastiCacheClient]
 }
 
 type Server interface {
@@ -49,4 +50,5 @@ type Server interface {
 	NfsConfig
 	ScopeConfig
 	VpcPeeringConfig
+	AwsElastiCacheMockUtils
 }
