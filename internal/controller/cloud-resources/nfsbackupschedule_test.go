@@ -167,12 +167,6 @@ var _ = Describe("Feature: SKR NfsBackupSchedule", func() {
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 						WithNextRunTime(now),
-						WithNfsBackups(
-							&corev1.ObjectReference{
-								Name:      nfsBackup1Name,
-								Namespace: DefaultSkrNamespace,
-							},
-						),
 					).
 					Should(Succeed())
 			})

@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -122,6 +121,8 @@ func (suite *deleteNfsBackupSuite) TestWhenNoMaxRetentionSet() {
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
 	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
+	suite.Nil(fromK8s.Status.NextRunTimes)
+	suite.Nil(fromK8s.Status.LastDeletedBackups)
 }
 
 func (suite *deleteNfsBackupSuite) testDeleteBackup(scope *cloudcontrolv1beta1.Scope, createBackup2 bool) {
@@ -148,11 +149,19 @@ func (suite *deleteNfsBackupSuite) testDeleteBackup(scope *cloudcontrolv1beta1.S
 		Name:              "test-backup-1",
 		Namespace:         nfsBackupSchedule.Namespace,
 		CreationTimestamp: metav1.Time{Time: time.Now()},
+		Labels: map[string]string{
+			v1beta1.LabelScheduleName:      nfsBackupSchedule.Name,
+			v1beta1.LabelScheduleNamespace: nfsBackupSchedule.Namespace,
+		},
 	}
 	backup2Meta := metav1.ObjectMeta{
 		Name:              "test-backup-2",
 		Namespace:         nfsBackupSchedule.Namespace,
 		CreationTimestamp: metav1.Time{Time: time.Now().AddDate(0, 0, -2)},
+		Labels: map[string]string{
+			v1beta1.LabelScheduleName:      nfsBackupSchedule.Name,
+			v1beta1.LabelScheduleNamespace: nfsBackupSchedule.Namespace,
+		},
 	}
 	gcpSpec := v1beta1.GcpNfsVolumeBackupSpec{
 		Source: v1beta1.GcpNfsVolumeBackupSource{
@@ -200,13 +209,6 @@ func (suite *deleteNfsBackupSuite) testDeleteBackup(scope *cloudcontrolv1beta1.S
 		suite.Nil(err)
 	}
 
-	//Update the schedules backup list with the created backups
-	obj.Status.Backups = []corev1.ObjectReference{
-		{Namespace: backup1.GetNamespace(), Name: backup1.GetName()},
-		{Namespace: backup2.GetNamespace(), Name: backup2.GetName()},
-	}
-	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-
 	//Invoke API under test
 	err, _ = deleteNfsBackup(ctx, state)
 
@@ -221,8 +223,6 @@ func (suite *deleteNfsBackupSuite) testDeleteBackup(scope *cloudcontrolv1beta1.S
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
 	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
-	suite.Len(fromK8s.Status.Backups, 1)
-	suite.Equal(backup1.GetName(), fromK8s.Status.Backups[0].Name)
 
 	var backup client.Object
 	switch scope.Spec.Provider {

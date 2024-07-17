@@ -25,6 +25,7 @@ func checkSuspension(ctx context.Context, st composed.State) (error, context.Con
 	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Schedule is suspended. Stopping reconciliation.")
 	schedule.Status.State = cloudresourcesv1beta1.JobStateSuspended
 	schedule.Status.NextRunTimes = nil
+	schedule.Status.NextDeleteTimes = nil
 	return composed.UpdateStatus(schedule).
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)

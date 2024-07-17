@@ -125,7 +125,7 @@ func (suite *createNfsBackupSuite) testCreateBackup(scope *cloudcontrolv1beta1.S
 		fromK8s)
 	suite.Nil(err)
 	suite.Equal(v1beta1.JobStateActive, fromK8s.Status.State)
-	suite.Equal(bkupName, fromK8s.Status.Backups[0].Name)
+	suite.Equal(bkupName, fromK8s.Status.LastCreatedBackup.Name)
 
 	var bkup client.Object
 	switch scope.Spec.Provider {

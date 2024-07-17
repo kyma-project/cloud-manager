@@ -69,11 +69,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	schedule.Status.State = cloudresourcesv1beta1.JobStateActive
 	schedule.Status.BackupIndex = index
 	schedule.Status.LastCreateRun = &metav1.Time{Time: state.nextRunTime.UTC()}
-	schedule.Status.Backups = append(schedule.Status.Backups, corev1.ObjectReference{
+	schedule.Status.LastCreatedBackup = corev1.ObjectReference{
 		Kind:      backup.GetObjectKind().GroupVersionKind().Kind,
 		Namespace: backup.GetNamespace(),
 		Name:      backup.GetName(),
-	})
+	}
 	return composed.UpdateStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
@@ -88,8 +88,8 @@ func getProviderSpecificBackupObject(state *State, name string) (client.Object, 
 		Name:      name,
 		Namespace: schedule.Namespace,
 		Labels: map[string]string{
-			"nfs-backup-schedule":    schedule.Name,
-			"nfs-backup-schedule-ns": schedule.Namespace,
+			cloudresourcesv1beta1.LabelScheduleName:      schedule.Name,
+			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.Namespace,
 		},
 	}
 

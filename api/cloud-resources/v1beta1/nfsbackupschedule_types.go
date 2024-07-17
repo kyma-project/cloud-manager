@@ -32,6 +32,7 @@ const (
 	ReasonNfsVolumeNotFound     = "NfsVolumeNotFound"
 	ReasonNfsVolumeNotReady     = "NfsVolumeNotReady"
 	ReasonBackupCreateFailed    = "BackupCreateFailed"
+	ReasonBackupListFailed      = "BackupListFailed"
 )
 
 // NfsBackupScheduleSpec defines the desired state of NfsBackupSchedule
@@ -89,17 +90,30 @@ type NfsBackupScheduleStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// NextRunTimes contains the time when the next backup will be created
+	// NextRunTimes contains the times when the next backup will be created
 	// +optional
 	NextRunTimes []string `json:"nextRunTimes,omitempty"`
+
+	//NextDeleteTimes contains the map of backup objects and
+	//their expected deletion times (calculated based on MaxRetentionDays).
+	// +optional
+	NextDeleteTimes map[string]string `json:"nextDeleteTimes,omitempty"`
 
 	// LastCreateRun specifies the time when the last backup was created
 	// +optional
 	LastCreateRun *metav1.Time `json:"lastCreateRun,omitempty"`
 
+	// LastCreatedBackup contains the object reference of the backup object created during last run.
+	// +optional
+	LastCreatedBackup corev1.ObjectReference `json:"lastCreatedBackup,omitempty"`
+
 	// LastDeleteRun specifies the time when the backups exceeding the retention period were deleted
 	// +optional
 	LastDeleteRun *metav1.Time `json:"lastDeleteRun,omitempty"`
+
+	// LastDeletedBackups contains the object references of the backup object deleted during last run.
+	// +optional
+	LastDeletedBackups []corev1.ObjectReference `json:"lastDeletedBackups,omitempty"`
 
 	// Schedule specifies the cron expression of the current active schedule
 	// +optional
@@ -108,10 +122,6 @@ type NfsBackupScheduleStatus struct {
 	// BackupIndex specifies the current index of the backup created by this schedule
 	// +kubebuilder:default=0
 	BackupIndex int `json:"backupIndex,omitempty"`
-
-	// Backups specifies the list of backups created by this schedule
-	// +optional
-	Backups []corev1.ObjectReference `json:"backups,omitempty"`
 }
 
 //+kubebuilder:object:root=true

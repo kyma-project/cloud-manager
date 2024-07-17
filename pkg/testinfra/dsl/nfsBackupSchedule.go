@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -141,19 +140,6 @@ func WithNextRunTime(runTime time.Time) ObjStatusAction {
 					x.Status.NextRunTimes = []string{t}
 				} else {
 					x.Status.NextRunTimes[0] = t
-				}
-			}
-		},
-	}
-}
-
-func WithNfsBackups(refs ...*corev1.ObjectReference) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
-
-				for _, ref := range refs {
-					x.Status.Backups = append(x.Status.Backups, *ref)
 				}
 			}
 		},
