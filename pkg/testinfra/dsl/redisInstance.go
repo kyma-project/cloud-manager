@@ -80,6 +80,16 @@ func WithRedisInstanceGcp() ObjAction {
 	}
 }
 
+func WithRedisInstanceAws() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				x.Spec.Instance.Aws = &cloudcontrolv1beta1.RedisInstanceAws{}
+			}
+		},
+	}
+}
+
 func WithKcpGcpRedisInstanceTier(tier string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
