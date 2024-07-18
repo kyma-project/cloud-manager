@@ -3,7 +3,6 @@ package looper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -174,10 +173,11 @@ func (l *skrLooper) Start(ctx context.Context) error {
 
 func (l *skrLooper) worker(id int) {
 	defer l.wg.Done()
-	l.logger.Info(fmt.Sprintf("SKR Looper worker %d started", id))
+	logger := l.logger.WithValues("skrWorkerId", id)
+	logger.Info("SKR Looper worker started")
 	for {
 		shouldStop := func() bool {
-			l.logger.Info(fmt.Sprintf("SKR Looper worker %d about to read from ch", id))
+			logger.Info("SKR Looper worker about to read SKR ID")
 			item, shuttingDown := l.queue.Get()
 			defer l.queue.Done(item)
 			if shuttingDown {
@@ -185,21 +185,24 @@ func (l *skrLooper) worker(id int) {
 			}
 			kymaName := item.(string)
 			time.Sleep(time.Second)
-			l.handleOneSkr(kymaName)
+			l.handleOneSkr(id, kymaName)
 			return false
 		}()
 		if shouldStop {
 			break
 		}
 	}
-	l.logger.Info(fmt.Sprintf("SKR Looper return from worker %d", id))
+	logger.Info("SKR Looper return from worker")
 }
 
-func (l *skrLooper) handleOneSkr(kymaName string) {
+func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	defer func() {
 		metrics.SkrRuntimeReconcileTotal.WithLabelValues(kymaName).Inc()
 	}()
-	logger := l.logger.WithValues("skrKymaName", kymaName)
+	logger := l.logger.WithValues(
+		"skrWorkerId", skrWorkerId,
+		"skrKymaName", kymaName,
+	)
 	skrManager, scope, kyma, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
 	if errors.Is(err, &skrmanager.ScopeNotFoundError{}) {
 		logger.
