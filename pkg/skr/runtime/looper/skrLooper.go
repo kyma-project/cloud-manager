@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -30,22 +31,22 @@ type ActiveSkrCollection interface {
 }
 
 func NewActiveSkrCollection(logger logr.Logger) ActiveSkrCollection {
-	return &activeSkrCollection{logger: logger}
+	return &activeSkrCollection{
+		queue:  NewCyclicQueue(),
+		logger: logger,
+	}
 }
 
 type activeSkrCollection struct {
-	sync.RWMutex
-	kymaNames []string
-	logger    logr.Logger
+	queue  *CyclicQueue
+	logger logr.Logger
 }
 
 func (l *activeSkrCollection) AddKymaUnstructured(kyma *unstructured.Unstructured) {
-	l.Lock()
-	defer l.Unlock()
 
 	kymaName := kyma.GetName()
 
-	if pie.Contains(l.kymaNames, kymaName) {
+	if l.queue.Contains(kymaName) {
 		return
 	}
 
@@ -68,20 +69,16 @@ func (l *activeSkrCollection) AddKymaUnstructured(kyma *unstructured.Unstructure
 		"brokerPlanName", brokerPlanName,
 	).Info("Adding Kyma to SkrLooper")
 
-	l.kymaNames = append(l.kymaNames, kymaName)
+	l.queue.Add(kymaName)
 
-	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).Add(1)
+	metrics.
+		SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
+		Add(1)
 }
 
 func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstructured) {
-	l.Lock()
-	defer l.Unlock()
-
 	kymaName := kyma.GetName()
-	idx := pie.FindFirstUsing(l.kymaNames, func(value string) bool {
-		return value == kymaName
-	})
-	if idx < 0 {
+	if !l.queue.Contains(kymaName) {
 		return
 	}
 
@@ -104,23 +101,21 @@ func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstruct
 		"brokerPlanName", brokerPlanName,
 	).Info("Removing Kyma from SkrLooper")
 
-	l.kymaNames = pie.Delete(l.kymaNames, idx)
+	l.queue.Remove(kymaName)
 
-	metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).Add(-1)
+	metrics.
+		SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
+		Add(-1)
 }
 
 func (l *activeSkrCollection) Contains(kymaName string) bool {
-	l.Lock()
-	defer l.Unlock()
-	return pie.Contains(l.kymaNames, kymaName)
+	return l.queue.Contains(kymaName)
 }
 
 func (l *activeSkrCollection) GetKymaNames() []string {
-	l.RLock()
-	defer l.RUnlock()
-	kymaNames := make([]string, len(l.kymaNames))
-	copy(kymaNames, l.kymaNames)
-	return kymaNames
+	return pie.Map(l.queue.Items(), func(x interface{}) string {
+		return x.(string)
+	})
 }
 
 // =====================================================================
@@ -132,12 +127,11 @@ type SkrLooper interface {
 
 func New(kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
 	return &skrLooper{
-		activeSkrCollection: &activeSkrCollection{logger: logger},
+		activeSkrCollection: NewActiveSkrCollection(logger).(*activeSkrCollection),
 		kcpCluster:          kcpCluster,
 		managerFactory:      skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system", skrScheme),
 		registry:            reg,
-		concurrency:         1,
-		ch:                  make(chan string, 1),
+		concurrency:         config.SkrRuntimeConfig.Concurrency,
 	}
 }
 
@@ -152,10 +146,6 @@ type skrLooper struct {
 	// wg the WorkGroup for workers
 	wg      sync.WaitGroup
 	started bool
-	stopped bool
-
-	// ch the channel trough which kymaNames sent to the workers
-	ch chan string
 
 	// ctx the Context looper was started with
 	ctx context.Context
@@ -169,60 +159,38 @@ func (l *skrLooper) Start(ctx context.Context) error {
 
 	l.logger.Info("SkrLooper started")
 	l.ctx = ctx
-	l.ch = make(chan string)
-	l.wg.Add(1)
-	go l.emitActiveKymaNames()
+	l.wg.Add(l.concurrency)
 	for x := 0; x < l.concurrency; x++ {
-		l.wg.Add(1)
 		go l.worker(x)
 	}
 
 	<-ctx.Done()
 
-	l.stopped = true
-	close(l.ch)
+	l.queue.Shutdown()
 	l.wg.Wait()
-	l.ch = nil
 	l.logger.Info("SkrLooper stopped")
 	return nil
-}
-
-func (l *skrLooper) emitActiveKymaNames() {
-	defer l.wg.Done()
-	//l.logger.Info("SKR Looper emitter started")
-	for !l.stopped {
-		//l.logger.Info("SKR Looper emitter getting active kymas")
-		kymaNames := l.GetKymaNames()
-		l.logger.Info(fmt.Sprintf("SKR Looper emitter got %d active kymas", len(kymaNames)))
-		for _, kn := range kymaNames {
-			if l.stopped {
-				return
-			}
-			//l.logger.WithValues("kymaName", kn).Info("SKR Looper emitter about to write to ch")
-			select {
-			case <-l.ctx.Done():
-				l.logger.Info("SKR Looper emitter context closed")
-				return
-			case l.ch <- kn:
-				l.logger.WithValues("kymaName", kn).Info("SKR Looper emitter wrote to ch")
-			}
-		}
-		time.Sleep(time.Second)
-	}
-	l.logger.Info("SKR Looper return from emitter")
 }
 
 func (l *skrLooper) worker(id int) {
 	defer l.wg.Done()
 	l.logger.Info(fmt.Sprintf("SKR Looper worker %d started", id))
-	for !l.stopped {
-		l.logger.Info(fmt.Sprintf("SKR Looper worker %d about to read from ch", id))
-		kymaName := <-l.ch
-		if l.stopped {
+	for {
+		shouldStop := func() bool {
+			l.logger.Info(fmt.Sprintf("SKR Looper worker %d about to read from ch", id))
+			item, shuttingDown := l.queue.Get()
+			defer l.queue.Done(item)
+			if shuttingDown {
+				return true
+			}
+			kymaName := item.(string)
+			time.Sleep(time.Second)
+			l.handleOneSkr(kymaName)
+			return false
+		}()
+		if shouldStop {
 			break
 		}
-		time.Sleep(time.Second)
-		l.handleOneSkr(kymaName)
 	}
 	l.logger.Info(fmt.Sprintf("SKR Looper return from worker %d", id))
 }
