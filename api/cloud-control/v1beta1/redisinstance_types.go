@@ -14,6 +14,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -112,6 +113,67 @@ type RedisInstanceAzureConfigs struct {
 	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
+func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
+	redisConfiguration := armRedis.CommonPropertiesRedisConfiguration{}
+
+	if redisConfigs.AofStorageConnectionString0 != "" {
+		redisConfiguration.AdditionalProperties["aad-enabled"] = &redisConfigs.AadEnabled
+	}
+	if redisConfigs.AofBackupEnabled != "" {
+		redisConfiguration.AdditionalProperties["aof-backup-enabled"] = &redisConfigs.AofBackupEnabled
+	}
+	if redisConfigs.AofStorageConnectionString0 != "" {
+		redisConfiguration.AofStorageConnectionString0 = &redisConfigs.AofStorageConnectionString0
+	}
+	if redisConfigs.AofStorageConnectionString1 != "" {
+		redisConfiguration.AofStorageConnectionString1 = &redisConfigs.AofStorageConnectionString1
+	}
+	if redisConfigs.AuthNotRequired != "" {
+		redisConfiguration.AdditionalProperties["authnotrequired"] = &redisConfigs.AuthNotRequired
+	}
+	if redisConfigs.MaxFragmentationMemoryReserved != "" {
+		redisConfiguration.MaxfragmentationmemoryReserved = &redisConfigs.MaxFragmentationMemoryReserved
+	}
+	if redisConfigs.MaxMemoryDelta != "" {
+		redisConfiguration.MaxmemoryDelta = &redisConfigs.MaxMemoryDelta
+	}
+	if redisConfigs.MaxMemoryPolicy != "" {
+		redisConfiguration.MaxmemoryPolicy = &redisConfigs.MaxMemoryPolicy
+	}
+	if redisConfigs.MaxMemoryReserved != "" {
+		redisConfiguration.MaxmemoryReserved = &redisConfigs.MaxMemoryReserved
+	}
+	if redisConfigs.NotifyKeyspaceEvents != "" {
+		redisConfiguration.AdditionalProperties["notify-keyspace-events"] = &redisConfigs.NotifyKeyspaceEvents
+	}
+	if redisConfigs.RdbBackupEnabled != "" {
+		redisConfiguration.RdbBackupEnabled = &redisConfigs.RdbBackupEnabled
+	}
+	if redisConfigs.RdbBackupFrequency != "" {
+		redisConfiguration.RdbBackupFrequency = &redisConfigs.RdbBackupFrequency
+	}
+	if redisConfigs.RdbBackupMaxSnapshotCount != "" {
+		redisConfiguration.RdbBackupMaxSnapshotCount = &redisConfigs.RdbBackupMaxSnapshotCount
+	}
+	if redisConfigs.RdbStorageConnectionString != "" {
+		redisConfiguration.RdbStorageConnectionString = &redisConfigs.RdbStorageConnectionString
+	}
+	if redisConfigs.MaxClients != "" {
+		redisConfiguration.Maxclients = &redisConfigs.MaxClients
+	}
+	if redisConfigs.PreferredDataArchiveAuthMethod != "" {
+		redisConfiguration.PreferredDataArchiveAuthMethod = &redisConfigs.PreferredDataArchiveAuthMethod
+	}
+	if redisConfigs.PreferredDataPersistenceAuthMethod != "" {
+		redisConfiguration.PreferredDataPersistenceAuthMethod = &redisConfigs.PreferredDataPersistenceAuthMethod
+	}
+	if redisConfigs.ZonalConfiguration != "" {
+		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
+	}
+
+	return &redisConfiguration
+}
+
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=1;2;3;4
@@ -184,6 +246,9 @@ type RedisInstanceGcp struct {
 type RedisInstanceAzure struct {
 	// +kubebuilder:validation:Required
 	SKU AzureRedisSKU `json:"sku"`
+
+	// +kubebuilder:validation:Required
+	Location string `json:"location"`
 
 	// +optional
 	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`

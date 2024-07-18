@@ -27,17 +27,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		ctx,
 		"phoenix-resource-group-1",
 		redisInstanceName,
-		armRedis.CreateParameters{
-			Location: to.Ptr("East US"),
-			Properties: &armRedis.CreateProperties{
-				RedisVersion: to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion),
-				SKU: &armRedis.SKU{
-					Name:     to.Ptr(armRedis.SKUNameBasic), //to.Ptr(armRedis.SKUNamePremium),
-					Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-					Family:   to.Ptr(armRedis.SKUFamilyC), //to.Ptr(armRedis.SKUFamilyP),
-				},
-			},
-		},
+		getCreateParams(state),
 	)
 
 	if error != nil {
@@ -61,4 +51,32 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	return composed.StopWithRequeue, nil
+}
+
+func getCreateParams(state *State) armRedis.CreateParameters {
+	createProperties := &armRedis.CreateProperties{
+		EnableNonSSLPort: to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.EnableNonSslPort),
+		SKU: &armRedis.SKU{
+			Name:     to.Ptr(armRedis.SKUNamePremium),
+			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
+			Family:   to.Ptr(armRedis.SKUFamilyP),
+		},
+		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
+	}
+
+	if state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount != 0 {
+		createProperties.ShardCount = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount))
+	}
+	if state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary != 0 {
+		createProperties.ReplicasPerPrimary = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary))
+	}
+	if state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion != "" {
+		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)
+	}
+
+	createParameters := armRedis.CreateParameters{
+		Location:   to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.Location),
+		Properties: createProperties,
+	}
+	return createParameters
 }
