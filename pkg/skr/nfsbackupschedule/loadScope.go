@@ -14,7 +14,7 @@ import (
 func loadScope(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 
 	logger = logger.WithValues(
 		"gcpScope", state.KymaRef.Name,
@@ -32,7 +32,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	if apierrors.IsNotFound(err) {
 		logger.Info("Scope not found")
 
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

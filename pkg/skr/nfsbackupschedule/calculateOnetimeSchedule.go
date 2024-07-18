@@ -9,7 +9,7 @@ import (
 
 func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 	now := time.Now()
 
@@ -19,32 +19,32 @@ func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, co
 	}
 
 	//If not one-time schedule, continue
-	if schedule.Spec.Schedule != "" {
+	if schedule.GetSchedule() != "" {
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Evaluating one-time schedule")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Evaluating one-time schedule")
 
 	//If the nextRunTime is already set, continue
-	if len(schedule.Status.NextRunTimes) > 0 {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is already set, continuing.")
+	if len(schedule.GetNextRunTimes()) > 0 {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Schedule is empty and scheduling it to run.")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Schedule is empty and scheduling it to run.")
 
 	//Set the next run time to the start time if it is set
 	var nextRunTime time.Time
-	if schedule.Spec.StartTime != nil && !schedule.Spec.StartTime.IsZero() {
-		nextRunTime = schedule.Spec.StartTime.Time
+	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() {
+		nextRunTime = schedule.GetStartTime().Time
 	} else {
 		nextRunTime = now
 	}
 
-	schedule.Status.State = cloudresourcesv1beta1.JobStateActive
-	schedule.Status.NextRunTimes = []string{nextRunTime.UTC().Format(time.RFC3339)}
+	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
+	schedule.SetNextRunTimes([]string{nextRunTime.UTC().Format(time.RFC3339)})
 
-	return composed.UpdateStatus(schedule).
+	return composed.UpdateStatus(schedule.(composed.ObjWithConditions)).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

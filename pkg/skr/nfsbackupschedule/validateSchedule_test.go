@@ -105,7 +105,7 @@ func (suite *validateScheduleSuite) TestValidCronExpression() {
 
 	//validate expected return values
 	suite.Nil(err)
-	suite.Equal("* * * * *", state.ObjAsNfsBackupSchedule().Spec.Schedule)
+	suite.Equal("* * * * *", state.ObjAsSchedule().GetSchedule())
 }
 
 func TestValidateScheduleSuite(t *testing.T) {

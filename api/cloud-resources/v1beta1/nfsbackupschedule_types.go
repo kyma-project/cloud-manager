@@ -20,6 +20,7 @@ import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -139,20 +140,121 @@ type NfsBackupSchedule struct {
 	Status NfsBackupScheduleStatus `json:"status,omitempty"`
 }
 
-func (in *NfsBackupSchedule) Conditions() *[]metav1.Condition {
-	return &in.Status.Conditions
+func (sc *NfsBackupSchedule) Conditions() *[]metav1.Condition {
+	return &sc.Status.Conditions
 }
 
-func (in *NfsBackupSchedule) GetObjectMeta() *metav1.ObjectMeta {
-	return &in.ObjectMeta
+func (sc *NfsBackupSchedule) GetObjectMeta() *metav1.ObjectMeta {
+	return &sc.ObjectMeta
 }
 
-func (in *NfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
+func (sc *NfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
 	return featuretypes.FeatureNfsBackup
 }
 
-func (in *NfsBackupSchedule) SpecificToProviders() []string {
+func (sc *NfsBackupSchedule) SpecificToProviders() []string {
 	return []string{"gcp"}
+}
+
+func (sc *NfsBackupSchedule) State() string {
+	return sc.Status.State
+}
+func (sc *NfsBackupSchedule) SetState(state string) {
+	sc.Status.State = state
+}
+func (sc *NfsBackupSchedule) GetSourceRef() corev1.ObjectReference {
+	return sc.Spec.NfsVolumeRef
+}
+func (sc *NfsBackupSchedule) SetSourceRef(ref corev1.ObjectReference) {
+	sc.Spec.NfsVolumeRef = ref
+}
+func (sc *NfsBackupSchedule) GetSchedule() string {
+	return sc.Spec.Schedule
+}
+func (sc *NfsBackupSchedule) SetSchedule(schedule string) {
+	sc.Spec.Schedule = schedule
+}
+func (sc *NfsBackupSchedule) GetPrefix() string {
+	return sc.Spec.Prefix
+}
+func (sc *NfsBackupSchedule) SetPrefix(prefix string) {
+	sc.Spec.Prefix = prefix
+}
+func (sc *NfsBackupSchedule) GetStartTime() *metav1.Time {
+	return sc.Spec.StartTime
+}
+func (sc *NfsBackupSchedule) SetStartTime(start *metav1.Time) {
+	sc.Spec.StartTime = start
+}
+func (sc *NfsBackupSchedule) GetEndTime() *metav1.Time {
+	return sc.Spec.EndTime
+}
+func (sc *NfsBackupSchedule) SetEndTime(end *metav1.Time) {
+	sc.Spec.EndTime = end
+}
+func (sc *NfsBackupSchedule) GetMaxRetentionDays() int {
+	return sc.Spec.MaxRetentionDays
+}
+func (sc *NfsBackupSchedule) SetMaxRetentionDays(days int) {
+	sc.Spec.MaxRetentionDays = days
+}
+func (sc *NfsBackupSchedule) GetSuspend() bool {
+	return sc.Spec.Suspend
+}
+func (sc *NfsBackupSchedule) SetSuspend(suspend bool) {
+	sc.Spec.Suspend = suspend
+}
+
+func (sc *NfsBackupSchedule) GetNextRunTimes() []string {
+	return sc.Status.NextRunTimes
+}
+func (sc *NfsBackupSchedule) SetNextRunTimes(times []string) {
+	sc.Status.NextRunTimes = times
+}
+func (sc *NfsBackupSchedule) GetNextDeleteTimes() map[string]string {
+	return sc.Status.NextDeleteTimes
+}
+func (sc *NfsBackupSchedule) SetNextDeleteTimes(times map[string]string) {
+	sc.Status.NextDeleteTimes = times
+}
+func (sc *NfsBackupSchedule) GetLastCreateRun() *metav1.Time {
+	return sc.Status.LastCreateRun
+}
+func (sc *NfsBackupSchedule) SetLastCreateRun(time *metav1.Time) {
+	sc.Status.LastCreateRun = time
+}
+func (sc *NfsBackupSchedule) GetLastCreatedBackup() corev1.ObjectReference {
+	return sc.Status.LastCreatedBackup
+}
+func (sc *NfsBackupSchedule) SetLastCreatedBackup(obj corev1.ObjectReference) {
+	sc.Status.LastCreatedBackup = obj
+}
+func (sc *NfsBackupSchedule) GetLastDeleteRun() *metav1.Time {
+	return sc.Status.LastDeleteRun
+}
+func (sc *NfsBackupSchedule) SetLastDeleteRun(time *metav1.Time) {
+	sc.Status.LastDeleteRun = time
+}
+func (sc *NfsBackupSchedule) GetLastDeletedBackups() []corev1.ObjectReference {
+	return sc.Status.LastDeletedBackups
+}
+func (sc *NfsBackupSchedule) SetLastDeletedBackups(objs []corev1.ObjectReference) {
+	sc.Status.LastDeletedBackups = objs
+}
+func (sc *NfsBackupSchedule) GetActiveSchedule() string {
+	return sc.Status.Schedule
+}
+func (sc *NfsBackupSchedule) SetActiveSchedule(schedule string) {
+	sc.Status.Schedule = schedule
+}
+func (sc *NfsBackupSchedule) GetBackupIndex() int {
+	return sc.Status.BackupIndex
+}
+func (sc *NfsBackupSchedule) SetBackupIndex(index int) {
+	sc.Status.BackupIndex = index
+}
+func (sc *NfsBackupSchedule) GetList() client.ObjectList {
+	return &NfsBackupScheduleList{}
 }
 
 //+kubebuilder:object:root=true

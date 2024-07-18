@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gorhill/cronexpr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -64,6 +63,6 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 	}, nil
 }
 
-func (s *State) ObjAsNfsBackupSchedule() *cloudresourcesv1beta1.NfsBackupSchedule {
-	return s.Obj().(*cloudresourcesv1beta1.NfsBackupSchedule)
+func (s *State) ObjAsSchedule() Schedule {
+	return s.Obj().(Schedule)
 }

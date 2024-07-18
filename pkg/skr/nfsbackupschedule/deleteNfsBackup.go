@@ -14,7 +14,7 @@ import (
 
 func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 	now := time.Now()
 
@@ -29,34 +29,34 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If the deletion for the nextRunTime is already done, return
-	if schedule.Status.LastDeleteRun != nil && !schedule.Status.LastDeleteRun.IsZero() &&
-		state.nextRunTime.Unix() == schedule.Status.LastDeleteRun.Time.Unix() {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
+	if schedule.GetLastDeleteRun() != nil && !schedule.GetLastDeleteRun().IsZero() &&
+		state.nextRunTime.Unix() == schedule.GetLastDeleteRun().Time.Unix() {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
 	//If maxRetentionDays is not positive, requeue to update next run time
-	if schedule.Spec.MaxRetentionDays <= 0 {
-		schedule.Status.LastDeleteRun = &metav1.Time{Time: state.nextRunTime.UTC()}
-		schedule.Status.NextDeleteTimes = nil
-		schedule.Status.LastDeletedBackups = nil
+	if schedule.GetMaxRetentionDays() <= 0 {
+		schedule.SetLastDeleteRun(&metav1.Time{Time: state.nextRunTime.UTC()})
+		schedule.SetNextDeleteTimes(nil)
+		schedule.SetLastDeletedBackups(nil)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions().
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Deleting old File Backups")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Deleting old File Backups")
 
 	list := &cloudresourcesv1beta1.GcpNfsVolumeBackupList{}
 	err := state.SkrCluster.K8sClient().List(
 		ctx,
 		list,
 		client.MatchingLabels{
-			cloudresourcesv1beta1.LabelScheduleName:      schedule.Name,
-			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.Namespace,
+			cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
+			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
 		},
-		client.InNamespace(schedule.Namespace),
+		client.InNamespace(schedule.GetNamespace()),
 	)
 
 	if err != nil {
@@ -81,7 +81,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	for _, backup := range list.Items {
 
 		//Check if the backup object should be deleted
-		toRetain := time.Duration(schedule.Spec.MaxRetentionDays) * 24 * time.Hour
+		toRetain := time.Duration(schedule.GetMaxRetentionDays()) * 24 * time.Hour
 		elapsed := time.Since(backup.GetCreationTimestamp().Time)
 		if elapsed > toRetain {
 			logger.WithValues("Backup", backup.Name).Info("Deleting backup object")
@@ -97,16 +97,16 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		}
 		if len(nextDeleteTimes) < MaxSchedules {
 			backupName := fmt.Sprintf("%s/%s", backup.Namespace, backup.Name)
-			deleteTime := backup.CreationTimestamp.AddDate(0, 0, schedule.Spec.MaxRetentionDays)
+			deleteTime := backup.CreationTimestamp.AddDate(0, 0, schedule.GetMaxRetentionDays())
 			nextDeleteTimes[backupName] = deleteTime.UTC().Format(time.RFC3339)
 		}
 	}
 
 	//Update the status of the schedule with the list of available backups
 	//schedule.Status.Backups = temp
-	schedule.Status.LastDeleteRun = &metav1.Time{Time: state.nextRunTime.UTC()}
-	schedule.Status.LastDeletedBackups = lastDeleted
-	schedule.Status.NextDeleteTimes = nextDeleteTimes
+	schedule.SetLastDeleteRun(&metav1.Time{Time: state.nextRunTime.UTC()})
+	schedule.SetLastDeletedBackups(lastDeleted)
+	schedule.SetNextDeleteTimes(nextDeleteTimes)
 	return composed.UpdateStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).

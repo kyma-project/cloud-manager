@@ -13,7 +13,7 @@ import (
 
 func loadNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 
 	//If marked for deletion, return
@@ -21,12 +21,12 @@ func loadNfsVolume(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("Nfs Backup Schedule :", schedule.Name).Info("Loading NfsVolume")
+	logger.WithValues("Nfs Backup Schedule :", schedule.GetName()).Info("Loading NfsVolume")
 
 	//Load the nfsVolume object
 	nfsVolume, err := getProviderSpecificNfsObject(ctx, state)
 	if err != nil {
-		schedule.Status.State = cloudresourcesv1beta1.StateError
+		schedule.SetState(cloudresourcesv1beta1.StateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -44,8 +44,8 @@ func loadNfsVolume(ctx context.Context, st composed.State) (error, context.Conte
 
 	//If the nfsVolume is not ready, return an error
 	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
-		logger.WithValues("NfsBackupSchedule", schedule.Name).Info("NfsVolume is not ready")
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+		logger.WithValues("NfsBackupSchedule", schedule.GetName()).Info("NfsVolume is not ready")
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -65,10 +65,10 @@ func loadNfsVolume(ctx context.Context, st composed.State) (error, context.Conte
 }
 
 func getProviderSpecificNfsObject(ctx context.Context, state *State) (composed.ObjWithConditions, error) {
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	key := types.NamespacedName{
-		Name:      schedule.Spec.NfsVolumeRef.Name,
-		Namespace: schedule.Spec.NfsVolumeRef.Namespace,
+		Name:      schedule.GetSourceRef().Name,
+		Namespace: schedule.GetSourceRef().Namespace,
 	}
 	var nfsVolume composed.ObjWithConditions
 

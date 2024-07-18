@@ -14,7 +14,7 @@ import (
 
 func createNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 	now := time.Now()
 
@@ -29,20 +29,20 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If the creation for the nextRunTime is already done, return
-	if schedule.Status.LastCreateRun != nil && !schedule.Status.LastCreateRun.IsZero() &&
-		state.nextRunTime.Unix() == schedule.Status.LastCreateRun.Time.Unix() {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
+	if schedule.GetLastCreateRun() != nil && !schedule.GetLastCreateRun().IsZero() &&
+		state.nextRunTime.Unix() == schedule.GetLastCreateRun().Time.Unix() {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Creating File Backup")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Creating File Backup")
 
 	//Get Backup details (name and index).
-	prefix := schedule.Spec.Prefix
+	prefix := schedule.GetPrefix()
 	if prefix == "" {
-		prefix = schedule.Name
+		prefix = schedule.GetName()
 	}
-	index := schedule.Status.BackupIndex + 1
+	index := schedule.GetBackupIndex() + 1
 	name := fmt.Sprintf("%s-%d-%s", prefix, index, state.nextRunTime.UTC().Format("20060102-150405"))
 
 	//Create Backup object
@@ -52,7 +52,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if err != nil {
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -66,14 +66,14 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//Update the status of the schedule with the latest backup details
-	schedule.Status.State = cloudresourcesv1beta1.JobStateActive
-	schedule.Status.BackupIndex = index
-	schedule.Status.LastCreateRun = &metav1.Time{Time: state.nextRunTime.UTC()}
-	schedule.Status.LastCreatedBackup = corev1.ObjectReference{
+	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
+	schedule.SetBackupIndex(index)
+	schedule.SetLastCreateRun(&metav1.Time{Time: state.nextRunTime.UTC()})
+	schedule.SetLastCreatedBackup(corev1.ObjectReference{
 		Kind:      backup.GetObjectKind().GroupVersionKind().Kind,
 		Namespace: backup.GetNamespace(),
 		Name:      backup.GetName(),
-	}
+	})
 	return composed.UpdateStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
@@ -81,15 +81,15 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 }
 
 func getProviderSpecificBackupObject(state *State, name string) (client.Object, error) {
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 
 	//Construct a common part of NfsBackup Object
 	objectMeta := metav1.ObjectMeta{
 		Name:      name,
-		Namespace: schedule.Namespace,
+		Namespace: schedule.GetNamespace(),
 		Labels: map[string]string{
-			cloudresourcesv1beta1.LabelScheduleName:      schedule.Name,
-			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.Namespace,
+			cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
+			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
 		},
 	}
 
@@ -99,11 +99,11 @@ func getProviderSpecificBackupObject(state *State, name string) (client.Object, 
 		return &cloudresourcesv1beta1.GcpNfsVolumeBackup{
 			ObjectMeta: objectMeta,
 			Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
-				Location: schedule.Spec.Location,
+				//TODO: fix : Location: schedule.Spec.Location,
 				Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
 					Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
-						Name:      schedule.Spec.NfsVolumeRef.Name,
-						Namespace: schedule.Spec.NfsVolumeRef.Namespace,
+						Name:      schedule.GetSourceRef().Name,
+						Namespace: schedule.GetSourceRef().Namespace,
 					},
 				},
 			},
@@ -114,8 +114,8 @@ func getProviderSpecificBackupObject(state *State, name string) (client.Object, 
 			Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
 				Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
 					Volume: cloudresourcesv1beta1.VolumeRef{
-						Name:      schedule.Spec.NfsVolumeRef.Name,
-						Namespace: schedule.Spec.NfsVolumeRef.Namespace,
+						Name:      schedule.GetSourceRef().Name,
+						Namespace: schedule.GetSourceRef().Namespace,
 					},
 				},
 			},

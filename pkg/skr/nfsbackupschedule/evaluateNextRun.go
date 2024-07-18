@@ -11,7 +11,7 @@ import (
 
 func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 	now := time.Now()
 
@@ -21,22 +21,22 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If it is a one-time schedule, and the job already ran, stop reconciliation
-	if schedule.Spec.Schedule == "" &&
-		schedule.Status.LastCreateRun != nil &&
-		!schedule.Status.LastCreateRun.IsZero() {
+	if schedule.GetSchedule() == "" &&
+		schedule.GetLastCreateRun() != nil &&
+		!schedule.GetLastCreateRun().IsZero() {
 
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("One-time schedule already ran. Stopping reconciliation.")
-		schedule.Status.State = cloudresourcesv1beta1.JobStateDone
-		schedule.Status.NextRunTimes = nil
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("One-time schedule already ran. Stopping reconciliation.")
+		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
+		schedule.SetNextRunTimes(nil)
 		return composed.UpdateStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Evaluating next run time")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Evaluating next run time")
 
-	if len(schedule.Status.NextRunTimes) == 0 {
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+	if len(schedule.GetNextRunTimes()) == 0 {
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -50,10 +50,10 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//Get the next run time
-	nextRunTime, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
+	nextRunTime, err := time.Parse(time.RFC3339, schedule.GetNextRunTimes()[0])
 
 	if err != nil {
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -67,11 +67,11 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If the next run time is after the end time, stop reconciliation
-	if schedule.Spec.EndTime != nil && !schedule.Spec.EndTime.IsZero() &&
-		nextRunTime.After(schedule.Spec.EndTime.Time) {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
-		schedule.Status.State = cloudresourcesv1beta1.JobStateDone
-		schedule.Status.NextRunTimes = nil
+	if schedule.GetEndTime() != nil && !schedule.GetEndTime().IsZero() &&
+		nextRunTime.After(schedule.GetEndTime().Time) {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
+		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
+		schedule.SetNextRunTimes(nil)
 		return composed.UpdateStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
@@ -80,14 +80,14 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	//If it still not time to run, reconcile with delay
 	if nextRunTime.After(now) {
 		timeLeft := nextRunTime.Unix() - now.Unix()
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
 		return composed.StopWithRequeueDelay(time.Duration(timeLeft) * time.Second), nil
 	}
 
 	//If create and delete tasks already completed for currentRun, reset the next run times
-	if schedule.Status.LastCreateRun != nil && nextRunTime.Equal(schedule.Status.LastCreateRun.Time) &&
-		schedule.Status.LastDeleteRun != nil && nextRunTime.Equal(schedule.Status.LastDeleteRun.Time) {
-		schedule.Status.NextRunTimes = nil
+	if schedule.GetLastCreateRun() != nil && nextRunTime.Equal(schedule.GetLastCreateRun().Time) &&
+		schedule.GetLastDeleteRun() != nil && nextRunTime.Equal(schedule.GetLastDeleteRun().Time) {
+		schedule.SetNextRunTimes(nil)
 		return composed.UpdateStatus(schedule).
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)

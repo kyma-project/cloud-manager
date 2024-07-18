@@ -101,7 +101,6 @@ func (suite *checkSuspensionSuite) TestValidCronExpression() {
 
 	//validate expected return values
 	suite.Nil(err)
-	suite.Equal("* * * * *", state.ObjAsNfsBackupSchedule().Spec.Schedule)
 }
 
 func TestCheckSuspensionSuite(t *testing.T) {

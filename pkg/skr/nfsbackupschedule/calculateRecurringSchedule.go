@@ -14,7 +14,7 @@ const (
 
 func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 	now := time.Now()
 
@@ -24,47 +24,50 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 	}
 
 	//If one-time schedule, continue
-	if schedule.Spec.Schedule == "" {
+	if schedule.GetSchedule() == "" {
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Evaluating next run time")
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Evaluating next run time")
 
 	//If cron expression has not changed, and the nextRunTime is already set, continue
-	if schedule.Spec.Schedule == schedule.Status.Schedule && len(schedule.Status.NextRunTimes) > 0 {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is already set, continuing.")
+	if schedule.GetSchedule() == schedule.GetActiveSchedule() && len(schedule.GetNextRunTimes()) > 0 {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}
 
 	//Evaluate next run times.
 	var nextRunTimes []time.Time
-	if schedule.Spec.StartTime != nil && !schedule.Spec.StartTime.IsZero() && schedule.Spec.StartTime.Time.After(now) {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("StateTime is in future.")
-		nextRunTimes = state.cronExpression.NextN(schedule.Spec.StartTime.Time, MaxSchedules)
+	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().Time.After(now) {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("StateTime is in future.")
+		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time, MaxSchedules)
 	} else {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Using current time  %s", now))
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
 		nextRunTimes = state.cronExpression.NextN(now, MaxSchedules)
 	}
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
 
 	//If the next run time is after the end time, stop reconciliation
-	if schedule.Spec.EndTime != nil && !schedule.Spec.EndTime.IsZero() && nextRunTimes[0].After(schedule.Spec.EndTime.Time) {
-		logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
-		schedule.Status.State = cloudresourcesv1beta1.JobStateDone
-		schedule.Status.NextRunTimes = nil
+	if schedule.GetEndTime() != nil && !schedule.GetEndTime().IsZero() && nextRunTimes[0].After(schedule.GetEndTime().Time) {
+		logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
+		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
+		schedule.SetNextRunTimes(nil)
 		return composed.UpdateStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
 	//Update the status of the schedule with the next run times
-	logger.WithValues("NfsBackupSchedule :", schedule.Name).Info("Next RunTime is set. Updating status.")
-	schedule.Status.State = cloudresourcesv1beta1.JobStateActive
-	schedule.Status.Schedule = schedule.Spec.Schedule
-	schedule.Status.NextRunTimes = []string{}
+	logger.WithValues("NfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is set. Updating status.")
+	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
+	schedule.SetActiveSchedule(schedule.GetSchedule())
+
+	var runtimes []string
 	for _, t := range nextRunTimes {
-		schedule.Status.NextRunTimes = append(schedule.Status.NextRunTimes, t.UTC().Format(time.RFC3339))
+		runtimes = append(runtimes, t.UTC().Format(time.RFC3339))
 	}
+	schedule.SetNextRunTimes(runtimes)
+
 	return composed.UpdateStatus(schedule).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)

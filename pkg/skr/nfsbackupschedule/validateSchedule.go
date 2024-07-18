@@ -11,12 +11,12 @@ import (
 func validateSchedule(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-	schedule := state.ObjAsNfsBackupSchedule()
+	schedule := state.ObjAsSchedule()
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Validating NFS Backup Schedule - Cron Expression")
 
-	sch := schedule.Spec.Schedule
+	sch := schedule.GetSchedule()
 
 	//If schedule is empty, continue
 	if sch == "" {
@@ -27,7 +27,7 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		logger.Info("Invalid cron expression")
 
-		schedule.Status.State = cloudresourcesv1beta1.JobStateError
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.UpdateStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
