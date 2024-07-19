@@ -2,9 +2,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"regexp"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
@@ -143,6 +144,7 @@ const (
 	ComputeService              GcpServiceName = "compute.googleapis.com"
 	FilestoreService            GcpServiceName = "file.googleapis.com"
 	CloudResourceManagerService GcpServiceName = "cloudresourcemanager.googleapis.com"
+	MemoryStoreForRedisService  GcpServiceName = "redis.googleapis.com"
 )
 
 func GetCompleteServiceName(projectId string, serviceName GcpServiceName) string {
