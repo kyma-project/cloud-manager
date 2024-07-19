@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
@@ -201,9 +202,10 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	}()
 	logger := l.logger.WithValues(
 		"skrWorkerId", skrWorkerId,
-		"skrKymaName", kymaName,
+		"kyma", kymaName,
 	)
-	skrManager, scope, kyma, err := l.managerFactory.CreateManager(l.ctx, kymaName, logger)
+	ctx := composed.LoggerIntoCtx(l.ctx, logger)
+	skrManager, scope, kyma, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
 	if errors.Is(err, &skrmanager.ScopeNotFoundError{}) {
 		logger.
 			WithValues("error", err.Error()).
@@ -218,12 +220,12 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	}
 	skrManager.GetScheme()
 
-	ctx := feature.ContextBuilderFromCtx(l.ctx).
+	ctx = feature.ContextBuilderFromCtx(ctx).
 		Landscape(os.Getenv("LANDSCAPE")).
 		LoadFromScope(scope).
 		LoadFromKyma(kyma).
 		Plane(types.PlaneSkr).
-		Build(l.ctx)
+		Build(ctx)
 
 	logger = feature.DecorateLogger(ctx, logger)
 
