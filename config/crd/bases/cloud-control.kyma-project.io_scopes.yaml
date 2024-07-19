@@ -124,6 +124,33 @@ spec:
                     - project
                     - vpcNetwork
                     type: object
+                  openstack:
+                    properties:
+                      domainName:
+                        type: string
+                      network:
+                        properties:
+                          nodes:
+                            type: string
+                          pods:
+                            type: string
+                          services:
+                            type: string
+                          zones:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      tenantName:
+                        type: string
+                      vpcNetwork:
+                        type: string
+                    required:
+                    - domainName
+                    - network
+                    - tenantName
+                    - vpcNetwork
+                    type: object
                 type: object
               shootName:
                 type: string
