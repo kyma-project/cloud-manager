@@ -120,7 +120,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// NfsBackupSchedule
-	Expect(SetupNfsBackupScheduleReconciler(infra.Registry(), env, testSetupLog)).NotTo(HaveOccurred())
+	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testSetupLog)).NotTo(HaveOccurred())
 
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 

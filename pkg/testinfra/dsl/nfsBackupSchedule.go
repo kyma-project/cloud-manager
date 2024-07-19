@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.NfsBackupSchedule, opts ...ObjAction) error {
+func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.GcpNfsBackupSchedule, opts ...ObjAction) error {
 	if obj == nil {
-		obj = &cloudresourcesv1beta1.NfsBackupSchedule{}
+		obj = &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
 	}
 	NewObjActions(opts...).
 		Append(
@@ -21,10 +21,10 @@ func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj *cloud
 		ApplyOnObject(obj)
 
 	if obj.Name == "" {
-		return errors.New("the SKR NfsBackupSchedule must have name set")
+		return errors.New("the SKR GcpNfsBackupSchedule must have name set")
 	}
 	if obj.Spec.NfsVolumeRef.Name == "" {
-		return errors.New("the SKR NfsBackupSchedule must have spec.NfsVolumeRef.name set")
+		return errors.New("the SKR GcpNfsBackupSchedule must have spec.NfsVolumeRef.name set")
 	}
 	if obj.Spec.NfsVolumeRef.Namespace == "" {
 		obj.Spec.NfsVolumeRef.Namespace = DefaultSkrNamespace
@@ -46,7 +46,7 @@ func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj *cloud
 func WithSchedule(schedule string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				x.Spec.Schedule = schedule
 				return
 			}
@@ -58,7 +58,7 @@ func WithSchedule(schedule string) ObjAction {
 func WithLocation(location string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				x.Spec.Location = location
 				return
 			}
@@ -70,7 +70,7 @@ func WithLocation(location string) ObjAction {
 func WithNfsVolumeRef(volumeName string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				x.Spec.NfsVolumeRef.Name = volumeName
 				if x.Spec.NfsVolumeRef.Namespace == "" {
 					x.Spec.NfsVolumeRef.Namespace = DefaultSkrNamespace
@@ -84,7 +84,7 @@ func WithNfsVolumeRef(volumeName string) ObjAction {
 func WithStartTime(start time.Time) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				x.Spec.StartTime = &metav1.Time{Time: start}
 				return
 			}
@@ -97,7 +97,7 @@ func WithStartTime(start time.Time) ObjAction {
 func WithRetentionDays(days int) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				x.Spec.MaxRetentionDays = days
 				return
 			}
@@ -108,7 +108,7 @@ func WithRetentionDays(days int) ObjAction {
 
 func HaveNextRunTimes(expectedTimes []time.Time) ObjAssertion {
 	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+		if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 			if len(x.Status.NextRunTimes) != len(expectedTimes) {
 				return fmt.Errorf(
 					"expected object %T %s/%s to have %d runtimes set, but found %d",
@@ -134,7 +134,7 @@ func HaveNextRunTimes(expectedTimes []time.Time) ObjAssertion {
 func WithNextRunTime(runTime time.Time) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.NfsBackupSchedule); ok {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 				t := runTime.UTC().Format(time.RFC3339)
 				if len(x.Status.NextRunTimes) == 0 {
 					x.Status.NextRunTimes = []string{t}

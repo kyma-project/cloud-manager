@@ -54,3 +54,13 @@ const (
 const (
 	ConditionTypeQuotaExceeded = "QuotaExceeded"
 )
+
+const (
+	ReasonInvalidCronExpression = "InvalidCronExpression"
+	ReasonTimeParseError        = "TimeParseError"
+	ReasonScheduleError         = "ScheduleError"
+	ReasonNfsVolumeNotFound     = "NfsVolumeNotFound"
+	ReasonNfsVolumeNotReady     = "NfsVolumeNotReady"
+	ReasonBackupCreateFailed    = "BackupCreateFailed"
+	ReasonBackupListFailed      = "BackupListFailed"
+)
