@@ -16,7 +16,7 @@ func loadSubnetGroup(ctx context.Context, st composed.State) (error, context.Con
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	list, err := state.awsClient.DescribeElastiCacheSubnetGroup(ctx, state.Obj().GetName())
+	list, err := state.awsClient.DescribeElastiCacheSubnetGroup(ctx, GetAwsElastiCacheSubnetGroupName(state.Obj().GetName()))
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error listing subnet groups", ctx)
 	}

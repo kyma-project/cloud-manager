@@ -39,6 +39,6 @@ func waitKcpRedisInstanceDeleted(ctx context.Context, st composed.State) (error,
 			Run(ctx, state)
 	}
 
-	logger.Info("Waiting for Kcp NfsInstance to be deleted")
+	logger.Info("Waiting for Kcp RedisInstance to be deleted")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

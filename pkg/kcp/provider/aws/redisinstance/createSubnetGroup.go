@@ -26,7 +26,7 @@ func createSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 		return subnet.Id
 	})
 
-	out, err := state.awsClient.CreateElastiCacheSubnetGroup(ctx, state.Obj().GetName(), subnetIds, []elasticacheTypes.Tag{
+	out, err := state.awsClient.CreateElastiCacheSubnetGroup(ctx, GetAwsElastiCacheSubnetGroupName(state.Obj().GetName()), subnetIds, []elasticacheTypes.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
 			Value: ptr.To(redisInstance.Spec.RemoteRef.String()),

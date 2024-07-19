@@ -43,7 +43,7 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"gcpRedisInstance",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolume{}),
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpRedisInstance{}),
 		composed.LoadObj,
 
 		defaultiprange.New(),
