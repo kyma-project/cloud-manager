@@ -2,12 +2,14 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"errors"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"math/rand"
 )
 
 func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
@@ -30,6 +32,19 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 }
 
 func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
+	location, err := getLocation(state, logger)
+	if err != nil {
+		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonNoWorkerZones,
+				Message: "Could not automatically select a zone",
+			}).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      uuid.NewString(),
@@ -53,7 +68,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 			},
 			Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 				Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
-					Location:      state.ObjAsGcpNfsVolume().Spec.Location,
+					Location:      location,
 					Tier:          cloudcontrolv1beta1.GcpFileTier(state.ObjAsGcpNfsVolume().Spec.Tier),
 					FileShareName: state.ObjAsGcpNfsVolume().Spec.FileShareName,
 					CapacityGb:    state.ObjAsGcpNfsVolume().Spec.CapacityGb,
@@ -63,7 +78,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		},
 	}
 
-	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpNfsInstance)
+	err = state.KcpCluster.K8sClient().Create(ctx, state.KcpNfsInstance)
 	if err != nil {
 		logger.Error(err, "Error creating KCP NfsInstance")
 		return composed.StopWithRequeue, nil
@@ -71,6 +86,8 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	logger.
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance created")
+	// Update the object with the location passed to KCP NfsInstance
+	state.ObjAsGcpNfsVolume().Status.Location = location
 
 	// Update the object with the ID of the KCP NfsInstance
 	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
@@ -101,4 +118,24 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
+}
+
+func getLocation(state *State, logger logr.Logger) (string, error) {
+	location := state.ObjAsGcpNfsVolume().Spec.Location
+	// location is optional. So if empty, using region from scope.
+	if len(location) != 0 {
+		return location, nil
+	}
+	switch state.ObjAsGcpNfsVolume().Spec.Tier {
+	case cloudresourcesv1beta1.ENTERPRISE, cloudresourcesv1beta1.REGIONAL:
+		return state.Scope.Spec.Region, nil
+	default:
+		if len(state.Scope.Spec.Scope.Gcp.Workers) == 0 {
+			logger.Error(nil, "No provider workers found in the scope")
+			return "", errors.New("could not automatically select a zone")
+		}
+		zones := state.Scope.Spec.Scope.Gcp.Workers[0].Zones
+		randomZone := zones[rand.Intn(len(zones))]
+		return randomZone, nil
+	}
 }

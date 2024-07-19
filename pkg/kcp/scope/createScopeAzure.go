@@ -38,6 +38,10 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 		},
 	}
 
+	// Preserve loaded obj resource version before getting overwritten by newly created scope
+	if st.Obj() != nil && st.Obj().GetName() != "" {
+		scope.ResourceVersion = st.Obj().GetResourceVersion()
+	}
 	state.SetObj(scope)
 
 	return nil, nil

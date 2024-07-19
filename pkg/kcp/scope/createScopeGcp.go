@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/elliotchance/pie/v2"
+	gardenerv1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
@@ -48,11 +50,20 @@ func createScopeGcp(ctx context.Context, st composed.State) (error, context.Cont
 						Pods:     ptr.Deref(state.shoot.Spec.Networking.Pods, ""),
 						Services: ptr.Deref(state.shoot.Spec.Networking.Services, ""),
 					},
+					Workers: pie.Map(state.shoot.Spec.Provider.Workers, func(w gardenerv1beta1.Worker) cloudcontrolv1beta1.GcpWorkers {
+						return cloudcontrolv1beta1.GcpWorkers{
+							Zones: w.Zones,
+						}
+					}),
 				},
 			},
 		},
 	}
 
+	// Preserve loaded obj resource version before getting overwritten by newly created scope
+	if st.Obj() != nil && st.Obj().GetName() != "" {
+		scope.ResourceVersion = st.Obj().GetResourceVersion()
+	}
 	state.SetObj(scope)
 
 	return nil, nil
