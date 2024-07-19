@@ -38,6 +38,13 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 		Provider(provider).
 		Build(ctx)
 	dir := path.Join(i.skrProvidersPath, provider)
+	_, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error checking provider dir %s: %w", dir, err)
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("error listing SKR provider directory %s: %w", dir, err)
