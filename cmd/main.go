@@ -203,6 +203,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAwsRedisInstanceReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsRedisInstance")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
 		os.Exit(1)
@@ -257,6 +262,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")
 		os.Exit(1)
 	}
+
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
