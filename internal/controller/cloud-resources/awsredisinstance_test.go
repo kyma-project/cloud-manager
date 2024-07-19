@@ -124,7 +124,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 
 		kcpRedisInstancePrimaryEndpoint := "192.168.0.1:6576"
 		kcpRedisInstanceReadEndpoint := "192.168.0.2:6576"
-		kcpRedisInstanceAuthString := "a9461793-2449-48d2-8618-0881bbe61d05"
+		kcpRedisInstanceAuthString := "cdaa7502-3433-441e-802d-310d931848bf"
 
 		By("When KCP RedisInstance has Ready condition", func() {
 			Eventually(UpdateStatus).
@@ -457,7 +457,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					kcpRedisInstance,
 					WithRedisInstancePrimaryEndpoint("192.168.0.1"),
 					WithRedisInstanceReadEndpoint("192.168.2.2"),
-					WithRedisInstanceAuthString("f85f28f9-0834-41f9-8079-5bfa32b6dadf"),
+					WithRedisInstanceAuthString("9d9c7159-39be-4992-90a2-95e81cf6298a"),
 					WithConditions(KcpReadyCondition()),
 				).
 				Should(Succeed())
