@@ -85,8 +85,15 @@ type GcpScope struct {
 
 	// +optional
 	Network GcpNetwork `json:"network"`
+
+	// +optional
+	Workers []GcpWorkers `json:"workers"`
 }
 
+type GcpWorkers struct {
+	// +kubebuilder:validation:Required
+	Zones []string `json:"zones"`
+}
 type GcpNetwork struct {
 	// +optional
 	Nodes string `json:"nodes,omitempty"`

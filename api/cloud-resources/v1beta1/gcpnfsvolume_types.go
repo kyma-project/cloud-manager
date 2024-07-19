@@ -56,6 +56,8 @@ const (
 	ConditionReasonPVNotReadyForNameChange = "PVNotReadyForNameChange"
 	ConditionReasonPVNameInvalid           = "PVNameInvalid"
 	ConditionReasonPVCNameInvalid          = "PVCNameInvalid"
+	ConditionReasonNoWorkerZones           = "NoWorkerZones"
+	ConditionReasonLocationInvalid         = "LocationInvalid"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
@@ -63,7 +65,7 @@ type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	IpRange IpRangeRef `json:"ipRange"`
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
 	Location string `json:"location"`
 
@@ -119,6 +121,8 @@ type GcpNfsVolumeStatus struct {
 
 	//State of the GcpNfsVolume
 	State GcpNfsVolumeState `json:"state,omitempty"`
+
+	Location string `json:"location,omitempty"`
 }
 
 //+kubebuilder:object:root=true

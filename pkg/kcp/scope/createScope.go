@@ -10,6 +10,7 @@ import (
 
 func createScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+
 	switch state.provider {
 	case cloudcontrolv1beta1.ProviderGCP:
 		return createScopeGcp(ctx, state)

@@ -231,6 +231,11 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 			Networking: &gardenerTypes.Networking{},
 			Provider: gardenerTypes.Provider{
 				Type: "gcp",
+				Workers: []gardenerTypes.Worker{
+					{
+						Zones: []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"},
+					},
+				},
 			},
 			SecretBindingName: ptr.To(shoot.Name),
 		}

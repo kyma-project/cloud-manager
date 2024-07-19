@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -99,15 +100,15 @@ func (r *scopeReconciler) newAction() composed.Action {
 					addKymaFinalizer,
 					composed.BuildBranchingAction(
 						"scopeAlreadyCreatedBranching",
-						ObjIsLoadedPredicate(),
-						composed.ComposeActions( // This is called only if scope exits.
+						composed.All(ObjIsLoadedPredicate(), composed.Not(UpdateIsNeededPredicate())),
+						composed.ComposeActions( // This is called only if scope exits, and it does not need to be updated.
 							"enableApisAndActivateSkr",
 							enableApis,
 							addReadyCondition,
 							skrActivate,
 							composed.StopAndForgetAction),
 						nil),
-					// scope does not exist
+					// scope does not exist or needs to be updated
 					createGardenerClient,
 					findShootName,
 					loadShoot,
@@ -126,5 +127,22 @@ func ObjIsLoadedPredicate() composed.Predicate {
 	return func(ctx context.Context, st composed.State) bool {
 		obj := st.Obj()
 		return obj != nil && obj.GetName() != "" // empty object is created when state gets created
+	}
+}
+
+func UpdateIsNeededPredicate() composed.Predicate {
+	return func(ctx context.Context, st composed.State) bool {
+		if ObjIsLoadedPredicate()(ctx, st) {
+			state := st.(*State)
+			scope := state.ObjAsScope().Spec
+			switch scope.Provider {
+			case cloudcontrolv1beta1.ProviderGCP:
+				return scope.Scope.Gcp.Workers == nil || len(scope.Scope.Gcp.Workers) == 0
+			default:
+				return false
+			}
+		} else {
+			return false
+		}
 	}
 }

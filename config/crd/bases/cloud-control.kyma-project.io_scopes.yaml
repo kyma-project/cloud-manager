@@ -120,6 +120,17 @@ spec:
                         type: string
                       vpcNetwork:
                         type: string
+                      workers:
+                        items:
+                          properties:
+                            zones:
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - zones
+                          type: object
+                        type: array
                     required:
                     - project
                     - vpcNetwork
