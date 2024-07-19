@@ -16,7 +16,7 @@ func loadElastiCacheCluster(ctx context.Context, st composed.State) (error, cont
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	list, err := state.awsClient.DescribeElastiCacheCluster(ctx, state.Obj().GetName())
+	list, err := state.awsClient.DescribeElastiCacheCluster(ctx, GetAwsElastiCacheClusterName(state.Obj().GetName()))
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error listing elasticache clusters", ctx)
 	}

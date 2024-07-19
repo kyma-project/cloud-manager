@@ -49,7 +49,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Value: ptr.To(state.Scope().Spec.ShootName),
 		},
 	}, client.CreateElastiCacheClusterOptions{
-		Name:            state.Obj().GetName(),
+		Name:            GetAwsElastiCacheClusterName(state.Obj().GetName()),
 		SubnetGroupName: ptr.Deref(state.subnetGroup.CacheSubnetGroupName, ""),
 	})
 
