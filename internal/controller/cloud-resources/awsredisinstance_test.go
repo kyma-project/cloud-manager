@@ -16,13 +16,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-var _ = Describe("Feature: SKR GcpRedisInstance", func() {
+var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 
-	It("Scenario: SKR GcpRedisInstance is created with specified IpRange", func() {
+	It("Scenario: SKR AwsRedisInstance is created with specified IpRange", func() {
 
-		skrIpRangeName := "custom-ip-range"
+		skrIpRangeName := "8886105f-ce02-4384-959e-afc7bb0dc700"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		skrIpRangeId := "acb8e77d-f674-4691-91b2-6f0d5bc81fc6"
+		skrIpRangeId := "2b978a2a-df7c-4811-819f-97396175cd28"
 
 		By("And Given SKR IpRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
@@ -46,17 +46,11 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		gcpRedisInstanceName := "custom-redis-instance"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
-		gcpRedisInstanceTier := "BASIC"
-		gcpRedisInstanceMemorySizeGb := int32(5)
-		gcpRedisInstanceRedisVersion := "REDIS_7_0"
-		gcpRedisInstanceAuthEnabled := true
-		gcpRedisInstanceTransitEncryptionMode := "SERVER_AUTHENTICATION"
-		gcpRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceGcpConfigs{}
+		awsRedisInstanceName := "897253b7-5ed1-4bbd-9782-99a2e07aea94"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 
 		const (
-			authSecretName = "custom-auth-secretname"
+			authSecretName = "26bc6c7b-190a-489a-83d2-afe272cbdffb"
 		)
 		authSecretLabels := map[string]string{
 			"foo": "1",
@@ -65,21 +59,16 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			"bar": "2",
 		}
 
-		By("When GcpRedisInstance is created", func() {
-			Eventually(CreateGcpRedisInstance).
+		By("When AwsRedisInstance is created", func() {
+			Eventually(CreateAwsRedisInstance).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
-					WithGcpRedisInstanceTier(gcpRedisInstanceTier),
-					WithGcpRedisInstanceMemorySizeGb(gcpRedisInstanceMemorySizeGb),
-					WithGcpRedisInstanceRedisVersion(gcpRedisInstanceRedisVersion),
-					WithGcpRedisInstanceAuthEnabled(gcpRedisInstanceAuthEnabled),
-					WithGcpRedisInstanceTransitEncryptionMode(gcpRedisInstanceTransitEncryptionMode),
-					WithGcpRedisInstanceRedisConfigs(gcpRedisInstanceRedisConfigs),
-					WithGcpRedisInstanceAuthSecretName(authSecretName),
-					WithGcpRedisInstanceAuthSecretLabels(authSecretLabels),
-					WithGcpRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+					// todo add specs here later
+					WithAwsRedisInstanceAuthSecretName(authSecretName),
+					WithAwsRedisInstanceAuthSecretLabels(authSecretLabels),
+					WithAwsRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
 				).
 				Should(Succeed())
 		})
@@ -87,17 +76,17 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 
 		By("Then KCP RedisInstance is created", func() {
-			// load SKR GcpRedisInstance to get ID
+			// load SKR AwsRedisInstance to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingAwsRedisInstanceStatusId(),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
-				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id")
+				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id")
 
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -105,7 +94,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.KCP().Client(),
 					kcpRedisInstance,
 					NewObjActions(
-						WithName(gcpRedisInstance.Status.Id),
+						WithName(awsRedisInstance.Status.Id),
 					),
 				).
 				Should(Succeed())
@@ -114,32 +103,20 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
 
 			By("And has label cloud-manager.kyma-project.io/remoteName")
-			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(gcpRedisInstance.Name))
+			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsRedisInstance.Name))
 
 			By("And has label cloud-manager.kyma-project.io/remoteNamespace")
-			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(gcpRedisInstance.Namespace))
+			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsRedisInstance.Namespace))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
 			Expect(kcpRedisInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
 
 			By("And has spec.remoteRef matching to to SKR IpRange")
-			Expect(kcpRedisInstance.Spec.RemoteRef.Namespace).To(Equal(gcpRedisInstance.Namespace))
-			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(gcpRedisInstance.Name))
+			Expect(kcpRedisInstance.Spec.RemoteRef.Namespace).To(Equal(awsRedisInstance.Namespace))
+			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(awsRedisInstance.Name))
 
-			By("And has spec.instance.gcp equal to SKR GcpRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.Tier).To(Equal(gcpRedisInstance.Spec.Tier))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb).To(Equal(gcpRedisInstance.Spec.MemorySizeGb))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisVersion).To(Equal(gcpRedisInstance.Spec.RedisVersion))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.AuthEnabled).To(Equal(gcpRedisInstance.Spec.AuthEnabled))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.TransitEncryptionMode).To(Equal(gcpRedisInstance.Spec.TransitEncryptionMode))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.MaxmemoryPolicy).To(Equal(gcpRedisInstance.Spec.RedisConfigs.MaxmemoryPolicy))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.NotifyKeyspaceEvents).To(Equal(gcpRedisInstance.Spec.RedisConfigs.NotifyKeyspaceEvents))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.Activedefrag).To(Equal(gcpRedisInstance.Spec.RedisConfigs.Activedefrag))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.LfuDecayTime).To(Equal(gcpRedisInstance.Spec.RedisConfigs.LfuDecayTime))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.LfuLogFactor).To(Equal(gcpRedisInstance.Spec.RedisConfigs.LfuLogFactor))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.MaxmemoryGb).To(Equal(gcpRedisInstance.Spec.RedisConfigs.MaxmemoryGb))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.StreamNodeMaxBytes).To(Equal(gcpRedisInstance.Spec.RedisConfigs.StreamNodeMaxBytes))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.StreamNodeMaxEntries).To(Equal(gcpRedisInstance.Spec.RedisConfigs.StreamNodeMaxEntries))
+			// todo fill later kcp == skr user spec
+			//By("And has spec.instance.aws equal to SKR AwsRedisInstance.spec values")
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")
 			Expect(kcpRedisInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))
@@ -147,7 +124,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		kcpRedisInstancePrimaryEndpoint := "192.168.0.1:6576"
 		kcpRedisInstanceReadEndpoint := "192.168.0.2:6576"
-		kcpRedisInstanceAuthString := "a9461793-2449-48d2-8618-0881bbe61d05"
+		kcpRedisInstanceAuthString := "cdaa7502-3433-441e-802d-310d931848bf"
 
 		By("When KCP RedisInstance has Ready condition", func() {
 			Eventually(UpdateStatus).
@@ -164,15 +141,15 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR GcpRedisInstance has Ready condition", func() {
+		By("Then SKR AwsRedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
 		})
@@ -186,7 +163,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					authSecret,
 					NewObjActions(
 						WithName(authSecretName),
-						WithNamespace(gcpRedisInstance.Namespace),
+						WithNamespace(awsRedisInstance.Namespace),
 					),
 				).
 				Should(Succeed())
@@ -211,18 +188,18 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		// CleanUp
 		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
 			Should(Succeed())
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 			Should(Succeed())
 	})
 
-	It("Scenario: SKR GcpRedisInstance is deleted", func() {
+	It("Scenario: SKR AwsRedisInstance is deleted", func() {
 
-		skrIpRangeName := "another-custom-ip-range"
+		skrIpRangeName := "09fcc653-500c-478c-84da-6cea9948e8af"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		skrIpRangeId := "84631231-903e-47af-82ba-4831c79f65b9"
+		skrIpRangeId := "33bc0194-d9de-4ac4-a582-10a6ac26f850"
 
 		By("And Given SKR IpRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange
@@ -246,18 +223,16 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		gcpRedisInstanceName := "another-gcp-redis-instance"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
+		awsRedisInstanceName := "58137995-df7c-4612-80ef-fde1bac32755"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 
-		By("And Given GcpRedisInstance is created", func() {
-			Eventually(CreateGcpRedisInstance).
+		By("And Given AwsRedisInstance is created", func() {
+			Eventually(CreateAwsRedisInstance).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					// todo add mandatory specs later
 				).
 				Should(Succeed())
 		})
@@ -265,17 +240,17 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 
 		By("And Given KCP RedisInstance is created", func() {
-			// load SKR GcpRedisInstance to get ID
+			// load SKR AwsRedisInstance to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingAwsRedisInstanceStatusId(),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
-				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id")
+				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id")
 
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -283,7 +258,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.KCP().Client(),
 					kcpRedisInstance,
 					NewObjActions(
-						WithName(gcpRedisInstance.Status.Id),
+						WithName(awsRedisInstance.Status.Id),
 					),
 				).
 				Should(Succeed(), "expected KCP RedisInstance to be created, but it was not")
@@ -304,17 +279,17 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed(), "failed setting KCP RedisInstance Ready condition")
 		})
 
-		By("And Given SKR GcpRedisInstance has Ready condition", func() {
+		By("And Given SKR AwsRedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
 				).
-				Should(Succeed(), "expected GcpRedisInstance to exist and have Ready condition")
+				Should(Succeed(), "expected AwsRedisInstance to exist and have Ready condition")
 		})
 
 		authSecret := &corev1.Secret{}
@@ -325,8 +300,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					authSecret,
 					NewObjActions(
-						WithName(gcpRedisInstance.Name),
-						WithNamespace(gcpRedisInstance.Namespace),
+						WithName(awsRedisInstance.Name),
+						WithNamespace(awsRedisInstance.Namespace),
 					),
 				).
 				Should(Succeed(), "failed creating auth Secret")
@@ -334,23 +309,23 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		// DELETE START HERE
 
-		By("When GcpRedisInstance is deleted", func() {
+		By("When AwsRedisInstance is deleted", func() {
 			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
-				Should(Succeed(), "failed deleting GcpRedisInstance")
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+				Should(Succeed(), "failed deleting AwsRedisInstance")
 		})
 
-		By("Then SKR GcpRedisInstance has Deleting state", func() {
+		By("Then SKR AwsRedisInstance has Deleting state", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateDeleting),
 				).
-				Should(Succeed(), "expected GcpRedisInstance to have Deleting state")
+				Should(Succeed(), "expected AwsRedisInstance to have Deleting state")
 		})
 
 		By("And Then SKR auth Secret is deleted", func() {
@@ -371,10 +346,10 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed(), "failed removing finalizer on KCP RedisInstance")
 		})
 
-		By("Then SKR GcpRedisInstance is deleted", func() {
+		By("Then SKR AwsRedisInstance is deleted", func() {
 			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
-				Should(Succeed(), "expected GcpRedisInstance not to exist")
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+				Should(Succeed(), "expected AwsRedisInstance not to exist")
 		})
 
 		// CleanUp
@@ -383,7 +358,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Should(Succeed())
 	})
 
-	It("Scenario: SKR GcpRedisInstance is created with empty IpRange when default IpRange does not exist", func() {
+	It("Scenario: SKR AwsRedisInstance is created with empty IpRange when default IpRange does not exist", func() {
 
 		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
 			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
@@ -391,9 +366,9 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			}
 		})
 
-		gcpRedisInstanceName := "64b571bd-dbab-40e4-9eeb-5a0eb3b3ed63"
-		skrIpRangeId := "209a331b-185f-4413-8d84-e27eaf02ce1d"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
+		awsRedisInstanceName := "b5351da0-5f49-4612-b9cd-e9a8357c0ea2"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7cd"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
@@ -406,14 +381,12 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				ShouldNot(Succeed())
 		})
 
-		By("When GcpRedisInstance is created with empty IpRange", func() {
-			Eventually(CreateGcpRedisInstance).
+		By("When AwsRedisInstance is created with empty IpRange", func() {
+			Eventually(CreateAwsRedisInstance).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
+					// todo add default specs
 				).
 				Should(Succeed())
 		})
@@ -433,12 +406,12 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(skrIpRange.Labels[util.WellKnownK8sLabelPartOf]).To(Equal("kyma"))
 		})
 
-		By("And Then GcpRedisInstance is not ready", func() {
+		By("And Then AwsRedisInstance is not ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance, NewObjActions()).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance, NewObjActions()).
 				Should(Succeed())
-			Expect(meta.IsStatusConditionTrue(gcpRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
-				To(BeFalse(), "expected GcpRedisInstance not to have Ready condition, but it has")
+			Expect(meta.IsStatusConditionTrue(awsRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
+				To(BeFalse(), "expected AwsRedisInstance not to have Ready condition, but it has")
 		})
 
 		By("When default SKR IpRange has Ready condition", func() {
@@ -452,17 +425,17 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		})
 
 		By("Then KCP RedisInstance is created", func() {
-			// load SKR GcpRedisInstance to get ID
+			// load SKR AwsRedisInstance to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingAwsRedisInstanceStatusId(),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
-				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id and status creating")
+				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id and status creating")
 
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -470,7 +443,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.KCP().Client(),
 					kcpRedisInstance,
 					NewObjActions(
-						WithName(gcpRedisInstance.Status.Id),
+						WithName(awsRedisInstance.Status.Id),
 					),
 				).
 				Should(Succeed())
@@ -484,21 +457,21 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					kcpRedisInstance,
 					WithRedisInstancePrimaryEndpoint("192.168.0.1"),
 					WithRedisInstanceReadEndpoint("192.168.2.2"),
-					WithRedisInstanceAuthString("f85f28f9-0834-41f9-8079-5bfa32b6dadf"),
+					WithRedisInstanceAuthString("9d9c7159-39be-4992-90a2-95e81cf6298a"),
 					WithConditions(KcpReadyCondition()),
 				).
 				Should(Succeed())
 		})
 
-		By("Then SKR GcpRedisInstance has Ready condition", func() {
+		By("Then SKR AwsRedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
 		})
@@ -511,20 +484,20 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					authSecret,
 					NewObjActions(
-						WithName(gcpRedisInstance.Name),
-						WithNamespace(gcpRedisInstance.Namespace),
+						WithName(awsRedisInstance.Name),
+						WithNamespace(awsRedisInstance.Namespace),
 					),
 				).
 				Should(Succeed())
 		})
 
-		By("When GcpRedisInstance is deleted", func() {
+		By("When AwsRedisInstance is deleted", func() {
 			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
 				Should(Succeed())
 			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
-				Should(Succeed(), "expected GcpRedisInstance not to exist, but it still does")
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+				Should(Succeed(), "expected AwsRedisInstance not to exist, but it still does")
 		})
 
 		By("Then auth Secret does not exist", func() {
@@ -555,7 +528,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		})
 	})
 
-	It("Scenario: SKR GcpRedisInstance is created with empty IpRangeRef when default IpRange already exist", func() {
+	It("Scenario: SKR AwsRedisInstance is created with empty IpRangeRef when default IpRange already exist", func() {
 
 		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
 			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
@@ -563,9 +536,9 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			}
 		})
 
-		gcpRedisInstanceName := "6fc84535-8702-4064-a1d4-92235d9d5dff"
-		skrIpRangeId := "343ab759-ed5f-4d0d-93f0-7d4f518bb92e"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
+		awsRedisInstanceName := "7f86e5fc-8b2b-44c5-8275-967e6e2403a4"
+		skrIpRangeId := "7f09262c-41fe-43be-91eb-10aa3e273d7b"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
@@ -587,30 +560,28 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("When GcpRedisInstance is created with empty IpRangeRef", func() {
-			Eventually(CreateGcpRedisInstance).
+		By("When AwsRedisInstance is created with empty IpRangeRef", func() {
+			Eventually(CreateAwsRedisInstance).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
+					// todo add default specs ltaer
 				).
 				Should(Succeed())
 		})
 
 		By("Then KCP RedisInstance is created", func() {
-			// load SKR GcpRedisInstance to get ID
+			// load SKR AwsRedisInstance to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingAwsRedisInstanceStatusId(),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
-				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id and status creating")
+				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id and status creating")
 
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -618,7 +589,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.KCP().Client(),
 					kcpRedisInstance,
 					NewObjActions(
-						WithName(gcpRedisInstance.Status.Id),
+						WithName(awsRedisInstance.Status.Id),
 					),
 				).
 				Should(Succeed())
@@ -636,15 +607,15 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR GcpRedisInstance has Ready condition", func() {
+		By("Then SKR AwsRedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.SKR().Client(),
-					gcpRedisInstance,
+					awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
 		})
@@ -657,20 +628,20 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					authSecret,
 					NewObjActions(
-						WithName(gcpRedisInstance.Name),
-						WithNamespace(gcpRedisInstance.Namespace),
+						WithName(awsRedisInstance.Name),
+						WithNamespace(awsRedisInstance.Namespace),
 					),
 				).
 				Should(Succeed())
 		})
 
-		By("When GcpRedisInstance is deleted", func() {
+		By("When AwsRedisInstance is deleted", func() {
 			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
 				Should(Succeed())
 			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
-				Should(Succeed(), "expected GcpRedisInstance not to exist, but it still does")
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+				Should(Succeed(), "expected AwsRedisInstance not to exist, but it still does")
 		})
 
 		By("Then auth Secret does not exist", func() {
@@ -701,7 +672,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		})
 	})
 
-	It("Scenario: SKR GcpRedisInstance IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
+	It("Scenario: SKR AwsRedisInstance IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
 
 		By("Given ff IpRangeAutomaticCidrAllocation is disabled", func() {
 			if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
@@ -709,37 +680,35 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			}
 		})
 
-		gcpRedisInstanceName := "d8037b59-18b7-45bb-8c3a-bc83578e976c"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
+		awsRedisInstanceName := "e69042c9-2a36-4098-b053-78ebb3718305"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 
-		By("When GcpRedisInstance is created with empty IpRangeRef", func() {
-			Eventually(CreateGcpRedisInstance).
+		By("When AwsRedisInstance is created with empty IpRangeRef", func() {
+			Eventually(CreateAwsRedisInstance).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
+					// todo add default specs
 				).
 				Should(Succeed())
 		})
 
-		By("Then GcpRedisInstance has Error condition", func() {
+		By("Then AwsRedisInstance has Error condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
 				).
 				Should(Succeed())
 		})
 
-		By("And Then GcpRedisInstance has Error state", func() {
-			Expect(gcpRedisInstance.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
+		By("And Then AwsRedisInstance has Error state", func() {
+			Expect(awsRedisInstance.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
 		})
 
-		By("And Then GcpRedisInstance Error condition message is: IpRangeRef is required", func() {
-			Expect(meta.FindStatusCondition(gcpRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError).Message).
+		By("And Then AwsRedisInstance Error condition message is: IpRangeRef is required", func() {
+			Expect(meta.FindStatusCondition(awsRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError).Message).
 				To(Equal("IpRangeRef is required"))
 		})
 	})

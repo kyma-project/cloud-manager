@@ -29,7 +29,8 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 		*cloudresourcesv1beta1.GcpNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
 		*cloudresourcesv1beta1.GcpNfsVolumeRestore,
-		*cloudresourcesv1beta1.GcpRedisInstance:
+		*cloudresourcesv1beta1.GcpRedisInstance,
+		*cloudresourcesv1beta1.AwsRedisInstance:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 
@@ -63,7 +64,8 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 		*cloudresourcesv1beta1.GcpNfsVolume,
 		*cloudresourcesv1beta1.GcpNfsVolumeBackup,
 		*cloudresourcesv1beta1.GcpNfsVolumeRestore,
-		*cloudresourcesv1beta1.GcpRedisInstance:
+		*cloudresourcesv1beta1.GcpRedisInstance,
+		*cloudresourcesv1beta1.AwsRedisInstance:
 		actions = actions.Append(WithNamespace(DefaultSkrNamespace))
 	}
 
