@@ -2,7 +2,6 @@ package backupschedule
 
 import (
 	"context"
-	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -70,16 +69,8 @@ func getSourceRef(ctx context.Context, state *State) (composed.ObjWithConditions
 		Name:      schedule.GetSourceRef().Name,
 		Namespace: schedule.GetSourceRef().Namespace,
 	}
-	var sourceObject composed.ObjWithConditions
 
-	if _, ok := schedule.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
-		sourceObject = &cloudresourcesv1beta1.GcpNfsVolume{}
-	}
-
-	if sourceObject == nil {
-		return nil, fmt.Errorf("provider %s not supported yet", state.Scope.Spec.Provider)
-	}
-
-	err := state.SkrCluster.K8sClient().Get(ctx, key, sourceObject)
-	return sourceObject, err
+	source := state.backupImpl.emptySourceObject()
+	err := state.SkrCluster.K8sClient().Get(ctx, key, source)
+	return source, err
 }

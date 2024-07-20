@@ -76,7 +76,7 @@ func (suite *calculateRecurringScheduleSuite) TestAlreadySetSchedule() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	//Set the backupschedule
+	//Set the schedule
 	now := time.Now()
 	obj.Status.Schedule = obj.Spec.Schedule
 	obj.Status.NextRunTimes = []string{now.Format(time.RFC3339)}
@@ -116,7 +116,7 @@ func (suite *calculateRecurringScheduleSuite) testSchedule(schedule string, star
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	//Set the Status.backupschedule
+	//Set the Status.schedule
 	obj.Status.Schedule = obj.Spec.Schedule
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
 	suite.Nil(err)
@@ -173,14 +173,20 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithStartTime() 
 func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithEndTime() {
 	now := time.Now().UTC()
 	schedule := "* * * * *"
-	expectedState := v1beta1.JobStateDone
-	end := now
+	end := now.AddDate(1, 0, 0)
 
-	suite.testSchedule(schedule, nil, &end, expectedState)
+	expectedState := v1beta1.JobStateActive
+	expectedTimes := []time.Time{
+		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC(),
+		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+2, 0, 0, now.Location()).UTC(),
+		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+3, 0, 0, now.Location()).UTC(),
+	}
+
+	suite.testSchedule(schedule, nil, &end, expectedState, expectedTimes...)
 }
 
 func (suite *calculateRecurringScheduleSuite) TestForEveryMonth() {
-	now := time.Now()
+	now := time.Now().UTC()
 	schedule := "0 0 1 * *"
 	expectedState := v1beta1.JobStateActive
 	expectedTimes := []time.Time{
@@ -192,7 +198,7 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMonth() {
 }
 
 func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithStartTime() {
-	now := time.Now()
+	now := time.Now().UTC()
 	schedule := "0 0 1 * *"
 	start := now.Add(time.Hour * 24)
 	expectedState := v1beta1.JobStateActive
@@ -206,11 +212,18 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithStartTime() {
 
 func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithEndTime() {
 	now := time.Now().UTC()
-	schedule := "* * * * *"
-	expectedState := v1beta1.JobStateDone
-	end := now
+	schedule := "0 0 1 * *"
+	start := now.Add(time.Hour * 24)
+	end := now.AddDate(1, 0, 0)
 
-	suite.testSchedule(schedule, nil, &end, expectedState)
+	expectedState := v1beta1.JobStateActive
+	expectedTimes := []time.Time{
+		time.Date(start.Year(), start.Month()+1, 1, 0, 0, 0, 0, now.Location()).UTC(),
+		time.Date(start.Year(), start.Month()+2, 1, 0, 0, 0, 0, now.Location()).UTC(),
+		time.Date(start.Year(), start.Month()+3, 1, 0, 0, 0, 0, now.Location()).UTC(),
+	}
+
+	suite.testSchedule(schedule, &start, &end, expectedState, expectedTimes...)
 }
 
 func TestCalculateRecurringScheduleSuite(t *testing.T) {

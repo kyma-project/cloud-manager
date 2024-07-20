@@ -18,12 +18,12 @@ func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, co
 		return nil, nil
 	}
 
-	//If not one-time backupschedule, continue
+	//If not one-time schedule, continue
 	if schedule.GetSchedule() != "" {
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Evaluating one-time backupschedule")
+	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Evaluating one-time schedule")
 
 	//If the nextRunTime is already set, continue
 	if len(schedule.GetNextRunTimes()) > 0 {

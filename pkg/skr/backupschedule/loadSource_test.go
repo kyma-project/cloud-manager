@@ -37,6 +37,7 @@ func (suite *loadSourceSuite) TestWhenScheduleIsDeleting() {
 
 	//Set the gcpScope object in state
 	state.Scope = &gcpScope
+	state.backupImpl = &backupImplGcpNfs{}
 
 	//Invoke loadSource API
 	err, _ctx := loadSource(ctx, state)
@@ -60,6 +61,7 @@ func (suite *loadSourceSuite) TestWhenScheduleExists() {
 
 	//Set the gcpScope object in state
 	state.Scope = &gcpScope
+	state.backupImpl = &backupImplGcpNfs{}
 
 	err, _ctx := loadSource(ctx, state)
 
@@ -84,6 +86,7 @@ func (suite *loadSourceSuite) TestSourceRefNotFound() {
 
 	//Set the gcpScope object in state
 	state.Scope = &gcpScope
+	state.backupImpl = &backupImplGcpNfs{}
 
 	//Invoke loadSource API
 	err, _ctx := loadSource(ctx, state)
@@ -107,6 +110,7 @@ func (suite *loadSourceSuite) TestSourceRefNotReady() {
 
 	//Set the gcpScope object in state
 	state.Scope = &gcpScope
+	state.backupImpl = &backupImplGcpNfs{}
 
 	// Remove the conditions from volume
 	notReadyVolume := gcpNfsVolume.DeepCopy()
@@ -142,6 +146,7 @@ func (suite *loadSourceSuite) TestSourceRefReady() {
 
 	//Set the gcpScope object in state
 	state.Scope = &gcpScope
+	state.backupImpl = &backupImplGcpNfs{}
 
 	//Invoke loadSource API
 	err, ctx = loadSource(ctx, state)

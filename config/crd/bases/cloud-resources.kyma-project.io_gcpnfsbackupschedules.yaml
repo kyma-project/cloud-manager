@@ -63,6 +63,9 @@ spec:
               maxRetentionDays:
                 description: MaxRetentionDays specifies the maximum number of days
                   to retain the backup If not provided, backup will be retained indefinitely
+                  If the DeleteCascade is true for this schedule, then all the backups
+                  will be deleted when the schedule is deleted irrespective of the
+                  MaxRetentionDay configuration.
                 type: integer
               nfsVolumeRef:
                 description: NfsVolumeRef specifies the SourceRef resource that a
@@ -128,6 +131,11 @@ spec:
             description: GcpNfsBackupScheduleStatus defines the observed state of
               GcpNfsBackupSchedule
             properties:
+              backupCount:
+                default: 0
+                description: BackupCount specifies the number of backups currently
+                  present in the system
+                type: integer
               backupIndex:
                 default: 0
                 description: BackupIndex specifies the current index of the backup

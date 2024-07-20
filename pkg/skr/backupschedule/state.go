@@ -6,8 +6,8 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
@@ -18,12 +18,14 @@ type State struct {
 	SkrCluster composed.StateCluster
 
 	SourceRef composed.ObjWithConditions
+	Backups   []client.Object
 
 	cronExpression *cronexpr.Expression
 	nextRunTime    time.Time
 
-	Scope *cloudcontrolv1beta1.Scope
-	env   abstractions.Environment
+	backupImpl backupImpl
+	Scope      *cloudcontrolv1beta1.Scope
+	env        abstractions.Environment
 }
 
 type StateFactory interface {
@@ -46,7 +48,6 @@ type stateFactory struct {
 	kcpCluster composed.StateCluster
 	skrCluster composed.StateCluster
 	env        abstractions.Environment
-	gcpConfig  *client.GcpConfig
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {

@@ -23,7 +23,7 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
-	//If one-time backupschedule, continue
+	//If one-time schedule, continue
 	if schedule.GetSchedule() == "" {
 		return nil, nil
 	}
@@ -40,24 +40,14 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 	var nextRunTimes []time.Time
 	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().Time.After(now) {
 		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("StateTime is in future.")
-		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time, MaxSchedules)
+		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time.UTC(), MaxSchedules)
 	} else {
 		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
-		nextRunTimes = state.cronExpression.NextN(now, MaxSchedules)
+		nextRunTimes = state.cronExpression.NextN(now.UTC(), MaxSchedules)
 	}
 	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
 
-	//If the next run time is after the end time, stop reconciliation
-	if schedule.GetEndTime() != nil && !schedule.GetEndTime().IsZero() && nextRunTimes[0].After(schedule.GetEndTime().Time) {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
-		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
-		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
-			SuccessError(composed.StopAndForget).
-			Run(ctx, state)
-	}
-
-	//Update the status of the backupschedule with the next run times
+	//Update the status of the schedule with the next run times
 	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is set. Updating status.")
 	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
 	schedule.SetActiveSchedule(schedule.GetSchedule())

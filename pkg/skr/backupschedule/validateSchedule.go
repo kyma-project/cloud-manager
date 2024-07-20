@@ -13,12 +13,17 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 
+	//If marked for deletion, continue
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-	logger.Info("Validating NFS Backup BackupSchedule - Cron Expression")
+	logger.Info("Validating BackupSchedule - Cron Expression")
 
 	sch := schedule.GetSchedule()
 
-	//If backupschedule is empty, continue
+	//If schedule is empty, continue
 	if sch == "" {
 		return nil, nil
 	}

@@ -4,147 +4,159 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/suite"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"testing"
 	"time"
 )
 
-type calculateOnetimeScheduleSuite struct {
+type deleteCascadeSuite struct {
 	suite.Suite
 	ctx context.Context
 }
 
-func (suite *calculateOnetimeScheduleSuite) SetupTest() {
+func (suite *deleteCascadeSuite) SetupTest() {
 	suite.ctx = context.Background()
 }
 
-func (suite *calculateOnetimeScheduleSuite) TestWhenNfsScheduleIsDeleting() {
+func (suite *deleteCascadeSuite) TestWhenScheduleIsNotDeleting() {
+	obj := gcpNfsBackupSchedule.DeepCopy()
+	factory, err := newTestStateFactoryWithObj(obj)
+	suite.Nil(err)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsBackupSchedule
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	//Invoke API under test
+	err, _ctx := deleteCascade(ctx, state)
+
+	//validate expected return values
+	suite.Nil(err)
+	suite.Nil(_ctx)
+}
+
+func (suite *deleteCascadeSuite) TestWhenDeleteCascadeIsNotSet() {
+	runTime := time.Now().Add(time.Minute).UTC()
 	obj := deletingGcpBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
+	state.nextRunTime = runTime
 	suite.Nil(err)
 
 	//Invoke API under test
-	err, _ctx := calculateOnetimeSchedule(ctx, state)
+	err, _ctx := deleteCascade(ctx, state)
 
 	//validate expected return values
 	suite.Nil(err)
 	suite.Nil(_ctx)
 }
 
-func (suite *calculateOnetimeScheduleSuite) TestRecurringSchedule() {
+func (suite *deleteCascadeSuite) TestWhenThereAreNoBackups() {
 
-	obj := gcpNfsBackupSchedule.DeepCopy()
-	obj.Spec.Schedule = "* * * * *"
+	obj := deletingGcpBackupSchedule.DeepCopy()
+	obj.Spec.DeleteCascade = true
 	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
 	//Invoke API under test
-	err, _ctx := calculateOnetimeSchedule(ctx, state)
+	err, _ctx := deleteCascade(ctx, state)
 
 	//validate expected return values
 	suite.Nil(err)
 	suite.Nil(_ctx)
 }
 
-func (suite *calculateOnetimeScheduleSuite) TestAlreadySetSchedule() {
+func (suite *deleteCascadeSuite) TestWhenNoBackupsExist() {
 
-	obj := gcpNfsBackupSchedule.DeepCopy()
+	obj := deletingGcpBackupSchedule.DeepCopy()
+	obj.Spec.DeleteCascade = true
 	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	//Set the schedule
-	obj.Status.NextRunTimes = []string{time.Now().Format(time.RFC3339)}
-	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
-
 	//Invoke API under test
-	err, _ctx := calculateOnetimeSchedule(ctx, state)
+	err, _ctx := deleteCascade(ctx, state)
 
 	//validate expected return values
 	suite.Nil(err)
 	suite.Nil(_ctx)
 }
 
-func (suite *calculateOnetimeScheduleSuite) TestScheduleWithStartTime() {
+func (suite *deleteCascadeSuite) TestDeleteSchedule() {
 
-	obj := gcpNfsBackupSchedule.DeepCopy()
-	startTime := time.Now().Add(time.Hour)
-	obj.Spec.StartTime = &metav1.Time{Time: startTime}
+	obj := deletingGcpBackupSchedule.DeepCopy()
+	obj.Spec.DeleteCascade = true
 	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
+	err = factory.skrCluster.K8sClient().Create(ctx, gcpBackup1.DeepCopy())
+	suite.Nil(err)
+	err = factory.skrCluster.K8sClient().Create(ctx, gcpBackup2.DeepCopy())
+	suite.Nil(err)
+
+	state.Backups = append(state.Backups, gcpBackup1)
+	state.Backups = append(state.Backups, gcpBackup2)
+
 	//Invoke API under test
-	err, _ = calculateOnetimeSchedule(ctx, state)
+	err, _ = deleteCascade(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeue, err)
+	suite.Equal(composed.StopWithRequeueDelay(util.Timing.T1000ms()), err)
 
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
-		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
+		types.NamespacedName{Name: obj.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
-	suite.Equal(1, len(fromK8s.Status.NextRunTimes))
-	suite.Equal(startTime.UTC().Format(time.RFC3339), fromK8s.Status.NextRunTimes[0])
-}
-
-func (suite *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
-
-	obj := gcpNfsBackupSchedule.DeepCopy()
-	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	//Get state object with GcpNfsBackupSchedule
-	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
-
-	//Invoke API under test
-	err, _ = calculateOnetimeSchedule(ctx, state)
-
-	//validate expected return values
-	suite.Equal(composed.StopWithRequeue, err)
-
-	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
+	backup := &v1beta1.GcpNfsVolumeBackup{}
+	//Check whether the gcpBackup1 is deleted
 	err = factory.skrCluster.K8sClient().Get(ctx,
-		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
-			Namespace: gcpNfsBackupSchedule.Namespace},
-		fromK8s)
-	suite.Equal(1, len(fromK8s.Status.NextRunTimes))
-	runTime, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[0])
-	suite.Nil(err)
-	suite.GreaterOrEqual(time.Second*1, time.Since(runTime))
+		types.NamespacedName{Name: gcpBackup1.GetName(),
+			Namespace: obj.Namespace},
+		backup)
+	suite.Equal(true, apierrors.IsNotFound(err))
+
+	//Check whether the gcpBackup2 is deleted
+	err = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpBackup2.GetName(),
+			Namespace: obj.Namespace},
+		backup)
+	suite.Equal(true, apierrors.IsNotFound(err))
 }
 
-func TestCalculateOnetimeScheduleSuite(t *testing.T) {
-	suite.Run(t, new(calculateOnetimeScheduleSuite))
+func TestDeleteCascadeSuite(t *testing.T) {
+	suite.Run(t, new(deleteCascadeSuite))
 }

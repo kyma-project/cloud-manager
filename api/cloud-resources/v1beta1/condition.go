@@ -63,4 +63,7 @@ const (
 	ReasonNfsVolumeNotReady     = "NfsVolumeNotReady"
 	ReasonBackupCreateFailed    = "BackupCreateFailed"
 	ReasonBackupListFailed      = "BackupListFailed"
+	ReasonUnknownSchedule       = "UnknownSchedule"
+	ReasonInvalidStartTime      = "InvalidStartTime"
+	ReasonInvalidEndTime        = "InvalidEndTime"
 )

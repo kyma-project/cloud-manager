@@ -16,7 +16,7 @@ func checkSuspension(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	//If the backupschedule is not suspended, continue
+	//If the schedule is not suspended, continue
 	if !schedule.GetSuspend() {
 		return nil, nil
 	}

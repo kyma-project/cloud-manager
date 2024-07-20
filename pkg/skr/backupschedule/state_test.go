@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -25,7 +25,7 @@ var kymaRef = klog.ObjectRef{
 }
 
 var gcpScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "skr",
 		Namespace: "test",
 	},
@@ -41,7 +41,7 @@ var gcpScope = cloudcontrolv1beta1.Scope{
 }
 
 var awsScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "skr",
 		Namespace: "test",
 	},
@@ -58,7 +58,7 @@ var awsScope = cloudcontrolv1beta1.Scope{
 }
 
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume",
 		Namespace: "test",
 	},
@@ -75,11 +75,11 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Id:         "test-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS instance is ready",
 			},
@@ -88,7 +88,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-aws-nfs-volume",
 		Namespace: "test",
 	},
@@ -99,11 +99,11 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	},
 	Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{
 		Id: "test-aws-nfs-instance",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS instance is ready",
 			},
@@ -112,8 +112,8 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 }
 
 var gcpNfsBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
-	ObjectMeta: v1.ObjectMeta{
-		Name:      "test-nfs-backup-backupschedule",
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "test-nfs-backup-schedule",
 		Namespace: "test",
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsBackupScheduleSpec{
@@ -125,11 +125,48 @@ var gcpNfsBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
 	},
 }
 
+var backup1Meta = metav1.ObjectMeta{
+	Name:              "test-backup-1",
+	Namespace:         gcpNfsBackupSchedule.Namespace,
+	CreationTimestamp: metav1.Time{Time: time.Now()},
+	Labels: map[string]string{
+		cloudresourcesv1beta1.LabelScheduleName:      gcpNfsBackupSchedule.Name,
+		cloudresourcesv1beta1.LabelScheduleNamespace: gcpNfsBackupSchedule.Namespace,
+	},
+}
+var backup2Meta = metav1.ObjectMeta{
+	Name:              "test-backup-2",
+	Namespace:         gcpNfsBackupSchedule.Namespace,
+	CreationTimestamp: metav1.Time{Time: time.Now().AddDate(0, 0, -2)},
+	Labels: map[string]string{
+		cloudresourcesv1beta1.LabelScheduleName:      gcpNfsBackupSchedule.Name,
+		cloudresourcesv1beta1.LabelScheduleNamespace: gcpNfsBackupSchedule.Namespace,
+	},
+}
+var gcpSpec = cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
+	Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
+		Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
+			Name:      gcpNfsVolume.Name,
+			Namespace: gcpNfsVolume.Namespace,
+		},
+	},
+	Location: "us-west1-a",
+}
+
+var gcpBackup1 = &cloudresourcesv1beta1.GcpNfsVolumeBackup{
+	ObjectMeta: backup1Meta,
+	Spec:       gcpSpec,
+}
+var gcpBackup2 = &cloudresourcesv1beta1.GcpNfsVolumeBackup{
+	ObjectMeta: backup2Meta,
+	Spec:       gcpSpec,
+}
+
 var deletingGcpBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
-	ObjectMeta: v1.ObjectMeta{
-		Name:              "test-nfs-backup-backupschedule-01",
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "test-nfs-backup-schedule",
 		Namespace:         "test",
-		DeletionTimestamp: &v1.Time{Time: time.Now()},
+		DeletionTimestamp: &metav1.Time{Time: time.Now()},
 		Finalizers:        []string{cloudresourcesv1beta1.Finalizer},
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsBackupScheduleSpec{

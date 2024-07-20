@@ -79,7 +79,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 
 		//Define variables.
 		nfsBackupSchedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
-		nfsBackupScheduleName := "nfs-backupschedule-1"
+		nfsBackupScheduleName := "nfs-backup-schedule-1"
 		nfsBackupHourlySchedule := "0 * * * *"
 		nfsBackupLocation := "us-west1"
 
@@ -196,13 +196,14 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 	Describe("Scenario: SKR Onetime GcpNfsBackupSchedule - Create", func() {
 		//Define variables.
 		nfsBackupSchedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
-		nfsBackupScheduleName := "nfs-backupschedule-2"
+		nfsBackupScheduleName := "nfs-backup-schedule-2"
 		nfsBackupLocation := "us-west1"
 
 		now := time.Now().UTC()
-		expectedTimes := []time.Time{now}
+		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+2, 0, 0, now.Location()).UTC()
+		expectedTimes := []time.Time{start}
 
-		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, now.Format("20060102-150405"))
+		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, start.Format("20060102-150405"))
 		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 
 		It("When GcpNfsBackupSchedule Create is called", func() {
@@ -211,19 +212,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
 					WithLocation(nfsBackupLocation),
-					WithStartTime(now),
+					WithStartTime(start),
 					WithNfsVolumeRef(skrNfsVolumeName),
 				).
 				Should(Succeed())
-			By("Then GcpNfsBackupSchedule is created in SKR", func() {
-				Eventually(LoadAndCheck).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
-						NewObjActions(),
-					).
-					Should(Succeed())
-			})
-			By("And Then GcpNfsBackupSchedule will get NextRun time", func() {
+
+			By("Then GcpNfsBackupSchedule will be created in SKR and will have NextRun time", func() {
 				Eventually(LoadAndCheck).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
@@ -238,7 +232,8 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 
 			By("Then the NfsVolumeBackup is created", func() {
 				//Load and check whether the NfsVolumeBackup object got created.
-				Eventually(LoadAndCheck).
+				//Waiting little longer as the scheduled backup creation might take about 2 minutes.
+				Eventually(LoadAndCheck, timeout*6, interval).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackup,
 						NewObjActions(WithName(nfsBackupName)),

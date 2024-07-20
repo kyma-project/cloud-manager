@@ -20,19 +20,6 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	//If it is a one-time backupschedule, and the job already ran, stop reconciliation
-	if schedule.GetSchedule() == "" &&
-		schedule.GetLastCreateRun() != nil &&
-		!schedule.GetLastCreateRun().IsZero() {
-
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("One-time backupschedule already ran. Stopping reconciliation.")
-		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
-		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
-			SuccessError(composed.StopAndForget).
-			Run(ctx, state)
-	}
-
 	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Evaluating next run time")
 
 	if len(schedule.GetNextRunTimes()) == 0 {
@@ -63,17 +50,6 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 			}).
 			SuccessError(composed.StopAndForget).
 			SuccessLogMsg(fmt.Sprintf("Error parsing next run time :%s", err)).
-			Run(ctx, state)
-	}
-
-	//If the next run time is after the end time, stop reconciliation
-	if schedule.GetEndTime() != nil && !schedule.GetEndTime().IsZero() &&
-		nextRunTime.After(schedule.GetEndTime().Time) {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Next RunTime is after the EndTime. Stopping reconciliation.")
-		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
-		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
-			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 

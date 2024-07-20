@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
@@ -46,8 +45,18 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	index := schedule.GetBackupIndex() + 1
 	name := fmt.Sprintf("%s-%d-%s", prefix, index, state.nextRunTime.UTC().Format("20060102-150405"))
 
+	//Construct a common part of Backup Object
+	objectMeta := metav1.ObjectMeta{
+		Name:      name,
+		Namespace: schedule.GetNamespace(),
+		Labels: map[string]string{
+			cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
+			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
+		},
+	}
+
 	//Create Backup object
-	backup, err := getBackupObject(state, name)
+	backup, err := state.backupImpl.getBackupObject(state, &objectMeta)
 	if err == nil {
 		err = state.Cluster().K8sClient().Create(ctx, backup)
 	}
@@ -66,9 +75,10 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	//Update the status of the backupschedule with the latest backup details
+	//Update the status of the schedule with the latest backup details
 	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
 	schedule.SetBackupIndex(index)
+	schedule.SetBackupCount(len(state.Backups) + 1)
 	schedule.SetLastCreateRun(&metav1.Time{Time: state.nextRunTime.UTC()})
 	schedule.SetLastCreatedBackup(corev1.ObjectReference{
 		Kind:      backup.GetObjectKind().GroupVersionKind().Kind,
@@ -79,37 +89,4 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
-}
-
-func getBackupObject(state *State, name string) (client.Object, error) {
-	schedule := state.ObjAsBackupSchedule()
-
-	//Construct a common part of NfsBackup Object
-	objectMeta := metav1.ObjectMeta{
-		Name:      name,
-		Namespace: schedule.GetNamespace(),
-		Labels: map[string]string{
-			cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
-			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
-		},
-	}
-
-	//Construct backupschedule specific Backup Object
-	if x, ok := schedule.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
-
-		return &cloudresourcesv1beta1.GcpNfsVolumeBackup{
-			ObjectMeta: objectMeta,
-			Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
-				Location: x.Spec.Location,
-				Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
-					Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
-						Name:      schedule.GetSourceRef().Name,
-						Namespace: schedule.GetSourceRef().Namespace,
-					},
-				},
-			},
-		}, nil
-	}
-
-	return nil, fmt.Errorf("provider %s not supported", state.Scope.Spec.Provider)
 }

@@ -20,7 +20,6 @@ import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -61,6 +60,8 @@ type GcpNfsBackupScheduleSpec struct {
 
 	// MaxRetentionDays specifies the maximum number of days to retain the backup
 	// If not provided, backup will be retained indefinitely
+	// If the DeleteCascade is true for this schedule,
+	// then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
 	// +optional
 	MaxRetentionDays int `json:"maxRetentionDays,omitempty"`
 
@@ -118,6 +119,10 @@ type GcpNfsBackupScheduleStatus struct {
 	// BackupIndex specifies the current index of the backup created by this schedule
 	// +kubebuilder:default=0
 	BackupIndex int `json:"backupIndex,omitempty"`
+
+	//BackupCount specifies the number of backups currently present in the system
+	// +kubebuilder:default=0
+	BackupCount int `json:"backupCount,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -256,8 +261,11 @@ func (sc *GcpNfsBackupSchedule) GetBackupIndex() int {
 func (sc *GcpNfsBackupSchedule) SetBackupIndex(index int) {
 	sc.Status.BackupIndex = index
 }
-func (sc *GcpNfsBackupSchedule) GetList() client.ObjectList {
-	return &GcpNfsBackupScheduleList{}
+func (sc *GcpNfsBackupSchedule) GetBackupCount() int {
+	return sc.Status.BackupCount
+}
+func (sc *GcpNfsBackupSchedule) SetBackupCount(count int) {
+	sc.Status.BackupCount = count
 }
 
 //+kubebuilder:object:root=true
