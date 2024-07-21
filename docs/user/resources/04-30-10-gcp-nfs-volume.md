@@ -72,7 +72,7 @@ metadata:
   name: my-vol
 spec:
   capacityGb: 1024
-  location: us-west1
+  location: us-west1-a
 ---
 apiVersion: v1
 kind: Pod
