@@ -140,6 +140,9 @@ data:
     - source: spec.fileShareName
       name: spec.fileShareName
       sort: true
+    - source: status.capacityGb
+      name: status.capacityGb
+      sort: true
     - source: spec.location
       name: spec.location
       sort: true
@@ -155,11 +158,12 @@ data:
       spec.location: Location
       spec.capacityGb: Capacity
       spec.fileShareName: File Share Name
-      spec.capacityGb: Capacity (Gb)
+      spec.capacityGb: Requested Capacity (Gb)
       spec.ipRange: IP Range
       spec.ipRange.name: Name
       configuration: Configuration
       status.state: State
+      status.capacityGb: Reserved Capacity (Gb)
       status: Status
       spec.volume: Volume
       spec.volume.name: Name

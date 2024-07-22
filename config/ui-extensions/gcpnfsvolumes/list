@@ -1,6 +1,9 @@
 - source: spec.fileShareName
   name: spec.fileShareName
   sort: true
+- source: status.capacityGb
+  name: status.capacityGb
+  sort: true
 - source: spec.location
   name: spec.location
   sort: true
