@@ -9,7 +9,7 @@
 - path: spec.location
   simple: true
   name: spec.location
-  required: true
+  required: false
 - path: spec.tier
   simple: true
   name: spec.tier
