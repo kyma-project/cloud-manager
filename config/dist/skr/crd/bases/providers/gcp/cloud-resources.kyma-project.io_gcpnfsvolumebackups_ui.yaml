@@ -61,11 +61,11 @@ data:
     description: >-
         GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
   list: |-
-    - source: spec.location
-      name: spec.location
-      sort: true
     - source: spec.source.volume.name
       name: spec.source.volume.name
+      sort: true
+    - source: spec.location
+      name: spec.location
       sort: true
     - source: status.state
       name: status.state
@@ -74,7 +74,7 @@ data:
     en:
       spec.location: Location
       spec.source.volume: Volume
-      spec.source.volume.name: Volume Name
+      spec.source.volume.name: GCP NFS Volume
       spec.source.volume.namespace: Namespace
       status.state: State
       configuration: Configuration

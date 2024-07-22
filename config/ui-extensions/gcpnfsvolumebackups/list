@@ -1,8 +1,8 @@
-- source: spec.location
-  name: spec.location
-  sort: true
 - source: spec.source.volume.name
   name: spec.source.volume.name
+  sort: true
+- source: spec.location
+  name: spec.location
   sort: true
 - source: status.state
   name: status.state
