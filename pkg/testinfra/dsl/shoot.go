@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -66,9 +66,9 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 			Region: "eu-west-1",
 			Networking: &gardenerTypes.Networking{
 				IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
-				Nodes:      pointer.String("10.180.0.0/16"),
-				Pods:       pointer.String("100.64.0.0/12"),
-				Services:   pointer.String("100.104.0.0/13"),
+				Nodes:      ptr.To("10.180.0.0/16"),
+				Pods:       ptr.To("100.64.0.0/12"),
+				Services:   ptr.To("100.104.0.0/13"),
 			},
 			Provider: gardenerTypes.Provider{
 				Type: "aws",
@@ -80,7 +80,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 						},
 						Networks: awsgardener.Networks{
 							VPC: awsgardener.VPC{
-								CIDR: pointer.String("10.180.0.0/16"),
+								CIDR: ptr.To("10.180.0.0/16"),
 							},
 							Zones: []awsgardener.Zone{
 								{
@@ -106,7 +106,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 					},
 				},
 			},
-			SecretBindingName: pointer.String(shoot.Name),
+			SecretBindingName: ptr.To(shoot.Name),
 		}
 
 		err := infra.Garden().Client().Create(ctx, shoot)
@@ -231,8 +231,13 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 			Networking: &gardenerTypes.Networking{},
 			Provider: gardenerTypes.Provider{
 				Type: "gcp",
+				Workers: []gardenerTypes.Worker{
+					{
+						Zones: []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"},
+					},
+				},
 			},
-			SecretBindingName: pointer.String(shoot.Name),
+			SecretBindingName: ptr.To(shoot.Name),
 		}
 
 		err := infra.Garden().Client().Create(ctx, shoot)

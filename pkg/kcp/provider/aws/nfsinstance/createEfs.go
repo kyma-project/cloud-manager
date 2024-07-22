@@ -11,7 +11,7 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -29,24 +29,24 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		efsTypes.ThroughputMode(state.ObjAsNfsInstance().Spec.Instance.Aws.Throughput),
 		[]efsTypes.Tag{
 			{
-				Key:   pointer.String("Name"),
-				Value: pointer.String(state.Obj().GetName()),
+				Key:   ptr.To("Name"),
+				Value: ptr.To(state.Obj().GetName()),
 			},
 			{
-				Key:   pointer.String(common.TagCloudManagerName),
-				Value: pointer.String(state.Name().String()),
+				Key:   ptr.To(common.TagCloudManagerName),
+				Value: ptr.To(state.Name().String()),
 			},
 			{
-				Key:   pointer.String(common.TagCloudManagerRemoteName),
-				Value: pointer.String(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
+				Key:   ptr.To(common.TagCloudManagerRemoteName),
+				Value: ptr.To(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
 			},
 			{
-				Key:   pointer.String(common.TagScope),
-				Value: pointer.String(state.ObjAsNfsInstance().Spec.Scope.Name),
+				Key:   ptr.To(common.TagScope),
+				Value: ptr.To(state.ObjAsNfsInstance().Spec.Scope.Name),
 			},
 			{
-				Key:   pointer.String(common.TagShoot),
-				Value: pointer.String(state.Scope().Spec.ShootName),
+				Key:   ptr.To(common.TagShoot),
+				Value: ptr.To(state.Scope().Spec.ShootName),
 			},
 		},
 	)

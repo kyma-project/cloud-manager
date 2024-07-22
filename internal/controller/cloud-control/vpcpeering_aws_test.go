@@ -10,7 +10,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -102,7 +102,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var connection ec2Types.VpcPeeringConnection
 		for _, p := range list {
-			if obj.Status.Id == pointer.StringDeref(p.VpcPeeringConnectionId, "") {
+			if obj.Status.Id == ptr.Deref(p.VpcPeeringConnectionId, "") {
 				connection = p
 			}
 		}
@@ -112,7 +112,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has status.Id equal to existing AWS Connection id", func() {
-			Expect(obj.Status.Id).To(Equal(pointer.StringDeref(connection.VpcPeeringConnectionId, "xxx")))
+			Expect(obj.Status.Id).To(Equal(ptr.Deref(connection.VpcPeeringConnectionId, "xxx")))
 		})
 
 		// DELETE
@@ -133,7 +133,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			list, _ = infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
 
 			found := pie.Any(list, func(x ec2Types.VpcPeeringConnection) bool {
-				return pointer.StringDeref(x.VpcPeeringConnectionId, "xxx") == obj.Status.Id
+				return ptr.Deref(x.VpcPeeringConnectionId, "xxx") == obj.Status.Id
 			})
 
 			Expect(found).To(Equal(false))

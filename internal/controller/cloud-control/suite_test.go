@@ -110,6 +110,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.GcpMock().MemoryStoreProviderFake(),
 		infra.AzureMock().RedisClientProvider(),
+		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
 	))
 

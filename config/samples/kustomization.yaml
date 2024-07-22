@@ -16,4 +16,5 @@ resources:
 - cloud-control_v1beta1_redisinstance.yaml
 - cloud-resources_v1beta1_awsvpcpeering.yaml
 - cloud-resources_v1beta1_gcpredisinstance.yaml
+- cloud-resources_v1beta1_awsredisinstance.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

@@ -5,7 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Cont
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	if pointer.StringDeref(state.remoteVpc.Tags["shoot-name"], "") != state.Scope().Spec.ShootName {
+	if ptr.Deref(state.remoteVpc.Tags["shoot-name"], "") != state.Scope().Spec.ShootName {
 
 		var kv []any
 

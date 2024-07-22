@@ -5,7 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func rangeExtendVpcAddressSpace(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,13 +18,13 @@ func rangeExtendVpcAddressSpace(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("Associating vpc cidr block")
 
-	block, err := state.awsClient.AssociateVpcCidrBlock(ctx, pointer.StringDeref(state.vpc.VpcId, ""), state.ObjAsIpRange().Status.Cidr)
+	block, err := state.awsClient.AssociateVpcCidrBlock(ctx, ptr.Deref(state.vpc.VpcId, ""), state.ObjAsIpRange().Status.Cidr)
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on associate vpc cidr block",
 		cloudcontrolv1beta1.ReasonFailedExtendingVpcAddressSpace, "Failed extending vpc address space"); x != nil {
 		return x, nil
 	}
 
-	state.ObjAsIpRange().Status.AddressSpaceId = pointer.StringDeref(block.AssociationId, "")
+	state.ObjAsIpRange().Status.AddressSpaceId = ptr.Deref(block.AssociationId, "")
 
 	return composed.PatchStatus(state.ObjAsIpRange()).
 		SuccessErrorNil().

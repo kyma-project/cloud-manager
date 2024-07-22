@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func rangeDisassociateVpcAddressSpace(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,7 +16,7 @@ func rangeDisassociateVpcAddressSpace(ctx context.Context, st composed.State) (e
 
 	var theBlock *ec2Types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
-		if pointer.StringDeref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
+		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
 			theBlock = &cidrBlock
 		}
 	}
@@ -52,7 +52,7 @@ func rangeDisassociateVpcAddressSpace(ctx context.Context, st composed.State) (e
 
 	logger.Info("Disassociating VPC Cidr block")
 
-	err := state.awsClient.DisassociateVpcCidrBlockInput(ctx, pointer.StringDeref(theBlock.AssociationId, ""))
+	err := state.awsClient.DisassociateVpcCidrBlockInput(ctx, ptr.Deref(theBlock.AssociationId, ""))
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange after DisassociateVpcCidrBlock",
 		cloudcontrolv1beta1.ReasonUnknown, "Failed deleting VPC CIDR address block"); x != nil {
 		return x, nil

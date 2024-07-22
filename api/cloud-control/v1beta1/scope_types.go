@@ -49,6 +49,31 @@ type ScopeInfo struct {
 
 	// +optional
 	Aws *AwsScope `json:"aws,omitempty"`
+
+	// +optional
+	OpenStack *OpenStackScope `json:"openstack,omitempty"`
+}
+
+type OpenStackScope struct {
+	VpcNetwork string `json:"vpcNetwork"`
+	DomainName string `json:"domainName"`
+	TenantName string `json:"tenantName"`
+
+	Network OpenStackNetwork `json:"network"`
+}
+
+type OpenStackNetwork struct {
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+
+	// +optional
+	Zones []string `json:"zones,omitempty"`
 }
 
 type GcpScope struct {
@@ -60,8 +85,15 @@ type GcpScope struct {
 
 	// +optional
 	Network GcpNetwork `json:"network"`
+
+	// +optional
+	Workers []GcpWorkers `json:"workers"`
 }
 
+type GcpWorkers struct {
+	// +kubebuilder:validation:Required
+	Zones []string `json:"zones"`
+}
 type GcpNetwork struct {
 	// +optional
 	Nodes string `json:"nodes,omitempty"`

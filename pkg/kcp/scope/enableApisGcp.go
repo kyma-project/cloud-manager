@@ -3,11 +3,12 @@ package scope
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/serviceusage/v1"
-	"os"
 )
 
 func enableApisGcp(ctx context.Context, st composed.State) (error, context.Context) {
@@ -48,8 +49,15 @@ func enableApisGcp(ctx context.Context, st composed.State) (error, context.Conte
 	if err != nil {
 		return err, ctx
 	}
+
 	// filestore
 	err, _ = verifyAndAddOperationToStatus(ctx, scope, client, gcpclient.FilestoreService)
+	if err != nil {
+		return err, ctx
+	}
+
+	// memorystore for redis
+	err, _ = verifyAndAddOperationToStatus(ctx, scope, client, gcpclient.MemoryStoreForRedisService)
 	if err != nil {
 		return err, ctx
 	}

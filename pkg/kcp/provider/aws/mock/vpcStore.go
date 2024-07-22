@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -61,7 +61,7 @@ type vpcStore struct {
 
 func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 	idx := pie.FindFirstUsing(s.items, func(e *vpcEntry) bool {
-		return pointer.StringDeref(e.vpc.VpcId, "") == vpcId
+		return ptr.Deref(e.vpc.VpcId, "") == vpcId
 	})
 	if idx == -1 {
 		return nil, fmt.Errorf("vpc with id %s does not exist", vpcId)
@@ -75,7 +75,7 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 	s.m.Lock()
 	defer s.m.Unlock()
 	existinIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
-		return pointer.StringDeref(value.vpc.VpcId, "xxx") == id
+		return ptr.Deref(value.vpc.VpcId, "xxx") == id
 	})
 	if existinIndex > -1 {
 		return &s.items[existinIndex].vpc
@@ -83,19 +83,19 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 
 	item := &vpcEntry{
 		vpc: ec2Types.Vpc{
-			VpcId:     pointer.String(id),
-			CidrBlock: pointer.String(cidr),
+			VpcId:     ptr.To(id),
+			CidrBlock: ptr.To(cidr),
 			Tags:      tags,
 		},
 		subnets: pie.Map(subnets, func(x VpcSubnet) ec2Types.Subnet {
 			return ec2Types.Subnet{
-				AvailabilityZone:   pointer.String(x.AZ),
-				AvailabilityZoneId: pointer.String(x.AZ),
-				CidrBlock:          pointer.String(x.Cidr),
+				AvailabilityZone:   ptr.To(x.AZ),
+				AvailabilityZoneId: ptr.To(x.AZ),
+				CidrBlock:          ptr.To(x.Cidr),
 				State:              ec2Types.SubnetStateAvailable,
-				SubnetId:           pointer.String(uuid.NewString()),
+				SubnetId:           ptr.To(uuid.NewString()),
 				Tags:               append(make([]ec2Types.Tag, 0, len(tags)), x.Tags...),
-				VpcId:              pointer.String(id),
+				VpcId:              ptr.To(id),
 			}
 		}),
 	}
@@ -114,7 +114,7 @@ func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc
 	defer s.m.Unlock()
 
 	for _, item := range s.items {
-		if pointer.StringDeref(item.vpc.VpcId, "") == vpcId {
+		if ptr.Deref(item.vpc.VpcId, "") == vpcId {
 			return &item.vpc, nil
 		}
 	}
@@ -144,11 +144,11 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 		return nil, err
 	}
 	a := ec2Types.VpcCidrBlockAssociation{
-		AssociationId: pointer.String(uuid.NewString()),
-		CidrBlock:     pointer.String(cidr),
+		AssociationId: ptr.To(uuid.NewString()),
+		CidrBlock:     ptr.To(cidr),
 		CidrBlockState: &ec2Types.VpcCidrBlockState{
 			State:         ec2Types.VpcCidrBlockStateCodeAssociated,
-			StatusMessage: pointer.String("Associated"),
+			StatusMessage: ptr.To("Associated"),
 		},
 	}
 	item.vpc.CidrBlockAssociationSet = append(item.vpc.CidrBlockAssociationSet, a)
@@ -166,7 +166,7 @@ func (s *vpcStore) DisassociateVpcCidrBlockInput(ctx context.Context, associatio
 	theIndex := -1
 	for _, item := range s.items {
 		for idx, cidrBlock := range item.vpc.CidrBlockAssociationSet {
-			if pointer.StringDeref(cidrBlock.AssociationId, "") == associationId {
+			if ptr.Deref(cidrBlock.AssociationId, "") == associationId {
 				theItem = item
 				theIndex = idx
 				break
@@ -207,7 +207,7 @@ func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Typ
 
 	for _, item := range s.items {
 		for _, subnet := range item.subnets {
-			if pointer.StringDeref(subnet.SubnetId, "") == subnetId {
+			if ptr.Deref(subnet.SubnetId, "") == subnetId {
 				return &subnet, nil
 			}
 		}
@@ -227,13 +227,13 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tag
 		return nil, err
 	}
 	subnet := ec2Types.Subnet{
-		AvailabilityZone:   pointer.String(az),
-		AvailabilityZoneId: pointer.String(az),
-		CidrBlock:          pointer.String(cidr),
+		AvailabilityZone:   ptr.To(az),
+		AvailabilityZoneId: ptr.To(az),
+		CidrBlock:          ptr.To(cidr),
 		State:              ec2Types.SubnetStateAvailable,
-		SubnetId:           pointer.String(uuid.NewString()),
+		SubnetId:           ptr.To(uuid.NewString()),
 		Tags:               append(make([]ec2Types.Tag, 0, len(tags)), tags...),
-		VpcId:              pointer.String(vpcId),
+		VpcId:              ptr.To(vpcId),
 	}
 	item.subnets = append(item.subnets, subnet)
 	return &subnet, nil
@@ -248,7 +248,7 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 	for _, item := range s.items {
 		idx := -1
 		for i, subnet := range item.subnets {
-			if pointer.StringDeref(subnet.SubnetId, "") == subnetId {
+			if ptr.Deref(subnet.SubnetId, "") == subnetId {
 				idx = i
 				break
 			}

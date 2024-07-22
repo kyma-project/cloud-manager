@@ -116,6 +116,9 @@ var _ = BeforeSuite(func() {
 	// GcpRedisInstance
 	Expect(SetupGcpRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AwsRedisInstance
+	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 

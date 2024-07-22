@@ -22,9 +22,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -42,10 +40,6 @@ func (f *IpRangeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reco
 // IpRangeReconciler reconciles a IpRange object
 type IpRangeReconciler struct {
 	reconciler reconcile.Reconciler
-
-	kymaRef    klog.ObjectRef
-	kcpCluster cluster.Cluster
-	skrCluster cluster.Cluster
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=ipranges,verbs=get;list;watch;create;update;patch;delete

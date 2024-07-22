@@ -23,11 +23,11 @@ func loadKcpRedisInstance(ctx context.Context, st composed.State) (error, contex
 		)
 	}
 
-	kcpNfsInstnace := &cloudcontrolv1beta1.RedisInstance{}
+	kcpRedisInstnace := &cloudcontrolv1beta1.RedisInstance{}
 	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.KymaRef.Namespace,
 		Name:      state.ObjAsGcpRedisInstance().Status.Id,
-	}, kcpNfsInstnace)
+	}, kcpRedisInstnace)
 	if apierrors.IsNotFound(err) {
 		state.KcpRedisInstance = nil
 		logger.Info("KCP RedisInstance does not exist")
@@ -37,7 +37,7 @@ func loadKcpRedisInstance(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error loading KCP RedisInstance", composed.StopWithRequeue, ctx)
 	}
 
-	state.KcpRedisInstance = kcpNfsInstnace
+	state.KcpRedisInstance = kcpRedisInstnace
 
 	return nil, nil
 }

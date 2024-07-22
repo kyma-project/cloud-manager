@@ -17,6 +17,5 @@ func loadScopeObj(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading Scope object", composed.StopWithRequeue, ctx)
 	}
-
 	return nil, nil
 }

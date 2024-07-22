@@ -11,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 var (
@@ -57,9 +57,9 @@ var cmdGardenShootCreateAws = &cobra.Command{
 				Region: cfg.Region,
 				Networking: &gardenerTypes.Networking{
 					IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
-					Nodes:      pointer.String("10.180.0.0/16"),
-					Pods:       pointer.String("100.64.0.0/12"),
-					Services:   pointer.String("100.104.0.0/13"),
+					Nodes:      ptr.To("10.180.0.0/16"),
+					Pods:       ptr.To("100.64.0.0/12"),
+					Services:   ptr.To("100.104.0.0/13"),
 				},
 				Provider: gardenerTypes.Provider{
 					Type: "aws",
@@ -71,7 +71,7 @@ var cmdGardenShootCreateAws = &cobra.Command{
 							},
 							Networks: awsgardener.Networks{
 								VPC: awsgardener.VPC{
-									CIDR: pointer.String("10.180.0.0/16"),
+									CIDR: ptr.To("10.180.0.0/16"),
 								},
 								Zones: []awsgardener.Zone{
 									{
@@ -97,7 +97,7 @@ var cmdGardenShootCreateAws = &cobra.Command{
 						},
 					},
 				},
-				SecretBindingName: pointer.String(shootName),
+				SecretBindingName: ptr.To(shootName),
 			},
 		}
 		err = c.Create(context.Background(), shoot)

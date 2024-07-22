@@ -39,6 +39,26 @@ spec:
                 minProperties: 1
                 properties:
                   aws:
+                    properties:
+                      autoMinorVersionUpgrade:
+                        default: false
+                        type: boolean
+                        x-kubernetes-validations:
+                        - message: AutoMinorVersionUpgrade is immutable.
+                          rule: (self == oldSelf)
+                      cacheNodeType:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: CacheNodeType is immutable.
+                          rule: (self == oldSelf)
+                      engineVersion:
+                        default: "7.0"
+                        type: string
+                        x-kubernetes-validations:
+                        - message: EngineVersion is immutable.
+                          rule: (self == oldSelf)
+                    required:
+                    - cacheNodeType
                     type: object
                   azure:
                     properties:

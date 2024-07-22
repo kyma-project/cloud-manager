@@ -10,6 +10,7 @@ import (
 
 func createScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+
 	switch state.provider {
 	case cloudcontrolv1beta1.ProviderGCP:
 		return createScopeGcp(ctx, state)
@@ -17,6 +18,8 @@ func createScope(ctx context.Context, st composed.State) (error, context.Context
 		return createScopeAzure(ctx, state)
 	case cloudcontrolv1beta1.ProviderAws:
 		return createScopeAws(ctx, state)
+	case cloudcontrolv1beta1.ProviderOpenStack:
+		return createScopeOpenStack(ctx, state)
 	}
 
 	err := fmt.Errorf("unable to handle unknown provider '%s'", state.provider)

@@ -5,7 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type Client interface {
@@ -68,12 +68,12 @@ func (c *client) CreatePeering(
 		virtualNetworkPeeringName,
 		armnetwork.VirtualNetworkPeering{
 			Properties: &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-				AllowForwardedTraffic:     pointer.Bool(true),
-				AllowGatewayTransit:       pointer.Bool(false),
-				AllowVirtualNetworkAccess: pointer.Bool(allowVnetAccess),
-				UseRemoteGateways:         pointer.Bool(false),
+				AllowForwardedTraffic:     ptr.To(true),
+				AllowGatewayTransit:       ptr.To(false),
+				AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
+				UseRemoteGateways:         ptr.To(false),
 				RemoteVirtualNetwork: &armnetwork.SubResource{
-					ID: pointer.String(remoteVnetId),
+					ID: ptr.To(remoteVnetId),
 				},
 			},
 		},

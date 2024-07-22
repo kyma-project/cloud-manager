@@ -31,7 +31,6 @@ func (suite *createNfsBackupSuite) SetupTest() {
 func (suite *createNfsBackupSuite) TestWhenBackupIsDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -55,7 +54,6 @@ func (suite *createNfsBackupSuite) TestWhenBackupIsDeleting() {
 func (suite *createNfsBackupSuite) TestWhenGcpBackupExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)

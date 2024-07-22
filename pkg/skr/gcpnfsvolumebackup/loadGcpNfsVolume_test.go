@@ -27,7 +27,6 @@ func (suite *loadGcpNfsVolumeSuite) SetupTest() {
 func (suite *loadGcpNfsVolumeSuite) TestWhenBackupIsDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -51,7 +50,6 @@ func (suite *loadGcpNfsVolumeSuite) TestWhenBackupIsDeleting() {
 func (suite *loadGcpNfsVolumeSuite) TestWhenGcpBackupExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -74,7 +72,6 @@ func (suite *loadGcpNfsVolumeSuite) TestWhenGcpBackupExists() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolumeBackup.DeepCopy()
@@ -100,7 +97,6 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -137,7 +133,6 @@ func (suite *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 func (suite *loadGcpNfsVolumeSuite) TestVolumeReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeBackup.DeepCopy()

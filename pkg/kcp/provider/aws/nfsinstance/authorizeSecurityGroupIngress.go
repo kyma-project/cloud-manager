@@ -5,7 +5,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,17 +18,17 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	hasNet := state.Scope().Spec.Scope.Aws.Network.VPC.CIDR == ""
 
 	for _, perm := range state.securityGroup.IpPermissions {
-		if pointer.Int32Deref(perm.ToPort, 0) != toPort {
+		if ptr.Deref(perm.ToPort, 0) != toPort {
 			continue
 		}
-		if pointer.StringDeref(perm.IpProtocol, "") != "tcp" {
+		if ptr.Deref(perm.IpProtocol, "") != "tcp" {
 			continue
 		}
 		for _, rng := range perm.IpRanges {
-			if pointer.StringDeref(rng.CidrIp, "") == state.Scope().Spec.Scope.Aws.Network.VPC.CIDR {
+			if ptr.Deref(rng.CidrIp, "") == state.Scope().Spec.Scope.Aws.Network.VPC.CIDR {
 				hasNet = true
 			}
-			if pointer.StringDeref(rng.CidrIp, "") == state.Scope().Spec.Scope.Aws.Network.Pods {
+			if ptr.Deref(rng.CidrIp, "") == state.Scope().Spec.Scope.Aws.Network.Pods {
 				hasPods = true
 			}
 		}
@@ -42,12 +42,12 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	if !hasPods {
 		logger.Info("Adding pod cidr to the NFS security group")
 		permissions = append(permissions, ec2Types.IpPermission{
-			IpProtocol: pointer.String("tcp"),
-			FromPort:   pointer.Int32(toPort),
-			ToPort:     pointer.Int32(toPort),
+			IpProtocol: ptr.To("tcp"),
+			FromPort:   ptr.To(toPort),
+			ToPort:     ptr.To(toPort),
 			IpRanges: []ec2Types.IpRange{
 				{
-					CidrIp: pointer.String(state.Scope().Spec.Scope.Aws.Network.Pods),
+					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.Pods),
 				},
 			},
 		})
@@ -55,12 +55,12 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	if !hasNet {
 		logger.Info("Adding vpc cidr to the NFS security group")
 		permissions = append(permissions, ec2Types.IpPermission{
-			IpProtocol: pointer.String("tcp"),
-			FromPort:   pointer.Int32(toPort),
-			ToPort:     pointer.Int32(toPort),
+			IpProtocol: ptr.To("tcp"),
+			FromPort:   ptr.To(toPort),
+			ToPort:     ptr.To(toPort),
 			IpRanges: []ec2Types.IpRange{
 				{
-					CidrIp: pointer.String(state.Scope().Spec.Scope.Aws.Network.VPC.CIDR),
+					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.VPC.CIDR),
 				},
 			},
 		})

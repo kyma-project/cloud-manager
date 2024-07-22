@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsRedisInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: awsredisinstance
+    app.kubernetes.io/instance: awsredisinstance-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: awsredisinstance-sample
+spec:
+  cacheNodeType: cache.t2.micro

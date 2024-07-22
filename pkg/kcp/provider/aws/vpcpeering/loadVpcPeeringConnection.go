@@ -3,7 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
@@ -23,7 +23,7 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	for _, c := range list {
-		if obj.Status.Id == pointer.StringDeref(c.VpcPeeringConnectionId, "") {
+		if obj.Status.Id == ptr.Deref(c.VpcPeeringConnectionId, "") {
 			state.vpcPeering = &c
 			break
 		}
@@ -34,7 +34,7 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	logger = logger.WithValues(
-		"vpcConnectionId", pointer.StringDeref(state.vpcPeering.VpcPeeringConnectionId, ""))
+		"vpcConnectionId", ptr.Deref(state.vpcPeering.VpcPeeringConnectionId, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 

@@ -255,7 +255,6 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucce
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	//Get state object with GcpNfsVolume

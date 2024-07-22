@@ -28,7 +28,6 @@ func (suite *runNfsRestoreSuite) SetupTest() {
 func (suite *runNfsRestoreSuite) TestRunNfsRestoreAlreadyOpId() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 
@@ -50,7 +49,6 @@ func (suite *runNfsRestoreSuite) TestRunNfsRestoreAlreadyOpId() {
 func (suite *runNfsRestoreSuite) TestRunNfsRestoreJobCompleted() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
@@ -79,7 +77,6 @@ func (suite *runNfsRestoreSuite) TestRunNfsRestoreJobCompleted() {
 func (suite *runNfsRestoreSuite) TestRunNfsRestoreDeletionTimestamp() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	deletingObj := deletingGpNfsVolumeRestore.DeepCopy()
@@ -132,7 +129,6 @@ func (suite *runNfsRestoreSuite) TestRunNfsRestoreSubmitted() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()

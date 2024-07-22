@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -16,7 +16,7 @@ func disassociateVpcAddressSpace(ctx context.Context, st composed.State) (error,
 
 	var theBlock *ec2Types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
-		if pointer.StringDeref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Spec.Cidr {
+		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Spec.Cidr {
 			theBlock = &cidrBlock
 		}
 	}
@@ -52,7 +52,7 @@ func disassociateVpcAddressSpace(ctx context.Context, st composed.State) (error,
 
 	logger.Info("Disassociating VPC Cidr block")
 
-	err := state.client.DisassociateVpcCidrBlockInput(ctx, pointer.StringDeref(theBlock.AssociationId, ""))
+	err := state.client.DisassociateVpcCidrBlockInput(ctx, ptr.Deref(theBlock.AssociationId, ""))
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error disassociating VPC Cidr block", ctx)
 	}

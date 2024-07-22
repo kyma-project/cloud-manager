@@ -26,7 +26,6 @@ func (suite *loadGcpNfsVolumeBackupSuite) SetupTest() {
 func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolumeRestore.DeepCopy()
@@ -39,6 +38,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
 	state, err := factory.newStateWith(objDiffName)
+	suite.Nil(err)
 	err, _ctx := loadGcpNfsVolumeBackup(ctx, state)
 
 	//validate expected return values
@@ -49,7 +49,6 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
@@ -60,6 +59,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
 	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
 	// Remove the conditions from backup
 	notReadyVolumeBackup := gcpNfsVolumeBackup.DeepCopy()
 	notReadyVolumeBackup.Status.Conditions = []metav1.Condition{}
@@ -83,7 +83,6 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()

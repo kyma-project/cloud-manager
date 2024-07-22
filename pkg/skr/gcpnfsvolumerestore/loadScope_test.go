@@ -26,7 +26,6 @@ func (suite *loadScopeSuite) SetupTest() {
 func (suite *loadScopeSuite) TestScopeNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
@@ -34,11 +33,13 @@ func (suite *loadScopeSuite) TestScopeNotFound() {
 
 	//remove scope
 	err = factory.kcpCluster.K8sClient().Delete(context.Background(), scope.DeepCopy())
+	suite.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
 	err, _ = loadScope(ctx, state)
 
 	//validate expected return values
@@ -58,7 +59,6 @@ func (suite *loadScopeSuite) TestScopeNotFound() {
 func (suite *loadScopeSuite) TestScopeExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		return
 	}))
 	defer fakeHttpServer.Close()
 

@@ -6,7 +6,7 @@ import (
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -46,7 +46,7 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	}
 
 	logger.Info("Deleting EFS")
-	err := state.awsClient.DeleteFileSystem(ctx, pointer.StringDeref(state.efs.FileSystemId, ""))
+	err := state.awsClient.DeleteFileSystem(ctx, ptr.Deref(state.efs.FileSystemId, ""))
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error deleting EFS", ctx)
 	}

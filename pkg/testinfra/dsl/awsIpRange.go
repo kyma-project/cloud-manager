@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, iprange *cloudcontrolv1beta1.IpRange,
@@ -63,7 +63,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 		}
 
 		iprange.Status.Subnets = append(iprange.Status.Subnets, cloudcontrolv1beta1.IpRangeSubnet{
-			Id:    pointer.StringDeref(subnet.SubnetId, ""),
+			Id:    ptr.Deref(subnet.SubnetId, ""),
 			Zone:  zone,
 			Range: rng,
 		})

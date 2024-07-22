@@ -127,6 +127,16 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 			Gcp: &cloudcontrolv1beta1.GcpScope{
 				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
 				Project:    "sap-gcp-skr-dev-cust-00002",
+				Network: cloudcontrolv1beta1.GcpNetwork{
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+				},
+				Workers: []cloudcontrolv1beta1.GcpWorkers{
+					{
+						Zones: []string{"us-central1-a", "us-central1-b", "us-central1-c"},
+					},
+				},
 			},
 		},
 	}

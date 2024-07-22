@@ -79,13 +79,13 @@ type AwsNfsVolumeStatus struct {
 	Id string `json:"id,omitempty"`
 
 	// +optional
-	Server string `json:"server,omitempty" json:"server,omitempty"`
+	Server string `json:"server,omitempty"`
 
 	// List of status conditions
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// +optional
 	State string `json:"state,omitempty"`

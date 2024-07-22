@@ -115,3 +115,49 @@ func WithKcpGcpRedisInstanceRedisVersion(redisVersion string) ObjAction {
 		},
 	}
 }
+
+func WithRedisInstanceAws() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				x.Spec.Instance.Aws = &cloudcontrolv1beta1.RedisInstanceAws{}
+			}
+		},
+	}
+}
+
+func WithKcpAwsCacheNodeType(cacheNodeType string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Aws.CacheNodeType = cacheNodeType
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAwsCacheNodeType", obj))
+		},
+	}
+}
+
+func WithKcpAwsEngineVersion(engineVersion string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Aws.EngineVersion = engineVersion
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAwsEngineVersion", obj))
+		},
+	}
+}
+
+func WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade = autoMinorVersionUpgrade
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAwsAutoMinorVersionUpgrade", obj))
+		},
+	}
+}

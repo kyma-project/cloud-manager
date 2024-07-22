@@ -19,6 +19,7 @@ type State struct {
 	SkrCluster     composed.StateCluster
 	PV             *v1.PersistentVolume
 	PVC            *v1.PersistentVolumeClaim
+	Scope          *cloudcontrolv1beta1.Scope
 }
 
 type StateFactory interface {

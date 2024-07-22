@@ -3,13 +3,15 @@ package meta
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"net/http"
 )
 
 type awsAccountKeyType struct{}
@@ -47,10 +49,12 @@ func AsApiError(err error) smithy.APIError {
 }
 
 var notFoundErrorCodes = map[string]struct{}{
-	(&efsTypes.FileSystemNotFound{}).ErrorCode():  {},
-	(&efsTypes.AccessPointNotFound{}).ErrorCode(): {},
-	(&efsTypes.MountTargetNotFound{}).ErrorCode(): {},
-	(&efsTypes.PolicyNotFound{}).ErrorCode():      {},
+	(&efsTypes.FileSystemNotFound{}).ErrorCode():                    {},
+	(&efsTypes.AccessPointNotFound{}).ErrorCode():                   {},
+	(&efsTypes.MountTargetNotFound{}).ErrorCode():                   {},
+	(&efsTypes.PolicyNotFound{}).ErrorCode():                        {},
+	(&elasticacheTypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
+	(&elasticacheTypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
 }
 
 func IsNotFound(err error) bool {
@@ -58,14 +62,16 @@ func IsNotFound(err error) bool {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
 			var smithyhttpErr *smithyhttp.ResponseError
-			if errors.As(err, &smithyhttpErr) {
-				return smithyhttpErr.HTTPStatusCode() == http.StatusNotFound
-			}
 
 			_, listed := notFoundErrorCodes[apiErr.ErrorCode()]
 			if listed {
 				return true
 			}
+
+			if errors.As(err, &smithyhttpErr) {
+				return smithyhttpErr.HTTPStatusCode() == http.StatusNotFound
+			}
+
 		}
 	}
 	return false
@@ -92,3 +98,22 @@ func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, conte
 	result := ErrorToRequeueResponse(err)
 	return composed.LogErrorAndReturn(err, msg, result, ctx)
 }
+
+type ElastiCacheState = string
+
+// github.com/aws/aws-sdk-go-v2/service/elasticache@v1.40.3/types/types.go
+// CacheClusterStatus *string
+// The current state of this cluster, one of the following values: available ,
+// creating , deleted , deleting , incompatible-network , modifying , rebooting
+// cluster nodes , restore-failed , or snapshotting .
+const (
+	ElastiCache_AVAILABLE               ElastiCacheState = "available"
+	ElastiCache_CREATING                ElastiCacheState = "creating"
+	ElastiCache_DELETED                 ElastiCacheState = "deleted"
+	ElastiCache_DELETING                ElastiCacheState = "deleting"
+	ElastiCache_INCOMPATIBLE_NETWORK    ElastiCacheState = "incompatible-network"
+	ElastiCache_MODIFYING               ElastiCacheState = "modifying"
+	ElastiCache_REBOOTING_CLUSTER_NODES ElastiCacheState = "rebooting cluster nodes"
+	ElastiCache_RESTORE_FAILED          ElastiCacheState = "restore-failed"
+	ElastiCache_SNAPSHOTTING            ElastiCacheState = "snapshotting"
+)

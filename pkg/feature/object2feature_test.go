@@ -36,6 +36,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpNfsVolumeRestore", &cloudresourcesv1beta1.GcpNfsVolumeRestore{}, types.FeatureNfsBackup},
 			{"GcpNfsVolume", &cloudresourcesv1beta1.GcpNfsVolume{}, types.FeatureNfs},
 			{"GcpRedisInstance", &cloudresourcesv1beta1.GcpRedisInstance{}, types.FeatureRedis},
+			{"GcpRedisInstance", &cloudresourcesv1beta1.AwsRedisInstance{}, types.FeatureRedis},
 			{"GcpVpcPeering", &cloudresourcesv1beta1.GcpVpcPeering{}, types.FeaturePeering},
 			{"IpRange", &cloudresourcesv1beta1.IpRange{}, ""},
 		}
@@ -71,6 +72,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpNfsVolumeRestore", newUnstructuredWithGVK(g, v, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
 			{"GcpNfsVolume", newUnstructuredWithGVK(g, v, "GcpNfsVolume"), types.FeatureNfs},
 			{"GcpRedisInstance", newUnstructuredWithGVK(g, v, "GcpRedisInstance"), types.FeatureRedis},
+			{"GcpRedisInstance", newUnstructuredWithGVK(g, v, "AwsRedisInstance"), types.FeatureRedis},
 			{"GcpVpcPeering", newUnstructuredWithGVK(g, v, "GcpVpcPeering"), types.FeaturePeering},
 			{"IpRange", newUnstructuredWithGVK(g, v, "IpRange"), ""},
 		}
@@ -109,6 +111,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpNfsVolumeRestore", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolumeRestore", g), types.FeatureNfsBackup},
 			{"GcpNfsVolume", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolume", g), types.FeatureNfs},
 			{"GcpRedisInstance", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpRedisInstance", g), types.FeatureRedis},
+			{"GcpRedisInstance", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsRedisInstance", g), types.FeatureRedis},
 			{"GcpVpcPeering", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpVpcPeering", g), types.FeaturePeering},
 			{"IpRange", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "IpRange", g), ""},
 		}
@@ -145,6 +148,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpNfsVolumeRestore", busolaCmUnstructuredKindGroup(t, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
 			{"GcpNfsVolume", busolaCmUnstructuredKindGroup(t, "GcpNfsVolume"), types.FeatureNfs},
 			{"GcpRedisInstance", busolaCmUnstructuredKindGroup(t, "GcpRedisInstance"), types.FeatureRedis},
+			{"GcpRedisInstance", busolaCmUnstructuredKindGroup(t, "AwsRedisInstance"), types.FeatureRedis},
 			{"GcpVpcPeering", busolaCmUnstructuredKindGroup(t, "GcpVpcPeering"), types.FeaturePeering},
 			{"IpRange", busolaCmUnstructuredKindGroup(t, "IpRange"), ""},
 		}

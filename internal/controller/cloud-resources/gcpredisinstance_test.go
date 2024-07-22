@@ -205,9 +205,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
 			}
 
-			By("And it has expected endpoint data value")
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.Tier).To(Equal(gcpRedisInstance.Spec.Tier))
-
 			By("And it has defined cloud-manager finalizer")
 			Expect(authSecret.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
 		})

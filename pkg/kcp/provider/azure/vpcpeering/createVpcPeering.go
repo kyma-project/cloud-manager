@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -48,13 +48,13 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("id", pointer.StringDeref(peering.ID, ""))
+	logger = logger.WithValues("id", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	logger.Info("Azure VPC Peering created")
 
-	obj.Status.Id = pointer.StringDeref(peering.ID, "")
+	obj.Status.Id = ptr.Deref(peering.ID, "")
 
 	err = state.UpdateObjStatus(ctx)
 
