@@ -202,6 +202,19 @@ type RedisInstanceAzure struct {
 }
 
 type RedisInstanceAws struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CacheNodeType is immutable."
+	CacheNodeType string `json:"cacheNodeType"`
+
+	// +optional
+	// +kubebuilder:default="7.0"
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EngineVersion is immutable."
+	EngineVersion string `json:"engineVersion"`
+
+	// +optional
+	// +kubebuilder:default=false
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AutoMinorVersionUpgrade is immutable."
+	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
 }
 
 // RedisInstanceStatus defines the observed state of RedisInstance

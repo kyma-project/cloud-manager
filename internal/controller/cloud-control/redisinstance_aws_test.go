@@ -55,6 +55,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
+		cacheNodeType := "cache.m5.large"
+		engineVersion := "6.x"
+		AutoMinorVersionUpgrade := true
 
 		By("When RedisInstance is created", func() {
 			Eventually(CreateRedisInstance).
@@ -64,7 +67,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithIpRange(kcpIpRangeName),
 					WithInstanceScope(name),
 					WithRedisInstanceAws(),
-					// todo add specs
+					WithKcpAwsCacheNodeType(cacheNodeType),
+					WithKcpAwsEngineVersion(engineVersion),
+					WithKcpAwsAutoMinorVersionUpgrade(AutoMinorVersionUpgrade),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
 		})

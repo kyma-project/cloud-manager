@@ -9,4 +9,4 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: awsredisinstance-sample
 spec:
-  # TODO(user): Add fields here
+  cacheNodeType: cache.t2.micro

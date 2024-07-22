@@ -38,6 +38,23 @@ spec:
           spec:
             description: AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
             properties:
+              autoMinorVersionUpgrade:
+                default: false
+                type: boolean
+                x-kubernetes-validations:
+                - message: AutoMinorVersionUpgrade is immutable.
+                  rule: (self == oldSelf)
+              cacheNodeType:
+                type: string
+                x-kubernetes-validations:
+                - message: CacheNodeType is immutable.
+                  rule: (self == oldSelf)
+              engineVersion:
+                default: "7.0"
+                type: string
+                x-kubernetes-validations:
+                - message: EngineVersion is immutable.
+                  rule: (self == oldSelf)
               ipRange:
                 properties:
                   name:
@@ -58,6 +75,8 @@ spec:
                   name:
                     type: string
                 type: object
+            required:
+            - cacheNodeType
             type: object
           status:
             description: AwsRedisInstanceStatus defines the observed state of AwsRedisInstance
