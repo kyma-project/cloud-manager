@@ -28,8 +28,9 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	logger.Info("Deleting Azure Redis")
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
+	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
 
-	err := state.client.DeleteRedisInstance(ctx, "phoenix-resource-group-1", redisInstanceName)
+	err := state.client.DeleteRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
 		if apiErr, ok := err.(*apierror.APIError); ok {
 			if apiErr.GRPCStatus().Code() == codes.NotFound {

@@ -23,7 +23,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		*state.azureRedisInstance.Properties.HostName,
 		*state.azureRedisInstance.Properties.Port,
 	)
-	primaryAccessKey, error := state.client.GetRedisInstanceAccessKeys(ctx, "phoenix-resource-group-1", state.ObjAsRedisInstance().Name)
+	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
+	primaryAccessKey, error := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
 
 	if error != nil {
 		return composed.LogErrorAndReturn(error, "Error retrieving Azure RedisInstance access keys", composed.StopWithRequeue, ctx)

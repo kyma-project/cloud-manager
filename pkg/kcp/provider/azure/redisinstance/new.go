@@ -34,10 +34,12 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"azureRedisInstance",
 			actions.AddFinalizer,
+			loadResourceGroup,
 			loadRedis,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"azure-redisInstance-create",
+					createResourceGroup,
 					createRedis,
 					updateStatusId,
 					waitRedisAvailable,
@@ -47,6 +49,8 @@ func New(stateFactory StateFactory) composed.Action {
 					"azure-redisInstance-delete",
 					deleteRedis,
 					waitRedisDeleted,
+					deleteResourceGroup,
+					waitResourceGroupDeleted,
 					actions.RemoveFinalizer,
 				),
 			),

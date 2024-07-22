@@ -21,11 +21,12 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	logger.Info("Creating Azure Redis")
+	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
 	_, error := state.client.CreateRedisInstance(
 		ctx,
-		"phoenix-resource-group-1",
+		resourceGroupName,
 		redisInstanceName,
 		getCreateParams(state),
 	)

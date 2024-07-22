@@ -11,42 +11,35 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func loadRedis(ctx context.Context, st composed.State) (error, context.Context) {
+func loadResourceGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.azureRedisInstance != nil {
-		logger.Info("Azure Redis already loaded")
+	if state.resourceGroup != nil {
+		logger.Info("Azure Redis resourceGroupName already loaded")
 		return nil, nil
 	}
 
-	if state.resourceGroup == nil {
-		logger.Info("Skip the Redis load, resource group is not present and needs to be created (or less possible, loaded)")
-		return nil, nil
-	}
+	logger.Info("Loading Azure Redis resourceGroupName")
 
-	logger.Info("Loading Azure Redis")
-
-	redisInstanceName := state.ObjAsRedisInstance().Name
 	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
-
-	redisInstance, error := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
+	resourceGroupExists, error := state.client.ResourceGroupExists(ctx, resourceGroupName)
 	if error != nil {
 		if azuremeta.IsNotFound(error) {
 			return nil, nil
 		}
 
-		logger.Error(error, "Error loading Azure Redis")
+		logger.Error(error, "Error loading Azure resource group")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
-			Message: fmt.Sprintf("Failed loading AzureRedis: %s", error),
+			Reason:  v1beta1.ReasonCanNotLoadResourceGroup,
+			Message: fmt.Sprintf("Failed loading AzureRedis resource group: %s", error),
 		})
 		error = state.UpdateObjStatus(ctx)
 		if error != nil {
 			return composed.LogErrorAndReturn(error,
-				"Error updating RedisInstance status due failed azure redis loading",
+				"Error updating RedisInstance status due failed azure redis resource group loading",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,
 			)
@@ -54,7 +47,9 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
-	state.azureRedisInstance = redisInstance
+	if resourceGroupExists {
+		state.resourceGroup = &resourceGroup{Name: resourceGroupName}
+	}
 
 	return nil, nil
 }

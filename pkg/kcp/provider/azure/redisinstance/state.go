@@ -21,6 +21,7 @@ type State struct {
 	tenantId       string
 
 	azureRedisInstance *armRedis.ResourceInfo
+	resourceGroup      *resourceGroup
 }
 
 type StateFactory interface {
@@ -29,6 +30,11 @@ type StateFactory interface {
 
 type stateFactory struct {
 	skrProvider azureclient.SkrClientProvider[azureredisclient.Client]
+}
+
+type resourceGroup struct {
+	Name  string
+	State string
 }
 
 func NewStateFactory(skrProvider azureclient.SkrClientProvider[azureredisclient.Client]) StateFactory {
