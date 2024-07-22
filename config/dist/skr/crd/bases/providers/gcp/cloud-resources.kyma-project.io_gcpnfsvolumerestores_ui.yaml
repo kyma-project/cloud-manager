@@ -72,17 +72,17 @@ data:
     description: >-
         GcpNfsVolumeRestore describes a request to restore a GCP NFS volume.
   list: |-
-    - source: spec.destination.volume.name
-      name: spec.destination.volume.name
-      sort: true
-    - source: spec.destination.volume.namespace
-      name: spec.destination.volume.namespace
-      sort: true
     - source: spec.source.backup.name
       name: spec.source.backup.name
       sort: true
     - source: spec.source.backup.namespace
       name: spec.source.backup.namespace
+      sort: true
+    - source: spec.destination.volume.name
+      name: spec.destination.volume.name
+      sort: true
+    - source: spec.destination.volume.namespace
+      name: spec.destination.volume.namespace
       sort: true
     - source: status.state
       name: status.state
