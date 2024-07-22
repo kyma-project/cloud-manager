@@ -12,7 +12,7 @@ body:
       - name: spec.volume.name
         source: volume.name
         widget: Labels
-  - name: ipRange
+  - name: spec.ipRange
     widget: Panel
     source: spec.ipRange
     children:
@@ -21,6 +21,19 @@ body:
         widget: Labels
       - name: namespace
         source: namespace
+        widget: Labels
+  - name: spec.volumeClaim
+    widget: Panel
+    source: spec.volumeClaim
+    children:
+      - name: spec.volumeClaim.name
+        source: name
+        widget: Labels
+      - name: spec.volumeClaim.labels
+        source: labels
+        widget: Labels
+      - name: spec.volumeClaim.annotations
+        source: annotations
         widget: Labels
   - name: volume
     source: spec.volume

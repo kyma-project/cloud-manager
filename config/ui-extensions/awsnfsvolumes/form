@@ -51,3 +51,21 @@
       name: annotations
       required: false
       widget: KeyValuePair
+- path: spec.volumeClaim
+  simple: true
+  name: spec.volumeClaim
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.volumeClaim.name
+      simple: true
+      widget: Text
+    - path: labels
+      name: spec.volumeClaim.labels
+      simple: true
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volumeClaim.annotations
+      simple: true
+      widget: KeyValuePair
+

@@ -15,7 +15,7 @@ data:
           - name: spec.volume.name
             source: volume.name
             widget: Labels
-      - name: ipRange
+      - name: spec.ipRange
         widget: Panel
         source: spec.ipRange
         children:
@@ -24,6 +24,19 @@ data:
             widget: Labels
           - name: namespace
             source: namespace
+            widget: Labels
+      - name: spec.volumeClaim
+        widget: Panel
+        source: spec.volumeClaim
+        children:
+          - name: spec.volumeClaim.name
+            source: name
+            widget: Labels
+          - name: spec.volumeClaim.labels
+            source: labels
+            widget: Labels
+          - name: spec.volumeClaim.annotations
+            source: annotations
             widget: Labels
       - name: volume
         source: spec.volume
@@ -45,7 +58,7 @@ data:
           - name: status.state
             source: state
             widget: Labels
-  form: |
+  form: |+
     - path: spec.capacity
       simple: true
       name: spec.capacity
@@ -99,6 +112,24 @@ data:
           name: annotations
           required: false
           widget: KeyValuePair
+    - path: spec.volumeClaim
+      simple: true
+      name: spec.volumeClaim
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.volumeClaim.name
+          simple: true
+          widget: Text
+        - path: labels
+          name: spec.volumeClaim.labels
+          simple: true
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volumeClaim.annotations
+          simple: true
+          widget: KeyValuePair
+
   general: |-
     resource:
         kind: AwsNfsVolume
@@ -124,7 +155,10 @@ data:
     - source: spec.volume.name
       name: spec.volume.name
       sort: true
-  translations: |-
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
     en:
       spec.capacity: Capacity
       spec.performanceMode: Performance Mode
@@ -134,13 +168,16 @@ data:
       status: Status
       status.state: State
       placeholders.dropdown: Type or choose an option
-      ipRange: IP Range
       formName: Name
       namespace: Namespace
       spec.volume: Volume
       labels: Labels
       annotations: Annotations
       spec.ipRange: IP Range
+      spec.volumeClaim: Volume Claim
+      spec.volumeClaim.name: Name
+      spec.volumeClaim.labels: Labels
+      spec.volumeClaim.annotations: Annotations
 kind: ConfigMap
 metadata:
   labels:

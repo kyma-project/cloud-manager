@@ -7,10 +7,13 @@ en:
   status: Status
   status.state: State
   placeholders.dropdown: Type or choose an option
-  ipRange: IP Range
   formName: Name
   namespace: Namespace
   spec.volume: Volume
   labels: Labels
   annotations: Annotations
   spec.ipRange: IP Range
+  spec.volumeClaim: Volume Claim
+  spec.volumeClaim.name: Name
+  spec.volumeClaim.labels: Labels
+  spec.volumeClaim.annotations: Annotations
