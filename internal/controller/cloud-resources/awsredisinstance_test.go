@@ -59,16 +59,22 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			"bar": "2",
 		}
 
+		cacheNodeType := "cache.m5.large"
+		engineVersion := "6.x"
+		autoMinorVersionUpgrade := true
+
 		By("When AwsRedisInstance is created", func() {
 			Eventually(CreateAwsRedisInstance).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					WithName(awsRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
-					// todo add specs here later
 					WithAwsRedisInstanceAuthSecretName(authSecretName),
 					WithAwsRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAwsRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+					WithAwsRedisInstanceCacheNodeType(cacheNodeType),
+					WithAwsRedisInstanceEngineVersion(engineVersion),
+					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
 				).
 				Should(Succeed())
 		})
@@ -115,8 +121,10 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Namespace).To(Equal(awsRedisInstance.Namespace))
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(awsRedisInstance.Name))
 
-			// todo fill later kcp == skr user spec
-			//By("And has spec.instance.aws equal to SKR AwsRedisInstance.spec values")
+			By("And has spec.instance.aws equal to SKR AwsRedisInstance.spec values")
+			Expect(kcpRedisInstance.Spec.Instance.Aws.CacheNodeType).To(Equal(awsRedisInstance.Spec.CacheNodeType))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.EngineVersion).To(Equal(awsRedisInstance.Spec.EngineVersion))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade).To(Equal(awsRedisInstance.Spec.AutoMinorVersionUpgrade))
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")
 			Expect(kcpRedisInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))
@@ -232,7 +240,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					WithName(awsRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
-					// todo add mandatory specs later
+					WithAwsRedisInstanceDefautSpecs(),
 				).
 				Should(Succeed())
 		})
@@ -386,7 +394,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					WithName(awsRedisInstanceName),
-					// todo add default specs
+					WithAwsRedisInstanceDefautSpecs(),
 				).
 				Should(Succeed())
 		})
@@ -565,7 +573,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					WithName(awsRedisInstanceName),
-					// todo add default specs ltaer
+					WithAwsRedisInstanceDefautSpecs(),
 				).
 				Should(Succeed())
 		})
@@ -688,7 +696,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
 					WithName(awsRedisInstanceName),
-					// todo add default specs
+					WithAwsRedisInstanceDefautSpecs(),
 				).
 				Should(Succeed())
 		})

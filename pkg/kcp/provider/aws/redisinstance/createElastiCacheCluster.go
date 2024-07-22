@@ -29,10 +29,6 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	_, err := state.awsClient.CreateElastiCacheCluster(ctx, []types.Tag{
 		{
-			Key:   ptr.To("Name"),
-			Value: ptr.To(state.Obj().GetName()),
-		},
-		{
 			Key:   ptr.To(common.TagCloudManagerName),
 			Value: ptr.To(state.Name().String()),
 		},
@@ -49,8 +45,11 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Value: ptr.To(state.Scope().Spec.ShootName),
 		},
 	}, client.CreateElastiCacheClusterOptions{
-		Name:            GetAwsElastiCacheClusterName(state.Obj().GetName()),
-		SubnetGroupName: ptr.Deref(state.subnetGroup.CacheSubnetGroupName, ""),
+		Name:                    GetAwsElastiCacheClusterName(state.Obj().GetName()),
+		SubnetGroupName:         ptr.Deref(state.subnetGroup.CacheSubnetGroupName, ""),
+		CacheNodeType:           redisInstance.Spec.Instance.Aws.CacheNodeType,
+		EngineVersion:           redisInstance.Spec.Instance.Aws.EngineVersion,
+		AutoMinorVersionUpgrade: redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
 	})
 
 	if err != nil {

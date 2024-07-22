@@ -29,8 +29,11 @@ func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
 }
 
 type CreateElastiCacheClusterOptions struct {
-	Name            string
-	SubnetGroupName string
+	Name                    string
+	SubnetGroupName         string
+	CacheNodeType           string
+	EngineVersion           string
+	AutoMinorVersionUpgrade bool
 }
 
 type ElastiCacheClient interface {
@@ -116,11 +119,11 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 	params := &elasticache.CreateCacheClusterInput{
 		CacheClusterId:          aws.String(options.Name),
 		CacheSubnetGroupName:    aws.String(options.SubnetGroupName),
-		CacheNodeType:           aws.String("cache.t2.micro"),
+		CacheNodeType:           aws.String(options.CacheNodeType),
 		NumCacheNodes:           aws.Int32(1),
 		Engine:                  aws.String("redis"),
-		EngineVersion:           aws.String("6.x"),
-		AutoMinorVersionUpgrade: aws.Bool(true),
+		EngineVersion:           aws.String(options.EngineVersion),
+		AutoMinorVersionUpgrade: aws.Bool(options.AutoMinorVersionUpgrade),
 		Tags:                    tags,
 	}
 

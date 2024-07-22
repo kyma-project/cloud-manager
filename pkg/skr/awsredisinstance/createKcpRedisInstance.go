@@ -41,7 +41,11 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 				Name: state.KymaRef.Name,
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
-				Aws: &cloudcontrolv1beta1.RedisInstanceAws{},
+				Aws: &cloudcontrolv1beta1.RedisInstanceAws{
+					CacheNodeType:           awsRedisInstance.Spec.CacheNodeType,
+					EngineVersion:           awsRedisInstance.Spec.EngineVersion,
+					AutoMinorVersionUpgrade: awsRedisInstance.Spec.AutoMinorVersionUpgrade,
+				},
 			},
 		},
 	}

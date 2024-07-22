@@ -39,6 +39,10 @@ func createSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 			Key:   ptr.To(common.TagScope),
 			Value: ptr.To(redisInstance.Spec.Scope.Name),
 		},
+		{
+			Key:   ptr.To(common.TagShoot),
+			Value: ptr.To(state.Scope().Spec.ShootName),
+		},
 	})
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error creating subnet group", ctx)

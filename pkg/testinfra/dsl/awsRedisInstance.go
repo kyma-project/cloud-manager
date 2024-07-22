@@ -27,6 +27,56 @@ func CreateAwsRedisInstance(ctx context.Context, clnt client.Client, obj *cloudr
 	return err
 }
 
+func WithAwsRedisInstanceDefautSpecs() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.CacheNodeType = "cache.m5.large"
+				awsRedisInstance.Spec.EngineVersion = "6.x"
+				awsRedisInstance.Spec.AutoMinorVersionUpgrade = true
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceDefautSpecs", obj))
+		},
+	}
+}
+
+func WithAwsRedisInstanceCacheNodeType(cacheNodeType string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.CacheNodeType = cacheNodeType
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceCacheNodeType", obj))
+		},
+	}
+}
+
+func WithAwsRedisInstanceEngineVersion(engineVersion string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.EngineVersion = engineVersion
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceEngineVersion", obj))
+		},
+	}
+}
+
+func WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.AutoMinorVersionUpgrade = autoMinorVersionUpgrade
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceAutoMinorVersionUpgrade", obj))
+		},
+	}
+}
+
 func WithAwsRedisInstanceAuthSecretName(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
