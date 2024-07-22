@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +23,7 @@ func loadResourceGroup(ctx context.Context, st composed.State) (error, context.C
 
 	logger.Info("Loading Azure Redis resourceGroupName")
 
-	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
+	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 	resourceGroupExists, error := state.client.ResourceGroupExists(ctx, resourceGroupName)
 	if error != nil {
 		if azuremeta.IsNotFound(error) {

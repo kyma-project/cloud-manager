@@ -11,17 +11,6 @@ import (
 	azureClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
 
-type CreateRedisInstanceOptions struct {
-	VPCNetworkFullName    string
-	IPRangeName           string
-	MemorySizeGb          int32
-	Tier                  string
-	RedisVersion          string
-	AuthEnabled           bool
-	TransitEncryptionMode string
-	RedisConfigs          map[string]string
-}
-
 type Client interface {
 	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)

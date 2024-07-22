@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -15,7 +16,7 @@ func waitResourceGroupDeleted(ctx context.Context, st composed.State) (error, co
 	}
 
 	if state.resourceGroup.State == "Deleting" {
-		resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
+		resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 		resourceGroupExists, error := state.client.ResourceGroupExists(ctx, resourceGroupName)
 
 		if error != nil {

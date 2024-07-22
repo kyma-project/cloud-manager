@@ -80,16 +80,6 @@ type RedisInstanceGcpConfigs struct {
 
 type RedisInstanceAzureConfigs struct {
 	// +optional
-	AadEnabled string `json:"aad-enabled,omitempty"`
-	// +optional
-	AofBackupEnabled string `json:"aof-backup-enabled,omitempty"`
-	// +optional
-	AofStorageConnectionString0 string `json:"aof-storage-connection-string-0,omitempty"`
-	// +optional
-	AofStorageConnectionString1 string `json:"aof-storage-connection-string-1,omitempty"`
-	// +optional
-	AuthNotRequired string `json:"authnotrequired,omitempty"`
-	// +optional
 	MaxClients string `json:"maxclients,omitempty"`
 	// +optional
 	MaxFragmentationMemoryReserved string `json:"maxfragmentationmemory-reserved,omitempty"`
@@ -102,42 +92,14 @@ type RedisInstanceAzureConfigs struct {
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
 	// +optional
-	PreferredDataArchiveAuthMethod string `json:"preferred-data-archive-auth-method,omitempty"`
-	// +optional
-	PreferredDataPersistenceAuthMethod string `json:"preferred-data-persistence-auth-method,omitempty"`
-	// +optional
-	RdbBackupEnabled string `json:"rdb-backup-enabled,omitempty"`
-	// +optional
-	// +kubebuilder:validation:Enum=15;30;60;360;720;1440
-	RdbBackupFrequency string `json:"rdb-backup-frequency,omitempty"`
-	// +optional
-	RdbBackupMaxSnapshotCount string `json:"rdb-backup-max-snapshot-count,omitempty"`
-	// +optional
-	RdbStorageConnectionString string `json:"rdb-storage-connection-string,omitempty"`
-	// +optional
-	StorageSubscriptionId string `json:"storage-subscription-id,omitempty"`
-	// +optional
 	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
 	redisConfiguration := armRedis.CommonPropertiesRedisConfiguration{}
 
-	if redisConfigs.AofStorageConnectionString0 != "" {
-		redisConfiguration.AdditionalProperties["aad-enabled"] = &redisConfigs.AadEnabled
-	}
-	if redisConfigs.AofBackupEnabled != "" {
-		redisConfiguration.AdditionalProperties["aof-backup-enabled"] = &redisConfigs.AofBackupEnabled
-	}
-	if redisConfigs.AofStorageConnectionString0 != "" {
-		redisConfiguration.AofStorageConnectionString0 = &redisConfigs.AofStorageConnectionString0
-	}
-	if redisConfigs.AofStorageConnectionString1 != "" {
-		redisConfiguration.AofStorageConnectionString1 = &redisConfigs.AofStorageConnectionString1
-	}
-	if redisConfigs.AuthNotRequired != "" {
-		redisConfiguration.AdditionalProperties["authnotrequired"] = &redisConfigs.AuthNotRequired
-	}
+	additionalProperties := map[string]interface{}{}
+
 	if redisConfigs.MaxFragmentationMemoryReserved != "" {
 		redisConfiguration.MaxfragmentationmemoryReserved = &redisConfigs.MaxFragmentationMemoryReserved
 	}
@@ -151,31 +113,17 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 		redisConfiguration.MaxmemoryReserved = &redisConfigs.MaxMemoryReserved
 	}
 	if redisConfigs.NotifyKeyspaceEvents != "" {
-		redisConfiguration.AdditionalProperties["notify-keyspace-events"] = &redisConfigs.NotifyKeyspaceEvents
-	}
-	if redisConfigs.RdbBackupEnabled != "" {
-		redisConfiguration.RdbBackupEnabled = &redisConfigs.RdbBackupEnabled
-	}
-	if redisConfigs.RdbBackupFrequency != "" {
-		redisConfiguration.RdbBackupFrequency = &redisConfigs.RdbBackupFrequency
-	}
-	if redisConfigs.RdbBackupMaxSnapshotCount != "" {
-		redisConfiguration.RdbBackupMaxSnapshotCount = &redisConfigs.RdbBackupMaxSnapshotCount
-	}
-	if redisConfigs.RdbStorageConnectionString != "" {
-		redisConfiguration.RdbStorageConnectionString = &redisConfigs.RdbStorageConnectionString
+		additionalProperties["notify-keyspace-events"] = &redisConfigs.NotifyKeyspaceEvents
 	}
 	if redisConfigs.MaxClients != "" {
 		redisConfiguration.Maxclients = &redisConfigs.MaxClients
 	}
-	if redisConfigs.PreferredDataArchiveAuthMethod != "" {
-		redisConfiguration.PreferredDataArchiveAuthMethod = &redisConfigs.PreferredDataArchiveAuthMethod
-	}
-	if redisConfigs.PreferredDataPersistenceAuthMethod != "" {
-		redisConfiguration.PreferredDataPersistenceAuthMethod = &redisConfigs.PreferredDataPersistenceAuthMethod
-	}
 	if redisConfigs.ZonalConfiguration != "" {
 		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
+	}
+
+	if len(additionalProperties) > 0 {
+		redisConfiguration.AdditionalProperties = additionalProperties
 	}
 
 	return &redisConfiguration

@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -23,7 +24,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		*state.azureRedisInstance.Properties.HostName,
 		*state.azureRedisInstance.Properties.Port,
 	)
-	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
+	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 	primaryAccessKey, error := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
 
 	if error != nil {

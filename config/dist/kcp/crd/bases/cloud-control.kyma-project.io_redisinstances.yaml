@@ -48,16 +48,6 @@ spec:
                         type: string
                       redisConfiguration:
                         properties:
-                          aad-enabled:
-                            type: string
-                          aof-backup-enabled:
-                            type: string
-                          aof-storage-connection-string-0:
-                            type: string
-                          aof-storage-connection-string-1:
-                            type: string
-                          authnotrequired:
-                            type: string
                           maxclients:
                             type: string
                           maxfragmentationmemory-reserved:
@@ -69,27 +59,6 @@ spec:
                           maxmemory-reserved:
                             type: string
                           notify-keyspace-events:
-                            type: string
-                          preferred-data-archive-auth-method:
-                            type: string
-                          preferred-data-persistence-auth-method:
-                            type: string
-                          rdb-backup-enabled:
-                            type: string
-                          rdb-backup-frequency:
-                            enum:
-                            - 15
-                            - 30
-                            - 60
-                            - 360
-                            - 720
-                            - 1440
-                            type: string
-                          rdb-backup-max-snapshot-count:
-                            type: string
-                          rdb-storage-connection-string:
-                            type: string
-                          storage-subscription-id:
                             type: string
                           zonal-configuration:
                             type: string

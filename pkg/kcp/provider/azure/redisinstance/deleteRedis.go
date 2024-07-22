@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 
 	"github.com/googleapis/gax-go/v2/apierror"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -28,7 +29,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	logger.Info("Deleting Azure Redis")
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
-	resourceGroupName := "cm.redis." + state.ObjAsRedisInstance().Name
+	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 
 	err := state.client.DeleteRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
@@ -38,7 +39,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 			}
 		}
 
-		logger.Error(err, "Error deleting GCP Redis")
+		logger.Error(err, "Error deleting Azure Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
