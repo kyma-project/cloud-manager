@@ -25,7 +25,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
-	_, error := state.client.CreateRedisInstance(
+	error := state.client.CreateRedisInstance(
 		ctx,
 		resourceGroupName,
 		redisInstanceName,

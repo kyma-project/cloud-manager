@@ -1,7 +1,6 @@
 package client
 
 import (
-	redis "cloud.google.com/go/redis/apiv1"
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -12,7 +11,7 @@ import (
 )
 
 type Client interface {
-	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error)
+	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) error
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
@@ -58,7 +57,7 @@ func newClient(armRedisClientInstance *armRedis.Client, resourceGroupClientInsta
 	}
 }
 
-func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) (*redis.CreateInstanceOperation, error) {
+func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) error {
 	logger := composed.LoggerFromCtx(ctx)
 	_, error := c.RedisClient.BeginCreate(
 		ctx,
@@ -69,9 +68,9 @@ func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName
 
 	if error != nil {
 		logger.Error(error, "Failed to create Azure Redis instance")
-		return nil, error
+		return error
 	}
-	return nil, nil
+	return nil
 }
 
 func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error) {
