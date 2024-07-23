@@ -23,7 +23,7 @@ func createResourceGroup(ctx context.Context, st composed.State) (error, context
 	logger.Info("Creating Azure Redis resourceGroup")
 
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
-	location := state.ObjAsRedisInstance().Spec.Instance.Azure.Location
+	location := state.Scope().Spec.Region
 
 	error := state.client.CreateResourceGroup(ctx, resourceGroupName, location)
 	if error != nil {

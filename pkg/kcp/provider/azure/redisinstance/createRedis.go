@@ -49,10 +49,10 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			)
 		}
 
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }
 
 func getCreateParams(state *State) armRedis.CreateParameters {
@@ -77,7 +77,7 @@ func getCreateParams(state *State) armRedis.CreateParameters {
 	}
 
 	createParameters := armRedis.CreateParameters{
-		Location:   to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.Location),
+		Location:   to.Ptr(state.Scope().Spec.Region),
 		Properties: createProperties,
 	}
 	return createParameters

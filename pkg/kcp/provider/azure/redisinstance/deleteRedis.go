@@ -3,13 +3,12 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+	azureMeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 
-	"github.com/googleapis/gax-go/v2/apierror"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,10 +32,8 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	err := state.client.DeleteRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
-		if apiErr, ok := err.(*apierror.APIError); ok {
-			if apiErr.GRPCStatus().Code() == codes.NotFound {
-				return nil, nil
-			}
+		if azureMeta.IsNotFound(err) {
+			return nil, nil
 		}
 
 		logger.Error(err, "Error deleting Azure Redis")

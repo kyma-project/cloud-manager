@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -27,7 +28,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 			Run(ctx, st)
 	}
 
-	if *state.azureRedisInstance.Properties.ProvisioningState == "Succeeded" {
+	if *state.azureRedisInstance.Properties.ProvisioningState == armredis.ProvisioningStateSucceeded {
 		return nil, nil
 	}
 

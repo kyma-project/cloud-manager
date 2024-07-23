@@ -24,7 +24,7 @@ func loadResourceGroup(ctx context.Context, st composed.State) (error, context.C
 	logger.Info("Loading Azure Redis resourceGroupName")
 
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
-	resourceGroupExists, error := state.client.ResourceGroupExists(ctx, resourceGroupName)
+	resourceGroupsClientGetResponse, error := state.client.GetResourceGroup(ctx, resourceGroupName)
 	if error != nil {
 		if azuremeta.IsNotFound(error) {
 			return nil, nil
@@ -48,9 +48,8 @@ func loadResourceGroup(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
-	if resourceGroupExists {
-		state.resourceGroup = &resourceGroup{Name: resourceGroupName}
-	}
+
+	state.resourceGroup = &resourceGroupsClientGetResponse.ResourceGroup
 
 	return nil, nil
 }

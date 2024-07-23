@@ -202,9 +202,6 @@ type RedisInstanceAzure struct {
 	// +kubebuilder:validation:Required
 	SKU AzureRedisSKU `json:"sku"`
 
-	// +kubebuilder:validation:Required
-	Location string `json:"location"`
-
 	// +optional
 	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
 

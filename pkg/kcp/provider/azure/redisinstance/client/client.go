@@ -15,7 +15,7 @@ type Client interface {
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
-	ResourceGroupExists(ctx context.Context, name string) (bool, error)
+	GetResourceGroup(ctx context.Context, name string) (*armResources.ResourceGroupsClientGetResponse, error)
 	CreateResourceGroup(ctx context.Context, name string, location string) error
 	DeleteResourceGroup(ctx context.Context, name string) error
 }
@@ -106,17 +106,17 @@ func (c *redisClient) GetRedisInstanceAccessKeys(ctx context.Context, resourceGr
 	return *redisAccessKeys.PrimaryKey, nil
 }
 
-func (c *redisClient) ResourceGroupExists(ctx context.Context, name string) (bool, error) {
+func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armResources.ResourceGroupsClientGetResponse, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	resourceGroupsClientCheckExistenceResponse, error := c.ResourceGroupClient.CheckExistence(ctx, name, nil)
+	resourceGroupsClientGetResponse, error := c.ResourceGroupClient.Get(ctx, name, nil)
 
 	if error != nil {
 		logger.Error(error, "Failed to get Azure Redis resource group")
-		return false, error
+		return nil, error
 	}
 
-	return resourceGroupsClientCheckExistenceResponse.Success, nil
+	return &resourceGroupsClientGetResponse, nil
 }
 
 func (c *redisClient) CreateResourceGroup(ctx context.Context, name string, location string) error {

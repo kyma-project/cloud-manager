@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -17,7 +18,7 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	if *state.azureRedisInstance.Properties.ProvisioningState != "Deleting" {
+	if *state.azureRedisInstance.Properties.ProvisioningState != armredis.ProvisioningStateDeleting {
 		errorMsg := "Error: unexpected azure redis state"
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).

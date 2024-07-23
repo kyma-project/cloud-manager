@@ -64,8 +64,6 @@ spec:
                     properties:
                       enableNonSslPort:
                         type: boolean
-                      location:
-                        type: string
                       redisConfiguration:
                         properties:
                           maxclients:
@@ -102,7 +100,6 @@ spec:
                         - capacity
                         type: object
                     required:
-                    - location
                     - sku
                     type: object
                   gcp:

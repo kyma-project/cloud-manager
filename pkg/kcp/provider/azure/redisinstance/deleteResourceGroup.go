@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -20,7 +21,11 @@ func deleteResourceGroup(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	if state.resourceGroup.State == "Deleting" {
+	if state.resourceGroup == nil {
+		return nil, nil
+	}
+
+	if *state.resourceGroup.Properties.ProvisioningState == string(armredis.ProvisioningStateDeleting) {
 		return nil, nil
 	}
 
@@ -52,7 +57,6 @@ func deleteResourceGroup(ctx context.Context, st composed.State) (error, context
 
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
-	state.resourceGroup.State = "Deleting"
 
 	return nil, nil
 }

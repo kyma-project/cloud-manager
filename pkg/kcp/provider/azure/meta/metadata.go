@@ -28,7 +28,14 @@ func TooManyRequests(err error) bool {
 func IsNotFound(err error) bool {
 	var respErr *azcore.ResponseError
 
-	return errors.As(err, &respErr) && respErr.ErrorCode == "ResourceNotFound"
+	if ok := errors.As(err, &respErr); ok {
+		if respErr.StatusCode == 404 {
+			return true
+		}
+		return respErr.ErrorCode == "ResourceNotFound"
+	}
+
+	return false
 }
 
 func ErrorToRequeueResponse(err error) error {
