@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -14,7 +15,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Loading GCP Address")
+	logger.WithValues("ipRange", ipRange.Name).Info("Validating CIDR")
 	if len(ipRange.Status.Cidr) == 0 {
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{

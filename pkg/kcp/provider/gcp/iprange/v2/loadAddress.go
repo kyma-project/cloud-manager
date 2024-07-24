@@ -30,7 +30,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 		"ipRangeRemoteFallbackName", remoteFallbackName,
 	)
 
-	logger.Info("Loading GCP Address")
+	logger.Info("Loading GCP Address (V2)")
 
 	addr, err := state.computeClient.GetIpRange(ctx, project, remoteName)
 
