@@ -36,6 +36,9 @@ func (s *testState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 type computeClientStubUtils interface {
 	ReturnOnFirstCall(address *compute.Address, err error)
 	ReturnOnSecondCall(address *compute.Address, err error)
+	GetFirstCallName() string
+	GetSecondCallName() string
+	GetCallCount() int
 }
 
 type computeClientStub struct {
@@ -43,8 +46,10 @@ type computeClientStub struct {
 	firstCallErr      error
 	secondCallAddress *compute.Address
 	secondCallErr     error
-	call              int32
+	callCount         int
 	mutex             *sync.Mutex
+	firstCallName     string
+	secondCallName    string
 }
 
 func (c *computeClientStub) ReturnOnFirstCall(address *compute.Address, err error) {
@@ -55,6 +60,18 @@ func (c *computeClientStub) ReturnOnFirstCall(address *compute.Address, err erro
 func (c *computeClientStub) ReturnOnSecondCall(address *compute.Address, err error) {
 	c.secondCallAddress = address
 	c.secondCallErr = err
+}
+
+func (c *computeClientStub) GetFirstCallName() string {
+	return c.firstCallName
+}
+
+func (c *computeClientStub) GetSecondCallName() string {
+	return c.secondCallName
+}
+
+func (c *computeClientStub) GetCallCount() int {
+	return c.callCount
 }
 
 func (c *computeClientStub) CreatePscIpRange(ctx context.Context, projectId string, vpcName string, name string, description string, address string, prefixLength int64) (*compute.Operation, error) {
@@ -73,11 +90,13 @@ func (c *computeClientStub) GetIpRange(ctx context.Context, projectId string, na
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.call = c.call + 1
-	if c.call == 1 {
+	c.callCount = c.callCount + 1
+	if c.callCount == 1 {
+		c.firstCallName = name
 		return c.firstCallAddress, c.firstCallErr
 	}
-	if c.call == 2 {
+	if c.callCount == 2 {
+		c.secondCallName = name
 		return c.secondCallAddress, c.secondCallErr
 	}
 
@@ -90,8 +109,8 @@ func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId s
 
 func newComputeClientStub() ipRangeClient.ComputeClient {
 	return &computeClientStub{
-		call:  0,
-		mutex: &sync.Mutex{},
+		callCount: 0,
+		mutex:     &sync.Mutex{},
 	}
 }
 
@@ -183,7 +202,9 @@ func TestLoadAddress(t *testing.T) {
 
 			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
-			assert.Equal(t, state.address, address)
+			assert.Equal(t, address, state.address)
+			assert.Equal(t, 1, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
 		})
 
 		t.Run("Should: fallback and load IpRange with old name", func(t *testing.T) {
@@ -200,7 +221,10 @@ func TestLoadAddress(t *testing.T) {
 
 			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
-			assert.Equal(t, state.address, address)
+			assert.Equal(t, address, state.address)
+			assert.Equal(t, 2, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
+			assert.Equal(t, ipRange.Spec.RemoteRef.Name, computeClient.(computeClientStubUtils).GetSecondCallName())
 		})
 
 		t.Run("Should: skip loaded fallback IpRange if it belongs to other VPC", func(t *testing.T) {
@@ -218,6 +242,9 @@ func TestLoadAddress(t *testing.T) {
 			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 			assert.Nilf(t, state.address, "address should be unset")
+			assert.Equal(t, 2, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
+			assert.Equal(t, ipRange.Spec.RemoteRef.Name, computeClient.(computeClientStubUtils).GetSecondCallName())
 		})
 
 		t.Run("Should: do nothing if IpRange doesnt exist (new or old name)", func(t *testing.T) {
@@ -232,6 +259,9 @@ func TestLoadAddress(t *testing.T) {
 			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 			assert.Nilf(t, state.address, "address should be unset")
+			assert.Equal(t, 2, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
+			assert.Equal(t, ipRange.Spec.RemoteRef.Name, computeClient.(computeClientStubUtils).GetSecondCallName())
 		})
 
 		t.Run("Should: set error if obtained IpRange (new name) belongs to another VPC", func(t *testing.T) {
@@ -248,6 +278,8 @@ func TestLoadAddress(t *testing.T) {
 			assert.NotNil(t, res, "should return non-nil res")
 			assert.NotNil(t, err, "should return non-nil err")
 			assert.Nilf(t, state.address, "address should be unset")
+			assert.Equal(t, 1, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
 		})
 
 		t.Run("Should: set error if its unable to get IpRange (new name)", func(t *testing.T) {
@@ -261,6 +293,8 @@ func TestLoadAddress(t *testing.T) {
 			assert.NotNil(t, res, "should return non-nil res")
 			assert.NotNil(t, err, "should return non-nil err")
 			assert.Nilf(t, state.address, "address should be unset")
+			assert.Equal(t, 1, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
 		})
 
 		t.Run("Should: set error if its unable to get IpRange (fallback name)", func(t *testing.T) {
@@ -275,6 +309,9 @@ func TestLoadAddress(t *testing.T) {
 			assert.NotNil(t, res, "should return non-nil res")
 			assert.NotNil(t, err, "should return non-nil err")
 			assert.Nilf(t, state.address, "address should be unset")
+			assert.Equal(t, 2, computeClient.(computeClientStubUtils).GetCallCount())
+			assert.Equal(t, GetIpRangeName(ipRange.Name), computeClient.(computeClientStubUtils).GetFirstCallName())
+			assert.Equal(t, ipRange.Spec.RemoteRef.Name, computeClient.(computeClientStubUtils).GetSecondCallName())
 		})
 	})
 }
