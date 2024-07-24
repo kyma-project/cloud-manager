@@ -29,7 +29,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	if gcpmeta.IsNotFound(err) {
 		// fallback to old name (backwards compatibility)
 		logger.Info("New IpRange not found, checking the old name")
-		fallbackAddr, err2 := state.computeClient.GetIpRange(ctx, project, name)
+		fallbackAddr, err2 := state.computeClient.GetIpRange(ctx, project, ipRange.GetName())
 
 		if gcpmeta.IsNotFound(err2) {
 			logger.Info("Fallback IpRange name not found, proceeding")
