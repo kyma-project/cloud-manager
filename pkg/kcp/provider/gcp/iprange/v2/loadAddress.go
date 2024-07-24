@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,19 +18,26 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Loading GCP Address")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpcName := gcpScope.VpcNetwork
-	name := GetIpRangeName(ipRange.GetName())
+	remoteName := GetIpRangeName(ipRange.GetName())
+	remoteFallbackName := ipRange.GetName()
+	logger = logger.WithValues(
+		"ipRange", ipRange.Name,
+		"ipRangeRemoteName", remoteName,
+		"ipRangeRemoteFallbackName", remoteFallbackName,
+	)
 
-	addr, err := state.computeClient.GetIpRange(ctx, project, name)
+	logger.Info("Loading GCP Address")
+
+	addr, err := state.computeClient.GetIpRange(ctx, project, remoteName)
 
 	if gcpmeta.IsNotFound(err) {
 		// fallback to old name (backwards compatibility)
 		logger.Info("New IpRange not found, checking the old name")
-		fallbackAddr, err2 := state.computeClient.GetIpRange(ctx, project, ipRange.GetName())
+		fallbackAddr, err2 := state.computeClient.GetIpRange(ctx, project, remoteFallbackName)
 
 		if gcpmeta.IsNotFound(err2) {
 			logger.Info("Fallback IpRange name not found, proceeding")
@@ -37,6 +45,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 		}
 
 		if err2 != nil {
+			logger.Error(err2, "Error getting fallback ipRange Addresses from GCP")
 			return composed.UpdateStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
@@ -45,7 +54,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 					Message: "Error getting fallback ipRange Addresses from GCP",
 				}).
 				SuccessError(composed.StopWithRequeue).
-				SuccessLogMsg("Error getting fallback ipRange Addresses from GCP").
+				SuccessLogMsg("Updated condition for failed IpRange fetching").
 				Run(ctx, state)
 		}
 
@@ -59,6 +68,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	if err != nil {
+		logger.Error(err, "Error getting fallback ipRange Addresses from GCP")
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -67,11 +77,12 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 				Message: "Error getting Addresses from GCP",
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error getting Addresses from GCP").
+			SuccessLogMsg("Updated condition for failed IpRange fetching").
 			Run(ctx, state)
 	}
 
 	if !strings.HasSuffix(addr.Network, fmt.Sprintf("/%s", vpcName)) {
+		logger.Error(errors.New("obtained IpRange belongs to another VPC"), "Obtained IpRange belongs to another VPC")
 		return composed.UpdateStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
