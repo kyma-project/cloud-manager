@@ -23,7 +23,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	project := gcpScope.Project
 	vpcName := gcpScope.VpcNetwork
 	remoteName := GetIpRangeName(ipRange.GetName())
-	remoteFallbackName := ipRange.GetName()
+	remoteFallbackName := ipRange.Spec.RemoteRef.Name
 	logger = logger.WithValues(
 		"ipRange", ipRange.Name,
 		"ipRangeRemoteName", remoteName,
