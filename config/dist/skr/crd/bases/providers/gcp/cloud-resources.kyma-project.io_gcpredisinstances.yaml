@@ -93,6 +93,9 @@ spec:
                   rule: (self == oldSelf)
               tier:
                 default: BASIC
+                enum:
+                - BASIC
+                - STANDARD_HA
                 type: string
                 x-kubernetes-validations:
                 - message: Tier is immutable.

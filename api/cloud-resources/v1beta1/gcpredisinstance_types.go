@@ -56,6 +56,7 @@ type GcpRedisInstanceSpec struct {
 
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
+	// +kubebuilder:validation:Enum=BASIC;STANDARD_HA
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
