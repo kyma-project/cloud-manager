@@ -9,7 +9,7 @@ import (
 
 type Client interface {
 	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
-	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error)
+	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tag []types.Tag) (*types.VpcPeeringConnection, error)
 	DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error)
 	AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*types.VpcPeeringConnection, error)
 	DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error
@@ -39,7 +39,7 @@ func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
 	return out.Vpcs, nil
 }
 
-func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*types.VpcPeeringConnection, error) {
+func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tags []types.Tag) (*types.VpcPeeringConnection, error) {
 	out, err := c.svc.CreateVpcPeeringConnection(ctx, &ec2.CreateVpcPeeringConnectionInput{
 		VpcId:       vpcId,
 		PeerVpcId:   remoteVpcId,
@@ -47,6 +47,15 @@ func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVp
 		PeerOwnerId: remoteAccountId,
 	})
 
+	x := &ec2.CreateVpcPeeringConnectionInput{}
+	tagSpec := []types.TagSpecification{
+		{
+			ResourceType: types.ResourceTypeVpcPeeringConnection,
+			Tags:         tags,
+		},
+	}
+
+	x.TagSpecifications = tagSpec
 	if err != nil {
 		return nil, err
 	}
