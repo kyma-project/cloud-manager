@@ -14,7 +14,6 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 	//Check and see whether the desiredState == actualState
 	deleting := !state.Obj().GetDeletionTimestamp().IsZero()
 	gcpOptions := state.ObjAsIpRange().Spec.Options.Gcp
-	ipRange := state.ObjAsIpRange()
 
 	state.addressOp = client.NONE
 	state.connectionOp = client.NONE
@@ -56,15 +55,17 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 		//Check whether the IPRange is created for PSA.
 		//If yes, identify the operation to be performed.
 		//If no, serviceConnection object is not needed, so ignore.
-		if gcpOptions == nil || gcpOptions.Purpose == v1beta1.GcpPurposePSA {
+		if state.address == nil {
+			state.connectionOp = client.NONE
+		} else if gcpOptions == nil || gcpOptions.Purpose == v1beta1.GcpPurposePSA {
 			if state.serviceConnection == nil {
 				//If serviceConnection doesn't exist, add it.
 				state.connectionOp = client.ADD
-				state.ipRanges = []string{ipRange.Spec.RemoteRef.Name}
+				state.ipRanges = []string{state.address.Name}
 			} else if index := state.doesConnectionIncludeRange(); index < 0 {
 				//If connection exists, but the ipRange is not part of it, include it.
 				state.connectionOp = client.MODIFY
-				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, ipRange.Spec.RemoteRef.Name)
+				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, state.address.Name)
 			}
 		}
 
