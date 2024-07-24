@@ -20,7 +20,10 @@ func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Cont
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	if ptr.Deref(state.remoteVpc.Tags["shoot-name"], "") != state.Scope().Spec.ShootName {
+	_, hasShootTag := state.remoteVpc.Tags[state.Scope().Spec.ShootName]
+	shootNameTagMatch := ptr.Deref(state.remoteVpc.Tags["shoot-name"], "") == state.Scope().Spec.ShootName
+
+	if !hasShootTag && !shootNameTagMatch {
 
 		var kv []any
 
