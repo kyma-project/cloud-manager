@@ -18,7 +18,7 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    - jsonPath: .spec.cidr
+    - jsonPath: .status.cidr
       name: Cidr
       type: string
     - jsonPath: .status.state
