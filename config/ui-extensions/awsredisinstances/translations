@@ -1,0 +1,13 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.ipRange: Ip Range
+  spec.ipRange.name: Ip Range Name
+  spec.volume: Volume
+  spec.volume.name: Name
+  spec.volume.labels: Labels
+  spec.volume.annotations: Annotations
+  spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
+  spec.cacheNodeType: Cache Node Type
+  spec.engineVersion: Engine Version
