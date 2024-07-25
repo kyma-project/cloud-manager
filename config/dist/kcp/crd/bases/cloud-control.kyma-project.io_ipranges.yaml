@@ -14,7 +14,17 @@ spec:
     singular: iprange
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - jsonPath: .spec.cidr
+      name: Cidr
+      type: string
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: IpRange is the Schema for the ipranges API
