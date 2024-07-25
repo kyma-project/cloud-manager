@@ -1,0 +1,11 @@
+resource:
+    kind: AwsRedisInstance
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsredisinstances
+name: AWS Redis Instance
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AwsRedisInstance description here
