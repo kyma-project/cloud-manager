@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
@@ -100,7 +101,7 @@ func (s State) toInstance() *file.Instance {
 			{
 				Network:         client2.GetVPCPath(project, vpc),
 				ConnectMode:     string(gcpOptions.ConnectMode),
-				ReservedIpRange: s.IpRange().Spec.RemoteRef.Name,
+				ReservedIpRange: s.IpRange().Status.Id,
 			},
 		},
 	}

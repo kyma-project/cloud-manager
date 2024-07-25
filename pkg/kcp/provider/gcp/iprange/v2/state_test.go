@@ -161,6 +161,9 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 			},
 		},
 	},
+	Status: cloudcontrolv1beta1.IpRangeStatus{
+		Id: "cm-test-ip-range",
+	},
 }
 
 var gcpScope = &cloudcontrolv1beta1.Scope{

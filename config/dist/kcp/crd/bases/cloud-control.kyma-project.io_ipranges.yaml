@@ -163,6 +163,9 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              id:
+                description: Id to track the Hyperscaler IpRange identifier
+                type: string
               opIdentifier:
                 description: Operation Identifier to track the Hyperscaler Operation
                 type: string
