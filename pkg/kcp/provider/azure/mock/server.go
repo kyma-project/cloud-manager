@@ -3,10 +3,12 @@ package mock
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"k8s.io/utils/ptr"
+	"sync"
 )
 
 var _ Server = &server{}
@@ -14,11 +16,16 @@ var _ Server = &server{}
 func New() Server {
 	return &server{
 		stores: map[string]*storeSubscriptionContext{},
+		redisCacheClientFake: redisCacheClientFake{
+			mutex:               sync.Mutex{},
+			redisResourceGroups: map[string]redisResourceGroup{},
+		},
 	}
 }
 
 type server struct {
-	stores map[string]*storeSubscriptionContext
+	stores               map[string]*storeSubscriptionContext
+	redisCacheClientFake redisCacheClientFake
 }
 
 func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client] {
@@ -31,7 +38,7 @@ func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Clien
 func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (azureredisinstanceclient.Client, error) {
 
-		return nil, nil
+		return &s.redisCacheClientFake, nil
 	}
 }
 
@@ -61,4 +68,14 @@ func (s *server) getStoreSubscriptionContext(subscription string) *storeSubscrip
 	}
 
 	return s.stores[subscription]
+}
+
+func (s *server) GetRedisCacheByResourceGroupName(resourceGroupName string) *armRedis.ResourceInfo {
+	redisInstance, _ := s.redisCacheClientFake.GetRedisInstance(nil, resourceGroupName, "")
+
+	return redisInstance
+}
+
+func (s *server) DeleteRedisCacheByResourceGroupName(resourceGroupName string) {
+	delete(s.redisCacheClientFake.redisResourceGroups, resourceGroupName)
 }

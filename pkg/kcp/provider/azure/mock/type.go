@@ -16,4 +16,6 @@ type Server interface {
 	Providers
 
 	VpcNetworkConfig
+
+	RedisCacheClientFakeUtils
 }
