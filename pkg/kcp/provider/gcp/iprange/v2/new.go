@@ -37,6 +37,7 @@ func New(stateFactory StateFactory) composed.Action {
 			actions.AddFinalizer,
 			checkGcpOperation,
 			loadAddress,
+			fixStatusId,
 			loadPsaConnection,
 			compareStates,
 			updateState,

@@ -119,7 +119,7 @@ func (suite *loadAddressSuite) TestWhenGcpAddressHasWrongVPC() {
 			if strings.HasSuffix(r.URL.Path, getUrlCompute) {
 				resp = &compute.Address{
 					Address:      ipAddr,
-					Name:         gcpIpRange.Spec.RemoteRef.Name,
+					Name:         gcpIpRange.Status.Id,
 					Network:      "not-matching-vpc",
 					PrefixLength: int64(prefix),
 				}
@@ -175,7 +175,7 @@ func (suite *loadAddressSuite) TestWhenGcpAddressHasCorrectVPC() {
 			if strings.HasSuffix(r.URL.Path, getUrlCompute) {
 				resp = &compute.Address{
 					Address:      ipAddr,
-					Name:         gcpIpRange.Spec.RemoteRef.Name,
+					Name:         gcpIpRange.Status.Id,
 					Network:      "test-vpc",
 					PrefixLength: int64(prefix),
 				}

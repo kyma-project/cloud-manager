@@ -100,7 +100,7 @@ func (s State) toInstance() *file.Instance {
 			{
 				Network:         client2.GetVPCPath(project, vpc),
 				ConnectMode:     string(gcpOptions.ConnectMode),
-				ReservedIpRange: s.IpRange().Spec.RemoteRef.Name,
+				ReservedIpRange: s.IpRange().Status.Id,
 			},
 		},
 	}

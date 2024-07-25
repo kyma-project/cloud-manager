@@ -23,6 +23,9 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
 	name := ipRange.Spec.RemoteRef.Name
+	if ipRange.Status.Id != "" {
+		name = ipRange.Status.Id
+	}
 
 	addr, err := state.computeClient.GetIpRange(ctx, project, name)
 	if err != nil {

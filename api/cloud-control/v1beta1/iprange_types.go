@@ -118,6 +118,10 @@ type IpRangeStatus struct {
 	// Operation Identifier to track the Hyperscaler Operation
 	// +optional
 	OpIdentifier string `json:"opIdentifier,omitempty"`
+
+	// Id to track the Hyperscaler IpRange identifier
+	// +optional
+	Id string `json:"id,omitempty"`
 }
 
 type IpRangeSubnets []IpRangeSubnet

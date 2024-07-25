@@ -162,6 +162,9 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 			},
 		},
 	},
+	Status: cloudcontrolv1beta1.IpRangeStatus{
+		Id: "cm-test-ip-range",
+	},
 }
 
 var gcpScope = &cloudcontrolv1beta1.Scope{
@@ -182,7 +185,7 @@ var gcpScope = &cloudcontrolv1beta1.Scope{
 
 var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
 var urlGlobalAddress = "/projects/test-project/global/addresses"
-var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, gcpIpRange.Spec.RemoteRef.Name)
+var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, gcpIpRange.Status.Id)
 
 var urlSvcNetworking = "services/servicenetworking.googleapis.com/connections"
 var getUrlSvcNw = fmt.Sprintf("%s/%s", urlSvcNetworking, client.PsaPeeringName)

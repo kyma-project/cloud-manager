@@ -21,7 +21,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork
-	name := ipRange.Spec.RemoteRef.Name
+	name := GetIpRangeName(ipRange.Name)
 
 	var operation *compute.Operation
 	var err error
@@ -51,6 +51,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
+		ipRange.Status.Id = name
 		return composed.UpdateStatus(ipRange).
 			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
