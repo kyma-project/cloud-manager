@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +38,7 @@ func New(stateFactory StateFactory) composed.Action {
 			actions.AddFinalizer,
 			checkGcpOperation,
 			loadAddress,
+			updateStatusId,
 			loadPsaConnection,
 			compareStates,
 			updateState,
