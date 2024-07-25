@@ -26,7 +26,7 @@ type Builder interface {
 	Owns(object client.Object, opts ...builder.OwnsOption) Builder
 	Watches(object client.Object, eventHandler handler.EventHandler, opts ...builder.WatchesOption) Builder
 	WatchesMetadata(object client.Object, eventHandler handler.EventHandler, opts ...builder.WatchesOption) Builder
-	WatchesRawSource(src source.Source, eventHandler handler.EventHandler, opts ...builder.WatchesOption) Builder
+	WatchesRawSource(src source.Source) Builder
 	WithEventFilter(p predicate.Predicate) Builder
 	WithOptions(options controller.Options) Builder
 	WithLogConstructor(logConstructor func(*ctrlreconcile.Request) logr.Logger) Builder
@@ -87,9 +87,9 @@ func (b *skrBuilder) WatchesMetadata(object client.Object, eventHandler handler.
 	})
 }
 
-func (b *skrBuilder) WatchesRawSource(src source.Source, eventHandler handler.EventHandler, opts ...builder.WatchesOption) Builder {
+func (b *skrBuilder) WatchesRawSource(src source.Source) Builder {
 	return b.add(func(cb *builder.Builder) {
-		cb.WatchesRawSource(src, eventHandler, opts...)
+		cb.WatchesRawSource(src)
 	})
 }
 

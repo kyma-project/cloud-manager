@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -89,6 +90,11 @@ func (m *skrManager) Add(runnable manager.Runnable) error {
 }
 
 func (m *skrManager) Elected() <-chan struct{} {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *skrManager) AddMetricsServerExtraHandler(path string, handler http.Handler) error {
 	//TODO implement me
 	panic("implement me")
 }
