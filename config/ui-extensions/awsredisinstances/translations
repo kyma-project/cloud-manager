@@ -4,10 +4,10 @@ en:
   status.state: State
   spec.ipRange: Ip Range
   spec.ipRange.name: Ip Range Name
-  spec.volume: Volume
-  spec.volume.name: Name
-  spec.volume.labels: Labels
-  spec.volume.annotations: Annotations
+  spec.authSecret: Authentication Secret
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
   spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
   spec.cacheNodeType: Cache Node Type
   spec.engineVersion: Engine Version
