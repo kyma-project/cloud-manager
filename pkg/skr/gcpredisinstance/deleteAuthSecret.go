@@ -26,7 +26,7 @@ func deleteAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudresourcesv1beta1.ConditionReasonDeletingAuthSecret,
-			Message: fmt.Sprintf("Deleting PersistentVolumeClaim %s", state.AuthSecret.Name),
+			Message: fmt.Sprintf("Deleting Auth Secret %s", state.AuthSecret.Name),
 		}).
 		ErrorLogMessage("Error setting ConditionReasonDeletingAuthSecret condition on GcpRedisInstance").
 		SuccessErrorNil().
