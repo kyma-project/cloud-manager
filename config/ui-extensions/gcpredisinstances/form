@@ -54,22 +54,22 @@
     - path: stream-node-max-entries
       name: spec.redisConfigs.stream-node-max-entries
       widget: Text
-- path: spec.volume
+- path: spec.authSecret
   simple: false
-  name: spec.volume
+  name: spec.authSecret
   widget: FormGroup
   required: false
   children:
     - path: name
-      name: spec.volume.name
+      name: spec.authSecret.name
       widget: Text
       required: true
     - path: labels
-      name: spec.volume.labels
+      name: spec.authSecret.labels
       required: false
       widget: KeyValuePair
     - path: annotations
-      name: spec.volume.annotations
+      name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
 

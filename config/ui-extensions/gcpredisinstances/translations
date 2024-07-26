@@ -9,10 +9,10 @@ en:
   spec.ipRange: Ip Range
   spec.ipRange.name: Ip Range Name
   spec.transitEncryptionMode: Transit Encryption Mode
-  spec.volume: Volume
-  spec.volume.name: Name
-  spec.volume.labels: Labels
-  spec.volume.annotations: Annotations
+  spec.authSecret: Authentication Secret
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
   spec.redisConfigs: Redis Configs
   spec.redisConfigs.activedefrag: Active Defrag
   spec.redisConfigs.lfu-decay-time: LFU Decay Time

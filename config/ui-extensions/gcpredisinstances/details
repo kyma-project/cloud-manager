@@ -64,18 +64,18 @@ body:
         source: ipRange.name
         widget: Labels
 
-  - name: spec.volume
+  - name: spec.authSecret
     widget: Panel
     source: spec
     children:
-      - source: volume.name
-        name: spec.volume.name
+      - source: authSecret.name
+        name: spec.authSecret.name
         widget: Labels
-      - source: volume.labels
-        name: spec.volume.labels
+      - source: authSecret.labels
+        name: spec.authSecret.labels
         widget: Labels
-      - source: volume.annotations
-        name: spec.volume.annotations
+      - source: authSecret.annotations
+        name: spec.authSecret.annotations
         widget: Labels
 
 
