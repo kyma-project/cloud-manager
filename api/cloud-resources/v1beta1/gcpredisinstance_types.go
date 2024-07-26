@@ -83,7 +83,7 @@ type GcpRedisInstanceSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
 	RedisConfigs RedisInstanceGcpConfigs `json:"redisConfigs"`
 
-	AuthSecret *AuthSecretSpec `json:"volume,omitempty"`
+	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
