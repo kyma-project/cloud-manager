@@ -3,6 +3,8 @@ package v2
 import (
 	"context"
 	"fmt"
+	"net/http/httptest"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -20,7 +22,6 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -141,16 +142,14 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 		Name:      "test-ip-range",
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
-			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      "test-gcp-ip-range",
-			cloudcontrolv1beta1.LabelRemoteNamespace: "test",
+			cloudcontrolv1beta1.LabelKymaName:   kymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName: "test-gcp-ip-range",
 		},
 		Finalizers: []string{cloudcontrolv1beta1.FinalizerName},
 	},
 	Spec: cloudcontrolv1beta1.IpRangeSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
-			Namespace: "test",
-			Name:      "test-gcp-ip-range",
+			Name: "test-gcp-ip-range",
 		},
 		Scope: cloudcontrolv1beta1.ScopeRef{
 			Name: kymaRef.Name,
@@ -161,6 +160,9 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 				Purpose: cloudcontrolv1beta1.GcpPurposePSA,
 			},
 		},
+	},
+	Status: cloudcontrolv1beta1.IpRangeStatus{
+		Id: "cm-test-ip-range",
 	},
 }
 
@@ -182,7 +184,7 @@ var gcpScope = &cloudcontrolv1beta1.Scope{
 
 var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
 var urlGlobalAddress = "/projects/test-project/global/addresses"
-var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, gcpIpRange.Spec.RemoteRef.Name)
+var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, "test-ip-range")
 
 var urlSvcNetworking = "services/servicenetworking.googleapis.com/connections"
 var getUrlSvcNw = fmt.Sprintf("%s/%s", urlSvcNetworking, client.PsaPeeringName)

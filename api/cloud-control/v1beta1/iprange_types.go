@@ -118,6 +118,10 @@ type IpRangeStatus struct {
 	// Operation Identifier to track the Hyperscaler Operation
 	// +optional
 	OpIdentifier string `json:"opIdentifier,omitempty"`
+
+	// Id to track the Hyperscaler IpRange identifier
+	// +optional
+	Id string `json:"id,omitempty"`
 }
 
 type IpRangeSubnets []IpRangeSubnet
@@ -148,6 +152,9 @@ func (in IpRangeSubnets) SubnetByZone(zone string) *IpRangeSubnet {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Cidr",type="string",JSONPath=".status.cidr"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // IpRange is the Schema for the ipranges API
 type IpRange struct {

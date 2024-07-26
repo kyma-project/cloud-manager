@@ -87,7 +87,7 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 	//Set Address
 	address := &compute.Address{
 		Address: ipAddr,
-		Name:    gcpIpRange.Spec.RemoteRef.Name,
+		Name:    GetIpRangeName(gcpIpRange.Name),
 	}
 	state.address = address
 
@@ -130,7 +130,7 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 
 	//Set Connection
 	connection := &servicenetworking.Connection{
-		ReservedPeeringRanges: []string{ipRange.Spec.RemoteRef.Name},
+		ReservedPeeringRanges: []string{GetIpRangeName(ipRange.Name)},
 	}
 	state.serviceConnection = connection
 
@@ -140,10 +140,10 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 	assert.Nil(suite.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.DeletePsaConnection, state.curState)
-	assert.Equal(suite.T(), client.DELETE, state.connectionOp)
+	assert.Equal(suite.T(), client.Deleted, state.curState)
+	assert.Equal(suite.T(), client.NONE, state.connectionOp)
 	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.True(suite.T(), state.inSync)
 }
 
 func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExists() {
@@ -174,13 +174,13 @@ func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExis
 	//Set Address
 	address := &compute.Address{
 		Address: ipAddr,
-		Name:    gcpIpRange.Spec.RemoteRef.Name,
+		Name:    GetIpRangeName(gcpIpRange.Name),
 	}
 	state.address = address
 
 	//Set Connection
 	connection := &servicenetworking.Connection{
-		ReservedPeeringRanges: []string{ipRange.Spec.RemoteRef.Name, "test"},
+		ReservedPeeringRanges: []string{GetIpRangeName(ipRange.Name), "test"},
 	}
 	state.serviceConnection = connection
 
@@ -225,7 +225,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists
 
 	//Validate state attributes
 	assert.Equal(suite.T(), client.SyncAddress, state.curState)
-	assert.Equal(suite.T(), client.ADD, state.connectionOp)
+	assert.Equal(suite.T(), client.NONE, state.connectionOp)
 	assert.Equal(suite.T(), client.ADD, state.addressOp)
 	assert.False(suite.T(), state.inSync)
 }
@@ -256,7 +256,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 	address := &compute.Address{
 		Address:      ipAddr,
 		PrefixLength: int64(prefix),
-		Name:         gcpIpRange.Spec.RemoteRef.Name,
+		Name:         GetIpRangeName(gcpIpRange.Name),
 		Network:      state.Scope().Spec.Scope.Gcp.VpcNetwork,
 	}
 	state.address = address
@@ -301,7 +301,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	address := &compute.Address{
 		Address:      ipAddr,
 		PrefixLength: int64(prefix),
-		Name:         gcpIpRange.Spec.RemoteRef.Name,
+		Name:         GetIpRangeName(gcpIpRange.Name),
 	}
 	state.address = address
 	state.ipAddress = ipAddr
@@ -345,7 +345,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 	address := &compute.Address{
 		Address:      ipAddr,
 		PrefixLength: int64(prefix),
-		Name:         gcpIpRange.Spec.RemoteRef.Name,
+		Name:         GetIpRangeName(gcpIpRange.Name),
 		Network:      state.Scope().Spec.Scope.Gcp.VpcNetwork,
 	}
 	state.address = address
@@ -396,7 +396,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 	address := &compute.Address{
 		Address:      ipAddr,
 		PrefixLength: int64(prefix),
-		Name:         gcpIpRange.Spec.RemoteRef.Name,
+		Name:         GetIpRangeName(gcpIpRange.Name),
 		Network:      state.Scope().Spec.Scope.Gcp.VpcNetwork,
 	}
 	state.address = address
@@ -405,7 +405,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 
 	//Set Connection
 	connection := &servicenetworking.Connection{
-		ReservedPeeringRanges: []string{gcpIpRange.Spec.RemoteRef.Name},
+		ReservedPeeringRanges: []string{GetIpRangeName(gcpIpRange.Name)},
 	}
 	state.serviceConnection = connection
 

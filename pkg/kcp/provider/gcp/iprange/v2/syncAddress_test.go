@@ -3,6 +3,11 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,11 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type syncAddressSuite struct {
@@ -185,6 +186,9 @@ func (suite *syncAddressSuite) TestDeleteSuccess() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 	state.addressOp = client.DELETE
+	state.address = &compute.Address{
+		Name: "test-ip-range",
+	}
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
@@ -235,6 +239,9 @@ func (suite *syncAddressSuite) TestDeleteFailure() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 	state.addressOp = client.DELETE
+	state.address = &compute.Address{
+		Name: "test-ip-range",
+	}
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)

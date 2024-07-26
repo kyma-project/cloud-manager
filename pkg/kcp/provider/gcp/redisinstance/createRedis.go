@@ -31,7 +31,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
 		VPCNetworkFullName:    vpcNetworkFullName,
-		IPRangeName:           state.IpRange().Spec.RemoteRef.Name,
+		IPRangeName:           state.IpRange().Status.Id,
 		MemorySizeGb:          redisInstance.Spec.Instance.Gcp.MemorySizeGb,
 		Tier:                  redisInstance.Spec.Instance.Gcp.Tier,
 		RedisVersion:          redisInstance.Spec.Instance.Gcp.RedisVersion,
