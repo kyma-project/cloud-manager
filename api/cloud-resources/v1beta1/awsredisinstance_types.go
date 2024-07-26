@@ -26,7 +26,7 @@ type AwsRedisInstanceSpec struct {
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
-	AuthSecret *AuthSecretSpec `json:"volume,omitempty"`
+	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CacheNodeType is immutable."

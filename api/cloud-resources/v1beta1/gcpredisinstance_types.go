@@ -56,6 +56,7 @@ type GcpRedisInstanceSpec struct {
 
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
+	// +kubebuilder:validation:Enum=BASIC;STANDARD_HA
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
@@ -82,7 +83,7 @@ type GcpRedisInstanceSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
 	RedisConfigs RedisInstanceGcpConfigs `json:"redisConfigs"`
 
-	AuthSecret *AuthSecretSpec `json:"volume,omitempty"`
+	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
