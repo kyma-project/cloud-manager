@@ -30,5 +30,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	logger.Info("Updating .status.id with gcp iprange identifier")
 	return composed.UpdateStatus(ipRange).
 		SuccessError(composed.StopWithRequeue).
+		SuccessLogMsg("Updated .status.id on IpRange").
+		ErrorLogMessage("Failed to update .status.id on IpRange").
 		Run(ctx, state)
 }
