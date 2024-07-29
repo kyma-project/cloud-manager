@@ -18,7 +18,7 @@ func waitKcpRedisInstanceDeleted(ctx context.Context, st composed.State) (error,
 	awsRedisInstance := state.ObjAsAwsRedisInstance()
 
 	if state.KcpRedisInstance == nil {
-		logger.Info("Kcp NfsInstance is deleted")
+		logger.Info("Kcp RedisInstance is deleted")
 		return nil, nil
 	}
 
