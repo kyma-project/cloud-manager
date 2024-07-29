@@ -24,7 +24,7 @@ type State struct {
 }
 
 type StateFactory interface {
-	NewState(ctx context.Context, nfsInstanceState types.State) (*State, error)
+	NewState(ctx context.Context, redisInstanceState types.State) (*State, error)
 }
 
 type stateFactory struct {
