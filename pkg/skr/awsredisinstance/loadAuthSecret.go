@@ -2,6 +2,7 @@ package awsredisinstance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -32,6 +33,9 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 	if secret.Labels[cloudresourcesv1beta1.LabelRedisInstanceId] != awsRedisInstance.Status.Id {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
 		errMsg := fmt.Sprintf("Auth secret %s belongs to another resource", authSecretName)
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Error(errors.New("auth secret error"), errMsg)
+
 		return composed.UpdateStatus(awsRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
