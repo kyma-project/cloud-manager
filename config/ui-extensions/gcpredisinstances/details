@@ -1,0 +1,88 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.memorySizeGb
+        source: memorySizeGb
+        widget: Labels
+      - name: spec.redisVersion
+        source: redisVersion
+        widget: Labels
+      - name: spec.tier
+        source: tier
+        widget: Labels
+      - name: spec.authEnabled
+        source: authEnabled
+        widget: Labels
+      - name: spec.transitEncryptionMode
+        source: transitEncryptionMode
+        widget: Labels
+
+
+  - name: spec.redisConfigs
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.redisConfigs.activedefrag
+        source: redisConfigs.activedefrag
+        widget: Labels
+      - name: spec.redisConfigs.lfu-decay-time
+        source: redisConfigs.lfu-decay-time
+        widget: Labels
+      - name: spec.redisConfigs.lfu-log-factor
+        source: redisConfigs.lfu-log-factor
+        widget: Labels
+      - name: spec.redisConfigs.maxmemory-gb
+        source: redisConfigs.maxmemory-gb
+        widget: Labels
+      - name: spec.redisConfigs.maxmemory-policy
+        source: redisConfigs.maxmemory-policy
+        widget: Labels
+      - name: spec.redisConfigs.notify-keyspace-events
+        source: redisConfigs.notify-keyspace-events
+        widget: Labels
+      - name: spec.redisConfigs.stream-node-max-bytes
+        source: redisConfigs.stream-node-max-bytes
+        widget: Labels
+      - name: spec.redisConfigs.stream-node-max-entries
+        source: redisConfigs.stream-node-max-entries
+        widget: Labels
+
+
+
+
+
+
+
+
+  - name: spec.ipRange
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.ipRange.name
+        source: ipRange.name
+        widget: Labels
+
+  - name: spec.authSecret
+    widget: Panel
+    source: spec
+    children:
+      - source: authSecret.name
+        name: spec.authSecret.name
+        widget: Labels
+      - source: authSecret.labels
+        name: spec.authSecret.labels
+        widget: Labels
+      - source: authSecret.annotations
+        name: spec.authSecret.annotations
+        widget: Labels
+
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state

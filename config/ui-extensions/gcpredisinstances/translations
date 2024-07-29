@@ -1,0 +1,24 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.memorySizeGb: Memory Size (Gb)
+  spec.redisVersion: Redis Version
+  spec.tier: Tier
+  spec.authEnabled: Auth Enabled
+  spec.ipRange: Ip Range
+  spec.ipRange.name: Ip Range Name
+  spec.transitEncryptionMode: Transit Encryption Mode
+  spec.authSecret: Authentication Secret
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
+  spec.redisConfigs: Redis Configs
+  spec.redisConfigs.activedefrag: Active Defrag
+  spec.redisConfigs.lfu-decay-time: LFU Decay Time
+  spec.redisConfigs.lfu-log-factor: LFU Log Factor
+  spec.redisConfigs.maxmemory-gb: Max Memory (Gb)
+  spec.redisConfigs.maxmemory-policy: Max Memory Policy
+  spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
+  spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
+  spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries

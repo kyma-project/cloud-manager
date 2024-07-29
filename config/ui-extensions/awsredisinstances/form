@@ -1,0 +1,44 @@
+- path: spec.cacheNodeType
+  simple: true
+  name: spec.cacheNodeType
+  required: true
+
+- path: spec.autoMinorVersionUpgrade
+  simple: false
+  name: spec.autoMinorVersionUpgrade
+  required: false
+
+- path: spec.engineVersion
+  simple: false
+  name: spec.engineVersion
+  required: false
+
+- path: spec.ipRange
+  simple: false
+  name: spec.ipRange
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.ipRange.name
+      widget: Text
+      required: true
+
+- path: spec.authSecret
+  simple: false
+  name: spec.authSecret
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.authSecret.name
+      widget: Text
+      required: true
+    - path: labels
+      name: spec.authSecret.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair

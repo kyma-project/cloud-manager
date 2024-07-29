@@ -1,0 +1,124 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.autoMinorVersionUpgrade
+            source: autoMinorVersionUpgrade
+            widget: Labels
+          - name: spec.cacheNodeType
+            source: cacheNodeType
+            widget: Labels
+          - name: spec.engineVersion
+            source: engineVersion
+            widget: Labels
+
+
+
+      - name: spec.ipRange
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.ipRange.name
+            source: ipRange.name
+            widget: Labels
+
+      - name: spec.authSecret
+        widget: Panel
+        source: spec
+        children:
+          - source: authSecret.name
+            name: spec.authSecret.name
+            widget: Labels
+          - source: authSecret.labels
+            name: spec.authSecret.labels
+            widget: Labels
+          - source: authSecret.annotations
+            name: spec.authSecret.annotations
+            widget: Labels
+  form: |-
+    - path: spec.cacheNodeType
+      simple: true
+      name: spec.cacheNodeType
+      required: true
+
+    - path: spec.autoMinorVersionUpgrade
+      simple: false
+      name: spec.autoMinorVersionUpgrade
+      required: false
+
+    - path: spec.engineVersion
+      simple: false
+      name: spec.engineVersion
+      required: false
+
+    - path: spec.ipRange
+      simple: false
+      name: spec.ipRange
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.ipRange.name
+          widget: Text
+          required: true
+
+    - path: spec.authSecret
+      simple: false
+      name: spec.authSecret
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.authSecret.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.authSecret.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.authSecret.annotations
+          required: false
+          widget: KeyValuePair
+  general: |
+    resource:
+        kind: AwsRedisInstance
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsredisinstances
+    name: AWS Redis Instance
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AwsRedisInstance description here
+  list: |-
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.ipRange: Ip Range
+      spec.ipRange.name: Ip Range Name
+      spec.authSecret: Authentication Secret
+      spec.authSecret.name: Name
+      spec.authSecret.labels: Labels
+      spec.authSecret.annotations: Annotations
+      spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
+      spec.cacheNodeType: Cache Node Type
+      spec.engineVersion: Engine Version
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsredisinstances-ui.operator.kyma-project.io
+  namespace: kyma-system

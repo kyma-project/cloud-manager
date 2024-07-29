@@ -1,0 +1,78 @@
+- path: spec.memorySizeGb
+  simple: true
+  name: spec.memorySizeGb
+  required: true
+- path: spec.redisVersion
+  simple: true
+  name: spec.redisVersion
+  required: true
+- path: spec.tier
+  simple: true
+  name: spec.tier
+  required: true
+
+- path: spec.authEnabled
+  simple: false
+  name: spec.authEnabled
+  required: false
+- path: spec.ipRange.name
+  simple: false
+  name: spec.ipRange.name
+  required: false
+- path: spec.transitEncryptionMode
+  simple: false
+  name: spec.transitEncryptionMode
+  required: false
+
+- path: spec.redisConfigs
+  name: spec.redisConfigs
+  simple: false
+  required: false
+  widget: FormGroup
+  children:
+    - path: activedefrag
+      name: spec.redisConfigs.activedefrag
+      widget: Text
+    - path: lfu-decay-time
+      name: spec.redisConfigs.lfu-decay-time
+      widget: Text
+    - path: lfu-log-factor
+      name: spec.redisConfigs.lfu-log-factor
+      widget: Text
+    - path: maxmemory-gb
+      name: spec.redisConfigs.maxmemory-gb
+      widget: Text
+    - path: maxmemory-policy
+      name: spec.redisConfigs.maxmemory-policy
+      widget: Text
+    - path: notify-keyspace-events
+      name: spec.redisConfigs.notify-keyspace-events
+      widget: Text
+    - path: stream-node-max-bytes
+      name: spec.redisConfigs.stream-node-max-bytes
+      widget: Text
+    - path: stream-node-max-entries
+      name: spec.redisConfigs.stream-node-max-entries
+      widget: Text
+- path: spec.authSecret
+  simple: false
+  name: spec.authSecret
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.authSecret.name
+      widget: Text
+      required: true
+    - path: labels
+      name: spec.authSecret.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair
+
+
+
+

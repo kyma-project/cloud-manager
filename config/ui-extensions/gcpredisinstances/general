@@ -1,0 +1,11 @@
+resource:
+    kind: GcpRedisInstance
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpredisinstances
+name: GCP Redis Instances
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    GcpRedisInstance description here

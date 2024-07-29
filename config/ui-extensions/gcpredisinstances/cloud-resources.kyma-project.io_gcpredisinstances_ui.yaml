@@ -1,0 +1,219 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.memorySizeGb
+            source: memorySizeGb
+            widget: Labels
+          - name: spec.redisVersion
+            source: redisVersion
+            widget: Labels
+          - name: spec.tier
+            source: tier
+            widget: Labels
+          - name: spec.authEnabled
+            source: authEnabled
+            widget: Labels
+          - name: spec.transitEncryptionMode
+            source: transitEncryptionMode
+            widget: Labels
+
+
+      - name: spec.redisConfigs
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.redisConfigs.activedefrag
+            source: redisConfigs.activedefrag
+            widget: Labels
+          - name: spec.redisConfigs.lfu-decay-time
+            source: redisConfigs.lfu-decay-time
+            widget: Labels
+          - name: spec.redisConfigs.lfu-log-factor
+            source: redisConfigs.lfu-log-factor
+            widget: Labels
+          - name: spec.redisConfigs.maxmemory-gb
+            source: redisConfigs.maxmemory-gb
+            widget: Labels
+          - name: spec.redisConfigs.maxmemory-policy
+            source: redisConfigs.maxmemory-policy
+            widget: Labels
+          - name: spec.redisConfigs.notify-keyspace-events
+            source: redisConfigs.notify-keyspace-events
+            widget: Labels
+          - name: spec.redisConfigs.stream-node-max-bytes
+            source: redisConfigs.stream-node-max-bytes
+            widget: Labels
+          - name: spec.redisConfigs.stream-node-max-entries
+            source: redisConfigs.stream-node-max-entries
+            widget: Labels
+
+
+
+
+
+
+
+
+      - name: spec.ipRange
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.ipRange.name
+            source: ipRange.name
+            widget: Labels
+
+      - name: spec.authSecret
+        widget: Panel
+        source: spec
+        children:
+          - source: authSecret.name
+            name: spec.authSecret.name
+            widget: Labels
+          - source: authSecret.labels
+            name: spec.authSecret.labels
+            widget: Labels
+          - source: authSecret.annotations
+            name: spec.authSecret.annotations
+            widget: Labels
+
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+  form: |+
+    - path: spec.memorySizeGb
+      simple: true
+      name: spec.memorySizeGb
+      required: true
+    - path: spec.redisVersion
+      simple: true
+      name: spec.redisVersion
+      required: true
+    - path: spec.tier
+      simple: true
+      name: spec.tier
+      required: true
+
+    - path: spec.authEnabled
+      simple: false
+      name: spec.authEnabled
+      required: false
+    - path: spec.ipRange.name
+      simple: false
+      name: spec.ipRange.name
+      required: false
+    - path: spec.transitEncryptionMode
+      simple: false
+      name: spec.transitEncryptionMode
+      required: false
+
+    - path: spec.redisConfigs
+      name: spec.redisConfigs
+      simple: false
+      required: false
+      widget: FormGroup
+      children:
+        - path: activedefrag
+          name: spec.redisConfigs.activedefrag
+          widget: Text
+        - path: lfu-decay-time
+          name: spec.redisConfigs.lfu-decay-time
+          widget: Text
+        - path: lfu-log-factor
+          name: spec.redisConfigs.lfu-log-factor
+          widget: Text
+        - path: maxmemory-gb
+          name: spec.redisConfigs.maxmemory-gb
+          widget: Text
+        - path: maxmemory-policy
+          name: spec.redisConfigs.maxmemory-policy
+          widget: Text
+        - path: notify-keyspace-events
+          name: spec.redisConfigs.notify-keyspace-events
+          widget: Text
+        - path: stream-node-max-bytes
+          name: spec.redisConfigs.stream-node-max-bytes
+          widget: Text
+        - path: stream-node-max-entries
+          name: spec.redisConfigs.stream-node-max-entries
+          widget: Text
+    - path: spec.authSecret
+      simple: false
+      name: spec.authSecret
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.authSecret.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.authSecret.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.authSecret.annotations
+          required: false
+          widget: KeyValuePair
+
+
+
+
+  general: |
+    resource:
+        kind: GcpRedisInstance
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpredisinstances
+    name: GCP Redis Instances
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        GcpRedisInstance description here
+  list: |-
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.memorySizeGb: Memory Size (Gb)
+      spec.redisVersion: Redis Version
+      spec.tier: Tier
+      spec.authEnabled: Auth Enabled
+      spec.ipRange: Ip Range
+      spec.ipRange.name: Ip Range Name
+      spec.transitEncryptionMode: Transit Encryption Mode
+      spec.authSecret: Authentication Secret
+      spec.authSecret.name: Name
+      spec.authSecret.labels: Labels
+      spec.authSecret.annotations: Annotations
+      spec.redisConfigs: Redis Configs
+      spec.redisConfigs.activedefrag: Active Defrag
+      spec.redisConfigs.lfu-decay-time: LFU Decay Time
+      spec.redisConfigs.lfu-log-factor: LFU Log Factor
+      spec.redisConfigs.maxmemory-gb: Max Memory (Gb)
+      spec.redisConfigs.maxmemory-policy: Max Memory Policy
+      spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
+      spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
+      spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: gcpredisinstances-ui.operator.kyma-project.io
+  namespace: kyma-system
