@@ -114,7 +114,7 @@ func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, durat
 				logger.Error(err, "error renewing GCP HTTP client")
 			} else {
 				clientMutex.Lock()
-				gcpClient = client
+				*gcpClient = *client
 				clientMutex.Unlock()
 				logger.Info("GCP HTTP client renewed")
 			}
