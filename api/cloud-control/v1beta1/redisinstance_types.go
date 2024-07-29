@@ -14,11 +14,19 @@ limitations under the License.
 package v1beta1
 
 import (
+	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+const (
+	ReasonCanNotLoadResourceGroup   = "ResourceGroupCanNotLoad"
+	ReasonCanNotDeleteResourceGroup = "ResourceGroupCanNotDelete"
+
+	ReasonCanNotCreateResourceGroup = "ResourceGroupCanNotCreate"
+)
 
 // RedisInstanceSpec defines the desired state of RedisInstance
 type RedisInstanceSpec struct {
@@ -72,16 +80,6 @@ type RedisInstanceGcpConfigs struct {
 
 type RedisInstanceAzureConfigs struct {
 	// +optional
-	AadEnabled string `json:"aad-enabled,omitempty"`
-	// +optional
-	AofBackupEnabled string `json:"aof-backup-enabled,omitempty"`
-	// +optional
-	AofStorageConnectionString0 string `json:"aof-storage-connection-string-0,omitempty"`
-	// +optional
-	AofStorageConnectionString1 string `json:"aof-storage-connection-string-1,omitempty"`
-	// +optional
-	AuthNotRequired string `json:"authnotrequired,omitempty"`
-	// +optional
 	MaxClients string `json:"maxclients,omitempty"`
 	// +optional
 	MaxFragmentationMemoryReserved string `json:"maxfragmentationmemory-reserved,omitempty"`
@@ -94,22 +92,41 @@ type RedisInstanceAzureConfigs struct {
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
 	// +optional
-	PreferredDataArchiveAuthMethod string `json:"preferred-data-archive-auth-method,omitempty"`
-	// +optional
-	PreferredDataPersistenceAuthMethod string `json:"preferred-data-persistence-auth-method,omitempty"`
-	// +optional
-	RdbBackupEnabled string `json:"rdb-backup-enabled,omitempty"`
-	// +optional
-	// +kubebuilder:validation:Enum=15;30;60;360;720;1440
-	RdbBackupFrequency string `json:"rdb-backup-frequency,omitempty"`
-	// +optional
-	RdbBackupMaxSnapshotCount string `json:"rdb-backup-max-snapshot-count,omitempty"`
-	// +optional
-	RdbStorageConnectionString string `json:"rdb-storage-connection-string,omitempty"`
-	// +optional
-	StorageSubscriptionId string `json:"storage-subscription-id,omitempty"`
-	// +optional
 	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
+}
+
+func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
+	redisConfiguration := armRedis.CommonPropertiesRedisConfiguration{}
+
+	additionalProperties := map[string]interface{}{}
+
+	if redisConfigs.MaxFragmentationMemoryReserved != "" {
+		redisConfiguration.MaxfragmentationmemoryReserved = &redisConfigs.MaxFragmentationMemoryReserved
+	}
+	if redisConfigs.MaxMemoryDelta != "" {
+		redisConfiguration.MaxmemoryDelta = &redisConfigs.MaxMemoryDelta
+	}
+	if redisConfigs.MaxMemoryPolicy != "" {
+		redisConfiguration.MaxmemoryPolicy = &redisConfigs.MaxMemoryPolicy
+	}
+	if redisConfigs.MaxMemoryReserved != "" {
+		redisConfiguration.MaxmemoryReserved = &redisConfigs.MaxMemoryReserved
+	}
+	if redisConfigs.NotifyKeyspaceEvents != "" {
+		additionalProperties["notify-keyspace-events"] = &redisConfigs.NotifyKeyspaceEvents
+	}
+	if redisConfigs.MaxClients != "" {
+		redisConfiguration.Maxclients = &redisConfigs.MaxClients
+	}
+	if redisConfigs.ZonalConfiguration != "" {
+		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
+	}
+
+	if len(additionalProperties) > 0 {
+		redisConfiguration.AdditionalProperties = additionalProperties
+	}
+
+	return &redisConfiguration
 }
 
 type AzureRedisSKU struct {

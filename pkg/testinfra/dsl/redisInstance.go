@@ -161,3 +161,35 @@ func WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) ObjAction {
 		},
 	}
 }
+
+func WithRedisInstanceAzure() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				x.Spec.Instance.Azure = &cloudcontrolv1beta1.RedisInstanceAzure{}
+			}
+		},
+	}
+}
+func WithKcpAzureRedisVersion(redisVersion string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				azureRedisInstance.Spec.Instance.Azure.RedisVersion = redisVersion
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisVersion", obj))
+		},
+	}
+}
+func WithSKU(capacity int) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				azureRedisInstance.Spec.Instance.Azure.SKU = cloudcontrolv1beta1.AzureRedisSKU{Capacity: capacity}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisVersion", obj))
+		},
+	}
+}
