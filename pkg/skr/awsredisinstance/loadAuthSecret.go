@@ -30,7 +30,7 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 		return composed.LogErrorAndReturn(err, "Error getting Secret by getAuthSecretName()", composed.StopWithRequeue, ctx)
 	}
 
-	if secret.Labels[cloudresourcesv1beta1.LabelRedisInstanceId] != awsRedisInstance.Status.Id {
+	if secret.Labels[cloudresourcesv1beta1.LabelRedisInstanceStatusId] != awsRedisInstance.Status.Id {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
 		errMsg := fmt.Sprintf("Auth secret %s belongs to another resource", authSecretName)
 		logger := composed.LoggerFromCtx(ctx)

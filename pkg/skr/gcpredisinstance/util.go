@@ -23,7 +23,7 @@ func getAuthSecretLabels(gcpRedis *cloudresourcesv1beta1.GcpRedisInstance) map[s
 		}
 	}
 
-	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceId, gcpRedis.Status.Id)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, gcpRedis.Status.Id)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceNamespace, gcpRedis.Namespace)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
 	labelsBuilder.WithCloudManagerDefaults()

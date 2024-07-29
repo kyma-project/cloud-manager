@@ -197,7 +197,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(authSecret.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
 
 			By("And it has defined ownmership label")
-			Expect(authSecret.Labels[cloudresourcesv1beta1.LabelRedisInstanceId]).To(Equal(gcpRedisInstance.Status.Id))
+			Expect(authSecret.Labels[cloudresourcesv1beta1.LabelRedisInstanceStatusId]).To(Equal(gcpRedisInstance.Status.Id))
 
 			By("And it has user defined custom labels")
 			for k, v := range authSecretLabels {
