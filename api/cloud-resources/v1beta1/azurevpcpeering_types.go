@@ -21,15 +21,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
 type AzureVpcPeeringSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	AllowVnetAccess     bool   `json:"allowVnetAccess,omitempty"`
-	RemoteVnet          string `json:"remoteVnet,omitempty"`
+
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AllowVnetAccess is immutable."
+	AllowVnetAccess bool `json:"allowVnetAccess,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVnet is immutable."
+	RemoteVnet string `json:"remoteVnet,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteResourceGroup is immutable."
 	RemoteResourceGroup string `json:"remoteResourceGroup,omitempty"`
 }
 

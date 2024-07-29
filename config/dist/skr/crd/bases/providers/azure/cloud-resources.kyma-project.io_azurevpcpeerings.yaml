@@ -35,13 +35,20 @@ spec:
             description: AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
             properties:
               allowVnetAccess:
-                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file'
                 type: boolean
+                x-kubernetes-validations:
+                - message: AllowVnetAccess is immutable.
+                  rule: (self == oldSelf)
               remoteResourceGroup:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteResourceGroup is immutable.
+                  rule: (self == oldSelf)
               remoteVnet:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteVnet is immutable.
+                  rule: (self == oldSelf)
             type: object
           status:
             description: AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
