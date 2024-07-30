@@ -22,7 +22,7 @@ type vpcPeeringStore struct {
 	items []*vpcPeeringEntry
 }
 
-func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) (*ec2types.VpcPeeringConnection, error) {
+func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tags []ec2types.Tag) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 

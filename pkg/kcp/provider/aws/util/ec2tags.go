@@ -46,3 +46,12 @@ func NameEc2TagEquals(tags []ec2types.Tag, name string) bool {
 	val := GetEc2TagValue(tags, "Name")
 	return val == name
 }
+
+func HasEc2Tag(tags []ec2types.Tag, key string) bool {
+	for _, t := range tags {
+		if ptr.Deref(t.Key, "") == key {
+			return true
+		}
+	}
+	return false
+}

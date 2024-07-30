@@ -25,7 +25,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.Status.Id,
 			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
+			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
 				cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,

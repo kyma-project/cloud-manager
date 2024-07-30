@@ -26,7 +26,9 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	if util.GetEc2TagValue(state.remoteVpc.Tags, "shoot-name") != state.Scope().Spec.ShootName {
+	hasShootTag := util.HasEc2Tag(state.remoteVpc.Tags, state.Scope().Spec.ShootName)
+
+	if !hasShootTag {
 
 		logger.Info("Loaded remote VPC Network have no matching tags", kv...)
 
