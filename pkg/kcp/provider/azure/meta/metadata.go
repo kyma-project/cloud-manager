@@ -10,12 +10,16 @@ import (
 )
 
 const (
-	RemotePeeringIsDisconnected                      = "RemotePeeringIsDisconnected"
-	RemotePeeringIsDisconnectedMessage               = "Cannot create or update peering because remote peering referencing parent virtual network is in Disconnected state. Update or re-create the remote peering to get it back to Initiated state. Peering gets Disconnected when remote vnet or remote peering is deleted and re-created"
-	AnotherPeeringAlreadyReferencesRemoteVnet        = "AnotherPeeringAlreadyReferencesRemoteVnet"
-	AnotherPeeringAlreadyReferencesRemoteVnetMessage = "Peering already references remote virtual network. Cannot add another peering referencing the same remote virtual network."
-	AuthorizationFailed                              = "AuthorizationFailed"
-	AuthorizationFailedMessage                       = "Not authorized to perform action."
+	RemotePeeringIsDisconnected                          = "RemotePeeringIsDisconnected"
+	RemotePeeringIsDisconnectedMessage                   = "Cannot create or update peering because remote peering referencing parent virtual network is in Disconnected state. Update or re-create the remote peering to get it back to Initiated state. Peering gets Disconnected when remote vnet or remote peering is deleted and re-created"
+	AnotherPeeringAlreadyReferencesRemoteVnet            = "AnotherPeeringAlreadyReferencesRemoteVnet"
+	AnotherPeeringAlreadyReferencesRemoteVnetMessage     = "Peering already references remote virtual network. Cannot add another peering referencing the same remote virtual network."
+	AuthorizationFailed                                  = "AuthorizationFailed"
+	AuthorizationFailedMessage                           = "Not authorized to perform action."
+	VnetAddressSpaceOverlapsWithAlreadyPeeredVnet        = "VnetAddressSpaceOverlapsWithAlreadyPeeredVnet"
+	VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage = "Cannot create or update peering. Virtual networks cannot be peered because address space of the first virtual network overlaps with address space of third virtual network already peered with the second virtual network."
+	InvalidResourceName                                  = "InvalidResourceName"
+	InvalidResourceNameMessage                           = "Resource name is invalid. The name can be up to 80 characters long. It must begin with a word character, and it must end with a word character. The name may contain word characters or '.', '-'."
 )
 
 func TooManyRequests(err error) bool {
@@ -61,6 +65,10 @@ func GetErrorMessage(err error) string {
 			return AnotherPeeringAlreadyReferencesRemoteVnetMessage
 		case AuthorizationFailed:
 			return AuthorizationFailedMessage
+		case VnetAddressSpaceOverlapsWithAlreadyPeeredVnet:
+			return VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage
+		case InvalidResourceName:
+			return InvalidResourceNameMessage
 		}
 	}
 
