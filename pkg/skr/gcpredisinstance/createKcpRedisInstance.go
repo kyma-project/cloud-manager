@@ -23,7 +23,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      gcpRedisInstance.Status.Id,
 			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
+			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      gcpRedisInstance.Name,
 				cloudcontrolv1beta1.LabelRemoteNamespace: gcpRedisInstance.Namespace,

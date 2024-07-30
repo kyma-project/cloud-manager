@@ -105,14 +105,14 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 				).
 				Should(Succeed())
 
-			By("And has label cloud-manager.kyma-project.io/kymaName")
-			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			By("And has annotaton cloud-manager.kyma-project.io/kymaName")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
 
-			By("And has label cloud-manager.kyma-project.io/remoteName")
-			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsRedisInstance.Name))
+			By("And has annotaton cloud-manager.kyma-project.io/remoteName")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsRedisInstance.Name))
 
-			By("And has label cloud-manager.kyma-project.io/remoteNamespace")
-			Expect(kcpRedisInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsRedisInstance.Namespace))
+			By("And has annotaton cloud-manager.kyma-project.io/remoteNamespace")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsRedisInstance.Namespace))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
 			Expect(kcpRedisInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
