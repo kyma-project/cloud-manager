@@ -36,10 +36,19 @@ spec:
             properties:
               remoteAccountId:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteAccountId is immutable.
+                  rule: (self == oldSelf)
               remoteRegion:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteRegion is immutable.
+                  rule: (self == oldSelf)
               remoteVpcId:
                 type: string
+                x-kubernetes-validations:
+                - message: RemoteVpcId is immutable.
+                  rule: (self == oldSelf)
             required:
             - remoteAccountId
             - remoteVpcId
