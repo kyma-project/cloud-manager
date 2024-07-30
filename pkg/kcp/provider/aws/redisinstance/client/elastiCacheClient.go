@@ -31,6 +31,7 @@ func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
 type CreateElastiCacheClusterOptions struct {
 	Name                    string
 	SubnetGroupName         string
+	ParameterGroupName      string
 	CacheNodeType           string
 	EngineVersion           string
 	AutoMinorVersionUpgrade bool
@@ -40,6 +41,10 @@ type ElastiCacheClient interface {
 	DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error)
 	CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error)
 	DeleteElastiCacheSubnetGroup(ctx context.Context, name string) error
+
+	DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error)
+	CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error)
+	DeleteElastiCacheParameterGroup(ctx context.Context, name string) error
 
 	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error)
 	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error)
@@ -101,6 +106,48 @@ func (c *client) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) 
 	return nil
 }
 
+func (c *client) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error) {
+	out, err := c.elastiCacheSvc.DescribeCacheParameterGroups(ctx, &elasticache.DescribeCacheParameterGroupsInput{
+		CacheParameterGroupName: ptr.To(name),
+	})
+	if err != nil {
+		if awsmeta.IsNotFound(err) {
+			return []elasticacheTypes.CacheParameterGroup{}, nil
+		}
+
+		return nil, err
+	}
+
+	return out.CacheParameterGroups, nil
+}
+
+func (c *client) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
+	out, err := c.elastiCacheSvc.CreateCacheParameterGroup(ctx, &elasticache.CreateCacheParameterGroupInput{
+		CacheParameterGroupName:   ptr.To(name),
+		CacheParameterGroupFamily: ptr.To(family),
+		Tags:                      tags,
+		Description:               ptr.To(fmt.Sprintf("ParameterGroup for ElastiCache %s", name)),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (c *client) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
+	_, err := c.elastiCacheSvc.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
+		CacheParameterGroupName: ptr.To(name),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {
 	out, err := c.elastiCacheSvc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
 		CacheClusterId:    ptr.To(clusterId),
@@ -119,6 +166,7 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 	params := &elasticache.CreateCacheClusterInput{
 		CacheClusterId:          aws.String(options.Name),
 		CacheSubnetGroupName:    aws.String(options.SubnetGroupName),
+		CacheParameterGroupName: aws.String(options.ParameterGroupName),
 		CacheNodeType:           aws.String(options.CacheNodeType),
 		NumCacheNodes:           aws.Int32(1),
 		Engine:                  aws.String("redis"),

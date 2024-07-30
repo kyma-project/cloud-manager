@@ -19,10 +19,12 @@ type AwsElastiCacheMockUtils interface {
 }
 
 type elastiCacheClientFake struct {
-	subnetGroupMutex *sync.Mutex
-	elasticacheMutex *sync.Mutex
-	elastiCaches     map[string]*elasticacheTypes.CacheCluster
-	subnetGroups     map[string]*elasticacheTypes.CacheSubnetGroup
+	subnetGroupMutex    *sync.Mutex
+	parameterGroupMutex *sync.Mutex
+	elasticacheMutex    *sync.Mutex
+	elastiCaches        map[string]*elasticacheTypes.CacheCluster
+	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
+	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
 }
 
 func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.CacheCluster {
@@ -73,6 +75,42 @@ func (client *elastiCacheClientFake) DeleteElastiCacheSubnetGroup(ctx context.Co
 	defer client.subnetGroupMutex.Unlock()
 
 	delete(client.subnetGroups, name)
+
+	return nil
+}
+
+func (client *elastiCacheClientFake) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error) {
+	client.parameterGroupMutex.Lock()
+	defer client.parameterGroupMutex.Unlock()
+
+	parameterGroup := client.parameterGroups[name]
+
+	if parameterGroup == nil {
+		return []elasticacheTypes.CacheParameterGroup{}, nil
+	}
+
+	return []elasticacheTypes.CacheParameterGroup{*parameterGroup}, nil
+}
+
+func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
+	client.parameterGroupMutex.Lock()
+	defer client.parameterGroupMutex.Unlock()
+
+	client.parameterGroups[name] = &elasticacheTypes.CacheParameterGroup{
+		CacheParameterGroupName:   ptr.To(name),
+		CacheParameterGroupFamily: ptr.To(family),
+	}
+
+	return &elasticache.CreateCacheParameterGroupOutput{
+		CacheParameterGroup: client.parameterGroups[name],
+	}, nil
+}
+
+func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
+	client.parameterGroupMutex.Lock()
+	defer client.parameterGroupMutex.Unlock()
+
+	delete(client.parameterGroups, name)
 
 	return nil
 }
