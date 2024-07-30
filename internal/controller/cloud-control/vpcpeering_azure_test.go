@@ -42,7 +42,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		subscriptionId := scope.Spec.Scope.Azure.SubscriptionId
 		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
 
-		infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{"shoot-name": ptr.To(kymaName)})
+		infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{kymaName: ptr.To(kymaName)})
 
 		obj := &cloudcontrolv1beta1.VpcPeering{}
 
