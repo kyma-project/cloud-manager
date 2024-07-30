@@ -61,7 +61,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			infra.AwsMock().AddVpc(
 				remoteVpcId,
 				"10.200.0.0/16",
-				awsutil.Ec2Tags("Name", "Remote Network Name", "shoot-name", kymaName),
+				awsutil.Ec2Tags("Name", "Remote Network Name", kymaName, kymaName),
 				nil,
 			)
 			infra.AwsMock().AddVpc(
