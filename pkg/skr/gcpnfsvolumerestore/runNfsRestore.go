@@ -40,7 +40,8 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	srcLocation := state.GcpNfsVolumeBackup.Spec.Location
 	dstLocation := state.GcpNfsVolume.Spec.Location
 
-	dstFullPath := client.GetFilestoreInstancePath(project, dstLocation, state.GcpNfsVolume.Name)
+	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
+	dstFullPath := client.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
 	srcFullPath := client.GetFileBackupPath(project, srcLocation, state.GcpNfsVolumeBackup.Name)
 

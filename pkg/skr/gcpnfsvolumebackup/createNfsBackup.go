@@ -39,10 +39,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	project := gcpScope.Project
 	location := backup.Spec.Location
 	name := backup.Name
+	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
 
 	fileBackup := &file.Backup{
 		SourceFileShare:    state.GcpNfsVolume.Spec.FileShareName,
-		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Spec.Location, state.GcpNfsVolume.Name),
+		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Spec.Location, nfsInstanceName),
 		SourceInstanceTier: string(state.GcpNfsVolume.Spec.Tier),
 	}
 	op, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)

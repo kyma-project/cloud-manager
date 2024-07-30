@@ -1,20 +1,20 @@
-# permissions for end users to edit nfsbackupschedules.
+# permissions for end users to edit gcpnfsbackupschedules.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: nfsbackupschedule-editor-role
+    app.kubernetes.io/instance: gcpnfsbackupschedule-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: cloud-manager
     app.kubernetes.io/part-of: cloud-manager
     app.kubernetes.io/managed-by: kustomize
-  name: nfsbackupschedule-editor-role
+  name: gcpnfsbackupschedule-editor-role
 rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
-  - nfsbackupschedules
+  - gcpnfsbackupschedules
   verbs:
   - create
   - delete
@@ -26,6 +26,6 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
-  - nfsbackupschedules/status
+  - gcpnfsbackupschedules/status
   verbs:
   - get
