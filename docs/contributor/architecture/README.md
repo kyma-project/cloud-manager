@@ -21,8 +21,7 @@ reconcilers observe the status of the Cloud Resources resource group and project
 resources in KCP. At the same time, Cloud Resources reconcilers observe the status of the Cloud Control resources and 
 project it into the status of the Cloud Control resource group in SKR.
 
-
-![API and Reconcilers](./assets/api-and-reconcilers.drawio.svg "API and Reconcilers")]
+![API and Reconcilers](./assets/api-and-reconcilers.drawio.svg "API and Reconcilers")
 
 ## KCP Cloud Control Controller Manager
 
@@ -43,10 +42,9 @@ called with respective resources they are managing. Once all is done, all resour
 are disposed and the same process is repeated for the next SKR. 
 
 The reconciler facing API like `Reconcile()` and `.SetupWithManager()` functions remains as close as possible to 
-the one defined by controller-runtime and used by Kubebuilder. 
+the one defined by controller-runtime and used by Kubebuilder.
 
 ![SKR Controller Manager](./assets/skr-controller-manager.drawio.svg)
-
 
 ## CloudControl Scope resource
 
@@ -59,10 +57,10 @@ The SKR loop, when projecting into the KCP resources, sets the `kymaName` field 
 resources refer to. So, the starting point for the KCP Loop reconcilers is the Kyma CR name. Following the path from 
 Kyma CR in KCP to the Shoot CR in Gardener it is possible to determine the cloud provider scope. 
 
-The Cloud Control KCP resource Scope was introduced to 
+The Cloud Control KCP resource Scope was introduced to:
+
 * improve performance by not reading so many different resources and reaching out to Gardener
-* simplify the development landscape by not avoiding the necessity to beside the local KCP cluster and also have the Gardener cluster 
-  with all the relevant resources
+* simplify the development landscape by not avoiding the necessity to beside the local KCP cluster and also have the Gardener cluster with all the relevant resources
 
 Upon the appearance of the first resource from a certain SKR the cloud provider scope is determined, saved in the 
 Scope KCP resource and the original Cloud Control KCP resource is updated with the `scopeRef`. In dev, scope determination 
