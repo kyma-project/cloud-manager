@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  details: ""
+  form: ""
+  general: ""
+  list: ""
+  translations: ""
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsvpcpeerings-ui.operator.kyma-project.io
+  namespace: kyma-system
