@@ -3,6 +3,9 @@ package redisinstance
 import (
 	"fmt"
 	"strings"
+
+	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"k8s.io/utils/ptr"
 )
 
 func GetAwsElastiCacheSubnetGroupName(name string) string {
@@ -41,4 +44,55 @@ func GetAwsElastiCacheParameterGroupFamily(engineVersion string) string {
 
 func GetAwsElastiCacheClusterName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
+}
+
+func MapParameters(parameters []elasticacheTypes.Parameter) map[string]string {
+	result := map[string]string{}
+
+	for _, parameters := range parameters {
+		result[ptr.Deref(parameters.ParameterName, "")] = ptr.Deref(parameters.ParameterValue, "")
+	}
+
+	return result
+}
+
+func GetDesiredParameters(defaultParameters, userDefinedParameters map[string]string) map[string]string {
+	result := map[string]string{}
+
+	for key, value := range defaultParameters {
+		result[key] = value
+	}
+
+	for key, value := range userDefinedParameters {
+		result[key] = value
+	}
+
+	return result
+}
+
+func GetMissmatchedParameters(currentParameters, desiredParameters map[string]string) map[string]string {
+	result := map[string]string{}
+
+	for key, _ := range desiredParameters {
+		if desiredParameters[key] == currentParameters[key] {
+			continue
+		}
+
+		result[key] = desiredParameters[key]
+	}
+
+	return result
+}
+
+func ToParametersSlice(parametersMap map[string]string) []elasticacheTypes.ParameterNameValue {
+	result := []elasticacheTypes.ParameterNameValue{}
+
+	for key, value := range parametersMap {
+		result = append(result, elasticacheTypes.ParameterNameValue{
+			ParameterName:  ptr.To(key),
+			ParameterValue: ptr.To(value),
+		})
+	}
+
+	return result
 }

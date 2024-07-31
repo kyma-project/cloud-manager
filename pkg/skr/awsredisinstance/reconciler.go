@@ -60,6 +60,7 @@ func (r *reconciler) newAction() composed.Action {
 				waitKcpStatusUpdate,
 				updateStatus,
 				waitSkrStatusReady,
+				modifyKcpRedisInstance,
 				createAuthSecret,
 			),
 			composed.ComposeActions(

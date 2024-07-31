@@ -115,6 +115,21 @@ func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context
 	return nil
 }
 
+func (client *elastiCacheClientFake) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error) {
+	// todo
+	return []elasticacheTypes.Parameter{}, nil
+}
+
+func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error {
+	// todo
+	return nil
+}
+
+func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error) {
+	// todo
+	return []elasticacheTypes.Parameter{}, nil
+}
+
 func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {
 	client.elasticacheMutex.Lock()
 	defer client.elasticacheMutex.Unlock()

@@ -32,6 +32,7 @@ func New(stateFactory StateFactory) composed.Action {
 					"redisInstance-create",
 					createSubnetGroup,
 					createParameterGroup,
+					modifyParameterGroup,
 					createElastiCacheCluster,
 					updateStatusId,
 					waitElastiCacheAvailable,

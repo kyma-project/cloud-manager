@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -45,6 +46,9 @@ type ElastiCacheClient interface {
 	DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error)
 	CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error)
 	DeleteElastiCacheParameterGroup(ctx context.Context, name string) error
+	DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error)
+	ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error
+	DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error)
 
 	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error)
 	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error)
@@ -146,6 +150,78 @@ func (c *client) DeleteElastiCacheParameterGroup(ctx context.Context, name strin
 	}
 
 	return nil
+}
+
+func (c *client) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error) {
+	result := []elasticacheTypes.Parameter{}
+	var marker *string = nil
+	for {
+		out, err := c.elastiCacheSvc.DescribeCacheParameters(ctx, &elasticache.DescribeCacheParametersInput{
+			CacheParameterGroupName: ptr.To(groupName),
+			Marker:                  marker,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, out.Parameters...)
+		if out.Marker == nil {
+			break
+		}
+	}
+
+	return result, nil
+}
+
+func (c *client) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error {
+	apiMaxChunkSize := 20
+	for i := 0; i < len(parameters); i += apiMaxChunkSize {
+		end := int(math.Min(float64(i+apiMaxChunkSize), float64(len(parameters))))
+
+		chunk := parameters[i:end]
+
+		_, err := c.elastiCacheSvc.ModifyCacheParameterGroup(ctx, &elasticache.ModifyCacheParameterGroupInput{
+			CacheParameterGroupName: ptr.To(groupName),
+			ParameterNameValues:     chunk,
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+var defaultParametersCache map[string][]elasticacheTypes.Parameter = map[string][]elasticacheTypes.Parameter{}
+
+func (c *client) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error) {
+	if _, found := defaultParametersCache[family]; found {
+		return defaultParametersCache[family], nil
+	}
+
+	result := []elasticacheTypes.Parameter{}
+	var marker *string = nil
+	for {
+		out, err := c.elastiCacheSvc.DescribeEngineDefaultParameters(ctx, &elasticache.DescribeEngineDefaultParametersInput{
+			CacheParameterGroupFamily: ptr.To(family),
+			Marker:                    marker,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, out.EngineDefaults.Parameters...)
+		if out.EngineDefaults.Marker == nil {
+			break
+		}
+	}
+
+	defaultParametersCache[family] = result
+
+	return result, nil
 }
 
 func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {

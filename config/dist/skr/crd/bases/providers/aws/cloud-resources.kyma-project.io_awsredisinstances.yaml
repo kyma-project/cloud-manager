@@ -72,6 +72,10 @@ spec:
                   required:
                     - name
                   type: object
+                parameters:
+                  additionalProperties:
+                    type: string
+                  type: object
               required:
                 - cacheNodeType
               type: object
