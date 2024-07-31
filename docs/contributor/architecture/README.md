@@ -36,7 +36,7 @@ maintaining an active long-living connection to the KCP Kubernetes API. See the 
 
 Due to the non-scalable concurrent reconciliation of large number of clusters the SKR Cloud Resources Controller Manager 
 cannot keep long-living connections on the remote clusters permanently watching for changes. Instead, a custom
-SKR Looper component loops through SKRs with the Cloud Manager module enabled, and instantiates new 
+SKR Looper component loops through SKRs with the Cloud Manager module added, and instantiates new 
 ControllerRuntime manager that lists all the "watched" (reconciler registered with the manager with `.For()` or `.Watches()` 
 methods as defined in controller-runtime) and with them maintain a shot lived "cache" until all SKR reconcilers are 
 called with respective resources they are managing. Once all is done, all resources for that SKR, shot-living cache, client... 

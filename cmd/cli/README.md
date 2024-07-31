@@ -17,7 +17,7 @@ Create new Kyma in KCP
 go run ./cmd/cli kyma create -s my-shoot -k my-kyma
 ```
 
-Enable Cloud Manager module state to Ready in your kyma.
+Add Cloud Manager module state to `Ready` in your kyma.
 ```shell
 go run ./cmd/cli kyma module state update -k my-kyma -m "cloud-manager" -s Ready
 ```

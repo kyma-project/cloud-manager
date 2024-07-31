@@ -3,7 +3,7 @@
 
 ## What is Cloud Manager?
 
-Cloud Manager is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. Its responsibility is to bring hyperscaler products/resources into the Kyma cluster in a secure way. Once Cloud Manager as a module is enabled in the Kyma cluster, Cloud Manager's features give you access to the respective products and resources of the hyperscaler providers.
+Cloud Manager is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. Its responsibility is to bring hyperscaler products/resources into the Kyma cluster in a secure way. Once Cloud Manager as a module is added in the Kyma cluster, Cloud Manager's features give you access to the respective products and resources of the hyperscaler providers.
 
 ## Features
 
@@ -14,7 +14,7 @@ Cloud Manager can provision the following cloud resources in the underlying clou
 ## Architecture
 
 Kyma Cloud Manager Operator runs in Kyma Control Plane and does remote reconciliation on Kyma clusters that
-have the Cloud Manager module enabled. It brings various Custom Resource Definitions (CRDs) each representing some
+have the Cloud Manager module added. It brings various Custom Resource Definitions (CRDs) each representing some
 a specific cloud resource from the underlying cloud provider subscription.
 
 ## API / Custom Resources Definitions
