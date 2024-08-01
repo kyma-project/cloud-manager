@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -26,20 +27,16 @@ func deleteUiCms(ctx context.Context, st composed.State) (error, context.Context
 
 		labels := uiCm.GetLabels()
 		value, hasUiKey := labels[uiKey]
-		if hasUiKey && value == "cloud-manager" {
-			// delete
-
+		if hasUiKey && value == "ui-cm" {
 			u := util.NewUiCmUnstructured()
 			u.SetName(uiCm.GetName())
-			// delete call
-			//err = state.Cluster().K8sClient().Delete(ctx, u)
-			//if err != nil {
-			//	return composed.LogErrorAndReturn(err, fmt.Sprintf("Error deleting ConfigMap %s", uiCm.GetName()), composed.StopWithRequeue, ctx)
-			//}
+			err = state.Cluster().K8sClient().Delete(ctx, u)
+			if err != nil {
+				return composed.LogErrorAndReturn(err, fmt.Sprintf("Error deleting ConfigMap %s", uiCm.GetName()), composed.StopWithRequeue, ctx)
+			}
 		} else {
 			continue
 		}
-
 	}
 
 	return nil, nil
