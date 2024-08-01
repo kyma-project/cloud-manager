@@ -14,21 +14,28 @@ import (
 
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+
+	obj := state.ObjAsVpcPeering()
+
+	if state.remoteVpcPeering != nil {
+		return nil, nil
+	}
+
 	logger := composed.LoggerFromCtx(ctx)
-	remoteVpcId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteVpcId
-	remoteAccountId := state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteAccountId
-	state.remoteRegion = state.ObjAsVpcPeering().Spec.VpcPeering.Aws.RemoteRegion
+	remoteVpcId := obj.Spec.VpcPeering.Aws.RemoteVpcId
+	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
+	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
 	logger.WithValues(
-		"awsRegion", state.remoteRegion,
+		"awsRegion", remoteRegion,
 		"awsRole", roleArn,
 	).Info("Assuming AWS role")
 
 	client, err := state.provider(
 		ctx,
-		state.remoteRegion,
+		remoteRegion,
 		state.awsAccessKeyid,
 		state.awsSecretAccessKey,
 		roleArn,
@@ -93,11 +100,10 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	state.remoteVpc = vpc
 
-	logger = logger.WithValues(
-		"remoteVpcId", ptr.Deref(state.remoteVpc.VpcId, ""),
+	ctx = composed.LoggerIntoCtx(ctx, logger.WithValues(
+		"remoteVpcId", remoteVpcId,
 		"remoteVpcName", remoteVpcName,
-	)
-	ctx = composed.LoggerIntoCtx(ctx, logger)
+	))
 
 	return nil, ctx
 }
