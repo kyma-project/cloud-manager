@@ -28,6 +28,7 @@ func New() Server {
 			elastiCaches:        map[string]*elasticacheTypes.CacheCluster{},
 			subnetGroups:        map[string]*elasticacheTypes.CacheSubnetGroup{},
 			parameterGroups:     map[string]*elasticacheTypes.CacheParameterGroup{},
+			parameters:          map[string]map[string]elasticacheTypes.Parameter{},
 		},
 	}
 }

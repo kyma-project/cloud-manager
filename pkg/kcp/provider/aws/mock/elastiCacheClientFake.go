@@ -7,6 +7,7 @@ import (
 	aws "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/elliotchance/pie/v2"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	"k8s.io/utils/ptr"
@@ -16,6 +17,24 @@ type AwsElastiCacheMockUtils interface {
 	GetAwsElastiCacheByName(name string) *elasticacheTypes.CacheCluster
 	SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState)
 	DeleteAwsElastiCacheByName(name string)
+	DescribeAwsElastiCacheParametersByName(groupName string) map[string]string
+}
+
+func getDefaultParams() map[string]elasticacheTypes.Parameter {
+	return map[string]elasticacheTypes.Parameter{
+		"maxmemory-policy": {
+			ParameterName:  ptr.To("maxmemory-policy"),
+			ParameterValue: ptr.To("volatile-lru"),
+		},
+		"active-defrag-cycle-max": {
+			ParameterName:  ptr.To("active-defrag-cycle-max"),
+			ParameterValue: ptr.To("75"),
+		},
+		"acl-pubsub-default": {
+			ParameterName:  ptr.To("acl-pubsub-default"),
+			ParameterValue: ptr.To("allchannels"),
+		},
+	}
 }
 
 type elastiCacheClientFake struct {
@@ -23,6 +42,7 @@ type elastiCacheClientFake struct {
 	parameterGroupMutex *sync.Mutex
 	elasticacheMutex    *sync.Mutex
 	elastiCaches        map[string]*elasticacheTypes.CacheCluster
+	parameters          map[string]map[string]elasticacheTypes.Parameter
 	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
 	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
 }
@@ -42,6 +62,16 @@ func (client *elastiCacheClientFake) DeleteAwsElastiCacheByName(name string) {
 	defer client.elasticacheMutex.Unlock()
 
 	delete(client.elastiCaches, name)
+}
+
+func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(groupName string) map[string]string {
+	result := map[string]string{}
+
+	for _, parameter := range pie.Values(client.parameters[groupName]) {
+		result[*parameter.ParameterName] = *parameter.ParameterValue
+	}
+
+	return result
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error) {
@@ -101,6 +131,8 @@ func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context
 		CacheParameterGroupFamily: ptr.To(family),
 	}
 
+	client.parameters[name] = getDefaultParams()
+
 	return &elasticache.CreateCacheParameterGroupOutput{
 		CacheParameterGroup: client.parameterGroups[name],
 	}, nil
@@ -116,18 +148,25 @@ func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error) {
-	// todo
-	return []elasticacheTypes.Parameter{}, nil
+	client.parameterGroupMutex.Lock()
+	defer client.parameterGroupMutex.Unlock()
+
+	return pie.Values(client.parameters[groupName]), nil
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error {
-	// todo
+	client.parameterGroupMutex.Lock()
+	defer client.parameterGroupMutex.Unlock()
+
+	for _, parameter := range parameters {
+		client.parameters[groupName][ptr.Deref(parameter.ParameterName, "")] = elasticacheTypes.Parameter{ParameterName: parameter.ParameterName, ParameterValue: parameter.ParameterValue}
+	}
+
 	return nil
 }
 
 func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error) {
-	// todo
-	return []elasticacheTypes.Parameter{}, nil
+	return pie.Values(getDefaultParams()), nil
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {

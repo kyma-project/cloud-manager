@@ -77,6 +77,18 @@ func WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) O
 	}
 }
 
+func WithAwsRedisInstanceParameters(parameters map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.Parameters = parameters
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceParameters", obj))
+		},
+	}
+}
+
 func WithAwsRedisInstanceAuthSecretName(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
