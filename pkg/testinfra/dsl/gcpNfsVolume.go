@@ -27,10 +27,10 @@ func CreateGcpNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.GcpNfsVolume{}
 	}
-	NewObjActions(opts...).
+	NewObjActions(WithNamespace(DefaultSkrNamespace),
+		WithGcpNfsValues()).
 		Append(
-			WithNamespace(DefaultSkrNamespace),
-			WithGcpNfsValues(),
+			opts...,
 		).
 		ApplyOnObject(obj)
 
@@ -47,6 +47,8 @@ func CreateGcpNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 		// some error
 		return err
 	}
+	//write entire object on the console
+	fmt.Println(obj)
 	err = clnt.Create(ctx, obj)
 	return err
 }
@@ -59,6 +61,18 @@ func WithGcpNfsValues() ObjAction {
 				x.Spec.Tier = "BASIC_HDD"
 				x.Spec.CapacityGb = 1024
 				x.Spec.FileShareName = "test01"
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
+		},
+	}
+}
+
+func WithGcpNfsVolumeLocation(location string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.Location = location
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
