@@ -120,6 +120,35 @@ var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
 	},
 }
 
+var kcpScope = cloudcontrolv1beta1.Scope{
+	ObjectMeta: v1.ObjectMeta{
+		Namespace: kymaRef.Namespace,
+		Name:      kymaRef.Name,
+	},
+	Spec: cloudcontrolv1beta1.ScopeSpec{
+		KymaName:  kymaRef.Name,
+		ShootName: kymaRef.Namespace,
+		Region:    "us-west1",
+		Provider:  cloudcontrolv1beta1.ProviderGCP,
+		Scope: cloudcontrolv1beta1.ScopeInfo{
+			Gcp: &cloudcontrolv1beta1.GcpScope{
+				Project:    "test-project",
+				VpcNetwork: fmt.Sprintf("shoot--%s--%s", "test-project", kymaRef.Name),
+				Network: cloudcontrolv1beta1.GcpNetwork{
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+				},
+				Workers: []cloudcontrolv1beta1.GcpWorkers{
+					{
+						Zones: []string{"us-central1-a", "us-central1-b", "us-central1-c"},
+					},
+				},
+			},
+		},
+	},
+}
+
 var kcpIpRange = cloudcontrolv1beta1.IpRange{
 	ObjectMeta: v1.ObjectMeta{
 		Name:      "test-ip-range",
@@ -256,6 +285,8 @@ func newTestStateFactory() (*testStateFactory, error) {
 		WithStatusSubresource(&gcpNfsInstance).
 		WithObjects(&gcpNfsInstanceToDelete).
 		WithStatusSubresource(&gcpNfsInstanceToDelete).
+		WithObjects(&kcpScope).
+		WithStatusSubresource(&kcpScope).
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 

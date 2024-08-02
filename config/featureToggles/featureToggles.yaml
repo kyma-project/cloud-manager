@@ -22,3 +22,13 @@ ipRangeAutomaticCidrAllocation:
       variation: enabled
   defaultRule:
     variation: disabled
+gcpNfsVolumeAutomaticLocationAllocation:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enabled on dev 57bc9639-d752-4f67-8b9e-7cd12514575f
+      query: landscape == "dev" and kyma == "57bc9639-d752-4f67-8b9e-7cd12514575f"
+      variation: enabled
+  defaultRule:
+    variation: disabled
