@@ -58,9 +58,6 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"redisInstanceCommon",
-				// common RedisInstance common actions here
-				loadIpRange,
-				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,

@@ -3,10 +3,10 @@ package redisinstance
 import (
 	"context"
 	"fmt"
-
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	rediscommon "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/common"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 )
 
@@ -23,6 +23,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"awsRedisInstance",
+			rediscommon.LoadIpRange,
 			actions.AddFinalizer,
 			loadSubnetGroup,
 			loadElastiCacheCluster,

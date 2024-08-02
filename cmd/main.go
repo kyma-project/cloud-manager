@@ -203,6 +203,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAzureRedisInstanceReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRedisInstance")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsRedisInstanceReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsRedisInstance")
 		os.Exit(1)
