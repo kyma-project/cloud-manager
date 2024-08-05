@@ -40,12 +40,16 @@ spec:
                 - message: AllowVnetAccess is immutable.
                   rule: (self == oldSelf)
               remotePeeringName:
-                maxLength: 80
-                pattern: ^[a-z][a-z0-9\.-]*[a-z0-9]$
                 type: string
                 x-kubernetes-validations:
                 - message: RemotePeeringName is immutable.
                   rule: (self == oldSelf)
+                - message: RemotePeeringName can be up to 80 characters long.
+                  rule: (size(self) <= 80)
+                - message: RemotePeeringName must begin with a word character, and
+                    it must end with a word character. RemotePeeringName may contain
+                    word characters or '-'.
+                  rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
               remoteResourceGroup:
                 type: string
                 x-kubernetes-validations:
