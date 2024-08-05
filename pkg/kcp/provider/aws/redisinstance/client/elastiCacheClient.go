@@ -159,6 +159,7 @@ func (c *client) DescribeElastiCacheParameters(ctx context.Context, groupName st
 		out, err := c.elastiCacheSvc.DescribeCacheParameters(ctx, &elasticache.DescribeCacheParametersInput{
 			CacheParameterGroupName: ptr.To(groupName),
 			Marker:                  marker,
+			MaxRecords:              ptr.To(int32(20)),
 		})
 
 		if err != nil {
@@ -166,9 +167,11 @@ func (c *client) DescribeElastiCacheParameters(ctx context.Context, groupName st
 		}
 
 		result = append(result, out.Parameters...)
+
 		if out.Marker == nil {
 			break
 		}
+		marker = out.Marker
 	}
 
 	return result, nil
