@@ -63,6 +63,7 @@ type GcpVpcPeering struct {
 
 type AzureVpcPeering struct {
 	AllowVnetAccess     bool   `json:"allowVnetAccess,omitempty"`
+	RemotePeeringName   string `json:"remotePeeringName,omitempty"`
 	RemoteVnet          string `json:"remoteVnet,omitempty"`
 	RemoteResourceGroup string `json:"remoteResourceGroup,omitempty"`
 }

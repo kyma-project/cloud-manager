@@ -2,7 +2,6 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 	"time"
 )
 
@@ -46,7 +44,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 
 	virtualNetworkName := remote.ResourceName
 	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
-	virtualNetworkPeeringName := strings.Trim(fmt.Sprintf("%s-%s", obj.Spec.RemoteRef.Namespace, obj.Spec.RemoteRef.Name), "-")
+	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
 	// Since we are creating virtual network peering connection from remote to shoot we need to build shootNetworkID
 	virtualNetworkId := util.VirtualNetworkResourceId(

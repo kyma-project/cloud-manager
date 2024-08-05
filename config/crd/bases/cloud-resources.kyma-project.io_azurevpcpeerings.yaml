@@ -39,6 +39,13 @@ spec:
                 x-kubernetes-validations:
                 - message: AllowVnetAccess is immutable.
                   rule: (self == oldSelf)
+              remotePeeringName:
+                maxLength: 80
+                pattern: ^[a-z][a-z0-9\.-]*[a-z0-9]$
+                type: string
+                x-kubernetes-validations:
+                - message: RemotePeeringName is immutable.
+                  rule: (self == oldSelf)
               remoteResourceGroup:
                 type: string
                 x-kubernetes-validations:
