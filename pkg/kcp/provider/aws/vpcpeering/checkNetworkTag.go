@@ -14,7 +14,7 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	if state.vpcPeering != nil {
+	if state.remoteVpcPeering != nil {
 		return nil, nil
 	}
 

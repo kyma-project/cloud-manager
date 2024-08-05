@@ -25,7 +25,6 @@ type State struct {
 	vpcPeering       *ec2Types.VpcPeeringConnection
 	remoteVpc        *ec2Types.Vpc
 	remoteVpcPeering *ec2Types.VpcPeeringConnection
-	remoteRegion     string
 }
 
 type StateFactory interface {
