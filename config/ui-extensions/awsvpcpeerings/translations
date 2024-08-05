@@ -1,0 +1,5 @@
+en:
+  configuration: Configuration
+  spec.remoteAccountId: Remote Account Id
+  spec.remoteVpcId: Remote VPC Id
+  spec.remoteRegion: Remote Region

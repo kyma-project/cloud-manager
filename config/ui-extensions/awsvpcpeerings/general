@@ -1,0 +1,11 @@
+resource:
+    kind: AwsVpcPeering
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsvpcpeerings
+name: AWS VPC Peerings
+scope: cluster
+category: Discovery and Network
+icon: tnt/network
+description: >-
+    Description here
