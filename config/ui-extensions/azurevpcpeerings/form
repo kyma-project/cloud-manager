@@ -9,3 +9,7 @@
   simple: true
   name: spec.remoteVnet
   widget: Text
+- path: spec.remotePeeringName
+  simple: true
+  name: spec.remotePeeringName
+  widget: Text

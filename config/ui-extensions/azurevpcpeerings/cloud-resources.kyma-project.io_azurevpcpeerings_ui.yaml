@@ -15,6 +15,9 @@ data:
             - widget: Labels
               source: remoteVnet
               name: spec.remoteVnet
+            - widget: Labels
+              source: remotePeeringName
+              name: spec.remotePeeringName
         - name: status
           widget: Panel
           source: status
@@ -33,6 +36,10 @@ data:
     - path: spec.remoteVnet
       simple: true
       name: spec.remoteVnet
+      widget: Text
+    - path: spec.remotePeeringName
+      simple: true
+      name: spec.remotePeeringName
       widget: Text
   general: |-
     resource:
@@ -64,6 +71,7 @@ data:
       spec.remoteResourceGroup: Remote Resource Group
       spec.remoteVnet: Remote Vnet
       status.id: ID
+      spec.remotePeeringName: Remote Peering Name
 kind: ConfigMap
 metadata:
   labels:
