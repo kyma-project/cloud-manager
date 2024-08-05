@@ -17,25 +17,25 @@ func GetAwsElastiCacheParameterGroupName(name string) string {
 }
 
 func GetAwsElastiCacheParameterGroupFamily(engineVersion string) string {
-	if strings.Contains(engineVersion, "2.6") {
+	if strings.HasPrefix(engineVersion, "2.6") {
 		return "redis2.6"
 	}
-	if strings.Contains(engineVersion, "2.8") {
+	if strings.HasPrefix(engineVersion, "2.8") {
 		return "redis2.8"
 	}
-	if strings.Contains(engineVersion, "3.2") {
+	if strings.HasPrefix(engineVersion, "3.2") {
 		return "redis3.2"
 	}
-	if strings.Contains(engineVersion, "4.0") {
+	if strings.HasPrefix(engineVersion, "4.0") {
 		return "redis4.0"
 	}
-	if strings.Contains(engineVersion, "5.0") {
+	if strings.HasPrefix(engineVersion, "5.0") {
 		return "redis5.0"
 	}
-	if strings.Contains(engineVersion, "6.") {
+	if strings.HasPrefix(engineVersion, "6.") {
 		return "redis6.x"
 	}
-	if strings.Contains(engineVersion, "7.") {
+	if strings.HasPrefix(engineVersion, "7.") {
 		return "redis7"
 	}
 
