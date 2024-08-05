@@ -49,21 +49,29 @@ type AzureRedisSKU struct {
 // AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
 type AzureRedisInstanceSpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SKU is immutable."
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EnableNonSslPort is immutable."
+	// +kubebuilder:default=false
 	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
 
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfiguration is immutable."
 	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
+	// +kubebuilder:default="6.0"
 	RedisVersion string `json:"redisVersion,omitempty"`
 
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
 	ShardCount int `json:"shardCount,omitempty"`
 
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerPrimary is immutable."
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
