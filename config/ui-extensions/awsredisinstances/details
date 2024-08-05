@@ -12,6 +12,9 @@ body:
       - name: spec.engineVersion
         source: engineVersion
         widget: Labels
+      - name: spec.parameters
+        source: parameters
+        widget: Labels
 
 
 
