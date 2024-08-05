@@ -71,6 +71,8 @@ spec:
                     properties:
                       allowVnetAccess:
                         type: boolean
+                      remotePeeringName:
+                        type: string
                       remoteResourceGroup:
                         type: string
                       remoteVnet:

@@ -28,6 +28,12 @@ type AzureVpcPeeringSpec struct {
 	AllowVnetAccess bool `json:"allowVnetAccess,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemotePeeringName is immutable."
+	// +kubebuilder:validation:Pattern="^[a-z][a-z0-9\\.-]*[a-z0-9]$"
+	// +kubebuilder:validation:MaxLength=80
+	RemotePeeringName string `json:"remotePeeringName,omitempty"`
+
+	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVnet is immutable."
 	RemoteVnet string `json:"remoteVnet,omitempty"`
 

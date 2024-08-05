@@ -73,13 +73,14 @@ func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string)
 	}
 }
 
-func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remoteVnet, remoteResourceGroup string) ObjAction {
+func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remotePeeringName, remoteVnet, remoteResourceGroup string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
 			if x.Spec.VpcPeering.Azure == nil {
 				x.Spec.VpcPeering.Azure = &cloudcontrolv1beta1.AzureVpcPeering{
 					AllowVnetAccess:     allowVnetAccess,
+					RemotePeeringName:   remotePeeringName,
 					RemoteVnet:          remoteVnet,
 					RemoteResourceGroup: remoteResourceGroup,
 				}
