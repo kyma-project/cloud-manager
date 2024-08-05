@@ -57,6 +57,10 @@ spec:
                         x-kubernetes-validations:
                         - message: EngineVersion is immutable.
                           rule: (self == oldSelf)
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        type: object
                     required:
                     - cacheNodeType
                     type: object

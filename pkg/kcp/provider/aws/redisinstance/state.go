@@ -17,6 +17,7 @@ type State struct {
 	awsClient redisinstanceclient.ElastiCacheClient
 
 	subnetGroup        *elasticacheTypes.CacheSubnetGroup
+	parameterGroup     *elasticacheTypes.CacheParameterGroup
 	elastiCacheCluster *elasticacheTypes.CacheCluster
 }
 

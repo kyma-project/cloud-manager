@@ -22,10 +22,13 @@ func New() Server {
 		scopeStore:      &scopeStore{},
 		vpcPeeringStore: &vpcPeeringStore{},
 		elastiCacheClientFake: &elastiCacheClientFake{
-			elasticacheMutex: &sync.Mutex{},
-			subnetGroupMutex: &sync.Mutex{},
-			elastiCaches:     map[string]*elasticacheTypes.CacheCluster{},
-			subnetGroups:     map[string]*elasticacheTypes.CacheSubnetGroup{},
+			elasticacheMutex:    &sync.Mutex{},
+			subnetGroupMutex:    &sync.Mutex{},
+			parameterGroupMutex: &sync.Mutex{},
+			elastiCaches:        map[string]*elasticacheTypes.CacheCluster{},
+			subnetGroups:        map[string]*elasticacheTypes.CacheSubnetGroup{},
+			parameterGroups:     map[string]*elasticacheTypes.CacheParameterGroup{},
+			parameters:          map[string]map[string]elasticacheTypes.Parameter{},
 		},
 	}
 }

@@ -233,6 +233,9 @@ type RedisInstanceAws struct {
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AutoMinorVersionUpgrade is immutable."
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
+
+	// +optional
+	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
 // RedisInstanceStatus defines the observed state of RedisInstance
