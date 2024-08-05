@@ -23,7 +23,7 @@ func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) m
 		}
 	}
 
-	//labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceName, azureRedis.Name)
+	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, azureRedis.Status.Id)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceNamespace, azureRedis.Namespace)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
 	labelsBuilder.WithCloudManagerDefaults()
