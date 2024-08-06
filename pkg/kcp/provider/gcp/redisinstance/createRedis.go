@@ -37,7 +37,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		RedisVersion:          redisInstance.Spec.Instance.Gcp.RedisVersion,
 		AuthEnabled:           redisInstance.Spec.Instance.Gcp.AuthEnabled,
 		TransitEncryptionMode: redisInstance.Spec.Instance.Gcp.TransitEncryptionMode,
-		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs.ToMap(),
+		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)

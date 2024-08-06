@@ -87,7 +87,7 @@ func WithGcpRedisInstanceTransitEncryptionMode(transitEncryptionMode string) Obj
 	}
 }
 
-func WithGcpRedisInstanceRedisConfigs(redisConfigs cloudresourcesv1beta1.RedisInstanceGcpConfigs) ObjAction {
+func WithGcpRedisInstanceRedisConfigs(redisConfigs map[string]string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {

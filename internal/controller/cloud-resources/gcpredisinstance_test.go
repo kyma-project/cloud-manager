@@ -53,7 +53,11 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		gcpRedisInstanceRedisVersion := "REDIS_7_0"
 		gcpRedisInstanceAuthEnabled := true
 		gcpRedisInstanceTransitEncryptionMode := "SERVER_AUTHENTICATION"
-		gcpRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceGcpConfigs{}
+		configKey := "maxmemory-policy"
+		configValue := "allkeys-lru"
+		gcpRedisInstanceRedisConfigs := map[string]string{
+			configKey: configValue,
+		}
 
 		const (
 			authSecretName = "custom-auth-secretname"
@@ -132,15 +136,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisVersion).To(Equal(gcpRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.AuthEnabled).To(Equal(gcpRedisInstance.Spec.AuthEnabled))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.TransitEncryptionMode).To(Equal(gcpRedisInstance.Spec.TransitEncryptionMode))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.MaxmemoryPolicy).To(Equal(gcpRedisInstance.Spec.RedisConfigs.MaxmemoryPolicy))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.NotifyKeyspaceEvents).To(Equal(gcpRedisInstance.Spec.RedisConfigs.NotifyKeyspaceEvents))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.Activedefrag).To(Equal(gcpRedisInstance.Spec.RedisConfigs.Activedefrag))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.LfuDecayTime).To(Equal(gcpRedisInstance.Spec.RedisConfigs.LfuDecayTime))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.LfuLogFactor).To(Equal(gcpRedisInstance.Spec.RedisConfigs.LfuLogFactor))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.MaxmemoryGb).To(Equal(gcpRedisInstance.Spec.RedisConfigs.MaxmemoryGb))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.StreamNodeMaxBytes).To(Equal(gcpRedisInstance.Spec.RedisConfigs.StreamNodeMaxBytes))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs.StreamNodeMaxEntries).To(Equal(gcpRedisInstance.Spec.RedisConfigs.StreamNodeMaxEntries))
-
+			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs[configKey]).To(Equal(configValue))
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")
 			Expect(kcpRedisInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))
 		})
