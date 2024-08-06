@@ -22,8 +22,8 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	clientId := azureconfig.AzureConfig.ClientId
-	clientSecret := azureconfig.AzureConfig.ClientSecret
+	clientId := azureconfig.AzureConfig.VpcPeeringClientId
+	clientSecret := azureconfig.AzureConfig.VpcPeeringClientSecret
 	tenantId := state.tenantId
 
 	// We are creating virtual network peering in remote subscription therefore we are decomposing remoteVnetID

@@ -15,8 +15,8 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	clientId := azureconfig.AzureConfig.ClientId
-	clientSecret := azureconfig.AzureConfig.ClientSecret
+	clientId := azureconfig.AzureConfig.VpcPeeringClientId
+	clientSecret := azureconfig.AzureConfig.VpcPeeringClientSecret
 	tenantId := state.tenantId
 
 	if len(obj.Status.RemoteId) == 0 {

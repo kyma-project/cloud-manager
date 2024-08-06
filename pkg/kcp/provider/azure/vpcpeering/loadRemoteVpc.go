@@ -20,8 +20,8 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	clientId := azureconfig.AzureConfig.ClientId
-	clientSecret := azureconfig.AzureConfig.ClientSecret
+	clientId := azureconfig.AzureConfig.VpcPeeringClientId
+	clientSecret := azureconfig.AzureConfig.VpcPeeringClientSecret
 	tenantId := state.tenantId
 
 	remote, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
