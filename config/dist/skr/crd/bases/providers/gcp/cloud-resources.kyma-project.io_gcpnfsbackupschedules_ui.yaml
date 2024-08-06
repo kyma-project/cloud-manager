@@ -62,28 +62,12 @@ data:
       required: true
       widget: FormGroup
       children:
-        - path: apiVersion
-          name: spec.nfsVolumeRef.apiVersion
-          required: true
-        - path: kind
-          name: spec.nfsVolumeRef.kind
-          required: true
         - path: name
           name: spec.nfsVolumeRef.name
           required: true
         - path: namespace
           name: spec.nfsVolumeRef.namespace
           required: true
-        - path: fieldPath
-          name: spec.nfsVolumeRef.fieldPath
-          required: false
-        - path: resourceVersion
-          name: spec.nfsVolumeRef.resourceVersion
-          required: false
-        - path: uid
-          name: spec.nfsVolumeRef.uid
-          required: false
-
     - path: spec.schedule
       name: spec.schedule
       simple: false
