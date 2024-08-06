@@ -1,0 +1,11 @@
+resource:
+    kind: GcpNfsBackupSchedule
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpnfsbackupschedules
+name: GCP NFS Backup Schedules
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    GcpNfsBackupSchedules is the Schema for the gcpnfsbackupschedules API
