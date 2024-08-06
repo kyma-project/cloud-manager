@@ -23,6 +23,10 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+### env variable(s) to enable FIPS compliance
+export CGO_ENABLED=1
+export GOEXPERIMENT=boringcrypto
+
 .PHONY: all
 all: build
 
