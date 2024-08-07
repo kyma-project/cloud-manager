@@ -46,6 +46,7 @@ cp $SCRIPT_DIR/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsv
 
 # AZURE
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurevpcpeerings.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/cloud-resources.kyma-project.io_azurevpcpeerings.yaml
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azureredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/cloud-resources.kyma-project.io_azureredisinstances.yaml
 
 # AZURE UI
 cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
