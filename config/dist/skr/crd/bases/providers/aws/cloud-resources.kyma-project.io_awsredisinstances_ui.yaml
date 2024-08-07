@@ -15,6 +15,9 @@ data:
           - name: spec.engineVersion
             source: engineVersion
             widget: Labels
+          - name: spec.parameters
+            source: parameters
+            widget: Labels
 
 
 
@@ -54,6 +57,12 @@ data:
       simple: false
       name: spec.engineVersion
       required: false
+
+    - path: spec.parameters
+      simple: false
+      name: spec.parameters
+      required: false
+      widget: KeyValuePair
 
     - path: spec.ipRange
       simple: false
@@ -114,6 +123,7 @@ data:
       spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
       spec.cacheNodeType: Cache Node Type
       spec.engineVersion: Engine Version
+      spec.parameters: Parameters
 kind: ConfigMap
 metadata:
   labels:

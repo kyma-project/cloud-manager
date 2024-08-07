@@ -5,3 +5,4 @@ en:
   spec.remoteResourceGroup: Remote Resource Group
   spec.remoteVnet: Remote Vnet
   status.id: ID
+  spec.remotePeeringName: Remote Peering Name
