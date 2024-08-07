@@ -25,6 +25,9 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if state.gcpRedisInstanceAuth != nil {
 		redisInstance.Status.AuthString = state.gcpRedisInstanceAuth.AuthString
 	}
+	if len(state.gcpRedisInstance.ServerCaCerts) > 0 {
+		redisInstance.Status.CaCert = state.gcpRedisInstance.ServerCaCerts[0].Cert
+	}
 
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{

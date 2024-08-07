@@ -56,5 +56,9 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 		result["authString"] = []byte(kcpRedis.Status.AuthString)
 	}
 
+	if len(kcpRedis.Status.CaCert) > 0 {
+		result["CaCert.pem"] = []byte(kcpRedis.Status.CaCert)
+	}
+
 	return result
 }
