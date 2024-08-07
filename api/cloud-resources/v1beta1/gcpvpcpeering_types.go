@@ -9,10 +9,18 @@ import (
 // Important: Run "make" to regenerate code after modifying this file
 
 type GcpVpcPeeringSpec struct {
-	ImportCustomRoutes bool   `json:"importCustomRoutes,omitempty"`
-	PeeringName        string `json:"peeringName,omitempty"`
-	RemoteVpc          string `json:"remoteVpc,omitempty"`
-	RemoteProject      string `json:"remoteProject,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ImportCustomRoutes is immutable."
+	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemotePeeringName is immutable."
+	RemotePeeringName string `json:"remotePeeringName,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVpc is immutable."
+	RemoteVpc string `json:"remoteVpc,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteNetwork is immutable."
+	RemoteProject string `json:"remoteProject,omitempty"`
 }
 
 type GcpVpcPeeringStatus struct {

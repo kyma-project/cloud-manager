@@ -1,8 +1,8 @@
 - source: spec.importCustomRoutes
   name: spec.importCustomRoutes
   sort: true
-- source: spec.peeringName
-  name: spec.peeringName
+- source: spec.remotePeeringName
+  name: spec.remotePeeringName
   sort: true
 - source: spec.remoteProject
   name: spec.remoteProject

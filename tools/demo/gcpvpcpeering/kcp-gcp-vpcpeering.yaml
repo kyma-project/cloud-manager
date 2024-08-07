@@ -6,7 +6,7 @@ metadata:
 spec:
   vpcPeering:
     gcp:
-      peeringName: vpcpeering-sap-gcp-skr-dev-cust-00002-sap-sc-learn
+      remotePeeringName: vpcpeering-sap-gcp-skr-dev-cust-00002-sap-sc-learn
       remoteProject: sap-sc-learn
       remoteVpc: default
       importCustomRoutes: false

@@ -7,8 +7,8 @@ body:
           source: importCustomRoutes
           name: spec.importCustomRoutes
         - widget: Labels
-          source: peeringName
-          name: spec.peeringName
+          source: remotePeeringName
+          name: spec.remotePeeringName
         - widget: Labels
           source: remoteProject
           name: spec.remoteProject

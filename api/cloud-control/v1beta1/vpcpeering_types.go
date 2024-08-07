@@ -55,7 +55,7 @@ type VpcPeeringInfo struct {
 }
 
 type GcpVpcPeering struct {
-	PeeringName        string `json:"peeringName,omitempty"`
+	RemotePeeringName  string `json:"remotePeeringName,omitempty"`
 	RemoteProject      string `json:"remoteProject,omitempty"`
 	RemoteVpc          string `json:"remoteVpc,omitempty"`
 	ImportCustomRoutes bool   `json:"importCustomRoutes,omitempty"`

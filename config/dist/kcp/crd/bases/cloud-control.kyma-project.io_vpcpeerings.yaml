@@ -82,7 +82,7 @@ spec:
                     properties:
                       importCustomRoutes:
                         type: boolean
-                      peeringName:
+                      remotePeeringName:
                         type: string
                       remoteProject:
                         type: string
