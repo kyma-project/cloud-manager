@@ -23,7 +23,10 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 		Namespace: state.Obj().GetNamespace(),
 		Name:      authSecretName,
 	}, secret)
-	if client.IgnoreNotFound(err) != nil {
+	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			return nil, nil
+		}
 		return composed.LogErrorAndReturn(err, "Error getting Secret by getAuthSecretName()", composed.StopWithRequeue, ctx)
 	}
 
