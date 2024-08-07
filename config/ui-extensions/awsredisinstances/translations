@@ -11,3 +11,4 @@ en:
   spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
   spec.cacheNodeType: Cache Node Type
   spec.engineVersion: Engine Version
+  spec.parameters: Parameters

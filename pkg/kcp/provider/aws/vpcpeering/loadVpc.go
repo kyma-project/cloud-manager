@@ -67,14 +67,17 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 			}).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
-			Run(ctx, st)
+			Run(ctx, state)
 	}
 
 	state.vpc = vpc
 
-	state.ObjAsVpcPeering().Status.VpcId = ptr.Deref(vpc.VpcId, "")
+	vpcId := ptr.Deref(vpc.VpcId, "")
 
-	logger = logger.WithValues("vpcId", ptr.Deref(state.vpc.VpcId, ""))
+	state.ObjAsVpcPeering().Status.VpcId = vpcId
+
+	logger = logger.WithValues("vpcId", vpcId)
+
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	return nil, ctx

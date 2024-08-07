@@ -1,0 +1,54 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: deleteCascade
+        name: spec.deleteCascade
+      - widget: Labels
+        source: endTime
+        name: spec.endTime
+      - widget: Labels
+        source: location
+        name: spec.location
+      - widget: Labels
+        source: maxRetentionDays
+        name: spec.maxRetentionDays
+      - widget: Labels
+        source: prefix
+        name: spec.prefix
+      - widget: Labels
+        source: schedule
+        name: spec.schedule
+      - widget: Labels
+        source: startTime
+        name: spec.startTime
+      - widget: Labels
+        source: suspend
+        name: spec.suspend
+  - name: nfsVolumeRef
+    widget: Panel
+    source: spec.nfsVolumeRef
+    children:
+      - widget: Labels
+        source: apiVersion
+        name: spec.nfsVolumeRef.apiVersion
+      - widget: Labels
+        source: kind
+        name: spec.nfsVolumeRef.kind
+      - widget: Labels
+        source: name
+        name: spec.nfsVolumeRef.name
+      - widget: Labels
+        source: namespace
+        name: spec.nfsVolumeRef.namespace
+      - widget: Labels
+        source: fieldPath
+        name: spec.nfsVolumeRef.fieldPath
+      - widget: Labels
+        source: resourceVersion
+        name: spec.nfsVolumeRef.resourceVersion
+      - widget: Labels
+        source: uid
+        name: spec.nfsVolumeRef.uid

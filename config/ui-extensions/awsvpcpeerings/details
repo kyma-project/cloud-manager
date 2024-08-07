@@ -1,0 +1,14 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: remoteAccountId
+        name: spec.remoteAccountId
+      - widget: Labels
+        source: remoteVpcId
+        name: spec.remoteVpcId
+      - widget: Labels
+        source: remoteRegion
+        name: spec.remoteRegion

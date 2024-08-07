@@ -57,27 +57,6 @@ type RedisInstanceInfo struct {
 	Aws *RedisInstanceAws `json:"aws,omitempty"`
 }
 
-type RedisInstanceGcpConfigs struct {
-	// +optional
-	MaxmemoryPolicy string `json:"maxmemory-policy,omitempty"`
-	// +optional
-	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-
-	// +optional
-	Activedefrag string `json:"activedefrag,omitempty"`
-	// +optional
-	LfuDecayTime string `json:"lfu-decay-time,omitempty"`
-	// +optional
-	LfuLogFactor string `json:"lfu-log-factor,omitempty"`
-	// +optional
-	MaxmemoryGb string `json:"maxmemory-gb,omitempty"`
-
-	// +optional
-	StreamNodeMaxBytes string `json:"stream-node-max-bytes,omitempty"`
-	// +optional
-	StreamNodeMaxEntries string `json:"stream-node-max-entries,omitempty"`
-}
-
 type RedisInstanceAzureConfigs struct {
 	// +optional
 	MaxClients string `json:"maxclients,omitempty"`
@@ -135,39 +114,6 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
-func (redisConfigs *RedisInstanceGcpConfigs) ToMap() map[string]string {
-	result := map[string]string{}
-
-	if redisConfigs.MaxmemoryPolicy != "" {
-		result["maxmemory-policy"] = redisConfigs.MaxmemoryPolicy
-	}
-	if redisConfigs.NotifyKeyspaceEvents != "" {
-		result["notify-keyspace-events"] = redisConfigs.NotifyKeyspaceEvents
-	}
-
-	if redisConfigs.Activedefrag != "" {
-		result["activedefrag"] = redisConfigs.Activedefrag
-	}
-	if redisConfigs.LfuDecayTime != "" {
-		result["lfu-decay-time"] = redisConfigs.LfuDecayTime
-	}
-	if redisConfigs.LfuLogFactor != "" {
-		result["lfu-log-factor"] = redisConfigs.LfuLogFactor
-	}
-	if redisConfigs.MaxmemoryGb != "" {
-		result["maxmemory-gb"] = redisConfigs.MaxmemoryGb
-	}
-
-	if redisConfigs.StreamNodeMaxBytes != "" {
-		result["stream-node-max-bytes"] = redisConfigs.StreamNodeMaxBytes
-	}
-	if redisConfigs.StreamNodeMaxEntries != "" {
-		result["stream-node-max-entries"] = redisConfigs.StreamNodeMaxEntries
-	}
-
-	return result
-}
-
 type RedisInstanceGcp struct {
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
@@ -178,6 +124,7 @@ type RedisInstanceGcp struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
+	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
 	// +kubebuilder:validation:Enum=REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
@@ -196,7 +143,7 @@ type RedisInstanceGcp struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
-	RedisConfigs RedisInstanceGcpConfigs `json:"redisConfigs"`
+	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
 }
 
 type RedisInstanceAzure struct {
@@ -233,6 +180,9 @@ type RedisInstanceAws struct {
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AutoMinorVersionUpgrade is immutable."
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
+
+	// +optional
+	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
 // RedisInstanceStatus defines the observed state of RedisInstance

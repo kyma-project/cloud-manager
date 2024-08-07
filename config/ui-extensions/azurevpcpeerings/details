@@ -12,6 +12,9 @@ body:
         - widget: Labels
           source: remoteVnet
           name: spec.remoteVnet
+        - widget: Labels
+          source: remotePeeringName
+          name: spec.remotePeeringName
     - name: status
       widget: Panel
       source: status

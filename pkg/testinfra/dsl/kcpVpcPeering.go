@@ -73,13 +73,14 @@ func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string)
 	}
 }
 
-func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remoteVnet, remoteResourceGroup string) ObjAction {
+func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remotePeeringName, remoteVnet, remoteResourceGroup string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
 			if x.Spec.VpcPeering.Azure == nil {
 				x.Spec.VpcPeering.Azure = &cloudcontrolv1beta1.AzureVpcPeering{
 					AllowVnetAccess:     allowVnetAccess,
+					RemotePeeringName:   remotePeeringName,
 					RemoteVnet:          remoteVnet,
 					RemoteResourceGroup: remoteResourceGroup,
 				}
@@ -88,7 +89,7 @@ func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remoteVnet, remoteResource
 	}
 }
 
-func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, peeringName string, importCustomRoutes bool) ObjAction {
+func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName string, importCustomRoutes bool) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
@@ -96,7 +97,7 @@ func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, peeringName string, impo
 				x.Spec.VpcPeering.Gcp = &cloudcontrolv1beta1.GcpVpcPeering{
 					RemoteVpc:          remoteVpc,
 					RemoteProject:      remoteProject,
-					PeeringName:        peeringName,
+					RemotePeeringName:  remotePeeringName,
 					ImportCustomRoutes: importCustomRoutes,
 				}
 			}

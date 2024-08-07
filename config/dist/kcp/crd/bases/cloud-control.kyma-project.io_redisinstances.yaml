@@ -57,6 +57,10 @@ spec:
                         x-kubernetes-validations:
                         - message: EngineVersion is immutable.
                           rule: (self == oldSelf)
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        type: object
                     required:
                     - cacheNodeType
                     type: object
@@ -117,23 +121,8 @@ spec:
                         - message: MemorySizeGb is immutable.
                           rule: (self == oldSelf)
                       redisConfigs:
-                        properties:
-                          activedefrag:
-                            type: string
-                          lfu-decay-time:
-                            type: string
-                          lfu-log-factor:
-                            type: string
-                          maxmemory-gb:
-                            type: string
-                          maxmemory-policy:
-                            type: string
-                          notify-keyspace-events:
-                            type: string
-                          stream-node-max-bytes:
-                            type: string
-                          stream-node-max-entries:
-                            type: string
+                        additionalProperties:
+                          type: string
                         type: object
                         x-kubernetes-validations:
                         - message: RedisConfigs is immutable.
@@ -171,7 +160,6 @@ spec:
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb
-                    - redisVersion
                     - tier
                     type: object
                 type: object

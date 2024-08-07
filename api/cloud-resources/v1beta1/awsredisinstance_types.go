@@ -26,6 +26,8 @@ type AwsRedisInstanceSpec struct {
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +kubebuilder:validation:Required
@@ -41,6 +43,9 @@ type AwsRedisInstanceSpec struct {
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AutoMinorVersionUpgrade is immutable."
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
+
+	// +optional
+	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
 // AwsRedisInstanceStatus defines the observed state of AwsRedisInstance

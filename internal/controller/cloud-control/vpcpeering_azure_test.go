@@ -1,7 +1,6 @@
 package cloudcontrol
 
 import (
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
@@ -52,7 +51,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					WithName(vpcpeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
 					WithKcpVpcPeeringSpecScope(kymaName),
-					WithKcpVpcPeeringSpecAzure(true, remoteVnet, remoteResourceGroup),
+					WithKcpVpcPeeringSpecAzure(true, vpcpeeringName, remoteVnet, remoteResourceGroup),
 				).
 				Should(Succeed())
 		})
@@ -75,13 +74,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(ptr.Deref(peering.ID, "xxx")).To(Equal(obj.Status.Id))
 		})
 
-		virtualNetworkPeeringName := fmt.Sprintf("%s-%s",
-			remoteRefNamespace,
-			remoteRefName)
-
 		r, _ := infra.AzureMock().VpcPeeringSkrProvider()(infra.Ctx(), "", "", remoteSubscription, "")
 
-		remotePeering, _ := r.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
+		remotePeering, _ := r.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, vpcpeeringName)
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to Status.RemoteId", func() {
 			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(obj.Status.RemoteId))
@@ -91,7 +86,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(ptr.Deref(peering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnet))
 		})
 
-		remotePeeringId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName, virtualNetworkPeeringName)
+		remotePeeringId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName, vpcpeeringName)
 
 		By("And Then found remote VirtualNetworkPeering has ID equal to remote vpc peering id", func() {
 			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(remotePeeringId))

@@ -116,6 +116,18 @@ func WithKcpGcpRedisInstanceRedisVersion(redisVersion string) ObjAction {
 	}
 }
 
+func WithKcpGcpRedisInstanceConfigs(redisConfigs map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Gcp.RedisConfigs = redisConfigs
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpGcpRedisInstanceConfigs", obj))
+		},
+	}
+}
+
 func WithRedisInstanceAws() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -158,6 +170,18 @@ func WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAwsAutoMinorVersionUpgrade", obj))
+		},
+	}
+}
+
+func WithKcpAwsParameters(parameters map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Aws.Parameters = parameters
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAwsParameters", obj))
 		},
 	}
 }

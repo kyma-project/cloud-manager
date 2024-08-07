@@ -210,6 +210,11 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 						Pods:     "10.96.0.0/13",
 						Services: "10.104.0.0/13",
 					},
+					Workers: []cloudcontrolv1beta1.GcpWorkers{
+						{
+							Zones: []string{"us-central1-a", "us-central1-b", "us-central1-c"},
+						},
+					},
 				},
 			},
 		},

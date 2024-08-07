@@ -71,6 +71,8 @@ spec:
                     properties:
                       allowVnetAccess:
                         type: boolean
+                      remotePeeringName:
+                        type: string
                       remoteResourceGroup:
                         type: string
                       remoteVnet:
@@ -80,7 +82,7 @@ spec:
                     properties:
                       importCustomRoutes:
                         type: boolean
-                      peeringName:
+                      remotePeeringName:
                         type: string
                       remoteProject:
                         type: string

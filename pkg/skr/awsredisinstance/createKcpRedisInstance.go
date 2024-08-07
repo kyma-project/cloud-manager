@@ -45,6 +45,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 					CacheNodeType:           awsRedisInstance.Spec.CacheNodeType,
 					EngineVersion:           awsRedisInstance.Spec.EngineVersion,
 					AutoMinorVersionUpgrade: awsRedisInstance.Spec.AutoMinorVersionUpgrade,
+					Parameters:              awsRedisInstance.Spec.Parameters,
 				},
 			},
 		},

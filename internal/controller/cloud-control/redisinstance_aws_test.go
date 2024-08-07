@@ -59,6 +59,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		engineVersion := "6.x"
 		AutoMinorVersionUpgrade := true
 
+		parameters := map[string]string{
+			"active-defrag-cycle-max": "85",
+		}
+
 		By("When RedisInstance is created", func() {
 			Eventually(CreateRedisInstance).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
@@ -70,6 +74,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpAwsCacheNodeType(cacheNodeType),
 					WithKcpAwsEngineVersion(engineVersion),
 					WithKcpAwsAutoMinorVersionUpgrade(AutoMinorVersionUpgrade),
+					WithKcpAwsParameters(parameters),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
 		})
@@ -82,6 +87,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					HavingRedisInstanceStatusId()).
 				Should(Succeed(), "expected RedisInstance to get status.id")
 			awsElastiCacheClusterInstance = infra.AwsMock().GetAwsElastiCacheByName(redisInstance.Status.Id)
+		})
+
+		By("And Then AWS Redis has defined custom parameters", func() {
+			remoteParameters := infra.AwsMock().DescribeAwsElastiCacheParametersByName("cm-" + redisInstance.Name)
+
+			Expect(remoteParameters["active-defrag-cycle-max"]).To(Equal(parameters["active-defrag-cycle-max"]))
 		})
 
 		By("When AWS Redis is Available", func() {

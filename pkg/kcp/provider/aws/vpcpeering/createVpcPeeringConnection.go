@@ -15,6 +15,7 @@ import (
 func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsVpcPeering()
 
 	if state.vpcPeering != nil {
 		return nil, nil
@@ -43,11 +44,13 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		},
 	}
 
+	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
+
 	con, err := state.client.CreateVpcPeeringConnection(
 		ctx,
 		state.vpc.VpcId,
 		state.remoteVpc.VpcId,
-		ptr.To(state.remoteRegion),
+		ptr.To(remoteRegion),
 		state.remoteVpc.OwnerId,
 		tags)
 

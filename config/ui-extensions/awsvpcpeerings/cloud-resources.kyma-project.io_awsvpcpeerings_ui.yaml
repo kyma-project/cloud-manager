@@ -1,0 +1,57 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - widget: Labels
+            source: remoteAccountId
+            name: spec.remoteAccountId
+          - widget: Labels
+            source: remoteVpcId
+            name: spec.remoteVpcId
+          - widget: Labels
+            source: remoteRegion
+            name: spec.remoteRegion
+  form: |-
+    - path: spec.remoteAccountId
+      simple: true
+      name: spec.remoteAccountId
+      required: true
+    - path: spec.remoteVpcId
+      simple: true
+      name: spec.remoteVpcId
+      required: true
+    - path: spec.remoteRegion
+      simple: false
+      name: spec.remoteRegion
+      required: false
+  general: |
+    resource:
+        kind: AwsVpcPeering
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsvpcpeerings
+    name: AWS VPC Peerings
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        Description here
+  list: ""
+  translations: |-
+    en:
+      configuration: Configuration
+      spec.remoteAccountId: Remote Account Id
+      spec.remoteVpcId: Remote VPC Id
+      spec.remoteRegion: Remote Region
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsvpcpeerings-ui.operator.kyma-project.io
+  namespace: kyma-system

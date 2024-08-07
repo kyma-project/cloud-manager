@@ -2,7 +2,7 @@ en:
   configuration: Configuration
   status: Status
   spec.importCustomRoutes: Import Custom Routes
-  spec.peeringName: Peering Name
+  spec.remotePeeringName: Remote Peering Name
   spec.remoteProject: Remote Project
   spec.remoteVpc: Remote VPC
   status.id: ID

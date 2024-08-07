@@ -63,6 +63,12 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
 
+		parameterKey := "active-defrag-cycle-max"
+		parameterValue := "85"
+		parameters := map[string]string{
+			parameterKey: parameterValue,
+		}
+
 		By("When AwsRedisInstance is created", func() {
 			Eventually(CreateAwsRedisInstance).
 				WithArguments(
@@ -75,6 +81,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceCacheNodeType(cacheNodeType),
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
+					WithAwsRedisInstanceParameters(parameters),
 				).
 				Should(Succeed())
 		})
@@ -125,6 +132,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Aws.CacheNodeType).To(Equal(awsRedisInstance.Spec.CacheNodeType))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.EngineVersion).To(Equal(awsRedisInstance.Spec.EngineVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade).To(Equal(awsRedisInstance.Spec.AutoMinorVersionUpgrade))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.Parameters[parameterKey]).To(Equal(parameterValue))
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")
 			Expect(kcpRedisInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))

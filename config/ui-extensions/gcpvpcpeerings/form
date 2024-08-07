@@ -1,9 +1,9 @@
 - path: spec.importCustomRoutes
   simple: true
   name: spec.importCustomRoutes
-- path: spec.peeringName
+- path: spec.remotePeeringName
   simple: true
-  name: spec.peeringName
+  name: spec.remotePeeringName
   widget: Text
 - path: spec.remoteProject
   simple: true

@@ -21,27 +21,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type RedisInstanceGcpConfigs struct {
-	// +optional
-	MaxmemoryPolicy string `json:"maxmemory-policy,omitempty"`
-	// +optional
-	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-
-	// +optional
-	Activedefrag string `json:"activedefrag,omitempty"`
-	// +optional
-	LfuDecayTime string `json:"lfu-decay-time,omitempty"`
-	// +optional
-	LfuLogFactor string `json:"lfu-log-factor,omitempty"`
-	// +optional
-	MaxmemoryGb string `json:"maxmemory-gb,omitempty"`
-
-	// +optional
-	StreamNodeMaxBytes string `json:"stream-node-max-bytes,omitempty"`
-	// +optional
-	StreamNodeMaxEntries string `json:"stream-node-max-entries,omitempty"`
-}
-
 type AuthSecretSpec struct {
 	Name        string            `json:"name,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
@@ -63,6 +42,7 @@ type GcpRedisInstanceSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
+	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
 	// +kubebuilder:validation:Enum=REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
@@ -81,8 +61,10 @@ type GcpRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
-	RedisConfigs RedisInstanceGcpConfigs `json:"redisConfigs"`
+	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
 
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 }
 

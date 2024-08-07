@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
@@ -20,15 +21,26 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"gcpVpcPeering",
-			composed.BuildSwitchAction(
-				"gcpVpcPeering-switch",
-				// default action
-				composed.ComposeActions("gcpVpcPeering-non-delete",
-					addFinalizer,
-					createVpcPeeringConnection,
-					updateSuccessStatus,
-					composed.StopAndForgetAction),
-			), // switch
+			actions.AddFinalizer,
+			loadRemoteVpcPeering,
+			loadKymaVpcPeering,
+			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
+				composed.ComposeActions(
+					"gcpVpcPeering-create",
+					createRemoteVpcPeering,
+					waitRemoteVpcPeeringAvailable,
+					createKymaVpcPeering,
+					waitVpcPeeringActive,
+					updateStatus,
+				),
+				composed.ComposeActions(
+					"gcpVpcPeering-delete",
+					removeReadyCondition,
+					deleteVpcPeering,
+					waitKymaVpcPeeringDeletion,
+					actions.RemoveFinalizer,
+				),
+			),
 			composed.StopAndForgetAction,
 		)(ctx, state)
 	}

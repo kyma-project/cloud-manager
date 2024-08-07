@@ -26,10 +26,11 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"awsVpcPeering-non-delete",
 					addFinalizer,
+					loadVpcPeeringConnection,
+					loadRemoteVpcPeeringConnection,
 					loadVpc,
 					loadRemoteVpc,
 					checkNetworkTag,
-					loadVpcPeeringConnection,
 					createVpcPeeringConnection,
 					acceptVpcPeeringConnection,
 					updateSuccessStatus,

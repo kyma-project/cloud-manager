@@ -143,9 +143,11 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
 
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
 
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 

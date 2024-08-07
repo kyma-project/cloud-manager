@@ -28,32 +28,8 @@
   name: spec.redisConfigs
   simple: false
   required: false
-  widget: FormGroup
-  children:
-    - path: activedefrag
-      name: spec.redisConfigs.activedefrag
-      widget: Text
-    - path: lfu-decay-time
-      name: spec.redisConfigs.lfu-decay-time
-      widget: Text
-    - path: lfu-log-factor
-      name: spec.redisConfigs.lfu-log-factor
-      widget: Text
-    - path: maxmemory-gb
-      name: spec.redisConfigs.maxmemory-gb
-      widget: Text
-    - path: maxmemory-policy
-      name: spec.redisConfigs.maxmemory-policy
-      widget: Text
-    - path: notify-keyspace-events
-      name: spec.redisConfigs.notify-keyspace-events
-      widget: Text
-    - path: stream-node-max-bytes
-      name: spec.redisConfigs.stream-node-max-bytes
-      widget: Text
-    - path: stream-node-max-entries
-      name: spec.redisConfigs.stream-node-max-entries
-      widget: Text
+  widget: KeyValuePair
+
 - path: spec.authSecret
   simple: false
   name: spec.authSecret
