@@ -100,7 +100,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		})
 
 		kcpRedisInstancePrimaryEndpoint := "192.168.0.1:6576"
-		kcpRedisInstanceAuthString := "a9461793-2449-48d2-8618-0881bbe61d05"
+		kcpRedisInstanceAuthString := "a9461793-2449-48d2-8618-0881bbe61d06"
 
 		By("When KCP RedisInstance has Ready condition", func() {
 			Eventually(UpdateStatus).
