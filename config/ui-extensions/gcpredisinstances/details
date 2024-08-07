@@ -24,37 +24,8 @@ body:
     widget: Panel
     source: spec
     children:
-      - name: spec.redisConfigs.activedefrag
-        source: redisConfigs.activedefrag
+      - source: redisConfigs
         widget: Labels
-      - name: spec.redisConfigs.lfu-decay-time
-        source: redisConfigs.lfu-decay-time
-        widget: Labels
-      - name: spec.redisConfigs.lfu-log-factor
-        source: redisConfigs.lfu-log-factor
-        widget: Labels
-      - name: spec.redisConfigs.maxmemory-gb
-        source: redisConfigs.maxmemory-gb
-        widget: Labels
-      - name: spec.redisConfigs.maxmemory-policy
-        source: redisConfigs.maxmemory-policy
-        widget: Labels
-      - name: spec.redisConfigs.notify-keyspace-events
-        source: redisConfigs.notify-keyspace-events
-        widget: Labels
-      - name: spec.redisConfigs.stream-node-max-bytes
-        source: redisConfigs.stream-node-max-bytes
-        widget: Labels
-      - name: spec.redisConfigs.stream-node-max-entries
-        source: redisConfigs.stream-node-max-entries
-        widget: Labels
-
-
-
-
-
-
-
 
   - name: spec.ipRange
     widget: Panel
