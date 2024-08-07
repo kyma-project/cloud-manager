@@ -201,6 +201,9 @@ type RedisInstanceStatus struct {
 	// +optional
 	AuthString string `json:"authString,omitempty"`
 
+	// +optional
+	CaCert string `json:"caCert,omitempty"`
+
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional
 	// +listType=map
