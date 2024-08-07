@@ -1,7 +1,6 @@
 package mock
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"fmt"
@@ -21,15 +20,21 @@ func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
 
-func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, importCustomRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	remoteNetwork := getFullNetworkUrl(remoteProject, remoteVpc)
 	kymaNetwork := getFullNetworkUrl(kymaProject, kymaVpc)
 
+	exportCustomRoutes := false
+	importCustomRoutes := false
+	if customRoutes {
+		exportCustomRoutes = true
+	}
+
 	_, peeringExists := s.items[remoteNetwork]
 	if peeringExists {
-		return new(compute.Operation), nil
+		return nil
 	}
 
 	state := pb.NetworkPeering_ACTIVE.String()
@@ -39,25 +44,32 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 			Name:                 &remotePeeringName,
 			Network:              &kymaNetwork,
 			ImportCustomRoutes:   &importCustomRoutes,
+			ExportCustomRoutes:   &exportCustomRoutes,
 			ExchangeSubnetRoutes: ptr.To(true),
 		},
 	}
 	item.peering.State = &state
 	s.items[remoteNetwork] = item
 
-	return new(compute.Operation), nil
+	return nil
 }
 
-func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, importCustomRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	remoteNetwork := getFullNetworkUrl(remoteProject, remoteVpc)
 	kymaNetwork := getFullNetworkUrl(kymaProject, kymaVpc)
 
+	exportCustomRoutes := false
+	importCustomRoutes := false
+	if customRoutes {
+		importCustomRoutes = true
+	}
+
 	_, peeringExists := s.items[kymaNetwork]
 	if peeringExists {
-		return new(compute.Operation), nil
+		return nil
 	}
 
 	state := pb.NetworkPeering_ACTIVE.String()
@@ -67,6 +79,7 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 			Name:                 &remotePeeringName,
 			Network:              &remoteNetwork,
 			ImportCustomRoutes:   &importCustomRoutes,
+			ExportCustomRoutes:   &exportCustomRoutes,
 			ExchangeSubnetRoutes: ptr.To(true),
 		},
 	}
@@ -74,7 +87,7 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 
 	s.items[kymaNetwork] = item
 
-	return new(compute.Operation), nil
+	return nil
 }
 
 func (s *vpcPeeringStore) CheckRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string, desiredTag string) (bool, error) {
@@ -102,15 +115,15 @@ func (s *vpcPeeringStore) GetVpcPeering(ctx context.Context, remotePeeringName s
 	return s.items[network].peering, nil
 }
 
-func (s *vpcPeeringStore) DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (s *vpcPeeringStore) DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	kymaNetwork := getFullNetworkUrl(kymaProject, kymaVpc)
 
 	if s.items[kymaNetwork] == nil {
-		return nil, nil
+		return nil
 	}
 	delete(s.items, kymaNetwork)
-	return new(compute.Operation), nil
+	return nil
 }
