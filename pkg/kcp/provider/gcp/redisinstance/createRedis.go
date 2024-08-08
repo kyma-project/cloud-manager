@@ -29,6 +29,11 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	vpcNetworkFullName := fmt.Sprintf("projects/%s/global/networks/%s", gcpScope.Project, gcpScope.VpcNetwork)
 
+	labels := util.NewLabelBuilder().WithGcpLabels(
+		state.Name().Name,
+		state.Scope().Spec.ShootName,
+	).Build()
+
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
 		VPCNetworkFullName:    vpcNetworkFullName,
 		IPRangeName:           state.IpRange().Status.Id,
@@ -39,6 +44,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		TransitEncryptionMode: redisInstance.Spec.Instance.Gcp.TransitEncryptionMode,
 		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs,
 		MaintenancePolicy:     redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
+		Labels:                labels,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
