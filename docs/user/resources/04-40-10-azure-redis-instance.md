@@ -3,9 +3,7 @@
 The `azureredisinstance.cloud-resources.kyma-project.io` custom resource (CR) defines an
 [Azure Cache for Redis instance](https://azure.microsoft.com/en-us/products/cache) that can be used as a caching solution within the cluster. 
 Please note that the current implementation does not support backups, so using `AzureRedisInstance` may not be ideal 
-for permanent storage. Once the Azure Cache for Redis instance is provisioned in the associated cloud provider subscription, a corresponding 
-[ResourceGroup](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#what-is-a-resource-group)
-is also created, as required by the Azure cloud provider. The endpoint and secret token for the instance are provided
+for permanent storage. The endpoint and secret token for the instance are provided
 in a Secret resource, which is generated within the Kyma cluster. This Secret will share the same name as the `AzureRedisInstance`.
 
 An `AzureRedisInstance` can only be deleted when there are no active workloads using it.
