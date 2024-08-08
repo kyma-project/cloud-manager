@@ -40,13 +40,6 @@ type TimeOfDay struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=59
 	Minutes int32 `json:"minutes"`
-
-	// Seconds of minutes of the time. Must normally be from 0 to 59. An API may
-	// allow the value 60 if it allows leap-seconds.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=59
-	Seconds int32 `json:"seconds"`
 }
 
 type WeeklyMaintenanceWindow struct {
@@ -101,7 +94,7 @@ type GcpRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
-	MaintenancePolicy *[]WeeklyMaintenanceWindow `json:"maintenancePolicy,omitempty"`
+	MaintenancePolicy *WeeklyMaintenanceWindow `json:"maintenancePolicy,omitempty"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance

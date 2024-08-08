@@ -1,7 +1,6 @@
 package gcpredisinstance
 
 import (
-	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -64,19 +63,16 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	return result
 }
 
-func toGcpMaintanencePolicy(windows *[]cloudresourcesv1beta1.WeeklyMaintenanceWindow) *[]cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp {
-	if windows == nil {
+func toGcpMaintenancePolicy(window *cloudresourcesv1beta1.WeeklyMaintenanceWindow) *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp {
+	if window == nil {
 		return nil
 	}
-	result := pie.Map(*windows, func(window cloudresourcesv1beta1.WeeklyMaintenanceWindow) cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp {
-		return cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
-			Day: window.Day,
-			StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
-				Hours:   window.StartTime.Hours,
-				Minutes: window.StartTime.Minutes,
-				Seconds: window.StartTime.Seconds,
-			},
-		}
-	})
-	return &result
+
+	return &cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
+		Day: window.Day,
+		StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
+			Hours:   window.StartTime.Hours,
+			Minutes: window.StartTime.Minutes,
+		},
+	}
 }

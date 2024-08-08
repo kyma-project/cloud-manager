@@ -128,7 +128,7 @@ func WithKcpGcpRedisInstanceConfigs(redisConfigs map[string]string) ObjAction {
 	}
 }
 
-func WithKcpGcpRedisInstanceMaintenancePolicy(maintenancePolicy *[]cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp) ObjAction {
+func WithKcpGcpRedisInstanceMaintenancePolicy(maintenancePolicy *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {

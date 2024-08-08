@@ -22,7 +22,7 @@ type CreateRedisInstanceOptions struct {
 	AuthEnabled           bool
 	TransitEncryptionMode string
 	RedisConfigs          map[string]string
-	MaintenancePolicy     *[]cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp
+	MaintenancePolicy     *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp
 }
 
 type MemorystoreClient interface {
@@ -68,18 +68,6 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			AuthEnabled:           options.AuthEnabled,
 			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
 			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
-			// MaintenancePolicy: &redispb.MaintenancePolicy{
-			// 	WeeklyMaintenanceWindow: []*redispb.WeeklyMaintenanceWindow{
-			// 		{
-			// 			Day: dayofweek.DayOfWeek_DAY_OF_WEEK_UNSPECIFIED,
-			// 			StartTime: &timeofday.TimeOfDay{
-			// 				Hours:   23,
-			// 				Minutes: 59,
-			// 				Seconds: 59,
-			// 			},
-			// 		},
-			// 	},
-			// },
 		},
 	}
 

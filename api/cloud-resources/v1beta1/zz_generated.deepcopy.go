@@ -1526,12 +1526,8 @@ func (in *GcpRedisInstanceSpec) DeepCopyInto(out *GcpRedisInstanceSpec) {
 	}
 	if in.MaintenancePolicy != nil {
 		in, out := &in.MaintenancePolicy, &out.MaintenancePolicy
-		*out = new([]WeeklyMaintenanceWindow)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]WeeklyMaintenanceWindow, len(*in))
-			copy(*out, *in)
-		}
+		*out = new(WeeklyMaintenanceWindow)
+		**out = **in
 	}
 }
 
