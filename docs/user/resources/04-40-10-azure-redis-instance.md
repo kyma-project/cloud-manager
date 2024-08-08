@@ -6,8 +6,6 @@ Please note that the current implementation does not support backups, so using `
 for permanent storage. The endpoint and secret token for the instance are provided
 in a Secret resource, which is generated within the Kyma cluster. This Secret will share the same name as the `AzureRedisInstance`.
 
-An `AzureRedisInstance` can only be deleted when there are no active workloads using it.
-
 The Azure Cache for Redis `geo-location` will be set to match the location of the Kyma cluster where the manifest is applied.
 
 The underlying Redis tier is Premium, as it supports VirtualNetwork.
