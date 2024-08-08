@@ -1,5 +1,7 @@
 package util
 
+import "regexp"
+
 const (
 	WellKnownK8sLabelName      = "app.kubernetes.io/name"
 	WellKnownK8sLabelInstance  = "app.kubernetes.io/instance"
@@ -15,6 +17,16 @@ const (
 	DefaultCloudManagerManagedByLabelValue = "cloud-manager"
 )
 
+// Keys and values can contain only lowercase letters, numeric characters, underscores, and dashes.
+// All characters must use UTF-8 encoding, and international characters are allowed. Keys must start with a lowercase letter or international character.
+// https://cloud.google.com/bigtable/docs/creating-managing-labels
+const (
+	GcpLabelKcpName   = "kyma-project__cloud-manager__kcp-name"
+	GcpLabelSkrName   = "kyma-project__cloud-manager__skr-name"
+	GcpLabelScopeName = "kyma-project__cloud-manager__scope-name"
+	GcpLabelShootName = "kyma-project__cloud-manager__shoot-name"
+)
+
 var _ LabelBuilder = &labelBuilder{}
 
 type LabelBuilder interface {
@@ -27,6 +39,7 @@ type LabelBuilder interface {
 	WithCustomLabel(labelName, labelValue string) LabelBuilder
 	WithCustomLabels(customLabels map[string]string) LabelBuilder
 	WithCloudManagerDefaults() LabelBuilder
+	WithGcpLabels(scopeName, shootName string) LabelBuilder
 
 	// Returns map[string]string that reflects the deep copy of provided building blocks
 	Build() map[string]string
@@ -80,6 +93,20 @@ func (labelBuilder *labelBuilder) WithCustomLabels(customLabels map[string]strin
 
 func (labelBuilder *labelBuilder) WithCloudManagerDefaults() LabelBuilder {
 	return labelBuilder.WithComponent(DefaultCloudManagerComponentLabelValue).WithPartOf(DefaultCloudManagerPartOfLabelValue).WithManagedBy(DefaultCloudManagerManagedByLabelValue)
+}
+
+func (labelBuilder *labelBuilder) WithGcpLabels(scopeName, shootName string) LabelBuilder {
+	re := regexp.MustCompile(`^[a-z\p{L}][a-z0-9\p{L}_-]*$`)
+
+	if re.MatchString(scopeName) {
+		labelBuilder.labels[GcpLabelScopeName] = scopeName
+	}
+
+	if re.MatchString(shootName) {
+		labelBuilder.labels[GcpLabelShootName] = shootName
+	}
+
+	return labelBuilder
 }
 
 func (labelBuilder *labelBuilder) Build() map[string]string {

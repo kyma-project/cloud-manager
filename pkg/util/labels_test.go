@@ -73,6 +73,29 @@ func TestLabels(t *testing.T) {
 			assert.Equal(t, DefaultCloudManagerManagedByLabelValue, labels[WellKnownK8sLabelManagedBy], "managed-by label equals expected value")
 		})
 
+		t.Run("should define default gcp resource labels", func(t *testing.T) {
+			builder := NewLabelBuilder()
+
+			scopeName := "b99523"
+			shootName := "b99523-fqwfg132"
+
+			labels := builder.WithGcpLabels(scopeName, shootName).Build()
+
+			assert.Equal(t, scopeName, labels[GcpLabelScopeName], "scopeName label equals expected value")
+			assert.Equal(t, shootName, labels[GcpLabelShootName], "shootName label equals expected value")
+		})
+
+		t.Run("should return empty map if default gcp resource labels do not match requirements", func(t *testing.T) {
+			builder := NewLabelBuilder()
+
+			scopeName := "3b99523"
+			shootName := "b99523-fqwfg132/"
+
+			labels := builder.WithGcpLabels(scopeName, shootName).Build()
+
+			assert.Equal(t, 0, len(labels), "labels lenght is zero")
+		})
+
 		t.Run("should define custom label", func(t *testing.T) {
 			builder := NewLabelBuilder()
 			customLabelName := "foo.test.io/custom-label-for-test"

@@ -23,6 +23,7 @@ type CreateRedisInstanceOptions struct {
 	TransitEncryptionMode string
 	RedisConfigs          map[string]string
 	MaintenancePolicy     *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp
+	Labels                map[string]string
 }
 
 type MemorystoreClient interface {
@@ -68,6 +69,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			AuthEnabled:           options.AuthEnabled,
 			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
 			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
+			Labels:                options.Labels,
 		},
 	}
 
