@@ -26,24 +26,24 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter               | Type   | Description                                                                                                                   |
-|-------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------|
-| **allowVnetAccess**     | bool   | Specifies whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space. |
-| **remotePeeringName**   | string |                                                                                                                               |
-| **remoteResourceGroup** | string |                                                                                                                               |
-| **remoteVnet**          | string |                                                                                                                               |
+| Parameter               | Type   | Description                                                                                                                                   |
+|-------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| **allowVnetAccess**     | bool   | Specifies whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space, and vice versa. |
+| **remotePeeringName**   | string | Specifies the name of the VNet peering in the remote subscription.                                                                            |
+| **remoteResourceGroup** | string | Specifies the name of the resource group in the remote subscription.                                                                          |
+| **remoteVnet**          | string | Specifies the ID of the VNet in the remote subscription.                                                                                      |
 
 **Status:**
 
-| Parameter                         | Type       | Description                                                                                                                        |
-|-----------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required)              | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
-| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                               |
-| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                              |
-| **conditions.message**            | string     | Provides more details about the condition status change.                                                                           |
-| **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
-| **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
-| **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
+| Parameter                         | Type       | Description                                                                                 |
+|-----------------------------------|------------|---------------------------------------------------------------------------------------------|
+| **id**                            | string     | Represents the VPC peering name on the Kyma cluster underlying cloud provider subscription. |
+| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                        |
+| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                       |
+| **conditions.message**            | string     | Provides more details about the condition status change.                                    |
+| **conditions.reason**             | string     | Defines the reason for the condition status change.                                         |
+| **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
+| **conditions.type**               | string     | Provides a short description of the condition.                                              |
 
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
