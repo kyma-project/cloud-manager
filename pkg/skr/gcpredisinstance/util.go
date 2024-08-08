@@ -62,3 +62,17 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 
 	return result
 }
+
+func toGcpMaintenancePolicy(window *cloudresourcesv1beta1.WeeklyMaintenanceWindow) *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp {
+	if window == nil {
+		return nil
+	}
+
+	return &cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
+		Day: window.Day,
+		StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
+			Hours:   window.StartTime.Hours,
+			Minutes: window.StartTime.Minutes,
+		},
+	}
+}

@@ -8,6 +8,7 @@ import (
 
 	redis "cloud.google.com/go/redis/apiv1"
 	redispb "cloud.google.com/go/redis/apiv1/redispb"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
 )
@@ -21,6 +22,7 @@ type CreateRedisInstanceOptions struct {
 	AuthEnabled           bool
 	TransitEncryptionMode string
 	RedisConfigs          map[string]string
+	MaintenancePolicy     *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp
 }
 
 type MemorystoreClient interface {
@@ -65,6 +67,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			RedisConfigs:          options.RedisConfigs,
 			AuthEnabled:           options.AuthEnabled,
 			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
+			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
 		},
 	}
 

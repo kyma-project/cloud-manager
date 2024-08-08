@@ -69,6 +69,13 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpGcpRedisInstanceConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),
+					WithKcpGcpRedisInstanceMaintenancePolicy(&cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
+						Day: "MONDAY",
+						StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
+							Hours:   11,
+							Minutes: 30,
+						},
+					}),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
 		})

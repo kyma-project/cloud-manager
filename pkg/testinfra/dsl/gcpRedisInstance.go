@@ -99,6 +99,18 @@ func WithGcpRedisInstanceRedisConfigs(redisConfigs map[string]string) ObjAction 
 	}
 }
 
+func WithGcpRedisInstanceMaintenancePolicy(maintenancePolicy *cloudresourcesv1beta1.WeeklyMaintenanceWindow) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
+				gcpRedisInstance.Spec.MaintenancePolicy = maintenancePolicy
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceMaintenancePolicy", obj))
+		},
+	}
+}
+
 func WithGcpRedisInstanceAuthSecretName(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

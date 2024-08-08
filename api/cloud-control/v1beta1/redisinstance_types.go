@@ -114,6 +114,31 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
+type TimeOfDayGcp struct {
+	// Hours of day in 24 hour format. Should be from 0 to 23. An API may choose
+	// to allow the value "24:00:00" for scenarios like business closing time.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=23
+	Hours int32 `json:"hours"`
+
+	// Minutes of hour of day. Must be from 0 to 59.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=59
+	Minutes int32 `json:"minutes"`
+}
+
+type WeeklyMaintenanceWindowGcp struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=DAY_OF_WEEK_UNSPECIFIED;MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
+	Day string `json:"day"`
+
+	// Start time of the window in UTC time.
+	// +kubebuilder:validation:Required
+	StartTime TimeOfDayGcp `json:"startTime"`
+}
+
 type RedisInstanceGcp struct {
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
@@ -144,6 +169,10 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
 	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
+	MaintenancePolicy *WeeklyMaintenanceWindowGcp `json:"maintenancePolicy,omitempty"`
 }
 
 type RedisInstanceAzure struct {
