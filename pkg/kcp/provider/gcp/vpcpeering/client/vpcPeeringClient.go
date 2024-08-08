@@ -50,17 +50,17 @@ type networkClient struct {
 }
 
 type VpcPeeringClient interface {
-	DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) (*compute.Operation, error)
+	DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) error
 	GetVpcPeering(ctx context.Context, remotePeeringName string, project string, vpc string) (*pb.NetworkPeering, error)
-	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, importCustomRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error)
-	CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, importCustomRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error)
+	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
+	CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
 	CheckRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string, desiredTag string) (bool, error)
 }
 
-func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string) (*compute.Operation, error) {
+func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string) error {
 	gcpNetworkClient, err := createGcpNetworksClient(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer gcpNetworkClient.Close()
 	destinationNetworkUrl := getFullNetworkUrl(destinationProject, destinationVpc)
@@ -79,15 +79,15 @@ func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sour
 		},
 	}
 
-	operation, err := gcpNetworkClient.AddPeering(ctx, vpcPeeringRequest)
+	_, err = gcpNetworkClient.AddPeering(ctx, vpcPeeringRequest)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return operation, nil
+	return nil
 
 }
 
-func (c *networkClient) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (c *networkClient) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	//peering from remote vpc to kyma
 	//by default exportCustomRoutes is false but if the remote vpc wants kyma to import custom routes, the peering needs to export them :)
 	exportCustomRoutes := false
@@ -98,7 +98,7 @@ func (c *networkClient) CreateRemoteVpcPeering(ctx context.Context, remotePeerin
 	return CreateVpcPeeringRequest(ctx, remotePeeringName, remoteVpc, remoteProject, importCustomRoutes, exportCustomRoutes, kymaProject, kymaVpc)
 }
 
-func (c *networkClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (c *networkClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	//peering from kyma to remote vpc
 	//Kyma will not export custom routes to the remote vpc, but if the remote vpc is exporting them we need to import them
 	exportCustomRoutes := false
@@ -109,21 +109,21 @@ func (c *networkClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringN
 	return CreateVpcPeeringRequest(ctx, remotePeeringName, kymaVpc, kymaProject, importCustomRoutes, exportCustomRoutes, remoteProject, remoteVpc)
 }
 
-func (c *networkClient) DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) (*compute.Operation, error) {
+func (c *networkClient) DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) error {
 	gcpNetworkClient, err := createGcpNetworksClient(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer gcpNetworkClient.Close()
-	deleteVpcPeeringOperation, err := gcpNetworkClient.RemovePeering(ctx, &pb.RemovePeeringNetworkRequest{
+	_, err = gcpNetworkClient.RemovePeering(ctx, &pb.RemovePeeringNetworkRequest{
 		Network:                              kymaVpc,
 		Project:                              kymaProject,
 		NetworksRemovePeeringRequestResource: &pb.NetworksRemovePeeringRequest{Name: &remotePeeringName},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return deleteVpcPeeringOperation, nil
+	return nil
 }
 
 func (c *networkClient) GetVpcPeering(ctx context.Context, remotePeeringName string, project string, vpc string) (*pb.NetworkPeering, error) {

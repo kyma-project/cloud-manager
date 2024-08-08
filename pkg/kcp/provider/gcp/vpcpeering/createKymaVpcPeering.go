@@ -55,9 +55,9 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	_, err = state.client.CreateKymaVpcPeering(
+	err = state.client.CreateKymaVpcPeering(
 		ctx,
-		state.remotePeeringName,
+		state.getKymaVpcPeeringName(),
 		state.remoteVpc,
 		state.remoteProject,
 		state.importCustomRoutes,

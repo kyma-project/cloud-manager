@@ -17,9 +17,9 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Deleting GCP VPC Peering " + obj.Spec.VpcPeering.Gcp.RemotePeeringName)
 
-	_, err := state.client.DeleteVpcPeering(
+	err := state.client.DeleteVpcPeering(
 		ctx,
-		obj.Spec.VpcPeering.Gcp.RemotePeeringName,
+		state.getKymaVpcPeeringName(),
 		state.Scope().Spec.Scope.Gcp.Project,
 		state.Scope().Spec.Scope.Gcp.VpcNetwork,
 	)
