@@ -136,7 +136,7 @@ type TimeOfDayGcp struct {
 	Minutes int32 `json:"minutes"`
 }
 
-type DayOfWeekGcp struct {
+type DayOfWeekPolicyGcp struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
 	Day string `json:"day"`
@@ -148,7 +148,7 @@ type DayOfWeekGcp struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type MaintenancePolicyGcp struct {
-	DayOfWeek *DayOfWeekGcp `json:"dayOfWeek,omitempty"`
+	DayOfWeek *DayOfWeekPolicyGcp `json:"dayOfWeek,omitempty"`
 }
 
 type RedisInstanceGcp struct {

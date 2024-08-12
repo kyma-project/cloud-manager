@@ -73,7 +73,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		}
 
 		gcpMaintanencePolicy := &cloudresourcesv1beta1.MaintenancePolicy{
-			DayOfWeek: &cloudresourcesv1beta1.DayOfWeek{
+			DayOfWeek: &cloudresourcesv1beta1.DayOfWeekPolicy{
 				Day: "MONDAY",
 				StartTime: cloudresourcesv1beta1.TimeOfDay{
 					Hours:   15,

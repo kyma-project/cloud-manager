@@ -49,7 +49,7 @@ type TransitEncryption struct {
 	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
 }
 
-type DayOfWeek struct {
+type DayOfWeekPolicy struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
 	Day string `json:"day"`
@@ -62,7 +62,7 @@ type DayOfWeek struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type MaintenancePolicy struct {
-	DayOfWeek *DayOfWeek `json:"dayOfWeek,omitempty"`
+	DayOfWeek *DayOfWeekPolicy `json:"dayOfWeek,omitempty"`
 }
 
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance

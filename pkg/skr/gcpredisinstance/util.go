@@ -73,7 +73,7 @@ func toGcpMaintenancePolicy(maintenancePolicy *cloudresourcesv1beta1.Maintenance
 	}
 
 	return &cloudcontrolv1beta1.MaintenancePolicyGcp{
-		DayOfWeek: &cloudcontrolv1beta1.DayOfWeekGcp{
+		DayOfWeek: &cloudcontrolv1beta1.DayOfWeekPolicyGcp{
 			Day: maintenancePolicy.DayOfWeek.Day,
 			StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
 				Hours:   maintenancePolicy.DayOfWeek.StartTime.Hours,

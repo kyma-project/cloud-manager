@@ -73,7 +73,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 						"maxmemory-policy": "allkeys-lru",
 					}),
 					WithKcpGcpRedisInstanceMaintenancePolicy(&cloudcontrolv1beta1.MaintenancePolicyGcp{
-						DayOfWeek: &cloudcontrolv1beta1.DayOfWeekGcp{
+						DayOfWeek: &cloudcontrolv1beta1.DayOfWeekPolicyGcp{
 							Day: "MONDAY",
 							StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
 								Hours:   14,
