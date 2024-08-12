@@ -50,6 +50,18 @@ body:
         widget: Labels
 
 
+  - name: spec.maintenancePolicy
+    widget: Panel
+    source: spec
+    children:
+      - source: maintenancePolicy.day
+        name: spec.maintenancePolicy.day
+        widget: Labels
+      - source: maintenancePolicy.startTime
+        name: spec.maintenancePolicy.startTime
+        widget: Labels
+
+
   - name: status
     widget: Panel
     source: status

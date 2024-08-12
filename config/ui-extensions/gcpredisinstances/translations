@@ -22,3 +22,8 @@ en:
   spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
   spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
   spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
+  spec.maintenancePolicy: Maintenance Policy
+  spec.maintenancePolicy.day: Day
+  spec.maintenancePolicy.startTime: Start Time
+  spec.maintenancePolicy.startTime.hours: Hours
+  spec.maintenancePolicy.startTime.minutes: Minutes

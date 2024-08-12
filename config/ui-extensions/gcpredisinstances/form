@@ -49,6 +49,20 @@
       required: false
       widget: KeyValuePair
 
-
-
-
+- path: spec.maintenancePolicy
+  simple: false
+  name: spec.maintenancePolicy
+  required: false
+  widget: FormGroup
+  children:
+    - path: day
+      name: spec.maintenancePolicy.day
+      required: true
+    - path: startTime.hours
+      name: spec.maintenancePolicy.startTime.hours
+      widget: Text
+      required: true
+    - path: startTime.minutes
+      name: spec.maintenancePolicy.startTime.minutes
+      widget: Text
+      required: true

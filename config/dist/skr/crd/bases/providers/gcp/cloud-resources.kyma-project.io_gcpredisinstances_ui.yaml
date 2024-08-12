@@ -53,6 +53,18 @@ data:
             widget: Labels
 
 
+      - name: spec.maintenancePolicy
+        widget: Panel
+        source: spec
+        children:
+          - source: maintenancePolicy.day
+            name: spec.maintenancePolicy.day
+            widget: Labels
+          - source: maintenancePolicy.startTime
+            name: spec.maintenancePolicy.startTime
+            widget: Labels
+
+
       - name: status
         widget: Panel
         source: status
@@ -60,7 +72,7 @@ data:
           - widget: Labels
             source: state
             name: status.state
-  form: |+
+  form: |
     - path: spec.memorySizeGb
       simple: true
       name: spec.memorySizeGb
@@ -112,9 +124,23 @@ data:
           required: false
           widget: KeyValuePair
 
-
-
-
+    - path: spec.maintenancePolicy
+      simple: false
+      name: spec.maintenancePolicy
+      required: false
+      widget: FormGroup
+      children:
+        - path: day
+          name: spec.maintenancePolicy.day
+          required: true
+        - path: startTime.hours
+          name: spec.maintenancePolicy.startTime.hours
+          widget: Text
+          required: true
+        - path: startTime.minutes
+          name: spec.maintenancePolicy.startTime.minutes
+          widget: Text
+          required: true
   general: |
     resource:
         kind: GcpRedisInstance
@@ -131,7 +157,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       configuration: Configuration
       status: Status
@@ -156,6 +182,11 @@ data:
       spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
       spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
       spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
+      spec.maintenancePolicy: Maintenance Policy
+      spec.maintenancePolicy.day: Day
+      spec.maintenancePolicy.startTime: Start Time
+      spec.maintenancePolicy.startTime.hours: Hours
+      spec.maintenancePolicy.startTime.minutes: Minutes
 kind: ConfigMap
 metadata:
   labels:
