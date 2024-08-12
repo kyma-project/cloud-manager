@@ -132,7 +132,7 @@ This tutorial explains how to create VPC peering in Azure.
    ```
 
    The command should print something like:
-   ```
+   ```shell
    ...
    PING 172.0.0.4 (172.0.0.4) 56(84) bytes of data.
    64 bytes from 172.0.0.4: icmp_seq=1 ttl=63 time=8.10 ms
