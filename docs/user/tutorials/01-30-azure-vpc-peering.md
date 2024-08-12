@@ -156,7 +156,7 @@ This tutorial explains how to create VPC peering in Azure.
    64 bytes from 172.0.0.4: icmp_seq=19 ttl=63 time=1.92 ms
    64 bytes from 172.0.0.4: icmp_seq=20 ttl=63 time=1.92 ms
    
-     --- 172.0.0.4 ping statistics ---
+   === 172.0.0.4 ping statistics ===
    20 packets transmitted, 20 received, 0% packet loss, time 19024ms
    rtt min/avg/max/mdev = 1.800/3.060/8.096/1.847 ms
    ...
