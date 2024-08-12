@@ -63,16 +63,32 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	return result
 }
 
-func toGcpMaintenancePolicy(window *cloudresourcesv1beta1.WeeklyMaintenanceWindow) *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp {
-	if window == nil {
+func toGcpMaintenancePolicy(maintenancePolicy *cloudresourcesv1beta1.MaintenancePolicy) *cloudcontrolv1beta1.MaintenancePolicyGcp {
+	if maintenancePolicy == nil {
 		return nil
 	}
 
-	return &cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
-		Day: window.Day,
-		StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
-			Hours:   window.StartTime.Hours,
-			Minutes: window.StartTime.Minutes,
+	if maintenancePolicy.DayOfWeek == nil {
+		return nil
+	}
+
+	return &cloudcontrolv1beta1.MaintenancePolicyGcp{
+		DayOfWeek: &cloudcontrolv1beta1.DayOfWeekGcp{
+			Day: maintenancePolicy.DayOfWeek.Day,
+			StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
+				Hours:   maintenancePolicy.DayOfWeek.StartTime.Hours,
+				Minutes: maintenancePolicy.DayOfWeek.StartTime.Minutes,
+			},
 		},
+	}
+}
+
+func toGcpTransitEncryption(transitEncryption *cloudresourcesv1beta1.TransitEncryption) *cloudcontrolv1beta1.TransitEncryptionGcp {
+	if transitEncryption == nil {
+		return nil
+	}
+
+	return &cloudcontrolv1beta1.TransitEncryptionGcp{
+		ServerAuthentication: transitEncryption.ServerAuthentication,
 	}
 }
