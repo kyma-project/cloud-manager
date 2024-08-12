@@ -69,6 +69,21 @@ spec:
                   x-kubernetes-validations:
                     - message: Location is immutable.
                       rule: (self == oldSelf)
+                sourceBackup:
+                  properties:
+                    name:
+                      description: Name specifies the name of the GcpNfsVolumeBackup resource that would be restored.
+                      type: string
+                    namespace:
+                      description: Namespace specifies the namespace of the GcpNfsVolumeBackup resource that would be restored.
+                      type: string
+                  required:
+                    - name
+                    - namespace
+                  type: object
+                  x-kubernetes-validations:
+                    - message: SourceBackup is immutable.
+                      rule: (self == oldSelf)
                 tier:
                   default: BASIC_HDD
                   enum:

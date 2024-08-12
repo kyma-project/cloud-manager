@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/rand"
 )
@@ -33,6 +34,10 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {
 	location, err := getLocation(state, logger)
+	srcBackupFullPath := ""
+	if len(state.ObjAsGcpNfsVolume().Spec.SourceBackup.Name) > 0 {
+		srcBackupFullPath = client.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, state.GcpNfsVolumeBackup.Spec.Location, state.GcpNfsVolumeBackup.Name)
+	}
 	if err != nil {
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
@@ -73,6 +78,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 					FileShareName: state.ObjAsGcpNfsVolume().Spec.FileShareName,
 					CapacityGb:    state.ObjAsGcpNfsVolume().Spec.CapacityGb,
 					ConnectMode:   cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS,
+					SourceBackup:  srcBackupFullPath,
 				},
 			},
 		},

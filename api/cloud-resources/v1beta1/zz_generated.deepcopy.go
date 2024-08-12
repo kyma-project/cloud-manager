@@ -1400,6 +1400,7 @@ func (in *GcpNfsVolumeRestoreStatus) DeepCopy() *GcpNfsVolumeRestoreStatus {
 func (in *GcpNfsVolumeSpec) DeepCopyInto(out *GcpNfsVolumeSpec) {
 	*out = *in
 	out.IpRange = in.IpRange
+	out.SourceBackup = in.SourceBackup
 	if in.PersistentVolume != nil {
 		in, out := &in.PersistentVolume, &out.PersistentVolume
 		*out = new(GcpNfsVolumePvSpec)

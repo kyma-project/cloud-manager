@@ -16,6 +16,9 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(*State)
 	volume := state.ObjAsGcpNfsVolume()
 
+	if state.Scope != nil {
+		return nil, ctx
+	}
 	logger = logger.WithValues(
 		"scope", state.KymaRef.Name,
 		"scopeNamespace", state.KymaRef.Namespace,

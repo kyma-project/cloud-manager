@@ -212,7 +212,7 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 					},
 					Workers: []cloudcontrolv1beta1.GcpWorkers{
 						{
-							Zones: []string{"us-central1-a", "us-central1-b", "us-central1-c"},
+							Zones: []string{"us-west1-a", "us-west1-b", "us-west1-c"},
 						},
 					},
 				},

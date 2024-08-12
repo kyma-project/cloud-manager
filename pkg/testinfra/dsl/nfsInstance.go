@@ -57,6 +57,16 @@ func WithNfsInstanceGcp(location string) ObjAction {
 	}
 }
 
+func WithSourceBackup(backupPath string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Instance.Gcp.SourceBackup = backupPath
+			}
+		},
+	}
+}
+
 func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.NfsInstance{}

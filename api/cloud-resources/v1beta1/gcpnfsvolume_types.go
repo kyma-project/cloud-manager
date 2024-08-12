@@ -78,6 +78,10 @@ type GcpNfsVolumeSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="FileShareName is immutable."
 	FileShareName string `json:"fileShareName"`
 
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SourceBackup is immutable."
+	SourceBackup GcpNfsVolumeBackupRef `json:"sourceBackup,omitempty"`
+
 	// +kubebuilder:default=2560
 	CapacityGb int `json:"capacityGb"`
 
