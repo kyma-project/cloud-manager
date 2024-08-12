@@ -1,4 +1,4 @@
-# Use RWX Volumes in AWS
+# Use VPC peering in Azure
 
 This tutorial explains how to create VPC peering in Azure.
 
