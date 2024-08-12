@@ -10,6 +10,7 @@ Cloud Manager is a central component that manages access to additional hyperscal
 Cloud Manager can provision the following cloud resources in the underlying cloud provider subscription:
 
 * NFS server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster
+* VPC Peering between your project and the Kyma cluster.
 
 ## Architecture
 
@@ -36,6 +37,11 @@ To learn more, read the [AwsNfsVolume Custom Resource](./resources/04-20-10-aws-
 The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filestore
 instance that can be used as RWX volume in the cluster.
 To learn more, read the [GcpNfsVolume Custom Resource](./resources/04-30-10-gcp-nfs-volume.md)  documentation.
+
+### GcpVpcPeering CR
+The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC Peering
+that can be used to peer the Kyma cluster with your Google Cloud project VPC.
+To learn more, read the [GcpVpcPeering Custom Resource](./resources/04-50-gcp-vpc-peering.md) documentation.
 
 ## Related Information
 
