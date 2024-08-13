@@ -48,6 +48,16 @@ body:
         - source: volumeClaim.annotations
           name: spec.volumeClaim.annotations
           widget: Labels
+    - name: spec.sourceBackup
+      widget: Panel
+      source: spec.sourceBackup
+      children:
+        - source: name
+          name: spec.sourceBackup.name
+          widget: Labels
+        - source: namespace
+          name: spec.sourceBackup.namespace
+          widget: Labels
     - name: status
       widget: Panel
       source: status

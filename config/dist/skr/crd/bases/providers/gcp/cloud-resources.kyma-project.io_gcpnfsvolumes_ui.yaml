@@ -51,6 +51,16 @@ data:
             - source: volumeClaim.annotations
               name: spec.volumeClaim.annotations
               widget: Labels
+        - name: spec.sourceBackup
+          widget: Panel
+          source: spec.sourceBackup
+          children:
+            - source: name
+              name: spec.sourceBackup.name
+              widget: Labels
+            - source: namespace
+              name: spec.sourceBackup.namespace
+              widget: Labels
         - name: status
           widget: Panel
           source: status
@@ -122,6 +132,20 @@ data:
           name: spec.volumeClaim.annotations
           required: false
           widget: KeyValuePair
+    - path: spec.sourceBackup
+      simple: false
+      name: spec.sourceBackup
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.sourceBackup.name
+          widget: Text
+          required: true
+        - path: namespace
+          name: spec.sourceBackup.namespace
+          widget: Text
+          required: true
   general: |+
     resource:
         kind: GcpNfsVolume
@@ -149,7 +173,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       spec.tier: Tier
       spec.location: Location
@@ -169,6 +193,9 @@ data:
       spec.volumeClaim.name: Name
       spec.volumeClaim.labels: Labels
       spec.volumeClaim.annotations: Annotations
+      spec.sourceBackup: Source Backup
+      spec.sourceBackup.name: Name
+      spec.sourceBackup.namespace: Namespace
 kind: ConfigMap
 metadata:
   labels:

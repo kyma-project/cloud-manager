@@ -17,3 +17,6 @@ en:
   spec.volumeClaim.name: Name
   spec.volumeClaim.labels: Labels
   spec.volumeClaim.annotations: Annotations
+  spec.sourceBackup: Source Backup
+  spec.sourceBackup.name: Name
+  spec.sourceBackup.namespace: Namespace

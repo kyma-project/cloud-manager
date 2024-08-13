@@ -61,3 +61,17 @@
       name: spec.volumeClaim.annotations
       required: false
       widget: KeyValuePair
+- path: spec.sourceBackup
+  simple: false
+  name: spec.sourceBackup
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.sourceBackup.name
+      widget: Text
+      required: true
+    - path: namespace
+      name: spec.sourceBackup.namespace
+      widget: Text
+      required: true
