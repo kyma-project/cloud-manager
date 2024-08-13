@@ -14,6 +14,10 @@ type NfsOptionsGcp struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="FileShareName is immutable."
 	FileShareName string `json:"fileShareName"`
 
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SourceBackup is immutable."
+	SourceBackup string `json:"sourceBackup,omitempty"`
+
 	// +kubebuilder:default=1024
 	CapacityGb int `json:"capacityGb"`
 

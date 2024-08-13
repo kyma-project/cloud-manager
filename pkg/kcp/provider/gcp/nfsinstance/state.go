@@ -93,8 +93,9 @@ func (s State) toInstance() *file.Instance {
 
 		FileShares: []*file.FileShareConfig{
 			{
-				Name:       gcpOptions.FileShareName,
-				CapacityGb: int64(gcpOptions.CapacityGb),
+				Name:         gcpOptions.FileShareName,
+				CapacityGb:   int64(gcpOptions.CapacityGb),
+				SourceBackup: gcpOptions.SourceBackup,
 			},
 		},
 		Networks: []*file.NetworkConfig{

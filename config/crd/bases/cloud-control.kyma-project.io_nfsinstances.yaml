@@ -83,6 +83,11 @@ spec:
                         x-kubernetes-validations:
                         - message: Location is immutable.
                           rule: (self == oldSelf)
+                      sourceBackup:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: SourceBackup is immutable.
+                          rule: (self == oldSelf)
                       tier:
                         default: BASIC_HDD
                         enum:

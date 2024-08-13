@@ -437,6 +437,154 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 		})
 
 	})
+
+	Context("Scenario: GCP NFSVolume With Restore Happy Path", Ordered, func() {
+		gcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		It("Scenario: GCP NFSVolume Creation", func() {
+			scope := &cloudcontrolv1beta1.Scope{}
+			By("Given KCP Cluster", func() {
+
+				// Tell Scope reconciler to ignore this kymaName
+				scopePkg.Ignore.AddName(kymaName)
+			})
+			By("And Given KCP Scope exists", func() {
+
+				// Given Scope exists
+				Expect(
+					infra.GivenScopeGcpExists(kymaName),
+				).NotTo(HaveOccurred())
+
+				// Load created scope
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
+					exists = err == nil
+					return exists, client.IgnoreNotFound(err)
+				}, timeout, interval).
+					Should(BeTrue(), "expected Scope to get created")
+			})
+			kcpIpRangeName := "gcp-nfs-iprange-1"
+			kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+			// Tell IpRange reconciler to ignore this kymaName
+			iprangePkg.Ignore.AddName(kcpIpRangeName)
+			By("And Given KCP IPRange exists", func() {
+				Eventually(CreateKcpIpRange).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+						WithName(kcpIpRangeName),
+						WithKcpIpRangeSpecScope(scope.Name),
+					).
+					Should(Succeed())
+			})
+
+			By("And Given KCP IpRange has Ready condition", func() {
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+						WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+						WithConditions(KcpReadyCondition()),
+					).WithTimeout(timeout).WithPolling(interval).
+					Should(Succeed())
+			})
+
+			By("When KCP NfsVolume is created", func() {
+				Eventually(CreateNfsInstance).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
+						WithName("gcp-nfs-instance-1"),
+						WithRemoteRef("gcp-nfs-instance-1"),
+						WithInstanceScope(scope.Name),
+						WithIpRange(kcpIpRange.Name),
+						WithNfsInstanceGcp(scope.Spec.Region),
+						WithSourceBackup("projects/kyma/locations/us-west1/backups/gcp-nfs-backup-1"),
+					).
+					Should(Succeed())
+			})
+			By("Then KCP NfsVolume will get Ready condition", func() {
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+					if err != nil {
+						return false, err
+					}
+					exists = meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+					return exists, nil
+				}, timeout, interval).
+					Should(BeTrue(), "expected NfsInstance for GCP with Ready condition")
+			})
+			By("And KCP NfsVolume has Ready state", func() {
+				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+			})
+		})
+
+		It("Scenario: GCP NFSVolume Updating", func() {
+			By("Given NfsVolume is Ready", func() {
+			})
+
+			By("When KCP NfsVolume is updated", func() {
+				Eventually(UpdateNfsInstance).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
+					).
+					Should(Succeed())
+			})
+			By("Then at first KCP NfsVolume will get SyncFilestore state", func() {
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+					if err != nil {
+						return false, err
+					}
+					exists = gcpNfsInstance.Status.State == client2.Updating
+					return exists, nil
+				}, timeout, interval)
+			})
+			By("And NfsVolume keeps Ready state", func() {
+				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
+			})
+			By("And eventually KCP NfsVolume will get Ready state", func() {
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+					if err != nil {
+						return false, err
+					}
+					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.ReadyState
+					return exists, nil
+				}, timeout, interval)
+			})
+		})
+
+		It("Scenario: GCP NFSVolume Deletion", func() {
+			By("Given NfsVolume is Ready", func() {
+			})
+			By("When KCP NfsVolume is deleted", func() {
+				Eventually(DeleteNfsInstance).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
+					).
+					Should(Succeed())
+			})
+			By("Then at first KCP NfsVolume will get Deleted state", func() {
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+					if err != nil {
+						return false, err
+					}
+					exists = gcpNfsInstance.Status.State == client2.Deleted
+					return exists, nil
+				}, timeout, interval)
+			})
+			By("And NfsVolume keeps Ready state", func() {
+				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
+			})
+			By("And eventually KCP NfsVolume will get permanently removed", func() {
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+					exists = apierrors.IsNotFound(err)
+					return exists, client.IgnoreNotFound(err)
+				}, timeout, interval)
+			})
+		})
+	})
+
 })
 
 func sample500Error() *googleapi.Error {

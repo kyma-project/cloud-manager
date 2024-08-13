@@ -40,6 +40,14 @@ func (r *Reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
 		composed.IfElse(EmptyLocationPredicate(), loadScope, nil),
+		composed.IfElse(
+			SourceBackupPredicate(),
+			composed.ComposeActions(
+				"restoreFromSourceBackup",
+				loadScope,
+				loadGcpNfsVolumeBackup),
+			nil,
+		),
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
 			validateIpRange, validateFileShareName, validateCapacity, validatePV, validatePVC, validateLocation),
@@ -82,5 +90,11 @@ func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluste
 func EmptyLocationPredicate() composed.Predicate {
 	return func(ctx context.Context, state composed.State) bool {
 		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.Location) == 0
+	}
+}
+
+func SourceBackupPredicate() composed.Predicate {
+	return func(ctx context.Context, state composed.State) bool {
+		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.SourceBackup.Name) > 0
 	}
 }

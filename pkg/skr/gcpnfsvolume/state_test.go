@@ -265,6 +265,33 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 	},
 }
 
+var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
+	ObjectMeta: v1.ObjectMeta{
+		Name:      "test-gcp-nfs-volume-backup",
+		Namespace: "test",
+	},
+	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
+		Location: "us-west1",
+		Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
+			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
+				Name:      "test-gcp-nfs-volume",
+				Namespace: "test",
+			},
+		},
+	},
+	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
+		Conditions: []v1.Condition{
+			{
+				Type:               "Ready",
+				Status:             "True",
+				LastTransitionTime: v1.Time{Time: time.Now()},
+				Reason:             "Ready",
+				Message:            "NFS backup is ready",
+			},
+		},
+	},
+}
+
 type testStateFactory struct {
 	factory             StateFactory
 	skrCluster          composed.StateCluster
@@ -273,8 +300,7 @@ type testStateFactory struct {
 	deletedGcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 }
 
-func newTestStateFactory() (*testStateFactory, error) {
-
+func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup, volumes ...*cloudresourcesv1beta1.GcpNfsVolume) (*testStateFactory, error) {
 	kcpScheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
@@ -294,13 +320,19 @@ func newTestStateFactory() (*testStateFactory, error) {
 	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
 
-	skrClient := fake.NewClientBuilder().
-		WithScheme(skrScheme).
-		WithObjects(&gcpNfsVolume).
-		WithStatusSubresource(&gcpNfsVolume).
-		WithObjects(&deletedGcpNfsVolume).
-		WithStatusSubresource(&deletedGcpNfsVolume).
-		Build()
+	clientBuilder := fake.NewClientBuilder().
+		WithScheme(skrScheme)
+	for _, volume := range volumes {
+		clientBuilder = clientBuilder.WithObjects(volume).
+			WithStatusSubresource(volume)
+
+	}
+	if backup.Name != "" {
+		clientBuilder = clientBuilder.WithObjects(backup).
+			WithStatusSubresource(backup)
+	}
+	skrClient := clientBuilder.Build()
+
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
 
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster)
@@ -313,6 +345,11 @@ func newTestStateFactory() (*testStateFactory, error) {
 		deletedGcpNfsVolume: &deletedGcpNfsVolume,
 	}, nil
 
+}
+
+func newTestStateFactory() (*testStateFactory, error) {
+	var backup cloudresourcesv1beta1.GcpNfsVolumeBackup
+	return newTestStateFactoryWithObject(&backup, &gcpNfsVolume, &deletedGcpNfsVolume)
 }
 
 func (f *testStateFactory) newState() *State {
