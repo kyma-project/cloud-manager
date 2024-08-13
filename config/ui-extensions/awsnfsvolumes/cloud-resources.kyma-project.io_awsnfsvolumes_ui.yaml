@@ -47,55 +47,45 @@ data:
             widget: Labels
   form: |
     - path: spec.capacity
-      simple: true
       name: spec.capacity
       required: true
       widget: Text
     - path: spec.performanceMode
-      simple: true
       name: spec.performanceMode
       required: true
       placeholder: placeholders.dropdown
     - path: spec.throughput
-      simple: true
       name: spec.throughput
       required: true
       placeholder: placeholders.dropdown
     - path: spec.ipRange
-      simple: true
       name: spec.ipRange
       widget: FormGroup
       required: false
       children:
         - path: name
           name: formName
-          simple: true
           required: true
           widget: Text
           inputInfo: Leave blank for auto IP Range
         - path: namespace
           name: namespace
-          simple: true
           required: true
           widget: Text
           inputInfo: Leave blank for auto IP Range
     - path: spec.volume
-      simple: true
       name: spec.volume
       widget: FormGroup
       children:
         - path: name
-          simple: true
           name: formName
           required: true
           widget: Text
         - path: labels
-          simple: true
           name: labels
           required: false
           widget: KeyValuePair
         - path: annotations
-          simple: true
           name: annotations
           required: false
           widget: KeyValuePair

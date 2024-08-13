@@ -1,22 +1,17 @@
 - path: spec.memorySizeGb
-  simple: true
   name: spec.memorySizeGb
   required: true
 - path: spec.redisVersion
-  simple: true
   name: spec.redisVersion
   required: true
 - path: spec.tier
-  simple: true
   name: spec.tier
   required: true
 
 - path: spec.authEnabled
-  simple: false
   name: spec.authEnabled
   required: false
 - path: spec.ipRange.name
-  simple: false
   name: spec.ipRange.name
   required: false
 - path: spec.transitEncryption.serverAuthentication
@@ -26,12 +21,10 @@
 
 - path: spec.redisConfigs
   name: spec.redisConfigs
-  simple: false
   required: false
   widget: KeyValuePair
 
 - path: spec.authSecret
-  simple: false
   name: spec.authSecret
   widget: FormGroup
   required: false

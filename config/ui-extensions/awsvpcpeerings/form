@@ -1,12 +1,9 @@
 - path: spec.remoteAccountId
-  simple: true
   name: spec.remoteAccountId
   required: true
 - path: spec.remoteVpcId
-  simple: true
   name: spec.remoteVpcId
   required: true
 - path: spec.remoteRegion
-  simple: false
   name: spec.remoteRegion
   required: false

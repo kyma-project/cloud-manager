@@ -26,25 +26,21 @@ data:
             - widget: Labels
               source: opIdentifier
               name: status.opIdentifier
-  form: |-
+  form: |
     - path: spec.location
-      simple: true
       name: spec.location
       required: true
       widget: Text
     - path: spec.source.volume
-      simple: true
       name: spec.source.volume
       required: true
       widget: FormGroup
       children:
         - path: name
-          simple: true
           name: spec.source.volume.name
           required: true
           widget: Text
         - path: namespace
-          simple: true
           name: spec.source.volume.namespace
           required: false
           widget: Text

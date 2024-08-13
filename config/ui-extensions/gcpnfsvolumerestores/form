@@ -1,30 +1,24 @@
 - path: spec.destination
-  simple: true
   name: spec.destination
   widget: FormGroup
   children:
     - path: volume.name
-      simple: true
       name: spec.destination.volume.name
       widget: Text
       required: true
     - path: volume.namespace
-      simple: true
       name: spec.destination.volume.namespace
       widget: Text
       required: false
 - path: spec.source
-  simple: true
   name: spec.source
   widget: FormGroup
   children:
     - path: backup.name
-      simple: true
       widget: Text
       name: spec.source.backup.name
       required: true
     - path: backup.namespace
-      simple: true
       name: spec.source.backup.namespace
       widget: Text
       required: true

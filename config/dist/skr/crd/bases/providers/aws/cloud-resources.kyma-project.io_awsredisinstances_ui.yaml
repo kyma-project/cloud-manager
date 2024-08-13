@@ -44,28 +44,23 @@ data:
             widget: Labels
   form: |-
     - path: spec.cacheNodeType
-      simple: true
       name: spec.cacheNodeType
       required: true
 
     - path: spec.autoMinorVersionUpgrade
-      simple: false
       name: spec.autoMinorVersionUpgrade
       required: false
 
     - path: spec.engineVersion
-      simple: false
       name: spec.engineVersion
       required: false
 
     - path: spec.parameters
-      simple: false
       name: spec.parameters
       required: false
       widget: KeyValuePair
 
     - path: spec.ipRange
-      simple: false
       name: spec.ipRange
       widget: FormGroup
       required: false
@@ -76,7 +71,6 @@ data:
           required: true
 
     - path: spec.authSecret
-      simple: false
       name: spec.authSecret
       widget: FormGroup
       required: false

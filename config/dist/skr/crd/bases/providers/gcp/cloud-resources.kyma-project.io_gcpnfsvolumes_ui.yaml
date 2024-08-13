@@ -68,26 +68,21 @@ data:
             - widget: Labels
               source: state
               name: status.state
-  form: |-
+  form: |
     - path: spec.capacityGb
-      simple: true
       name: spec.capacityGb
       required: true
     - path: spec.fileShareName
-      simple: true
       name: spec.fileShareName
       required: true
     - path: spec.location
-      simple: true
       name: spec.location
       required: true
     - path: spec.tier
-      simple: true
       name: spec.tier
       required: true
 
     - path: spec.ipRange
-      simple: false
       name: spec.ipRange
       widget: FormGroup
       required: false
@@ -97,7 +92,6 @@ data:
           widget: Text
           required: true
     - path: spec.volume
-      simple: false
       name: spec.volume
       widget: FormGroup
       required: false
@@ -115,7 +109,6 @@ data:
           required: false
           widget: KeyValuePair
     - path: spec.volumeClaim
-      simple: false
       name: spec.volumeClaim
       widget: FormGroup
       required: false
@@ -133,7 +126,6 @@ data:
           required: false
           widget: KeyValuePair
     - path: spec.sourceBackup
-      simple: false
       name: spec.sourceBackup
       widget: FormGroup
       required: false

@@ -58,7 +58,6 @@ data:
   form: |
     - path: spec.nfsVolumeRef
       name: nfsVolumeRef
-      simple: true
       required: true
       widget: FormGroup
       children:
@@ -70,35 +69,27 @@ data:
           required: true
     - path: spec.schedule
       name: spec.schedule
-      simple: false
       required: false
     - path: spec.deleteCascade
       name: spec.deleteCascade
-      simple: false
       required: false
     - path: spec.endTime
       name: spec.endTime
-      simple: false
       required: false
     - path: spec.location
       name: spec.location
-      simple: false
       required: false
     - path: spec.maxRetentionDays
       name: spec.maxRetentionDays
-      simple: false
       required: false
     - path: spec.prefix
       name: spec.prefix
-      simple: false
       required: false
     - path: spec.startTime
       name: spec.startTime
-      simple: false
       required: false
     - path: spec.suspend
       name: spec.suspend
-      simple: false
       required: false
   general: |-
     resource:
