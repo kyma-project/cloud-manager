@@ -41,6 +41,7 @@ spec:
               description: AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
               properties:
                 allowVnetAccess:
+                  default: true
                   type: boolean
                   x-kubernetes-validations:
                     - message: AllowVnetAccess is immutable.
