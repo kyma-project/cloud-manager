@@ -1,7 +1,128 @@
 apiVersion: v1
 data:
-  details: ""
-  form: ""
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.enableNonSslPort
+            source: enableNonSslPort
+            widget: Labels
+          - name: spec.replicasPerPrimary
+            source: replicasPerPrimary
+            widget: Labels
+          - name: spec.shardCount
+            source: shardCount
+            widget: Labels
+          - name: spec.redisVersion
+            source: redisVersion
+            widget: Labels
+
+      - name: spec.sku
+        widget: Panel
+        source: spec.sku
+        children:
+          - name: spec.sku.capacity
+            source: capacity
+            widget: Labels
+
+      - name: spec.redisConfiguration
+        widget: Panel
+        source: spec.redisConfiguration
+        children:
+          - name: spec.redisConfiguration.maxclients
+            source: maxclients
+            widget: Labels
+          - name: spec.redisConfiguration.maxfragmentationmemory-reserved
+            source: maxfragmentationmemory-reserved
+            widget: Labels
+          - name: spec.redisConfiguration.maxmemory-delta
+            source: maxmemory-delta
+            widget: Labels
+          - name: spec.redisConfiguration.maxmemory-policy
+            source: maxmemory-policy
+            widget: Labels
+          - name: spec.redisConfiguration.maxmemory-reserved
+            source: maxmemory-reserved
+            widget: Labels
+          - name: spec.redisConfiguration.notify-keyspace-events
+            source: notify-keyspace-events
+            widget: Labels
+          - name: spec.redisConfiguration.zonal-configuration
+            source: zonal-configuration
+            widget: Labels
+
+      - name: spec.volume
+        widget: Panel
+        source: spec.volume
+        children:
+          - name: spec.volume.name
+            source: name
+            widget: Labels
+          - name: spec.volume.labels
+            source: labels
+            widget: Labels
+          - name: spec.volume.annotations
+            source: annotations
+            widget: Labels
+  form: |
+    - path: spec.sku
+      simple: true
+      name: spec.sku
+      required: true
+      widget: FormGroup
+      children:
+        - path: capacity
+          name: spec.sku.capacity
+          required: true
+
+    - path: spec.enableNonSslPort
+      name: spec.enableNonSslPort
+      required: false
+    - path: spec.replicasPerPrimary
+      name: spec.replicasPerPrimary
+      required: false
+    - path: spec.shardCount
+      name: spec.shardCount
+      required: false
+    - path: spec.redisVersion
+      name: spec.redisVersion
+      required: false
+
+    - path: spec.redisConfiguration
+      name: spec.redisConfiguration
+      required: false
+      widget: FormGroup
+      children:
+        - path: maxclients
+          name: spec.redisConfiguration.maxclients
+        - path: maxfragmentationmemory-reserved
+          name: spec.redisConfiguration.maxfragmentationmemory-reserved
+        - path: maxmemory-delta
+          name: spec.redisConfiguration.maxmemory-delta
+        - path: maxmemory-policy
+          name: spec.redisConfiguration.maxmemory-policy
+        - path: maxmemory-reserved
+          name: spec.redisConfiguration.maxmemory-reserved
+        - path: notify-keyspace-events
+          name: spec.redisConfiguration.notify-keyspace-events
+        - path: zonal-configuration
+          name: spec.redisConfiguration.zonal-configuration
+
+    - path: spec.volume
+      name: spec.volume
+      required: false
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.volume.name
+        - path: labels
+          name: spec.volume.labels
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volume.annotations
+          widget: KeyValuePair
   general: |
     resource:
         kind: AzureRedisInstance
@@ -14,8 +135,32 @@ data:
     icon: shelf
     description: >-
         AzureRedisInstance description here
-  list: ""
-  translations: ""
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status.state: State
+      spec.enableNonSslPort: Enable Non SSL Port
+      spec.replicasPerPrimary: Replicas Per Primary
+      spec.shardCount: Shard Count
+      spec.redisVersion: Redis Version
+      spec.sku: SKU
+      spec.sku.capacity: Capacity
+      spec.redisConfiguration: Redis Configuration
+      spec.redisConfiguration.maxclients: Max Clients
+      spec.redisConfiguration.maxfragmentationmemory-reserved: Max Fragmentation Memory Reserved
+      spec.redisConfiguration.maxmemory-delta: Max Memory Delta
+      spec.redisConfiguration.maxmemory-policy: Max Memory Policy
+      spec.redisConfiguration.maxmemory-reserved: Max Memory Reserved
+      spec.redisConfiguration.notify-keyspace-events: Notify Keyspace Events
+      spec.redisConfiguration.zonal-configuration: Zonal Configuration
+      spec.volume: Volume
+      spec.volume.name: Name
+      spec.volume.labels: Labels
+      spec.volume.annotations: Annotations
 kind: ConfigMap
 metadata:
   labels:

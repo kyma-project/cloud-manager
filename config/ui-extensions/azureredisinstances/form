@@ -1,0 +1,56 @@
+- path: spec.sku
+  simple: true
+  name: spec.sku
+  required: true
+  widget: FormGroup
+  children:
+    - path: capacity
+      name: spec.sku.capacity
+      required: true
+
+- path: spec.enableNonSslPort
+  name: spec.enableNonSslPort
+  required: false
+- path: spec.replicasPerPrimary
+  name: spec.replicasPerPrimary
+  required: false
+- path: spec.shardCount
+  name: spec.shardCount
+  required: false
+- path: spec.redisVersion
+  name: spec.redisVersion
+  required: false
+
+- path: spec.redisConfiguration
+  name: spec.redisConfiguration
+  required: false
+  widget: FormGroup
+  children:
+    - path: maxclients
+      name: spec.redisConfiguration.maxclients
+    - path: maxfragmentationmemory-reserved
+      name: spec.redisConfiguration.maxfragmentationmemory-reserved
+    - path: maxmemory-delta
+      name: spec.redisConfiguration.maxmemory-delta
+    - path: maxmemory-policy
+      name: spec.redisConfiguration.maxmemory-policy
+    - path: maxmemory-reserved
+      name: spec.redisConfiguration.maxmemory-reserved
+    - path: notify-keyspace-events
+      name: spec.redisConfiguration.notify-keyspace-events
+    - path: zonal-configuration
+      name: spec.redisConfiguration.zonal-configuration
+
+- path: spec.volume
+  name: spec.volume
+  required: false
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.volume.name
+    - path: labels
+      name: spec.volume.labels
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volume.annotations
+      widget: KeyValuePair

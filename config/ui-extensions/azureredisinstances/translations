@@ -1,0 +1,21 @@
+en:
+  configuration: Configuration
+  status.state: State
+  spec.enableNonSslPort: Enable Non SSL Port
+  spec.replicasPerPrimary: Replicas Per Primary
+  spec.shardCount: Shard Count
+  spec.redisVersion: Redis Version
+  spec.sku: SKU
+  spec.sku.capacity: Capacity
+  spec.redisConfiguration: Redis Configuration
+  spec.redisConfiguration.maxclients: Max Clients
+  spec.redisConfiguration.maxfragmentationmemory-reserved: Max Fragmentation Memory Reserved
+  spec.redisConfiguration.maxmemory-delta: Max Memory Delta
+  spec.redisConfiguration.maxmemory-policy: Max Memory Policy
+  spec.redisConfiguration.maxmemory-reserved: Max Memory Reserved
+  spec.redisConfiguration.notify-keyspace-events: Notify Keyspace Events
+  spec.redisConfiguration.zonal-configuration: Zonal Configuration
+  spec.volume: Volume
+  spec.volume.name: Name
+  spec.volume.labels: Labels
+  spec.volume.annotations: Annotations
