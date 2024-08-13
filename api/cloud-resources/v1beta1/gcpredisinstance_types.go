@@ -42,14 +42,27 @@ type TimeOfDay struct {
 	Minutes int32 `json:"minutes"`
 }
 
-type WeeklyMaintenanceWindow struct {
+type TransitEncryption struct {
+	// +optional
+	// +kubebuilder:default=false
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
+	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
+}
+
+type DayOfWeekPolicy struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=DAY_OF_WEEK_UNSPECIFIED;MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
+	// +kubebuilder:validation:Enum=MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
 	Day string `json:"day"`
 
 	// Start time of the window in UTC time.
 	// +kubebuilder:validation:Required
 	StartTime TimeOfDay `json:"startTime"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type MaintenancePolicy struct {
+	DayOfWeek *DayOfWeekPolicy `json:"dayOfWeek,omitempty"`
 }
 
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
@@ -79,10 +92,8 @@ type GcpRedisInstanceSpec struct {
 	AuthEnabled bool `json:"authEnabled,omitempty"`
 
 	// +optional
-	// +kubebuilder:default=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED;SERVER_AUTHENTICATION;DISABLED
-	TransitEncryptionMode string `json:"transitEncryptionMode,omitempty"`
+	TransitEncryption *TransitEncryption `json:"transitEncryption,omitempty"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
@@ -94,7 +105,7 @@ type GcpRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
-	MaintenancePolicy *WeeklyMaintenanceWindow `json:"maintenancePolicy,omitempty"`
+	MaintenancePolicy *MaintenancePolicy `json:"maintenancePolicy,omitempty"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance

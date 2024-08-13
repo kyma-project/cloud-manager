@@ -17,16 +17,20 @@ func GetGcpMemoryStoreRedisInstanceId(instanceId string) string {
 	return fmt.Sprintf("cm-%s", instanceId)
 }
 
-func ToMaintenancePolicy(window *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp) *redispb.MaintenancePolicy {
-	if window == nil {
+func ToMaintenancePolicy(maintenancePolicy *cloudcontrolv1beta1.MaintenancePolicyGcp) *redispb.MaintenancePolicy {
+	if maintenancePolicy == nil {
+		return nil
+	}
+
+	if maintenancePolicy.DayOfWeek == nil {
 		return nil
 	}
 
 	maintenanceWindow := &redispb.WeeklyMaintenanceWindow{
-		Day: dayofweek.DayOfWeek(dayofweek.DayOfWeek_value[window.Day]),
+		Day: dayofweek.DayOfWeek(dayofweek.DayOfWeek_value[maintenancePolicy.DayOfWeek.Day]),
 		StartTime: &timeofday.TimeOfDay{
-			Hours:   window.StartTime.Hours,
-			Minutes: window.StartTime.Minutes,
+			Hours:   maintenancePolicy.DayOfWeek.StartTime.Hours,
+			Minutes: maintenancePolicy.DayOfWeek.StartTime.Minutes,
 			Seconds: 0,
 			Nanos:   0,
 		},
@@ -35,4 +39,16 @@ func ToMaintenancePolicy(window *cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp)
 	return &redispb.MaintenancePolicy{
 		WeeklyMaintenanceWindow: []*redispb.WeeklyMaintenanceWindow{maintenanceWindow},
 	}
+}
+
+func ToTransitEncryptionMode(transitEncryption *cloudcontrolv1beta1.TransitEncryptionGcp) redispb.Instance_TransitEncryptionMode {
+	if transitEncryption == nil {
+		return redispb.Instance_DISABLED
+	}
+
+	if transitEncryption.ServerAuthentication {
+		return redispb.Instance_SERVER_AUTHENTICATION
+	}
+
+	return redispb.Instance_DISABLED
 }

@@ -52,7 +52,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		gcpRedisInstanceMemorySizeGb := int32(5)
 		gcpRedisInstanceRedisVersion := "REDIS_7_0"
 		gcpRedisInstanceAuthEnabled := true
-		gcpRedisInstanceTransitEncryptionMode := "SERVER_AUTHENTICATION"
 		configKey := "maxmemory-policy"
 		configValue := "allkeys-lru"
 		gcpRedisInstanceRedisConfigs := map[string]string{
@@ -69,11 +68,17 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			"bar": "2",
 		}
 
-		gcpRedisMaintenanceWindows := cloudresourcesv1beta1.WeeklyMaintenanceWindow{
-			Day: "MONDAY",
-			StartTime: cloudresourcesv1beta1.TimeOfDay{
-				Hours:   11,
-				Minutes: 30,
+		gcpEncryptionMode := &cloudresourcesv1beta1.TransitEncryption{
+			ServerAuthentication: true,
+		}
+
+		gcpMaintanencePolicy := &cloudresourcesv1beta1.MaintenancePolicy{
+			DayOfWeek: &cloudresourcesv1beta1.DayOfWeekPolicy{
+				Day: "MONDAY",
+				StartTime: cloudresourcesv1beta1.TimeOfDay{
+					Hours:   15,
+					Minutes: 35,
+				},
 			},
 		}
 
@@ -87,9 +92,9 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceMemorySizeGb(gcpRedisInstanceMemorySizeGb),
 					WithGcpRedisInstanceRedisVersion(gcpRedisInstanceRedisVersion),
 					WithGcpRedisInstanceAuthEnabled(gcpRedisInstanceAuthEnabled),
-					WithGcpRedisInstanceTransitEncryptionMode(gcpRedisInstanceTransitEncryptionMode),
+					WithGcpRedisInstanceTransitEncryptionMode(gcpEncryptionMode),
 					WithGcpRedisInstanceRedisConfigs(gcpRedisInstanceRedisConfigs),
-					WithGcpRedisInstanceMaintenancePolicy(&gcpRedisMaintenanceWindows),
+					WithGcpRedisInstanceMaintenancePolicy(gcpMaintanencePolicy),
 					WithGcpRedisInstanceAuthSecretName(authSecretName),
 					WithGcpRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithGcpRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
@@ -144,11 +149,11 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb).To(Equal(gcpRedisInstance.Spec.MemorySizeGb))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisVersion).To(Equal(gcpRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.AuthEnabled).To(Equal(gcpRedisInstance.Spec.AuthEnabled))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.TransitEncryptionMode).To(Equal(gcpRedisInstance.Spec.TransitEncryptionMode))
+			Expect(kcpRedisInstance.Spec.Instance.Gcp.TransitEncryption.ServerAuthentication).To(Equal(gcpRedisInstance.Spec.TransitEncryption.ServerAuthentication))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs[configKey]).To(Equal(configValue))
-			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).Day).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).Day))
-			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).StartTime.Hours).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).StartTime.Hours))
-			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).StartTime.Minutes).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).StartTime.Minutes))
+			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).DayOfWeek.Day).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).DayOfWeek.Day))
+			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).DayOfWeek.StartTime.Hours).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).DayOfWeek.StartTime.Hours))
+			Expect((*kcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy).DayOfWeek.StartTime.Minutes).To(Equal((*gcpRedisInstance.Spec.MaintenancePolicy).DayOfWeek.StartTime.Minutes))
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")
 			Expect(kcpRedisInstance.Spec.IpRange.Name).To(Equal(skrIpRange.Status.Id))

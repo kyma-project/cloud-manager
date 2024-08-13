@@ -66,14 +66,19 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpGcpRedisInstanceTier("BASIC"),
 					WithKcpGcpRedisInstanceMemorySizeGb(5),
 					WithKcpGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithKcpGcpRedisInstanceTransitEncryption(&cloudcontrolv1beta1.TransitEncryptionGcp{
+						ServerAuthentication: true,
+					}),
 					WithKcpGcpRedisInstanceConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),
-					WithKcpGcpRedisInstanceMaintenancePolicy(&cloudcontrolv1beta1.WeeklyMaintenanceWindowGcp{
-						Day: "MONDAY",
-						StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
-							Hours:   11,
-							Minutes: 30,
+					WithKcpGcpRedisInstanceMaintenancePolicy(&cloudcontrolv1beta1.MaintenancePolicyGcp{
+						DayOfWeek: &cloudcontrolv1beta1.DayOfWeekPolicyGcp{
+							Day: "MONDAY",
+							StartTime: cloudcontrolv1beta1.TimeOfDayGcp{
+								Hours:   14,
+								Minutes: 45,
+							},
 						},
 					}),
 				).

@@ -114,6 +114,13 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
+type TransitEncryptionGcp struct {
+	// +optional
+	// +kubebuilder:default=false
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
+	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
+}
+
 type TimeOfDayGcp struct {
 	// Hours of day in 24 hour format. Should be from 0 to 23. An API may choose
 	// to allow the value "24:00:00" for scenarios like business closing time.
@@ -129,14 +136,19 @@ type TimeOfDayGcp struct {
 	Minutes int32 `json:"minutes"`
 }
 
-type WeeklyMaintenanceWindowGcp struct {
+type DayOfWeekPolicyGcp struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=DAY_OF_WEEK_UNSPECIFIED;MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
+	// +kubebuilder:validation:Enum=MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
 	Day string `json:"day"`
 
-	// Start time of the window in UTC time.
 	// +kubebuilder:validation:Required
 	StartTime TimeOfDayGcp `json:"startTime"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type MaintenancePolicyGcp struct {
+	DayOfWeek *DayOfWeekPolicyGcp `json:"dayOfWeek,omitempty"`
 }
 
 type RedisInstanceGcp struct {
@@ -161,10 +173,8 @@ type RedisInstanceGcp struct {
 	AuthEnabled bool `json:"authEnabled,omitempty"`
 
 	// +optional
-	// +kubebuilder:default=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=TRANSIT_ENCRYPTION_MODE_UNSPECIFIED;SERVER_AUTHENTICATION;DISABLED
-	TransitEncryptionMode string `json:"transitEncryptionMode,omitempty"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption`` is immutable."
+	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
@@ -172,7 +182,7 @@ type RedisInstanceGcp struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
-	MaintenancePolicy *WeeklyMaintenanceWindowGcp `json:"maintenancePolicy,omitempty"`
+	MaintenancePolicy *MaintenancePolicyGcp `json:"maintenancePolicy,omitempty"`
 }
 
 type RedisInstanceAzure struct {

@@ -9,6 +9,21 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: gcpredisinstance-sample
 spec:
+  # required fields
   memorySizeGb: 1
   tier: "BASIC"
+
+  # optional fields
   redisVersion: REDIS_7_0
+  authEnabled: true
+  transitEncryption:
+    serverAuthentication: true
+  redisConfigs:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
+  maintenancePolicy:
+    dayOfWeek:
+      day: "TUESDAY"
+      startTime:
+          hours: 15
+          minutes: 45
