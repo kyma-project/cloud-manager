@@ -26,7 +26,7 @@ This tutorial explains how to create VPC peering in Azure.
    ```
 3. Set the region that is closest to your Kyma cluster. Use `az account list-locations` to list available locations. 
    ```shell
-      export REGION=<Location>
+      export REGION=<Location.>
    ```
 4. Create a resource group that will be a container for related resources.
    ```shell
@@ -176,7 +176,7 @@ This tutorial explains how to create VPC peering in Azure.
    ...
    ```
 
-13. Clean up Kuberbetes resources
+13. Clean up Kubernetes resources
 
     * Remove the created workloads:
       ```shell
