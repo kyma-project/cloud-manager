@@ -130,7 +130,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 
 		case http.MethodPost:
 			fmt.Println(r.URL.Path)
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups") && strings.Contains(r.URL.RawQuery, "backupId=cm-") {
 				//Return 200
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume-backup-operation-id"}`))
@@ -160,7 +160,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 	err, _ctx := createNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
+	suite.Equal(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}

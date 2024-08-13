@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -36,7 +37,8 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	location, err := getLocation(state, logger)
 	srcBackupFullPath := ""
 	if len(state.ObjAsGcpNfsVolume().Spec.SourceBackup.Name) > 0 {
-		srcBackupFullPath = client.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, state.GcpNfsVolumeBackup.Spec.Location, state.GcpNfsVolumeBackup.Name)
+		backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
+		srcBackupFullPath = client.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, state.GcpNfsVolumeBackup.Spec.Location, backupName)
 	}
 	if err != nil {
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).

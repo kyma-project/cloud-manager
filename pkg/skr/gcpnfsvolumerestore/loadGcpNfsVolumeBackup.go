@@ -11,6 +11,10 @@ import (
 )
 
 func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, context.Context) {
+	//If deleting, continue with next steps.
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
 	// implement similar to loadGcpNfsVolume
 	// loadGcpNfsVolumeBackup loads the GcpNfsVolumeBackup object from the restore.Spec.Source.Backup value.
 	// If the object is not found, the function returns an error.

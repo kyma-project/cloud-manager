@@ -11,6 +11,11 @@ import (
 )
 
 func runNfsRestore(ctx context.Context, st composed.State) (error, context.Context) {
+	//If deleting, continue with next steps.
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	restore := state.ObjAsGcpNfsVolumeRestore()
@@ -26,12 +31,6 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	//If deleting, skip.
-	deleting := !state.Obj().GetDeletionTimestamp().IsZero()
-	if deleting {
-		return nil, nil
-	}
-
 	logger.WithValues("NfsRestore :", restore.Name).Info("Creating GCP File Restore")
 
 	//Get GCP details.
@@ -39,11 +38,12 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	project := gcpScope.Project
 	srcLocation := state.GcpNfsVolumeBackup.Spec.Location
 	dstLocation := state.GcpNfsVolume.Spec.Location
+	backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
 
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
 	dstFullPath := client.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
-	srcFullPath := client.GetFileBackupPath(project, srcLocation, state.GcpNfsVolumeBackup.Name)
+	srcFullPath := client.GetFileBackupPath(project, srcLocation, backupName)
 
 	operation, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, srcFullPath)
 

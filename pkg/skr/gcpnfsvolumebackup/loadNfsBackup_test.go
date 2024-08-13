@@ -27,7 +27,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 
 		case http.MethodGet:
 			fmt.Println(r.URL.Path)
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/test-gcp-nfs-volume-backup") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/cm-cffd6896-0127-48a1-8a64-e07f6ad5c912") {
 				//Return 404
 				http.Error(w, "Not Found", http.StatusNotFound)
 			} else {
@@ -64,7 +64,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
 
 		case http.MethodGet:
 			fmt.Println(r.URL.Path)
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/test-gcp-nfs-volume-backup") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/cm-cffd6896-0127-48a1-8a64-e07f6ad5c912") {
 				//Return 500
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 			} else {
@@ -99,7 +99,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/test-gcp-nfs-volume-backup") {
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/cm-cffd6896-0127-48a1-8a64-e07f6ad5c912") {
 				//Return 200
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume-backup"}`))

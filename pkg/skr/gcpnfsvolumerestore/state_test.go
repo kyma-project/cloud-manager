@@ -95,6 +95,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 				Message:            "NFS backup is ready",
 			},
 		},
+		Id: "cffd6896-0127-48a1-8a64-e07f6ad5c912",
 	},
 }
 

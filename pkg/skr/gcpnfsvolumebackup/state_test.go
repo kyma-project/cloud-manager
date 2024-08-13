@@ -96,6 +96,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 				Message:            "NFS backup is ready",
 			},
 		},
+		Id: "cffd6896-0127-48a1-8a64-e07f6ad5c912",
 	},
 }
 
@@ -114,6 +115,19 @@ var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 				Namespace: "test",
 			},
 		},
+	},
+	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
+		State: "Ready",
+		Conditions: []v1.Condition{
+			{
+				Type:               "Ready",
+				Status:             "True",
+				LastTransitionTime: v1.Time{Time: time.Now()},
+				Reason:             "Ready",
+				Message:            "NFS backup is ready",
+			},
+		},
+		Id: "cffd6896-0127-48a1-8a64-e07f6ad5c912",
 	},
 }
 

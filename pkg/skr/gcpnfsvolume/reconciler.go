@@ -40,14 +40,6 @@ func (r *Reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
 		composed.IfElse(EmptyLocationPredicate(), loadScope, nil),
-		composed.IfElse(
-			SourceBackupPredicate(),
-			composed.ComposeActions(
-				"restoreFromSourceBackup",
-				loadScope,
-				loadGcpNfsVolumeBackup),
-			nil,
-		),
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
 			validateIpRange, validateFileShareName, validateCapacity, validatePV, validatePVC, validateLocation),
@@ -56,6 +48,14 @@ func (r *Reconciler) newAction() composed.Action {
 		addFinalizer,
 		loadKcpIpRange,
 		loadKcpNfsInstance,
+		composed.IfElse(
+			composed.All(composed.Not(composed.MarkedForDeletionPredicate), SourceBackupPredicate(), NoKcpNfsInstancePredicate()),
+			composed.ComposeActions(
+				"restoreFromSourceBackup",
+				loadScope,
+				loadGcpNfsVolumeBackup),
+			nil,
+		),
 		loadPersistenceVolume,
 		sanitizeReleasedVolume,
 		loadPersistentVolumeClaim,
@@ -96,5 +96,13 @@ func EmptyLocationPredicate() composed.Predicate {
 func SourceBackupPredicate() composed.Predicate {
 	return func(ctx context.Context, state composed.State) bool {
 		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.SourceBackup.Name) > 0
+	}
+}
+
+func NoKcpNfsInstancePredicate() composed.Predicate {
+	return func(ctx context.Context, state composed.State) bool {
+		//If KcpNfsInstance is not null, it means that NfsInstance object has already been created on KCP and we don't need backup to populate the field.
+		//This allows backup to be deleted after NfsInstance is created.
+		return state.(*State).KcpNfsInstance == nil
 	}
 }
