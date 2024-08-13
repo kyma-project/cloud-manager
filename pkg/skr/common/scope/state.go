@@ -11,6 +11,8 @@ type State interface {
 	KcpCluster() composed.StateCluster
 	KymaRef() klog.ObjectRef
 	Scope() *cloudcontrolv1beta1.Scope
+	ObjWithConditionsAndState() composed.ObjWithConditionsAndState
+	setScope(scope *cloudcontrolv1beta1.Scope)
 }
 
 type StateFactory interface {
@@ -59,4 +61,8 @@ func (s *myState) Scope() *cloudcontrolv1beta1.Scope {
 
 func (s *myState) ObjWithConditionsAndState() composed.ObjWithConditionsAndState {
 	return s.Obj().(composed.ObjWithConditionsAndState)
+}
+
+func (s *myState) setScope(scope *cloudcontrolv1beta1.Scope) {
+	s.scope = scope
 }

@@ -11,19 +11,23 @@ import (
 )
 
 func waitScopeReady(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*myState)
+	state := st.(State)
 
 	hasReady := meta.FindStatusCondition(state.Scope().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 	if hasReady != nil {
 		// scope is ready
-		// * set status.State back to processing
+		// * set status.State back to empty
 		// * remove ConditionTypeWaitScopeReady
 		// * continue (return nil error)
-		state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateProcessing)
 
+		if state.ObjWithConditionsAndState().State() != cloudresourcesv1beta1.StateWaitingScopeReady {
+			return nil, nil
+		}
+
+		state.ObjWithConditionsAndState().SetState("")
 		return composed.UpdateStatus(state.ObjWithConditionsAndState()).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeWaitScopeReady).
-			SuccessErrorNil(). // continue
+			SuccessError(composed.StopWithRequeue).
 			ErrorLogMessage("Error updating object status after removing ").
 			Run(ctx, state)
 	}

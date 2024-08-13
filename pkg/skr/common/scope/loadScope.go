@@ -11,7 +11,7 @@ import (
 )
 
 func loadScope(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*myState)
+	state := st.(State)
 
 	if state.Scope() != nil {
 		return nil, nil
@@ -19,8 +19,8 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 
 	scope := &cloudcontrolv1beta1.Scope{}
 	err := state.KcpCluster().K8sClient().Get(ctx, types.NamespacedName{
-		Namespace: state.kymaRef.Namespace,
-		Name:      state.kymaRef.Name,
+		Namespace: state.KymaRef().Namespace,
+		Name:      state.KymaRef().Name,
 	}, scope)
 	if apierrors.IsNotFound(err) {
 		state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateError)
@@ -39,5 +39,6 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.LogErrorAndReturn(err, "Error loading KCP Scope", composed.StopWithRequeue, ctx)
 	}
 
+	state.setScope(scope)
 	return nil, nil
 }

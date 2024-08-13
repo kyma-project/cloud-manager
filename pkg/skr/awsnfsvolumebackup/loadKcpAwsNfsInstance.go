@@ -13,6 +13,12 @@ import (
 
 func loadKcpAwsNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	backup := state.ObjAsAwsNfsVolumeBackup()
+
+	//If the object is being deleted continue...
+	if composed.IsMarkedForDeletion(backup) {
+		return nil, nil
+	}
 
 	kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 	err := state.KcpCluster().K8sClient().Get(ctx, types.NamespacedName{
