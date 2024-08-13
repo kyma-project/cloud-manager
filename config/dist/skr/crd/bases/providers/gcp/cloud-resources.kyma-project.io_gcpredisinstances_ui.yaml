@@ -18,8 +18,8 @@ data:
           - name: spec.authEnabled
             source: authEnabled
             widget: Labels
-          - name: spec.transitEncryptionMode
-            source: transitEncryptionMode
+          - name: spec.transitEncryption.serverAuthentication
+            source: transitEncryption.serverAuthentication
             widget: Labels
 
 
@@ -57,11 +57,11 @@ data:
         widget: Panel
         source: spec
         children:
-          - source: maintenancePolicy.day
-            name: spec.maintenancePolicy.day
+          - source: maintenancePolicy.dayOfWeek.day
+            name: spec.maintenancePolicy.dayOfWeek.day
             widget: Labels
-          - source: maintenancePolicy.startTime
-            name: spec.maintenancePolicy.startTime
+          - source: maintenancePolicy.dayOfWeek.startTime
+            name: spec.maintenancePolicy.dayOfWeek.startTime
             widget: Labels
 
 
@@ -94,9 +94,9 @@ data:
       simple: false
       name: spec.ipRange.name
       required: false
-    - path: spec.transitEncryptionMode
+    - path: spec.transitEncryption.serverAuthentication
       simple: false
-      name: spec.transitEncryptionMode
+      name: spec.transitEncryption.serverAuthentication
       required: false
 
     - path: spec.redisConfigs
@@ -130,14 +130,14 @@ data:
       required: false
       widget: FormGroup
       children:
-        - path: day
-          name: spec.maintenancePolicy.day
+        - path: dayOfWeek.day
+          name: spec.maintenancePolicy.dayOfWeek.day
           required: true
-        - path: startTime.hours
-          name: spec.maintenancePolicy.startTime.hours
+        - path: dayOfWeek.startTime.hours
+          name: spec.maintenancePolicy.dayOfWeek.startTime.hours
           required: true
-        - path: startTime.minutes
-          name: spec.maintenancePolicy.startTime.minutes
+        - path: dayOfWeek.startTime.minutes
+          name: spec.maintenancePolicy.dayOfWeek.startTime.minutes
           required: true
   general: |
     resource:
@@ -166,7 +166,8 @@ data:
       spec.authEnabled: Auth Enabled
       spec.ipRange: Ip Range
       spec.ipRange.name: Ip Range Name
-      spec.transitEncryptionMode: Transit Encryption Mode
+      spec.transitEncryption: Transit Encryption
+      spec.transitEncryption.serverAuthentication: Server Authentication
       spec.authSecret: Authentication Secret
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels
@@ -181,10 +182,10 @@ data:
       spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
       spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
       spec.maintenancePolicy: Maintenance Policy
-      spec.maintenancePolicy.day: Day
-      spec.maintenancePolicy.startTime: Start Time
-      spec.maintenancePolicy.startTime.hours: Hours
-      spec.maintenancePolicy.startTime.minutes: Minutes
+      spec.maintenancePolicy.dayOfWeek.day: Day
+      spec.maintenancePolicy.dayOfWeek.startTime: Start Time
+      spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
+      spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
 kind: ConfigMap
 metadata:
   labels:
