@@ -50,7 +50,7 @@ func NewStateFactory(skrProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPe
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
 	c, err := f.skrProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		f.env.Get(vpcpeeringclient.GcpVpcPeeringPath),
 	)
 
 	if err != nil {

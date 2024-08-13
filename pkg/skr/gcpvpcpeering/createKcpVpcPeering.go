@@ -2,8 +2,10 @@ package gcpvpcpeering
 
 import (
 	"context"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -21,16 +23,24 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 
 	obj := state.ObjAsGcpVpcPeering()
 
-	//If the peering name is not set, use the object name
-	//if obj.Spec.RemotePeeringName == "" {
-	//	obj.Spec.RemotePeeringName = obj.Name
-	//}
+	// If there is no guid, generate one before creating the KCP VpcPeering
+	if obj.Status.Id == "" {
+		statusId := uuid.NewString()
+
+		obj.Status.Id = statusId
+		err := state.UpdateObjStatus(ctx)
+
+		// If there is too many requests to the API, log and requeue the request
+		if err != nil {
+			return composed.LogErrorAndReturn(err, "[SKR GcpVpcPeering] Error updating status with ID "+err.Error(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		}
+	}
 
 	state.KcpVpcPeering = &cloudcontrolv1beta1.VpcPeering{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      state.ObjAsGcpVpcPeering().Name,
+			Name:      obj.Status.Id,
 			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
+			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
 				cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,
@@ -38,8 +48,8 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 		},
 		Spec: cloudcontrolv1beta1.VpcPeeringSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{
-				Namespace: state.ObjAsGcpVpcPeering().Namespace,
-				Name:      state.ObjAsGcpVpcPeering().Name,
+				Namespace: obj.Namespace,
+				Name:      obj.Name,
 			},
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
@@ -58,10 +68,10 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpVpcPeering)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "[SKR GcpVpcPeering] Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("Created KCP VpcPeering")
+	logger.Info("[SKR GcpVpcPeering] Created KCP VpcPeering")
 
 	return nil, nil
 }
