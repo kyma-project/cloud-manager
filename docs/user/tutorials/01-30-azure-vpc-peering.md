@@ -1,6 +1,10 @@
 # Use VPC peering in Azure
 
-This tutorial explains how to create VPC peering in Azure.
+This tutorial explains how to create VPC peering connection between a remote VPC network and Kyma in Azure. Tutorial 
+assumes that Cloud Manager module is enabled in your Kyma. Steps from this tutorial create new resource group, VPC 
+network and VM, and assigns required roles to provided Kyma principal name in your Azure subscription. If you wish to
+use existing resources instead of creating new ones, adjust variable names accordingly and skip
+the steps that create those resources.
 
 ## Steps <!-- {docsify-ignore} -->
 
@@ -24,6 +28,7 @@ This tutorial explains how to create VPC peering in Azure.
    --role "Classic Network Contributor" \
    --scope "/subscriptions/$SUBSCRIPTION_ID"
    ```
+   
 3. Set the region that is closest to your Kyma cluster. Use `az account list-locations` to list available locations. 
    ```shell
       export REGION=<Location.>
@@ -43,10 +48,9 @@ This tutorial explains how to create VPC peering in Azure.
    
    az network vnet create -g $RESOURCE_GROUP_NAME -n $VNET_NAME --address-prefix $ADDRESS_PREFIX --subnet-name $SUBNET_NAME --subnet-prefixes $SUBNET_PREFIX
    ```
-6. Create the virtual machine this resource group
+6. Create virtual machine
    ```shell
    export VM_NAME="myVM$RANDOM_ID"
-   export USERNAME=azureuser
    export VM_IMAGE="Canonical:0001-com-ubuntu-minimal-jammy:minimal-22_04-lts-gen2:latest"
    
    az vm create \
@@ -59,11 +63,11 @@ This tutorial explains how to create VPC peering in Azure.
    --nsg "" 
    ```
    
-7. Tag the VNet with the Kyma name
+7. Tag the VPC network with the Kyma shoot name
    ```shell
-   export KYMA_NAME=<Your Kyma name.>
+   export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
    export VNET_ID=$(az network vnet show --name $VNET_NAME --resource-group $RESOURCE_GROUP_NAME --query id --output tsv)
-   az tag update --resource-id $VNET_ID --operation Merge --tags $KYMA_NAME
+   az tag update --resource-id $VNET_ID --operation Merge --tags SHOOT_NAME
    ```
 
 
