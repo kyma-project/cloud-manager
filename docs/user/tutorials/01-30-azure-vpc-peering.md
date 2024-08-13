@@ -2,7 +2,7 @@
 
 This tutorial explains how to create VPC peering connection between a remote VPC network and Kyma in Azure. Tutorial 
 assumes that Cloud Manager module is enabled in your Kyma. Steps from this tutorial create new resource group, VPC 
-network and VM, and assigns required roles to provided Kyma principal name in your Azure subscription. If you wish to
+network and VM, and assigns required roles to provided Kyma service principal in your Azure subscription. If you wish to
 use existing resources instead of creating new ones, adjust variable names accordingly and skip
 the steps that create those resources.
 
@@ -10,14 +10,14 @@ the steps that create those resources.
 
 1. Login to Azure and set active subscription
    ```shell
-   export SUBSCRIPTION=<Name or ID of subscription.>
+   export SUBSCRIPTION=<Name or ID of subscription>
    az login
    az account set --subscription $SUBSCRIPTION
    ```
 2. Assign required roles to Cloud Manager peering service principal
    ```shell
    export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-   export PRINCIPAL_NAME=<Cloud Manager service principal name.>
+   export PRINCIPAL_NAME=<Cloud Manager service principal name>
    export OBJECT_ID=$(az ad sp list --display-name $PRINCIPAL_NAME --query "[].id" -o tsv)
    
    az role assignment create --assignee $OBJECT_ID \
@@ -31,9 +31,9 @@ the steps that create those resources.
    
 3. Set the region that is closest to your Kyma cluster. Use `az account list-locations` to list available locations. 
    ```shell
-      export REGION=<Location.>
+      export REGION=<Location>
    ```
-4. Create a resource group that will be a container for related resources.
+4. Create a resource group that will be a container for related resources
    ```shell
    export RANDOM_ID="$(openssl rand -hex 3)"
    export RESOURCE_GROUP_NAME="myResourceGroup$RANDOM_ID"
@@ -71,7 +71,7 @@ the steps that create those resources.
    ```
 
 
-8. Create an AzureVpcPeering resource.
+8. Create an AzureVpcPeering resource
 
    ```shell
    kubectl apply -f - <<EOF
