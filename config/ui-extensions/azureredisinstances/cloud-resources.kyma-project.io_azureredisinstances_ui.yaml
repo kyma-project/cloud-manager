@@ -68,7 +68,6 @@ data:
             widget: Labels
   form: |
     - path: spec.sku
-      simple: true
       name: spec.sku
       required: true
       widget: FormGroup
