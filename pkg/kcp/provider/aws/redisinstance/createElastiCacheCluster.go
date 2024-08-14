@@ -45,13 +45,14 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Value: ptr.To(state.Scope().Spec.ShootName),
 		},
 	}, client.CreateElastiCacheClusterOptions{
-		Name:                     GetAwsElastiCacheClusterName(state.Obj().GetName()),
-		SubnetGroupName:          ptr.Deref(state.subnetGroup.CacheSubnetGroupName, ""),
-		ParameterGroupName:       ptr.Deref(state.parameterGroup.CacheParameterGroupName, ""),
-		CacheNodeType:            redisInstance.Spec.Instance.Aws.CacheNodeType,
-		EngineVersion:            redisInstance.Spec.Instance.Aws.EngineVersion,
-		AutoMinorVersionUpgrade:  redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
-		TransitEncryptionEnabled: redisInstance.Spec.Instance.Aws.TransitEncryptionEnabled,
+		Name:                       GetAwsElastiCacheClusterName(state.Obj().GetName()),
+		SubnetGroupName:            ptr.Deref(state.subnetGroup.CacheSubnetGroupName, ""),
+		ParameterGroupName:         ptr.Deref(state.parameterGroup.CacheParameterGroupName, ""),
+		CacheNodeType:              redisInstance.Spec.Instance.Aws.CacheNodeType,
+		EngineVersion:              redisInstance.Spec.Instance.Aws.EngineVersion,
+		AutoMinorVersionUpgrade:    redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
+		TransitEncryptionEnabled:   redisInstance.Spec.Instance.Aws.TransitEncryptionEnabled,
+		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 	})
 
 	if err != nil {

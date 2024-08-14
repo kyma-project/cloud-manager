@@ -16,3 +16,5 @@ spec:
   engineVersion: "7.0"
   autoMinorVersionUpgrade: true
   transitEncryptionEnabled: true
+  preferredMaintenanceWindow: sun:23:00-mon:01:30
+

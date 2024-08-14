@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.5
+    cloud-resources.kyma-project.io/version: v0.0.6
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -88,6 +88,21 @@ spec:
                   additionalProperties:
                     type: string
                   type: object
+                preferredMaintenanceWindow:
+                  description: |-
+                    Specifies the weekly time range during which maintenance on the cluster is
+                    performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H
+                    Clock UTC). The minimum maintenance window is a 60 minute period.
+
+
+                    Valid values for ddd are: sun mon tue wed thu fri sat
+
+
+                    Example: sun:23:00-mon:01:30
+                  type: string
+                  x-kubernetes-validations:
+                    - message: PreferredMaintenanceWindow is immutable.
+                      rule: (self == oldSelf)
                 transitEncryptionEnabled:
                   default: false
                   type: boolean

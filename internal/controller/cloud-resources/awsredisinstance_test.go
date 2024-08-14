@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: SKR AwsRedisInstance", func() {
@@ -64,6 +65,8 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		autoMinorVersionUpgrade := true
 		transitEncryptionEnabled := true
 
+		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+
 		parameterKey := "active-defrag-cycle-max"
 		parameterValue := "85"
 		parameters := map[string]string{
@@ -83,6 +86,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
 					WithAwsRedisInstanceTransitEncryptionEnabled(transitEncryptionEnabled),
+					WithAwsRedisInstancePreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithAwsRedisInstanceParameters(parameters),
 				).
 				Should(Succeed())
@@ -135,6 +139,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Aws.EngineVersion).To(Equal(awsRedisInstance.Spec.EngineVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade).To(Equal(awsRedisInstance.Spec.AutoMinorVersionUpgrade))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled).To(Equal(awsRedisInstance.Spec.TransitEncryptionEnabled))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow).To(Equal(awsRedisInstance.Spec.PreferredMaintenanceWindow))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.Parameters[parameterKey]).To(Equal(parameterValue))
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")

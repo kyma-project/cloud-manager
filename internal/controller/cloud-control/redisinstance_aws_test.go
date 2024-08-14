@@ -11,6 +11,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP RedisInstance", func() {
@@ -59,6 +60,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
 		transitEncryptionEnabled := true
+		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
 
 		parameters := map[string]string{
 			"active-defrag-cycle-max": "85",
@@ -76,6 +78,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpAwsEngineVersion(engineVersion),
 					WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
 					WithKcpAwsTransitEncryptionEnabled(transitEncryptionEnabled),
+					WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithKcpAwsParameters(parameters),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
@@ -113,10 +116,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		By("And Then RedisInstance has .status.primaryEndpoint set", func() {
 			Expect(len(redisInstance.Status.PrimaryEndpoint) > 0).To(Equal(true))
 		})
-		// TODO
-		// By("And Then RedisInstance has .status.readEndpoint set", func() {
-		// 	Expect(len(redisInstance.Status.ReadEndpoint) > 0).To(Equal(true))
-		// })
+
+		By("And Then RedisInstance has .status.readEndpoint set", func() {
+			Expect(len(redisInstance.Status.ReadEndpoint) > 0).To(Equal(true))
+		})
 		// By("And Then RedisInstance has .status.authString set", func() {
 		// 	Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
 		// })

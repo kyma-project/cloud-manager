@@ -30,13 +30,14 @@ func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
 }
 
 type CreateElastiCacheClusterOptions struct {
-	Name                     string
-	SubnetGroupName          string
-	ParameterGroupName       string
-	CacheNodeType            string
-	EngineVersion            string
-	AutoMinorVersionUpgrade  bool
-	TransitEncryptionEnabled bool
+	Name                       string
+	SubnetGroupName            string
+	ParameterGroupName         string
+	CacheNodeType              string
+	EngineVersion              string
+	AutoMinorVersionUpgrade    bool
+	TransitEncryptionEnabled   bool
+	PreferredMaintenanceWindow *string
 }
 
 type ElastiCacheClient interface {
@@ -256,6 +257,7 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 		EngineVersion:               aws.String(options.EngineVersion),
 		AutoMinorVersionUpgrade:     aws.Bool(options.AutoMinorVersionUpgrade),
 		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
+		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)
