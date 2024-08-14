@@ -1,16 +1,16 @@
 # GcpVpcPeering Custom Resource
 
 The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describes the VPC peering
-connection that can be created to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
+connection that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
 It allows you to consume services available on the remote VPC from the Kyma cluster.
 
-### Required permissions on the remote project
+### Required Permissions on the Remote Project
 In order to create a VPC peering connection, the following permissions are required and must be granted to the Kyma service account provided:
 
 | Parameter                          | Description                                                                 |
 |------------------------------------|-----------------------------------------------------------------------------|
-| compute.networks.addPeering        | Required to create the peering request on the remote project and VPC.       |
-| compute.networks.get               | Required to fetch the list of existing VPC peerings on the remote VPC.      |
+| compute.networks.addPeering        | Required to create the peering request in the remote project and VPC.       |
+| compute.networks.get               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
 | compute.networks.ListEffectiveTags | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
 
 
@@ -19,12 +19,12 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter              | Type   | Description                                                                                                                      |
-|------------------------|--------|----------------------------------------------------------------------------------------------------------------------------------|
-| **importCustomRoutes** | bool   | If set to `true`, custom routes will be exported from the remote VPC and imported in Kyma.                                       |
-| **remotePeeringName**  | string | VPC Peering name on the remote project. It will appear on your Google Cloud project under VPC > {VPC Name} > VPC Network Peering |
-| **remoteProject**      | string | The Google Cloud project where the remote VPC is located to be peered with Kyma.                                                 |
-| **remoteVpcName**      | string | The name of the remote VPC to be peered with Kyma.                                                                               |
+| Parameter              | Type   | Description                                                                                                                                                        |
+|------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **importCustomRoutes** | bool   | If set to `true`, custom routes are exported from the remote VPC and imported into Kyma.                                                                           |
+| **remotePeeringName**  | string | The VPC Peering name in the remote project. To find it, select **Google Cloud project under VPC > {VPC Name} > VPC Network Peering** in your Google Cloud Project. |
+| **remoteProject**      | string | The Google Cloud project to be peered with Kyma. The remote VPC is located in this project.                                                                        |
+| **remoteVpcName**      | string | The name of the remote VPC to be peered with Kyma.                                                                                                                 |
 
 **Status:**
 
