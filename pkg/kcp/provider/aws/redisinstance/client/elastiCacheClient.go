@@ -270,7 +270,7 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 func (c *client) DeleteElastiCacheClaster(ctx context.Context, id string) error {
 	deleteInput := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId:   ptr.To(id),
-		RetainPrimaryCluster: aws.Bool(true),
+		RetainPrimaryCluster: aws.Bool(false),
 	}
 
 	_, err := c.elastiCacheSvc.DeleteReplicationGroup(ctx, deleteInput)
