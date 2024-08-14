@@ -23,7 +23,7 @@ func loadElastiCacheCluster(ctx context.Context, st composed.State) (error, cont
 
 	if len(list) > 0 {
 		state.elastiCacheCluster = &list[0]
-		logger = logger.WithValues("elastiCacheClusterId", ptr.Deref(state.elastiCacheCluster.CacheClusterId, ""))
+		logger = logger.WithValues("elastiCacheClusterId", ptr.Deref(state.elastiCacheCluster.ReplicationGroupId, ""))
 		logger.Info("ElastiCache cluster found and loaded")
 		return nil, composed.LoggerIntoCtx(ctx, logger)
 	}

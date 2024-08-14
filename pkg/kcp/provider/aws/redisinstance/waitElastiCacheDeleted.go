@@ -20,9 +20,9 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	cacheState := ptr.Deref(state.elastiCacheCluster.CacheClusterStatus, "")
+	cacheState := ptr.Deref(state.elastiCacheCluster.Status, "")
 
-	if cacheState != awsmeta.ElastiCache_DELETING && cacheState != awsmeta.ElastiCache_DELETED {
+	if cacheState != awsmeta.ElastiCache_DELETING {
 		errorMsg := fmt.Sprintf("Error: unexpected aws elasticache cluster state: %s", cacheState)
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).
@@ -35,10 +35,6 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 			SuccessError(composed.StopAndForget).
 			SuccessLogMsg(errorMsg).
 			Run(ctx, st)
-	}
-
-	if cacheState == awsmeta.ElastiCache_DELETED {
-		return nil, nil
 	}
 
 	logger.Info("Instance is still being deleted, requeueing with delay")

@@ -81,7 +81,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
-		var awsElastiCacheClusterInstance *elasticacheTypes.CacheCluster
+		var awsElastiCacheClusterInstance *elasticacheTypes.ReplicationGroup
 		By("Then AWS Redis is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
@@ -98,7 +98,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		By("When AWS Redis is Available", func() {
-			infra.AwsMock().SetAwsElastiCacheLifeCycleState(*awsElastiCacheClusterInstance.CacheClusterId, awsmeta.ElastiCache_AVAILABLE)
+			infra.AwsMock().SetAwsElastiCacheLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_AVAILABLE)
 		})
 
 		By("Then RedisInstance has Ready condition", func() {
@@ -130,7 +130,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		By("And When AWS Redis state is deleted", func() {
-			infra.AwsMock().DeleteAwsElastiCacheByName(*awsElastiCacheClusterInstance.CacheClusterId)
+			infra.AwsMock().DeleteAwsElastiCacheByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
 		})
 
 		By("Then RedisInstance does not exist", func() {

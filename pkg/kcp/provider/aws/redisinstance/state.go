@@ -18,7 +18,7 @@ type State struct {
 
 	subnetGroup        *elasticacheTypes.CacheSubnetGroup
 	parameterGroup     *elasticacheTypes.CacheParameterGroup
-	elastiCacheCluster *elasticacheTypes.CacheCluster
+	elastiCacheCluster *elasticacheTypes.ReplicationGroup
 }
 
 type StateFactory interface {

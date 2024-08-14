@@ -25,7 +25,7 @@ func New() Server {
 			elasticacheMutex:    &sync.Mutex{},
 			subnetGroupMutex:    &sync.Mutex{},
 			parameterGroupMutex: &sync.Mutex{},
-			elastiCaches:        map[string]*elasticacheTypes.CacheCluster{},
+			elastiCaches:        map[string]*elasticacheTypes.ReplicationGroup{},
 			subnetGroups:        map[string]*elasticacheTypes.CacheSubnetGroup{},
 			parameterGroups:     map[string]*elasticacheTypes.CacheParameterGroup{},
 			parameters:          map[string]map[string]elasticacheTypes.Parameter{},

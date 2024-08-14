@@ -51,8 +51,8 @@ type ElastiCacheClient interface {
 	ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error
 	DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error)
 
-	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error)
-	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error)
+	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error)
+	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
 	DeleteElastiCacheClaster(ctx context.Context, id string) error
 }
 
@@ -228,35 +228,37 @@ func (c *client) DescribeEngineDefaultParameters(ctx context.Context, family str
 	return result, nil
 }
 
-func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {
-	out, err := c.elastiCacheSvc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
-		CacheClusterId:    ptr.To(clusterId),
-		ShowCacheNodeInfo: ptr.To(true),
+func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
+	out, err := c.elastiCacheSvc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
+		ReplicationGroupId: ptr.To(clusterId),
 	})
+
 	if err != nil {
 		if awsmeta.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return out.CacheClusters, nil
+	return out.ReplicationGroups, nil
 }
 
-func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error) {
-	params := &elasticache.CreateCacheClusterInput{
-		CacheClusterId:           aws.String(options.Name),
-		CacheSubnetGroupName:     aws.String(options.SubnetGroupName),
-		CacheParameterGroupName:  aws.String(options.ParameterGroupName),
-		CacheNodeType:            aws.String(options.CacheNodeType),
-		NumCacheNodes:            aws.Int32(1),
-		Engine:                   aws.String("redis"),
-		EngineVersion:            aws.String(options.EngineVersion),
-		AutoMinorVersionUpgrade:  aws.Bool(options.AutoMinorVersionUpgrade),
-		TransitEncryptionEnabled: aws.Bool(options.TransitEncryptionEnabled),
-		Tags:                     tags,
+func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
+	params := &elasticache.CreateReplicationGroupInput{
+		ReplicationGroupId:          aws.String(options.Name),
+		ReplicationGroupDescription: aws.String("ElastiCache managed by Kyma Cloud Manager"),
+		CacheSubnetGroupName:        aws.String(options.SubnetGroupName),
+		CacheParameterGroupName:     aws.String(options.ParameterGroupName),
+		CacheNodeType:               aws.String(options.CacheNodeType),
+		NumCacheClusters:            aws.Int32(1),
+		NumNodeGroups:               aws.Int32(1),
+		ClusterMode:                 elasticacheTypes.ClusterModeDisabled,
+		Engine:                      aws.String("redis"),
+		EngineVersion:               aws.String(options.EngineVersion),
+		AutoMinorVersionUpgrade:     aws.Bool(options.AutoMinorVersionUpgrade),
+		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
+		Tags:                        tags,
 	}
-
-	res, err := c.elastiCacheSvc.CreateCacheCluster(ctx, params)
+	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)
 
 	if err != nil {
 		return nil, err
@@ -266,11 +268,12 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 }
 
 func (c *client) DeleteElastiCacheClaster(ctx context.Context, id string) error {
-	deleteInput := &elasticache.DeleteCacheClusterInput{
-		CacheClusterId: ptr.To(id),
+	deleteInput := &elasticache.DeleteReplicationGroupInput{
+		ReplicationGroupId:   ptr.To(id),
+		RetainPrimaryCluster: aws.Bool(true),
 	}
 
-	_, err := c.elastiCacheSvc.DeleteCacheCluster(ctx, deleteInput)
+	_, err := c.elastiCacheSvc.DeleteReplicationGroup(ctx, deleteInput)
 
 	return err
 }
