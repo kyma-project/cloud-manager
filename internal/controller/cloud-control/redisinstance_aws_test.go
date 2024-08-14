@@ -57,7 +57,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "6.x"
-		AutoMinorVersionUpgrade := true
+		autoMinorVersionUpgrade := true
+		transitEncryptionEnabled := true
 
 		parameters := map[string]string{
 			"active-defrag-cycle-max": "85",
@@ -73,7 +74,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithRedisInstanceAws(),
 					WithKcpAwsCacheNodeType(cacheNodeType),
 					WithKcpAwsEngineVersion(engineVersion),
-					WithKcpAwsAutoMinorVersionUpgrade(AutoMinorVersionUpgrade),
+					WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
+					WithKcpAwsTransitEncryptionEnabled(transitEncryptionEnabled),
 					WithKcpAwsParameters(parameters),
 				).
 				Should(Succeed(), "failed creating RedisInstance")

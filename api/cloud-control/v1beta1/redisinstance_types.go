@@ -221,6 +221,11 @@ type RedisInstanceAws struct {
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
 
 	// +optional
+	// +kubebuilder:default=false
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionEnabled is immutable."
+	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
+
+	// +optional
 	Parameters map[string]string `json:"parameters,omitempty"`
 }
 

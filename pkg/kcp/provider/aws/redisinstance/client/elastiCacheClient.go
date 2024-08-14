@@ -30,12 +30,13 @@ func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
 }
 
 type CreateElastiCacheClusterOptions struct {
-	Name                    string
-	SubnetGroupName         string
-	ParameterGroupName      string
-	CacheNodeType           string
-	EngineVersion           string
-	AutoMinorVersionUpgrade bool
+	Name                     string
+	SubnetGroupName          string
+	ParameterGroupName       string
+	CacheNodeType            string
+	EngineVersion            string
+	AutoMinorVersionUpgrade  bool
+	TransitEncryptionEnabled bool
 }
 
 type ElastiCacheClient interface {
@@ -243,15 +244,16 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId strin
 
 func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error) {
 	params := &elasticache.CreateCacheClusterInput{
-		CacheClusterId:          aws.String(options.Name),
-		CacheSubnetGroupName:    aws.String(options.SubnetGroupName),
-		CacheParameterGroupName: aws.String(options.ParameterGroupName),
-		CacheNodeType:           aws.String(options.CacheNodeType),
-		NumCacheNodes:           aws.Int32(1),
-		Engine:                  aws.String("redis"),
-		EngineVersion:           aws.String(options.EngineVersion),
-		AutoMinorVersionUpgrade: aws.Bool(options.AutoMinorVersionUpgrade),
-		Tags:                    tags,
+		CacheClusterId:           aws.String(options.Name),
+		CacheSubnetGroupName:     aws.String(options.SubnetGroupName),
+		CacheParameterGroupName:  aws.String(options.ParameterGroupName),
+		CacheNodeType:            aws.String(options.CacheNodeType),
+		NumCacheNodes:            aws.Int32(1),
+		Engine:                   aws.String("redis"),
+		EngineVersion:            aws.String(options.EngineVersion),
+		AutoMinorVersionUpgrade:  aws.Bool(options.AutoMinorVersionUpgrade),
+		TransitEncryptionEnabled: aws.Bool(options.TransitEncryptionEnabled),
+		Tags:                     tags,
 	}
 
 	res, err := c.elastiCacheSvc.CreateCacheCluster(ctx, params)
