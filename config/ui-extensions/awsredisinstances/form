@@ -10,6 +10,14 @@
   name: spec.engineVersion
   required: false
 
+- path: spec.preferredMaintenanceWindow
+  name: spec.preferredMaintenanceWindow
+  required: false
+
+- path: spec.transitEncryptionEnabled
+  name: spec.transitEncryptionEnabled
+  required: false
+
 - path: spec.parameters
   name: spec.parameters
   required: false

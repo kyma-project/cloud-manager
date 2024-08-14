@@ -18,6 +18,12 @@ data:
           - name: spec.parameters
             source: parameters
             widget: Labels
+          - name: spec.preferredMaintenanceWindow
+            source: preferredMaintenanceWindow
+            widget: Labels
+          - name: spec.transitEncryptionEnabled
+            source: transitEncryptionEnabled
+            widget: Labels
 
 
 
@@ -53,6 +59,14 @@ data:
 
     - path: spec.engineVersion
       name: spec.engineVersion
+      required: false
+
+    - path: spec.preferredMaintenanceWindow
+      name: spec.preferredMaintenanceWindow
+      required: false
+
+    - path: spec.transitEncryptionEnabled
+      name: spec.transitEncryptionEnabled
       required: false
 
     - path: spec.parameters
@@ -118,6 +132,8 @@ data:
       spec.cacheNodeType: Cache Node Type
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
+      spec.preferredMaintenanceWindow: Preferred Maintenance Window
+      spec.transitEncryptionEnabled: Transit Encryption Enabled
 kind: ConfigMap
 metadata:
   labels:
