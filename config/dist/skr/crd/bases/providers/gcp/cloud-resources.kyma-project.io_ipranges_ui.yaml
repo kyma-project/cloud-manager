@@ -19,11 +19,10 @@ data:
             - widget: Labels
               source: cidr
               name: status.cidr
-  form: |-
+  form: |
     - path: spec.cidr
       name: spec.cidr
       widget: Text
-      simple: true
       required: false
       inputInfo: Leave blank for Auto-CIDR
   general: |

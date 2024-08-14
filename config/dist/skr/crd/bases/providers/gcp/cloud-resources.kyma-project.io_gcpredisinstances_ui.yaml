@@ -74,39 +74,31 @@ data:
             name: status.state
   form: |
     - path: spec.memorySizeGb
-      simple: true
       name: spec.memorySizeGb
       required: true
     - path: spec.redisVersion
-      simple: true
       name: spec.redisVersion
       required: true
     - path: spec.tier
-      simple: true
       name: spec.tier
       required: true
 
     - path: spec.authEnabled
-      simple: false
       name: spec.authEnabled
       required: false
     - path: spec.ipRange.name
-      simple: false
       name: spec.ipRange.name
       required: false
     - path: spec.transitEncryption.serverAuthentication
-      simple: false
       name: spec.transitEncryption.serverAuthentication
       required: false
 
     - path: spec.redisConfigs
       name: spec.redisConfigs
-      simple: false
       required: false
       widget: KeyValuePair
 
     - path: spec.authSecret
-      simple: false
       name: spec.authSecret
       widget: FormGroup
       required: false
@@ -125,7 +117,6 @@ data:
           widget: KeyValuePair
 
     - path: spec.maintenancePolicy
-      simple: false
       name: spec.maintenancePolicy
       required: false
       widget: FormGroup
@@ -172,15 +163,6 @@ data:
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels
       spec.authSecret.annotations: Annotations
-      spec.redisConfigs: Redis Configs
-      spec.redisConfigs.activedefrag: Active Defrag
-      spec.redisConfigs.lfu-decay-time: LFU Decay Time
-      spec.redisConfigs.lfu-log-factor: LFU Log Factor
-      spec.redisConfigs.maxmemory-gb: Max Memory (Gb)
-      spec.redisConfigs.maxmemory-policy: Max Memory Policy
-      spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
-      spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
-      spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
       spec.maintenancePolicy: Maintenance Policy
       spec.maintenancePolicy.dayOfWeek.day: Day
       spec.maintenancePolicy.dayOfWeek.startTime: Start Time
