@@ -15,7 +15,6 @@
   name: spec.ipRange.name
   required: false
 - path: spec.transitEncryption.serverAuthentication
-  simple: false
   name: spec.transitEncryption.serverAuthentication
   required: false
 
@@ -43,7 +42,6 @@
       widget: KeyValuePair
 
 - path: spec.maintenancePolicy
-  simple: false
   name: spec.maintenancePolicy
   required: false
   widget: FormGroup
