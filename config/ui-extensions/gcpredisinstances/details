@@ -15,8 +15,8 @@ body:
       - name: spec.authEnabled
         source: authEnabled
         widget: Labels
-      - name: spec.transitEncryptionMode
-        source: transitEncryptionMode
+      - name: spec.transitEncryption.serverAuthentication
+        source: transitEncryption.serverAuthentication
         widget: Labels
 
 
@@ -47,6 +47,18 @@ body:
         widget: Labels
       - source: authSecret.annotations
         name: spec.authSecret.annotations
+        widget: Labels
+
+
+  - name: spec.maintenancePolicy
+    widget: Panel
+    source: spec
+    children:
+      - source: maintenancePolicy.dayOfWeek.day
+        name: spec.maintenancePolicy.dayOfWeek.day
+        widget: Labels
+      - source: maintenancePolicy.dayOfWeek.startTime
+        name: spec.maintenancePolicy.dayOfWeek.startTime
         widget: Labels
 
 

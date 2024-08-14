@@ -18,8 +18,8 @@ data:
           - name: spec.authEnabled
             source: authEnabled
             widget: Labels
-          - name: spec.transitEncryptionMode
-            source: transitEncryptionMode
+          - name: spec.transitEncryption.serverAuthentication
+            source: transitEncryption.serverAuthentication
             widget: Labels
 
 
@@ -53,6 +53,18 @@ data:
             widget: Labels
 
 
+      - name: spec.maintenancePolicy
+        widget: Panel
+        source: spec
+        children:
+          - source: maintenancePolicy.dayOfWeek.day
+            name: spec.maintenancePolicy.dayOfWeek.day
+            widget: Labels
+          - source: maintenancePolicy.dayOfWeek.startTime
+            name: spec.maintenancePolicy.dayOfWeek.startTime
+            widget: Labels
+
+
       - name: status
         widget: Panel
         source: status
@@ -60,7 +72,7 @@ data:
           - widget: Labels
             source: state
             name: status.state
-  form: |+
+  form: |
     - path: spec.memorySizeGb
       simple: true
       name: spec.memorySizeGb
@@ -82,9 +94,9 @@ data:
       simple: false
       name: spec.ipRange.name
       required: false
-    - path: spec.transitEncryptionMode
+    - path: spec.transitEncryption.serverAuthentication
       simple: false
-      name: spec.transitEncryptionMode
+      name: spec.transitEncryption.serverAuthentication
       required: false
 
     - path: spec.redisConfigs
@@ -112,9 +124,21 @@ data:
           required: false
           widget: KeyValuePair
 
-
-
-
+    - path: spec.maintenancePolicy
+      simple: false
+      name: spec.maintenancePolicy
+      required: false
+      widget: FormGroup
+      children:
+        - path: dayOfWeek.day
+          name: spec.maintenancePolicy.dayOfWeek.day
+          required: true
+        - path: dayOfWeek.startTime.hours
+          name: spec.maintenancePolicy.dayOfWeek.startTime.hours
+          required: true
+        - path: dayOfWeek.startTime.minutes
+          name: spec.maintenancePolicy.dayOfWeek.startTime.minutes
+          required: true
   general: |
     resource:
         kind: GcpRedisInstance
@@ -131,7 +155,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       configuration: Configuration
       status: Status
@@ -142,7 +166,8 @@ data:
       spec.authEnabled: Auth Enabled
       spec.ipRange: Ip Range
       spec.ipRange.name: Ip Range Name
-      spec.transitEncryptionMode: Transit Encryption Mode
+      spec.transitEncryption: Transit Encryption
+      spec.transitEncryption.serverAuthentication: Server Authentication
       spec.authSecret: Authentication Secret
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels
@@ -156,6 +181,11 @@ data:
       spec.redisConfigs.notify-keyspace-events: Notify Keyspace Events
       spec.redisConfigs.stream-node-max-bytes: Stream Node Max Bytes
       spec.redisConfigs.stream-node-max-entries: Stream Node Max Entries
+      spec.maintenancePolicy: Maintenance Policy
+      spec.maintenancePolicy.dayOfWeek.day: Day
+      spec.maintenancePolicy.dayOfWeek.startTime: Start Time
+      spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
+      spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
 kind: ConfigMap
 metadata:
   labels:

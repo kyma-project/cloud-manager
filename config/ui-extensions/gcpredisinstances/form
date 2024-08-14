@@ -19,9 +19,9 @@
   simple: false
   name: spec.ipRange.name
   required: false
-- path: spec.transitEncryptionMode
+- path: spec.transitEncryption.serverAuthentication
   simple: false
-  name: spec.transitEncryptionMode
+  name: spec.transitEncryption.serverAuthentication
   required: false
 
 - path: spec.redisConfigs
@@ -49,6 +49,18 @@
       required: false
       widget: KeyValuePair
 
-
-
-
+- path: spec.maintenancePolicy
+  simple: false
+  name: spec.maintenancePolicy
+  required: false
+  widget: FormGroup
+  children:
+    - path: dayOfWeek.day
+      name: spec.maintenancePolicy.dayOfWeek.day
+      required: true
+    - path: dayOfWeek.startTime.hours
+      name: spec.maintenancePolicy.dayOfWeek.startTime.hours
+      required: true
+    - path: dayOfWeek.startTime.minutes
+      name: spec.maintenancePolicy.dayOfWeek.startTime.minutes
+      required: true
