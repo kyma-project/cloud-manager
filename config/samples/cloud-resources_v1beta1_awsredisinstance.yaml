@@ -9,4 +9,10 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: awsredisinstance-sample
 spec:
+  # required fields
   cacheNodeType: cache.t2.micro
+
+  # optional fields
+  engineVersion: "7.0"
+  autoMinorVersionUpgrade: true
+  transitEncryptionEnabled: true
