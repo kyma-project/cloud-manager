@@ -14,7 +14,7 @@ import (
 )
 
 type AwsElastiCacheMockUtils interface {
-	GetAwsElastiCacheByName(name string) *elasticacheTypes.CacheCluster
+	GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup
 	SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState)
 	DeleteAwsElastiCacheByName(name string)
 	DescribeAwsElastiCacheParametersByName(groupName string) map[string]string
@@ -41,19 +41,19 @@ type elastiCacheClientFake struct {
 	subnetGroupMutex    *sync.Mutex
 	parameterGroupMutex *sync.Mutex
 	elasticacheMutex    *sync.Mutex
-	elastiCaches        map[string]*elasticacheTypes.CacheCluster
+	elastiCaches        map[string]*elasticacheTypes.ReplicationGroup
 	parameters          map[string]map[string]elasticacheTypes.Parameter
 	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
 	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
 }
 
-func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.CacheCluster {
+func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup {
 	return client.elastiCaches[name]
 }
 
 func (client *elastiCacheClientFake) SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState) {
 	if instance, ok := client.elastiCaches[name]; ok {
-		instance.CacheClusterStatus = ptr.To(state)
+		instance.Status = ptr.To(state)
 	}
 }
 
@@ -169,38 +169,41 @@ func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context
 	return pie.Values(getDefaultParams()), nil
 }
 
-func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.CacheCluster, error) {
+func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
 	client.elasticacheMutex.Lock()
 	defer client.elasticacheMutex.Unlock()
 
 	cacheCluster := client.elastiCaches[clusterId]
 
 	if cacheCluster == nil {
-		return []elasticacheTypes.CacheCluster{}, nil
+		return []elasticacheTypes.ReplicationGroup{}, nil
 	}
 
-	return []elasticacheTypes.CacheCluster{*cacheCluster}, nil
+	return []elasticacheTypes.ReplicationGroup{*cacheCluster}, nil
 }
 
-func (client *elastiCacheClientFake) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options awsclient.CreateElastiCacheClusterOptions) (*elasticache.CreateCacheClusterOutput, error) {
+func (client *elastiCacheClientFake) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options awsclient.CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
 	client.elasticacheMutex.Lock()
 	defer client.elasticacheMutex.Unlock()
 
-	client.elastiCaches[options.Name] = &elasticacheTypes.CacheCluster{
-		CacheClusterId:       ptr.To(options.Name),
-		CacheSubnetGroupName: ptr.To(options.SubnetGroupName),
-		CacheClusterStatus:   ptr.To("creating"),
-		CacheNodes: []elasticacheTypes.CacheNode{
+	client.elastiCaches[options.Name] = &elasticacheTypes.ReplicationGroup{
+		ReplicationGroupId: ptr.To(options.Name),
+		Status:             ptr.To("creating"),
+		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
-				Endpoint: &elasticacheTypes.Endpoint{
+				PrimaryEndpoint: &elasticacheTypes.Endpoint{
 					Address: ptr.To("192.168.3.3"),
+					Port:    aws.Int32(6949),
+				},
+				ReaderEndpoint: &elasticacheTypes.Endpoint{
+					Address: ptr.To("192.168.3.4"),
 					Port:    aws.Int32(6949),
 				},
 			},
 		},
 	}
 
-	return &elasticache.CreateCacheClusterOutput{}, nil
+	return &elasticache.CreateReplicationGroupOutput{}, nil
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheClaster(ctx context.Context, id string) error {
@@ -208,7 +211,7 @@ func (client *elastiCacheClientFake) DeleteElastiCacheClaster(ctx context.Contex
 	defer client.elasticacheMutex.Unlock()
 
 	if instance, ok := client.elastiCaches[id]; ok {
-		instance.CacheClusterStatus = ptr.To("deleting")
+		instance.Status = ptr.To("deleting")
 	}
 
 	return nil

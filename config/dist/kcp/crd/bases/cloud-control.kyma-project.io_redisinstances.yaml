@@ -66,6 +66,12 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      transitEncryptionEnabled:
+                        default: false
+                        type: boolean
+                        x-kubernetes-validations:
+                        - message: TransitEncryptionEnabled is immutable.
+                          rule: (self == oldSelf)
                     required:
                     - cacheNodeType
                     type: object

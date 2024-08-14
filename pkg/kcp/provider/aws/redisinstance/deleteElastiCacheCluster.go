@@ -16,16 +16,16 @@ func deleteElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	if state.elastiCacheCluster == nil {
 		return nil, nil
 	}
-	cacheState := ptr.Deref(state.elastiCacheCluster.CacheClusterStatus, "")
-	if cacheState == awsmeta.ElastiCache_DELETED || cacheState == awsmeta.ElastiCache_DELETING {
+	cacheState := ptr.Deref(state.elastiCacheCluster.Status, "")
+	if cacheState == awsmeta.ElastiCache_DELETING {
 		return nil, nil
 	}
 
 	logger.
-		WithValues("elastiCacheCluster", ptr.Deref(state.elastiCacheCluster.CacheClusterId, "")).
+		WithValues("elastiCacheCluster", ptr.Deref(state.elastiCacheCluster.ReplicationGroupId, "")).
 		Info("Deleting elasti cache cluster")
 
-	err := state.awsClient.DeleteElastiCacheClaster(ctx, ptr.Deref(state.elastiCacheCluster.CacheClusterId, ""))
+	err := state.awsClient.DeleteElastiCacheClaster(ctx, ptr.Deref(state.elastiCacheCluster.ReplicationGroupId, ""))
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error deleting elasti cache cluster", ctx)
 	}

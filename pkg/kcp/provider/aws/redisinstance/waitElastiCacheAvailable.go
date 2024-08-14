@@ -30,7 +30,7 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			Run(ctx, st)
 	}
 
-	cacheState := ptr.Deref(state.elastiCacheCluster.CacheClusterStatus, "")
+	cacheState := ptr.Deref(state.elastiCacheCluster.Status, "")
 	if cacheState == awsmeta.ElastiCache_AVAILABLE {
 		return nil, nil
 	}

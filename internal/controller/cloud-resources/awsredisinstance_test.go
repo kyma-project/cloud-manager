@@ -62,6 +62,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
+		transitEncryptionEnabled := true
 
 		parameterKey := "active-defrag-cycle-max"
 		parameterValue := "85"
@@ -81,6 +82,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceCacheNodeType(cacheNodeType),
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
+					WithAwsRedisInstanceTransitEncryptionEnabled(transitEncryptionEnabled),
 					WithAwsRedisInstanceParameters(parameters),
 				).
 				Should(Succeed())
@@ -132,6 +134,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Aws.CacheNodeType).To(Equal(awsRedisInstance.Spec.CacheNodeType))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.EngineVersion).To(Equal(awsRedisInstance.Spec.EngineVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade).To(Equal(awsRedisInstance.Spec.AutoMinorVersionUpgrade))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled).To(Equal(awsRedisInstance.Spec.TransitEncryptionEnabled))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.Parameters[parameterKey]).To(Equal(parameterValue))
 
 			By("And has spec.ipRange.name equal to SKR IpRange.status.id")

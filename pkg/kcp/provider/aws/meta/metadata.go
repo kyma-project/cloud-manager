@@ -102,18 +102,14 @@ func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, conte
 type ElastiCacheState = string
 
 // github.com/aws/aws-sdk-go-v2/service/elasticache@v1.40.3/types/types.go
-// CacheClusterStatus *string
-// The current state of this cluster, one of the following values: available ,
-// creating , deleted , deleting , incompatible-network , modifying , rebooting
-// cluster nodes , restore-failed , or snapshotting .
+// Status *string
+// The current state of this replication group - creating , available , modifying ,
+// deleting , create-failed , snapshotting .
 const (
-	ElastiCache_AVAILABLE               ElastiCacheState = "available"
-	ElastiCache_CREATING                ElastiCacheState = "creating"
-	ElastiCache_DELETED                 ElastiCacheState = "deleted"
-	ElastiCache_DELETING                ElastiCacheState = "deleting"
-	ElastiCache_INCOMPATIBLE_NETWORK    ElastiCacheState = "incompatible-network"
-	ElastiCache_MODIFYING               ElastiCacheState = "modifying"
-	ElastiCache_REBOOTING_CLUSTER_NODES ElastiCacheState = "rebooting cluster nodes"
-	ElastiCache_RESTORE_FAILED          ElastiCacheState = "restore-failed"
-	ElastiCache_SNAPSHOTTING            ElastiCacheState = "snapshotting"
+	ElastiCache_AVAILABLE     ElastiCacheState = "available"
+	ElastiCache_CREATING      ElastiCacheState = "creating"
+	ElastiCache_DELETING      ElastiCacheState = "deleting"
+	ElastiCache_MODIFYING     ElastiCacheState = "modifying"
+	ElastiCache_CREATE_FAILED ElastiCacheState = "create-failed"
+	ElastiCache_SNAPSHOTTING  ElastiCacheState = "snapshotting"
 )

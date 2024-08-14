@@ -42,10 +42,11 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Aws: &cloudcontrolv1beta1.RedisInstanceAws{
-					CacheNodeType:           awsRedisInstance.Spec.CacheNodeType,
-					EngineVersion:           awsRedisInstance.Spec.EngineVersion,
-					AutoMinorVersionUpgrade: awsRedisInstance.Spec.AutoMinorVersionUpgrade,
-					Parameters:              awsRedisInstance.Spec.Parameters,
+					CacheNodeType:            awsRedisInstance.Spec.CacheNodeType,
+					EngineVersion:            awsRedisInstance.Spec.EngineVersion,
+					AutoMinorVersionUpgrade:  awsRedisInstance.Spec.AutoMinorVersionUpgrade,
+					TransitEncryptionEnabled: awsRedisInstance.Spec.TransitEncryptionEnabled,
+					Parameters:               awsRedisInstance.Spec.Parameters,
 				},
 			},
 		},

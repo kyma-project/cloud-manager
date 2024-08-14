@@ -20,7 +20,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, nil
 	}
 
-	redisInstance.Status.Id = ptr.Deref(state.elastiCacheCluster.CacheClusterId, "")
+	redisInstance.Status.Id = ptr.Deref(state.elastiCacheCluster.ReplicationGroupId, "")
 
 	err := state.UpdateObjStatus(ctx)
 
