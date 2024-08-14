@@ -428,6 +428,11 @@ func (in *AwsRedisInstanceSpec) DeepCopyInto(out *AwsRedisInstanceSpec) {
 		*out = new(AuthSecretSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.PreferredMaintenanceWindow != nil {
+		in, out := &in.PreferredMaintenanceWindow, &out.PreferredMaintenanceWindow
+		*out = new(string)
+		**out = **in
+	}
 	if in.Parameters != nil {
 		in, out := &in.Parameters, &out.Parameters
 		*out = make(map[string]string, len(*in))
