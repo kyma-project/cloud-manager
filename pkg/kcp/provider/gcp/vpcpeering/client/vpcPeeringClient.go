@@ -17,27 +17,40 @@ required GCP permissions
 package client
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	compute "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
-	"context"
-	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	"google.golang.org/api/option"
 	"k8s.io/utils/ptr"
-	"strings"
+)
+
+const (
+	// VPC Peering uses a different service account
+	GcpVpcPeeringPath = "GCP_VPC_PEERING_KEY_PATH"
 )
 
 func createGcpNetworksClient(ctx context.Context) (*compute.NetworksClient, error) {
-	c, err := compute.NewNetworksRESTClient(ctx, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get("GCP_SA_JSON_KEY_PATH")))
+	c, err := compute.NewNetworksRESTClient(ctx, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get(GcpVpcPeeringPath)))
 	if err != nil {
 		return nil, err
 	}
 	return c, nil
+}
+
+func closeNetworkClient(ctx context.Context, gcpNetworkClient *compute.NetworksClient) {
+	err := gcpNetworkClient.Close()
+	if err != nil {
+		composed.LoggerFromCtx(ctx).Error(err, "Error closing GCP Networks Client")
+	}
 }
 
 func NewClientProvider() cloudclient.ClientProvider[VpcPeeringClient] {
@@ -62,7 +75,8 @@ func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sour
 	if err != nil {
 		return err
 	}
-	defer gcpNetworkClient.Close()
+	defer closeNetworkClient(ctx, gcpNetworkClient)
+
 	destinationNetworkUrl := getFullNetworkUrl(destinationProject, destinationVpc)
 
 	vpcPeeringRequest := &pb.AddPeeringNetworkRequest{
@@ -114,7 +128,7 @@ func (c *networkClient) DeleteVpcPeering(ctx context.Context, remotePeeringName 
 	if err != nil {
 		return err
 	}
-	defer gcpNetworkClient.Close()
+	defer closeNetworkClient(ctx, gcpNetworkClient)
 	_, err = gcpNetworkClient.RemovePeering(ctx, &pb.RemovePeeringNetworkRequest{
 		Network:                              kymaVpc,
 		Project:                              kymaProject,
@@ -131,7 +145,7 @@ func (c *networkClient) GetVpcPeering(ctx context.Context, remotePeeringName str
 	if err != nil {
 		return nil, err
 	}
-	defer gcpNetworkClient.Close()
+	defer closeNetworkClient(ctx, gcpNetworkClient)
 	network, err := gcpNetworkClient.Get(ctx, &pb.GetNetworkRequest{Network: vpc, Project: project})
 	if err != nil {
 		return nil, err
@@ -156,7 +170,7 @@ func (c *networkClient) CheckRemoteNetworkTags(context context.Context, remoteVp
 	if err != nil {
 		return false, err
 	}
-	defer gcpNetworkClient.Close()
+	defer closeNetworkClient(context, gcpNetworkClient)
 
 	//NetworkPeering will only be created if the remote vpc has a tag with the kyma shoot name
 	remoteNetwork, err := gcpNetworkClient.Get(context, &pb.GetNetworkRequest{Network: remoteVpc, Project: remoteProject})
@@ -165,14 +179,19 @@ func (c *networkClient) CheckRemoteNetworkTags(context context.Context, remoteVp
 	}
 
 	//Unfortunately get networks doesn't return the tags, so we need to use the resource manager tag bindings client
-	tbc, err := resourcemanager.NewTagBindingsClient(context, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get("GCP_SA_JSON_KEY_PATH")))
+	tbc, err := resourcemanager.NewTagBindingsClient(context, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get(GcpVpcPeeringPath)))
 	if err != nil {
 		return false, err
 	}
 	//ListEffectiveTags requires the networkId instead of name therefore we need to convert the selfLinkId to the format that the tag bindings client expects
 	//more info here: https://cloud.google.com/iam/docs/full-resource-names
 	tagIterator := tbc.ListEffectiveTags(context, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(*remoteNetwork.SelfLinkWithId, "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
-	defer tbc.Close()
+	defer func(tbc *resourcemanager.TagBindingsClient) {
+		err := tbc.Close()
+		if err != nil {
+			composed.LoggerFromCtx(context).Error(err, "Error closing GCP TagBindingsClient")
+		}
+	}(tbc)
 	for {
 		tag, err := tagIterator.Next()
 		if err != nil {
