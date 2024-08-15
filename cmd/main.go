@@ -304,7 +304,10 @@ func main() {
 
 	go func() {
 		err := cfg.Watch(ctx.Done(), func(_ fsnotify.Event) {
+			rootLogger.Info("Reloading config")
 			cfg.Read()
+			rootLogger.WithValues("config", cfg.PrintJson()).
+				Info("Config reload dump")
 		})
 		if err != nil {
 			rootLogger.Error(err, "Error from config watcher")
