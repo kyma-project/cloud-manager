@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
@@ -19,6 +20,7 @@ type State struct {
 	subnetGroup        *elasticacheTypes.CacheSubnetGroup
 	parameterGroup     *elasticacheTypes.CacheParameterGroup
 	elastiCacheCluster *elasticacheTypes.ReplicationGroup
+	authTokenValue     *secretsmanager.GetSecretValueOutput
 }
 
 type StateFactory interface {

@@ -46,6 +46,10 @@ func GetAwsElastiCacheClusterName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
 }
 
+func GetAwsAuthTokenSecretName(name string) string {
+	return fmt.Sprintf("cm-%s/authToken", name)
+}
+
 func MapParameters(parameters []elasticacheTypes.Parameter) map[string]string {
 	result := map[string]string{}
 

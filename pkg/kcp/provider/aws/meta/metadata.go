@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -55,6 +56,7 @@ var notFoundErrorCodes = map[string]struct{}{
 	(&efsTypes.PolicyNotFound{}).ErrorCode():                        {},
 	(&elasticacheTypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
 	(&elasticacheTypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
+	(&secretsmanagerTypes.ResourceNotFoundException{}).ErrorCode():  {},
 }
 
 func IsNotFound(err error) bool {
