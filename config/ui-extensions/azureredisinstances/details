@@ -1,0 +1,65 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.enableNonSslPort
+        source: enableNonSslPort
+        widget: Labels
+      - name: spec.replicasPerPrimary
+        source: replicasPerPrimary
+        widget: Labels
+      - name: spec.shardCount
+        source: shardCount
+        widget: Labels
+      - name: spec.redisVersion
+        source: redisVersion
+        widget: Labels
+
+  - name: spec.sku
+    widget: Panel
+    source: spec.sku
+    children:
+      - name: spec.sku.capacity
+        source: capacity
+        widget: Labels
+
+  - name: spec.redisConfiguration
+    widget: Panel
+    source: spec.redisConfiguration
+    children:
+      - name: spec.redisConfiguration.maxclients
+        source: maxclients
+        widget: Labels
+      - name: spec.redisConfiguration.maxfragmentationmemory-reserved
+        source: maxfragmentationmemory-reserved
+        widget: Labels
+      - name: spec.redisConfiguration.maxmemory-delta
+        source: maxmemory-delta
+        widget: Labels
+      - name: spec.redisConfiguration.maxmemory-policy
+        source: maxmemory-policy
+        widget: Labels
+      - name: spec.redisConfiguration.maxmemory-reserved
+        source: maxmemory-reserved
+        widget: Labels
+      - name: spec.redisConfiguration.notify-keyspace-events
+        source: notify-keyspace-events
+        widget: Labels
+      - name: spec.redisConfiguration.zonal-configuration
+        source: zonal-configuration
+        widget: Labels
+
+  - name: spec.volume
+    widget: Panel
+    source: spec.volume
+    children:
+      - name: spec.volume.name
+        source: name
+        widget: Labels
+      - name: spec.volume.labels
+        source: labels
+        widget: Labels
+      - name: spec.volume.annotations
+        source: annotations
+        widget: Labels
