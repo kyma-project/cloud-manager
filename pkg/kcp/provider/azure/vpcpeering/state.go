@@ -42,8 +42,8 @@ func NewStateFactory(skrProvider azureclient.SkrClientProvider[vpcpeeringclient.
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
 
-	clientId := azureconfig.AzureConfig.VpcPeeringClientId
-	clientSecret := azureconfig.AzureConfig.VpcPeeringClientSecret
+	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
 	subscriptionId := vpcPeeringState.Scope().Spec.Scope.Azure.SubscriptionId
 	tenantId := vpcPeeringState.Scope().Spec.Scope.Azure.TenantId
 
