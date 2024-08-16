@@ -40,7 +40,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", ipRangeState.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.AssumeRoleName)
+	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", ipRangeState.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
 
 	logger.
 		WithValues(
@@ -52,8 +52,8 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 	c, err := f.skrProvider(
 		ctx,
 		ipRangeState.Scope().Spec.Region,
-		awsconfig.AwsConfig.AccessKeyId,
-		awsconfig.AwsConfig.SecretAccessKey,
+		awsconfig.AwsConfig.Default.AccessKeyId,
+		awsconfig.AwsConfig.Default.SecretAccessKey,
 		roleName,
 	)
 	if err != nil {

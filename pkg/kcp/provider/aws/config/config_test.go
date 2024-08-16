@@ -19,9 +19,9 @@ func TestConfigAllFromEnv(t *testing.T) {
 	InitConfig(cfg)
 	cfg.Read()
 
-	assert.Equal(t, "key", AwsConfig.AccessKeyId)
-	assert.Equal(t, "secret", AwsConfig.SecretAccessKey)
-	assert.Equal(t, "role", AwsConfig.AssumeRoleName)
+	assert.Equal(t, "key", AwsConfig.Default.AccessKeyId)
+	assert.Equal(t, "secret", AwsConfig.Default.SecretAccessKey)
+	assert.Equal(t, "role", AwsConfig.Default.AssumeRoleName)
 }
 
 func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
@@ -45,9 +45,9 @@ func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
 	InitConfig(cfg)
 	cfg.Read()
 
-	assert.Equal(t, "key222", AwsConfig.AccessKeyId)
-	assert.Equal(t, "secret222", AwsConfig.SecretAccessKey)
-	assert.Equal(t, "role", AwsConfig.AssumeRoleName)
+	assert.Equal(t, "key222", AwsConfig.Default.AccessKeyId)
+	assert.Equal(t, "secret222", AwsConfig.Default.SecretAccessKey)
+	assert.Equal(t, "role", AwsConfig.Default.AssumeRoleName)
 }
 
 func TestAllFromFile(t *testing.T) {
@@ -73,7 +73,7 @@ func TestAllFromFile(t *testing.T) {
 	InitConfig(cfg)
 	cfg.Read()
 
-	assert.Equal(t, "key222", AwsConfig.AccessKeyId)
-	assert.Equal(t, "secret222", AwsConfig.SecretAccessKey)
-	assert.Equal(t, "role222", AwsConfig.AssumeRoleName)
+	assert.Equal(t, "key222", AwsConfig.Default.AccessKeyId)
+	assert.Equal(t, "secret222", AwsConfig.Default.SecretAccessKey)
+	assert.Equal(t, "role222", AwsConfig.Default.AssumeRoleName)
 }
