@@ -235,7 +235,7 @@ spec:
                               rule: (self == oldSelf)
                         type: object
                         x-kubernetes-validations:
-                        - message: TransitEncryption`` is immutable.
+                        - message: TransitEncryption is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb
