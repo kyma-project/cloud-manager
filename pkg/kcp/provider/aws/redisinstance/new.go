@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -27,6 +28,7 @@ func New(stateFactory StateFactory) composed.Action {
 			actions.AddFinalizer,
 			loadSubnetGroup,
 			loadParameterGroup,
+			loadAuthTokenSecret,
 			loadElastiCacheCluster,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
@@ -34,6 +36,7 @@ func New(stateFactory StateFactory) composed.Action {
 					createSubnetGroup,
 					createParameterGroup,
 					modifyParameterGroup,
+					createAuthTokenSecret,
 					createElastiCacheCluster,
 					updateStatusId,
 					waitElastiCacheAvailable,
@@ -44,6 +47,7 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteElastiCacheCluster,
 					waitElastiCacheDeleted,
+					deleteAuthTokenSecret,
 					deleteParameterGroup,
 					deleteSubnetGroup,
 					actions.RemoveFinalizer,

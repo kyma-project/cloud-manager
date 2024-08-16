@@ -45,6 +45,12 @@ spec:
                 properties:
                   aws:
                     properties:
+                      authEnabled:
+                        default: true
+                        type: boolean
+                        x-kubernetes-validations:
+                        - message: AuthEnabled is immutable.
+                          rule: (self == oldSelf)
                       autoMinorVersionUpgrade:
                         default: false
                         type: boolean

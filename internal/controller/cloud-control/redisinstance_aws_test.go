@@ -61,6 +61,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		autoMinorVersionUpgrade := true
 		transitEncryptionEnabled := true
 		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		authEnabled := true
 
 		parameters := map[string]string{
 			"active-defrag-cycle-max": "85",
@@ -77,6 +78,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpAwsCacheNodeType(cacheNodeType),
 					WithKcpAwsEngineVersion(engineVersion),
 					WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
+					WithKcpAwsAuthEnabled(authEnabled),
 					WithKcpAwsTransitEncryptionEnabled(transitEncryptionEnabled),
 					WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithKcpAwsParameters(parameters),
@@ -120,9 +122,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		By("And Then RedisInstance has .status.readEndpoint set", func() {
 			Expect(len(redisInstance.Status.ReadEndpoint) > 0).To(Equal(true))
 		})
-		// By("And Then RedisInstance has .status.authString set", func() {
-		// 	Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
-		// })
+
+		By("And Then RedisInstance has .status.authString set", func() {
+			Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
+		})
 
 		// DELETE
 

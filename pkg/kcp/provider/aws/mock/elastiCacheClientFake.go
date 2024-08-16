@@ -7,7 +7,10 @@ import (
 	aws "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/elliotchance/pie/v2"
+	"github.com/google/uuid"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	"k8s.io/utils/ptr"
@@ -41,10 +44,12 @@ type elastiCacheClientFake struct {
 	subnetGroupMutex    *sync.Mutex
 	parameterGroupMutex *sync.Mutex
 	elasticacheMutex    *sync.Mutex
+	secretStoreMutex    *sync.Mutex
 	elastiCaches        map[string]*elasticacheTypes.ReplicationGroup
 	parameters          map[string]map[string]elasticacheTypes.Parameter
 	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
 	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
+	secretStore         map[string]*secretsmanager.GetSecretValueOutput
 }
 
 func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup {
@@ -167,6 +172,34 @@ func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context
 
 func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error) {
 	return pie.Values(getDefaultParams()), nil
+}
+
+func (client *elastiCacheClientFake) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
+	client.secretStoreMutex.Lock()
+	defer client.secretStoreMutex.Unlock()
+
+	return client.secretStore[secretName], nil
+}
+
+func (client *elastiCacheClientFake) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error {
+	client.secretStoreMutex.Lock()
+	defer client.secretStoreMutex.Unlock()
+
+	client.secretStore[secretName] = &secretsmanager.GetSecretValueOutput{
+		Name:         ptr.To(secretName),
+		SecretString: ptr.To(uuid.NewString()),
+	}
+
+	return nil
+}
+
+func (client *elastiCacheClientFake) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
+	client.secretStoreMutex.Lock()
+	defer client.secretStoreMutex.Unlock()
+
+	delete(client.secretStore, secretName)
+
+	return nil
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {

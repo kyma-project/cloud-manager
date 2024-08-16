@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.6
+    cloud-resources.kyma-project.io/version: v0.0.7
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -44,6 +44,12 @@ spec:
             spec:
               description: AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
               properties:
+                authEnabled:
+                  default: true
+                  type: boolean
+                  x-kubernetes-validations:
+                    - message: AuthEnabled is immutable.
+                      rule: (self == oldSelf)
                 authSecret:
                   properties:
                     annotations:
