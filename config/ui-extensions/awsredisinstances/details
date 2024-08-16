@@ -21,6 +21,9 @@ body:
       - name: spec.transitEncryptionEnabled
         source: transitEncryptionEnabled
         widget: Labels
+      - name: spec.authEnabled
+        source: authEnabled
+        widget: Labels
 
 
 

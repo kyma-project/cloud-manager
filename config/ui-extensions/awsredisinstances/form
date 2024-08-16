@@ -50,3 +50,7 @@
       name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
+
+- path: spec.authEnabled
+  name: spec.authEnabled
+  required: false
