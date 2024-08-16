@@ -18,6 +18,8 @@ package main
 
 import (
 	"flag"
+	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
+	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -237,6 +239,7 @@ func main() {
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
 		gcpFilestoreClient.NewFilestoreClientProvider(),
+		cceenfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
@@ -332,6 +335,7 @@ func loadConfig() config.Config {
 
 	awsconfig.InitConfig(cfg)
 	azureconfig.InitConfig(cfg)
+	cceeconfig.InitConfig(cfg)
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)

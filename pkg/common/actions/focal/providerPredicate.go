@@ -20,3 +20,8 @@ func GcpProviderPredicate(_ context.Context, st composed.State) bool {
 	state := st.(State)
 	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderGCP
 }
+
+func OpenStackProviderPredicate(_ context.Context, st composed.State) bool {
+	state := st.(State)
+	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderOpenStack
+}

@@ -108,6 +108,13 @@ spec:
                     - location
                     - tier
                     type: object
+                  openStack:
+                    properties:
+                      sizeGb:
+                        type: integer
+                    required:
+                    - sizeGb
+                    type: object
                 type: object
               ipRange:
                 properties:
@@ -138,10 +145,12 @@ spec:
                 type: object
             required:
             - instance
-            - ipRange
             - remoteRef
             - scope
             type: object
+            x-kubernetes-validations:
+            - message: IpRange is required.
+              rule: (has(self.instance.openStack) || has(self.ipRange) && has(self.ipRange.name))
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
@@ -235,6 +244,10 @@ spec:
                 type: string
               state:
                 type: string
+              stateData:
+                additionalProperties:
+                  type: string
+                type: object
             type: object
         type: object
     served: true

@@ -27,6 +27,9 @@ import (
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
+	cceeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/client"
+	cceenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance"
+	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -40,6 +43,7 @@ func SetupNfsInstanceReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
 	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
+	cceeProvider cceeclient.CceeClientProvider[cceenfsinstanceclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -52,6 +56,7 @@ func SetupNfsInstanceReconciler(
 			awsnfsinstance.NewStateFactory(awsSkrProvider),
 			azurenfsinstance.NewStateFactory(),
 			gcpnfsinstance.NewStateFactory(filestoreClientProvider, env),
+			cceenfsinstance.NewStateFactory(cceeProvider),
 		),
 	).SetupWithManager(kcpManager)
 }

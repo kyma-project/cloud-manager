@@ -43,12 +43,13 @@ const (
 )
 
 // NfsInstanceSpec defines the desired state of NfsInstance
+// +kubebuilder:validation:XValidation:rule=(has(self.instance.openStack) || has(self.ipRange) && has(self.ipRange.name)), message="IpRange is required."
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."
 	RemoteRef RemoteRef `json:"remoteRef"`
 
-	// +kubebuilder:validation:Required
+	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
@@ -69,11 +70,19 @@ type NfsInstanceInfo struct {
 
 	// +optional
 	Aws *NfsInstanceAws `json:"aws,omitempty"`
+
+	// +optional
+	OpenStack *NfsInstanceOpenStack `json:"openStack,omitempty"`
 }
 
 type NfsInstanceGcp NfsOptionsGcp
 
 type NfsInstanceAzure struct {
+}
+
+type NfsInstanceOpenStack struct {
+	// +kubebuilder:validation:Required
+	SizeGb int `json:"sizeGb"`
 }
 
 type NfsInstanceAws struct {
@@ -108,6 +117,9 @@ type NfsInstanceStatus struct {
 	// Provisioned Capacity in GBs
 	// +optional
 	CapacityGb int `json:"capacityGb"`
+
+	// +optional
+	StateData map[string]string `json:"stateData,omitempty"`
 }
 
 var _ client.Object = &NfsInstance{}
@@ -138,6 +150,32 @@ func (in *NfsInstance) Conditions() *[]metav1.Condition {
 
 func (in *NfsInstance) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *NfsInstance) SetStateData(key, value string) {
+	if in.Status.StateData == nil {
+		in.Status.StateData = make(map[string]string)
+	}
+	in.Status.StateData[key] = value
+}
+
+func (in *NfsInstance) GetStateData(key string) (string, bool) {
+	v, found := in.Status.StateData[key]
+	return v, found
+}
+
+func (in *NfsInstance) CloneForPatchStatus() client.Object {
+	return &NfsInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "NfsInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true
