@@ -8,6 +8,7 @@ import (
 )
 
 func addFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
+	//If deleting, continue with next steps.
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}

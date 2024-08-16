@@ -19,11 +19,16 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 	backup := state.ObjAsGcpNfsVolumeBackup()
 	logger.WithValues("nfsBackup :", backup.Name).Info("Loading GCP FileBackup")
 
+	if backup.Status.Id == "" {
+		// Backup is not created yet.
+		return nil, nil
+	}
+
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
 	location := backup.Spec.Location
-	name := backup.Name
+	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
 	bkup, err := state.fileBackupClient.GetFileBackup(ctx, project, location, name)
 	if err != nil {

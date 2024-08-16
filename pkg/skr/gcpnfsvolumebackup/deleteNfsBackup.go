@@ -30,13 +30,13 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackup :", backup.Name).Info("Deleting GCP File Backup")
+	logger.WithValues("NfsBackup name", backup.Name, "NfsBackup namespace", backup.Namespace).Info("Deleting GCP File Backup")
 
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
 	location := backup.Spec.Location
-	name := backup.Name
+	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
 	op, err := state.fileBackupClient.DeleteFileBackup(ctx, project, location, name)
 
