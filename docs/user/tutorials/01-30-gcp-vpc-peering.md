@@ -2,13 +2,13 @@
 
 This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in Google Cloud Platform (GCP).
 
-## Prerequisites
+## Prerequisites  <!-- {docsify-ignore} -->
 - You have the Cloud Manager module added.
 - Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1. Fetch your Kyma ID
+1. Fetch your Kyma ID.
     
     ```shell
    kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'
