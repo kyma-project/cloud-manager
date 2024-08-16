@@ -64,6 +64,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
 		transitEncryptionEnabled := true
+		authEnabled := true
 
 		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
 
@@ -85,6 +86,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceCacheNodeType(cacheNodeType),
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
+					WithAwsRedisInstanceAuthEnabled(authEnabled),
 					WithAwsRedisInstanceTransitEncryptionEnabled(transitEncryptionEnabled),
 					WithAwsRedisInstancePreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithAwsRedisInstanceParameters(parameters),

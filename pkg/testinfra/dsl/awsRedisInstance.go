@@ -34,6 +34,7 @@ func WithAwsRedisInstanceDefautSpecs() ObjAction {
 				awsRedisInstance.Spec.CacheNodeType = "cache.m5.large"
 				awsRedisInstance.Spec.EngineVersion = "6.x"
 				awsRedisInstance.Spec.AutoMinorVersionUpgrade = true
+				awsRedisInstance.Spec.AuthEnabled = false
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceDefautSpecs", obj))
@@ -73,6 +74,18 @@ func WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) O
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceAutoMinorVersionUpgrade", obj))
+		},
+	}
+}
+
+func WithAwsRedisInstanceAuthEnabled(authEnabled bool) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				awsRedisInstance.Spec.AuthEnabled = authEnabled
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceAuthEnabled", obj))
 		},
 	}
 }
