@@ -43,14 +43,14 @@ const (
 )
 
 // NfsInstanceSpec defines the desired state of NfsInstance
-// +kubebuilder:validation:XValidation:rule=(has(self.instance.openStack) || has(self.ipRange) && has(self.ipRange.name)), message="IpRange is required."
+// +kubebuilder:validation:XValidation:rule=(has(self.instance.openStack) || false) && !has(self.ipRange) || (has(self.instance.aws) || has(self.instance.gcp) || false) && has(self.ipRange), message="IpRange can not be specified for openstack, and is mandatory for gcp and aws."
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +optional
-	IpRange IpRangeRef `json:"ipRange"`
+	IpRange *IpRangeRef `json:"ipRange,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`

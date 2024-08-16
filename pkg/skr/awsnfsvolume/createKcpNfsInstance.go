@@ -37,7 +37,7 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 				Namespace: state.ObjAsAwsNfsVolume().Namespace,
 				Name:      state.ObjAsAwsNfsVolume().Name,
 			},
-			IpRange: cloudcontrolv1beta1.IpRangeRef{
+			IpRange: &cloudcontrolv1beta1.IpRangeRef{
 				Name: state.SkrIpRange.Status.Id,
 			},
 			Scope: cloudcontrolv1beta1.ScopeRef{

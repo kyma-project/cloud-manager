@@ -150,7 +150,8 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: IpRange is required.
-              rule: (has(self.instance.openStack) || has(self.ipRange) && has(self.ipRange.name))
+              rule: (has(self.instance.openStack) && !has(self.ipRange) && !has(self.ipRange.name))
+                || (has(self.ipRange) && has(self.ipRange.name))
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:

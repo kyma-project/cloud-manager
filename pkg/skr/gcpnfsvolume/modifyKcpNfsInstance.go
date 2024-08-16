@@ -70,7 +70,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 				Namespace: state.ObjAsGcpNfsVolume().Namespace,
 				Name:      state.ObjAsGcpNfsVolume().Name,
 			},
-			IpRange: cloudcontrolv1beta1.IpRangeRef{
+			IpRange: &cloudcontrolv1beta1.IpRangeRef{
 				Name: state.KcpIpRange.Name,
 			},
 			Instance: cloudcontrolv1beta1.NfsInstanceInfo{

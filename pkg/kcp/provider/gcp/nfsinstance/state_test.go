@@ -58,7 +58,7 @@ func getGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 				Namespace: "test",
 				Name:      "test-gcp-nfs-volume",
 			},
-			IpRange: cloudcontrolv1beta1.IpRangeRef{
+			IpRange: &cloudcontrolv1beta1.IpRangeRef{
 				Name: "test-gcp-ip-range",
 			},
 			Scope: cloudcontrolv1beta1.ScopeRef{
