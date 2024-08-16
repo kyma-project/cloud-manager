@@ -170,10 +170,10 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=true
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
-	AuthEnabled bool `json:"authEnabled,omitempty"`
+	AuthEnabled bool `json:"authEnabled"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption`` is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption is immutable."
 	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
 	// +optional
