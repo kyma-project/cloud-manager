@@ -24,11 +24,6 @@ data:
           - name: spec.transitEncryptionEnabled
             source: transitEncryptionEnabled
             widget: Labels
-          - name: spec.authEnabled
-            source: authEnabled
-            widget: Labels
-
-
 
       - name: spec.ipRange
         widget: Panel
@@ -38,10 +33,13 @@ data:
             source: ipRange.name
             widget: Labels
 
-      - name: spec.authSecret
+      - name: spec.auth
         widget: Panel
         source: spec
         children:
+          - source: authEnabled
+            name: spec.authEnabled
+            widget: Labels
           - source: authSecret.name
             name: spec.authSecret.name
             widget: Labels
@@ -87,6 +85,10 @@ data:
           widget: Text
           required: true
 
+
+    - path: spec.authEnabled
+      name: spec.authEnabledFull
+
     - path: spec.authSecret
       name: spec.authSecret
       widget: FormGroup
@@ -104,10 +106,6 @@ data:
           name: spec.authSecret.annotations
           required: false
           widget: KeyValuePair
-
-    - path: spec.authEnabled
-      name: spec.authEnabled
-      required: false
   general: |
     resource:
         kind: AwsRedisInstance
@@ -131,7 +129,10 @@ data:
       status.state: State
       spec.ipRange: Ip Range
       spec.ipRange.name: Ip Range Name
+      spec.auth: Authentication
       spec.authSecret: Authentication Secret
+      spec.authEnabled: Enabled
+      spec.authEnabledFull: Authentication Enabled
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels
       spec.authSecret.annotations: Annotations
@@ -141,7 +142,6 @@ data:
       spec.parameters: Parameters
       spec.preferredMaintenanceWindow: Preferred Maintenance Window
       spec.transitEncryptionEnabled: Transit Encryption Enabled
-      spec.authEnabled: Authentication Enabled
 kind: ConfigMap
 metadata:
   labels:

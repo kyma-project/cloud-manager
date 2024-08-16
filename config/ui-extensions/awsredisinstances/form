@@ -33,6 +33,10 @@
       widget: Text
       required: true
 
+
+- path: spec.authEnabled
+  name: spec.authEnabledFull
+
 - path: spec.authSecret
   name: spec.authSecret
   widget: FormGroup
@@ -50,7 +54,3 @@
       name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
-
-- path: spec.authEnabled
-  name: spec.authEnabled
-  required: false
