@@ -58,6 +58,7 @@ const (
 	ConditionReasonPVCNameInvalid          = "PVCNameInvalid"
 	ConditionReasonNoWorkerZones           = "NoWorkerZones"
 	ConditionReasonLocationInvalid         = "LocationInvalid"
+	ConditionReasonTierLegacy              = "LegacyTier"
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume

@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 	"time"
 )
 
@@ -25,15 +26,17 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 	capacity := state.ObjAsGcpNfsVolume().Spec.CapacityGb
 	switch tier {
 	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.PREMIUM:
-		return validateCapacityForTier(ctx, st, 2560, 65400, capacity)
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{2560, 65400, 1})
 	case cloudresourcesv1beta1.HIGH_SCALE_SSD:
-		return validateCapacityForTier(ctx, st, 10240, 102400, capacity)
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{10240, 102400, 1})
 	case cloudresourcesv1beta1.ZONAL:
-		return validateCapacityForTier(ctx, st, 1024, 9980, capacity)
-	case cloudresourcesv1beta1.ENTERPRISE, cloudresourcesv1beta1.REGIONAL:
-		return validateCapacityForTier(ctx, st, 1024, 10240, capacity)
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 9984, 256}, capacityRange{10240, 102400, 2560})
+	case cloudresourcesv1beta1.ENTERPRISE:
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 10240, 256})
+	case cloudresourcesv1beta1.REGIONAL:
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 9984, 256}, capacityRange{10240, 102400, 2560})
 	case cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
-		return validateCapacityForTier(ctx, st, 1024, 65400, capacity)
+		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 65400, 1})
 	default:
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
@@ -48,20 +51,27 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 	}
 }
 
-func validateCapacityForTier(ctx context.Context, st composed.State, min, max, capacity int) (error, context.Context) {
+type capacityRange struct {
+	min        int
+	max        int
+	increments int
+}
+
+func validateCapacityForTier(ctx context.Context, st composed.State, capacity int, validRanges ...capacityRange) (error, context.Context) {
 	state := st.(*State)
-	if capacity < min || capacity > max {
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionReasonCapacityInvalid,
-				Message: fmt.Sprintf("CapacityGb for this tier must be between %d and %d", min, max),
-			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
-			Run(ctx, state)
-	} else {
+	valid := false
+	var rangesString []string
+	for _, validRange := range validRanges {
+		if capacity >= validRange.min && capacity <= validRange.max && (capacity-validRange.min)%validRange.increments == 0 {
+			valid = true
+		}
+		if validRange.increments == 1 {
+			rangesString = append(rangesString, fmt.Sprintf("%d to %d", validRange.min, validRange.max))
+		} else {
+			rangesString = append(rangesString, fmt.Sprintf("%d to %d scaling in increments of %d", validRange.min, validRange.max, validRange.increments))
+		}
+	}
+	if valid {
 		// Capacity is the only mutable field. If it succeeds, we should remove the error condition if the reason was invalid capacity
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 			RemoveConditionIfReasonMatched(cloudresourcesv1beta1.ConditionTypeError, cloudresourcesv1beta1.ConditionReasonCapacityInvalid).
@@ -69,6 +79,18 @@ func validateCapacityForTier(ctx context.Context, st composed.State, min, max, c
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 				return nil, nil
 			}).
+			Run(ctx, state)
+
+	} else {
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
+		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonCapacityInvalid,
+				Message: fmt.Sprintf("CapacityGb for this tier must be between %s", strings.Join(rangesString, " or ")),
+			}).
+			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
 			Run(ctx, state)
 	}
 }
@@ -203,4 +225,43 @@ func validateLocation(ctx context.Context, st composed.State) (error, context.Co
 		// if validation succeeds, we don't need to update the status
 		return nil, nil
 	}
+}
+
+// This is to prevent legacy tiers when creating new volumes
+func validateTier(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(*State)
+	var message string
+	switch state.ObjAsGcpNfsVolume().Spec.Tier {
+	case cloudresourcesv1beta1.ENTERPRISE:
+		message = "ENTERPRISE is a legacy tier. Use REGIONAL tier instead."
+	case cloudresourcesv1beta1.HIGH_SCALE_SSD:
+		message = "HIGH_SCALE_SSD is a legacy tier. Use ZONAL tier instead."
+	case cloudresourcesv1beta1.STANDARD:
+		message = "STANDARD is a legacy tier. Use BASIC_HDD tier instead."
+	case cloudresourcesv1beta1.PREMIUM:
+		message = "PREMIUM is a legacy tier. Use BASIC_SSD tier instead."
+	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.ZONAL, cloudresourcesv1beta1.REGIONAL:
+		return nil, nil
+	default:
+		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
+		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonTierInvalid,
+				Message: "Tier is not valid",
+			}).
+			ErrorLogMessage("Error updating GcpNfsVolume status with invalid tier error").
+			Run(ctx, state)
+	}
+	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
+	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		SetExclusiveConditions(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionReasonTierLegacy,
+			Message: message,
+		}).
+		ErrorLogMessage("Error updating GcpNfsVolume status with legacy tier error").
+		Run(ctx, state)
 }

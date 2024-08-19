@@ -40,7 +40,7 @@ func (suite *validateSpecSuite) TestDoNotValidateCapacity() {
 }
 
 func (suite *validateSpecSuite) TestValidCapacityBasicHDD() {
-	suite.checkCapacity(2048, cloudresourcesv1beta1.BASIC_HDD, true)
+	suite.checkCapacity(2049, cloudresourcesv1beta1.BASIC_HDD, true)
 }
 
 func (suite *validateSpecSuite) TestLowCapacityBasicHDD() {
@@ -52,7 +52,7 @@ func (suite *validateSpecSuite) TestHighCapacityBasicHDD() {
 }
 
 func (suite *validateSpecSuite) TestValidCapacityBasicSSD() {
-	suite.checkCapacity(2560, cloudresourcesv1beta1.BASIC_SSD, true)
+	suite.checkCapacity(2561, cloudresourcesv1beta1.BASIC_SSD, true)
 }
 
 func (suite *validateSpecSuite) TestLowCapacityBasicSSD() {
@@ -86,8 +86,13 @@ func (suite *validateSpecSuite) TestLowCapacityEnterprise() {
 func (suite *validateSpecSuite) TestHighCapacityEnterprise() {
 	suite.checkCapacity(120000, cloudresourcesv1beta1.ENTERPRISE, false)
 }
-func (suite *validateSpecSuite) TestValidCapacityZonal() {
+
+func (suite *validateSpecSuite) TestValidCapacityLowZonal() {
 	suite.checkCapacity(2560, cloudresourcesv1beta1.ZONAL, true)
+}
+
+func (suite *validateSpecSuite) TestValidCapacityHighZonal() {
+	suite.checkCapacity(20480, cloudresourcesv1beta1.ZONAL, true)
 }
 
 func (suite *validateSpecSuite) TestLowCapacityZonal() {
@@ -95,8 +100,33 @@ func (suite *validateSpecSuite) TestLowCapacityZonal() {
 }
 
 func (suite *validateSpecSuite) TestHighCapacityZonal() {
-	suite.checkCapacity(10240, cloudresourcesv1beta1.ZONAL, false)
+	suite.checkCapacity(102401, cloudresourcesv1beta1.ZONAL, false)
 }
+
+func (suite *validateSpecSuite) TestMediumCapacityZonal() {
+	suite.checkCapacity(10000, cloudresourcesv1beta1.ZONAL, false)
+}
+
+func (suite *validateSpecSuite) TestLowCapacityZonalBadIncrement() {
+	suite.checkCapacity(1233, cloudresourcesv1beta1.ZONAL, false)
+}
+
+func (suite *validateSpecSuite) TestHighCapacityZonalBadIncrement() {
+	suite.checkCapacity(20483, cloudresourcesv1beta1.ZONAL, false)
+}
+
+func (suite *validateSpecSuite) TestLowCapacityRegionalBadIncrement() {
+	suite.checkCapacity(1233, cloudresourcesv1beta1.REGIONAL, false)
+}
+
+func (suite *validateSpecSuite) TestHighCapacityRegionalBadIncrement() {
+	suite.checkCapacity(20483, cloudresourcesv1beta1.REGIONAL, false)
+}
+
+func (suite *validateSpecSuite) TestCapacityEnterpriseBadIncrement() {
+	suite.checkCapacity(1233, cloudresourcesv1beta1.ENTERPRISE, false)
+}
+
 func (suite *validateSpecSuite) TestInvalidTier() {
 	suite.checkCapacity(2048, "UNSPECIFIED", false)
 }
@@ -339,6 +369,96 @@ func (suite *validateSpecSuite) TestValidFileShareEnterprise() {
 func (suite *validateSpecSuite) TestInvalidFileShareEnterprise() {
 	name := strings.Repeat("abcdefghij1234567890", 4)
 	suite.checkFileShare(name, cloudresourcesv1beta1.ENTERPRISE, false)
+}
+
+func (suite *validateSpecSuite) checkTier(tier cloudresourcesv1beta1.GcpFileTier, valid bool) {
+	factory, err := newTestStateFactory()
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Set the tier in GcpNfsVolume spec
+	nfsVol := gcpNfsVolume.DeepCopy()
+	nfsVol.Spec.Tier = tier
+
+	err = factory.skrCluster.K8sClient().Update(ctx, nfsVol)
+	assert.Nil(suite.T(), err)
+
+	//Update Status and remove conditions.
+	nfsVol.Status.Conditions = nil
+	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
+	assert.Nil(suite.T(), err)
+
+	state := factory.newStateWith(nfsVol)
+
+	//Invoke validateSpec
+	err, _ = validateTier(ctx, state)
+
+	//validate expected return values
+	if valid {
+		assert.Nil(suite.T(), err)
+	} else {
+		assert.Equal(suite.T(), composed.StopAndForget, err)
+	}
+
+	//Get the modified GcpNfsVolume object
+	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
+	err = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
+	assert.Nil(suite.T(), err)
+
+	//Validate GcpNfsVolume status.
+	if valid {
+		assert.Equal(suite.T(), 0, len(nfsVol.Status.Conditions))
+	} else {
+		assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
+		assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
+		if tier == "UNSPECIFIED" {
+			assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonTierInvalid, nfsVol.Status.Conditions[0].Reason)
+
+		} else {
+			assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonTierLegacy, nfsVol.Status.Conditions[0].Reason)
+		}
+		assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
+	}
+
+}
+
+func (suite *validateSpecSuite) TestValidBasicHddTier() {
+	suite.checkTier(cloudresourcesv1beta1.BASIC_HDD, true)
+}
+
+func (suite *validateSpecSuite) TestValidBasicSsdTier() {
+	suite.checkTier(cloudresourcesv1beta1.BASIC_SSD, true)
+}
+
+func (suite *validateSpecSuite) TestValidZonalTier() {
+	suite.checkTier(cloudresourcesv1beta1.ZONAL, true)
+}
+
+func (suite *validateSpecSuite) TestValidRegionalTier() {
+	suite.checkTier(cloudresourcesv1beta1.REGIONAL, true)
+}
+
+func (suite *validateSpecSuite) TestInvalidLegacyStandardTier() {
+	suite.checkTier(cloudresourcesv1beta1.STANDARD, false)
+}
+
+func (suite *validateSpecSuite) TestInvalidLegacyPremiumTier() {
+	suite.checkTier(cloudresourcesv1beta1.PREMIUM, false)
+}
+
+func (suite *validateSpecSuite) TestInvalidLegacyHighScaleSsdTier() {
+	suite.checkTier(cloudresourcesv1beta1.HIGH_SCALE_SSD, false)
+}
+
+func (suite *validateSpecSuite) TestInvalidLegacyEnterpriseTier() {
+	suite.checkTier(cloudresourcesv1beta1.ENTERPRISE, false)
+}
+
+func (suite *validateSpecSuite) TestInvalidUnspecifiedTier() {
+	suite.checkTier("UNSPECIFIED", false)
 }
 
 func TestValidateSpec(t *testing.T) {
