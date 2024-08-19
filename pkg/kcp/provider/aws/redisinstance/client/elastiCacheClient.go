@@ -9,6 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	elasticache "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/google/uuid"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 
@@ -25,6 +28,7 @@ func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
 		return newClient(
 			ec2.NewFromConfig(cfg),
 			elasticache.NewFromConfig(cfg),
+			secretsmanager.NewFromConfig(cfg),
 		), nil
 	}
 }
@@ -36,6 +40,7 @@ type CreateElastiCacheClusterOptions struct {
 	CacheNodeType              string
 	EngineVersion              string
 	AutoMinorVersionUpgrade    bool
+	AuthTokenSecretString      *string
 	TransitEncryptionEnabled   bool
 	PreferredMaintenanceWindow *string
 }
@@ -52,21 +57,27 @@ type ElastiCacheClient interface {
 	ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error
 	DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error)
 
+	GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error)
+	CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error
+	DeleteAuthTokenSecret(ctx context.Context, secretName string) error
+
 	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error)
 	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
 	DeleteElastiCacheClaster(ctx context.Context, id string) error
 }
 
-func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client) ElastiCacheClient {
+func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
 	return &client{
-		ec2Svc:         ec2Svc,
-		elastiCacheSvc: elastiCacheSvc,
+		ec2Svc:            ec2Svc,
+		elastiCacheSvc:    elastiCacheSvc,
+		secretsManagerSvc: secretsManagerSvc,
 	}
 }
 
 type client struct {
-	ec2Svc         *ec2.Client
-	elastiCacheSvc *elasticache.Client
+	ec2Svc            *ec2.Client
+	elastiCacheSvc    *elasticache.Client
+	secretsManagerSvc *secretsmanager.Client
 }
 
 func (c *client) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error) {
@@ -229,6 +240,41 @@ func (c *client) DescribeEngineDefaultParameters(ctx context.Context, family str
 	return result, nil
 }
 
+func (c *client) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
+	out, err := c.secretsManagerSvc.GetSecretValue(ctx, &secretsmanager.GetSecretValueInput{
+		SecretId: ptr.To(secretName),
+	})
+
+	if err != nil {
+		if awsmeta.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (c *client) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error {
+	_, err := c.secretsManagerSvc.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
+		Name:         ptr.To(secretName),
+		SecretString: ptr.To(uuid.NewString()),
+		Tags:         tags,
+	})
+
+	return err
+}
+
+func (c *client) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
+	_, err := c.secretsManagerSvc.DeleteSecret(ctx, &secretsmanager.DeleteSecretInput{
+		SecretId:                   ptr.To(secretName),
+		ForceDeleteWithoutRecovery: aws.Bool(true),
+	})
+
+	return err
+}
+
 func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
 	out, err := c.elastiCacheSvc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: ptr.To(clusterId),
@@ -256,6 +302,7 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 		Engine:                      aws.String("redis"),
 		EngineVersion:               aws.String(options.EngineVersion),
 		AutoMinorVersionUpgrade:     aws.Bool(options.AutoMinorVersionUpgrade),
+		AuthToken:                   options.AuthTokenSecretString,
 		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		Tags:                        tags,

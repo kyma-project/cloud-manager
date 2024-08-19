@@ -27,6 +27,12 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	logger.Info("Creating AWS ElastiCache")
 
+	var authTokenSecetString *string = nil
+
+	if state.authTokenValue != nil {
+		authTokenSecetString = state.authTokenValue.SecretString
+	}
+
 	_, err := state.awsClient.CreateElastiCacheCluster(ctx, []types.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
@@ -51,6 +57,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		CacheNodeType:              redisInstance.Spec.Instance.Aws.CacheNodeType,
 		EngineVersion:              redisInstance.Spec.Instance.Aws.EngineVersion,
 		AutoMinorVersionUpgrade:    redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
+		AuthTokenSecretString:      authTokenSecetString,
 		TransitEncryptionEnabled:   redisInstance.Spec.Instance.Aws.TransitEncryptionEnabled,
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 	})

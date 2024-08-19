@@ -15,7 +15,7 @@ func loadKcpGcpVpcPeering(ctx context.Context, st composed.State) (error, contex
 	kcpVpcPeering := &cloudcontrolv1beta1.VpcPeering{}
 	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.KymaRef.Namespace,
-		Name:      state.ObjAsGcpVpcPeering().Name,
+		Name:      state.ObjAsGcpVpcPeering().Status.Id,
 	}, kcpVpcPeering)
 
 	if apierrors.IsNotFound(err) {

@@ -275,6 +275,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceMemorySizeGb(int32(5)),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceAuthEnabled(false),
 				).
 				Should(Succeed())
 		})

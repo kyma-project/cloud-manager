@@ -49,6 +49,11 @@ type AwsRedisInstanceSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionEnabled is immutable."
 	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
+	// +optional
+	// +kubebuilder:default=true
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
+	AuthEnabled bool `json:"authEnabled"`
+
 	// Specifies the weekly time range during which maintenance on the cluster is
 	// performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H
 	// Clock UTC). The minimum maintenance window is a 60 minute period.

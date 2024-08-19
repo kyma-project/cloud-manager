@@ -24,6 +24,8 @@ type GcpVpcPeeringSpec struct {
 }
 
 type GcpVpcPeeringStatus struct {
+	// +optional
+	Id string `json:"id,omitempty"`
 	// List of status conditions to indicate the Peering status.
 	// +optional
 	// +listType=map

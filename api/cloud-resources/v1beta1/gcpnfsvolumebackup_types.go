@@ -98,6 +98,9 @@ type GcpNfsVolumeBackupStatus struct {
 	// Operation Identifier to track the Hyperscaler Restore Operation
 	// +optional
 	OpIdentifier string `json:"opIdentifier,omitempty"`
+
+	// +optional
+	Id string `json:"id,omitempty"`
 }
 
 //+kubebuilder:object:root=true

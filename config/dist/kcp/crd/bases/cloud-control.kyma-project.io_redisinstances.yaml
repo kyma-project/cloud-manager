@@ -45,6 +45,12 @@ spec:
                 properties:
                   aws:
                     properties:
+                      authEnabled:
+                        default: true
+                        type: boolean
+                        x-kubernetes-validations:
+                        - message: AuthEnabled is immutable.
+                          rule: (self == oldSelf)
                       autoMinorVersionUpgrade:
                         default: false
                         type: boolean
@@ -229,7 +235,7 @@ spec:
                               rule: (self == oldSelf)
                         type: object
                         x-kubernetes-validations:
-                        - message: TransitEncryption`` is immutable.
+                        - message: TransitEncryption is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb

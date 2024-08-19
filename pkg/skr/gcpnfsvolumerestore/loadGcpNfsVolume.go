@@ -13,6 +13,10 @@ import (
 )
 
 func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
+	//If deleting, continue with next steps.
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 

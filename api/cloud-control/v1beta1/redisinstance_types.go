@@ -171,10 +171,10 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=true
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
-	AuthEnabled bool `json:"authEnabled,omitempty"`
+	AuthEnabled bool `json:"authEnabled"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption`` is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption is immutable."
 	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
 	// +optional
@@ -225,6 +225,11 @@ type RedisInstanceAws struct {
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionEnabled is immutable."
 	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
+
+	// +optional
+	// +kubebuilder:default=true
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
+	AuthEnabled bool `json:"authEnabled"`
 
 	// Specifies the weekly time range during which maintenance on the cluster is
 	// performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H

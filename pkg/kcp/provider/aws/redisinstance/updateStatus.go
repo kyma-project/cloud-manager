@@ -19,14 +19,17 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		ptr.Deref(state.elastiCacheCluster.NodeGroups[0].PrimaryEndpoint.Address, ""),
 		ptr.Deref(state.elastiCacheCluster.NodeGroups[0].PrimaryEndpoint.Port, 0),
 	)
+	redisInstance.Status.PrimaryEndpoint = primaryEndpoint
 
 	readEndpoint := fmt.Sprintf("%s:%d",
 		ptr.Deref(state.elastiCacheCluster.NodeGroups[0].ReaderEndpoint.Address, ""),
 		ptr.Deref(state.elastiCacheCluster.NodeGroups[0].ReaderEndpoint.Port, 0),
 	)
-
-	redisInstance.Status.PrimaryEndpoint = primaryEndpoint
 	redisInstance.Status.ReadEndpoint = readEndpoint
+
+	if state.authTokenValue != nil {
+		redisInstance.Status.AuthString = ptr.Deref(state.authTokenValue.SecretString, "")
+	}
 
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{

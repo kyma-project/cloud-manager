@@ -3,6 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -38,7 +39,8 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
 	location := backup.Spec.Location
-	name := backup.Name
+	id := uuid.NewString()
+	name := fmt.Sprintf("cm-%.60s", id)
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
 
 	fileBackup := &file.Backup{
@@ -58,14 +60,16 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg(fmt.Sprintf("Error updating File backup object in GCP :%s", err)).
+			SuccessLogMsg(fmt.Sprintf("Error creating Filestore backup in GCP :%s", err)).
 			Run(ctx, state)
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
 	backup.Status.OpIdentifier = op.Name
+	backup.Status.Id = id
 	return composed.UpdateStatus(backup).
 		SetExclusiveConditions().
-		SuccessErrorNil().
+		// Give some time for backup to get created.
+		SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
 		Run(ctx, state)
 }

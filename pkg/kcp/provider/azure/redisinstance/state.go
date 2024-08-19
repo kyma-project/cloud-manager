@@ -41,8 +41,8 @@ func NewStateFactory(skrProvider azureclient.SkrClientProvider[azureredisclient.
 
 func (f *stateFactory) NewState(ctx context.Context, redisinstanceState redisinstancetypes.State, logger logr.Logger) (*State, error) {
 
-	clientId := azureconfig.AzureConfig.ClientId
-	clientSecret := azureconfig.AzureConfig.ClientSecret
+	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
 	subscriptionId := redisinstanceState.Scope().Spec.Scope.Azure.SubscriptionId
 	tenantId := redisinstanceState.Scope().Spec.Scope.Azure.TenantId
 
