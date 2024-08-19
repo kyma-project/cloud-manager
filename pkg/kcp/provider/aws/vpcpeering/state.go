@@ -42,9 +42,9 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-	roleName := awsconfig.AwsConfig.AssumeRoleName
-	awsAccessKeyId := awsconfig.AwsConfig.AccessKeyId
-	awsSecretAccessKey := awsconfig.AwsConfig.SecretAccessKey
+	roleName := awsconfig.AwsConfig.Peering.AssumeRoleName
+	awsAccessKeyId := awsconfig.AwsConfig.Peering.AccessKeyId
+	awsSecretAccessKey := awsconfig.AwsConfig.Peering.SecretAccessKey
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, roleName)
 
