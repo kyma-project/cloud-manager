@@ -170,6 +170,128 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Should(Succeed())
 	})
 
+	It("Scenario: SKR AzureRedisInstance is modified", func() {
+
+		azureRedisInstanceName := "modified-redis-instance"
+		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
+		enableNonSslPort := false
+		redisVersion := "6.0"
+		sku := cloudresourcesv1beta1.AzureRedisSKU{}
+		sku.Capacity = 1
+		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
+		azureRedisInstanceRedisConfigs.MaxClients = "5"
+
+		const (
+			authSecretName = "azure-custom-auth-secretname"
+		)
+		authSecretLabels := map[string]string{
+			"foo": "1",
+		}
+		authSecretAnnotations := map[string]string{
+			"bar": "2",
+		}
+
+		By("When AzureRedisInstance is created", func() {
+			Eventually(CreateAzureRedisInstance).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
+					WithName(azureRedisInstanceName),
+					WithAzureRedisInstanceEnableNonSslPort(enableNonSslPort),
+					WithAzureRedisInstanceRedisVersion(redisVersion),
+					WithAzureRedisInstanceSKUCapacity(sku),
+					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
+					WithAzureRedisInstanceAuthSecretName(authSecretName),
+					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
+					WithAzureRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
+
+		By("Then KCP RedisInstance is created", func() {
+			// load SKR AzureRedisInstance to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisInstance,
+					NewObjActions(),
+					HavingAzureRedisInstanceStatusId(),
+					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisInstance,
+					NewObjActions(
+						WithName(azureRedisInstance.Status.Id),
+					),
+				).
+				Should(Succeed())
+
+			By("And has annotaton cloud-manager.kyma-project.io/kymaName")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+
+			By("And has annotaton cloud-manager.kyma-project.io/remoteName")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(azureRedisInstance.Name))
+
+			By("And has annotaton cloud-manager.kyma-project.io/remoteNamespace")
+			Expect(kcpRedisInstance.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(azureRedisInstance.Namespace))
+
+			By("And has spec.scope.name equal to SKR Cluster kyma name")
+			Expect(kcpRedisInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+
+			By("And has spec.remoteRef matching to to SKR IpRange")
+			Expect(kcpRedisInstance.Spec.RemoteRef.Namespace).To(Equal(azureRedisInstance.Namespace))
+			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
+
+			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
+			Expect(kcpRedisInstance.Spec.Instance.Azure.EnableNonSslPort).To(Equal(azureRedisInstance.Spec.EnableNonSslPort))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
+		})
+
+		sku.Capacity = 2
+
+		By("When AzureRedisInstance is modified", func() {
+			Eventually(UpdateAzureRedisInstance).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
+					WithAzureRedisInstanceSKUCapacity(sku),
+				).
+				Should(Succeed())
+		})
+
+		By("And AzureRedsiInstance SKU.Capacity has modified value")
+		Expect(azureRedisInstance.Spec.SKU.Capacity).To(Equal(sku.Capacity))
+
+		By("Then KCP RedisInstance SKU.Capacity is modified", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisInstance,
+					NewObjActions(
+						WithName(azureRedisInstance.Status.Id),
+					),
+				).
+				Should(Succeed())
+
+			By("And KCP RedisInstance SKU.Capacity has modified value")
+			Expect(azureRedisInstance.Spec.SKU.Capacity).To(Equal(sku.Capacity))
+		})
+
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisInstance).
+			Should(Succeed())
+	})
+
 	It("Scenario: SKR AzureRedisInstance is deleted", func() {
 
 		azureRedisInstanceName := "another-azure-redis-instance"

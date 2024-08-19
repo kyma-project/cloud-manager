@@ -49,7 +49,6 @@ type AzureRedisSKU struct {
 // AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
 type AzureRedisInstanceSpec struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SKU is immutable."
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional

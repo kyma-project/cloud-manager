@@ -41,6 +41,7 @@ func New(stateFactory StateFactory) composed.Action {
 					"azure-redisInstance-create",
 					createResourceGroup,
 					createRedis,
+					modifyRedis,
 					updateStatusId,
 					waitRedisAvailable,
 					updateStatus,

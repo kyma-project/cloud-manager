@@ -62,6 +62,9 @@ func (redisCacheClientFake *redisCacheClientFake) CreateRedisInstance(ctx contex
 				AccessKeys: &armRedis.AccessKeys{
 					PrimaryKey: ptr.To("primary-key"),
 				},
+				SKU: &armRedis.SKU{
+					Capacity: to.Ptr[int32](1),
+				},
 			},
 		}
 		resourceGroup.redisInstance = &redisInstanceCreated
@@ -132,4 +135,16 @@ func (redisCacheClientFake *redisCacheClientFake) DeleteResourceGroup(ctx contex
 	delete(redisCacheClientFake.redisResourceGroups, name)
 
 	return nil
+}
+
+func (redisCacheClientFake *redisCacheClientFake) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.UpdateParameters) error {
+	redisCacheClientFake.mutex.Lock()
+	defer redisCacheClientFake.mutex.Unlock()
+
+	resourceGroup, resourceGroupPresent := redisCacheClientFake.redisResourceGroups[resourceGroupName]
+	if resourceGroupPresent {
+		resourceGroup.redisInstance.Properties.SKU = parameters.Properties.SKU
+	}
+
+	return errors.New("failed to update FAKE Azure Redis instance")
 }

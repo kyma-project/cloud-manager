@@ -98,9 +98,6 @@ spec:
                 required:
                 - capacity
                 type: object
-                x-kubernetes-validations:
-                - message: SKU is immutable.
-                  rule: (self == oldSelf)
               volume:
                 properties:
                   annotations:

@@ -26,6 +26,7 @@ const (
 	ReasonCanNotDeleteResourceGroup = "ResourceGroupCanNotDelete"
 
 	ReasonCanNotCreateResourceGroup = "ResourceGroupCanNotCreate"
+	ReasonCanNotModifyRedisInstance = "RedisInstanceCanNotModify"
 )
 
 // RedisInstanceSpec defines the desired state of RedisInstance

@@ -12,6 +12,7 @@ import (
 
 type Client interface {
 	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) error
+	UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.UpdateParameters) error
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
@@ -70,6 +71,7 @@ func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName
 		logger.Error(error, "Failed to create Azure Redis instance")
 		return error
 	}
+
 	return nil
 }
 
@@ -139,6 +141,23 @@ func (c *redisClient) DeleteResourceGroup(ctx context.Context, name string) erro
 
 	if error != nil {
 		logger.Error(error, "Failed to delete Azure Redis resource group")
+		return error
+	}
+
+	return nil
+}
+
+func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.UpdateParameters) error {
+	logger := composed.LoggerFromCtx(ctx)
+	_, error := c.RedisClient.Update(
+		ctx,
+		resourceGroupName,
+		redisInstanceName,
+		parameters,
+		nil)
+
+	if error != nil {
+		logger.Error(error, "Failed to update Azure Redis instance")
 		return error
 	}
 
