@@ -30,13 +30,19 @@ body:
         source: ipRange.name
         widget: Labels
 
-  - name: spec.auth
+
+  - name: spec.authEnabledFull
     widget: Panel
     source: spec
     children:
-      - source: authEnabled
-        name: spec.authEnabled
+      - name: spec.authEnabled
+        source: authEnabled
         widget: Labels
+
+  - name: spec.authSecret
+    widget: Panel
+    source: spec
+    children:
       - source: authSecret.name
         name: spec.authSecret.name
         widget: Labels

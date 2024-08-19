@@ -18,6 +18,9 @@
   name: spec.transitEncryptionEnabled
   required: false
 
+- path: spec.authEnabled
+  name: spec.authEnabledFull
+
 - path: spec.parameters
   name: spec.parameters
   required: false
@@ -32,10 +35,6 @@
       name: spec.ipRange.name
       widget: Text
       required: true
-
-
-- path: spec.authEnabled
-  name: spec.authEnabledFull
 
 - path: spec.authSecret
   name: spec.authSecret

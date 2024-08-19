@@ -33,13 +33,19 @@ data:
             source: ipRange.name
             widget: Labels
 
-      - name: spec.auth
+
+      - name: spec.authEnabledFull
         widget: Panel
         source: spec
         children:
-          - source: authEnabled
-            name: spec.authEnabled
+          - name: spec.authEnabled
+            source: authEnabled
             widget: Labels
+
+      - name: spec.authSecret
+        widget: Panel
+        source: spec
+        children:
           - source: authSecret.name
             name: spec.authSecret.name
             widget: Labels
@@ -70,6 +76,9 @@ data:
       name: spec.transitEncryptionEnabled
       required: false
 
+    - path: spec.authEnabled
+      name: spec.authEnabledFull
+
     - path: spec.parameters
       name: spec.parameters
       required: false
@@ -84,10 +93,6 @@ data:
           name: spec.ipRange.name
           widget: Text
           required: true
-
-
-    - path: spec.authEnabled
-      name: spec.authEnabledFull
 
     - path: spec.authSecret
       name: spec.authSecret
