@@ -1,20 +1,20 @@
 # Use VPC peering in Azure
 
-This tutorial explains how to create VPC peering connection between a remote VPC network and Kyma in Azure. Tutorial 
-assumes that Cloud Manager module is enabled in your Kyma. Steps from this tutorial create new resource group, VPC 
-network and VM, and assigns required roles to provided Kyma service principal in your Azure subscription. If you wish to
-use existing resources instead of creating new ones, adjust variable names accordingly and skip
+This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in Azure. The tutorial 
+assumes that the Cloud Manager module is enabled in your Kyma cluster. Follow the steps from this tutorial to create a new resource group, VPC 
+network and VM, and assign required roles to the provided Kyma service principal in your Azure subscription. If you want to
+use the existing resources instead of creating new ones, adjust variable names accordingly and skip
 the steps that create those resources.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1. Login to Azure and set active subscription
+1. Login to Azure and set the active subscription
    ```shell
    export SUBSCRIPTION=<Name or ID of subscription>
    az login
    az account set --subscription $SUBSCRIPTION
    ```
-2. Assign required roles to Cloud Manager peering service principal
+2. Assign required roles to the Cloud Manager peering service principal
    ```shell
    export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
    export PRINCIPAL_NAME=<Cloud Manager service principal name>
@@ -39,7 +39,7 @@ the steps that create those resources.
    export RESOURCE_GROUP_NAME="myResourceGroup$RANDOM_ID"
    az group create --name $RESOURCE_GROUP_NAME --location $REGION
    ```
-5. Create network
+5. Create a network
    ```shell
    export VNET_NAME="myVnet$RANDOM_ID"
    export ADDRESS_PREFIX=172.0.0.0/16
@@ -48,7 +48,7 @@ the steps that create those resources.
    
    az network vnet create -g $RESOURCE_GROUP_NAME -n $VNET_NAME --address-prefix $ADDRESS_PREFIX --subnet-name $SUBNET_NAME --subnet-prefixes $SUBNET_PREFIX
    ```
-6. Create virtual machine
+6. Create a virtual machine
    ```shell
    export VM_NAME="myVM$RANDOM_ID"
    export VM_IMAGE="Canonical:0001-com-ubuntu-minimal-jammy:minimal-22_04-lts-gen2:latest"
@@ -187,7 +187,7 @@ the steps that create those resources.
       kubectl delete -n $NAMESPACE deployment azurevpcpeering-demo
       ```
 
-    * Remove the created azurevpcpeering:
+    * Remove the created `azurevpcpeering`:
       ```shell
       kubectl delete -n $NAMESPACE azurevpcpeering peering-to-my-vnet
       ```

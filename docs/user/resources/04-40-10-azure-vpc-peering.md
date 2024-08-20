@@ -7,16 +7,16 @@ of the same cloud provider.
 
 
 
-Once an AzureVpcPeering CR is created and reconciled, the Cloud Manager controller first creates virtual network peering 
+Once an AzureVpcPeering CR is created and reconciled, the Cloud Manager controller first creates a virtual network peering 
 connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the underlying cloud provider and accepts
 VPC peering connection in the remote cloud provider subscription.
 
-You must authorize Cloud Manager service principal kyma-cloud-manager-ENV in remote cloud provider subscription to
-accept VPC peering connection. Assign following IAM roles to Cloud Manager service principal in the remote subscription: 
+You must authorize Cloud Manager service principal `kyma-cloud-manager-ENV` in the remote cloud provider subscription to
+accept VPC peering connection. Assign the following IAM roles to the Cloud Manager service principal in the remote subscription: 
 * Classic Network Contributor
 * Network Contributor
 
-AzureVpcPeering can be deleted at any time but VPC peering connection in the remote subscription must be deleted
+AzureVpcPeering can be deleted at any time but the VPC peering connection in the remote subscription must be deleted
 manually.
 
 ## Specification <!-- {docsify-ignore} -->
@@ -28,7 +28,7 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter               | Type   | Description                                                                                                                                   |
 |-------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| **allowVnetAccess**     | bool   | Specifies whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space, and vice versa. |
+| **allowVnetAccess**     | bool   | Specifies whether the VMs in the local virtual network space can access the VMs in the remote virtual network space and vice versa. |
 | **remotePeeringName**   | string | Specifies the name of the VNet peering in the remote subscription.                                                                            |
 | **remoteResourceGroup** | string | Specifies the name of the resource group in the remote subscription.                                                                          |
 | **remoteVnet**          | string | Specifies the ID of the VNet in the remote subscription.                                                                                      |
