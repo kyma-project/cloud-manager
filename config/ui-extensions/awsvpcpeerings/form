@@ -1,9 +1,15 @@
 - path: spec.remoteAccountId
   name: spec.remoteAccountId
   required: true
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.remoteVpcId
   name: spec.remoteVpcId
   required: true
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.remoteRegion
   name: spec.remoteRegion
   required: false
+  disableOnEdit: true
+  description: Immutable once set.
