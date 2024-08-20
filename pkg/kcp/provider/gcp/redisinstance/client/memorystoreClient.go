@@ -56,7 +56,6 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 	}
 	defer redisClient.Close()
 
-	redisInstance.MemorySizeGb = 2
 	req := &redispb.UpdateInstanceRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
 			Paths: updateMask,
