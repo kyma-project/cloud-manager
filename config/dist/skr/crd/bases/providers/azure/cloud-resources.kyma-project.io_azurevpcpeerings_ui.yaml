@@ -25,18 +25,26 @@ data:
             - widget: Labels
               source: id
               name: status.id
-  form: |-
+  form: |
     - path: spec.allowVnetAccess
       name: spec.allowVnetAccess
+    #  disableOnEdit: true
+    #  description: Immutable once set.
     - path: spec.remoteResourceGroup
       name: spec.remoteResourceGroup
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
     - path: spec.remoteVnet
       name: spec.remoteVnet
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
     - path: spec.remotePeeringName
       name: spec.remotePeeringName
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
   general: |-
     resource:
         kind: AzureVpcPeering
