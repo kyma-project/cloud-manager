@@ -3,6 +3,7 @@ package azureredisinstance
 import (
 	"context"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -42,6 +43,14 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 
 	azureRedisInstance.Status.State = cloudresourcesv1beta1.StateUpdating
 	return composed.UpdateStatus(azureRedisInstance).
+		SetCondition(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeProcessing,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionTypeProcessing,
+			Message: "Processing the resource modification",
+		}).
+		RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
+		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 		ErrorLogMessage("Error setting Updating state on AzureRedisInstance").
 		SuccessErrorNil().
 		FailedError(composed.StopWithRequeue).
