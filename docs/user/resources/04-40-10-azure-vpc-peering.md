@@ -5,8 +5,6 @@ The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) speci
 Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
 
-
-
 Once an AzureVpcPeering CR is created and reconciled, the Cloud Manager controller first creates a virtual network peering 
 connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the underlying cloud provider and accepts
 VPC peering connection in the remote cloud provider subscription.
