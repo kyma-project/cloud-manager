@@ -158,7 +158,6 @@ type RedisInstanceGcp struct {
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
 	// +optional
@@ -177,8 +176,7 @@ type RedisInstanceGcp struct {
 	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
-	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
+	RedisConfigs map[string]string `json:"redisConfigs"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."

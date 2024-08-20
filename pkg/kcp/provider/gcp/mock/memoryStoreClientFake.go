@@ -46,10 +46,26 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 		Port:             6093,
 		ReadEndpoint:     "192.168.24.1",
 		ReadEndpointPort: 5093,
+		MemorySizeGb:     options.MemorySizeGb,
+		RedisConfigs:     options.RedisConfigs,
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 
 	return &redis.CreateInstanceOperation{}, nil // redis.CreateInstanceOperation is not used in actual code, so empty object is returned
+}
+
+func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error {
+	memoryStoreClientFake.mutex.Lock()
+	defer memoryStoreClientFake.mutex.Unlock()
+
+	if instance, ok := memoryStoreClientFake.redisInstances[redisInstance.Name]; ok {
+		instance.State = redispb.Instance_UPDATING
+
+		instance.MemorySizeGb = redisInstance.MemorySizeGb
+		instance.RedisConfigs = redisInstance.RedisConfigs
+	}
+
+	return nil
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) error {
