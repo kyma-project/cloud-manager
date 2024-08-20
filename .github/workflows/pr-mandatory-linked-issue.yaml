@@ -3,8 +3,10 @@ name: Mandatory linked issue
 on:
   pull_request:
     types:
+      - synchronize
       - opened
       - edited
+      - reopened
 
 permissions:
   contents: read
@@ -39,7 +41,7 @@ jobs:
           		}
           	}
           }' > data.json
-          COUNT=$(jq '.data.repository.pullRequest.closingIssuesReferences.nodes | length' jj.json)
+          COUNT=$(jq '.data.repository.pullRequest.closingIssuesReferences.nodes | length' data.json)
           if [ "$COUNT" -lt "1" ]; then
             echo "To merge a pull request you must link it with an issue."
             echo "For details read:"
