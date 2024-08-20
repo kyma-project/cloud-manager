@@ -652,11 +652,7 @@ func (in *NfsInstanceOpenStack) DeepCopy() *NfsInstanceOpenStack {
 func (in *NfsInstanceSpec) DeepCopyInto(out *NfsInstanceSpec) {
 	*out = *in
 	out.RemoteRef = in.RemoteRef
-	if in.IpRange != nil {
-		in, out := &in.IpRange, &out.IpRange
-		*out = new(IpRangeRef)
-		**out = **in
-	}
+	out.IpRange = in.IpRange
 	out.Scope = in.Scope
 	in.Instance.DeepCopyInto(&out.Instance)
 }

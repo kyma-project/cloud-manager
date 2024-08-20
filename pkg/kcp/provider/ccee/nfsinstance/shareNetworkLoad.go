@@ -16,8 +16,12 @@ func shareNetworkLoad(ctx context.Context, st composed.State) (error, context.Co
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error listing CCEE shareNetworks", composed.StopWithRequeue, ctx)
 		}
-		if len(arr) > 0 {
-			state.shareNetwork = &arr[0]
+		name := state.ShareNetworkName()
+		for _, shareNetwork := range arr {
+			if shareNetwork.Name == name {
+				state.shareNetwork = &shareNetwork
+				break
+			}
 		}
 	} else {
 		sn, err := state.cceeClient.GetShareNetwork(ctx, shareNetworkId)
@@ -33,11 +37,12 @@ func shareNetworkLoad(ctx context.Context, st composed.State) (error, context.Co
 		logger.Info("CCEE shareNetwork loaded")
 	}
 
+	// save shareNetworkId
 	if state.shareNetwork != nil && shareNetworkId == "" {
 		state.ObjAsNfsInstance().SetStateData(StateDataShareNetworkId, state.shareNetwork.ID)
 
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
-			ErrorLogMessage("Error updating CCEE NfsInstance state data with shareNetwork id").
+			ErrorLogMessage("Error updating CCEE NfsInstance state data with shareNetworkId").
 			FailedError(composed.StopWithRequeue).
 			SuccessErrorNil().
 			Run(ctx, state)

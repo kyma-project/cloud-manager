@@ -48,7 +48,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				IpRange: &cloudcontrolv1beta1.IpRangeRef{
+				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
@@ -108,7 +108,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				IpRange: &cloudcontrolv1beta1.IpRangeRef{
+				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
@@ -170,7 +170,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				IpRange: &cloudcontrolv1beta1.IpRangeRef{
+				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{

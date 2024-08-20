@@ -43,14 +43,14 @@ const (
 )
 
 // NfsInstanceSpec defines the desired state of NfsInstance
-// +kubebuilder:validation:XValidation:rule=(has(self.instance.openStack) || false) && !has(self.ipRange) || (has(self.instance.aws) || has(self.instance.gcp) || false) && has(self.ipRange), message="IpRange can not be specified for openstack, and is mandatory for gcp and aws."
+// +kubebuilder:validation:XValidation:rule=(has(self.instance.openStack) || false) && self.ipRange.name == "" || (has(self.instance.aws) || has(self.instance.gcp) || false) && self.ipRange.name != "", message="IpRange can not be specified for openstack, and is mandatory for gcp and aws."
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +optional
-	IpRange *IpRangeRef `json:"ipRange,omitempty"`
+	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
@@ -107,8 +107,16 @@ type NfsInstanceStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
+	//
+	// Deprecated: Use Host and Path
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
+
+	// +optional
+	Host string `json:"host,omitempty"`
+
+	// +optional
+	Path string `json:"path,omitempty"`
 
 	// Operation Identifier to track the Hyperscaler Operation
 	// +optional
@@ -156,7 +164,11 @@ func (in *NfsInstance) SetStateData(key, value string) {
 	if in.Status.StateData == nil {
 		in.Status.StateData = make(map[string]string)
 	}
-	in.Status.StateData[key] = value
+	if value == "" {
+		delete(in.Status.StateData, key)
+	} else {
+		in.Status.StateData[key] = value
+	}
 }
 
 func (in *NfsInstance) GetStateData(key string) (string, bool) {

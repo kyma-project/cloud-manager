@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	cceeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/client"
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
@@ -17,7 +19,10 @@ type State struct {
 	cceeClient cceenfsinstanceclient.Client
 
 	network      *networks.Network
+	subnet       *subnets.Subnet
 	shareNetwork *sharenetworks.ShareNetwork
+	share        *shares.Share
+	accessRight  *shares.AccessRight
 }
 
 type StateFactory interface {
@@ -48,4 +53,12 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 		State:      nfsInstanceState,
 		cceeClient: cceeClient,
 	}, nil
+}
+
+func (s *State) ShareNetworkName() string {
+	return fmt.Sprintf("cm-%s", s.Scope().Spec.ShootName)
+}
+
+func (s *State) ShareName() string {
+	return fmt.Sprintf("cm-%s", s.ObjAsNfsInstance().Name)
 }

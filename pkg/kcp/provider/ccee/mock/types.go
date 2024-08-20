@@ -19,4 +19,8 @@ type Providers interface {
 
 type Server interface {
 	Clients
+
+	Providers
+
+	NfsConfig
 }

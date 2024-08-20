@@ -33,7 +33,7 @@ type Client interface {
 	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
 
 	ListShareAccessRights(ctx context.Context, id string) ([]shares.AccessRight, error)
-	GrantShareAccess(ctx context.Context, id string, cidr string) (*shares.AccessRight, error)
+	GrantShareAccess(ctx context.Context, shareId string, cidr string) (*shares.AccessRight, error)
 	RevokeShareAccess(ctx context.Context, shareId, accessId string) error
 }
 
@@ -165,6 +165,7 @@ func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
 // shares ----------------------------------------------------------------------------------
 
 // share.status possible values https://docs.openstack.org/manila/latest/user/create-and-manage-shares.html
+// These “-ing” states end in a “available” state if everything goes well. They may end up in an “error” state in case there is an issue.
 // * available
 // * error
 // * creating
@@ -217,6 +218,9 @@ func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, s
 
 func (c *client) DeleteShare(ctx context.Context, id string) error {
 	err := shares.Delete(ctx, c.svc, id).ExtractErr()
+	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error deleting share: %w", err)
 	}
@@ -241,8 +245,8 @@ func (c *client) ListShareAccessRights(ctx context.Context, id string) ([]shares
 	return arr, nil
 }
 
-func (c *client) GrantShareAccess(ctx context.Context, id string, cidr string) (*shares.AccessRight, error) {
-	ar, err := shares.GrantAccess(ctx, c.svc, id, shares.GrantAccessOpts{
+func (c *client) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*shares.AccessRight, error) {
+	ar, err := shares.GrantAccess(ctx, c.svc, shareId, shares.GrantAccessOpts{
 		AccessType:  "ip",
 		AccessTo:    cidr,
 		AccessLevel: "rw",

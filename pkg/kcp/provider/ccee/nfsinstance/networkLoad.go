@@ -38,7 +38,7 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 		state.ObjAsNfsInstance().SetStateData(StateDataNetworkId, state.network.ID)
 
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
-			ErrorLogMessage("Error updating CCEE NfsInstance state data with network id").
+			ErrorLogMessage("Error updating CCEE NfsInstance state data with networkId").
 			FailedError(composed.StopWithRequeue).
 			SuccessErrorNil().
 			Run(ctx, state)

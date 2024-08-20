@@ -120,8 +120,6 @@ spec:
                 properties:
                   name:
                     type: string
-                required:
-                - name
                 type: object
               remoteRef:
                 properties:
@@ -151,9 +149,9 @@ spec:
             x-kubernetes-validations:
             - message: IpRange can not be specified for openstack, and is mandatory
                 for gcp and aws.
-              rule: (has(self.instance.openStack) || false) && !has(self.ipRange)
-                || (has(self.instance.aws) || has(self.instance.gcp) || false) &&
-                has(self.ipRange)
+              rule: (has(self.instance.openStack) || false) && self.ipRange.name ==
+                "" || (has(self.instance.aws) || has(self.instance.gcp) || false)
+                && self.ipRange.name != ""
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
@@ -234,9 +232,14 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              host:
+                type: string
               hosts:
-                description: List of NFS Hosts (DNS Names or IP Addresses) that clients
-                  can use to connect
+                description: |-
+                  List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
+
+
+                  Deprecated: Use Host and Path
                 items:
                   type: string
                 type: array
@@ -244,6 +247,8 @@ spec:
                 type: string
               opIdentifier:
                 description: Operation Identifier to track the Hyperscaler Operation
+                type: string
+              path:
                 type: string
               state:
                 type: string

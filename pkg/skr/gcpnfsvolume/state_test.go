@@ -198,7 +198,7 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 			Namespace: gcpNfsVolume.Namespace,
 			Name:      gcpNfsVolume.Name,
 		},
-		IpRange: &cloudcontrolv1beta1.IpRangeRef{
+		IpRange: cloudcontrolv1beta1.IpRangeRef{
 			Name: gcpNfsVolume.Spec.IpRange.Name,
 		},
 		Scope: cloudcontrolv1beta1.ScopeRef{
@@ -247,7 +247,7 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 			Namespace: "test",
 			Name:      "deleted-gcp-nfs-volume",
 		},
-		IpRange: &cloudcontrolv1beta1.IpRangeRef{
+		IpRange: cloudcontrolv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
 		},
 		Scope: cloudcontrolv1beta1.ScopeRef{
