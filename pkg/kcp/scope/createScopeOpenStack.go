@@ -5,6 +5,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	cceemeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/meta"
 	"k8s.io/utils/ptr"
 )
 
@@ -37,5 +38,12 @@ func createScopeOpenStack(ctx context.Context, st composed.State) (error, contex
 
 	state.SetObj(scope)
 
-	return nil, nil
+	ctx = cceemeta.SetCeeDomainProjectRegion(
+		ctx,
+		scope.Spec.Scope.OpenStack.DomainName,
+		scope.Spec.Scope.OpenStack.TenantName,
+		scope.Spec.Region,
+	)
+
+	return nil, ctx
 }

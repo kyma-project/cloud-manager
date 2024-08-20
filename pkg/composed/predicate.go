@@ -95,6 +95,15 @@ func (cs *CaseStruct) Action(ctx context.Context, state State) (error, context.C
 	return cs.A(ctx, state)
 }
 
+func If(condition Predicate, action Action) Action {
+	return func(ctx context.Context, state State) (error, context.Context) {
+		if condition(ctx, state) {
+			return action(ctx, state)
+		}
+		return nil, nil
+	}
+}
+
 func IfElse(condition Predicate, trueAction Action, falseAction Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		if condition(ctx, state) {

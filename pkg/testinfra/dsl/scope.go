@@ -148,3 +148,44 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 
 	return nil
 }
+
+func CreateScopeCcee(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+	if scope == nil {
+		scope = &cloudcontrolv1beta1.Scope{}
+	}
+
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(scope)
+
+	project := strings.TrimPrefix(scope.Namespace, "garden-")
+
+	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
+		KymaName:  scope.Name,
+		ShootName: scope.Name,
+		Region:    "eu-de-1",
+		Provider:  cloudcontrolv1beta1.ProviderOpenStack,
+		Scope: cloudcontrolv1beta1.ScopeInfo{
+			OpenStack: &cloudcontrolv1beta1.OpenStackScope{
+				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+				DomainName: "kyma",
+				TenantName: "kyma-dev-02",
+				Network: cloudcontrolv1beta1.OpenStackNetwork{
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+					Zones:    []string{"eu-de-1d", "eu-de-1a", "eu-de-1b"},
+				},
+			},
+		},
+	}
+
+	err := infra.KCP().Client().Create(ctx, scope)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

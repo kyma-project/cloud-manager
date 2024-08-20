@@ -1,6 +1,6 @@
 package v1beta1
 
 type IpRangeRef struct {
-	// +kubebuilder:validation:Required
+	// +optional
 	Name string `json:"name"`
 }
