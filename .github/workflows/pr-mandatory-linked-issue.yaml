@@ -2,6 +2,9 @@ name: Mandatory linked issue
 
 on:
   pull_request:
+    types:
+      - opened
+      - edited
 
 permissions:
   contents: read
@@ -13,7 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh api graphql -f query='
           query {
           	repository(owner: "kyma-project" name: "cloud-manager") {
