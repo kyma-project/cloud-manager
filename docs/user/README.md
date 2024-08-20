@@ -41,7 +41,7 @@ To learn more, read the [GcpNfsVolume Custom Resource](./resources/04-30-10-gcp-
 ### AzureVpcPeering CR
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection 
-between Kyma and the remote Virtual Network. To learn more, read the [AzureVpcPeering Custom Resource](./resources/04-40-10-azure-vpc-peering.md) documentation.
+between Kyma and the remote Azure Virtual Network. To learn more, read the [AzureVpcPeering Custom Resource](./resources/04-40-10-azure-vpc-peering.md) documentation.
 
 ### GcpVpcPeering CR
 The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC Peering
