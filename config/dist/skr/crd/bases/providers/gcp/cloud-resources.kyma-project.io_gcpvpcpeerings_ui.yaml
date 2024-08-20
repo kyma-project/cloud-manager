@@ -28,15 +28,23 @@ data:
   form: |
     - path: spec.importCustomRoutes
       name: spec.importCustomRoutes
+    #  disableOnEdit: true
+    #  description: Immutable once set.
     - path: spec.remotePeeringName
       name: spec.remotePeeringName
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
     - path: spec.remoteProject
       name: spec.remoteProject
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
     - path: spec.remoteVpc
       name: spec.remoteVpc
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
   general: |-
     resource:
         kind: GcpVpcPeering
