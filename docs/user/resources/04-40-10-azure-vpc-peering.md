@@ -2,7 +2,7 @@
 
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between 
-Kyma and remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible withing the networks
+Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
 
 
