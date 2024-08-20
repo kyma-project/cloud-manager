@@ -41,7 +41,9 @@ jobs:
           		}
           	}
           }' > data.json
+          cat data.json
           COUNT=$(jq '.data.repository.pullRequest.closingIssuesReferences.nodes | length' data.json)
+          echo "count=$COUNT"
           if [ "$COUNT" -lt "1" ]; then
             echo "To merge a pull request you must link it with an issue."
             echo "For details read:"
