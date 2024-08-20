@@ -8,7 +8,7 @@ the steps that create those resources.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1. Login to Azure and set the active subscription
+1. Log in to Azure and set the active subscription
    ```shell
    export SUBSCRIPTION=<Name or ID of subscription>
    az login
