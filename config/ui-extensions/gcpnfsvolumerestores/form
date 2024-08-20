@@ -6,10 +6,14 @@
       name: spec.destination.volume.name
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
     - path: volume.namespace
       name: spec.destination.volume.namespace
       widget: Text
       required: false
+      disableOnEdit: true
+      description: Immutable once set.
 - path: spec.source
   name: spec.source
   widget: FormGroup
@@ -18,7 +22,11 @@
       widget: Text
       name: spec.source.backup.name
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
     - path: backup.namespace
       name: spec.source.backup.namespace
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
