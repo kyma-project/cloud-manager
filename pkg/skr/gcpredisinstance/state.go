@@ -63,3 +63,7 @@ func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 	return s.ObjAsGcpRedisInstance()
 }
+
+func (s *State) ShouldModifyKcp() bool {
+	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, s.ObjAsGcpRedisInstance().Spec.RedisConfigs)
+}

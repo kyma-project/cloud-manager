@@ -11,6 +11,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type CreateRedisInstanceOptions struct {
@@ -29,6 +30,7 @@ type CreateRedisInstanceOptions struct {
 type MemorystoreClient interface {
 	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
 	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
+	UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
@@ -44,6 +46,32 @@ func NewMemorystoreClient(saJsonKeyPath string) MemorystoreClient {
 
 type memorystoreClient struct {
 	saJsonKeyPath string
+}
+
+// UpdateRedisInstanceConfigs implements MemorystoreClient.
+func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error {
+	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if err != nil {
+		return err
+	}
+	defer redisClient.Close()
+
+	redisInstance.MemorySizeGb = 2
+	req := &redispb.UpdateInstanceRequest{
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: updateMask,
+		},
+		Instance: redisInstance,
+	}
+
+	_, err = redisClient.UpdateInstance(ctx, req)
+	if err != nil {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Error(err, "Failed to update redis instance", "redisInstance", redisInstance.Name)
+		return err
+	}
+
+	return nil
 }
 
 func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {

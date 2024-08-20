@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.5
+    cloud-resources.kyma-project.io/version: v0.0.6
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -128,9 +128,6 @@ spec:
                   additionalProperties:
                     type: string
                   type: object
-                  x-kubernetes-validations:
-                    - message: RedisConfigs is immutable.
-                      rule: (self == oldSelf)
                 redisVersion:
                   default: REDIS_7_0
                   enum:

@@ -92,3 +92,18 @@ func toGcpTransitEncryption(transitEncryption *cloudresourcesv1beta1.TransitEncr
 		ServerAuthentication: transitEncryption.ServerAuthentication,
 	}
 }
+
+func areMapsDifferent(first, second map[string]string) bool {
+	if len(first) != len(second) {
+		return true
+	}
+
+	for key, value1 := range first {
+		value2, exists := second[key]
+		if !exists || value1 != value2 {
+			return true
+		}
+	}
+
+	return false
+}

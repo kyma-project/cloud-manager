@@ -177,8 +177,7 @@ type RedisInstanceGcp struct {
 	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
-	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
+	RedisConfigs map[string]string `json:"redisConfigs"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."

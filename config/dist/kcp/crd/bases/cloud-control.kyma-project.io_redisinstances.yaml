@@ -201,9 +201,6 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
-                        x-kubernetes-validations:
-                        - message: RedisConfigs is immutable.
-                          rule: (self == oldSelf)
                       redisVersion:
                         default: REDIS_7_0
                         enum:
