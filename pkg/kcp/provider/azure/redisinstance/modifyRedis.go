@@ -18,10 +18,6 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-
 	requestedAzureRedisInstance := state.ObjAsRedisInstance()
 
 	if !meta.IsStatusConditionTrue(requestedAzureRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady) {

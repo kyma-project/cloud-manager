@@ -13,10 +13,6 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
 
 	if !meta.IsStatusConditionTrue(azureRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady) {

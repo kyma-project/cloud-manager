@@ -13,10 +13,6 @@ import (
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
-	}
-
 	redisInstance := state.ObjAsRedisInstance()
 
 	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf(
