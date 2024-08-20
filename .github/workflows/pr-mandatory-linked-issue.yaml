@@ -24,7 +24,7 @@ jobs:
           gh api graphql -f query='
           query {
           	repository(owner: "kyma-project" name: "cloud-manager") {
-          		pullRequest(number: 499) {
+          		pullRequest(number: ${{ github.event.pull_request.number }}) {
           			closingIssuesReferences(first: 100) {
           				nodes {
           					number
