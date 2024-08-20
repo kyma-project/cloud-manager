@@ -65,5 +65,7 @@ func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 }
 
 func (s *State) ShouldModifyKcp() bool {
-	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, s.ObjAsGcpRedisInstance().Spec.RedisConfigs)
+	gcpRedisInstance := s.ObjAsGcpRedisInstance()
+	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, gcpRedisInstance.Spec.RedisConfigs) ||
+		s.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb != gcpRedisInstance.Spec.MemorySizeGb
 }

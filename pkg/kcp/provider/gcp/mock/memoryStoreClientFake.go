@@ -46,6 +46,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 		Port:             6093,
 		ReadEndpoint:     "192.168.24.1",
 		ReadEndpointPort: 5093,
+		MemorySizeGb:     options.MemorySizeGb,
 		RedisConfigs:     options.RedisConfigs,
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
@@ -59,6 +60,8 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx cont
 
 	if instance, ok := memoryStoreClientFake.redisInstances[redisInstance.Name]; ok {
 		instance.State = redispb.Instance_UPDATING
+
+		instance.MemorySizeGb = redisInstance.MemorySizeGb
 		instance.RedisConfigs = redisInstance.RedisConfigs
 	}
 

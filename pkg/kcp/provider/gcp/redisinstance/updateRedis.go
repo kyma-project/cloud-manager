@@ -58,5 +58,5 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	return composed.StopWithRequeueDelay(5 * util.Timing.T1000ms()), nil
+	return composed.StopWithRequeueDelay(30 * util.Timing.T1000ms()), nil
 }

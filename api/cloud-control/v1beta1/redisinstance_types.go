@@ -158,7 +158,6 @@ type RedisInstanceGcp struct {
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
 	// +optional

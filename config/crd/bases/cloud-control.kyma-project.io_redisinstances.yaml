@@ -194,9 +194,6 @@ spec:
                       memorySizeGb:
                         format: int32
                         type: integer
-                        x-kubernetes-validations:
-                        - message: MemorySizeGb is immutable.
-                          rule: (self == oldSelf)
                       redisConfigs:
                         additionalProperties:
                           type: string
