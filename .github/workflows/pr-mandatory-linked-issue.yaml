@@ -1,0 +1,43 @@
+name: Mandatory linked issue
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+
+jobs:
+  checkIssue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          gh api graphql -f query='
+          query {
+          	repository(owner: "kyma-project" name: "cloud-manager") {
+          		pullRequest(number: 499) {
+          			closingIssuesReferences(first: 100) {
+          				nodes {
+          					number
+          					title
+          					labels(first: 100) {
+          						nodes {
+          							id
+          							name
+          						}
+          					}
+          					state
+          				}
+          			}
+          		}
+          	}
+          }' > data.json
+          COUNT=$(jq '.data.repository.pullRequest.closingIssuesReferences.nodes | length' jj.json)
+          if [ "$COUNT" -lt "1" ]; then
+            echo "To merge a pull request you must link it with an issue."
+            echo "For details read:"
+            echo "https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#manually-linking-a-pull-request-to-an-issue-using-the-pull-request-sidebar"
+            exit 1
+          fi
