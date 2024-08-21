@@ -42,7 +42,6 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
-	golang.org/x/oauth2 v0.21.0
 	google.golang.org/api v0.188.0
 	google.golang.org/genproto v0.0.0-20240708141625-4ad9e859172b
 	google.golang.org/grpc v1.65.0
@@ -132,6 +131,7 @@ require (
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp v0.0.0-20240707233637-46b078467d37 // indirect
 	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/term v0.22.0 // indirect

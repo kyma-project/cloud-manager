@@ -1,27 +1,20 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jws"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -127,36 +120,30 @@ func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, err
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
-	CheckGcpAuthentication(ctx, client, saJsonKeyPath)
+	CheckGcpAuthentication(ctx, saJsonKeyPath)
 	return client, nil
 }
 
-func CheckGcpAuthentication(ctx context.Context, client *http.Client, saJsonKeyPath string) {
+func CheckGcpAuthentication(ctx context.Context, saJsonKeyPath string) {
 	logger := composed.LoggerFromCtx(ctx)
-	jwtToken, err := GetJwtToken(ctx, saJsonKeyPath, 5*time.Minute, google.Endpoint.TokenURL, "openid")
+
+	svc, err := oauth2.NewService(ctx, option.WithCredentialsFile(saJsonKeyPath))
 	if err != nil {
 		IncrementCallCounter("Authentication", "Check", "", err)
-		logger.Error(err, "GCP Authentication Check - error getting JWT token")
+		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
 		return
 	}
 
-	//Create the request body
-	body := fmt.Sprintf("grant_type=%s&assertion=%s",
-		url.QueryEscape("urn:ietf:params:oauth:grant-type:jwt-bearer"), jwtToken)
-	reader := bytes.NewReader([]byte(body))
-
-	//Perform the authentication check
-	resp, err := client.Post(google.Endpoint.TokenURL, "application/x-www-form-urlencoded", reader)
-	if err == nil {
-		err = googleapi.CheckResponse(resp)
-	}
+	userInfoSvc := oauth2.NewUserinfoV2MeService(svc)
+	userInfo, err := userInfoSvc.Get().Do()
 
 	IncrementCallCounter("Authentication", "Check", "", err)
 	if err != nil {
-		logger.Error(err, "GCP Authentication Check - error performing authentication check")
+		logger.Error(err, "GCP Authentication Check - error getting UserInfo")
 		return
 	}
-	logger.Info("GCP Authentication Check - successful")
+
+	logger.Info(fmt.Sprintf("GCP Authentication Check - successful [user = %s].", userInfo.Name))
 }
 
 func IncrementCallCounter(serviceName, operationName, region string, err error) {
@@ -171,73 +158,4 @@ func IncrementCallCounter(serviceName, operationName, region string, err error) 
 	}
 	gcpProject := ""
 	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region, gcpProject).Inc()
-}
-
-func GetJwtToken(ctx context.Context, saJsonKeyPath string, validity time.Duration, audience string, scopes ...string) (string, error) {
-
-	//Get the credentials from the JSON Key file
-	cred, err := transport.Creds(ctx, option.WithCredentialsFile(saJsonKeyPath))
-	if err != nil {
-		return "", err
-	}
-
-	//Parse the contents into a JWT Config
-	jwtCfg, err := google.JWTConfigFromJSON(cred.JSON, scopes...)
-	if err != nil {
-		return "", err
-	}
-	jwtCfg.Audience = audience
-
-	//Parse the Private Key
-	pk, err := ParseKey(jwtCfg.PrivateKey)
-	if err != nil {
-		return "", err
-	}
-
-	//Get issue and expiry times
-	now := time.Now()
-	exp := now.Add(validity)
-
-	//Create the JWT Claim Set
-	cs := &jws.ClaimSet{
-		Iss:   jwtCfg.Email,
-		Sub:   jwtCfg.Email,
-		Aud:   jwtCfg.Audience,
-		Scope: strings.Join(jwtCfg.Scopes, " "),
-		Iat:   now.Unix(),
-		Exp:   exp.Unix(),
-	}
-
-	//Create the JWT Header
-	hdr := &jws.Header{
-		Algorithm: "RS256",
-		Typ:       "JWT",
-		KeyID:     string(jwtCfg.PrivateKeyID),
-	}
-
-	//Generate the JWT Token
-	token, err := jws.Encode(hdr, cs, pk)
-	if err != nil {
-		return "", fmt.Errorf("error encoding jws in GetJwtToken: %w", err)
-	}
-	return token, nil
-}
-
-func ParseKey(key []byte) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(key)
-	if block != nil {
-		key = block.Bytes
-	}
-	parsedKey, err := x509.ParsePKCS8PrivateKey(key)
-	if err != nil {
-		parsedKey, err = x509.ParsePKCS1PrivateKey(key)
-		if err != nil {
-			return nil, fmt.Errorf("private key should be a PEM or plain PKCS1 or PKCS8; parse error: %v", err)
-		}
-	}
-	parsed, ok := parsedKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, errors.New("private key is invalid")
-	}
-	return parsed, nil
 }
