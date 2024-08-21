@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
+	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -54,6 +55,7 @@ type InfraEnv interface {
 	AwsMock() awsmock.Server
 	GcpMock() gcpmock.Server
 	AzureMock() azuremock.Server
+	CceeMock() cceemock.Server
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
 	Config() config.Config

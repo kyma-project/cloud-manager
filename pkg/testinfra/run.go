@@ -9,6 +9,7 @@ import (
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
+	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
@@ -36,7 +37,7 @@ func Start() (Infra, error) {
 	}
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
-		envtestK8sVersion = "1.28.0"
+		envtestK8sVersion = "1.29.3"
 	}
 
 	ginkgo.By("Preparing CRDs")
@@ -142,6 +143,7 @@ func Start() (Infra, error) {
 		awsMock:             awsMock,
 		gcpMock:             gcpmock.New(),
 		azureMock:           azuremock.New(),
+		cceeMock:            cceemock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),

@@ -29,6 +29,7 @@ require (
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.12.5
+	github.com/gophercloud/gophercloud/v2 v2.1.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.19.0
@@ -45,6 +46,7 @@ require (
 	google.golang.org/api v0.188.0
 	google.golang.org/genproto v0.0.0-20240708141625-4ad9e859172b
 	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.30.3
 	k8s.io/apiextensions-apiserver v0.30.1
@@ -139,7 +141,6 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240701130421-f6361c86f094 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240708141625-4ad9e859172b // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect

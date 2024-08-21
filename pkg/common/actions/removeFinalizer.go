@@ -2,11 +2,26 @@ package actions
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+func PatchRemoveFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
+	if !composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, nil
+	}
+
+	_, err := state.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName)
+
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error patching obj to remove finalizer", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
+
+	return nil, nil
+}
 
 func RemoveFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 

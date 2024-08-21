@@ -77,7 +77,7 @@ func GetDesiredParameters(defaultParameters, userDefinedParameters map[string]st
 func GetMissmatchedParameters(currentParameters, desiredParameters map[string]string) map[string]string {
 	result := map[string]string{}
 
-	for key, _ := range desiredParameters {
+	for key := range desiredParameters {
 		if desiredParameters[key] == currentParameters[key] {
 			continue
 		}

@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	rediscommon "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/common"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
@@ -41,6 +42,9 @@ func New(stateFactory StateFactory) composed.Action {
 					createRedis,
 					updateStatusId,
 					waitRedisAvailable,
+					modifyMemorySizeGb,
+					modifyRedisConfigs,
+					updateRedis,
 					updateStatus,
 				),
 				composed.ComposeActions(

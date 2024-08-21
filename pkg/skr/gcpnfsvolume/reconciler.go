@@ -56,6 +56,12 @@ func (r *Reconciler) newAction() composed.Action {
 				loadGcpNfsVolumeBackup),
 			nil,
 		),
+		composed.IfElse(
+			// If nfsInstance already exists, do not validate legacy tiers
+			composed.All(composed.Not(composed.MarkedForDeletionPredicate), NoKcpNfsInstancePredicate()),
+			validateTier,
+			nil,
+		),
 		loadPersistenceVolume,
 		sanitizeReleasedVolume,
 		loadPersistentVolumeClaim,

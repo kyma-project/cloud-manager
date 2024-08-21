@@ -17,7 +17,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: KCP NfsInstance", func() {
+var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 
 	It("Scenario: KCP AWS NfsInstance is created and deleted", func() {
 
@@ -102,7 +102,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
-				Should(Succeed(), "expected NfsInstance to has Ready state, but it didn't")
+				Should(Succeed(), "expected NfsInstance to have Ready state, but it didn't")
 		})
 
 		By("And Then NfsInstance has status.host set", func() {

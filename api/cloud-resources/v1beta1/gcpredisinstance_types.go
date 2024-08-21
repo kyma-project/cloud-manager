@@ -77,7 +77,6 @@ type GcpRedisInstanceSpec struct {
 	Tier string `json:"tier"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MemorySizeGb is immutable."
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
 	// +optional
@@ -96,8 +95,7 @@ type GcpRedisInstanceSpec struct {
 	TransitEncryption *TransitEncryption `json:"transitEncryption,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfigs is immutable."
-	RedisConfigs map[string]string `json:"redisConfigs,omitempty"`
+	RedisConfigs map[string]string `json:"redisConfigs"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."

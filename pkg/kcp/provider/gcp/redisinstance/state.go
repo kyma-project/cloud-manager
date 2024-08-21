@@ -19,6 +19,8 @@ type State struct {
 	gcpRedisInstanceAuth *redispb.InstanceAuthString
 	memorystoreClient    client.MemorystoreClient
 
+	updateMask []string
+
 	//gcp config
 	gcpConfig *gcpClient.GcpConfig
 }
@@ -58,9 +60,24 @@ func newState(redisInstanceState types.State, memorystoreClient client.Memorysto
 		State:             redisInstanceState,
 		memorystoreClient: memorystoreClient,
 		gcpConfig:         gcpConfig,
+		updateMask:        []string{},
 	}
 }
 
 func (s *State) GetRemoteRedisName() string {
 	return s.Obj().GetName()
+}
+
+func (s *State) ShouldUpdateRedisInstance() bool {
+	return len(s.updateMask) > 0
+}
+
+func (s *State) UpdateRedisConfigs(redisConfigs map[string]string) {
+	s.updateMask = append(s.updateMask, "redis_configs") // it is 'redis_configs', GCP API says 'redisConfig', but it is wrongly documented
+	s.gcpRedisInstance.RedisConfigs = redisConfigs
+}
+
+func (s *State) UpdateMemorySizeGb(memorySizeGb int32) {
+	s.updateMask = append(s.updateMask, "memory_size_gb")
+	s.gcpRedisInstance.MemorySizeGb = memorySizeGb
 }

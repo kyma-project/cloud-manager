@@ -42,6 +42,18 @@ func WithNfsInstanceAws() ObjAction {
 	}
 }
 
+func WithNfsInstanceCcee(sizeGb int) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Instance.OpenStack = &cloudcontrolv1beta1.NfsInstanceOpenStack{
+					SizeGb: sizeGb,
+				}
+			}
+		},
+	}
+}
+
 func WithNfsInstanceGcp(location string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -126,10 +138,10 @@ func HavingNfsInstanceStatusId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
 		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsNfsVolume", obj)
+			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
 		}
 		if x.Status.Id == "" {
-			return errors.New("the SKR AwsNfsVolume ID not set")
+			return errors.New("the KCP NfsInstance status.id is not set")
 		}
 		return nil
 	}

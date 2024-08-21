@@ -3,9 +3,10 @@ package nfsinstance
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	nfsinstance3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
-	nfsinstance2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
+	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
+	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
+	cceenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance"
+	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -23,17 +24,19 @@ type nfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   nfsinstance3.StateFactory
-	azureStateFactory nfsinstance2.StateFactory
-	gcpStateFactory   nfsinstance.StateFactory
+	awsStateFactory   awsnfsinstance.StateFactory
+	azureStateFactory azurenfsinstance.StateFactory
+	gcpStateFactory   gcpnfsinstance.StateFactory
+	cceeStateFactory  cceenfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	awsStateFactory nfsinstance3.StateFactory,
-	azureStateFactory nfsinstance2.StateFactory,
-	gcpStateFactory nfsinstance.StateFactory,
+	awsStateFactory awsnfsinstance.StateFactory,
+	azureStateFactory azurenfsinstance.StateFactory,
+	gcpStateFactory gcpnfsinstance.StateFactory,
+	cceeStateFactory cceenfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -41,6 +44,7 @@ func NewNfsInstanceReconciler(
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
+		cceeStateFactory:     cceeStateFactory,
 	}
 }
 
@@ -65,9 +69,10 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, nfsinstance3.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, nfsinstance2.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, nfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(focal.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
+					composed.NewCase(focal.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
+					composed.NewCase(focal.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(focal.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
