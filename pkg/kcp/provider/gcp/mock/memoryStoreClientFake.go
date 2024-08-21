@@ -40,14 +40,15 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 
 	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	redisInstance := &redispb.Instance{
-		Name:             name,
-		State:            redispb.Instance_CREATING,
-		Host:             "192.168.0.1",
-		Port:             6093,
-		ReadEndpoint:     "192.168.24.1",
-		ReadEndpointPort: 5093,
-		MemorySizeGb:     options.MemorySizeGb,
-		RedisConfigs:     options.RedisConfigs,
+		Name:              name,
+		State:             redispb.Instance_CREATING,
+		Host:              "192.168.0.1",
+		Port:              6093,
+		ReadEndpoint:      "192.168.24.1",
+		ReadEndpointPort:  5093,
+		MemorySizeGb:      options.MemorySizeGb,
+		RedisConfigs:      options.RedisConfigs,
+		MaintenancePolicy: memoryStoreClient.ToMaintenancePolicy(options.MaintenancePolicy),
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 

@@ -19,6 +19,14 @@ func AreConfigsMissmatched(currentParameters, desiredParameters map[string]strin
 }
 
 func AreEqualPolicies(current, desired *redispb.MaintenancePolicy) bool {
+	if current == nil && desired == nil {
+		return true
+	}
+
+	if (current != nil && desired == nil) || (current == nil && desired != nil) {
+		return false
+	}
+
 	currentWindow := current.WeeklyMaintenanceWindow[0]
 	desiredWindow := desired.WeeklyMaintenanceWindow[0]
 
