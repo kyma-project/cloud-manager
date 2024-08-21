@@ -191,7 +191,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			"bar": "2",
 		}
 
-		By("When AzureRedisInstance is created", func() {
+		By("Given AzureRedisInstance exists", func() {
 			Eventually(CreateAzureRedisInstance).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
@@ -209,7 +209,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 
-		By("Then KCP RedisInstance is created", func() {
+		By("And RedisInstance exists", func() {
 			// load SKR AzureRedisInstance to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(

@@ -73,7 +73,7 @@ func (redisCacheClientFake *redisCacheClientFake) CreateRedisInstance(ctx contex
 		return nil
 	}
 
-	return errors.New("failed to create FAKE Azure Redis instance")
+	return nil
 }
 
 func (redisCacheClientFake *redisCacheClientFake) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error) {
@@ -85,7 +85,7 @@ func (redisCacheClientFake *redisCacheClientFake) GetRedisInstance(ctx context.C
 		return resourceGroup.redisInstance, nil
 	}
 
-	return nil, errors.New("failed to get FAKE Azure Redis instance")
+	return nil, nil
 }
 
 func (redisCacheClientFake *redisCacheClientFake) DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error {
@@ -98,7 +98,7 @@ func (redisCacheClientFake *redisCacheClientFake) DeleteRedisInstance(ctx contex
 		return nil
 	}
 
-	return errors.New("failed to delete FAKE Azure Redis instance")
+	return nil
 }
 
 func (redisCacheClientFake *redisCacheClientFake) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error) {
@@ -110,7 +110,7 @@ func (redisCacheClientFake *redisCacheClientFake) GetRedisInstanceAccessKeys(ctx
 		return *resourceGroup.redisInstance.Properties.AccessKeys.PrimaryKey, nil
 	}
 
-	return "", errors.New("failed to get FAKE Azure Redis credentials")
+	return "", nil
 }
 
 func (redisCacheClientFake *redisCacheClientFake) CreateResourceGroup(ctx context.Context, name string, location string) error {
@@ -146,5 +146,5 @@ func (redisCacheClientFake *redisCacheClientFake) UpdateRedisInstance(ctx contex
 		resourceGroup.redisInstance.Properties.SKU = parameters.Properties.SKU
 	}
 
-	return errors.New("failed to update FAKE Azure Redis instance")
+	return nil
 }

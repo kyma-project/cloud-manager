@@ -48,7 +48,7 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCanNotModifyRedisInstance,
+			Reason:  v1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed to modify AzureRedis: %s", error),
 		})
 		error = state.UpdateObjStatus(ctx)
