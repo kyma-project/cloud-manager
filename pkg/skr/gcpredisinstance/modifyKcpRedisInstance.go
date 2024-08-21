@@ -27,6 +27,8 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 
 	state.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb = gcpRedisInstance.Spec.MemorySizeGb
 	state.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs = gcpRedisInstance.Spec.RedisConfigs
+	state.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy = toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy)
+
 	err := state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating KCP RedisInstance", composed.StopWithRequeue, ctx)

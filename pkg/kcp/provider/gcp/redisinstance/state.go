@@ -81,3 +81,8 @@ func (s *State) UpdateMemorySizeGb(memorySizeGb int32) {
 	s.updateMask = append(s.updateMask, "memory_size_gb")
 	s.gcpRedisInstance.MemorySizeGb = memorySizeGb
 }
+
+func (s *State) UpdateMaintenancePolicy(policy *redispb.MaintenancePolicy) {
+	s.updateMask = append(s.updateMask, "maintenance_policy")
+	s.gcpRedisInstance.MaintenancePolicy = policy
+}

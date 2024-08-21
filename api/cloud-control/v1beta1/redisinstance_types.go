@@ -179,7 +179,6 @@ type RedisInstanceGcp struct {
 	RedisConfigs map[string]string `json:"redisConfigs"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
 	MaintenancePolicy *MaintenancePolicyGcp `json:"maintenancePolicy,omitempty"`
 }
 

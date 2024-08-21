@@ -63,6 +63,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx cont
 
 		instance.MemorySizeGb = redisInstance.MemorySizeGb
 		instance.RedisConfigs = redisInstance.RedisConfigs
+		instance.MaintenancePolicy = redisInstance.MaintenancePolicy
 	}
 
 	return nil
