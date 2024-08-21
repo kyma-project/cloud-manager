@@ -54,6 +54,7 @@ func (r *reconciler) newAction() composed.Action {
 				"azureRedisInstance-create",
 				actions.AddFinalizer,
 				createKcpRedisInstance,
+				modifyKcpRedisInstance,
 				waitKcpStatusUpdate,
 				updateStatus,
 				waitSkrStatusReady,

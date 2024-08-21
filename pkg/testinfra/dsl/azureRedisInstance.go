@@ -154,3 +154,21 @@ func HavingAzureRedisInstanceStatusState(state string) ObjAssertion {
 		return nil
 	}
 }
+
+func UpdateAzureRedisInstance(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureRedisInstance, opts ...ObjAction) error {
+	if obj == nil {
+		obj = &cloudresourcesv1beta1.AzureRedisInstance{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultSkrNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the SKR AzureRedisInstance must have name set")
+	}
+
+	err := clnt.Update(ctx, obj)
+	return err
+}
