@@ -45,6 +45,7 @@ jobs:
           COUNT=$(jq '.data.repository.pullRequest.closingIssuesReferences.nodes | length' data.json)
           echo "count=$COUNT"
           if [ "$COUNT" -lt "1" ]; then
+            echo "This pull request is not linked with an issue."
             echo "To merge a pull request you must link it with an issue."
             echo "For details read:"
             echo "https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#manually-linking-a-pull-request-to-an-issue-using-the-pull-request-sidebar"
