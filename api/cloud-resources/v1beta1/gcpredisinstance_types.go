@@ -102,7 +102,6 @@ type GcpRedisInstanceSpec struct {
 	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="MaintenancePolicy is immutable."
 	MaintenancePolicy *MaintenancePolicy `json:"maintenancePolicy,omitempty"`
 }
 

@@ -66,6 +66,42 @@ func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 
 func (s *State) ShouldModifyKcp() bool {
 	gcpRedisInstance := s.ObjAsGcpRedisInstance()
+
+	areMemorySizesGbDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb != gcpRedisInstance.Spec.MemorySizeGb
+
 	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, gcpRedisInstance.Spec.RedisConfigs) ||
-		s.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb != gcpRedisInstance.Spec.MemorySizeGb
+		areMemorySizesGbDifferent ||
+		areMaintenancePoliciesDifferent(gcpRedisInstance.Spec.MaintenancePolicy, s.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy)
+}
+
+func areMaintenancePoliciesDifferent(skrPolicy *cloudresourcesv1beta1.MaintenancePolicy, kcpPolicy *cloudcontrolv1beta1.MaintenancePolicyGcp) bool {
+	if skrPolicy == nil && kcpPolicy == nil {
+		return false
+	}
+
+	if skrPolicy.DayOfWeek == nil && kcpPolicy.DayOfWeek == nil {
+		return false
+	}
+
+	if (skrPolicy == nil && kcpPolicy != nil) || (skrPolicy != nil && kcpPolicy == nil) {
+		return true
+	}
+
+	if (skrPolicy.DayOfWeek == nil && kcpPolicy.DayOfWeek != nil) || (skrPolicy.DayOfWeek != nil && kcpPolicy.DayOfWeek == nil) {
+		return true
+	}
+
+	if skrPolicy.DayOfWeek.Day != kcpPolicy.DayOfWeek.Day {
+		return true
+	}
+
+	if skrPolicy.DayOfWeek.StartTime.Hours != kcpPolicy.DayOfWeek.StartTime.Hours {
+		return true
+	}
+
+	if skrPolicy.DayOfWeek.StartTime.Minutes != kcpPolicy.DayOfWeek.StartTime.Minutes {
+		return true
+	}
+
+	return false
 }

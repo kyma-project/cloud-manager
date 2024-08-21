@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.6
+    cloud-resources.kyma-project.io/version: v0.0.7
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -115,9 +115,6 @@ spec:
                         - startTime
                       type: object
                   type: object
-                  x-kubernetes-validations:
-                    - message: MaintenancePolicy is immutable.
-                      rule: (self == oldSelf)
                 memorySizeGb:
                   format: int32
                   type: integer

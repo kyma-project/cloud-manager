@@ -188,9 +188,6 @@ spec:
                             - startTime
                             type: object
                         type: object
-                        x-kubernetes-validations:
-                        - message: MaintenancePolicy is immutable.
-                          rule: (self == oldSelf)
                       memorySizeGb:
                         format: int32
                         type: integer
