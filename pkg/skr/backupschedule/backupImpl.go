@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
 )
 
 type backupImpl interface {
@@ -38,20 +37,4 @@ func loadBackupImpl(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	return nil, nil
-}
-
-func getListObjects(list client.ObjectList) []client.Object {
-	var objects []client.Object
-
-	//Retrieve List objects for specific type
-	if x, ok := list.(*cloudresourcesv1beta1.GcpNfsVolumeList); ok {
-		for _, item := range x.Items {
-			objects = append(objects, &item)
-		}
-	}
-
-	sort.Slice(objects, func(i, j int) bool {
-		return objects[i].GetCreationTimestamp().Time.Before(objects[j].GetCreationTimestamp().Time)
-	})
-	return objects
 }

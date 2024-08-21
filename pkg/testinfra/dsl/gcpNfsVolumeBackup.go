@@ -27,12 +27,11 @@ func CreateGcpNfsVolumeBackup(ctx context.Context, clnt client.Client, obj *clou
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 	}
-	NewObjActions(opts...).
+	NewObjActions(WithNamespace(DefaultSkrNamespace),
+		WithGcpNfsVolumeBackupValues()).
 		Append(
-			WithNamespace(DefaultSkrNamespace),
-			WithGcpNfsVolumeBackupValues(),
-		).
-		ApplyOnObject(obj)
+			opts...,
+		).ApplyOnObject(obj)
 
 	if obj.Name == "" {
 		return errors.New("the SKR GcpNfsVolumeBackup must have name set")
@@ -85,11 +84,14 @@ func AssertGcpNfsVolumeBackupHasState(state string) ObjAssertion {
 	}
 }
 
-func WithGcpNfsVolumeBackupState(state string) ObjStatusAction {
-	return &objStatusAction{
+func WithGcpNfsVolumeBackupLocation(location string) ObjAction {
+	return &objAction{
 		f: func(obj client.Object) {
-			x := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
-			x.Status.State = cloudresourcesv1beta1.GcpNfsBackupState(state)
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
+				x.Spec.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupLocation", obj))
 		},
 	}
 }

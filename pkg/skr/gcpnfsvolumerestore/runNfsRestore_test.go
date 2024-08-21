@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
+	"io"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
@@ -129,6 +130,13 @@ func (suite *runNfsRestoreSuite) TestRunNfsRestoreSubmitted() {
 		if err != nil {
 			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
+		body, err := io.ReadAll(r.Body)
+		assert.Nil(suite.T(), err)
+		//create filestore instance from byte[] and check if it is equal to the expected filestore instance
+		obj := &file.RestoreInstanceRequest{}
+		err = json.Unmarshal(body, obj)
+		suite.Contains(obj.SourceBackup, "projects/test-project/locations/us-west1/backups/cm-"+gcpNfsVolumeBackup.Status.Id)
+		suite.Equal("/v1/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance:restore", r.URL.Path)
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()

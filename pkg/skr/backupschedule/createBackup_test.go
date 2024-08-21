@@ -91,7 +91,7 @@ func (suite *createBackupSuite) TestWhenRunAlreadyCompleted() {
 	suite.Nil(_ctx)
 }
 
-func (suite *createBackupSuite) testCreateGcpBackup() {
+func (suite *createBackupSuite) TestCreateGcpBackup() {
 
 	runTime := time.Now().UTC()
 
@@ -107,6 +107,8 @@ func (suite *createBackupSuite) testCreateGcpBackup() {
 	suite.Nil(err)
 	state.Scope = &gcpScope
 	state.nextRunTime = runTime
+	state.backupImpl = &backupImplGcpNfs{}
+
 	index := obj.Status.BackupIndex + 1
 
 	//Invoke API under test
@@ -135,7 +137,7 @@ func (suite *createBackupSuite) testCreateGcpBackup() {
 	suite.Equal(bkupName, bkup.GetName())
 }
 
-func (suite *createBackupSuite) testCreateGcpBackupFailure() {
+func (suite *createBackupSuite) TestCreateGcpBackupFailure() {
 
 	runTime := time.Now().UTC()
 	obj := gcpNfsBackupSchedule.DeepCopy()
@@ -150,6 +152,8 @@ func (suite *createBackupSuite) testCreateGcpBackupFailure() {
 	suite.Nil(err)
 	state.Scope = &gcpScope
 	state.nextRunTime = runTime
+	state.backupImpl = &backupImplGcpNfs{}
+
 	index := obj.Status.BackupIndex + 1
 
 	bkupName := fmt.Sprintf("%s-%d-%s", obj.Name, index, state.nextRunTime.UTC().Format("20060102-150405"))

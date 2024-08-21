@@ -38,7 +38,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	srcBackupFullPath := ""
 	if len(state.ObjAsGcpNfsVolume().Spec.SourceBackup.Name) > 0 {
 		backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
-		srcBackupFullPath = client.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, state.GcpNfsVolumeBackup.Spec.Location, backupName)
+		srcBackupFullPath = client.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, state.GcpNfsVolumeBackup.Status.Location, backupName)
 	}
 	if err != nil {
 		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).

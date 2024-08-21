@@ -36,7 +36,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
-	srcLocation := state.GcpNfsVolumeBackup.Spec.Location
+	srcLocation := state.GcpNfsVolumeBackup.Status.Location
 	dstLocation := state.GcpNfsVolume.Status.Location
 	backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
 

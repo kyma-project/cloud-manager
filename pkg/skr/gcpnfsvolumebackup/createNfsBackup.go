@@ -3,6 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -10,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 func createNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -38,7 +40,18 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
-	location := backup.Spec.Location
+	location, err := getLocation(state, logger)
+	if err != nil {
+		return composed.UpdateStatus(backup).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonLocationInvalid,
+				Message: fmt.Sprintf("Could not automatically populate the location for the backup: %s", err),
+			}).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
 	id := uuid.NewString()
 	name := fmt.Sprintf("cm-%.60s", id)
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
@@ -67,9 +80,33 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
 	backup.Status.OpIdentifier = op.Name
 	backup.Status.Id = id
+	backup.Status.Location = location
 	return composed.UpdateStatus(backup).
 		SetExclusiveConditions().
 		// Give some time for backup to get created.
 		SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
 		Run(ctx, state)
+}
+
+func getLocation(state *State, logger logr.Logger) (string, error) {
+	location := state.ObjAsGcpNfsVolumeBackup().Spec.Location
+	// location is optional. So if empty, using region from scope.
+	if len(location) != 0 {
+		return location, nil
+	}
+	if (state.GcpNfsVolume == nil) || (state.GcpNfsVolume.Status.Location == "") {
+		logger.Error(nil, "Source GcpNfsVolume location is empty")
+		return "", fmt.Errorf("source GcpNfsVolume location is empty")
+	}
+	switch state.GcpNfsVolume.Spec.Tier {
+	case cloudresourcesv1beta1.ENTERPRISE, cloudresourcesv1beta1.REGIONAL:
+		return state.GcpNfsVolume.Status.Location, nil
+	default:
+		return getRegion(state.GcpNfsVolume.Status.Location), nil
+	}
+}
+
+func getRegion(zone string) string {
+	//slit zone by the last '-'
+	return zone[:strings.LastIndex(zone, "-")]
 }

@@ -271,7 +271,6 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		Namespace: "test",
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
-		Location: "us-west1",
 		Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
 			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
 				Name:      "test-gcp-nfs-volume",
@@ -280,6 +279,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		},
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
+		Location: "us-west1",
 		Conditions: []v1.Condition{
 			{
 				Type:               "Ready",
@@ -289,6 +289,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 				Message:            "NFS backup is ready",
 			},
 		},
+		Id: "backup-uuid",
 	},
 }
 

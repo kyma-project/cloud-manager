@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
+	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"net/http"
@@ -130,6 +132,12 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 
 		case http.MethodPost:
 			fmt.Println(r.URL.Path)
+			b, err := io.ReadAll(r.Body)
+			assert.Nil(suite.T(), err)
+			//create filestore instance from byte[] and check if it is equal to the expected filestore instance
+			obj := &file.Backup{}
+			err = json.Unmarshal(b, obj)
+			suite.Equal("projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance", obj.SourceInstance)
 			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups") && strings.Contains(r.URL.RawQuery, "backupId=cm-") {
 				//Return 200
 				w.WriteHeader(http.StatusOK)
