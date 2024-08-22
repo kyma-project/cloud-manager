@@ -28,6 +28,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	state.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb = gcpRedisInstance.Spec.MemorySizeGb
 	state.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs = gcpRedisInstance.Spec.RedisConfigs
 	state.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy = toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy)
+	state.KcpRedisInstance.Spec.Instance.Gcp.AuthEnabled = gcpRedisInstance.Spec.AuthEnabled
 
 	err := state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 	if err != nil {

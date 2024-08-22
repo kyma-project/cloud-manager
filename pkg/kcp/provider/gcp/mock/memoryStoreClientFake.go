@@ -49,6 +49,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 		MemorySizeGb:      options.MemorySizeGb,
 		RedisConfigs:      options.RedisConfigs,
 		MaintenancePolicy: memoryStoreClient.ToMaintenancePolicy(options.MaintenancePolicy),
+		AuthEnabled:       options.AuthEnabled,
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 
@@ -65,6 +66,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx cont
 		instance.MemorySizeGb = redisInstance.MemorySizeGb
 		instance.RedisConfigs = redisInstance.RedisConfigs
 		instance.MaintenancePolicy = redisInstance.MaintenancePolicy
+		instance.AuthEnabled = redisInstance.AuthEnabled
 	}
 
 	return nil

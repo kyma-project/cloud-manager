@@ -62,6 +62,7 @@ func (r *reconciler) newAction() composed.Action {
 				updateStatus,
 				waitSkrStatusReady,
 				createAuthSecret,
+				modifyAuthSecret,
 			),
 			composed.ComposeActions(
 				"gcpRedisInstance-delete",
