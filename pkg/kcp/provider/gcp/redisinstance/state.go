@@ -86,3 +86,8 @@ func (s *State) UpdateMaintenancePolicy(policy *redispb.MaintenancePolicy) {
 	s.updateMask = append(s.updateMask, "maintenance_policy")
 	s.gcpRedisInstance.MaintenancePolicy = policy
 }
+
+func (s *State) UpdateAuthEnabled(authEnabled bool) {
+	s.updateMask = append(s.updateMask, "auth_enabled")
+	s.gcpRedisInstance.AuthEnabled = authEnabled
+}

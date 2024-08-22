@@ -45,6 +45,7 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyMemorySizeGb,
 					modifyRedisConfigs,
 					modifyMaintenancePolicy,
+					modifyAuthEnabled,
 					updateRedis,
 					updateStatus,
 				),

@@ -18,14 +18,29 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf("%s:%d", state.gcpRedisInstance.Host, state.gcpRedisInstance.Port)
-	if state.gcpRedisInstance.ReadEndpoint != "" {
-		redisInstance.Status.ReadEndpoint = fmt.Sprintf("%s:%d", state.gcpRedisInstance.ReadEndpoint, state.gcpRedisInstance.ReadEndpointPort)
+	primaryEndpoint := fmt.Sprintf("%s:%d", state.gcpRedisInstance.Host, state.gcpRedisInstance.Port)
+	if redisInstance.Status.PrimaryEndpoint != primaryEndpoint {
+		redisInstance.Status.PrimaryEndpoint = primaryEndpoint
 	}
+
+	readEndpoint := fmt.Sprintf("%s:%d", state.gcpRedisInstance.ReadEndpoint, state.gcpRedisInstance.ReadEndpointPort)
+	if state.gcpRedisInstance.ReadEndpoint == "" {
+		readEndpoint = ""
+	}
+	if redisInstance.Status.ReadEndpoint != readEndpoint {
+		redisInstance.Status.ReadEndpoint = readEndpoint
+
+	}
+
+	authString := ""
 	if state.gcpRedisInstanceAuth != nil {
-		redisInstance.Status.AuthString = state.gcpRedisInstanceAuth.AuthString
+		authString = state.gcpRedisInstanceAuth.AuthString
 	}
-	if len(state.gcpRedisInstance.ServerCaCerts) > 0 {
+	if redisInstance.Status.AuthString != authString {
+		redisInstance.Status.AuthString = authString
+	}
+
+	if len(state.gcpRedisInstance.ServerCaCerts) > 0 && redisInstance.Status.CaCert != state.gcpRedisInstance.ServerCaCerts[0].Cert {
 		redisInstance.Status.CaCert = state.gcpRedisInstance.ServerCaCerts[0].Cert
 	}
 

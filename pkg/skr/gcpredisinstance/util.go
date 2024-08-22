@@ -1,6 +1,8 @@
 package gcpredisinstance
 
 import (
+	"bytes"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -106,4 +108,23 @@ func areMapsDifferent(first, second map[string]string) bool {
 	}
 
 	return false
+}
+
+func areByteMapsEqual(first, second map[string][]byte) bool {
+	if len(first) != len(second) {
+		return false
+	}
+
+	for key, firstValue := range first {
+		secondValue, exists := second[key]
+		if !exists {
+			return false
+		}
+
+		if !bytes.Equal(firstValue, secondValue) {
+			return false
+		}
+	}
+
+	return true
 }
