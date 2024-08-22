@@ -27,7 +27,7 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
-	location := backup.Spec.Location
+	location := backup.Status.Location
 	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
 	bkup, err := state.fileBackupClient.GetFileBackup(ctx, project, location, name)

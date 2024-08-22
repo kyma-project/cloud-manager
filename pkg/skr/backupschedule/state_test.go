@@ -40,23 +40,6 @@ var gcpScope = cloudcontrolv1beta1.Scope{
 	},
 }
 
-var awsScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "skr",
-		Namespace: "test",
-	},
-	Spec: cloudcontrolv1beta1.ScopeSpec{
-		Provider: "aws",
-		Scope: cloudcontrolv1beta1.ScopeInfo{
-			Aws: &cloudcontrolv1beta1.AwsScope{
-				VpcNetwork: "aws-nw",
-				Network:    cloudcontrolv1beta1.AwsNetwork{},
-				AccountId:  "aws-account-id",
-			},
-		},
-	},
-}
-
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume",

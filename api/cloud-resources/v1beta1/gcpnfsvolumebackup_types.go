@@ -80,7 +80,7 @@ type GcpNfsVolumeBackupSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="source is immutable."
 	Source GcpNfsVolumeBackupSource `json:"source"`
 
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
 	Location string `json:"location"`
 }
@@ -101,12 +101,15 @@ type GcpNfsVolumeBackupStatus struct {
 
 	// +optional
 	Id string `json:"id,omitempty"`
+
+	// +optional
+	Location string `json:"location,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="GCP NFS Volume",type="string",JSONPath=".spec.source.volume.name"
-// +kubebuilder:printcolumn:name="Location",type="string",JSONPath=".spec.location"
+// +kubebuilder:printcolumn:name="Location",type="string",JSONPath=".status.location"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 

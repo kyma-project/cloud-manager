@@ -1,7 +1,6 @@
 package looper
 
 import (
-	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -44,12 +43,6 @@ func (f *freqType) inc(item interface{}) {
 	}
 }
 
-func (f *freqType) trackedItems() map[interface{}]int {
-	f.l.Lock()
-	defer f.l.Unlock()
-	return f.mt
-}
-
 func (f *freqType) unknownItems() map[interface{}]int {
 	f.l.Lock()
 	defer f.l.Unlock()
@@ -62,14 +55,6 @@ func (f *freqType) statsTracked() (int, int, int, float64) {
 	defer f.l.Unlock()
 
 	return f.stats(f.mt)
-}
-
-// statsUnknown returns stats on tracked items
-func (f *freqType) statsUnknown() (int, int, int, float64) {
-	f.l.Lock()
-	defer f.l.Unlock()
-
-	return f.stats(f.mu)
 }
 
 // stats returns:
@@ -99,15 +84,6 @@ func (f *freqType) stats(m map[interface{}]int) (int, int, int, float64) {
 		rel = float64(d) / float64(minVal)
 	}
 	return len(m), gz, d, rel
-}
-
-func (f *freqType) print() {
-	for v, ff := range f.mt {
-		fmt.Printf("%v: %v\n", v, ff)
-	}
-	for v, ff := range f.mu {
-		fmt.Printf("%v: %v\n", v, ff)
-	}
 }
 
 func (f *freqType) assertTracked(t *testing.T, expectedCount int) {

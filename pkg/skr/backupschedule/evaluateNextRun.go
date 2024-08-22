@@ -32,7 +32,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 				Message: "BackupSchedule has no next run time",
 			}).
 			SuccessError(composed.StopAndForget).
-			SuccessLogMsg(fmt.Sprintf("BackupSchedule has not next run times calculated.")).
+			SuccessLogMsg("BackupSchedule has not next run times calculated.").
 			Run(ctx, state)
 	}
 

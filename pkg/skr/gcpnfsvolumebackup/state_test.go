@@ -51,12 +51,12 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
 		},
-		Location:      "us-west1",
 		Tier:          "BASIC_HDD",
 		FileShareName: "vol1",
 		CapacityGb:    1024,
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
+		Location:   "us-west1",
 		Id:         "test-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
@@ -86,7 +86,8 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		},
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
-		State: "Ready",
+		Location: "us-west1",
+		State:    "Ready",
 		Conditions: []v1.Condition{
 			{
 				Type:               "Ready",
@@ -117,7 +118,8 @@ var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		},
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
-		State: "Ready",
+		Location: "us-west1",
+		State:    "Ready",
 		Conditions: []v1.Condition{
 			{
 				Type:               "Ready",

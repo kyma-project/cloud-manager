@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"os"
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -28,6 +29,8 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	BeforeEach(func() {
+		err := os.Unsetenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION")
+		Expect(err).ToNot(HaveOccurred())
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists
@@ -114,6 +117,102 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-2"
 
+		BeforeEach(func() {
+			By("And Given SKR GcpNfsVolumeBackup has Ready condition", func() {
+
+				//Create GcpNfsVolume
+				Eventually(CreateGcpNfsVolumeBackup).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						WithName(gcpNfsVolumeBackupName),
+						WithGcpNfsVolume(skrGcpNfsVolumeName),
+					).
+					Should(Succeed())
+
+				//Load SKR GcpNfsVolumeBackup and check for Ready condition
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+						AssertGcpNfsVolumeBackupHasState(cloudresourcesv1beta1.StateReady),
+					).
+					Should(Succeed())
+			})
+		})
+		It("When SKR GcpNfsVolumeBackup Delete is called ", func() {
+
+			//Delete SKR GcpNfsVolume
+			Eventually(Delete).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+				).Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			By("Then DeletionTimestamp is set in GcpNfsVolumeBackup", func() {
+				Expect(gcpNfsVolumeBackup.DeletionTimestamp.IsZero()).NotTo(BeTrue())
+			})
+
+			By("And Then the GcpNfsVolumeBackup in SKR is deleted.", func() {
+				Eventually(IsDeleted, timeout, interval).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+					).
+					Should(Succeed())
+			})
+		})
+	})
+
+	Describe("Scenario: SKR GcpNfsVolumeBackup is created with empty location", func() {
+		//Define variables.
+		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-1"
+		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
+		Expect(err).ToNot(HaveOccurred())
+		It("When GcpNfsVolumeBackup Create is called", func() {
+			Eventually(CreateGcpNfsVolumeBackup).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+					WithName(gcpNfsVolumeBackupName),
+					WithGcpNfsVolume(skrGcpNfsVolumeName),
+					WithGcpNfsVolumeBackupLocation(""),
+				).
+				Should(Succeed())
+			By("Then GcpNfsVolumeBackup is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+					).
+					Should(Succeed())
+			})
+			By("And Then GcpNfsVolumeBackup will get Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed())
+			})
+			By("And Then GcpNfsVolumeBackup has Ready state", func() {
+				Expect(gcpNfsVolumeBackup.Status.State).To(Equal(cloudresourcesv1beta1.GcpNfsBackupReady))
+			})
+		})
+	})
+
+	Describe("Scenario: SKR GcpNfsVolumeBackup is deleted with empty location", Ordered, func() {
+		//Define variables.
+		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-2"
+		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
+		Expect(err).ToNot(HaveOccurred())
 		BeforeEach(func() {
 			By("And Given SKR GcpNfsVolumeBackup has Ready condition", func() {
 

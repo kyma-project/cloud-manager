@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: gcpnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -19,7 +19,7 @@ spec:
         - jsonPath: .spec.source.volume.name
           name: GCP NFS Volume
           type: string
-        - jsonPath: .spec.location
+        - jsonPath: .status.location
           name: Location
           type: string
         - jsonPath: .metadata.creationTimestamp
@@ -81,7 +81,6 @@ spec:
                     - message: source is immutable.
                       rule: (self == oldSelf)
               required:
-                - location
                 - source
               type: object
             status:
@@ -152,6 +151,8 @@ spec:
                     - type
                   x-kubernetes-list-type: map
                 id:
+                  type: string
+                location:
                   type: string
                 opIdentifier:
                   description: Operation Identifier to track the Hyperscaler Restore Operation
