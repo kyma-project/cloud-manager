@@ -18,6 +18,9 @@
   name: spec.transitEncryptionEnabled
   required: false
 
+- path: spec.authEnabled
+  name: spec.authEnabledFull
+
 - path: spec.parameters
   name: spec.parameters
   required: false

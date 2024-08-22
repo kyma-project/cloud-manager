@@ -4,7 +4,10 @@ en:
   status.state: State
   spec.ipRange: Ip Range
   spec.ipRange.name: Ip Range Name
+  spec.auth: Authentication
   spec.authSecret: Authentication Secret
+  spec.authEnabled: Enabled
+  spec.authEnabledFull: Authentication Enabled
   spec.authSecret.name: Name
   spec.authSecret.labels: Labels
   spec.authSecret.annotations: Annotations
