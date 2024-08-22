@@ -4,12 +4,18 @@
 - path: spec.fileShareName
   name: spec.fileShareName
   required: true
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.location
   name: spec.location
   required: true
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.tier
   name: spec.tier
   required: true
+  disableOnEdit: true
+  description: Immutable once set.
 
 - path: spec.ipRange
   name: spec.ipRange
@@ -20,6 +26,8 @@
       name: spec.ipRange.name
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
 - path: spec.volume
   name: spec.volume
   widget: FormGroup
@@ -46,6 +54,8 @@
       name: spec.volumeClaim.name
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
     - path: labels
       name: spec.volumeClaim.labels
       required: false
@@ -63,7 +73,11 @@
       name: spec.sourceBackup.name
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
     - path: namespace
       name: spec.sourceBackup.namespace
       widget: Text
       required: true
+      disableOnEdit: true
+      description: Immutable once set.
