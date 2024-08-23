@@ -64,6 +64,7 @@ func getCreateParams(state *State) armRedis.CreateParameters {
 			Family:   to.Ptr(armRedis.SKUFamilyP),
 		},
 		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
+		SubnetID:           state.subnet.ID,
 	}
 
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount != 0 {
