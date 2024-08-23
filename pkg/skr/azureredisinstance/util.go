@@ -1,8 +1,6 @@
 package azureredisinstance
 
 import (
-	"strings"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -46,14 +44,8 @@ func getAuthSecretAnnotations(azureRedis *cloudresourcesv1beta1.AzureRedisInstan
 }
 
 func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
-	splitEndpoint := strings.Split(kcpRedis.Status.PrimaryEndpoint, ":")
-	host := splitEndpoint[0]
-	port := splitEndpoint[1]
-
 	result := map[string][]byte{
 		"primaryEndpoint": []byte(kcpRedis.Status.PrimaryEndpoint),
-		"host":            []byte(host),
-		"port":            []byte(port),
 	}
 
 	if len(kcpRedis.Status.AuthString) > 0 {
