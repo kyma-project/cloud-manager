@@ -7,4 +7,5 @@ Cloud Manager custom resources:
 * [AzureVpcPeering Custom Resource](./04-40-10-azure-vpc-peering.md)
 
 * [GcpVpcPeering Custom Resource](./04-50-gcp-vpc-peering.md)
+* [GcpRedisInstance Custom Resource](./04-60-gcp-redis-instance.md)
 
