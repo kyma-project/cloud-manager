@@ -79,9 +79,11 @@ data:
     - path: spec.redisVersion
       name: spec.redisVersion
       required: true
+      disableOnEdit: true
     - path: spec.tier
       name: spec.tier
       required: true
+      disableOnEdit: true
 
     - path: spec.authEnabled
       name: spec.authEnabled
@@ -92,6 +94,7 @@ data:
     - path: spec.transitEncryption.serverAuthentication
       name: spec.transitEncryption.serverAuthentication
       required: false
+      disableOnEdit: true
 
     - path: spec.redisConfigs
       name: spec.redisConfigs
@@ -107,14 +110,17 @@ data:
           name: spec.authSecret.name
           widget: Text
           required: true
+          disableOnEdit: true
         - path: labels
           name: spec.authSecret.labels
           required: false
           widget: KeyValuePair
+          disableOnEdit: true
         - path: annotations
           name: spec.authSecret.annotations
           required: false
           widget: KeyValuePair
+          disableOnEdit: true
 
     - path: spec.maintenancePolicy
       name: spec.maintenancePolicy

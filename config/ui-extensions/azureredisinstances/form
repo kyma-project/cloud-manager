@@ -10,15 +10,19 @@
 - path: spec.enableNonSslPort
   name: spec.enableNonSslPort
   required: false
+  disableOnEdit: true
 - path: spec.replicasPerPrimary
   name: spec.replicasPerPrimary
   required: false
+  disableOnEdit: true
 - path: spec.shardCount
   name: spec.shardCount
   required: false
+  disableOnEdit: true
 - path: spec.redisVersion
   name: spec.redisVersion
   required: false
+  disableOnEdit: true
 
 - path: spec.redisConfiguration
   name: spec.redisConfiguration
@@ -27,18 +31,25 @@
   children:
     - path: maxclients
       name: spec.redisConfiguration.maxclients
+      disableOnEdit: true
     - path: maxfragmentationmemory-reserved
       name: spec.redisConfiguration.maxfragmentationmemory-reserved
+      disableOnEdit: true
     - path: maxmemory-delta
       name: spec.redisConfiguration.maxmemory-delta
+      disableOnEdit: true
     - path: maxmemory-policy
       name: spec.redisConfiguration.maxmemory-policy
+      disableOnEdit: true
     - path: maxmemory-reserved
       name: spec.redisConfiguration.maxmemory-reserved
+      disableOnEdit: true
     - path: notify-keyspace-events
       name: spec.redisConfiguration.notify-keyspace-events
+      disableOnEdit: true
     - path: zonal-configuration
       name: spec.redisConfiguration.zonal-configuration
+      disableOnEdit: true
 
 - path: spec.volume
   name: spec.volume

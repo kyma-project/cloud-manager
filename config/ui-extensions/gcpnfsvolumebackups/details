@@ -18,6 +18,9 @@ body:
       source: status
       children:
         - widget: Labels
+          source: location
+          name: status.location
+        - widget: Labels
           source: state
           name: status.state
         - widget: Labels
