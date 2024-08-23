@@ -99,14 +99,34 @@ spec:
                     type: object
                   azure:
                     properties:
+                      azureNetwork:
+                        properties:
+                          nodes:
+                            type: string
+                          pods:
+                            type: string
+                          services:
+                            type: string
+                          vpc:
+                            properties:
+                              cidr:
+                                type: string
+                              id:
+                                type: string
+                            type: object
+                        type: object
                       subscriptionId:
+                        type: string
+                      technicalID:
                         type: string
                       tenantId:
                         type: string
                       vpcNetwork:
                         type: string
                     required:
+                    - azureNetwork
                     - subscriptionId
+                    - technicalID
                     - tenantId
                     - vpcNetwork
                     type: object
