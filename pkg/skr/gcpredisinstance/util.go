@@ -2,6 +2,7 @@ package gcpredisinstance
 
 import (
 	"bytes"
+	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -46,12 +47,24 @@ func getAuthSecretAnnotations(gcpRedis *cloudresourcesv1beta1.GcpRedisInstance) 
 }
 
 func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
+	splitEndpoint := strings.Split(kcpRedis.Status.PrimaryEndpoint, ":")
+	host := splitEndpoint[0]
+	port := splitEndpoint[1]
+
 	result := map[string][]byte{
 		"primaryEndpoint": []byte(kcpRedis.Status.PrimaryEndpoint),
+		"host":            []byte(host),
+		"port":            []byte(port),
 	}
 
 	if len(kcpRedis.Status.ReadEndpoint) > 0 {
+		splitReadEndpoint := strings.Split(kcpRedis.Status.ReadEndpoint, ":")
+		readHost := splitReadEndpoint[0]
+		readPort := splitReadEndpoint[1]
+
 		result["readEndpoint"] = []byte(kcpRedis.Status.ReadEndpoint)
+		result["readHost"] = []byte(readHost)
+		result["readPort"] = []byte(readPort)
 	}
 
 	if len(kcpRedis.Status.AuthString) > 0 {
