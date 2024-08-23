@@ -21,6 +21,9 @@ data:
           source: status
           children:
             - widget: Labels
+              source: location
+              name: status.location
+            - widget: Labels
               source: state
               name: status.state
             - widget: Labels
@@ -29,7 +32,6 @@ data:
   form: |
     - path: spec.location
       name: spec.location
-      required: true
       widget: Text
       disableOnEdit: true
       description: Immutable once set.
@@ -74,7 +76,8 @@ data:
       sort: true
   translations: |-
     en:
-      spec.location: Location
+      spec.location: Requested Location
+      status.location: Reserved Location
       spec.source.volume: Volume
       spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Namespace

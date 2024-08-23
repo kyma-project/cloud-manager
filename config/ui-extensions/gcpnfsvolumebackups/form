@@ -1,6 +1,5 @@
 - path: spec.location
   name: spec.location
-  required: true
   widget: Text
   disableOnEdit: true
   description: Immutable once set.
