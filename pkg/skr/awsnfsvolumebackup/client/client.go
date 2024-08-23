@@ -10,9 +10,15 @@ import (
 	"regexp"
 )
 
-type Client interface {
+type LocalClient interface {
 	IsNotFound(err error) bool
 	IsAlreadyExists(err error) bool
+	ParseRecoveryPointId(recoveryPointArn string) string
+}
+
+type Client interface {
+	LocalClient
+
 	ListTags(ctx context.Context, resourceArn string) (map[string]string, error)
 
 	ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error)
@@ -25,7 +31,6 @@ type Client interface {
 
 	DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error)
 	DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error)
-	ParseRecoveryPointId(recoveryPointArn string) string
 }
 
 type StartBackupJobInput struct {
@@ -48,20 +53,29 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	}
 }
 
-func newClient(svc *backup.Client) Client {
-	re := regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):recovery-point:(?P<RecoveryPointID>[^:\n]*)$`)
-	return &client{
-		svc:             svc,
-		recoveryPointRe: re,
+func newLocalClient() *localClient {
+	return &localClient{
+		recoveryPointRe: regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):recovery-point:(?P<RecoveryPointID>[^:\n]*)$`),
 	}
 }
 
-type client struct {
-	svc             *backup.Client
+func newClient(svc *backup.Client) Client {
+	return &client{
+		localClient: *newLocalClient(),
+		svc:         svc,
+	}
+}
+
+type localClient struct {
 	recoveryPointRe *regexp.Regexp
 }
 
-func (c *client) IsNotFound(err error) bool {
+type client struct {
+	localClient
+	svc *backup.Client
+}
+
+func (c *localClient) IsNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -69,12 +83,17 @@ func (c *client) IsNotFound(err error) bool {
 	return errors.As(err, &resourceNotFoundException)
 }
 
-func (c *client) IsAlreadyExists(err error) bool {
+func (c *localClient) IsAlreadyExists(err error) bool {
 	if err == nil {
 		return false
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
 	return errors.As(err, &alreadyExistsException)
+}
+
+func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) string {
+	match := c.recoveryPointRe.FindStringSubmatch(recoveryPointArn)
+	return match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
@@ -195,9 +214,4 @@ func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recov
 		return nil, err
 	}
 	return out, nil
-}
-
-func (c *client) ParseRecoveryPointId(recoveryPointArn string) string {
-	match := c.recoveryPointRe.FindStringSubmatch(recoveryPointArn)
-	return match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
 }

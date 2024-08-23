@@ -20,6 +20,8 @@ import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -29,11 +31,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type AwsNfsVolumeBackupReconcilerFactory struct{}
+type AwsNfsVolumeBackupReconcilerFactory struct {
+	backupProvider awsclient.SkrClientProvider[client.Client]
+	env            abstractions.Environment
+}
 
 func (f *AwsNfsVolumeBackupReconcilerFactory) New(args skrreconciler.ReconcilerArguments) reconcile.Reconciler {
 	return &AwsNfsVolumeBackupReconciler{
-		reconciler: awsnfsvolumebackup.NewReconcilerFactory(client.NewClientProvider(), abstractions.NewOSEnvironment()).New(args),
+		reconciler: awsnfsvolumebackup.NewReconcilerFactory(f.backupProvider, abstractions.NewOSEnvironment()).New(args),
 	}
 }
 
@@ -59,9 +64,12 @@ func (r *AwsNfsVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupAwsNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry) error {
+func SetupAwsNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, backupProvider awsclient.SkrClientProvider[client.Client], env abstractions.Environment) error {
 	return reg.Register().
-		WithFactory(&AwsNfsVolumeBackupReconcilerFactory{}).
+		WithFactory(&AwsNfsVolumeBackupReconcilerFactory{
+			backupProvider: backupProvider,
+			env:            env,
+		}).
 		For(&cloudresourcesv1beta1.AwsNfsVolumeBackup{}).
 		Complete()
 }

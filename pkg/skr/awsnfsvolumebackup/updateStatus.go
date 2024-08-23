@@ -17,7 +17,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	backup := state.ObjAsAwsNfsVolumeBackup()
 
 	logger := composed.LoggerFromCtx(ctx)
-
+	logger.Info("Updating Status for AwsNfsVolumeBackup")
 	//Handle if deletion is in progress
 	deleting := composed.IsMarkedForDeletion(backup)
 	if deleting {
@@ -42,6 +42,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	//If backup is completed, mark the backup as ready.
 	if (jobStatus == "" || jobStatus == types.BackupJobStateCompleted) &&
 		recoveryPointStatus == types.RecoveryPointStatusCompleted {
+
+		logger.Info("Updating SKR AwsNfsVolumeBackup status with Ready state/condition")
 
 		//Check if the backup has a ready condition
 		backupReady := meta.FindStatusCondition(backup.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)

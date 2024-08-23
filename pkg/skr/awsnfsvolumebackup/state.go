@@ -100,10 +100,3 @@ func (s *State) GetTags() map[string]string {
 		common.TagShoot:            s.Scope().Spec.ShootName,
 	}
 }
-
-func (f *stateFactory) test() {
-	var _ composed.State = State{}
-	var _ commonScope.State = State{}
-	var _ composed.State = (*State)(nil)
-	var _ commonScope.State = (*State)(nil)
-}

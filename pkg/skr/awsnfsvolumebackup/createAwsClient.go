@@ -28,8 +28,8 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 	cli, err := state.awsClientProvider(
 		ctx,
 		state.Scope().Spec.Region,
-		awsconfig.AwsConfig.AccessKeyId,
-		awsconfig.AwsConfig.SecretAccessKey,
+		awsconfig.AwsConfig.Default.AccessKeyId,
+		awsconfig.AwsConfig.Default.SecretAccessKey,
 		roleName,
 	)
 	if err != nil {

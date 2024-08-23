@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -175,5 +175,43 @@ func HavingAwsNfsVolumeStatusState(state string) ObjAssertion {
 			return fmt.Errorf("the SKR AwsNfsVolume State does not match. expected: %s, got: %s", state, x.Status.State)
 		}
 		return nil
+	}
+}
+
+func GivenAwsNfsVolumeExists(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AwsNfsVolume, opts ...ObjAction) error {
+	if obj == nil {
+		obj = &cloudresourcesv1beta1.AwsNfsVolume{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultSkrNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the SKR AwsNfsVolume must have name set")
+	}
+
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	if apierrors.IsNotFound(err) {
+		err = clnt.Create(ctx, obj)
+	} else {
+		err = clnt.Update(ctx, obj)
+	}
+	return err
+}
+
+func WithAwsNfsVolumeStatusId(id string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if len(x.Status.Id) == 0 {
+					x.Status.Id = id
+				}
+			}
+		},
 	}
 }
