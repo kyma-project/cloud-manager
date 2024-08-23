@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
+	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shareaccessrules"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
-	"k8s.io/utils/ptr"
 	"net/http"
 
 	cceeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/client"
@@ -32,33 +33,46 @@ type Client interface {
 	DeleteShare(ctx context.Context, id string) error
 	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
 
-	ListShareAccessRights(ctx context.Context, id string) ([]shares.AccessRight, error)
-	GrantShareAccess(ctx context.Context, shareId string, cidr string) (*shares.AccessRight, error)
+	ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error)
+	GrantShareAccess(ctx context.Context, shareId string, cidr string) (*ShareAccess, error)
 	RevokeShareAccess(ctx context.Context, shareId, accessId string) error
 }
 
 var _ Client = &client{}
 
 type client struct {
-	svc *gophercloud.ServiceClient
+	//svc *gophercloud.ServiceClient
+	netSvc   *gophercloud.ServiceClient
+	shareSvc *gophercloud.ServiceClient
 }
 
 func NewClientProvider() cceeclient.CceeClientProvider[Client] {
 	return func(ctx context.Context, pp cceeclient.ProviderParams) (Client, error) {
-		svc, err := cceeclient.NewProviderClient(ctx, pp)
+		pi, err := cceeclient.NewProviderClient(ctx, pp)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new ccee provider client: %v", err)
 		}
-		return &client{svc: svc}, nil
+		netSvc, err := openstack.NewNetworkV2(pi.ProviderClient, pi.EndpointOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create network v2 client: %v", err)
+		}
+		shareSvc, err := openstack.NewSharedFileSystemV2(pi.ProviderClient, pi.EndpointOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create shared file system v2 client: %v", err)
+		}
+		shareSvc.Microversion = "2.65"
+		return &client{
+			netSvc:   netSvc,
+			shareSvc: shareSvc,
+		}, nil
 	}
 }
 
 func (c *client) ListInternalNetworks(ctx context.Context, name string) ([]networks.Network, error) {
-	pg, err := networks.List(c.svc, external.ListOptsExt{
-		External: ptr.To(false),
-		ListOptsBuilder: networks.ListOpts{
-			Name: name,
-		},
+	pg, err := networks.List(c.netSvc, networks.ListOpts{
+		//TenantID:  "c70ec64b9b3e4766bf1a5aaaf5693663",
+		//ProjectID: "f37face36bb74b1fa84e9f6e4f2c6cbf",
+		Name: name,
 	}).AllPages(ctx)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
@@ -74,7 +88,7 @@ func (c *client) ListInternalNetworks(ctx context.Context, name string) ([]netwo
 }
 
 func (c *client) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
-	n, err := networks.Get(ctx, c.svc, id).Extract()
+	n, err := networks.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
@@ -82,7 +96,7 @@ func (c *client) GetNetwork(ctx context.Context, id string) (*networks.Network, 
 }
 
 func (c *client) ListSubnets(ctx context.Context, networkId string) ([]subnets.Subnet, error) {
-	pg, err := subnets.List(c.svc, subnets.ListOpts{
+	pg, err := subnets.List(c.netSvc, subnets.ListOpts{
 		NetworkID: networkId,
 	}).AllPages(ctx)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
@@ -100,7 +114,7 @@ func (c *client) ListSubnets(ctx context.Context, networkId string) ([]subnets.S
 }
 
 func (c *client) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
-	subnet, err := subnets.Get(ctx, c.svc, id).Extract()
+	subnet, err := subnets.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
@@ -114,7 +128,7 @@ func (c *client) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, err
 // Share Networks ------------------------------------------------------------------------------
 
 func (c *client) ListShareNetworks(ctx context.Context, networkId string) ([]sharenetworks.ShareNetwork, error) {
-	pg, err := sharenetworks.ListDetail(c.svc, sharenetworks.ListOpts{
+	pg, err := sharenetworks.ListDetail(c.shareSvc, sharenetworks.ListOpts{
 		NeutronNetID: networkId,
 	}).AllPages(ctx)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
@@ -132,7 +146,7 @@ func (c *client) ListShareNetworks(ctx context.Context, networkId string) ([]sha
 }
 
 func (c *client) GetShareNetwork(ctx context.Context, id string) (*sharenetworks.ShareNetwork, error) {
-	net, err := sharenetworks.Get(ctx, c.svc, id).Extract()
+	net, err := sharenetworks.Get(ctx, c.shareSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
@@ -143,7 +157,7 @@ func (c *client) GetShareNetwork(ctx context.Context, id string) (*sharenetworks
 }
 
 func (c *client) CreateShareNetwork(ctx context.Context, networkId, subnetId, name string) (*sharenetworks.ShareNetwork, error) {
-	net, err := sharenetworks.Create(ctx, c.svc, sharenetworks.CreateOpts{
+	net, err := sharenetworks.Create(ctx, c.shareSvc, sharenetworks.CreateOpts{
 		NeutronNetID:    networkId,
 		NeutronSubnetID: subnetId,
 		Name:            name,
@@ -155,7 +169,7 @@ func (c *client) CreateShareNetwork(ctx context.Context, networkId, subnetId, na
 }
 
 func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
-	err := sharenetworks.Delete(ctx, c.svc, id).ExtractErr()
+	err := sharenetworks.Delete(ctx, c.shareSvc, id).ExtractErr()
 	if err != nil {
 		return fmt.Errorf("error deleting sharenetwork: %w", err)
 	}
@@ -174,7 +188,7 @@ func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
 // * migrating
 
 func (c *client) ListShares(ctx context.Context, shareNetworkId string) ([]shares.Share, error) {
-	pg, err := shares.ListDetail(c.svc, shares.ListOpts{
+	pg, err := shares.ListDetail(c.shareSvc, shares.ListOpts{
 		ShareNetworkID: shareNetworkId,
 	}).AllPages(ctx)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
@@ -191,7 +205,7 @@ func (c *client) ListShares(ctx context.Context, shareNetworkId string) ([]share
 }
 
 func (c *client) GetShare(ctx context.Context, id string) (*shares.Share, error) {
-	sh, err := shares.Get(ctx, c.svc, id).Extract()
+	sh, err := shares.Get(ctx, c.shareSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
@@ -202,7 +216,7 @@ func (c *client) GetShare(ctx context.Context, id string) (*shares.Share, error)
 }
 
 func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error) {
-	sh, err := shares.Create(ctx, c.svc, shares.CreateOpts{
+	sh, err := shares.Create(ctx, c.shareSvc, shares.CreateOpts{
 		ShareProto:     "NFS",
 		Size:           size,
 		Name:           name,
@@ -217,7 +231,7 @@ func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, s
 }
 
 func (c *client) DeleteShare(ctx context.Context, id string) error {
-	err := shares.Delete(ctx, c.svc, id).ExtractErr()
+	err := shares.Delete(ctx, c.shareSvc, id).ExtractErr()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil
 	}
@@ -228,7 +242,7 @@ func (c *client) DeleteShare(ctx context.Context, id string) error {
 }
 
 func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
-	arr, err := shares.ListExportLocations(ctx, c.svc, id).Extract()
+	arr, err := shares.ListExportLocations(ctx, c.shareSvc, id).Extract()
 	if err != nil {
 		return nil, fmt.Errorf("error listing export locations: %w", err)
 	}
@@ -237,28 +251,69 @@ func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]sha
 
 // share access -------------------------------------------------------------------
 
-func (c *client) ListShareAccessRights(ctx context.Context, id string) ([]shares.AccessRight, error) {
-	arr, err := shares.ListAccessRights(ctx, c.svc, id).Extract()
+type ShareAccess struct {
+	ID          string
+	ShareID     string
+	AccessType  string
+	AccessTo    string
+	AccessKey   string
+	State       string
+	AccessLevel string
+}
+
+func newShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAccess) *ShareAccess {
+	return &ShareAccess{
+		ID:          o.ID,
+		ShareID:     o.ShareID,
+		AccessType:  o.AccessType,
+		AccessTo:    o.AccessTo,
+		AccessKey:   o.AccessKey,
+		State:       o.State,
+		AccessLevel: o.AccessLevel,
+	}
+}
+
+func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
+	return &ShareAccess{
+		ID:          o.ID,
+		ShareID:     o.ShareID,
+		AccessType:  o.AccessType,
+		AccessTo:    o.AccessTo,
+		AccessKey:   o.AccessKey,
+		State:       o.State,
+		AccessLevel: o.AccessLevel,
+	}
+}
+
+func (c *client) ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error) {
+	arr, err := shareaccessrules.List(ctx, c.shareSvc, shareId).Extract()
+	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error listing access rights: %w", err)
 	}
-	return arr, nil
+	return pie.Map(arr, func(x shareaccessrules.ShareAccess) ShareAccess {
+		x.ShareID = shareId
+		return *newShareAccessFromShareAccessRulesShareAccess(&x)
+	}), nil
 }
 
-func (c *client) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*shares.AccessRight, error) {
-	ar, err := shares.GrantAccess(ctx, c.svc, shareId, shares.GrantAccessOpts{
+func (c *client) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*ShareAccess, error) {
+	ar, err := shares.GrantAccess(ctx, c.shareSvc, shareId, shares.GrantAccessOpts{
 		AccessType:  "ip",
 		AccessTo:    cidr,
 		AccessLevel: "rw",
 	}).Extract()
 	if err != nil {
-		return ar, fmt.Errorf("error granting access to share: %w", err)
+		return nil, fmt.Errorf("error granting access to share: %w", err)
 	}
-	return ar, nil
+	ar.ShareID = shareId
+	return newShareAccessFromSharesAccessRight(ar), nil
 }
 
 func (c *client) RevokeShareAccess(ctx context.Context, shareId, accessId string) error {
-	err := shares.RevokeAccess(ctx, c.svc, shareId, shares.RevokeAccessOpts{
+	err := shares.RevokeAccess(ctx, c.shareSvc, shareId, shares.RevokeAccessOpts{
 		AccessID: accessId,
 	}).ExtractErr()
 	if err != nil {

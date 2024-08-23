@@ -22,7 +22,7 @@ type State struct {
 	subnet       *subnets.Subnet
 	shareNetwork *sharenetworks.ShareNetwork
 	share        *shares.Share
-	accessRight  *shares.AccessRight
+	accessRight  *cceenfsinstanceclient.ShareAccess
 }
 
 type StateFactory interface {

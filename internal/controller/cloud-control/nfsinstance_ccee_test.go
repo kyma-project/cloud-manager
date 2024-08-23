@@ -101,7 +101,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 		})
 
 		By("And Then Share has access granted", func() {
-			arr, err := infra.CceeMock().ListShareAccessRights(infra.Ctx(), theShare.ID)
+			arr, err := infra.CceeMock().ListShareAccessRules(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(1), "expected one access right")
 			Expect(arr[0].AccessTo).To(Equal(scope.Spec.Scope.OpenStack.Network.Nodes))

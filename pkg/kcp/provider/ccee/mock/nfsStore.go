@@ -347,7 +347,7 @@ func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]s
 	}, nil
 }
 
-func (s *nfsStore) ListShareAccessRights(ctx context.Context, id string) ([]shares.AccessRight, error) {
+func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]shares.AccessRight, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}

@@ -11,7 +11,8 @@ Before setting up garden, the following tools are required:
 If you already have brew installed you can install the others requirements by running:
 
 ```shell
-brew install awscli kind npm
+brew install awscli kind npm gettext
+brew link --force gettext
 sudo npm install -g aws-azure-login --unsafe-perm
 ```
 
@@ -20,7 +21,7 @@ sudo npm install -g aws-azure-login --unsafe-perm
 Generate Gardener core CRDs
 ```shell
 ./bin/controller-gen crd:allowDangerousTypes=true \
-  paths="$GOPATH/pkg/mod/github.com/gardener/gardener@v1.85.0/pkg/apis/core/v1beta1" \
+  paths="$GOPATH/pkg/mod/github.com/gardener/gardener@v1.99.1/pkg/apis/core/v1beta1" \
   output:crd:artifacts:config=tools/dev/gardener
 ```
 

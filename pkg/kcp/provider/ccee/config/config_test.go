@@ -22,9 +22,6 @@ func TestCceeConfig(t *testing.T) {
 	values := map[string]string{
 		"OS_USERNAME": un,
 		"OS_PASSWORD": pw,
-		"OS_CACERT":   ca,
-		"OS_KEY":      key,
-		"OS_CERT":     cert,
 	}
 
 	t.Run("All from env", func(t *testing.T) {
@@ -35,9 +32,6 @@ func TestCceeConfig(t *testing.T) {
 
 		assert.Equal(t, un, CCEEConfig.Username)
 		assert.Equal(t, pw, CCEEConfig.Password)
-		assert.Equal(t, ca, CCEEConfig.TlsCaCertPath)
-		assert.Equal(t, key, CCEEConfig.TlsKeyPath)
-		assert.Equal(t, cert, CCEEConfig.TlsCertPath)
 	})
 
 	t.Run("All from file", func(t *testing.T) {
@@ -64,9 +58,6 @@ func TestCceeConfig(t *testing.T) {
 
 		assert.Equal(t, un, CCEEConfig.Username)
 		assert.Equal(t, pw, CCEEConfig.Password)
-		assert.Equal(t, ca, CCEEConfig.TlsCaCertPath)
-		assert.Equal(t, key, CCEEConfig.TlsKeyPath)
-		assert.Equal(t, cert, CCEEConfig.TlsCertPath)
 	})
 
 }
