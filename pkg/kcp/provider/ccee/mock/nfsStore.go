@@ -11,6 +11,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
+	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	"net/http"
 	"sync"
 	"time"
@@ -34,7 +35,7 @@ type nfsStore struct {
 	subnets       map[string][]*subnets.Subnet
 	shareNetworks map[string][]*sharenetworks.ShareNetwork
 	shares        map[string][]*shares.Share
-	access        map[string][]*shares.AccessRight
+	access        map[string][]*cceenfsinstanceclient.ShareAccess
 }
 
 // NfsConfig implementation ======================================================================
@@ -347,7 +348,7 @@ func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]s
 	}, nil
 }
 
-func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]shares.AccessRight, error) {
+func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]cceenfsinstanceclient.ShareAccess, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -355,7 +356,7 @@ func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]share
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.access == nil {
-		s.access = map[string][]*shares.AccessRight{}
+		s.access = map[string][]*cceenfsinstanceclient.ShareAccess{}
 	}
 	arr, ok := s.access[id]
 	if !ok {
@@ -364,7 +365,7 @@ func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]share
 	return deptrSlice(arr), nil
 }
 
-func (s *nfsStore) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*shares.AccessRight, error) {
+func (s *nfsStore) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*cceenfsinstanceclient.ShareAccess, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -372,7 +373,7 @@ func (s *nfsStore) GrantShareAccess(ctx context.Context, shareId string, cidr st
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.access == nil {
-		s.access = map[string][]*shares.AccessRight{}
+		s.access = map[string][]*cceenfsinstanceclient.ShareAccess{}
 	}
 
 	exists := false
@@ -394,7 +395,7 @@ func (s *nfsStore) GrantShareAccess(ctx context.Context, shareId string, cidr st
 	}
 
 	arr := s.access[shareId]
-	a := &shares.AccessRight{
+	a := &cceenfsinstanceclient.ShareAccess{
 		ID:          uuid.NewString(),
 		ShareID:     shareId,
 		AccessType:  "ip",
@@ -414,7 +415,7 @@ func (s *nfsStore) RevokeShareAccess(ctx context.Context, shareId, accessId stri
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.access == nil {
-		s.access = map[string][]*shares.AccessRight{}
+		s.access = map[string][]*cceenfsinstanceclient.ShareAccess{}
 	}
 
 	exists := false
@@ -436,7 +437,7 @@ func (s *nfsStore) RevokeShareAccess(ctx context.Context, shareId, accessId stri
 	}
 
 	arr := s.access[shareId]
-	arr = pie.Filter(arr, func(x *shares.AccessRight) bool {
+	arr = pie.Filter(arr, func(x *cceenfsinstanceclient.ShareAccess) bool {
 		return x.ID != accessId
 	})
 	s.access[shareId] = arr
