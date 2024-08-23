@@ -77,7 +77,7 @@ data:
   translations: |-
     en:
       spec.location: Requested Location
-      status.location: Reserved Location
+      status.location: Allocated Location
       spec.source.volume: Volume
       spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Namespace
