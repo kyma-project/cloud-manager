@@ -348,6 +348,37 @@ func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]s
 	}, nil
 }
 
+func (s *nfsStore) ShareShrink(ctx context.Context, shareId string, newSize int) error {
+	return s.shareChangeSize(ctx, shareId, newSize)
+}
+
+func (s *nfsStore) ShareExtend(ctx context.Context, shareId string, newSize int) error {
+	return s.shareChangeSize(ctx, shareId, newSize)
+}
+
+func (s *nfsStore) shareChangeSize(ctx context.Context, shareId string, newSize int) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+	var theShare *shares.Share
+	for _, arr := range s.shares {
+		for _, sh := range arr {
+			if sh.ID == shareId {
+				theShare = sh
+			}
+		}
+	}
+	if theShare == nil {
+		return &gophercloud.ErrUnexpectedResponseCode{
+			BaseError: gophercloud.BaseError{
+				Info: fmt.Sprintf("share %q does not exist", shareId),
+			},
+			Actual: http.StatusNotFound,
+		}
+	}
+	theShare.Size = newSize
+	return nil
+}
+
 func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]cceenfsinstanceclient.ShareAccess, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

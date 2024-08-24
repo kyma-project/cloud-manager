@@ -32,6 +32,8 @@ type Client interface {
 	CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error)
 	DeleteShare(ctx context.Context, id string) error
 	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
+	ShareShrink(ctx context.Context, shareId string, newSize int) error
+	ShareExtend(ctx context.Context, shareId string, newSize int) error
 
 	ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error)
 	GrantShareAccess(ctx context.Context, shareId string, cidr string) (*ShareAccess, error)
@@ -247,6 +249,26 @@ func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]sha
 		return nil, fmt.Errorf("error listing export locations: %w", err)
 	}
 	return arr, nil
+}
+
+func (c *client) ShareShrink(ctx context.Context, shareId string, newSize int) error {
+	err := shares.Shrink(ctx, c.shareSvc, shareId, shares.ShrinkOpts{
+		NewSize: newSize,
+	}).ExtractErr()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *client) ShareExtend(ctx context.Context, shareId string, newSize int) error {
+	err := shares.Extend(ctx, c.shareSvc, shareId, shares.ExtendOpts{
+		NewSize: newSize,
+	}).ExtractErr()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // share access -------------------------------------------------------------------

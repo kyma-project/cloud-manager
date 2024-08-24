@@ -47,6 +47,8 @@ func New(stateFactory StateFactory) composed.Action {
 					shareNetworkCreate,
 					shareCreate,
 					shareWaitAvailable,
+					shareExpandShrink,
+					shareUpdateStatusCapacity,
 					accessGrant,
 					shareExportRead,
 					statusReady,
