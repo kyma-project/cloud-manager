@@ -80,7 +80,8 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 	env := abstractions.NewMockedEnvironment(map[string]string{
 		"GCP_SA_JSON_KEY_PATH":        "test",
 		"GCP_RETRY_WAIT_DURATION":     "100ms",
-		"GCP_OPERATION_WAIT_DURATION": "100ms"})
+		"GCP_OPERATION_WAIT_DURATION": "100ms",
+		"GCP_API_TIMEOUT_DURATION":    "100ms"})
 
 	factory := NewStateFactory(svcNwClientProvider, computeClientProvider, env)
 

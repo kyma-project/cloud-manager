@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -121,6 +122,7 @@ func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, err
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
 	CheckGcpAuthentication(ctx, saJsonKeyPath)
+	client.Timeout = GetGcpConfig(abstractions.NewOSEnvironment()).GcpApiTimeout
 	return client, nil
 }
 
