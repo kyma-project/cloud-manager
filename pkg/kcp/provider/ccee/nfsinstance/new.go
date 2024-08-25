@@ -35,6 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
 					"cceeNfsInstance-delete",
+					statusDeleting,
 					accessRevoke,
 					shareDelete,
 					shareNetworkDelete,
