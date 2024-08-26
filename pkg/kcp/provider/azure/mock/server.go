@@ -71,7 +71,7 @@ func (s *server) getStoreSubscriptionContext(subscription string) *storeSubscrip
 }
 
 func (s *server) GetRedisCacheByResourceGroupName(resourceGroupName string) *armRedis.ResourceInfo {
-	redisInstance, _ := s.redisCacheClientFake.GetRedisInstance(nil, resourceGroupName, "")
+	redisInstance, _ := s.redisCacheClientFake.GetRedisInstance(context.TODO(), resourceGroupName, "")
 
 	return redisInstance
 }

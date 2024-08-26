@@ -49,6 +49,7 @@ func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfNotDeleting() {
 
 	//First add finalizer
 	err, _ = addFinalizer(ctx, state)
+	suite.Nil(err)
 	//Call removeFinalizer
 	err, _ = removeFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
