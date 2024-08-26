@@ -25,6 +25,9 @@ type State struct {
 	vpcPeering       *ec2Types.VpcPeeringConnection
 	remoteVpc        *ec2Types.Vpc
 	remoteVpcPeering *ec2Types.VpcPeeringConnection
+
+	routeTables       []ec2Types.RouteTable
+	remoteRouteTables []ec2Types.RouteTable
 }
 
 type StateFactory interface {

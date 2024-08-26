@@ -7,19 +7,15 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"strings"
 )
 
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	obj := state.ObjAsVpcPeering()
-
-	if state.remoteVpcPeering != nil {
-		return nil, nil
-	}
 
 	logger := composed.LoggerFromCtx(ctx)
 	remoteVpcId := obj.Spec.VpcPeering.Aws.RemoteVpcId
@@ -58,18 +54,11 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	for _, vv := range vpcList {
 		v := vv
-		var sb strings.Builder
-		for _, t := range v.Tags {
-			sb.WriteString(ptr.Deref(t.Key, ""))
-			sb.WriteString("=")
-			sb.WriteString(ptr.Deref(t.Value, ""))
-			sb.WriteString(",")
-		}
 
 		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
 			"%s{%s}",
 			ptr.Deref(v.VpcId, ""),
-			sb.String(),
+			util.TagsToString(v.Tags),
 		))
 
 		if ptr.Deref(v.VpcId, "xxx") == remoteVpcId {
@@ -86,12 +75,20 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			).
 			Info("VPC not found")
 
+		message := fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId)
+		condition := meta.FindStatusCondition(obj.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+
+		if condition != nil && condition.Reason == cloudcontrolv1beta1.ReasonVpcNotFound &&
+			condition.Message == message {
+			return composed.StopAndForget, nil
+		}
+
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
-				Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
+				Message: message,
 			}).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).

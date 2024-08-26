@@ -4,6 +4,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"k8s.io/utils/ptr"
+	"strings"
 )
 
 func Ec2Tags(args ...string) (result []ec2types.Tag) {
@@ -54,4 +55,17 @@ func HasEc2Tag(tags []ec2types.Tag, key string) bool {
 		}
 	}
 	return false
+}
+
+func TagsToString(tags []ec2types.Tag) string {
+	var sb strings.Builder
+
+	for _, t := range tags {
+		sb.WriteString(ptr.Deref(t.Key, ""))
+		sb.WriteString("=")
+		sb.WriteString(ptr.Deref(t.Value, ""))
+		sb.WriteString(",")
+	}
+
+	return sb.String()
 }
