@@ -24,13 +24,14 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	state.ObjAsNfsInstance().Status.Hosts = []string{
-		fmt.Sprintf(
-			"%s.efs.%s.amazonaws.com",
-			*state.efs.FileSystemId,
-			state.Scope().Spec.Region,
-		),
-	}
+	host := fmt.Sprintf(
+		"%s.efs.%s.amazonaws.com",
+		*state.efs.FileSystemId,
+		state.Scope().Spec.Region,
+	)
+	state.ObjAsNfsInstance().Status.Hosts = []string{host}
+	state.ObjAsNfsInstance().Status.Host = host
+	state.ObjAsNfsInstance().Status.Path = "/"
 
 	state.ObjAsNfsInstance().Status.Id = *state.efs.FileSystemId
 

@@ -2,7 +2,10 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -19,9 +22,25 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 
 	logger := composed.LoggerFromCtx(ctx)
 
+	arr, err := state.cceeClient.ListShares(ctx, state.shareNetwork.ID)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error listing shares for delete share network", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
+	}
+	if len(arr) > 1 {
+		ids := pie.Map(arr, func(sh shares.Share) string {
+			return fmt.Sprintf("%s-%s", sh.ID, sh.Name)
+		})
+		logger.
+			WithValues("existingShares", fmt.Sprintf("%v", ids)).
+			Info("Other shares exist, not deleting CCEE share network")
+
+		return nil, nil
+	}
+
 	logger.Info("Deleting CCEE share")
 
-	err := state.cceeClient.DeleteShareNetwork(ctx, state.shareNetwork.ID)
+	err = state.cceeClient.DeleteShareNetwork(ctx, state.shareNetwork.ID)
+
 	if err != nil && !gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
 		return composed.PatchStatus(state.ObjAsNfsInstance()).

@@ -108,7 +108,7 @@ type NfsInstanceStatus struct {
 
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	//
-	// Deprecated: Use Host and Path
+	// XDeprecated: Use Host and Path
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
 
@@ -136,6 +136,9 @@ var _ client.Object = &NfsInstance{}
 //+kubebuilder:subresource:status
 
 // NfsInstance is the Schema for the nfsinstances API
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="SizeGb",type="string",JSONPath=".status.capacityGb"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 type NfsInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

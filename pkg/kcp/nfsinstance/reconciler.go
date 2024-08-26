@@ -65,6 +65,7 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 				"nfsInstanceCommon",
 				// common NfsInstance common actions here
 				loadIpRange,
+				copyStatusHostsToHost,
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",

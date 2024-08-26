@@ -10,20 +10,14 @@ type ProviderParams struct {
 	ProjectName       string `json:"projectName" yaml:"projectName"`
 	RegionName        string `json:"regionName" yaml:"regionName"`
 
-	Username      string
-	Password      string
-	TlsCaCertPath string
-	TlsKeyPath    string
-	TlsCertPath   string
+	Username string
+	Password string
 }
 
 func NewProviderParamsFromConfig(cfg *cceeconfig.CCEEConfigStruct) ProviderParams {
 	return ProviderParams{
-		Username:      cfg.Username,
-		Password:      cfg.Password,
-		TlsCaCertPath: cfg.TlsCaCertPath,
-		TlsKeyPath:    cfg.TlsKeyPath,
-		TlsCertPath:   cfg.TlsCertPath,
+		Username: cfg.Username,
+		Password: cfg.Password,
 	}
 }
 

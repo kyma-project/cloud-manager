@@ -35,6 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
 					"cceeNfsInstance-delete",
+					statusDeleting,
 					accessRevoke,
 					shareDelete,
 					shareNetworkDelete,
@@ -47,6 +48,8 @@ func New(stateFactory StateFactory) composed.Action {
 					shareNetworkCreate,
 					shareCreate,
 					shareWaitAvailable,
+					shareExpandShrink,
+					shareUpdateStatusCapacity,
 					accessGrant,
 					shareExportRead,
 					statusReady,
