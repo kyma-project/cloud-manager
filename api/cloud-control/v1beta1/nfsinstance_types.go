@@ -108,7 +108,7 @@ type NfsInstanceStatus struct {
 
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	//
-	// Deprecated: Use Host and Path
+	// XDeprecated: Use Host and Path
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
 
