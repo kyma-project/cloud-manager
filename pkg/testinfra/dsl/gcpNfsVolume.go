@@ -142,6 +142,7 @@ func WithKcpNfsStatusHost(host string) ObjStatusAction {
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.NfsInstance)
 			x.Status.Hosts = []string{host}
+			x.Status.Host = host
 		},
 	}
 }

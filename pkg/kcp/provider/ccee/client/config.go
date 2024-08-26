@@ -41,10 +41,4 @@ func NewProviderClient(_ context.Context, pp ProviderParams) (*ProvidedInfo, err
 		ProviderClient:  providerClient,
 		EndpointOptions: endpointOptions,
 	}, nil
-	//serviceClient, err := openstack.NewComputeV2(providerClient, endpointOptions)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create cloud client: %v", err)
-	//}
-	//
-	//return serviceClient, nil
 }
