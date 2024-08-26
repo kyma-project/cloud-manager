@@ -137,6 +137,7 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 			//create filestore instance from byte[] and check if it is equal to the expected filestore instance
 			obj := &file.Backup{}
 			err = json.Unmarshal(b, obj)
+			suite.Nil(err)
 			suite.Equal("projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance", obj.SourceInstance)
 			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups") && strings.Contains(r.URL.RawQuery, "backupId=cm-") {
 				//Return 200

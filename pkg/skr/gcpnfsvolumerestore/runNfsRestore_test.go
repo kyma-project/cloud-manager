@@ -135,6 +135,7 @@ func (suite *runNfsRestoreSuite) TestRunNfsRestoreSubmitted() {
 		//create filestore instance from byte[] and check if it is equal to the expected filestore instance
 		obj := &file.RestoreInstanceRequest{}
 		err = json.Unmarshal(body, obj)
+		assert.Nil(suite.T(), err)
 		suite.Contains(obj.SourceBackup, "projects/test-project/locations/us-west1/backups/cm-"+gcpNfsVolumeBackup.Status.Id)
 		suite.Equal("/v1/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance:restore", r.URL.Path)
 	}))
