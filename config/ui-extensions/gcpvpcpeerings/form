@@ -1,7 +1,7 @@
 - path: spec.importCustomRoutes
   name: spec.importCustomRoutes
-#  disableOnEdit: true
-#  description: Immutable once set.
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.remotePeeringName
   name: spec.remotePeeringName
   widget: Text
