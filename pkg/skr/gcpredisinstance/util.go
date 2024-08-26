@@ -50,23 +50,27 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	result := map[string][]byte{}
 
 	if len(kcpRedis.Status.PrimaryEndpoint) > 0 {
-		splitEndpoint := strings.Split(kcpRedis.Status.PrimaryEndpoint, ":")
-		host := splitEndpoint[0]
-		port := splitEndpoint[1]
-
 		result["primaryEndpoint"] = []byte(kcpRedis.Status.PrimaryEndpoint)
-		result["host"] = []byte(host)
-		result["port"] = []byte(port)
+
+		splitEndpoint := strings.Split(kcpRedis.Status.PrimaryEndpoint, ":")
+		if len(splitEndpoint) >= 2 {
+			host := splitEndpoint[0]
+			port := splitEndpoint[1]
+			result["host"] = []byte(host)
+			result["port"] = []byte(port)
+		}
 	}
 
 	if len(kcpRedis.Status.ReadEndpoint) > 0 {
-		splitReadEndpoint := strings.Split(kcpRedis.Status.ReadEndpoint, ":")
-		readHost := splitReadEndpoint[0]
-		readPort := splitReadEndpoint[1]
-
 		result["readEndpoint"] = []byte(kcpRedis.Status.ReadEndpoint)
-		result["readHost"] = []byte(readHost)
-		result["readPort"] = []byte(readPort)
+
+		splitReadEndpoint := strings.Split(kcpRedis.Status.ReadEndpoint, ":")
+		if len(splitReadEndpoint) >= 2 {
+			readHost := splitReadEndpoint[0]
+			readPort := splitReadEndpoint[1]
+			result["readHost"] = []byte(readHost)
+			result["readPort"] = []byte(readPort)
+		}
 	}
 
 	if len(kcpRedis.Status.AuthString) > 0 {
