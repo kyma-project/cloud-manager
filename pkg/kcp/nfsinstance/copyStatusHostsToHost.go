@@ -17,11 +17,11 @@ func copyStatusHostsToHost(ctx context.Context, st composed.State) (error, conte
 
 	changed := false
 
-	if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAws {
+	if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAws && len(state.ObjAsNfsInstance().Status.Hosts) > 0 {
 		changed = true
 		state.ObjAsNfsInstance().Status.Host = pie.First(state.ObjAsNfsInstance().Status.Hosts)
 		state.ObjAsNfsInstance().Status.Path = "/"
-	} else if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderGCP {
+	} else if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderGCP && len(state.ObjAsNfsInstance().Status.Hosts) > 0 {
 		changed = true
 		state.ObjAsNfsInstance().Status.Host = pie.First(state.ObjAsNfsInstance().Status.Hosts)
 		state.ObjAsNfsInstance().Status.Path = state.ObjAsNfsInstance().Spec.Instance.Gcp.FileShareName
