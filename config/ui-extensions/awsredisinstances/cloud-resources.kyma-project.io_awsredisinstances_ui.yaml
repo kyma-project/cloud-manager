@@ -63,6 +63,9 @@ data:
     - path: spec.autoMinorVersionUpgrade
       name: spec.autoMinorVersionUpgrade
       required: false
+      widget: Switch
+      disableOnEdit: true
+      description: Immutable once set.
 
     - path: spec.engineVersion
       name: spec.engineVersion
@@ -75,9 +78,15 @@ data:
     - path: spec.transitEncryptionEnabled
       name: spec.transitEncryptionEnabled
       required: false
+      widget: Switch
+      disableOnEdit: true
+      description: Immutable once set.
 
     - path: spec.authEnabled
       name: spec.authEnabledFull
+      widget: Switch
+      disableOnEdit: true
+      description: Immutable once set.
 
     - path: spec.parameters
       name: spec.parameters
