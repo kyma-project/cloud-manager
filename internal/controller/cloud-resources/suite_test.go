@@ -84,6 +84,7 @@ var _ = BeforeSuite(func() {
 		"GCP_SA_JSON_KEY_PATH":        "test",
 		"GCP_RETRY_WAIT_DURATION":     "300ms",
 		"GCP_OPERATION_WAIT_DURATION": "300ms",
+		"GCP_API_TIMEOUT_DURATION":    "300ms",
 	})
 
 	testSetupLog := ctrl.Log.WithName("testSetup")
