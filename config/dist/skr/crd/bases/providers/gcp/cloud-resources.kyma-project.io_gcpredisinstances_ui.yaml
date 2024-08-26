@@ -95,6 +95,7 @@ data:
       name: spec.transitEncryption.serverAuthentication
       required: false
       disableOnEdit: true
+      description: Immutable once set.
 
     - path: spec.redisConfigs
       name: spec.redisConfigs
