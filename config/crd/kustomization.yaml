@@ -19,6 +19,7 @@ resources:
 - bases/cloud-resources.kyma-project.io_awsvpcpeerings.yaml
 - bases/cloud-resources.kyma-project.io_gcpredisinstances.yaml
 - bases/cloud-resources.kyma-project.io_awsredisinstances.yaml
+- bases/cloud-resources.kyma-project.io_cceenfsvolumes.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -64,6 +65,7 @@ patches:
 #- path: patches/cainjection_in_cloud-resources_gcpredisinstances.yaml
 #- path: patches/cainjection_in_cloud-resources_awsredisinstances.yaml
 #- path: patches/cainjection_in_cloud-resources_gcpnfsbackupschedules.yaml
+#- path: patches/cainjection_in_cloud-resources_cceenfsvolumes.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

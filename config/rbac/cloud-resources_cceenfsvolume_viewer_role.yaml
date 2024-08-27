@@ -1,0 +1,23 @@
+# permissions for end users to view cceenfsvolumes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-resources-cceenfsvolume-viewer-role
+rules:
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes/status
+  verbs:
+  - get
