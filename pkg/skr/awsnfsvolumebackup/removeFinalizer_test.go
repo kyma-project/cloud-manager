@@ -2,6 +2,7 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
@@ -20,7 +21,7 @@ func (suite *removeFinalizerSuite) SetupTest() {
 
 func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
 
-	deletingObj := deletingGpNfsVolumeBackup.DeepCopy()
+	deletingObj := deletingAwsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(deletingObj)
 	suite.Nil(err)
 
@@ -48,6 +49,26 @@ func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfNotDeleting() {
 	//First add finalizer
 	err, _ = addFinalizer(ctx, state)
 	suite.Equal(composed.StopWithRequeue, err)
+
+	//Call removeFinalizer
+	err, _ = removeFinalizer(ctx, state)
+	suite.Nil(err)
+	suite.Equal(1, len(state.Obj().GetFinalizers()))
+}
+
+func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfRPexists() {
+	obj := deletingAwsNfsVolumeBackup.DeepCopy()
+	factory, err := newStateFactoryWithObj(obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	//Set the Recovery Point
+	state.recoveryPoint = &backup.DescribeRecoveryPointOutput{}
 
 	//Call removeFinalizer
 	err, _ = removeFinalizer(ctx, state)

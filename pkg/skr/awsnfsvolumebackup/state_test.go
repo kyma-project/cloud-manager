@@ -30,10 +30,33 @@ var scope = cloudcontrolv1beta1.Scope{
 	},
 	Spec: cloudcontrolv1beta1.ScopeSpec{
 		Provider: "aws",
+		Region:   client.MockAwsRegion,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			Aws: &cloudcontrolv1beta1.AwsScope{
-				AccountId:  "test-project",
+				AccountId:  client.MockAwsAccount,
 				VpcNetwork: "test-network",
+			},
+		},
+	},
+}
+
+var awsNfsInstance = cloudcontrolv1beta1.NfsInstance{
+	ObjectMeta: v1.ObjectMeta{
+		Name:      "test-aws-nfs-instance",
+		Namespace: "test",
+	},
+	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+		RemoteRef: cloudcontrolv1beta1.RemoteRef{
+			Name:      "test-aws-nfs-volume",
+			Namespace: "test",
+		},
+		Scope: cloudcontrolv1beta1.ScopeRef{
+			Name: scope.Name,
+		},
+		Instance: cloudcontrolv1beta1.NfsInstanceInfo{
+			Aws: &cloudcontrolv1beta1.NfsInstanceAws{
+				PerformanceMode: cloudcontrolv1beta1.AwsPerformanceModeGeneralPurpose,
+				Throughput:      cloudcontrolv1beta1.AwsThroughputModeElastic,
 			},
 		},
 	},
@@ -91,7 +114,7 @@ var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 	},
 }
 
-var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
+var deletingAwsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 	ObjectMeta: v1.ObjectMeta{
 		Name:              "test-aws-nfs-volume-restore",
 		Namespace:         "test",
@@ -123,6 +146,8 @@ var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 
 type testStateFactory struct {
 	*stateFactory
+	kcpCluster composed.StateCluster
+	skrCluster composed.StateCluster
 }
 
 func newStateFactoryWithObj(awsNfsVolumeBackup *cloudresourcesv1beta1.AwsNfsVolumeBackup) (*testStateFactory, error) {
@@ -134,6 +159,7 @@ func newStateFactoryWithObj(awsNfsVolumeBackup *cloudresourcesv1beta1.AwsNfsVolu
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).
 		WithObjects(&scope).
+		WithObjects(&awsNfsInstance).
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
@@ -156,7 +182,11 @@ func newStateFactoryWithObj(awsNfsVolumeBackup *cloudresourcesv1beta1.AwsNfsVolu
 		commonScope.NewStateFactory(kcpCluster, kymaRef),
 		client.NewMockClient(), env,
 	)
-	return &testStateFactory{stateFactory: factory}, nil
+	return &testStateFactory{
+		stateFactory: factory,
+		kcpCluster:   kcpCluster,
+		skrCluster:   skrCluster,
+	}, nil
 }
 
 func (f *testStateFactory) newStateWith(obj *cloudresourcesv1beta1.AwsNfsVolumeBackup) (*State, error) {

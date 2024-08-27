@@ -32,7 +32,7 @@ func stopIfVolumeNotReady(ctx context.Context, st composed.State) (error, contex
 			Message: "The AwsNfsVolume is not ready",
 		}).
 		ErrorLogMessage("Failed updating AwsNfsVolumeBackup error status with NfsVolumeNotReady condition").
-		SuccessLogMsg("Forgeting AwsNfsVolumeBackup with NfsVolume not ready").
+		SuccessLogMsg("Forgetting AwsNfsVolumeBackup with NfsVolume not ready").
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	mockRegion  = "eu-west-1"
-	mockAccount = "some-aws-account"
+	MockAwsRegion  = "eu-west-1"
+	MockAwsAccount = "some-aws-account"
 
 	mock = &mockClient{
 		localClient: *newLocalClient(),
@@ -76,7 +76,7 @@ func (s *mockClient) DescribeBackupVault(ctx context.Context, backupVaultName st
 }
 func (s *mockClient) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s", mockRegion, mockAccount, name)
+	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s", MockAwsRegion, MockAwsAccount, name)
 	vault := backup.DescribeBackupVaultOutput{
 		BackupVaultArn:         ptr.To(arn),
 		BackupVaultName:        ptr.To(name),
@@ -109,7 +109,7 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	rPointId := uuid.NewString()
 	jobId := uuid.NewString()
 
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", mockRegion, mockAccount, rPointId)
+	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", MockAwsRegion, MockAwsAccount, rPointId)
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:   vault.BackupVaultArn,
 		BackupVaultName:  vault.BackupVaultName,
@@ -123,7 +123,7 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	}
 
 	job := backup.DescribeBackupJobOutput{
-		AccountId:        ptr.To(mockAccount),
+		AccountId:        ptr.To(MockAwsAccount),
 		BackupJobId:      ptr.To(jobId),
 		BackupVaultArn:   rPoint.BackupVaultArn,
 		BackupVaultName:  rPoint.BackupVaultName,

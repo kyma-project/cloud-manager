@@ -39,6 +39,6 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.LogErrorAndReturn(err, "Error loading KCP Scope", composed.StopWithRequeue, ctx)
 	}
 
-	state.setScope(scope)
+	state.SetScope(scope)
 	return nil, nil
 }

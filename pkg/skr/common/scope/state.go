@@ -12,7 +12,7 @@ type State interface {
 	KymaRef() klog.ObjectRef
 	Scope() *cloudcontrolv1beta1.Scope
 	ObjWithConditionsAndState() composed.ObjWithConditionsAndState
-	setScope(scope *cloudcontrolv1beta1.Scope)
+	SetScope(scope *cloudcontrolv1beta1.Scope)
 }
 
 type StateFactory interface {
@@ -63,6 +63,6 @@ func (s *myState) ObjWithConditionsAndState() composed.ObjWithConditionsAndState
 	return s.Obj().(composed.ObjWithConditionsAndState)
 }
 
-func (s *myState) setScope(scope *cloudcontrolv1beta1.Scope) {
+func (s *myState) SetScope(scope *cloudcontrolv1beta1.Scope) {
 	s.scope = scope
 }

@@ -37,27 +37,27 @@ func loadAwsBackup(ctx context.Context, st composed.State) (error, context.Conte
 		state.GetVaultName(),
 		state.GetRecoveryPointArn())
 
-	if err != nil {
-		// If deleting and not found, continue...
-		if deleting && state.awsClient.IsNotFound(err) {
-			return nil, nil
-		}
-
-		//Update the status with error, and stop reconciliation
-		backup.Status.State = cloudresourcesv1beta1.StateError
-		return composed.UpdateStatus(backup).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ConditionTypeError,
-				Message: err.Error(),
-			}).
-			SuccessLogMsg(fmt.Sprintf("Error loading the Recovery Point : %s", err)).
-			SuccessError(composed.StopAndForget).
-			Run(ctx, state)
+	if err == nil {
+		//store the recoveryPoint in the state object
+		state.recoveryPoint = recoveryPoint
+		return nil, nil
 	}
 
-	//store the recoveryPoint in the state object
-	state.recoveryPoint = recoveryPoint
-	return nil, nil
+	// If deleting and not found, continue...
+	if deleting && state.awsClient.IsNotFound(err) {
+		return nil, nil
+	}
+
+	//Update the status with error, and stop reconciliation
+	backup.Status.State = cloudresourcesv1beta1.StateError
+	return composed.UpdateStatus(backup).
+		SetExclusiveConditions(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ConditionTypeError,
+			Message: err.Error(),
+		}).
+		SuccessLogMsg(fmt.Sprintf("Error loading the Recovery Point : %s", err)).
+		SuccessError(composed.StopAndForget).
+		Run(ctx, state)
 }

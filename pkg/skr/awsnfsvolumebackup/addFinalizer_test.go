@@ -6,6 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
 )
@@ -36,9 +37,29 @@ func (suite *addFinalizerSuite) TestAddFinalizer() {
 	suite.Contains(state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
 }
 
+func (suite *addFinalizerSuite) TestAddFinalizerWhenAlreadyExists() {
+
+	obj := awsNfsVolumeBackup.DeepCopy()
+	factory, err := newStateFactoryWithObj(obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with AwsNfsVolume
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	controllerutil.AddFinalizer(obj, cloudresourcesv1beta1.Finalizer)
+
+	err, _ = addFinalizer(ctx, state)
+	suite.Nil(err)
+	suite.Contains(state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+}
+
 func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 
-	deletingObj := deletingGpNfsVolumeBackup.DeepCopy()
+	deletingObj := deletingAwsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(deletingObj)
 	suite.Nil(err)
 
