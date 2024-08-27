@@ -429,7 +429,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 	It("Scenario: SKR AwsNfsVolume is created with empty IpRange when default IpRange does not exist", func() {
 
 		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
+			if !feature.IpRangeAutomaticCidrAllocation.Value(infra.Ctx()) {
 				Skip("IpRangeAutomaticCidrAllocation is disabled")
 			}
 		})

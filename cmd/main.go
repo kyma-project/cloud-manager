@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
-	"os"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -229,6 +230,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsBackupSchedule")
 		os.Exit(1)
 	}
+
+	//if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
+	//	os.Exit(1)
+	//}
 
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
