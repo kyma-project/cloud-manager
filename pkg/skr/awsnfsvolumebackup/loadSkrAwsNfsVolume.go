@@ -11,7 +11,12 @@ import (
 
 func loadSkrAwsNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	backup := state.ObjAsAwsNfsVolumeBackup()
 
+	//If the object is being deleted continue...
+	if composed.IsMarkedForDeletion(backup) {
+		return nil, nil
+	}
 	name := state.ObjAsAwsNfsVolumeBackup().Spec.Source.Volume.ToNamespacedName(state.Obj().GetNamespace())
 
 	skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}

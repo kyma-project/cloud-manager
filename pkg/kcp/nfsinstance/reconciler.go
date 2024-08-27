@@ -49,6 +49,10 @@ func NewNfsInstanceReconciler(
 }
 
 func (r *nfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if Ignore != nil && Ignore.ShouldIgnoreKey(req) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 

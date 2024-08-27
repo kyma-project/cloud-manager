@@ -86,6 +86,14 @@ type AwsNfsVolumeBackupStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// Identifier of the AWS Recovery Point
+	// +optional
+	Id string `json:"id,omitempty"`
+
+	// AWS Backup Job Identifier
+	// +optional
+	JobId string `json:"jobId,omitempty"`
 }
 
 //+kubebuilder:object:root=true

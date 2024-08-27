@@ -51,6 +51,7 @@ import (
 	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -235,6 +236,11 @@ func main() {
 	//	setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
 	//	os.Exit(1)
 	//}
+
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
+		os.Exit(1)
+	}
 
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {

@@ -10,8 +10,14 @@ import (
 
 func stopIfVolumeNotReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	backup := state.ObjAsAwsNfsVolumeBackup()
 
-	isReady := meta.IsStatusConditionTrue(state.ObjAsAwsNfsVolumeBackup().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+	//If the object is being deleted continue...
+	if composed.IsMarkedForDeletion(backup) {
+		return nil, nil
+	}
+
+	isReady := meta.IsStatusConditionTrue(state.skrAwsNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 	if isReady {
 		return nil, nil
 	}
@@ -26,7 +32,7 @@ func stopIfVolumeNotReady(ctx context.Context, st composed.State) (error, contex
 			Message: "The AwsNfsVolume is not ready",
 		}).
 		ErrorLogMessage("Failed updating AwsNfsVolumeBackup error status with NfsVolumeNotReady condition").
-		SuccessLogMsg("Forgeting AwsNfsVolumeBackup with NfsVolume not ready").
+		SuccessLogMsg("Forgetting AwsNfsVolumeBackup with NfsVolume not ready").
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

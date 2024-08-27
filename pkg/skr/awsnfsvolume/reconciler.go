@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -33,6 +34,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	if Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
