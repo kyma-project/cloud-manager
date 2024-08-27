@@ -32,6 +32,7 @@ func New(stateFactory StateFactory) composed.Action {
 					waitNetworkTag,
 					createVpcPeering,
 					createRemoteVpcPeering,
+					waitVpcPeeringReady,
 					updateStatus,
 					composed.StopAndForgetAction,
 				),

@@ -15,7 +15,11 @@ spec:
     singular: azurevpcpeering
   scope: Cluster
   versions:
-    - name: v1beta1
+    - additionalPrinterColumns:
+        - jsonPath: .status.state
+          name: State
+          type: string
+      name: v1beta1
       schema:
         openAPIV3Schema:
           description: AzureVpcPeering is the Schema for the azurevpcpeerings API
@@ -134,6 +138,8 @@ spec:
                     - type
                   x-kubernetes-list-type: map
                 id:
+                  type: string
+                state:
                   type: string
               type: object
           type: object

@@ -37,6 +37,7 @@ func (c *storeSubscriptionContext) CreatePeering(ctx context.Context, resourceGr
 				RemoteVirtualNetwork: &armnetwork.SubResource{
 					ID: ptr.To(remoteVnetId),
 				},
+				PeeringState: ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),
 			},
 		},
 	}
