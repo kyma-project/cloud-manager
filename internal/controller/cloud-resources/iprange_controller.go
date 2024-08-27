@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -73,6 +74,20 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 			return []string{"default"}
 		}
 		return []string{nfsVol.Spec.IpRange.Name}
+	})
+	reg.IndexField(&cloudresourcesv1beta1.GcpRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		redisInstance := object.(*cloudresourcesv1beta1.GcpRedisInstance)
+		if redisInstance.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{redisInstance.Spec.IpRange.Name}
+	})
+	reg.IndexField(&cloudresourcesv1beta1.AwsRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		redisInstance := object.(*cloudresourcesv1beta1.AwsRedisInstance)
+		if redisInstance.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{redisInstance.Spec.IpRange.Name}
 	})
 
 	return reg.Register().
