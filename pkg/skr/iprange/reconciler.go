@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -60,6 +61,8 @@ func (r *reconciler) newAction() composed.Action {
 		setProcessingStateForDeletion,
 		preventDeleteOnAwsNfsVolumeUsage,
 		preventDeleteOnGcpNfsVolumeUsage,
+		preventDeleteOnAwsRedisInstanceUsage,
+		preventDeleteOnGcpRedisInstanceUsage,
 		deleteKcpIpRange,
 		removeFinalizer,
 		updateStatus,

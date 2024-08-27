@@ -9,6 +9,9 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awsredisinstance"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpredisinstance"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -250,7 +253,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 						NewObjActions(),
 						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 					).
-					Should(Succeed(), "exepcted SKR IpRange to get Ready condition, but it did not")
+					Should(Succeed(), "expected SKR IpRange to get Ready condition, but it did not")
 			})
 
 			By("When SKR IpRange is deleted", func() {
@@ -581,7 +584,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
-				Should(Succeed(), "exepcted SKR IpRange to get Ready condition, but it did not")
+				Should(Succeed(), "expected SKR IpRange to get Ready condition, but it did not")
 		})
 
 		By("And Given AwsNfsVolume exists", func() {
@@ -621,6 +624,116 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
 				Should(Succeed(), "failed deleting SKR AwsNfsVolume to clean up")
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
+
+	})
+
+	It("Scenario: SKR IpRange can not be deleted if used by GcpNfsVolume", func() {
+		const (
+			skrIpRangeName   = "9f024c36-4ea8-420a-a297-33bf93a01da9"
+			gcpNfsVolumeName = "8dfb5b8b-297b-4ebb-b813-08bebbf42976"
+		)
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+
+		By("Given SKR IpRange exists", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+
+		})
+
+		By("And Given SKR IpRange has Ready condition", func() {
+			// load SKR IpRange to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+			// KCP IpRange is created by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected SKR IpRange to be created, but none found")
+
+			// When Kcp IpRange gets Ready condition
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed updating KCP IpRange status")
+
+			// And when SKR IpRange gets Ready condition by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected SKR IpRange to get Ready condition, but it did not")
+		})
+
+		By("And Given GcpNfsVolume exists", func() {
+			// tell GcpNfsVolume reconciler to ignore this GcpNfsVolume
+			gcpnfsvolume.Ignore.AddName(gcpNfsVolumeName)
+
+			Eventually(CreateGcpNfsVolume).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume,
+					WithName(gcpNfsVolumeName),
+					WithIpRange(skrIpRange.Name),
+				).
+				Should(Succeed(), "failed creating GcpNfsVolume")
+
+			time.Sleep(50 * time.Millisecond)
+		})
+
+		By("When SKR IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange")
+		})
+
+		By("Then SKR IpRange has Warning condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeWarning)).
+				Should(Succeed(), "expected SKR IpRange to have Warning condition")
+		})
+
+		By("And Then SKR IpRange has DeleteWhileUsed reason", func() {
+			cond := meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeWarning)
+			Expect(cond.Reason).To(Equal(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed))
+			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", skrGcpNfsVolume.Namespace, skrGcpNfsVolume.Name)))
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR GcpNfsVolume %s", skrGcpNfsVolume.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume).
+				Should(Succeed(), "failed deleting SKR GcpNfsVolume to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
@@ -788,6 +901,230 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					NewObjActions(WithName(skrIpRange.Status.Id)),
 				).
 				Should(Succeed(), "expected KCP IpRange to exists, but none found")
+		})
+
+	})
+
+	It("Scenario: SKR IpRange can not be deleted if used by AwsRedisInstance", func() {
+		const (
+			skrIpRangeName = "de648eb4-bab8-484a-a13f-fd8258787de3"
+			awsRedisName   = "b1411011-ee5e-4ddd-ba7c-b20509e81bf6"
+		)
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		skrAwsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
+
+		By("Given SKR IpRange exists", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+
+		})
+
+		By("And Given SKR IpRange has Ready condition", func() {
+			// load SKR IpRange to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+			// KCP IpRange is created by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected SKR IpRange to be created, but none found")
+
+			// When Kcp IpRange gets Ready condition
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed updating KCP IpRange status")
+
+			// And when SKR IpRange gets Ready condition by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected SKR IpRange to get Ready condition, but it did not")
+		})
+
+		By("And Given AwsRedisInstance exists", func() {
+			// tell AwsRedisInstance reconciler to ignore this AwsRedisInstance
+			awsredisinstance.Ignore.AddName(awsRedisName)
+
+			Eventually(CreateAwsRedisInstance).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsRedisInstance,
+					WithName(awsRedisName),
+					WithIpRange(skrIpRange.Name),
+					WithAwsRedisInstanceDefautSpecs(),
+				).
+				Should(Succeed(), "failed creating AwsRedisInstance")
+
+			time.Sleep(50 * time.Millisecond)
+		})
+
+		By("When SKR IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange")
+		})
+
+		By("Then SKR IpRange has Warning condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeWarning)).
+				Should(Succeed(), "expected SKR IpRange to have Warning condition")
+		})
+
+		By("And Then SKR IpRange has DeleteWhileUsed reason", func() {
+			cond := meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeWarning)
+			Expect(cond.Reason).To(Equal(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed))
+			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", skrAwsRedisInstance.Namespace, skrAwsRedisInstance.Name)))
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR AwsRedisInstance %s", skrAwsRedisInstance.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsRedisInstance).
+				Should(Succeed(), "failed deleting SKR AwsRedisInstance to clean up")
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
+
+	})
+
+	It("Scenario: SKR IpRange can not be deleted if used by GcpRedisInstance", func() {
+		const (
+			skrIpRangeName = "d776bc88-801e-4125-a549-8ecf6a2b6f23"
+			gcpRedisName   = "95d238db-a29a-4285-ae6c-041efd156f8a"
+		)
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		skrGcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
+
+		By("Given SKR IpRange exists", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+
+		})
+
+		By("And Given SKR IpRange has Ready condition", func() {
+			// load SKR IpRange to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+
+			// KCP IpRange is created by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected SKR IpRange to be created, but none found")
+
+			// When Kcp IpRange gets Ready condition
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed updating KCP IpRange status")
+
+			// And when SKR IpRange gets Ready condition by manager
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected SKR IpRange to get Ready condition, but it did not")
+		})
+
+		By("And Given GcpRedisInstance exists", func() {
+			// tell GcpRedisInstance reconciler to ignore this GcpRedisInstance
+			gcpredisinstance.Ignore.AddName(gcpRedisName)
+
+			Eventually(CreateGcpRedisInstance).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpRedisInstance,
+					WithName(gcpRedisName),
+					WithIpRange(skrIpRange.Name),
+					WithGcpRedisInstanceMemorySizeGb(5),
+					WithGcpRedisInstanceTier("BASIC"),
+					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+				).
+				Should(Succeed(), "failed creating GcpRedisInstance")
+
+			time.Sleep(50 * time.Millisecond)
+		})
+
+		By("When SKR IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange")
+		})
+
+		By("Then SKR IpRange has Warning condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeWarning)).
+				Should(Succeed(), "expected SKR IpRange to have Warning condition")
+		})
+
+		By("And Then SKR IpRange has DeleteWhileUsed reason", func() {
+			cond := meta.FindStatusCondition(skrIpRange.Status.Conditions, cloudresourcesv1beta1.ConditionTypeWarning)
+			Expect(cond.Reason).To(Equal(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed))
+			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", skrGcpRedisInstance.Namespace, skrGcpRedisInstance.Name)))
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR GcpRedisInstance %s", skrGcpRedisInstance.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpRedisInstance).
+				Should(Succeed(), "failed deleting SKR GcpRedisInstance to clean up")
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
