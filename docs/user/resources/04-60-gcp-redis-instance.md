@@ -16,7 +16,7 @@ When creating GcpRedisInstance, two fields are mandatry: `memorySizeGb`, and `ti
 
 Optionally, you can specify the `redisVersion`, `authEnabled`, `transitEncryption`, `redisConfigs`, and `maintenancePolicy` fields.
 
-By default, the created secret that holds credentials has the same name as the GcpRedisInstance, unless specified otherwise.
+By default, the created Secret that holds credentials has the same name as the GcpRedisInstance, unless specified otherwise.
 
 # Specification
 
@@ -28,7 +28,7 @@ This table lists the parameters of GcpRedisInstance, together with their descrip
 | Parameter                                         | Type   | Description                                                                                                                                                                                                 |
 | --------------------------------------------------| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ipRange**                                       | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                           |
-| **ipRange.name**                                  | string | Name of the existing IpRange to use.                                                                                                                                                                        |
+| **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                                        |
 | **memorySizeGb**                                  | int    | Required. Redis memory size in GiB.                                                                                                                                                                         |
 | **tier**                                          | string | Required. The service tier of the instance. Supported values are `BASIC` and `STANDARD_HA`                                                                                                                  |
 | **transitEncryption**                             | object | Optional. Defines the way TLS is executed. Currently supports only one mode. If not provided, in-transit encryption is disabled.                                                                            |
