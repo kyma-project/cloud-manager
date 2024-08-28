@@ -49,7 +49,7 @@ that you can use to peer the Kyma cluster with your Google Cloud project VPC.
 To learn more, read the [GcpVpcPeering Custom Resource](./resources/04-50-gcp-vpc-peering.md) documentation.
 
 ### GcpRedisInstance CR
-The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Redis Instance provisioned inside Google Memorystore.
+The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Redis instance provisioned inside Google Memorystore.
 To learn more, read the [GcpRedisInstance Custom Resource](./resources/04-60-gcp-redis-instance.md) documentation.
 
 ## Related Information
