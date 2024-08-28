@@ -7,6 +7,7 @@
   * [GcpNfsVolume](/cloud-manager/user/resources/04-30-10-gcp-nfs-volume.md)
   * [AzureVpcPeering](/cloud-manager/user/resources/04-40-10-azure-vpc-peering.md)
   * [GcpVpcPeering](/cloud-manager/user/resources/04-50-gcp-vpc-peering.md)
+  * [GcpRedisInstance](/cloud-manager/user/resources/04-60-gcp-redis-instance.md)
 * [Tutorials](/cloud-manager/user/tutorials/README.md)
   * [Use RWX Volumes in AWS](/cloud-manager/user/tutorials/01-10-aws-nfs-volume.md)
   * [Use RWX Volumes in GCP](/cloud-manager/user/tutorials/01-20-gcp-nfs-volume.md)
