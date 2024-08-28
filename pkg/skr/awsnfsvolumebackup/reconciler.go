@@ -64,6 +64,7 @@ func (r *reconciler) newAction() composed.Action {
 		loadSkrAwsNfsVolume,
 		stopIfVolumeNotReady,
 		loadKcpAwsNfsInstance,
+		setIdempotencyToken,
 		createAwsClient,
 		loadVault,
 		loadAwsBackup,
