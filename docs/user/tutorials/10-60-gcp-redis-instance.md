@@ -1,11 +1,14 @@
-# GCP Redis Instance tutorial
-This tutorial shows how to instantiate redis, and connect to it.
+# GCP Redis Instance Tutorial
+This tutorial shows how to instantiate Redis and connect to it.
 
-# Simple example
+## Simple Example
 
-This example showcases how to instantiate Redis, connect a pod to it, and send PING command.
+This example showcases how to instantiate Redis, connect a Pod to it, and send a PING command.
 
-## 1. Instantiate Redis (this action may take 10+ min)
+1. Instantiate Redis
+
+> [!NOTE]
+> This action may take 10+ min
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -17,7 +20,7 @@ spec:
   tier: "BASIC"
 ```
 
-## 2. Instantiate redis-cli pod
+2. Instantiate the redis-cli Pod
 
 ```yaml
 apiVersion: v1
@@ -43,24 +46,27 @@ spec:
           name: simple-example-probe
 ```
 
-## 3. Exec into pod:
+3. Exec into the Pod:
 
 ```bash
 kubectl exec -i -t gcpredisinstance-simple-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
 ```
 
-## 4. Exec PING command:
+4. Exec a PING command:
 
 ```bash
 redis-cli -h $HOST -p $PORT
 ```
 You should receive `PONG` back from the server.
 
-# Complex example
+## Complex Example
 
-This example showcases how to instantiate Redis by using most of the spec fields, connects a pod to it, and sends PING command.
+This example showcases how to instantiate Redis by using most of the spec fields, connect a Pod to it, and send a PING command.
 
-## 1. Instantiate redis (this action may take 10+ min)
+1. Instantiate Redis
+
+> [!NOTE]
+> This action may take 10+ min
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: GcpRedisInstance
@@ -84,7 +90,7 @@ spec:
           minutes: 45
 ```
 
-## 2. Instantiate redis-cli pod
+2. Instantiate the redis-cli Pod
 
 ```yaml
 apiVersion: v1
@@ -122,13 +128,13 @@ spec:
       secretName: gcpredisinstance-complex-example
 ```
 
-## 3. Exec into pod:
+3. Exec into the Pod:
 
 ```bash
 kubectl exec -i -t gcpredisinstance-complex-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
 ```
 
-## 4. Exec PING command:
+4. Exec a PING command:
 
 ```bash
 redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls --cacert /mnt/CaCert.pem PING
