@@ -94,6 +94,10 @@ type AwsNfsVolumeBackupStatus struct {
 	// AWS Backup Job Identifier
 	// +optional
 	JobId string `json:"jobId,omitempty"`
+
+	// IdempotencyToken
+	// +optional
+	IdempotencyToken string `json:"idempotencyToken"`
 }
 
 //+kubebuilder:object:root=true
