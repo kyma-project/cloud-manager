@@ -7,7 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -23,9 +23,9 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
 	logger.WithValues(
-		"awsRegion", remoteRegion,
-		"awsRole", roleArn,
-	).Info("Assuming AWS role")
+		"remoteAwsRegion", remoteRegion,
+		"remoteAwsRole", roleArn,
+	).Info("Assuming remote AWS role")
 
 	client, err := state.provider(
 		ctx,
@@ -46,27 +46,30 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 		})
 
 		if !routeExists {
-			err := client.CreateRoute(ctx, t.RouteTableId, state.vpc.CidrBlock, state.vpcPeering.VpcPeeringConnectionId)
+			err = client.CreateRoute(ctx, t.RouteTableId, state.vpc.CidrBlock, state.vpcPeering.VpcPeeringConnectionId)
 
 			if err != nil {
-				routeTableName := util.GetEc2TagValue(t.Tags, "Name")
-				vpcName := util.GetEc2TagValue(state.remoteVpc.Tags, "Name")
+				routeTableId := ptr.Deref(t.RouteTableId, "")
 
 				logger.
 					WithValues(
-						"vpcName", vpcName,
-						"routeTableName", routeTableName,
-						"id", *state.vpcPeering.VpcPeeringConnectionId,
+						"remoteRouteTableId", routeTableId,
 					).
 					Error(err, "Failed to create route")
 
+				condition := metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
+					Message: fmt.Sprintf("AWS Failed to create route for remote route table %s", routeTableId),
+				}
+
+				if !awsmeta.AnyConditionChanged(obj, condition) {
+					return composed.StopAndForget, nil
+				}
+
 				return composed.UpdateStatus(obj).
-					SetExclusiveConditions(metav1.Condition{
-						Type:    cloudcontrolv1beta1.ConditionTypeError,
-						Status:  metav1.ConditionTrue,
-						Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
-						Message: fmt.Sprintf("AWS Failed to create route for route table %s", routeTableName),
-					}).
+					SetExclusiveConditions(condition).
 					ErrorLogMessage("Error updating VpcPeering status when creating routes").
 					SuccessError(composed.StopAndForget).
 					Run(ctx, state)

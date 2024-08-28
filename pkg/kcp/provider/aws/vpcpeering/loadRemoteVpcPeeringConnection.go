@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
 )
 
@@ -11,6 +12,8 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 	state := st.(*State)
 
 	obj := state.ObjAsVpcPeering()
+
+	logger := composed.LoggerFromCtx(ctx)
 
 	// skip loading of vpc peering connections if remoteId is empty
 	if len(obj.Status.RemoteId) == 0 {
@@ -22,6 +25,11 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
+	logger.WithValues(
+		"remoteAwsRegion", remoteRegion,
+		"remoteAwsRole", roleArn,
+	).Info("Assuming remote AWS role")
+
 	client, err := state.provider(
 		ctx,
 		remoteRegion,
@@ -31,13 +39,13 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 	)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error initializing remote AWS client", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error initializing remote AWS client", ctx)
 	}
 
 	list, err := client.DescribeVpcPeeringConnections(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing AWS peering connections", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error listing AWS peering connections", ctx)
 	}
 
 	for _, c := range list {
@@ -47,7 +55,6 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 		}
 	}
 
-	logger := composed.LoggerFromCtx(ctx)
 	ctx = composed.LoggerIntoCtx(ctx, logger.WithValues("remoteId", obj.Status.RemoteId))
 
 	if state.remoteVpcPeering == nil {

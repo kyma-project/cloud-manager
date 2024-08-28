@@ -3,6 +3,9 @@ package meta
 import (
 	"context"
 	"errors"
+	"github.com/elliotchance/pie/v2"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -115,3 +118,10 @@ const (
 	ElastiCache_CREATE_FAILED ElastiCacheState = "create-failed"
 	ElastiCache_SNAPSHOTTING  ElastiCacheState = "snapshotting"
 )
+
+func AnyConditionChanged(obj composed.ObjWithConditions, conditionsToSet ...metav1.Condition) bool {
+	return pie.All(conditionsToSet, func(x metav1.Condition) bool {
+		c := meta.FindStatusCondition(*obj.Conditions(), x.Type)
+		return c == nil || c.Reason != x.Reason || c.Message != c.Message || c.Status != x.Status
+	})
+}

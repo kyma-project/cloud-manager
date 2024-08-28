@@ -6,8 +6,8 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -25,9 +25,9 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
 	logger.WithValues(
-		"awsRegion", remoteRegion,
-		"awsRole", roleArn,
-	).Info("Assuming AWS role")
+		"remoteAwsRegion", remoteRegion,
+		"remoteAwsRole", roleArn,
+	).Info("Assuming remote AWS role")
 
 	client, err := state.provider(
 		ctx,
@@ -38,13 +38,13 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error initializing remote AWS client", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error initializing remote AWS client", ctx)
 	}
 
 	vpcList, err := client.DescribeVpcs(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error loading AWS VPC Networks", ctx)
 	}
 
 	var vpc *ec2Types.Vpc
@@ -75,21 +75,19 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			).
 			Info("VPC not found")
 
-		message := fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId)
-		condition := meta.FindStatusCondition(obj.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+		condition := metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
+			Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
+		}
 
-		if condition != nil && condition.Reason == cloudcontrolv1beta1.ReasonVpcNotFound &&
-			condition.Message == message {
+		if !awsmeta.AnyConditionChanged(obj, condition) {
 			return composed.StopAndForget, nil
 		}
 
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
-				Message: message,
-			}).
+		return composed.UpdateStatus(obj).
+			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, st)

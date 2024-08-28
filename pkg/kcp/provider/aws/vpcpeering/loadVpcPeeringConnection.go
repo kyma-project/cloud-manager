@@ -34,7 +34,7 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	logger = logger.WithValues(
-		"vpcConnectionId", ptr.Deref(state.vpcPeering.VpcPeeringConnectionId, ""))
+		"id", ptr.Deref(state.vpcPeering.VpcPeeringConnectionId, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
