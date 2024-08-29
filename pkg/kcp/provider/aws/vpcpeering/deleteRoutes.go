@@ -18,6 +18,10 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
+	if state.remoteVpc == nil {
+		return nil, nil
+	}
+
 	for _, t := range state.routeTables {
 
 		routeExists := pie.Any(t.Routes, func(r types.Route) bool {

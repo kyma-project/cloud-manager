@@ -44,13 +44,42 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	vpcList, err := client.DescribeVpcs(ctx)
 
 	if err != nil {
-		return awsmeta.LogErrorAndReturn(err, "Error loading AWS VPC Networks", ctx)
+
+		if composed.MarkedForDeletionPredicate(ctx, state) {
+			return nil, nil
+		}
+
+		apiErr := awsmeta.AsApiError(err)
+
+		logger.Error(err, "Error loading remote AWS VPC Networks")
+
+		message := fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId)
+
+		if apiErr != nil {
+			message = apiErr.Error()
+		}
+
+		condition := metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
+			Message: message,
+		}
+
+		if !awsmeta.AnyConditionChanged(obj, condition) {
+			return composed.StopAndForget, nil
+		}
+
+		return composed.UpdateStatus(obj).
+			SetExclusiveConditions(condition).
+			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, st)
 	}
 
 	var vpc *ec2Types.Vpc
 	var remoteVpcName string
 	var allLoadedVpcs []string
-	// TODO refactor as it is more or less the same as in loadVpc
 
 	for _, vv := range vpcList {
 		v := vv
@@ -68,6 +97,12 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	if vpc == nil {
+
+		// created with bad vpcId
+		if composed.MarkedForDeletionPredicate(ctx, state) {
+			return nil, nil
+		}
+
 		logger.
 			WithValues(
 				"remoteVpcId", remoteVpcId,

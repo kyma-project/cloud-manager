@@ -24,7 +24,6 @@ const (
 	ReasonFailedCreatingVpcPeeringConnection  = "FailedCreatingVpcPeeringConnection"
 	ReasonFailedAcceptingVpcPeeringConnection = "FailedAcceptingVpcPeeringConnection"
 	ReasonFailedLoadingRemoteVpcNetwork       = "FailedLoadingRemoteVpcNetwork"
-	ReasonFailedLoadingRouteTables            = "FailedLoadingRouteTables"
 	ReasonFailedCreatingRoutes                = "FailedCreatingRoutes"
 )
 

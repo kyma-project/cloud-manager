@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -64,14 +65,15 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 					Message: fmt.Sprintf("AWS Failed to create route for remote route table %s", routeTableId),
 				}
 
+				// User can recover by modifying routes
 				if !awsmeta.AnyConditionChanged(obj, condition) {
-					return composed.StopAndForget, nil
+					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 				}
 
 				return composed.UpdateStatus(obj).
 					SetExclusiveConditions(condition).
 					ErrorLogMessage("Error updating VpcPeering status when creating routes").
-					SuccessError(composed.StopAndForget).
+					SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 					Run(ctx, state)
 			}
 		}

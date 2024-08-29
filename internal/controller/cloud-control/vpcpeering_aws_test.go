@@ -164,34 +164,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		tables, _ := infra.AwsMock().DescribeRouteTables(infra.Ctx(), vpcId)
 
-		routeCount := 0
-		for _, t := range tables {
-			for _, r := range t.Routes {
-				if *r.VpcPeeringConnectionId == *connection.VpcPeeringConnectionId &&
-					*r.DestinationCidrBlock == remoteVpcCidr {
-					routeCount++
-				}
-			}
-		}
-
-		By("And Then route table has one new route with destination CIDR matching remote VPC CIDR", func() {
-			Expect(routeCount).To(Equal(2))
+		By("And Then all route table has one new route with destination CIDR matching remote VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(3))
 		})
 
 		tables, _ = infra.AwsMock().DescribeRouteTables(infra.Ctx(), remoteVpcId)
 
-		routeCount = 0
-		for _, t := range tables {
-			for _, r := range t.Routes {
-				if *r.VpcPeeringConnectionId == *connection.VpcPeeringConnectionId &&
-					*r.DestinationCidrBlock == vpcCidr {
-					routeCount++
-				}
-			}
-
-		}
-		By("And Then remote route table has one new route with destination CIDR matching remote VPC CIDR", func() {
-			Expect(routeCount).To(Equal(2))
+		By("And Then all remote route table has one new route with destination CIDR matching VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, vpcCidr)).To(Equal(2))
 		})
 
 		// DELETE
@@ -217,5 +197,22 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 			Expect(found).To(Equal(false))
 		})
+
+		By("And Then all route table has no routes with destination CIDR matching remote VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(0))
+		})
 	})
 })
+
+func routeCount(tables []ec2Types.RouteTable, vpcPeeringConnectionId, destinationCidrBlock string) int {
+	cnt := 0
+	for _, t := range tables {
+		for _, r := range t.Routes {
+			if *r.VpcPeeringConnectionId == vpcPeeringConnectionId &&
+				*r.DestinationCidrBlock == destinationCidrBlock {
+				cnt++
+			}
+		}
+	}
+	return cnt
+}
