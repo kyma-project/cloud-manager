@@ -220,8 +220,11 @@ func (client *elastiCacheClientFake) CreateElastiCacheCluster(ctx context.Contex
 	defer client.elasticacheMutex.Unlock()
 
 	client.elastiCaches[options.Name] = &elasticacheTypes.ReplicationGroup{
-		ReplicationGroupId: ptr.To(options.Name),
-		Status:             ptr.To("creating"),
+		ReplicationGroupId:       ptr.To(options.Name),
+		Status:                   ptr.To("creating"),
+		CacheNodeType:            ptr.To(options.CacheNodeType),
+		AutoMinorVersionUpgrade:  ptr.To(options.AutoMinorVersionUpgrade),
+		TransitEncryptionEnabled: ptr.To(options.TransitEncryptionEnabled),
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
@@ -239,6 +242,19 @@ func (client *elastiCacheClientFake) CreateElastiCacheCluster(ctx context.Contex
 	return &elasticache.CreateReplicationGroupOutput{}, nil
 }
 
+func (client *elastiCacheClientFake) ModifyElastiCacheCluster(ctx context.Context, id string, options awsclient.ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
+	client.elasticacheMutex.Lock()
+	defer client.elasticacheMutex.Unlock()
+
+	if instance, ok := client.elastiCaches[id]; ok {
+		instance.Status = ptr.To("modifying")
+		instance.CacheNodeType = options.CacheNodeType
+		instance.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
+	}
+
+	return &elasticache.ModifyReplicationGroupOutput{}, nil
+}
+
 func (client *elastiCacheClientFake) DeleteElastiCacheClaster(ctx context.Context, id string) error {
 	client.elasticacheMutex.Lock()
 	defer client.elasticacheMutex.Unlock()
@@ -247,5 +263,9 @@ func (client *elastiCacheClientFake) DeleteElastiCacheClaster(ctx context.Contex
 		instance.Status = ptr.To("deleting")
 	}
 
+	return nil
+}
+
+func (c *elastiCacheClientFake) RestartElastiCacheCluster(ctx context.Context, id string) error {
 	return nil
 }

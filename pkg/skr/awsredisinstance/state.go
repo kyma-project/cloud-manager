@@ -63,3 +63,12 @@ func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 	return s.ObjAsAwsRedisInstance()
 }
+
+func (s *State) ShouldModifyKcp() bool {
+	awsRedisInstance := s.ObjAsAwsRedisInstance()
+
+	areCacheNodeTypesDifferent := s.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType != awsRedisInstance.Spec.CacheNodeType
+
+	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
+		areCacheNodeTypesDifferent
+}

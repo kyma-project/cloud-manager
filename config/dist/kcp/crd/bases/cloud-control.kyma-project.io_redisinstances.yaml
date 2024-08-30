@@ -46,7 +46,7 @@ spec:
                   aws:
                     properties:
                       authEnabled:
-                        default: true
+                        default: false
                         type: boolean
                         x-kubernetes-validations:
                         - message: AuthEnabled is immutable.
@@ -59,9 +59,6 @@ spec:
                           rule: (self == oldSelf)
                       cacheNodeType:
                         type: string
-                        x-kubernetes-validations:
-                        - message: CacheNodeType is immutable.
-                          rule: (self == oldSelf)
                       engineVersion:
                         default: "7.0"
                         type: string

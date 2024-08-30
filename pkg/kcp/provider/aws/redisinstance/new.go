@@ -40,6 +40,9 @@ func New(stateFactory StateFactory) composed.Action {
 					createElastiCacheCluster,
 					updateStatusId,
 					waitElastiCacheAvailable,
+					modifyCacheNodeType,
+					updateElastiCacheCluster,
+					// restartElastiCacheCluster, // todo - proveri dal moze da se provali kad restart zbog param changa
 					updateStatus,
 				),
 				composed.ComposeActions(

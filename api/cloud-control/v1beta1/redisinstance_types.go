@@ -203,7 +203,6 @@ type RedisInstanceAzure struct {
 
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CacheNodeType is immutable."
 	CacheNodeType string `json:"cacheNodeType"`
 
 	// +optional
@@ -222,7 +221,7 @@ type RedisInstanceAws struct {
 	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
 	AuthEnabled bool `json:"authEnabled"`
 

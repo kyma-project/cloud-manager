@@ -8,33 +8,36 @@ import (
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
-
+	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
+	"k8s.io/utils/ptr"
 )
 
 type State struct {
 	types.State
-	awsClient redisinstanceclient.ElastiCacheClient
+	awsClient client.ElastiCacheClient
 
 	subnetGroup        *elasticacheTypes.CacheSubnetGroup
 	parameterGroup     *elasticacheTypes.CacheParameterGroup
 	elastiCacheCluster *elasticacheTypes.ReplicationGroup
 	authTokenValue     *secretsmanager.GetSecretValueOutput
+
+	modifyElastiCacheClusterOptions client.ModifyElastiCacheClusterOptions
+	updateMask                      []string
 }
 
 type StateFactory interface {
 	NewState(ctx context.Context, redisInstace types.State) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[redisinstanceclient.ElastiCacheClient]) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[client.ElastiCacheClient]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[redisinstanceclient.ElastiCacheClient]
+	skrProvider awsclient.SkrClientProvider[client.ElastiCacheClient]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (*State, error) {
@@ -54,9 +57,24 @@ func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (
 	return newState(redisInstace, c), nil
 }
 
-func newState(redisInstace types.State, elastiCacheClient redisinstanceclient.ElastiCacheClient) *State {
+func newState(redisInstace types.State, elastiCacheClient client.ElastiCacheClient) *State {
 	return &State{
-		State:     redisInstace,
-		awsClient: elastiCacheClient,
+		State:                           redisInstace,
+		awsClient:                       elastiCacheClient,
+		modifyElastiCacheClusterOptions: client.ModifyElastiCacheClusterOptions{},
+		updateMask:                      []string{},
 	}
+}
+
+func (s *State) ShouldUpdateRedisInstance() bool {
+	return len(s.updateMask) > 0
+}
+
+func (s *State) GetModifyElastiCacheClusterOptions() client.ModifyElastiCacheClusterOptions {
+	return s.modifyElastiCacheClusterOptions
+}
+
+func (s *State) UpdateCacheNodeType(cacheNodeType string) {
+	s.modifyElastiCacheClusterOptions.CacheNodeType = ptr.To(cacheNodeType)
+	s.updateMask = append(s.updateMask, "cacheNodeType")
 }
