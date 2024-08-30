@@ -122,6 +122,6 @@ const (
 func AnyConditionChanged(obj composed.ObjWithConditions, conditionsToSet ...metav1.Condition) bool {
 	return pie.All(conditionsToSet, func(x metav1.Condition) bool {
 		c := meta.FindStatusCondition(*obj.Conditions(), x.Type)
-		return c == nil || c.Reason != x.Reason || c.Message != c.Message || c.Status != x.Status
+		return c == nil || c.Reason != x.Reason || c.Message != x.Message || c.Status != x.Status
 	})
 }
