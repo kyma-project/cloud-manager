@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -55,15 +54,15 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 	//load the address names into a map.
 	tmpMap := map[string]struct{}{}
 	for _, addr := range list.Items {
-		if addr.Purpose != string(v1beta1.GcpPurposePSA) {
+		if addr.Purpose == string(v1beta1.GcpPurposePSA) {
 			tmpMap[addr.Name] = struct{}{}
 		}
 	}
 
 	//Iterate over the list peering ranges, and include required ones.
 	for _, name := range state.serviceConnection.ReservedPeeringRanges {
-		//If this object is getting deleted, do not include its name.
-		if deleting && name == state.address.Name {
+		//If it is the name of current ip-range, do not include it.
+		if name == state.address.Name {
 			continue
 		}
 
@@ -77,8 +76,6 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 	if !deleting {
 		state.ipRanges = append(state.ipRanges, state.address.Name)
 	}
-
-	logger.WithValues("ipRange :", ipRange.Name).Info(fmt.Sprintf("IpRanges List :: %v", state.ipRanges))
 
 	return nil, nil
 }
