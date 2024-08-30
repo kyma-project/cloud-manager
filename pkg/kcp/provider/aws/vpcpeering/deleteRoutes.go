@@ -2,8 +2,6 @@ package vpcpeering
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
 )
@@ -18,30 +16,23 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	if state.remoteVpc == nil {
-		return nil, nil
-	}
-
 	for _, t := range state.routeTables {
+		for _, r := range t.Routes {
+			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == obj.Status.Id {
 
-		routeExists := pie.Any(t.Routes, func(r types.Route) bool {
-			return ptr.Deref(r.VpcPeeringConnectionId, "xxx") == obj.Status.Id &&
-				ptr.Equal(r.DestinationCidrBlock, state.remoteVpc.CidrBlock)
-		})
+				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
-		if routeExists {
-			err := state.client.DeleteRoute(ctx, t.RouteTableId, state.remoteVpc.CidrBlock)
+				lll := logger.WithValues(
+					"vpcPeeringName", obj.Name,
+					"vpcPeeringId", obj.Status.Id,
+					"routeTableId", ptr.Deref(t.RouteTableId, "xxx"),
+				)
 
-			lll := logger.WithValues(
-				"vpcPeeringName", obj.Name,
-				"vpcPeeringId", obj.Status.Id,
-				"routeTableId", ptr.Deref(t.RouteTableId, "xxx"),
-			)
+				lll.Info("Deleting route")
 
-			lll.Info("Deleting route")
-
-			if err != nil {
-				lll.Error(err, "Error deleting route")
+				if err != nil {
+					lll.Error(err, "Error deleting route")
+				}
 			}
 		}
 	}

@@ -10,39 +10,15 @@ import (
 
 func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-
-	obj := state.ObjAsVpcPeering()
-
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsVpcPeering()
 
 	// skip loading of vpc peering connections if remoteId is empty
 	if len(obj.Status.RemoteId) == 0 {
 		return nil, nil
 	}
 
-	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
-	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
-
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
-
-	logger.WithValues(
-		"remoteAwsRegion", remoteRegion,
-		"remoteAwsRole", roleArn,
-	).Info("Assuming remote AWS role")
-
-	client, err := state.provider(
-		ctx,
-		remoteRegion,
-		state.awsAccessKeyid,
-		state.awsSecretAccessKey,
-		roleArn,
-	)
-
-	if err != nil {
-		return awsmeta.LogErrorAndReturn(err, "Error initializing remote AWS client", ctx)
-	}
-
-	list, err := client.DescribeVpcPeeringConnections(ctx)
+	list, err := state.remoteClient.DescribeVpcPeeringConnections(ctx)
 
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error listing AWS peering connections", ctx)

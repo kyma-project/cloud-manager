@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -14,56 +15,25 @@ import (
 
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-
+	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	logger := composed.LoggerFromCtx(ctx)
 	remoteVpcId := obj.Spec.VpcPeering.Aws.RemoteVpcId
-	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
-	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
 
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
-
-	logger.WithValues(
-		"remoteAwsRegion", remoteRegion,
-		"remoteAwsRole", roleArn,
-	).Info("Assuming remote AWS role")
-
-	client, err := state.provider(
-		ctx,
-		remoteRegion,
-		state.awsAccessKeyid,
-		state.awsSecretAccessKey,
-		roleArn,
-	)
+	vpcList, err := state.remoteClient.DescribeVpcs(ctx)
 
 	if err != nil {
-		return awsmeta.LogErrorAndReturn(err, "Error initializing remote AWS client", ctx)
-	}
-
-	vpcList, err := client.DescribeVpcs(ctx)
-
-	if err != nil {
-
-		if composed.MarkedForDeletionPredicate(ctx, state) {
-			return nil, nil
+		if awsmeta.IsErrorRetryable(err) {
+			return awsmeta.LogErrorAndReturn(err, "Error loading remote AWS VPC Networks", ctx)
 		}
-
-		apiErr := awsmeta.AsApiError(err)
 
 		logger.Error(err, "Error loading remote AWS VPC Networks")
-
-		message := fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId)
-
-		if apiErr != nil {
-			message = apiErr.Error()
-		}
 
 		condition := metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
-			Message: message,
+			Message: err.Error(),
 		}
 
 		if !awsmeta.AnyConditionChanged(obj, condition) {
@@ -79,29 +49,23 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	var vpc *ec2Types.Vpc
 	var remoteVpcName string
-	var allLoadedVpcs []string
 
 	for _, vv := range vpcList {
 		v := vv
-
-		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
-			"%s{%s}",
-			ptr.Deref(v.VpcId, ""),
-			util.TagsToString(v.Tags),
-		))
-
 		if ptr.Deref(v.VpcId, "xxx") == remoteVpcId {
 			remoteVpcName = util.GetEc2TagValue(v.Tags, "Name")
 			vpc = &v
+			break
 		}
 	}
 
 	if vpc == nil {
-
-		// created with bad vpcId
-		if composed.MarkedForDeletionPredicate(ctx, state) {
-			return nil, nil
-		}
+		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2Types.Vpc) string {
+			return fmt.Sprintf(
+				"%s{%s}",
+				ptr.Deref(x.VpcId, ""),
+				util.TagsToString(x.Tags))
+		})
 
 		logger.
 			WithValues(

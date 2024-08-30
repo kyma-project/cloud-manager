@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -25,22 +26,24 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	var vpc *ec2Types.Vpc
-	var allLoadedVpcs []string
+
 	for _, vv := range vpcList {
 		v := vv
-
-		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
-			"%s{%s}",
-			ptr.Deref(v.VpcId, ""),
-			util.TagsToString(v.Tags),
-		))
-
 		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {
 			vpc = &v
+			break
 		}
 	}
 
 	if vpc == nil {
+
+		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2Types.Vpc) string {
+			return fmt.Sprintf(
+				"%s{%s}",
+				ptr.Deref(x.VpcId, ""),
+				util.TagsToString(x.Tags))
+		})
+
 		logger.
 			WithValues(
 				"vpcName", vpcNetworkName,

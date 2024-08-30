@@ -14,8 +14,9 @@ import (
 type State struct {
 	vpcpeeringtypes.State
 
-	client   vpcpeeringclient.Client
-	provider awsclient.SkrClientProvider[vpcpeeringclient.Client]
+	client       vpcpeeringclient.Client
+	remoteClient vpcpeeringclient.Client
+	provider     awsclient.SkrClientProvider[vpcpeeringclient.Client]
 
 	awsAccessKeyid     string
 	awsSecretAccessKey string
