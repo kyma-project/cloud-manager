@@ -28,8 +28,6 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 		if state.serviceConnection != nil && index >= 0 {
 			if len(state.serviceConnection.ReservedPeeringRanges) > 1 {
 				state.connectionOp = client.MODIFY
-				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges[:index],
-					state.serviceConnection.ReservedPeeringRanges[index+1:]...)
 			} else {
 				state.connectionOp = client.DELETE
 			}
@@ -61,11 +59,9 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 			if state.serviceConnection == nil {
 				//If serviceConnection doesn't exist, add it.
 				state.connectionOp = client.ADD
-				state.ipRanges = []string{state.address.Name}
 			} else if index := state.doesConnectionIncludeRange(); index < 0 {
 				//If connection exists, but the ipRange is not part of it, include it.
 				state.connectionOp = client.MODIFY
-				state.ipRanges = append(state.serviceConnection.ReservedPeeringRanges, state.address.Name)
 			}
 		}
 

@@ -171,6 +171,7 @@ func (suite *syncPsaConnectionSuite) TestUpdate() {
 	state, err := factory.newStateWith(ctx, ipRange)
 	assert.Nil(suite.T(), err)
 	state.connectionOp = client.MODIFY
+	state.ipRanges = []string{ipRange.Name}
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
