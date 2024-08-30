@@ -265,7 +265,3 @@ func (client *elastiCacheClientFake) DeleteElastiCacheClaster(ctx context.Contex
 
 	return nil
 }
-
-func (c *elastiCacheClientFake) RestartElastiCacheCluster(ctx context.Context, id string) error {
-	return nil
-}

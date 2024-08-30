@@ -11,7 +11,6 @@ import (
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
-	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -73,7 +72,6 @@ type ElastiCacheClient interface {
 	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
 	ModifyElastiCacheCluster(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheClaster(ctx context.Context, id string) error
-	RestartElastiCacheCluster(ctx context.Context, id string) error
 }
 
 func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
@@ -362,34 +360,4 @@ func (c *client) DeleteElastiCacheClaster(ctx context.Context, id string) error 
 	_, err := c.elastiCacheSvc.DeleteReplicationGroup(ctx, deleteInput)
 
 	return err
-}
-
-func (c *client) RestartElastiCacheCluster(ctx context.Context, id string) error {
-	result, err := c.elastiCacheSvc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
-		CacheClusterId:    ptr.To(id),
-		ShowCacheNodeInfo: aws.Bool(true),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	if len(result.CacheClusters) < 1 {
-		return nil
-	}
-
-	nodes := pie.Map(result.CacheClusters[0].CacheNodes, func(cacheNode elasticacheTypes.CacheNode) string {
-		return ptr.Deref(cacheNode.CacheNodeId, "")
-	})
-
-	_, err = c.elastiCacheSvc.RebootCacheCluster(ctx, &elasticache.RebootCacheClusterInput{
-		CacheClusterId:       ptr.To(id),
-		CacheNodeIdsToReboot: nodes,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
