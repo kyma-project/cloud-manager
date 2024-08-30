@@ -1,0 +1,85 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: spec.lifecycle
+        widget: Panel
+        source: spec.lifecycle
+        children:
+          - name: spec.lifecycle.deleteAfterDays
+            source: deleteAfterDays
+            widget: Labels
+          - name: spec.lifecycle.moveToColdStorageAfterDays
+            source: moveToColdStorageAfterDays
+            widget: Labels
+      - name: spec.source.volume
+        widget: Panel
+        source: spec.source.volume
+        children:
+          - name: spec.source.volume.name
+            source: name
+            widget: Labels
+          - name: spec.source.volume.namespace
+            source: namespace
+            widget: Labels
+  form: |-
+    - path: spec.lifecycle
+      name: spec.lifecycle
+      widget: FormGroup
+      children:
+        - path: deleteAfterDays
+          name: spec.lifecycle.deleteAfterDays
+          required: false
+          widget: Number
+        - path: moveToColdStorageAfterDays
+          name: spec.lifecycle.moveToColdStorageAfterDays
+          required: false
+          widget: Number
+
+    - path: spec.source.volume
+      name: spec.source.volume
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.source.volume.name
+          required: true
+          widget: Text
+        - path: namespace
+          name: spec.source.volume.namespace
+          required: false
+          widget: Text
+  general: |-
+    resource:
+        kind: AwsNfsVolumeBackup
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsnfsvolumebackups
+    name: AWS NFS Volume Backups
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AWS NFS Volume Backup description here
+  list: |-
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.lifecycle: Lifecycle
+      spec.lifecycle.deleteAfterDays: Delete After Days
+      spec.lifecycle.moveToColdStorageAfterDays: Move to Cold Storage After Days
+      spec.source.volume: Source Volume
+      spec.source.volume.name: Name
+      spec.source.volume.namespace: Namespace
+kind: ConfigMap
+metadata:
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsnfsvolumebackups-ui.operator.kyma-project.io
+  namespace: kyma-system
