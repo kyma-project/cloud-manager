@@ -1,0 +1,11 @@
+resource:
+    kind: AwsNfsVolumeBackup
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsnfsvolumebackups
+name: AWS NFS Volume Backups
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AWS NFS Volume Backup description here
