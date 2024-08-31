@@ -24,7 +24,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 
 	if len(schedule.GetNextRunTimes()) == 0 {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -41,7 +41,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 
 	if err != nil {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -64,7 +64,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	if schedule.GetLastCreateRun() != nil && nextRunTime.Equal(schedule.GetLastCreateRun().Time) &&
 		schedule.GetLastDeleteRun() != nil && nextRunTime.Equal(schedule.GetLastDeleteRun().Time) {
 		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}

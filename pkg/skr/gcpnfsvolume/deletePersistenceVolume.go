@@ -27,7 +27,7 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 	if state.PV.Status.Phase != "Released" && state.PV.Status.Phase != "Available" {
 		// Only PV in Released or Available state can be deleted
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -41,7 +41,7 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 		for i := range state.ObjAsGcpNfsVolume().Status.Conditions {
 			condition := (state.ObjAsGcpNfsVolume().Status.Conditions)[i]
 			if condition.Type == cloudresourcesv1beta1.ConditionTypeError && condition.Reason == cloudresourcesv1beta1.ConditionReasonPVNotReadyForDeletion {
-				return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+				return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 					RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
 					ErrorLogMessage("Error removing conditionType Error").
 					OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {

@@ -36,7 +36,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.Info("Scope not found")
 
 		volume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(volume).
+		return composed.PatchStatus(volume).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

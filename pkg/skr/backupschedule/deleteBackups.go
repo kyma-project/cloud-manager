@@ -39,7 +39,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 		schedule.SetNextDeleteTimes(nil)
 		schedule.SetLastDeletedBackups(nil)
 		schedule.SetBackupCount(len(state.Backups))
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions().
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
@@ -78,7 +78,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 	schedule.SetLastDeletedBackups(lastDeleted)
 	schedule.SetNextDeleteTimes(nextDeleteTimes)
 	schedule.SetBackupCount(len(state.Backups) - len(lastDeleted))
-	return composed.UpdateStatus(schedule).
+	return composed.PatchStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)

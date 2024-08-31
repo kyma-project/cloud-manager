@@ -40,20 +40,30 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
-	location, err := getLocation(state, logger)
-	if err != nil {
-		return composed.UpdateStatus(backup).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionReasonLocationInvalid,
-				Message: fmt.Sprintf("Could not automatically populate the location for the backup: %s", err),
-			}).
-			SuccessError(composed.StopAndForget).
+
+	// Setting the uuid as id to prevent duplicate backups if updateStatus fails.
+	if backup.Status.Id == "" {
+		location, err := getLocation(state, logger)
+		if err != nil {
+			return composed.PatchStatus(backup).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudresourcesv1beta1.ConditionReasonLocationInvalid,
+					Message: fmt.Sprintf("Could not automatically populate the location for the backup: %s", err),
+				}).
+				SuccessError(composed.StopAndForget).
+				Run(ctx, state)
+		}
+		backup.Status.Location = location
+		backup.Status.Id = uuid.NewString()
+		return composed.PatchStatus(backup).
+			SetExclusiveConditions().
+			// Give some time for backup to get created.
+			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
-	id := uuid.NewString()
-	name := fmt.Sprintf("cm-%.60s", id)
+	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
 
 	fileBackup := &file.Backup{
@@ -61,11 +71,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Status.Location, nfsInstanceName),
 		SourceInstanceTier: string(state.GcpNfsVolume.Spec.Tier),
 	}
-	op, err := state.fileBackupClient.CreateFileBackup(ctx, project, location, name, fileBackup)
+	op, err := state.fileBackupClient.CreateFileBackup(ctx, project, backup.Status.Location, name, fileBackup)
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -79,9 +89,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
 	backup.Status.OpIdentifier = op.Name
-	backup.Status.Id = id
-	backup.Status.Location = location
-	return composed.UpdateStatus(backup).
+	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		// Give some time for backup to get created.
 		SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
@@ -90,7 +98,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 func getLocation(state *State, logger logr.Logger) (string, error) {
 	location := state.ObjAsGcpNfsVolumeBackup().Spec.Location
-	// location is optional. So if empty, using region from scope.
+	// location is optional. So if empty, using region from source volume.
 	if len(location) != 0 {
 		return location, nil
 	}

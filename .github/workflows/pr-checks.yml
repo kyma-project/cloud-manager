@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         ipRangeAutomaticCidrAllocation: [ "false", "true" ]
+        gcpNfsVolumeAutomaticLocationAllocation: [ "false", "true" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,6 +23,7 @@ jobs:
       - name: Build and test
         env:
           FF_IP_RANGE_AUTOMATIC_CIDR_ALLOCATION: ${{ matrix.ipRangeAutomaticCidrAllocation }}
+          FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION: ${{ matrix.gcpNfsVolumeAutomaticLocationAllocation }}
         run: |
           ./config/sync.sh
           go mod tidy

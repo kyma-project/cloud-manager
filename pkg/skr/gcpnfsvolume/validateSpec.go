@@ -39,7 +39,7 @@ func validateCapacity(ctx context.Context, st composed.State) (error, context.Co
 		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 65400, 1})
 	default:
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -73,7 +73,7 @@ func validateCapacityForTier(ctx context.Context, st composed.State, capacity in
 	}
 	if valid {
 		// Capacity is the only mutable field. If it succeeds, we should remove the error condition if the reason was invalid capacity
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			RemoveConditionIfReasonMatched(cloudresourcesv1beta1.ConditionTypeError, cloudresourcesv1beta1.ConditionReasonCapacityInvalid).
 			ErrorLogMessage("Error removing conditionType Error").
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
@@ -83,7 +83,7 @@ func validateCapacityForTier(ctx context.Context, st composed.State, capacity in
 
 	} else {
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -118,7 +118,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			WithValues("ipRange", ipRangeName).
 			Error(err, "Referred IpRange does not exist")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -134,7 +134,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			WithValues("ipRange", ipRangeName).
 			Error(err, "Referred IpRange is not Ready")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -148,7 +148,7 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 	// If validation succeeds, we should remove the condition if the reason was invalid or not found ipRange
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+	return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 		RemoveConditionIfReasonMatched(cloudresourcesv1beta1.ConditionTypeError, cloudresourcesv1beta1.ConditionReasonIpRangeNotReady).
 		RemoveConditionIfReasonMatched(cloudresourcesv1beta1.ConditionTypeError, cloudresourcesv1beta1.ConditionReasonIpRangeNotFound).
 		ErrorLogMessage("Error removing conditionType Error").
@@ -169,7 +169,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.PREMIUM, cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
 		if len(fileShareName) > 16 {
 			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+			return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -185,7 +185,7 @@ func validateFileShareName(ctx context.Context, st composed.State) (error, conte
 	default:
 		if len(fileShareName) > 64 {
 			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-			return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+			return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -212,7 +212,7 @@ func validateLocation(ctx context.Context, st composed.State) (error, context.Co
 			return nil, nil
 		}
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -244,7 +244,7 @@ func validateTier(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	default:
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -255,7 +255,7 @@ func validateTier(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+	return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,

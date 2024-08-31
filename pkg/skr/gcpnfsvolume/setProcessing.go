@@ -26,7 +26,7 @@ func setProcessing(ctx context.Context, st composed.State) (error, context.Conte
 
 	//Set the state to processing
 	nfsVolume.Status.State = cloudresourcesv1beta1.StateProcessing
-	return composed.UpdateStatus(nfsVolume).
+	return composed.PatchStatus(nfsVolume).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)

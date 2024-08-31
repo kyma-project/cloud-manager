@@ -26,7 +26,7 @@ func checkSuspension(ctx context.Context, st composed.State) (error, context.Con
 	schedule.SetState(cloudresourcesv1beta1.JobStateSuspended)
 	schedule.SetNextRunTimes(nil)
 	schedule.SetNextDeleteTimes(nil)
-	return composed.UpdateStatus(schedule).
+	return composed.PatchStatus(schedule).
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

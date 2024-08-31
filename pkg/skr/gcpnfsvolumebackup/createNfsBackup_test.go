@@ -126,6 +126,57 @@ func (suite *createNfsBackupSuite) TestWhenCreateBackupReturnsError() {
 	suite.Equal(cloudcontrolv1beta1.ReasonGcpError, fromK8s.Status.Conditions[0].Reason)
 }
 
+func (suite *createNfsBackupSuite) TestWhenCreateBackupNoIdNoLocation() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+
+		case http.MethodPost:
+			fmt.Println(r.URL.Path)
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups") {
+				//Return 500
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+			} else {
+				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			}
+		default:
+			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		}
+	}))
+	obj := gcpNfsVolumeBackup.DeepCopy()
+	obj.Status.Id = ""
+	obj.Status.Location = ""
+	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	//Set the scope and gcpNfsVolume objects in state
+	state.Scope = scope.DeepCopy()
+	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
+
+	//Invoke createNfsBackup API
+	err, _ctx := createNfsBackup(ctx, state)
+
+	//validate expected return values
+	suite.Equal(composed.StopWithRequeue, err)
+	suite.NotNil(_ctx)
+
+	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
+	_ = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
+			Namespace: gcpNfsVolumeBackup.Namespace},
+		fromK8s)
+
+	//Validate expected status
+	suite.Equal("us-west1", fromK8s.Status.Location)
+	suite.NotEqual("", fromK8s.Status.Id)
+}
+
 func (suite *createNfsBackupSuite) TestWhenCreateBackupSuccessful() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

@@ -18,7 +18,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 
 	// This shouldn't be reached, but just in case
 	if restore.Status.State == "InProgress" {
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

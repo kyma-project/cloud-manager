@@ -20,6 +20,7 @@ import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type GcpNfsBackupState string
@@ -31,9 +32,6 @@ const (
 
 	// GcpNfsBackupError signifies the backup operation resulted in error.
 	GcpNfsBackupError GcpNfsBackupState = "Error"
-
-	// GcpNfsBackupProcessing signifies backup operation is in-progress.
-	GcpNfsBackupProcessing GcpNfsBackupState = "Processing"
 
 	// GcpNfsBackupCreating signifies backup create operation is in-progress.
 	GcpNfsBackupCreating GcpNfsBackupState = "Creating"
@@ -62,7 +60,7 @@ type GcpNfsVolumeRef struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
-func (v GcpNfsVolumeRef) ToNamespacedName(fallbackNamespace string) types.NamespacedName {
+func (v *GcpNfsVolumeRef) ToNamespacedName(fallbackNamespace string) types.NamespacedName {
 	ns := v.Namespace
 	if len(ns) == 0 {
 		ns = fallbackNamespace
@@ -157,4 +155,18 @@ type GcpNfsVolumeBackupList struct {
 
 func init() {
 	SchemeBuilder.Register(&GcpNfsVolumeBackup{}, &GcpNfsVolumeBackupList{})
+}
+
+func (in *GcpNfsVolumeBackup) CloneForPatchStatus() client.Object {
+	return &GcpNfsVolumeBackup{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GcpNfsVolumeBackup",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
