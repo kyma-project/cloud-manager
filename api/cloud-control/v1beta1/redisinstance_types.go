@@ -115,6 +115,7 @@ type AzureRedisSKU struct {
 }
 
 type TransitEncryptionGcp struct {
+	// Client to Server traffic encryption enabled with server authentication.
 	// +optional
 	// +kubebuilder:default=false
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
@@ -122,8 +123,7 @@ type TransitEncryptionGcp struct {
 }
 
 type TimeOfDayGcp struct {
-	// Hours of day in 24 hour format. Should be from 0 to 23. An API may choose
-	// to allow the value "24:00:00" for scenarios like business closing time.
+	// Hours of day in 24 hour format. Should be from 0 to 23.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=23
@@ -152,31 +152,41 @@ type MaintenancePolicyGcp struct {
 }
 
 type RedisInstanceGcp struct {
+	// The service tier of the instance.
 	// +kubebuilder:default=BASIC
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
 	// +kubebuilder:validation:Enum=BASIC;STANDARD_HA
 	Tier string `json:"tier"`
 
+	// Redis memory size in GiB.
 	// +kubebuilder:validation:Required
 	MemorySizeGb int32 `json:"memorySizeGb"`
 
+	// The version of Redis software.
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
 	RedisVersion string `json:"redisVersion"`
 
+	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
 	// +kubebuilder:default=true
 	AuthEnabled bool `json:"authEnabled"`
 
+	// The TLS mode of the Redis instance.
+	// If not provided, TLS is disabled for the instance.
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption is immutable."
 	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
 
+	// Redis configuration parameters, according to http://redis.io/topics/config.
+	// See docs for the list of the supported parameters
 	// +optional
 	RedisConfigs map[string]string `json:"redisConfigs"`
 
+	// The maintenance policy for the instance.
+	// If not provided, maintenance events can be performed at any time.
 	// +optional
 	MaintenancePolicy *MaintenancePolicyGcp `json:"maintenancePolicy,omitempty"`
 }
