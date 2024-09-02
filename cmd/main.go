@@ -308,7 +308,7 @@ func main() {
 	setupLog.Info("starting manager")
 	ctx := ctrl.SetupSignalHandler()
 
-	if err := feature.Initialize(ctx); err != nil {
+	if err := feature.Initialize(ctx, feature.WithLogger(setupLog.WithName("ff"))); err != nil {
 		setupLog.Error(err, "problem initializing feature flags")
 	}
 
