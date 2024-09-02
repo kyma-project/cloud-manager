@@ -1,0 +1,29 @@
+name: Feature toggles
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+
+jobs:
+  schema-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Go details
+        run: |
+          go env
+      - name: Install jv
+        run: |
+          go install github.com/santhosh-tekuri/jsonschema/cmd/jv@latest
+      - name: Validate schema
+        run: |
+          SCHEMA_URL="https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/v1.31.2/.schema/flag-schema.json"
+          jv --assert-content --assert-format $SCHEMA_URL ./config/featureToggles/featureToggles.yaml
+
