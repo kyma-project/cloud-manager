@@ -5,6 +5,10 @@ import (
 	"sync"
 )
 
+type VpcPeeringConfig interface {
+	SetPeeringStateConnected(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string)
+}
+
 type peeringEntry struct {
 	resourceGroupName  string
 	virtualNetworkName string

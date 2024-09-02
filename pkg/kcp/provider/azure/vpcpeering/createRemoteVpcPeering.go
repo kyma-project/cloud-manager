@@ -78,6 +78,8 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			Run(ctx, state)
 	}
 
+	state.remotePeering = peering
+
 	logger = logger.WithValues("remotePeeringId", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)

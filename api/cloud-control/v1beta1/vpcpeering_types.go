@@ -21,10 +21,17 @@ import (
 )
 
 const (
-	ReasonFailedCreatingVpcPeeringConnection  = "FailedCreatingVpcPeeringConnection"
-	ReasonFailedAcceptingVpcPeeringConnection = "FailedAcceptingVpcPeeringConnection"
-	ReasonFailedLoadingRemoteVpcNetwork       = "FailedLoadingRemoteVpcNetwork"
-	ReasonFailedCreatingRoutes                = "FailedCreatingRoutes"
+	ReasonFailedCreatingVpcPeeringConnection      = "FailedCreatingVpcPeeringConnection"
+	ReasonFailedAcceptingVpcPeeringConnection     = "FailedAcceptingVpcPeeringConnection"
+	ReasonFailedLoadingRemoteVpcNetwork           = "FailedLoadingRemoteVpcNetwork"
+	ReasonFailedLoadingRemoteVpcPeeringConnection = "FailedLoadingRemoteVpcPeeringConnection"
+	ReasonFailedCreatingRoutes                    = "FailedCreatingRoutes"
+)
+
+const (
+	VirtualNetworkPeeringStateConnected    = "Connected"
+	VirtualNetworkPeeringStateDisconnected = "Disconnected"
+	VirtualNetworkPeeringStateInitiated    = "Initiated"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -77,7 +84,7 @@ type AwsVpcPeering struct {
 
 // VpcPeeringStatus defines the observed state of VpcPeering
 type VpcPeeringStatus struct {
-	State StatusState `json:"state,omitempty"`
+	State string `json:"state,omitempty"`
 
 	// +optional
 	VpcId string `json:"vpcId,omitempty"`

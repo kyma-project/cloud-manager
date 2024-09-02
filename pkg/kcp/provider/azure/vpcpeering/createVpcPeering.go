@@ -48,6 +48,8 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
+	state.peering = peering
+
 	logger = logger.WithValues("id", ptr.Deref(peering.ID, ""))
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
@@ -55,6 +57,7 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	logger.Info("Azure VPC Peering created")
 
 	obj.Status.Id = ptr.Deref(peering.ID, "")
+	obj.Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated
 
 	err = state.UpdateObjStatus(ctx)
 

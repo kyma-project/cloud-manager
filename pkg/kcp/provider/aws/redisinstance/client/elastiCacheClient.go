@@ -45,6 +45,13 @@ type CreateElastiCacheClusterOptions struct {
 	PreferredMaintenanceWindow *string
 }
 
+type ModifyElastiCacheClusterOptions struct {
+	CacheNodeType              *string
+	EngineVersion              *string
+	AutoMinorVersionUpgrade    *bool
+	PreferredMaintenanceWindow *string
+}
+
 type ElastiCacheClient interface {
 	DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error)
 	CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error)
@@ -63,6 +70,7 @@ type ElastiCacheClient interface {
 
 	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error)
 	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
+	ModifyElastiCacheCluster(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheClaster(ctx context.Context, id string) error
 }
 
@@ -308,6 +316,33 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (c *client) ModifyElastiCacheCluster(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
+	params := &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId: aws.String(id),
+		ApplyImmediately:   aws.Bool(true),
+	}
+	if options.CacheNodeType != nil {
+		params.CacheNodeType = options.CacheNodeType
+	}
+	if options.EngineVersion != nil {
+		params.EngineVersion = options.EngineVersion
+	}
+	if options.PreferredMaintenanceWindow != nil {
+		params.PreferredMaintenanceWindow = options.PreferredMaintenanceWindow
+	}
+	if options.AutoMinorVersionUpgrade != nil {
+		params.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
+	}
+
+	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)
 
 	if err != nil {
 		return nil, err

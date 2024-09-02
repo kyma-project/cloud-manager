@@ -17,5 +17,7 @@ type Server interface {
 
 	VpcNetworkConfig
 
+	VpcPeeringConfig
+
 	RedisCacheClientFakeUtils
 }

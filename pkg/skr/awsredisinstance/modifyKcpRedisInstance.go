@@ -18,11 +18,15 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		return composed.StopWithRequeue, nil
 	}
 
-	if !areMapsDifferent(state.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) {
+	shouldModifyKcp := state.ShouldModifyKcp()
+
+	if !shouldModifyKcp {
 		return nil, nil
 	}
 
 	state.KcpRedisInstance.Spec.Instance.Aws.Parameters = awsRedisInstance.Spec.Parameters
+	state.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType = awsRedisInstance.Spec.CacheNodeType
+
 	err := state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating KCP RedisInstance", composed.StopWithRequeue, ctx)

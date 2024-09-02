@@ -54,12 +54,15 @@ type AzureVpcPeeringStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:resource:scope=Cluster
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 // AzureVpcPeering is the Schema for the azurevpcpeerings API
 type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
