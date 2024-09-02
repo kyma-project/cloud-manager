@@ -79,7 +79,6 @@ func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remotePeeringName, remoteV
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
 			if x.Spec.VpcPeering.Azure == nil {
 				x.Spec.VpcPeering.Azure = &cloudcontrolv1beta1.AzureVpcPeering{
-					AllowVnetAccess:     allowVnetAccess,
 					RemotePeeringName:   remotePeeringName,
 					RemoteVnet:          remoteVnet,
 					RemoteResourceGroup: remoteResourceGroup,

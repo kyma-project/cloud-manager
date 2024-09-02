@@ -41,7 +41,6 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 			},
 			VpcPeering: cloudcontrolv1beta1.VpcPeeringInfo{
 				Azure: &cloudcontrolv1beta1.AzureVpcPeering{
-					AllowVnetAccess:     obj.Spec.AllowVnetAccess,
 					RemotePeeringName:   obj.Spec.RemotePeeringName,
 					RemoteVnet:          obj.Spec.RemoteVnet,
 					RemoteResourceGroup: obj.Spec.RemoteResourceGroup,
