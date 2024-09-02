@@ -15,18 +15,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version-file: 'go.mod'
       - name: Go details
         run: |
           go env
       - name: Install jv
         run: |
-          mkdir -p bin
-          GOBIN=`pwd`/bin
-          ls -ls $GOBIN
+          echo $PATH
+          ls -la $GOPATH/bin
           go install github.com/santhosh-tekuri/jsonschema/cmd/jv@latest
-          ls -ls $GOBIN
+          ls -la $GOPATH/bin
       - name: Validate schema
         run: |
-          $GOBIN/jv --assert-content --assert-format https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/v1.31.2/.schema/flag-schema.json ./config/featureToggles/featureToggles.yaml
+          jv --assert-content --assert-format https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/v1.31.2/.schema/flag-schema.json ./config/featureToggles/featureToggles.yaml
 
