@@ -69,7 +69,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Message: fmt.Sprintf("Failed creating VpcPeerings. %s", awsmeta.GetErrorMessage(err)),
 		}
 
-		if !awsmeta.AnyConditionChanged(obj, condition) {
+		if !composed.AnyConditionChanged(obj, condition) {
 			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 		}
 

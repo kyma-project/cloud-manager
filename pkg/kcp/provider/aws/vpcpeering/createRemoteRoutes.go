@@ -46,7 +46,7 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 				}
 
 				// User can recover by modifying routes
-				if !awsmeta.AnyConditionChanged(obj, condition) {
+				if !composed.AnyConditionChanged(obj, condition) {
 					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 				}
 

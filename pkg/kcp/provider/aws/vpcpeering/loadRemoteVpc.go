@@ -36,7 +36,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			Message: err.Error(),
 		}
 
-		if !awsmeta.AnyConditionChanged(obj, condition) {
+		if !composed.AnyConditionChanged(obj, condition) {
 			return composed.StopAndForget, nil
 		}
 
@@ -81,7 +81,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
 		}
 
-		if !awsmeta.AnyConditionChanged(obj, condition) {
+		if !composed.AnyConditionChanged(obj, condition) {
 			return composed.StopAndForget, nil
 		}
 
