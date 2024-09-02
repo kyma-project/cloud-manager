@@ -1,3 +1,6 @@
+# Default owners of the `cloud-manager` repository
+* @kyma-project/Phoenix
+
 # All files and subdirectories in /docs
 /docs/ @kyma-project/technical-writers
 
@@ -5,6 +8,3 @@
 *.md @kyma-project/technical-writers
 
 /config/featureToggles/featureToggles.yaml @kyma-project/phoenix-admins
-
-# Default owners of the `cloud-manager` repository
-* @kyma-project/Phoenix
