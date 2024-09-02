@@ -74,8 +74,6 @@ spec:
                     type: object
                   azure:
                     properties:
-                      allowVnetAccess:
-                        type: boolean
                       remotePeeringName:
                         type: string
                       remoteResourceGroup:

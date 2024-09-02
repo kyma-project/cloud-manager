@@ -24,10 +24,6 @@ import (
 // AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
 type AzureVpcPeeringSpec struct {
 
-	// +kubebuilder:default=true
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AllowVnetAccess is immutable."
-	AllowVnetAccess bool `json:"allowVnetAccess,omitempty"`
-
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemotePeeringName is immutable."
 	// +kubebuilder:validation:XValidation:rule=(size(self) <= 80), message="RemotePeeringName can be up to 80 characters long."

@@ -57,7 +57,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		virtualNetworkName,
 		virtualNetworkPeeringName,
 		virtualNetworkId,
-		obj.Spec.VpcPeering.Azure.AllowVnetAccess,
+		true,
 	)
 
 	if err != nil {
