@@ -40,6 +40,8 @@ func New(stateFactory StateFactory) composed.Action {
 					createElastiCacheCluster,
 					updateStatusId,
 					waitElastiCacheAvailable,
+					modifyCacheNodeType,
+					updateElastiCacheCluster,
 					updateStatus,
 				),
 				composed.ComposeActions(
