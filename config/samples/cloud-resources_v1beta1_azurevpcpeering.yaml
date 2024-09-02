@@ -9,6 +9,5 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: azurevpcpeering-sample
 spec:
-  allowVnetAccess: true
   remoteResourceGroup: MyResourceGroup
   remoteVnet: /subscriptions/9c05f3c1-314b-4c4b-bfff-b5a0650177cb/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet

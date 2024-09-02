@@ -80,7 +80,6 @@ the steps that create those resources.
    metadata:
      name: peering-to-my-vnet
    spec:
-     allowVnetAccess: true
      remotePeeringName: peering-to-my-kyma
      remoteResourceGroup: $RESOURCE_GROUP_NAME
      remoteVnet: $VNET_ID
