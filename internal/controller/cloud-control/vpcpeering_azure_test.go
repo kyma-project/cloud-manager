@@ -56,6 +56,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
+		By("Then KCP VpcPeering has finalizer", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+				).
+				Should(Succeed())
+		})
+
+		infra.AzureMock().SetPeeringStateConnected(subscriptionId, resourceGroupName, virtualNetworkName, vpcpeeringName)
+
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,

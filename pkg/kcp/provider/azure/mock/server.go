@@ -57,6 +57,18 @@ func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName stri
 	store.networkStore.items = append(store.networkStore.items, entry)
 }
 
+func (s *server) SetPeeringStateConnected(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) {
+	store := s.getStoreSubscriptionContext(subscription)
+
+	for _, x := range store.peeringStore.items {
+		if virtualNetworkPeeringName == ptr.Deref(x.peering.Name, "") &&
+			resourceGroup == x.resourceGroupName &&
+			virtualNetworkName == x.virtualNetworkName {
+			x.peering.Properties.PeeringState = ptr.To(armnetwork.VirtualNetworkPeeringStateConnected)
+		}
+	}
+}
+
 func (s *server) getStoreSubscriptionContext(subscription string) *storeSubscriptionContext {
 
 	if s.stores[subscription] == nil {
