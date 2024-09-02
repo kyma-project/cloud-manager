@@ -32,13 +32,17 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 
 				logger.
 					WithValues("remoteRouteTableId", routeTableId).
-					Error(err, "Failed to create route")
+					Error(err, "Failed to create remote route")
+
+				if awsmeta.IsErrorRetryable(err) {
+					return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+				}
 
 				condition := metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
-					Message: fmt.Sprintf("AWS Failed to create route for remote route table %s", routeTableId),
+					Message: fmt.Sprintf("Failed creating route for remote route table %s. %s", routeTableId, awsmeta.GetErrorMessage(err)),
 				}
 
 				// User can recover by modifying routes

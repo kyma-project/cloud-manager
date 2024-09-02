@@ -7,9 +7,10 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
@@ -32,11 +33,11 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		},
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
-			Value: ptr.To(state.ObjAsVpcPeering().Spec.RemoteRef.String()),
+			Value: ptr.To(obj.Spec.RemoteRef.String()),
 		},
 		{
 			Key:   ptr.To(common.TagScope),
-			Value: ptr.To(state.ObjAsVpcPeering().Spec.Scope.Name),
+			Value: ptr.To(obj.Spec.Scope.Name),
 		},
 		{
 			Key:   ptr.To(common.TagShoot),
@@ -55,18 +56,28 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		tags)
 
 	if err != nil {
-		logger.Error(err, "Error creating VPC Peering")
+		logger.Error(err, "Error creating AWS VPC Peering")
 
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetCondition(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Failed creating VpcPeerings %s", err),
-			}).
+		if awsmeta.IsErrorRetryable(err) {
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
+
+		condition := metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  "True",
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+			Message: fmt.Sprintf("Failed creating VpcPeerings. %s", awsmeta.GetErrorMessage(err)),
+		}
+
+		if !awsmeta.AnyConditionChanged(obj, condition) {
+			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+		}
+
+		return composed.UpdateStatus(obj).
+			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 			Run(ctx, state)
 	}
 
@@ -78,7 +89,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	state.vpcPeering = con
 
-	state.ObjAsVpcPeering().Status.Id = ptr.Deref(con.VpcPeeringConnectionId, "")
+	obj.Status.Id = ptr.Deref(con.VpcPeeringConnectionId, "")
 
 	err = state.UpdateObjStatus(ctx)
 

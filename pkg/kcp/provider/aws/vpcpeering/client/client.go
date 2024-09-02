@@ -49,17 +49,14 @@ func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVp
 		PeerVpcId:   remoteVpcId,
 		PeerRegion:  remoteRegion,
 		PeerOwnerId: remoteAccountId,
+		TagSpecifications: []types.TagSpecification{
+			{
+				ResourceType: types.ResourceTypeVpcPeeringConnection,
+				Tags:         tags,
+			},
+		},
 	})
 
-	x := &ec2.CreateVpcPeeringConnectionInput{}
-	tagSpec := []types.TagSpecification{
-		{
-			ResourceType: types.ResourceTypeVpcPeeringConnection,
-			Tags:         tags,
-		},
-	}
-
-	x.TagSpecifications = tagSpec
 	if err != nil {
 		return nil, err
 	}
