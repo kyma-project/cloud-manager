@@ -36,5 +36,4 @@ jobs:
       tags: ${{ needs.compute-tag.outputs.tag }}
       name: cloud-manager
       dockerfile: Dockerfile
-      context: cloud-manager
       export-tags: true
