@@ -92,6 +92,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 			// reload share
 			x, err := infra.CceeMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(x).NotTo(BeNil())
 			theShare = x
 		})
 
@@ -101,7 +102,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 		})
 
 		By("And Then Share has access granted", func() {
-			arr, err := infra.CceeMock().ListShareAccessRights(infra.Ctx(), theShare.ID)
+			arr, err := infra.CceeMock().ListShareAccessRules(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(1), "expected one access right")
 			Expect(arr[0].AccessTo).To(Equal(scope.Spec.Scope.OpenStack.Network.Nodes))
@@ -121,6 +122,18 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
 				Should(Succeed(), "expected NfsInstance not to exist (be deleted), but it still exists")
+		})
+
+		By("And Then CCEE Share does not exist", func() {
+			x, err := infra.CceeMock().GetShare(infra.Ctx(), theShare.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(x).To(BeNil())
+		})
+
+		By("And Then CCEE Share Network does not exist", func() {
+			x, err := infra.CceeMock().GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(x).To(BeNil())
 		})
 	})
 

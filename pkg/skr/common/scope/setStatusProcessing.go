@@ -9,7 +9,12 @@ import (
 )
 
 func setStatusProcessing(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*myState)
+	state := st.(State)
+
+	//If the object already have a state, continue..
+	if state.ObjWithConditionsAndState().State() != "" {
+		return nil, nil
+	}
 
 	state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateProcessing)
 

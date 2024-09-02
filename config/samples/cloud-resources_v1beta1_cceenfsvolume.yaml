@@ -1,0 +1,9 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: CceeNfsVolume
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cceenfsvolume-sample
+spec:
+  # TODO(user): Add fields here

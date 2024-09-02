@@ -29,11 +29,13 @@ func (suite *loadScopeSuite) TestScopeNotFound() {
 
 	//remove gcpScope
 	err = factory.kcpCluster.K8sClient().Delete(context.Background(), gcpScope.DeepCopy())
+	assert.Nil(suite.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
+	assert.Nil(suite.T(), err)
 	err, _ = loadScope(ctx, state)
 
 	//validate expected return values

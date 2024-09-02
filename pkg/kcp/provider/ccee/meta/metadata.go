@@ -12,7 +12,7 @@ var cceeProjectKey = cceeProjectKeyType{}
 
 type cceeRegionKeyType struct{}
 
-var cceeRegionKey = cceeProjectKeyType{}
+var cceeRegionKey = cceeRegionKeyType{}
 
 func GetCceeDomain(ctx context.Context) string {
 	x := ctx.Value(cceeDomainKey)

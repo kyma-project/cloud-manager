@@ -10,16 +10,19 @@ type ClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, e
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
+const GcpApiTimeout = time.Second * 3
 
 type GcpConfig struct {
 	GcpRetryWaitTime     time.Duration
 	GcpOperationWaitTime time.Duration
+	GcpApiTimeout        time.Duration
 }
 
 func GetGcpConfig(env abstractions.Environment) *GcpConfig {
 	return &GcpConfig{
 		GcpRetryWaitTime:     GetConfigDuration(env, "GCP_RETRY_WAIT_DURATION", GcpRetryWaitTime),
 		GcpOperationWaitTime: GetConfigDuration(env, "GCP_OPERATION_WAIT_DURATION", GcpOperationWaitTime),
+		GcpApiTimeout:        GetConfigDuration(env, "GCP_API_TIMEOUT_DURATION", GcpApiTimeout),
 	}
 }
 

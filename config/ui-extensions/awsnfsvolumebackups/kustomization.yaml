@@ -1,0 +1,15 @@
+configMapGenerator:
+  - name: awsnfsvolumebackups-ui.operator.kyma-project.io
+    files:
+      - details
+      - form
+      - general
+      - list
+      - translations
+    options:
+      disableNameSuffixHash: true
+      labels:
+        cloud-manager: ui-cm
+        busola.io/extension: resource
+        busola.io/extension-version: "0.5"
+    namespace: kyma-system

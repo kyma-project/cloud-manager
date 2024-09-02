@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
-	"os"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -50,6 +51,7 @@ import (
 	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -227,6 +229,16 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env, setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsBackupSchedule")
+		os.Exit(1)
+	}
+
+	//if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
+	//	os.Exit(1)
+	//}
+
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
 		os.Exit(1)
 	}
 

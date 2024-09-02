@@ -14,7 +14,17 @@ spec:
     singular: nfsinstance
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.scope.name
+      name: Scope
+      type: string
+    - jsonPath: .status.capacityGb
+      name: SizeGb
+      type: string
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: NfsInstance is the Schema for the nfsinstances API
@@ -239,7 +249,7 @@ spec:
                   List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 
 
-                  Deprecated: Use Host and Path
+                  XDeprecated: Use Host and Path
                 items:
                   type: string
                 type: array

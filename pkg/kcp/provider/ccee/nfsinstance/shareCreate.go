@@ -54,6 +54,9 @@ func shareCreate(ctx context.Context, st composed.State) (error, context.Context
 	state.ObjAsNfsInstance().SetStateData(StateDataShareId, share.ID)
 	state.ObjAsNfsInstance().Status.Id = share.ID
 
+	state.ObjAsNfsInstance().Status.State = "Creating"
+	state.ObjAsNfsInstance().Status.CapacityGb = state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb
+
 	return composed.PatchStatus(state.ObjAsNfsInstance()).
 		ErrorLogMessage("Error updating CCEE NfsInstance state data with created shareId").
 		SuccessErrorNil().

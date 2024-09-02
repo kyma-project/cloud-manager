@@ -301,6 +301,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - cceenfsvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - cloudresources
   verbs:
   - create

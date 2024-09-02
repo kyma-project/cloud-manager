@@ -140,6 +140,7 @@ func (suite *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
 		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
+	suite.Nil(err)
 	suite.Equal(1, len(fromK8s.Status.NextRunTimes))
 	runTime, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[0])
 	suite.Nil(err)

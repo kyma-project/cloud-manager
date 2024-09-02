@@ -1,0 +1,27 @@
+# permissions for end users to edit cceenfsvolumes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-resources-cceenfsvolume-editor-role
+rules:
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - cceenfsvolumes/status
+  verbs:
+  - get

@@ -1,0 +1,21 @@
+body:
+  - name: spec.lifecycle
+    widget: Panel
+    source: spec.lifecycle
+    children:
+      - name: spec.lifecycle.deleteAfterDays
+        source: deleteAfterDays
+        widget: Labels
+      - name: spec.lifecycle.moveToColdStorageAfterDays
+        source: moveToColdStorageAfterDays
+        widget: Labels
+  - name: spec.source.volume
+    widget: Panel
+    source: spec.source.volume
+    children:
+      - name: spec.source.volume.name
+        source: name
+        widget: Labels
+      - name: spec.source.volume.namespace
+        source: namespace
+        widget: Labels

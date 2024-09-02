@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -49,6 +50,8 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 
 	if state.curState == v1beta1.ReadyState {
 		nfsInstance.Status.Hosts = state.fsInstance.Networks[0].IpAddresses
+		nfsInstance.Status.Host = pie.First(state.fsInstance.Networks[0].IpAddresses)
+		nfsInstance.Status.Path = state.ObjAsNfsInstance().Spec.Instance.Gcp.FileShareName
 		nfsInstance.Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{

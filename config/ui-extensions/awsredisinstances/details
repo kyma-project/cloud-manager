@@ -22,14 +22,21 @@ body:
         source: transitEncryptionEnabled
         widget: Labels
 
-
-
   - name: spec.ipRange
     widget: Panel
     source: spec
     children:
       - name: spec.ipRange.name
         source: ipRange.name
+        widget: Labels
+
+
+  - name: spec.authEnabledFull
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.authEnabled
+        source: authEnabled
         widget: Labels
 
   - name: spec.authSecret

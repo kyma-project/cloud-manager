@@ -1,0 +1,25 @@
+- path: spec.lifecycle
+  name: spec.lifecycle
+  widget: FormGroup
+  children:
+    - path: deleteAfterDays
+      name: spec.lifecycle.deleteAfterDays
+      required: false
+      widget: Number
+    - path: moveToColdStorageAfterDays
+      name: spec.lifecycle.moveToColdStorageAfterDays
+      required: false
+      widget: Number
+
+- path: spec.source.volume
+  name: spec.source.volume
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.source.volume.name
+      required: true
+      widget: Text
+    - path: namespace
+      name: spec.source.volume.namespace
+      required: false
+      widget: Text

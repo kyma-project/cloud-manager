@@ -7,23 +7,34 @@ import (
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
+	"regexp"
 )
 
-type Client interface {
+type LocalClient interface {
 	IsNotFound(err error) bool
 	IsAlreadyExists(err error) bool
+	ParseRecoveryPointId(recoveryPointArn string) string
+}
+
+type Client interface {
+	LocalClient
+
 	ListTags(ctx context.Context, resourceArn string) (map[string]string, error)
-	//ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error)
+
+	ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error)
 	DescribeBackupVault(ctx context.Context, backupVaultName string) (*backup.DescribeBackupVaultOutput, error)
 	CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error)
 	DeleteBackupVault(ctx context.Context, name string) error
+
 	StartBackupJob(ctx context.Context, params *StartBackupJobInput) (*backup.StartBackupJobOutput, error)
-	ListBackupJobs(ctx context.Context, in *backup.ListBackupJobsInput) ([]backuptypes.BackupJob, error)
 	DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error)
+
+	DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error)
+	DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error)
 }
 
 type StartBackupJobInput struct {
-	BackupValueName            string
+	BackupVaultName            string
 	ResourceArn                string
 	IamRoleArn                 string
 	IdempotencyToken           *string
@@ -42,15 +53,29 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	}
 }
 
+func newLocalClient() *localClient {
+	return &localClient{
+		recoveryPointRe: regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):recovery-point:(?P<RecoveryPointID>[^:\n]*)$`),
+	}
+}
+
 func newClient(svc *backup.Client) Client {
-	return &client{svc: svc}
+	return &client{
+		localClient: *newLocalClient(),
+		svc:         svc,
+	}
+}
+
+type localClient struct {
+	recoveryPointRe *regexp.Regexp
 }
 
 type client struct {
+	localClient
 	svc *backup.Client
 }
 
-func (c *client) IsNotFound(err error) bool {
+func (c *localClient) IsNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -58,12 +83,17 @@ func (c *client) IsNotFound(err error) bool {
 	return errors.As(err, &resourceNotFoundException)
 }
 
-func (c *client) IsAlreadyExists(err error) bool {
+func (c *localClient) IsAlreadyExists(err error) bool {
 	if err == nil {
 		return false
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
 	return errors.As(err, &alreadyExistsException)
+}
+
+func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) string {
+	match := c.recoveryPointRe.FindStringSubmatch(recoveryPointArn)
+	return match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
@@ -127,7 +157,7 @@ func (c *client) StartBackupJob(ctx context.Context, params *StartBackupJobInput
 		}
 	}
 	in := &backup.StartBackupJobInput{
-		BackupVaultName:   ptr.To(params.BackupValueName),
+		BackupVaultName:   ptr.To(params.BackupVaultName),
 		IamRoleArn:        ptr.To(params.IamRoleArn),
 		ResourceArn:       ptr.To(params.ResourceArn),
 		BackupOptions:     nil, // ???
@@ -135,6 +165,7 @@ func (c *client) StartBackupJob(ctx context.Context, params *StartBackupJobInput
 		Lifecycle:         lifecycle,
 		RecoveryPointTags: params.RecoveryPointTags,
 	}
+
 	out, err := c.svc.StartBackupJob(ctx, in)
 	if err != nil {
 		return nil, err
@@ -155,6 +186,30 @@ func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*ba
 		BackupJobId: ptr.To(backupJobId),
 	}
 	out, err := c.svc.DescribeBackupJob(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *client) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {
+	in := &backup.DescribeRecoveryPointInput{
+		BackupVaultName:      ptr.To(backupVaultName),
+		RecoveryPointArn:     ptr.To(recoveryPointArn),
+		BackupVaultAccountId: ptr.To(accountId),
+	}
+	out, err := c.svc.DescribeRecoveryPoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
+	in := &backup.DeleteRecoveryPointInput{
+		BackupVaultName:  ptr.To(backupVaultName),
+		RecoveryPointArn: ptr.To(recoveryPointArn),
+	}
+	out, err := c.svc.DeleteRecoveryPoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}

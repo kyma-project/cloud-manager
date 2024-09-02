@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,6 +27,19 @@ func WithNfsInstanceStatusHost(host string) ObjStatusAction {
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
 				if len(x.Status.Hosts) == 0 {
 					x.Status.Hosts = []string{host}
+					x.Status.Host = host
+				}
+			}
+		},
+	}
+}
+
+func WithNfsInstanceStatusId(id string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				if len(x.Status.Id) == 0 {
+					x.Status.Id = id
 				}
 			}
 		},
@@ -94,6 +108,32 @@ func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontro
 	}
 
 	err := clnt.Create(ctx, obj)
+	return err
+}
+
+func GivenNfsInstanceExists(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
+	if obj == nil {
+		obj = &cloudcontrolv1beta1.NfsInstance{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the KCP NfsInstance must have name set")
+	}
+
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	if apierrors.IsNotFound(err) {
+		err = clnt.Create(ctx, obj)
+	} else {
+		err = clnt.Update(ctx, obj)
+	}
 	return err
 }
 

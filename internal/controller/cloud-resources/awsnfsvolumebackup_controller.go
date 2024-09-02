@@ -18,19 +18,33 @@ package cloudresources
 
 import (
 	"context"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrreconciler "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
+
+type AwsNfsVolumeBackupReconcilerFactory struct {
+	backupProvider awsclient.SkrClientProvider[client.Client]
+	env            abstractions.Environment
+}
+
+func (f *AwsNfsVolumeBackupReconcilerFactory) New(args skrreconciler.ReconcilerArguments) reconcile.Reconciler {
+	return &AwsNfsVolumeBackupReconciler{
+		reconciler: awsnfsvolumebackup.NewReconcilerFactory(f.backupProvider, abstractions.NewOSEnvironment()).New(args),
+	}
+}
 
 // AwsNfsVolumeBackupReconciler reconciles a AwsNfsVolumeBackup object
 type AwsNfsVolumeBackupReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	reconciler reconcile.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsvolumebackups,verbs=get;list;watch;create;update;patch;delete
@@ -47,16 +61,15 @@ type AwsNfsVolumeBackupReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
 func (r *AwsNfsVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Reconcile(ctx, req)
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *AwsNfsVolumeBackupReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+func SetupAwsNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, backupProvider awsclient.SkrClientProvider[client.Client], env abstractions.Environment) error {
+	return reg.Register().
+		WithFactory(&AwsNfsVolumeBackupReconcilerFactory{
+			backupProvider: backupProvider,
+			env:            env,
+		}).
 		For(&cloudresourcesv1beta1.AwsNfsVolumeBackup{}).
-		Complete(r)
+		Complete()
 }

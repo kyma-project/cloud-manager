@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -21,16 +20,19 @@ const fileBackupPattern = "projects/%s/locations/%s/backups/%s"
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
+const GcpApiTimeout = time.Second * 3
 
 type GcpConfig struct {
 	GcpRetryWaitTime     time.Duration
 	GcpOperationWaitTime time.Duration
+	GcpApiTimeout        time.Duration
 }
 
 func GetGcpConfig(env abstractions.Environment) *GcpConfig {
 	return &GcpConfig{
 		GcpRetryWaitTime:     GetConfigDuration(env, "GCP_RETRY_WAIT_DURATION", GcpRetryWaitTime),
 		GcpOperationWaitTime: GetConfigDuration(env, "GCP_OPERATION_WAIT_DURATION", GcpOperationWaitTime),
+		GcpApiTimeout:        GetConfigDuration(env, "GCP_API_TIMEOUT_DURATION", GcpApiTimeout),
 	}
 }
 
@@ -41,8 +43,6 @@ func GetConfigDuration(env abstractions.Environment, key string, defaultValue ti
 	}
 	return duration
 }
-
-var FilestoreInstanceRegEx *regexp.Regexp = regexp.MustCompile(`^projects\/([^/]+)\/locations\/([^/]+)\/instances\/([^/]+)$`)
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)
@@ -64,39 +64,16 @@ func GetFileBackupPath(projectId, location, name string) string {
 	return fmt.Sprintf(fileBackupPattern, projectId, location, name)
 }
 
-type networkTier string
-
-const (
-	NetworkTierPremium  networkTier = "PREMIUM"
-	NetworkTierStandard networkTier = "STANDARD"
-)
-
-type ipVersion string
-
-const (
-	IpVersionIpV4 ipVersion = "IPV4"
-	IpVersionIpV6 ipVersion = "IPV6"
-)
-
 type addressType string
 
 const (
-	AddressTypeExternal addressType = "EXTERNAL"
 	AddressTypeInternal addressType = "INTERNAL"
 )
 
 type ipRangePurpose string
 
 const (
-	IpRangePurposeVPCPeering            ipRangePurpose = "VPC_PEERING"
-	IpRangePurposePrivateServiceConnect ipRangePurpose = "PRIVATE_SERVICE_CONNECT"
-)
-
-type ipv6EndpointType string
-
-const (
-	Ipv6EndpointTypeVm    ipv6EndpointType = "VM"
-	Ipv6EndpointTypeNetlb ipv6EndpointType = "NETLB"
+	IpRangePurposeVPCPeering ipRangePurpose = "VPC_PEERING"
 )
 
 const (
@@ -116,16 +93,8 @@ const (
 type FilestoreState string
 
 const (
-	CREATING   FilestoreState = "CREATING"
-	READY      FilestoreState = "READY"
-	REPAIRING  FilestoreState = "REPAIRING"
-	DELETING   FilestoreState = "DELETING"
-	ERROR      FilestoreState = "ERROR"
-	RESTORING  FilestoreState = "RESTORING"
-	SUSPENDED  FilestoreState = "SUSPENDED"
-	SUSPENDING FilestoreState = "SUSPENDING"
-	RESUMING   FilestoreState = "RESUMING"
-	REVERTING  FilestoreState = "REVERTING"
+	READY    FilestoreState = "READY"
+	DELETING FilestoreState = "DELETING"
 )
 
 type OperationType int

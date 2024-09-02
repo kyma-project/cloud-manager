@@ -12,7 +12,7 @@ func accessLoad(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, nil
 	}
 
-	arr, err := state.cceeClient.ListShareAccessRights(ctx, state.share.ID)
+	arr, err := state.cceeClient.ListShareAccessRules(ctx, state.share.ID)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "error listing CCEE share access rights", composed.StopWithRequeue, ctx)
 	}

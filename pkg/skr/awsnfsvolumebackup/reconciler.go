@@ -2,6 +2,7 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -47,6 +48,7 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	fmt.Println("Received reconcile for :", request)
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
@@ -58,11 +60,18 @@ func (r *reconciler) newAction() composed.Action {
 		"AwsNfsVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeBackup{}),
 		commonScope.New(),
+		addFinalizer,
 		loadSkrAwsNfsVolume,
 		stopIfVolumeNotReady,
 		loadKcpAwsNfsInstance,
+		setIdempotencyToken,
 		createAwsClient,
 		loadVault,
+		loadAwsBackup,
+		createAwsBackup,
+		deleteAwsBackup,
+		removeFinalizer,
+		updateStatus,
 
 		composed.StopAndForgetAction,
 	)
