@@ -21,6 +21,8 @@ jobs:
           go env
       - name: Install jv
         run: |
+          mkdir -p bin
+          GOBIN=`pwd`/bin
           ls -ls $GOBIN
           go install github.com/santhosh-tekuri/jsonschema/cmd/jv@latest
           ls -ls $GOBIN
