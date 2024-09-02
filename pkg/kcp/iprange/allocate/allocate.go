@@ -32,7 +32,7 @@ func AllocateCidr(maskOnes int, existingRanges []string) (string, error) {
 	}
 
 	current, _ := parseRange(existingRanges[0])
-	current.nextWithOnes(maskOnes)
+	current = current.nextWithOnes(maskOnes)
 	for occupied.overlaps(current) {
 		current = current.next()
 		if current == nil {

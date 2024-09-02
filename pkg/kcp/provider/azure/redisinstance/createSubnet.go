@@ -31,7 +31,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		state.Scope().Spec.Scope.Azure.Network.Pods,
 		state.Scope().Spec.Scope.Azure.Network.Services,
 	}
-	cidr, error := iprangeallocate.AllocateCidr(22, existingRanges)
+	cidr, error := iprangeallocate.AllocateCidr(25, existingRanges)
 
 	if error != nil {
 		logger.Error(error, "Error creating Azure subnet")
