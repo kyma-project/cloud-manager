@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -69,9 +69,6 @@ spec:
                 autoMinorVersionUpgrade:
                   default: false
                   type: boolean
-                  x-kubernetes-validations:
-                    - message: AutoMinorVersionUpgrade is immutable.
-                      rule: (self == oldSelf)
                 cacheNodeType:
                   type: string
                 engineVersion:

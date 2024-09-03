@@ -40,7 +40,6 @@ type AwsRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AutoMinorVersionUpgrade is immutable."
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
 
 	// +optional

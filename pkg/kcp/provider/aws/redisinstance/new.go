@@ -41,6 +41,7 @@ func New(stateFactory StateFactory) composed.Action {
 					updateStatusId,
 					waitElastiCacheAvailable,
 					modifyCacheNodeType,
+					modifyAutoMinorVersionUpgrade,
 					updateElastiCacheCluster,
 					updateStatus,
 				),

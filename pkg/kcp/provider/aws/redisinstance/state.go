@@ -78,3 +78,8 @@ func (s *State) UpdateCacheNodeType(cacheNodeType string) {
 	s.modifyElastiCacheClusterOptions.CacheNodeType = ptr.To(cacheNodeType)
 	s.updateMask = append(s.updateMask, "cacheNodeType")
 }
+
+func (s *State) UpdateAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) {
+	s.modifyElastiCacheClusterOptions.AutoMinorVersionUpgrade = ptr.To(autoMinorVersionUpgrade)
+	s.updateMask = append(s.updateMask, "autoMinorVersionUpgrade")
+}
