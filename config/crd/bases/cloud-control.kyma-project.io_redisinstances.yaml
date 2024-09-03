@@ -54,9 +54,6 @@ spec:
                       autoMinorVersionUpgrade:
                         default: false
                         type: boolean
-                        x-kubernetes-validations:
-                        - message: AutoMinorVersionUpgrade is immutable.
-                          rule: (self == oldSelf)
                       cacheNodeType:
                         type: string
                       engineVersion:
