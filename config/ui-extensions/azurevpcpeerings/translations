@@ -1,7 +1,7 @@
 en:
   configuration: Configuration
   status: Status
-  spec.allowVnetAccess: Allow Vnet Access
+  status.state: State
   spec.remoteResourceGroup: Remote Resource Group
   spec.remoteVnet: Remote Vnet
   status.id: ID

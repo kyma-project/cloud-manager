@@ -4,9 +4,6 @@ body:
       source: spec
       children:
         - widget: Labels
-          source: allowVnetAccess
-          name: spec.allowVnetAccess
-        - widget: Labels
           source: remoteResourceGroup
           name: spec.remoteResourceGroup
         - widget: Labels
@@ -19,6 +16,9 @@ body:
       widget: Panel
       source: status
       children:
+        - widget: Labels
+          source: state
+          name: status.state
         - widget: Labels
           source: id
           name: status.id

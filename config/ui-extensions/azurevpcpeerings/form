@@ -1,7 +1,3 @@
-- path: spec.allowVnetAccess
-  name: spec.allowVnetAccess
-  disableOnEdit: true
-  description: Immutable once set.
 - path: spec.remoteResourceGroup
   name: spec.remoteResourceGroup
   widget: Text
