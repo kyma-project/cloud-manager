@@ -7,9 +7,6 @@ data:
           source: spec
           children:
             - widget: Labels
-              source: allowVnetAccess
-              name: spec.allowVnetAccess
-            - widget: Labels
               source: remoteResourceGroup
               name: spec.remoteResourceGroup
             - widget: Labels
@@ -23,13 +20,12 @@ data:
           source: status
           children:
             - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
               source: id
               name: status.id
   form: |
-    - path: spec.allowVnetAccess
-      name: spec.allowVnetAccess
-      disableOnEdit: true
-      description: Immutable once set.
     - path: spec.remoteResourceGroup
       name: spec.remoteResourceGroup
       widget: Text
@@ -58,20 +54,20 @@ data:
     description: >-
         Description here
   list: |-
-    - source: spec.allowVnetAccess
-      name: spec.allowVnetAccess
-      sort: true
     - source: spec.remoteResourceGroup
       name: spec.remoteResourceGroup
       sort: true
     - source: spec.remoteVnet
       name: spec.remoteVnet
       sort: true
+    - source: status.state
+      name: status.state
+      sort: true
   translations: |-
     en:
       configuration: Configuration
       status: Status
-      spec.allowVnetAccess: Allow Vnet Access
+      status.state: State
       spec.remoteResourceGroup: Remote Resource Group
       spec.remoteVnet: Remote Vnet
       status.id: ID

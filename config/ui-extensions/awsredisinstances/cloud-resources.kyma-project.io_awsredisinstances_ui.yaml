@@ -64,8 +64,6 @@ data:
       name: spec.autoMinorVersionUpgrade
       required: false
       widget: Switch
-      disableOnEdit: true
-      description: Immutable once set.
 
     - path: spec.engineVersion
       name: spec.engineVersion
