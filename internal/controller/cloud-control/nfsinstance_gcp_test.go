@@ -1,6 +1,8 @@
 package cloudcontrol
 
 import (
+	"context"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -436,6 +438,25 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			infra.GcpMock().SetOperationError(nil)
 		})
 
+		It("// cleanup: delete GCP NfsVolume for unhappy path", func() {
+			infra.GcpMock().SetCreateError(nil)
+			infra.GcpMock().SetPatchError(nil)
+			infra.GcpMock().SetDeleteError(nil)
+			infra.GcpMock().SetGetError(nil)
+			infra.GcpMock().SetOperationError(nil)
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpNfsInstance).
+				Should(Succeed())
+			Eventually(func(ctx context.Context) error {
+				_, err := composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, gcpNfsInstance, infra.KCP().Client())
+				return err
+			}).
+				WithContext(infra.Ctx()).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpNfsInstance).
+				Should(Succeed())
+		})
 	})
 
 	Context("Scenario: GCP NFSVolume With Restore Happy Path", Ordered, func() {
