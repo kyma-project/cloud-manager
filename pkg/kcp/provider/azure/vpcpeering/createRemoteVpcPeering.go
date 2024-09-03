@@ -6,11 +6,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,7 +27,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	tenantId := state.tenantId
 
 	// We are creating virtual network peering in remote subscription therefore we are decomposing remoteVnetID
-	remote, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
+	remote, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		logger.Error(err, "Error parsing remoteVnet")
@@ -47,7 +47,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
 	// Since we are creating virtual network peering connection from remote to shoot we need to build shootNetworkID
-	virtualNetworkId := util.VirtualNetworkResourceId(
+	virtualNetworkId := azureutil.VirtualNetworkResourceId(
 		state.Scope().Spec.Scope.Azure.SubscriptionId,
 		state.Scope().Spec.Scope.Azure.VpcNetwork, // ResourceGroup name is the same as VPC network name.
 		state.Scope().Spec.Scope.Azure.VpcNetwork)
@@ -74,7 +74,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 

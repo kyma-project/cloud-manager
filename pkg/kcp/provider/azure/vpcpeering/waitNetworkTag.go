@@ -4,8 +4,8 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Context) {
@@ -40,7 +40,7 @@ func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Cont
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to remote vpc network tag mismatch").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
