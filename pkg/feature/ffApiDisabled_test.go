@@ -2,6 +2,7 @@ package feature
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -17,7 +18,7 @@ func TestApiDisabled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := Initialize(ctx, WithFile("testdata/apiDisabled.yaml"))
+	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)
 
 	sch := runtime.NewScheme()

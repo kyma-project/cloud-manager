@@ -47,8 +47,6 @@ func CreateGcpNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 		// some error
 		return err
 	}
-	//write entire object on the console
-	fmt.Println(obj)
 	err = clnt.Create(ctx, obj)
 	return err
 }

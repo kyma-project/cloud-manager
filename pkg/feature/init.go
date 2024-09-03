@@ -10,6 +10,7 @@ import (
 	"github.com/thomaspoignant/go-feature-flag/retriever"
 	"github.com/thomaspoignant/go-feature-flag/retriever/fileretriever"
 	"github.com/thomaspoignant/go-feature-flag/retriever/httpretriever"
+	"log/slog"
 	"os"
 	"time"
 )
@@ -21,10 +22,8 @@ func init() {
 }
 
 type ProviderOptions struct {
-	logger    logr.Logger
-	loggerSet bool
-	filename  string
-	url       string
+	filename string
+	url      string
 }
 
 type ProviderOption func(o *ProviderOptions)
@@ -41,21 +40,12 @@ func WithUrl(url string) ProviderOption {
 	}
 }
 
-func WithLogger(logger logr.Logger) ProviderOption {
-	return func(o *ProviderOptions) {
-		o.logger = logger
-		o.loggerSet = true
-	}
-}
-
-func Initialize(ctx context.Context, opts ...ProviderOption) (err error) {
+func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption) (err error) {
 	o := &ProviderOptions{}
 	for _, x := range opts {
 		x(o)
 	}
-	if !o.loggerSet {
-		o.logger = logr.Discard()
-	}
+
 	if len(o.filename) == 0 && len(o.url) == 0 {
 		o.url = os.Getenv("FEATURE_FLAG_CONFIG_URL")
 		if len(o.url) == 0 {
@@ -67,19 +57,20 @@ func Initialize(ctx context.Context, opts ...ProviderOption) (err error) {
 	}
 	var rtvr retriever.Retriever
 	if o.url != "" {
-		o.logger.WithValues("url", o.url).Info("Using http retriever")
+		logger.WithValues("ffRetrieverUrl", o.url).Info("Using http retriever")
 		rtvr = &httpretriever.Retriever{URL: o.url}
 	} else {
-		o.logger.WithValues("file", o.filename).Info("Using file retriever")
+		logger.WithValues("ffRetrieverFile", o.filename).Info("Using file retriever")
 		rtvr = &fileretriever.Retriever{Path: o.filename}
 	}
 	ff, errLoading := ffclient.New(ffclient.Config{
-		PollingInterval:         10 * time.Second,
+		PollingInterval:         30 * time.Second,
 		Context:                 ctx,
 		FileFormat:              "yaml",
 		EnablePollingJitter:     true,
 		StartWithRetrieverError: true,
 		Retriever:               rtvr,
+		LeveledLogger:           slog.New(logr.ToSlogHandler(logger)),
 	})
 	if errLoading != nil {
 		err = fmt.Errorf("loading error: %w", errLoading)

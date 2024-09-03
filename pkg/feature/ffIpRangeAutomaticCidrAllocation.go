@@ -9,5 +9,5 @@ var IpRangeAutomaticCidrAllocation = &ipRangeAutomaticCidrAllocationInfo{}
 type ipRangeAutomaticCidrAllocationInfo struct{}
 
 func (k *ipRangeAutomaticCidrAllocationInfo) Value(ctx context.Context) bool {
-	return provider.BoolVariation(ctx, ipRangeAutomaticCidrAllocationFlagName, false)
+	return provider.BoolVariation(ctx, ipRangeAutomaticCidrAllocationFlagName, true)
 }

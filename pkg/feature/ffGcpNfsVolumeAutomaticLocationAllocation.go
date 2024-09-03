@@ -9,5 +9,5 @@ var GcpNfsVolumeAutomaticLocationAllocation = &gcpNfsVolumeAutomaticLocationAllo
 type gcpNfsVolumeAutomaticLocationAllocationInfo struct{}
 
 func (k *gcpNfsVolumeAutomaticLocationAllocationInfo) Value(ctx context.Context) bool {
-	return provider.BoolVariation(ctx, gcpNfsVolumeAutomaticLocationAllocationFlagName, false)
+	return provider.BoolVariation(ctx, gcpNfsVolumeAutomaticLocationAllocationFlagName, true)
 }

@@ -179,18 +179,26 @@ func (s *baseState) PatchObjStatus(ctx context.Context) error {
 // characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',
 // or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')"}
 func (s *baseState) PatchObjAddFinalizer(ctx context.Context, f string) (bool, error) {
-	added := controllerutil.AddFinalizer(s.Obj(), f)
-	if !added {
-		return false, nil
-	}
-	p := []byte(fmt.Sprintf(`{"metadata": {"finalizers":["%s"]}}`, f))
-	return true, s.Cluster().K8sClient().Patch(ctx, s.Obj(), client.RawPatch(types.MergePatchType, p))
+	return PatchObjAddFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
 }
 
 // PatchObjRemoveFinalizer patches obj with JSONPatchType removing the specified finalizer name
 func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool, error) {
+	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
+}
+
+func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
+	added := controllerutil.AddFinalizer(obj, f)
+	if !added {
+		return false, nil
+	}
+	p := []byte(fmt.Sprintf(`{"metadata": {"finalizers":["%s"]}}`, f))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
+func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
 	idx := -1
-	for i, s := range s.Obj().GetFinalizers() {
+	for i, s := range obj.GetFinalizers() {
 		if s == f {
 			idx = i
 			break
@@ -199,7 +207,7 @@ func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool
 	if idx == -1 {
 		return false, nil
 	}
-	controllerutil.RemoveFinalizer(s.Obj(), f)
+	controllerutil.RemoveFinalizer(obj, f)
 	p := []byte(fmt.Sprintf(`[{"op": "remove", "path": "/metadata/finalizers/%d"}]`, idx))
-	return true, s.Cluster().K8sClient().Patch(ctx, s.Obj(), client.RawPatch(types.JSONPatchType, p))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
 }
