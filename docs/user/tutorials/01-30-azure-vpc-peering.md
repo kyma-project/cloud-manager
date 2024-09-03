@@ -1,4 +1,4 @@
-# Create VPC peering in Azure
+# Create VPC Peering in Azure
 
 This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in Azure. The tutorial 
 assumes that the Cloud Manager module is enabled in your Kyma cluster. Follow the steps from this tutorial to create a new resource group, VPC 
