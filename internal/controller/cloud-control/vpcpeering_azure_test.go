@@ -65,7 +65,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		infra.AzureMock().SetPeeringStateConnected(subscriptionId, resourceGroupName, virtualNetworkName, vpcpeeringName)
+		By("When Azure VPC Peering state is Connected", func() {
+			infra.AzureMock().SetPeeringStateConnected(subscriptionId, resourceGroupName, virtualNetworkName, vpcpeeringName)
+		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).

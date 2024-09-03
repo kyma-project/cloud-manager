@@ -6,9 +6,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,7 +24,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
 	tenantId := state.tenantId
 
-	remote, err := util.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
+	remote, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		logger.Error(err, "Error parsing remoteVnet")
@@ -46,7 +46,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 		message := azuremeta.GetErrorMessage(err)
 
-		successError := composed.StopWithRequeueDelay(time.Minute)
+		successError := composed.StopWithRequeueDelay(util.Timing.T60000ms())
 
 		// If VpcNetwork is not found user can not recover from this error without updating the resource so, we are doing
 		// stop and forget.
