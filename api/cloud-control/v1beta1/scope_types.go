@@ -169,6 +169,9 @@ type ScopeStatus struct {
 //+kubebuilder:subresource:status
 
 // Scope is the Schema for the scopes API
+// +kubebuilder:printcolumn:name="Kyma",type="string",JSONPath=".spec.kymaName"
+// +kubebuilder:printcolumn:name="Shoot",type="string",JSONPath=".spec.shootName"
+// +kubebuilder:printcolumn:name="Provider",type="string",JSONPath=".spec.provider"
 type Scope struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

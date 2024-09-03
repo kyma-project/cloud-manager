@@ -14,7 +14,17 @@ spec:
     singular: scope
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.kymaName
+      name: Kyma
+      type: string
+    - jsonPath: .spec.shootName
+      name: Shoot
+      type: string
+    - jsonPath: .spec.provider
+      name: Provider
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: Scope is the Schema for the scopes API
