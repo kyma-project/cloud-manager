@@ -29,7 +29,11 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	case client.ADD:
 		operation, err = state.serviceNetworkingClient.CreateServiceConnection(ctx, project, vpc, state.ipRanges)
 	case client.MODIFY:
-		operation, err = state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
+		if len(state.ipRanges) > 0 {
+			operation, err = state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
+		} else {
+			operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
+		}
 	case client.DELETE:
 		operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
 	}
