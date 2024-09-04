@@ -50,6 +50,8 @@ type ModifyElastiCacheClusterOptions struct {
 	EngineVersion              *string
 	AutoMinorVersionUpgrade    *bool
 	PreferredMaintenanceWindow *string
+	TransitEncryptionEnabled   *bool
+	TransitEncryptionMode      *elasticacheTypes.TransitEncryptionMode
 }
 
 type ElastiCacheClient interface {
@@ -340,6 +342,12 @@ func (c *client) ModifyElastiCacheCluster(ctx context.Context, id string, option
 	}
 	if options.AutoMinorVersionUpgrade != nil {
 		params.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
+	}
+	if options.TransitEncryptionEnabled != nil {
+		params.TransitEncryptionEnabled = options.TransitEncryptionEnabled
+	}
+	if options.TransitEncryptionMode != nil {
+		params.TransitEncryptionMode = *options.TransitEncryptionMode
 	}
 
 	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)

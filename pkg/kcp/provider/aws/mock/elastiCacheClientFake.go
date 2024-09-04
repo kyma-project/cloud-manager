@@ -238,6 +238,9 @@ func (client *elastiCacheClientFake) CreateElastiCacheCluster(ctx context.Contex
 			},
 		},
 	}
+	if options.TransitEncryptionEnabled {
+		client.elastiCaches[options.Name].TransitEncryptionMode = elasticacheTypes.TransitEncryptionModeRequired
+	}
 
 	return &elasticache.CreateReplicationGroupOutput{}, nil
 }
@@ -248,8 +251,23 @@ func (client *elastiCacheClientFake) ModifyElastiCacheCluster(ctx context.Contex
 
 	if instance, ok := client.elastiCaches[id]; ok {
 		instance.Status = ptr.To("modifying")
-		instance.CacheNodeType = options.CacheNodeType
-		instance.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
+		if options.CacheNodeType != nil {
+			instance.CacheNodeType = options.CacheNodeType
+		}
+		if options.AutoMinorVersionUpgrade != nil {
+			instance.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
+		}
+		if options.TransitEncryptionEnabled != nil {
+			instance.TransitEncryptionEnabled = options.TransitEncryptionEnabled
+			if *options.TransitEncryptionEnabled {
+				instance.TransitEncryptionMode = elasticacheTypes.TransitEncryptionModeRequired
+			} else {
+				instance.TransitEncryptionMode = ""
+			}
+		}
+		if options.TransitEncryptionMode != nil {
+			instance.TransitEncryptionMode = *options.TransitEncryptionMode
+		}
 	}
 
 	return &elasticache.ModifyReplicationGroupOutput{}, nil
