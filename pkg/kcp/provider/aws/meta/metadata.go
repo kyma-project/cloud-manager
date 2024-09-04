@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/smithy-go"
@@ -49,6 +50,14 @@ func AsApiError(err error) smithy.APIError {
 	return nil
 }
 
+func GetErrorMessage(err error) string {
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorMessage()
+	}
+	return err.Error()
+}
+
 var notFoundErrorCodes = map[string]struct{}{
 	(&efsTypes.FileSystemNotFound{}).ErrorCode():                    {},
 	(&efsTypes.AccessPointNotFound{}).ErrorCode():                   {},
@@ -57,6 +66,7 @@ var notFoundErrorCodes = map[string]struct{}{
 	(&elasticacheTypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
 	(&elasticacheTypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
 	(&secretsmanagerTypes.ResourceNotFoundException{}).ErrorCode():  {},
+	"InvalidVpcPeeringConnectionID.NotFound":                        {},
 }
 
 func IsNotFound(err error) bool {

@@ -4,22 +4,18 @@ import (
 	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"strings"
 )
 
 func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
-
-	if len(obj.Status.Id) != 0 {
-		return nil, nil
-	}
 
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 
@@ -30,27 +26,24 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	var vpc *ec2Types.Vpc
-	var allLoadedVpcs []string
+
 	for _, vv := range vpcList {
 		v := vv
-		var sb strings.Builder
-		for _, t := range v.Tags {
-			sb.WriteString(ptr.Deref(t.Key, ""))
-			sb.WriteString("=")
-			sb.WriteString(ptr.Deref(t.Value, ""))
-			sb.WriteString(",")
-		}
-		allLoadedVpcs = append(allLoadedVpcs, fmt.Sprintf(
-			"%s{%s}",
-			ptr.Deref(v.VpcId, ""),
-			sb.String(),
-		))
 		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {
 			vpc = &v
+			break
 		}
 	}
 
 	if vpc == nil {
+
+		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2Types.Vpc) string {
+			return fmt.Sprintf(
+				"%s{%s}",
+				ptr.Deref(x.VpcId, ""),
+				util.TagsToString(x.Tags))
+		})
+
 		logger.
 			WithValues(
 				"vpcName", vpcNetworkName,
@@ -58,7 +51,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 			).
 			Info("VPC not found")
 
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
+		return composed.UpdateStatus(obj).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	"k8s.io/utils/ptr"
 )
 
 type Client interface {
@@ -13,6 +14,9 @@ type Client interface {
 	DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error)
 	AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*types.VpcPeeringConnection, error)
 	DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error
+	DescribeRouteTables(ctc context.Context, vpcId string) ([]types.RouteTable, error)
+	CreateRoute(ctx context.Context, routeTableId, destinationCidrBlock, vpcPeeringConnectionId *string) error
+	DeleteRoute(ctx context.Context, routeTableId, destinationCidrBlock *string) error
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -45,17 +49,14 @@ func (c *client) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVp
 		PeerVpcId:   remoteVpcId,
 		PeerRegion:  remoteRegion,
 		PeerOwnerId: remoteAccountId,
+		TagSpecifications: []types.TagSpecification{
+			{
+				ResourceType: types.ResourceTypeVpcPeeringConnection,
+				Tags:         tags,
+			},
+		},
 	})
 
-	x := &ec2.CreateVpcPeeringConnectionInput{}
-	tagSpec := []types.TagSpecification{
-		{
-			ResourceType: types.ResourceTypeVpcPeeringConnection,
-			Tags:         tags,
-		},
-	}
-
-	x.TagSpecifications = tagSpec
 	if err != nil {
 		return nil, err
 	}
@@ -93,4 +94,39 @@ func (c *client) DeleteVpcPeeringConnection(ctx context.Context, connectionId *s
 	}
 
 	return nil
+}
+
+func (c *client) DescribeRouteTables(ctx context.Context, vpcId string) ([]types.RouteTable, error) {
+	out, err := c.svc.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
+		Filters: []types.Filter{
+			{
+				Name:   ptr.To("vpc-id"),
+				Values: []string{vpcId},
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.RouteTables, nil
+}
+
+func (c *client) CreateRoute(ctx context.Context, routeTableId, destinationCidrBlock, vpcPeeringConnectionId *string) error {
+	_, err := c.svc.CreateRoute(ctx, &ec2.CreateRouteInput{
+		RouteTableId:           routeTableId,
+		DestinationCidrBlock:   destinationCidrBlock,
+		VpcPeeringConnectionId: vpcPeeringConnectionId,
+	})
+
+	return err
+}
+
+func (c *client) DeleteRoute(ctx context.Context, routeTableId, destinationCidrBlock *string) error {
+	_, err := c.svc.DeleteRoute(ctx, &ec2.DeleteRouteInput{
+		RouteTableId:         routeTableId,
+		DestinationCidrBlock: destinationCidrBlock,
+	})
+	return err
 }

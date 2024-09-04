@@ -18,10 +18,11 @@ var _ Server = &server{}
 
 func New() Server {
 	return &server{
-		vpcStore:        &vpcStore{},
-		nfsStore:        &nfsStore{},
-		scopeStore:      &scopeStore{},
-		vpcPeeringStore: &vpcPeeringStore{},
+		vpcStore:         &vpcStore{},
+		nfsStore:         &nfsStore{},
+		scopeStore:       &scopeStore{},
+		vpcPeeringStore:  &vpcPeeringStore{},
+		routeTablesStore: &routeTablesStore{},
 		elastiCacheClientFake: &elastiCacheClientFake{
 			elasticacheMutex:    &sync.Mutex{},
 			subnetGroupMutex:    &sync.Mutex{},
@@ -42,6 +43,7 @@ type server struct {
 	*scopeStore
 	*vpcPeeringStore
 	*elastiCacheClientFake
+	*routeTablesStore
 }
 
 func (s *server) ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient] {

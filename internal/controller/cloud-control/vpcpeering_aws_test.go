@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -19,8 +20,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 	It("Scenario: KCP AWS VpcPeering is created", func() {
 		const (
 			kymaName        = "09bdb13e-8a51-4920-852d-b170433d1236"
-			vpcId           = "26ce833e-07d1-4493-98ee-f9d6f11a6987"
-			remoteVpcId     = "6e6d1748-9912-4957-9075-b97a6fac8ac1"
+			vpcId           = "vpc-c0c7d75db0832988d"
+			vpcCidr         = "10.180.0.0/16"
+			remoteVpcId     = "vpc-2c41e43fcd5340f8f"
+			remoteVpcCidr   = "10.200.0.0/16"
 			remoteAccountId = "444455556666"
 			remoteRegion    = "eu-west1"
 		)
@@ -45,7 +48,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 			infra.AwsMock().AddVpc(
 				vpcId,
-				"10.180.0.0/16",
+				vpcCidr,
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
@@ -57,10 +60,31 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 		})
 
+		By("And Given AWS route table exists", func() {
+
+			infra.AwsMock().AddRouteTable(
+				ptr.To("rtb-c6606c725da27ff10"),
+				ptr.To(vpcId),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", scope.Spec.Scope.Aws.VpcNetwork), "1"),
+				[]ec2Types.RouteTableAssociation{})
+
+			infra.AwsMock().AddRouteTable(
+				ptr.To("rtb-0c65354e2979d9c83"),
+				ptr.To(vpcId),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", scope.Spec.Scope.Aws.VpcNetwork), "1"),
+				[]ec2Types.RouteTableAssociation{})
+
+			infra.AwsMock().AddRouteTable(
+				ptr.To("rtb-ae17300793a424240"),
+				ptr.To(vpcId),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", "wrong2"), "1"),
+				[]ec2Types.RouteTableAssociation{})
+		})
+
 		By("And Given AWS remote VPC exists", func() {
 			infra.AwsMock().AddVpc(
 				remoteVpcId,
-				"10.200.0.0/16",
+				remoteVpcCidr,
 				awsutil.Ec2Tags("Name", "Remote Network Name", kymaName, kymaName),
 				nil,
 			)
@@ -70,6 +94,29 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags("Name", "wrong3"),
 				nil,
 			)
+		})
+
+		By("And Given AWS remote route table exists", func() {
+
+			infra.AwsMock().AddRouteTable(
+				ptr.To("rtb-69a1e8a929a9eb5ed"),
+				ptr.To(remoteVpcId),
+				awsutil.Ec2Tags(),
+				[]ec2Types.RouteTableAssociation{
+					{
+						Main: ptr.To(true),
+					},
+				})
+
+			infra.AwsMock().AddRouteTable(
+				ptr.To("rtb-ae17300793a424247"),
+				ptr.To(remoteVpcId),
+				awsutil.Ec2Tags(),
+				[]ec2Types.RouteTableAssociation{
+					{
+						SubnetId: ptr.To("10.200.1.0/24"),
+					},
+				})
 		})
 
 		obj := &cloudcontrolv1beta1.VpcPeering{}
@@ -115,6 +162,18 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(obj.Status.Id).To(Equal(ptr.Deref(connection.VpcPeeringConnectionId, "xxx")))
 		})
 
+		tables, _ := infra.AwsMock().DescribeRouteTables(infra.Ctx(), vpcId)
+
+		By("And Then all route table has one new route with destination CIDR matching remote VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(3))
+		})
+
+		tables, _ = infra.AwsMock().DescribeRouteTables(infra.Ctx(), remoteVpcId)
+
+		By("And Then all remote route table has one new route with destination CIDR matching VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, vpcCidr)).To(Equal(2))
+		})
+
 		// DELETE
 
 		By("When KCP VpcPeering is deleted", func() {
@@ -138,5 +197,22 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 			Expect(found).To(Equal(false))
 		})
+
+		By("And Then all route table has no routes with destination CIDR matching remote VPC CIDR", func() {
+			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(0))
+		})
 	})
 })
+
+func routeCount(tables []ec2Types.RouteTable, vpcPeeringConnectionId, destinationCidrBlock string) int {
+	cnt := 0
+	for _, t := range tables {
+		for _, r := range t.Routes {
+			if *r.VpcPeeringConnectionId == vpcPeeringConnectionId &&
+				*r.DestinationCidrBlock == destinationCidrBlock {
+				cnt++
+			}
+		}
+	}
+	return cnt
+}

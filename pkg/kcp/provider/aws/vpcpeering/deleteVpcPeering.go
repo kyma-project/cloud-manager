@@ -25,6 +25,12 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	err := state.client.DeleteVpcPeeringConnection(ctx, ptr.To(obj.Status.Id))
 
 	if err != nil {
+
+		if awsmeta.IsNotFound(err) {
+			lll.Info("VpcPeeringConnection not found")
+			return nil, nil
+		}
+
 		return awsmeta.LogErrorAndReturn(err, "Error deleting vpc peering", composed.LoggerIntoCtx(ctx, lll))
 	}
 

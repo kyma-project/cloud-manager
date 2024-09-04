@@ -50,5 +50,6 @@ type Server interface {
 	NfsConfig
 	ScopeConfig
 	VpcPeeringConfig
+	RouteTableConfig
 	AwsElastiCacheMockUtils
 }
