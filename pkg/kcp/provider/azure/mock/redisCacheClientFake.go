@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"k8s.io/utils/ptr"
@@ -146,5 +147,13 @@ func (redisCacheClientFake *redisCacheClientFake) UpdateRedisInstance(ctx contex
 		resourceGroup.redisInstance.Properties.SKU = parameters.Properties.SKU
 	}
 
+	return nil
+}
+
+func (redisCacheClientFake *redisCacheClientFake) GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.SubnetsClientGetResponse, error) {
+	return &armnetwork.SubnetsClientGetResponse{Subnet: armnetwork.Subnet{Name: ptr.To("fake-subnet")}}, nil
+}
+
+func (redisCacheClientFake *redisCacheClientFake) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, cidr string) error {
 	return nil
 }

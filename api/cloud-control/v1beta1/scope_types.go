@@ -114,6 +114,31 @@ type AzureScope struct {
 
 	// +kubebuilder:validation:Required
 	VpcNetwork string `json:"vpcNetwork"`
+
+	// +kubebuilder:validation:Required
+	Network AzureNetwork `json:"azureNetwork"`
+
+	// +kubebuilder:validation:Required
+	TechnicalID string `json:"technicalID"`
+}
+
+type AzureNetwork struct {
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+
+	// +optional
+	VPC AzureVPC `json:"vpc"`
+}
+
+type AzureVPC struct {
+	Id   string `json:"id,omitempty"`
+	CIDR string `json:"cidr,omitempty"`
 }
 
 type AwsScope struct {

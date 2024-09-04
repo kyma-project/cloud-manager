@@ -14,6 +14,7 @@ func TestAllocateCidr(t *testing.T) {
 		s string
 	}{
 		{22, []string{"10.250.0.0/22", "10.96.0.0/13", "10.104.0.0/13"}, "10.250.4.0/22"},
+		{25, []string{"10.250.0.0/22", "10.96.0.0/13", "10.104.0.0/13"}, "10.250.4.0/25"},
 	}
 	for x, item := range list {
 		t.Run(strconv.Itoa(x), func(t *testing.T) {

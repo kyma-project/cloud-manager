@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/go-logr/logr"
@@ -23,6 +24,7 @@ type State struct {
 
 	azureRedisInstance *armRedis.ResourceInfo
 	resourceGroup      *armResources.ResourceGroup
+	subnet             *armnetwork.Subnet
 }
 
 type StateFactory interface {

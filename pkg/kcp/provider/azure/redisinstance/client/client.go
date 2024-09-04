@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -19,6 +20,8 @@ type Client interface {
 	GetResourceGroup(ctx context.Context, name string) (*armResources.ResourceGroupsClientGetResponse, error)
 	CreateResourceGroup(ctx context.Context, name string, location string) error
 	DeleteResourceGroup(ctx context.Context, name string) error
+	GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.SubnetsClientGetResponse, error)
+	CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, cidr string) error
 }
 
 func NewClientProvider() azureClient.SkrClientProvider[Client] {
@@ -42,19 +45,27 @@ func NewClientProvider() azureClient.SkrClientProvider[Client] {
 			return nil, err
 		}
 
-		return newClient(armRedisClientInstance, resourceGroupClientInstance), nil
+		subnetClientInstance, err := armnetwork.NewSubnetsClient(subscriptionId, cred, nil)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return newClient(armRedisClientInstance, resourceGroupClientInstance, subnetClientInstance), nil
 	}
 }
 
 type redisClient struct {
 	RedisClient         *armRedis.Client
 	ResourceGroupClient *armResources.ResourceGroupsClient
+	SubnetClient        *armnetwork.SubnetsClient
 }
 
-func newClient(armRedisClientInstance *armRedis.Client, resourceGroupClientInstance *armResources.ResourceGroupsClient) Client {
+func newClient(armRedisClientInstance *armRedis.Client, resourceGroupClientInstance *armResources.ResourceGroupsClient, subnetClientInstance *armnetwork.SubnetsClient) Client {
 	return &redisClient{
 		RedisClient:         armRedisClientInstance,
 		ResourceGroupClient: resourceGroupClientInstance,
+		SubnetClient:        subnetClientInstance,
 	}
 }
 
@@ -158,6 +169,37 @@ func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName
 
 	if error != nil {
 		logger.Error(error, "Failed to update Azure Redis instance")
+		return error
+	}
+
+	return nil
+}
+
+func (c *redisClient) GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.SubnetsClientGetResponse, error) {
+	logger := composed.LoggerFromCtx(ctx)
+
+	subnetClientGetResponse, error := c.SubnetClient.Get(ctx, resourceGroupName, virtualNetworkName, subnetName, nil)
+
+	if error != nil {
+		logger.Error(error, "Failed to get Azure Redis subnet")
+		return nil, error
+	}
+
+	return &subnetClientGetResponse, nil
+}
+
+func (c *redisClient) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, cidr string) error {
+	logger := composed.LoggerFromCtx(ctx)
+
+	subnet := armnetwork.Subnet{
+		Properties: &armnetwork.SubnetPropertiesFormat{
+			AddressPrefix: to.Ptr(cidr),
+		},
+	}
+	_, error := c.SubnetClient.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, subnetName, subnet, nil)
+
+	if error != nil {
+		logger.Error(error, "Failed to create Azure Redis subnet")
 		return error
 	}
 

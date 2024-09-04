@@ -5,6 +5,9 @@ import (
 	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
+	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/utils/ptr"
 )
 
 func createScopeAzure(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,6 +28,12 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 		return composed.StopAndForget, nil // no requeue
 	}
 
+	infra := &awsgardener.InfrastructureConfig{}
+	err := json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, ctx)
+	}
+
 	// just create the scope with Azure specifics, the ensureScopeCommonFields will set common values
 	scope := &cloudcontrolv1beta1.Scope{
 		Spec: cloudcontrolv1beta1.ScopeSpec{
@@ -33,6 +42,16 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 					TenantId:       tenantID,
 					SubscriptionId: subscriptionID,
 					VpcNetwork:     commonVpcName(state.shootNamespace, state.shootName),
+					Network: cloudcontrolv1beta1.AzureNetwork{
+						Nodes:    ptr.Deref(state.shoot.Spec.Networking.Nodes, ""),
+						Pods:     ptr.Deref(state.shoot.Spec.Networking.Pods, ""),
+						Services: ptr.Deref(state.shoot.Spec.Networking.Services, ""),
+						VPC: cloudcontrolv1beta1.AzureVPC{
+							Id:   ptr.Deref(infra.Networks.VPC.ID, ""),
+							CIDR: ptr.Deref(infra.Networks.VPC.CIDR, ""),
+						},
+					},
+					TechnicalID: state.shoot.Status.TechnicalID,
 				},
 			},
 		},
