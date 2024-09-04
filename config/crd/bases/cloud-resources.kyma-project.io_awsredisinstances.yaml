@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.9
+    cloud-resources.kyma-project.io/version: v0.0.10
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -106,9 +106,6 @@ spec:
                 transitEncryptionEnabled:
                   default: false
                   type: boolean
-                  x-kubernetes-validations:
-                    - message: TransitEncryptionEnabled is immutable.
-                      rule: (self == oldSelf)
               required:
                 - cacheNodeType
               type: object

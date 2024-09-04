@@ -69,8 +69,10 @@ func (s *State) ShouldModifyKcp() bool {
 
 	areCacheNodeTypesDifferent := s.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType != awsRedisInstance.Spec.CacheNodeType
 	isAutoMinorVersionUpgradeDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade != awsRedisInstance.Spec.AutoMinorVersionUpgrade
+	isTransitEncryptionEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled != awsRedisInstance.Spec.TransitEncryptionEnabled
 
 	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
 		areCacheNodeTypesDifferent ||
-		isAutoMinorVersionUpgradeDifferent
+		isAutoMinorVersionUpgradeDifferent ||
+		isTransitEncryptionEnabledDifferent
 }

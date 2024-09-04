@@ -1,0 +1,32 @@
+apiDisabled:
+  variations:
+    enabled: false
+    disabled: true
+  targeting:
+    - name: All APIs are disabled for trial SKR
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Enabled on stage for global account 6034adc9-3441-494c-b438-a0eba4c5045a
+      query: landscape == "stage" and globalAccount == "6034adc9-3441-494c-b438-a0eba4c5045a"
+      variation: enabled
+    - name: Disabled APIs on stage and prod
+      query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
+      variation: enabled
+  defaultRule:
+    variation: enabled
+ipRangeAutomaticCidrAllocation:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+gcpNfsVolumeAutomaticLocationAllocation:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enabled on dev 57bc9639-d752-4f67-8b9e-7cd12514575f
+      query: landscape == "dev" and kyma == "57bc9639-d752-4f67-8b9e-7cd12514575f"
+      variation: enabled
+  defaultRule:
+    variation: disabled

@@ -83,3 +83,26 @@ func (s *State) UpdateAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) {
 	s.modifyElastiCacheClusterOptions.AutoMinorVersionUpgrade = ptr.To(autoMinorVersionUpgrade)
 	s.updateMask = append(s.updateMask, "autoMinorVersionUpgrade")
 }
+
+func (s *State) UpdateTransitEncryptionEnabled(transitEncryptionEnabled bool, isMidstep bool) {
+
+	if isMidstep {
+		s.modifyElastiCacheClusterOptions.TransitEncryptionMode = ptr.To(elasticacheTypes.TransitEncryptionModePreferred)
+		s.updateMask = append(s.updateMask, "transitEncryptionMode")
+
+		if transitEncryptionEnabled {
+			s.modifyElastiCacheClusterOptions.TransitEncryptionEnabled = ptr.To(transitEncryptionEnabled)
+			s.updateMask = append(s.updateMask, "transitEncryptionEnabled")
+		}
+
+		return
+	}
+
+	if transitEncryptionEnabled {
+		s.modifyElastiCacheClusterOptions.TransitEncryptionMode = ptr.To(elasticacheTypes.TransitEncryptionModeRequired)
+		s.updateMask = append(s.updateMask, "transitEncryptionMode")
+	}
+
+	s.modifyElastiCacheClusterOptions.TransitEncryptionEnabled = ptr.To(transitEncryptionEnabled)
+	s.updateMask = append(s.updateMask, "transitEncryptionEnabled")
+}
