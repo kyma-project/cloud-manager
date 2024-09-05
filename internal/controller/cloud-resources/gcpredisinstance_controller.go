@@ -18,8 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpredisinstance"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrreconciler "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -61,14 +59,6 @@ func (r *GcpRedisInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func SetupGcpRedisInstanceReconciler(reg skrruntime.SkrRegistry) error {
-	reg.IndexField(&cloudresourcesv1beta1.GcpRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.GcpRedisInstance)
-		if redisInstance.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{redisInstance.Spec.IpRange.Name}
-	})
-
 	return reg.Register().
 		WithFactory(&GcpRedisInstanceReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.GcpRedisInstance{}).

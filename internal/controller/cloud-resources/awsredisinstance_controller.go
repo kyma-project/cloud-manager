@@ -18,8 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -60,14 +58,6 @@ func (r *AwsRedisInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func SetupAwsRedisInstanceReconciler(reg skrruntime.SkrRegistry) error {
-	reg.IndexField(&cloudresourcesv1beta1.AwsRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.AwsRedisInstance)
-		if redisInstance.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{redisInstance.Spec.IpRange.Name}
-	})
-
 	return reg.Register().
 		WithFactory(&AwsRedisInstanceReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.AwsRedisInstance{}).
