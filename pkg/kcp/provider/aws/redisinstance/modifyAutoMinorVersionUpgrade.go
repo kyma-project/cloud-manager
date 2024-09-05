@@ -12,11 +12,11 @@ func modifyAutoMinorVersionUpgrade(ctx context.Context, st composed.State) (erro
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	if state.elastiCacheCluster == nil {
+	if state.elastiCacheReplicationGroup == nil {
 		return composed.StopWithRequeue, nil
 	}
 
-	currentAutoMinorVersionUpgrade := ptr.Deref(state.elastiCacheCluster.AutoMinorVersionUpgrade, false)
+	currentAutoMinorVersionUpgrade := ptr.Deref(state.elastiCacheReplicationGroup.AutoMinorVersionUpgrade, false)
 	desiredAutoMinorVersionUpgrade := redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade
 
 	if currentAutoMinorVersionUpgrade == desiredAutoMinorVersionUpgrade {

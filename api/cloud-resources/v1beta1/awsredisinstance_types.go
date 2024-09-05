@@ -59,7 +59,6 @@ type AwsRedisInstanceSpec struct {
 	//
 	// Example: sun:23:00-mon:01:30
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="PreferredMaintenanceWindow is immutable."
 	PreferredMaintenanceWindow *string `json:"preferredMaintenanceWindow,omitempty"`
 
 	// +optional
