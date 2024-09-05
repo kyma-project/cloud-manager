@@ -5,7 +5,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -26,10 +25,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 
 	//Load the nfsVolume object
 	nfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-	nfsVolumeKey := types.NamespacedName{
-		Name:      restore.Spec.Destination.Volume.Name,
-		Namespace: restore.Spec.Destination.Volume.Namespace,
-	}
+	nfsVolumeKey := restore.Spec.Destination.Volume.ToNamespacedName(restore.Namespace)
 	err := state.SkrCluster.K8sClient().Get(ctx, nfsVolumeKey, nfsVolume)
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error loading SKR GcpNfsVolume", composed.StopWithRequeue, ctx)
