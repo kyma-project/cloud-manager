@@ -24,11 +24,11 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore", func() {
 		timeout = time.Second * 20
 	)
 
-	skrGcpNfsVolumeName := "gcp-nfs-1"
+	skrGcpNfsVolumeName := "gcp-nfs-1-r"
 	skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-	skrGcpNfsBackupName := "gcp-nfs-1-backup"
+	skrGcpNfsBackupName := "gcp-nfs-backup-1-r"
 	skrGcpNfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
-	skrIpRangeName := "gcp-iprange-1"
+	skrIpRangeName := "gcp-iprange-1-r"
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	BeforeEach(func() {

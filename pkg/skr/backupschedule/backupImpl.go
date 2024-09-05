@@ -25,7 +25,7 @@ func loadBackupImpl(ctx context.Context, st composed.State) (error, context.Cont
 	if _, ok := schedule.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 		state.backupImpl = &backupImplGcpNfs{}
 	} else {
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

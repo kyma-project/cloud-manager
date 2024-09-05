@@ -33,7 +33,7 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 		logger.Info("Invalid cron expression")
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

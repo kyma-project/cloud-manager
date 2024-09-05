@@ -22,7 +22,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 	//If the schedule is in Done state, stop reconciliation
 	if schedule.State() == cloudresourcesv1beta1.JobStateDone {
 		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Schedule already completed, stopping reconciliation.")
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -34,7 +34,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Current Time is after the EndTime. Stopping reconciliation.")
 		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
 		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -50,7 +50,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("One-time schedule already ran. Stopping reconciliation.")
 		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
 		schedule.SetNextRunTimes(nil)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}

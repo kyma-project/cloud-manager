@@ -1,8 +1,9 @@
 package cloudresources
 
 import (
+	"context"
 	"fmt"
-	"os"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -26,14 +27,19 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		timeout = time.Second * 20
 	)
 
-	skrIpRangeName := "gcp-iprange-1"
+	skrIpRangeName := "gcp-iprange-1-v"
 	skrIpRange := &cloudresourcesv1beta1.IpRange{}
 	kcpIpRangeName := "513f20b4-7b73-4246-9397-f8dd55344479"
 	kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
+	shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled := func() (bool, string) {
+		if feature.GcpNfsVolumeAutomaticLocationAllocation.Value(context.Background()) {
+			return false, ""
+		}
+		return true, "gcpNfsVolumeAutomaticLocationAllocation is disabled"
+	}
+
 	BeforeEach(func() {
-		err := os.Unsetenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION")
-		Expect(err).ToNot(HaveOccurred())
 		By("And Given SKR namespace exists", func() {
 			//Create namespace if it doesn't exist.
 			Eventually(CreateNamespace).
@@ -100,9 +106,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		pv := &corev1.PersistentVolume{}
 
 		gcpNfsVolumeName := "gcp-nfs-volume-1"
-		nfsIpAddress := "10.11.12.14"
+		nfsIpAddress := "10.11.12.11"
 		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
-			Name: "gcp-nfs-pv",
+			Name: "gcp-nfs-pv-1",
 			Labels: map[string]string{
 				"app": "gcp-nfs",
 			},
@@ -301,7 +307,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		pv := &corev1.PersistentVolume{}
 
 		gcpNfsVolumeName := "gcp-nfs-volume-2"
-		nfsIpAddress := "10.11.12.16"
+		nfsIpAddress := "10.11.12.12"
 		updatedCapacityGb := 1024
 
 		prevPv := &corev1.PersistentVolume{}
@@ -551,7 +557,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		pvc := &corev1.PersistentVolumeClaim{}
 
 		gcpNfsVolumeName := "gcp-nfs-volume-3"
-		nfsIpAddress := "10.11.12.16"
+		nfsIpAddress := "10.11.12.13"
 
 		BeforeEach(func() {
 			By("And Given SKR GcpNfsVolume exists", func() {
@@ -678,14 +684,12 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		pv := &corev1.PersistentVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
-		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
-		Expect(err).ToNot(HaveOccurred())
 		gcpNfsVolumeName := "gcp-nfs-volume-4"
 		nfsIpAddress := "10.11.12.14"
 		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
-			Name: "gcp-nfs-pv-3",
+			Name: "gcp-nfs-pv-4",
 			Labels: map[string]string{
-				"app": "gcp-nfs-3",
+				"app": "gcp-nfs-4",
 			},
 			Annotations: map[string]string{
 				"volume": "gcp-nfs-volume-4",
@@ -694,7 +698,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 		pvc := &corev1.PersistentVolumeClaim{}
 		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc-3",
+			Name: "gcp-nfs-pvc-4",
 			Labels: map[string]string{
 				"foo": "bar",
 			},
@@ -703,6 +707,10 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 		BeforeEach(func() {
+			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
+			if shouldSkip {
+				Skip(msg)
+			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
@@ -725,7 +733,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 					WithName(gcpNfsVolumeName),
 					WithGcpNfsVolumeIpRange(skrIpRange.Name),
-					WithGcpNfsVolumeLocation(""),
+					WithGcpNfsVolumeSpecLocation(""),
 					WithPvSpec(pvSpec),
 					WithPvcSpec(pvcSpec),
 				).
@@ -898,18 +906,16 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		pv := &corev1.PersistentVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
-		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
-		Expect(err).ToNot(HaveOccurred())
 
 		gcpNfsVolumeName := "gcp-nfs-volume-5"
-		nfsIpAddress := "10.11.12.16"
+		nfsIpAddress := "10.11.12.15"
 		updatedCapacityGb := 1024
 
 		prevPv := &corev1.PersistentVolume{}
 		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
-			Name: "gcp-nfs-pv-4",
+			Name: "gcp-nfs-pv-5",
 			Labels: map[string]string{
-				"app": "gcp-nfs-4",
+				"app": "gcp-nfs-5",
 			},
 			Annotations: map[string]string{
 				"volume": "gcp-nfs-volume-5",
@@ -918,7 +924,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 		pvc := &corev1.PersistentVolumeClaim{}
 		prevPvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc-4",
+			Name: "gcp-nfs-pvc-5",
 			Labels: map[string]string{
 				"foo": "bar",
 			},
@@ -927,7 +933,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "gcp-nfs-pvc-4",
+			Name: "gcp-nfs-pvc-5",
 			Labels: map[string]string{
 				"foo":  "bar-changed",
 				"foo2": "bar2",
@@ -939,6 +945,10 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		}
 
 		BeforeEach(func() {
+			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
+			if shouldSkip {
+				Skip(msg)
+			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
@@ -1022,7 +1032,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		})
 
 		It("When SKR GcpNfsVolume Update is called ", func() {
-
 			Eventually(Update).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
@@ -1165,13 +1174,15 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		pv := &corev1.PersistentVolume{}
 		pvc := &corev1.PersistentVolumeClaim{}
 		scope := &cloudcontrolv1beta1.Scope{}
-		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
-		Expect(err).ToNot(HaveOccurred())
 
 		gcpNfsVolumeName := "gcp-nfs-volume-6"
 		nfsIpAddress := "10.11.12.16"
 
 		BeforeEach(func() {
+			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
+			if shouldSkip {
+				Skip(msg)
+			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
@@ -1253,7 +1264,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			})
 		})
 		It("When SKR GcpNfsVolume Delete is called ", func() {
-
 			//Delete SKR GcpNfsVolume
 			Eventually(Delete).
 				WithArguments(

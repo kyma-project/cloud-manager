@@ -26,7 +26,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 	sourceRef, err := getSourceRef(ctx, state)
 	if err != nil {
 		schedule.SetState(cloudresourcesv1beta1.StateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -45,7 +45,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("SourceRef is not ready")
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

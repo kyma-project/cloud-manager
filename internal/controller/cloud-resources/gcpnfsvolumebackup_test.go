@@ -1,8 +1,9 @@
 package cloudresources
 
 import (
+	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"os"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -23,14 +24,19 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 		timeout = time.Second * 20
 	)
 
-	skrGcpNfsVolumeName := "gcp-nfs-1"
+	skrGcpNfsVolumeName := "gcp-nfs-1-b"
 	skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-	skrIpRangeName := "gcp-iprange-1"
+	skrIpRangeName := "gcp-iprange-1-b"
 	scope := &cloudcontrolv1beta1.Scope{}
 
+	shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled := func() (bool, string) {
+		if feature.GcpNfsVolumeAutomaticLocationAllocation.Value(context.Background()) {
+			return false, ""
+		}
+		return true, "gcpNfsVolumeAutomaticLocationAllocation is disabled"
+	}
+
 	BeforeEach(func() {
-		err := os.Unsetenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION")
-		Expect(err).ToNot(HaveOccurred())
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists
@@ -71,6 +77,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume,
 					WithConditions(SkrReadyCondition()),
+					WithGcpNfsVolumeStatusLocation(skrGcpNfsVolume.Spec.Location),
 				).
 				Should(Succeed())
 		})
@@ -172,10 +179,12 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 	Describe("Scenario: SKR GcpNfsVolumeBackup is created with empty location", func() {
 		//Define variables.
 		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
-		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-1"
-		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
-		Expect(err).ToNot(HaveOccurred())
+		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-3"
 		It("When GcpNfsVolumeBackup Create is called", func() {
+			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
+			if shouldSkip {
+				Skip(msg)
+			}
 			Eventually(CreateGcpNfsVolumeBackup).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
@@ -210,12 +219,13 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 	Describe("Scenario: SKR GcpNfsVolumeBackup is deleted with empty location", Ordered, func() {
 		//Define variables.
 		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
-		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-2"
-		err := os.Setenv("FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION", "true")
-		Expect(err).ToNot(HaveOccurred())
+		gcpNfsVolumeBackupName := "gcp-nfs-volume-backup-4"
 		BeforeEach(func() {
+			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
+			if shouldSkip {
+				Skip(msg)
+			}
 			By("And Given SKR GcpNfsVolumeBackup has Ready condition", func() {
-
 				//Create GcpNfsVolume
 				Eventually(CreateGcpNfsVolumeBackup).
 					WithArguments(
@@ -237,7 +247,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 			})
 		})
 		It("When SKR GcpNfsVolumeBackup Delete is called ", func() {
-
 			//Delete SKR GcpNfsVolume
 			Eventually(Delete).
 				WithArguments(

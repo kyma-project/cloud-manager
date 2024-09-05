@@ -58,7 +58,7 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 	}
 	schedule.SetNextRunTimes(runtimes)
 
-	return composed.UpdateStatus(schedule).
+	return composed.PatchStatus(schedule).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

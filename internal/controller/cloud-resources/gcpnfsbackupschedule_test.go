@@ -24,8 +24,8 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		timeout = time.Second * 20
 	)
 	now := time.Now().UTC()
-	skrIpRangeName := "gcp-iprange-1"
-	skrNfsVolumeName := "gcp-nfs-1"
+	skrIpRangeName := "gcp-iprange-1-bs"
+	skrNfsVolumeName := "gcp-nfs-1-bs"
 	skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 	scope := &cloudcontrolv1beta1.Scope{}
 
@@ -83,7 +83,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		nfsBackupHourlySchedule := "0 * * * *"
 		nfsBackupLocation := "us-west1"
 
-		nfsBackup1Name := "gcp-nfs-backup-1"
+		nfsBackup1Name := "gcp-nfs-backup-1-bs"
 
 		expectedTimes := []time.Time{
 			time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location()).UTC(),

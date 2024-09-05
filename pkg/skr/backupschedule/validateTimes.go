@@ -42,7 +42,7 @@ func validateTimes(ctx context.Context, st composed.State) (error, context.Conte
 		logger.Info(fmt.Sprintf("Invalid start time : %s before %s", start, refTime))
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -61,7 +61,7 @@ func validateTimes(ctx context.Context, st composed.State) (error, context.Conte
 		logger.Info("Invalid end time")
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

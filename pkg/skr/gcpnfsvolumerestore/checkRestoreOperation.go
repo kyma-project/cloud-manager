@@ -38,7 +38,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			}
 		}
 		restore.Status.State = v1beta1.JobStateError
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -60,7 +60,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	restore.Status.OpIdentifier = ""
 	if op == nil {
 		restore.Status.State = v1beta1.JobStateError
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -75,7 +75,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	//If the operation failed, update the error status on the object.
 	if op != nil && op.Error != nil {
 		restore.Status.State = v1beta1.JobStateFailed
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -91,7 +91,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 
 	//Done Successfully
 	restore.Status.State = v1beta1.JobStateDone
-	return composed.UpdateStatus(restore).
+	return composed.PatchStatus(restore).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    v1beta1.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,

@@ -20,6 +20,7 @@ import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -279,4 +280,18 @@ type GcpNfsBackupScheduleList struct {
 
 func init() {
 	SchemeBuilder.Register(&GcpNfsBackupSchedule{}, &GcpNfsBackupScheduleList{})
+}
+
+func (sc *GcpNfsBackupSchedule) CloneForPatchStatus() client.Object {
+	return &GcpNfsBackupSchedule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GcpNfsBackupSchedule",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: sc.Namespace,
+			Name:      sc.Name,
+		},
+		Status: sc.Status,
+	}
 }
