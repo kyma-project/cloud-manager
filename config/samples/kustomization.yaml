@@ -18,4 +18,5 @@ resources:
 - cloud-resources_v1beta1_gcpredisinstance.yaml
 - cloud-resources_v1beta1_awsredisinstance.yaml
 - cloud-resources_v1beta1_cceenfsvolume.yaml
+- cloud-control_v1beta1_network.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

@@ -23,6 +23,7 @@ import (
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -71,6 +72,14 @@ func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 }
 
 func SetupGcpNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
+	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		nfsVol := object.(*cloudresourcesv1beta1.GcpNfsVolume)
+		if nfsVol.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{nfsVol.Spec.IpRange.Name}
+	})
+
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.GcpNfsVolume{}).

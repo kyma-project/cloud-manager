@@ -8,10 +8,16 @@ import (
 
 type State struct {
 	focal.State
+
+	network *cloudcontrolv1beta1.Network
 }
 
 func (s *State) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 	return s.Obj().(*cloudcontrolv1beta1.IpRange)
+}
+
+func (s *State) Network() *cloudcontrolv1beta1.Network {
+	return s.network
 }
 
 func newState(focalState focal.State) types.State {

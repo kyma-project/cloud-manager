@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -48,6 +49,11 @@ type IpRangeSpec struct {
 
 	// +optional
 	Options IpRangeOptions `json:"options,omitempty"`
+
+	// Network is a reference to the network where this IpRange belongs and where it creates subnets.
+	// If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
+	// +optional
+	Network *klog.ObjectRef `json:"network,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=0

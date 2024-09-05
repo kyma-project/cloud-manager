@@ -287,7 +287,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")
 		os.Exit(1)
 	}
-
+	if err = cloudcontrolcontroller.SetupNetworkReconciler(
+		mgr,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Network")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

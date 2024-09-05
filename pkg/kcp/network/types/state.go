@@ -7,6 +7,6 @@ import (
 
 type State interface {
 	focal.State
-	ObjAsIpRange() *cloudcontrolv1beta1.IpRange
-	Network() *cloudcontrolv1beta1.Network
+
+	ObjAsNetwork() *cloudcontrolv1beta1.Network
 }

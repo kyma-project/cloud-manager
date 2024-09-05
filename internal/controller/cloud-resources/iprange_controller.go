@@ -23,7 +23,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -61,35 +60,6 @@ func (r *IpRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
-	reg.IndexField(&cloudresourcesv1beta1.AwsNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		nfsVol := object.(*cloudresourcesv1beta1.AwsNfsVolume)
-		if nfsVol.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{nfsVol.Spec.IpRange.Name}
-	})
-	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		nfsVol := object.(*cloudresourcesv1beta1.GcpNfsVolume)
-		if nfsVol.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{nfsVol.Spec.IpRange.Name}
-	})
-	reg.IndexField(&cloudresourcesv1beta1.GcpRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.GcpRedisInstance)
-		if redisInstance.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{redisInstance.Spec.IpRange.Name}
-	})
-	reg.IndexField(&cloudresourcesv1beta1.AwsRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.AwsRedisInstance)
-		if redisInstance.Spec.IpRange.Name == "" {
-			return []string{"default"}
-		}
-		return []string{redisInstance.Spec.IpRange.Name}
-	})
-
 	return reg.Register().
 		WithFactory(&IpRangeReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.IpRange{}).
