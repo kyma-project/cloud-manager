@@ -46,7 +46,7 @@ func InitConfig(cfg config.Config) {
 			"peering.secretAccessKey",
 			config.Sensitive(),
 			config.SourceEnv("AWS_PEERING_SECRET_ACCESS_KEY"),
-			config.SourceFile("AWS_PEEriNG_SECRET_ACCESS_KEY"),
+			config.SourceFile("AWS_PEERING_SECRET_ACCESS_KEY"),
 		),
 		config.Path(
 			"peering.assumeRoleName",
