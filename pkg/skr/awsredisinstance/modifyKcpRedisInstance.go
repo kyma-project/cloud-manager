@@ -28,6 +28,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	state.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType = awsRedisInstance.Spec.CacheNodeType
 	state.KcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade = awsRedisInstance.Spec.AutoMinorVersionUpgrade
 	state.KcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled = awsRedisInstance.Spec.TransitEncryptionEnabled
+	state.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow = awsRedisInstance.Spec.PreferredMaintenanceWindow
 
 	err := state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 	if err != nil {

@@ -43,6 +43,7 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyCacheNodeType,
 					modifyAutoMinorVersionUpgrade,
 					modifyTransitEncryptionEnabled,
+					modifyPreferredMaintenanceWindow,
 					updateElastiCacheCluster,
 					updateStatus,
 				),

@@ -21,7 +21,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	if state.elastiCacheCluster != nil {
+	if state.elastiCacheReplicationGroup != nil {
 		return nil, nil
 	}
 
@@ -33,7 +33,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		authTokenSecetString = state.authTokenValue.SecretString
 	}
 
-	_, err := state.awsClient.CreateElastiCacheCluster(ctx, []types.Tag{
+	_, err := state.awsClient.CreateElastiCacheReplicationGroup(ctx, []types.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
 			Value: ptr.To(state.Name().String()),

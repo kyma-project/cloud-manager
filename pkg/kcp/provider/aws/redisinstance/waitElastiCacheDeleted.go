@@ -16,11 +16,11 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.elastiCacheCluster == nil {
+	if state.elastiCacheReplicationGroup == nil {
 		return nil, nil
 	}
 
-	cacheState := ptr.Deref(state.elastiCacheCluster.Status, "")
+	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
 
 	if cacheState != awsmeta.ElastiCache_DELETING {
 		errorMsg := fmt.Sprintf("Error: unexpected aws elasticache cluster state: %s", cacheState)

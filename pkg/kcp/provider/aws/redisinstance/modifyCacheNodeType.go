@@ -12,11 +12,11 @@ func modifyCacheNodeType(ctx context.Context, st composed.State) (error, context
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	if state.elastiCacheCluster == nil {
+	if state.elastiCacheReplicationGroup == nil {
 		return composed.StopWithRequeue, nil
 	}
 
-	currentCacheNodeType := ptr.Deref(state.elastiCacheCluster.CacheNodeType, "")
+	currentCacheNodeType := ptr.Deref(state.elastiCacheReplicationGroup.CacheNodeType, "")
 	desiredCacheNodeType := redisInstance.Spec.Instance.Aws.CacheNodeType
 
 	if currentCacheNodeType == desiredCacheNodeType {

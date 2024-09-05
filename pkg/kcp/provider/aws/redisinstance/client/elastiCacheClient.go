@@ -70,10 +70,11 @@ type ElastiCacheClient interface {
 	CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error
 	DeleteAuthTokenSecret(ctx context.Context, secretName string) error
 
-	DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error)
-	CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
-	ModifyElastiCacheCluster(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
-	DeleteElastiCacheClaster(ctx context.Context, id string) error
+	DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error)
+	CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
+	ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
+	DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error
+	DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error)
 }
 
 func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
@@ -285,7 +286,7 @@ func (c *client) DeleteAuthTokenSecret(ctx context.Context, secretName string) e
 	return err
 }
 
-func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
+func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
 	out, err := c.elastiCacheSvc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: ptr.To(clusterId),
 	})
@@ -299,7 +300,7 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, clusterId strin
 	return out.ReplicationGroups, nil
 }
 
-func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
+func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(options.Name),
 		ReplicationGroupDescription: aws.String("ElastiCache managed by Kyma Cloud Manager"),
@@ -326,7 +327,7 @@ func (c *client) CreateElastiCacheCluster(ctx context.Context, tags []elasticach
 	return res, nil
 }
 
-func (c *client) ModifyElastiCacheCluster(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
+func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
 	params := &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId: aws.String(id),
 		ApplyImmediately:   aws.Bool(true),
@@ -359,7 +360,7 @@ func (c *client) ModifyElastiCacheCluster(ctx context.Context, id string, option
 	return res, nil
 }
 
-func (c *client) DeleteElastiCacheClaster(ctx context.Context, id string) error {
+func (c *client) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
 	deleteInput := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId:   ptr.To(id),
 		RetainPrimaryCluster: aws.Bool(false),
@@ -368,4 +369,18 @@ func (c *client) DeleteElastiCacheClaster(ctx context.Context, id string) error 
 	_, err := c.elastiCacheSvc.DeleteReplicationGroup(ctx, deleteInput)
 
 	return err
+}
+
+func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error) {
+	out, err := c.elastiCacheSvc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
+		CacheClusterId: ptr.To(id),
+	})
+
+	if err != nil {
+		if awsmeta.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return out.CacheClusters, nil
 }

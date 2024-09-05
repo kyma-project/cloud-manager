@@ -13,27 +13,27 @@ func modifyTransitEncryptionEnabled(ctx context.Context, st composed.State) (err
 
 	redisInstance := state.ObjAsRedisInstance()
 
-	if state.elastiCacheCluster == nil {
+	if state.elastiCacheReplicationGroup == nil {
 		return composed.StopWithRequeue, nil
 	}
 
-	currentTransitEncryptionEnabled := ptr.Deref(state.elastiCacheCluster.TransitEncryptionEnabled, false)
+	currentTransitEncryptionEnabled := ptr.Deref(state.elastiCacheReplicationGroup.TransitEncryptionEnabled, false)
 	desiredTransitEncryptionEnabled := redisInstance.Spec.Instance.Aws.TransitEncryptionEnabled
 
 	// when disabling transient encryption, we cant go from enabled to disabled
 	// we must go from enabled to preferred and then to disabled
 	isDisablingMidstep := !desiredTransitEncryptionEnabled &&
-		state.elastiCacheCluster.TransitEncryptionMode == elasticacheTypes.TransitEncryptionModeRequired
+		state.elastiCacheReplicationGroup.TransitEncryptionMode == elasticacheTypes.TransitEncryptionModeRequired
 
 	// when enabling transient encryption, we cant go from disabled to enabled
 	// we must go from disabled to preferred and then to enabled
 	isEnablingMidstep := desiredTransitEncryptionEnabled &&
-		state.elastiCacheCluster.TransitEncryptionMode == ""
+		state.elastiCacheReplicationGroup.TransitEncryptionMode == ""
 
 	isMidstep := isDisablingMidstep || isEnablingMidstep
 
 	if (currentTransitEncryptionEnabled == desiredTransitEncryptionEnabled) &&
-		state.elastiCacheCluster.TransitEncryptionMode != elasticacheTypes.TransitEncryptionModePreferred &&
+		state.elastiCacheReplicationGroup.TransitEncryptionMode != elasticacheTypes.TransitEncryptionModePreferred &&
 		!isMidstep {
 		return nil, nil
 	}
