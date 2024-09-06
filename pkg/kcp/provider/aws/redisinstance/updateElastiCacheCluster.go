@@ -16,7 +16,7 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	redisInstance := state.ObjAsRedisInstance()
 
-	if state.elastiCacheCluster == nil {
+	if state.elastiCacheReplicationGroup == nil {
 		return nil, nil
 	}
 
@@ -38,7 +38,7 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	}
 
 	logger.Info("Updating redis")
-	_, err = state.awsClient.ModifyElastiCacheCluster(ctx, *state.elastiCacheCluster.ReplicationGroupId, state.GetModifyElastiCacheClusterOptions())
+	_, err = state.awsClient.ModifyElastiCacheReplicationGroup(ctx, *state.elastiCacheReplicationGroup.ReplicationGroupId, state.GetModifyElastiCacheClusterOptions())
 
 	if err != nil {
 		logger.Error(err, "Error updating AWS Redis")

@@ -39,7 +39,7 @@ func deleteCascade(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	schedule.SetState(cloudresourcesv1beta1.StateDeleting)
-	return composed.UpdateStatus(schedule).
+	return composed.PatchStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
 		Run(ctx, state)

@@ -25,3 +25,7 @@ Dockerfile.cross
 *.swp
 *.swo
 *~
+
+# Local featureToggles file
+
+config/featureToggles/featureToggles.local.yaml

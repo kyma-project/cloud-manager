@@ -63,7 +63,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	if err != nil {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -85,7 +85,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 		Namespace: backup.GetNamespace(),
 		Name:      backup.GetName(),
 	})
-	return composed.UpdateStatus(schedule).
+	return composed.PatchStatus(schedule).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)

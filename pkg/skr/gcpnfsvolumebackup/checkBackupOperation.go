@@ -37,7 +37,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			}
 		}
 		backup.Status.State = v1beta1.GcpNfsBackupError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -59,7 +59,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 	backup.Status.OpIdentifier = ""
 	if op == nil {
 		backup.Status.State = v1beta1.GcpNfsBackupError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:   v1beta1.ConditionTypeError,
 				Status: metav1.ConditionTrue,
@@ -75,7 +75,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 	//If the operation failed, update the error status on the object.
 	if op != nil && op.Error != nil {
 		backup.Status.State = v1beta1.GcpNfsBackupError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -91,14 +91,14 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 	if backup.Status.State == v1beta1.GcpNfsBackupDeleting {
 		backup.Status.State = v1beta1.GcpNfsBackupDeleted
 		state.fileBackup = nil
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions().
 			SuccessErrorNil().
 			Run(ctx, state)
 	} else {
 		// The only remaining operation is backup creation.
 		backup.Status.State = v1beta1.GcpNfsBackupReady
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

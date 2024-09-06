@@ -36,7 +36,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	}
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -55,7 +55,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	if backupReady == nil || backupReady.Status != metav1.ConditionTrue {
 		logger.WithValues("GcpNfsVolumeBackup", nfsVolumeBackup.Name).Info("GcpNfsVolumeBackup is not ready")
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

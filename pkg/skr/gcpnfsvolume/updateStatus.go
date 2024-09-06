@@ -23,7 +23,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		WithValues("kcpNfsInstanceConditions", pie.Map(state.KcpNfsInstance.Status.Conditions, func(c metav1.Condition) string {
 			return fmt.Sprintf("%s:%s", c.Type, c.Status)
 		})).
-		Info("Updating SKR GcpNfsVolume status from KCP NgsInstance conditions")
+		Info("Updating SKR GcpNfsVolume status from KCP NfsInstance conditions")
 
 	kcpCondErr := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
@@ -34,7 +34,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondErr != nil && skrCondErr == nil {
 		logger.Info("Updating SKR GcpNfsVolume status with Error condition")
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -55,7 +55,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Status.CapacityGb
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
@@ -86,7 +86,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeProcessing
 
 	}
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+	return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 		SuccessError(composed.StopWithRequeueDelay(2*util.Timing.T100ms())).
 		Run(ctx, state)
 }

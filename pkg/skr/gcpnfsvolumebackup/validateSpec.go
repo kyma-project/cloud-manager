@@ -19,7 +19,7 @@ func validateLocation(ctx context.Context, st composed.State) (error, context.Co
 			return nil, nil
 		}
 		state.ObjAsGcpNfsVolumeBackup().Status.State = cloudresourcesv1beta1.GcpNfsBackupError
-		return composed.UpdateStatus(state.ObjAsGcpNfsVolumeBackup()).
+		return composed.PatchStatus(state.ObjAsGcpNfsVolumeBackup()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

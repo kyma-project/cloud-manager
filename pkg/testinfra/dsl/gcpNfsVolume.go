@@ -66,11 +66,23 @@ func WithGcpNfsValues() ObjAction {
 	}
 }
 
-func WithGcpNfsVolumeLocation(location string) ObjAction {
+func WithGcpNfsVolumeSpecLocation(location string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
 				x.Spec.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
+		},
+	}
+}
+
+func WithGcpNfsVolumeStatusLocation(location string) ObjAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Status.Location = location
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))

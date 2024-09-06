@@ -1,6 +1,7 @@
 package gcpnfsvolume
 
 import (
+	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -363,4 +364,9 @@ func (f *testStateFactory) newStateWith(nfsVolume *cloudresourcesv1beta1.GcpNfsV
 			Name:      nfsVolume.Name,
 			Namespace: nfsVolume.Namespace,
 		}, nfsVolume))
+}
+
+// Fake client doesn't support type "apply" for patching so falling back on update for unit tests.
+func (s *State) PatchObjStatus(ctx context.Context) error {
+	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
 }

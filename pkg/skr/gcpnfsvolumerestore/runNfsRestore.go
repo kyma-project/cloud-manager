@@ -49,7 +49,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -63,7 +63,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	if operation != nil {
 		restore.Status.OpIdentifier = operation.Name
 		restore.Status.State = cloudresourcesv1beta1.JobStateInProgress
-		return composed.UpdateStatus(restore).
+		return composed.PatchStatus(restore).
 			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}

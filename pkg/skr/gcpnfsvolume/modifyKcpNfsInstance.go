@@ -100,9 +100,10 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	// Update the object with the ID of the KCP NfsInstance
 	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
 	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeProcessing
-	return composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
+	err, ctx = composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
+	return err, ctx
 }
 
 func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger) (error, context.Context) {

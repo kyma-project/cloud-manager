@@ -33,7 +33,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.Info("Scope not found")
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
-		return composed.UpdateStatus(schedule).
+		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

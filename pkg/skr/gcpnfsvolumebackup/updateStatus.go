@@ -40,7 +40,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	} else {
 		logger.Info("Updating SKR GcpNfsVolumeBackup status with Ready condition")
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupReady
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

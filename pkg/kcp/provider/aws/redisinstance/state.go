@@ -17,10 +17,10 @@ type State struct {
 	types.State
 	awsClient client.ElastiCacheClient
 
-	subnetGroup        *elasticacheTypes.CacheSubnetGroup
-	parameterGroup     *elasticacheTypes.CacheParameterGroup
-	elastiCacheCluster *elasticacheTypes.ReplicationGroup
-	authTokenValue     *secretsmanager.GetSecretValueOutput
+	subnetGroup                 *elasticacheTypes.CacheSubnetGroup
+	parameterGroup              *elasticacheTypes.CacheParameterGroup
+	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
+	authTokenValue              *secretsmanager.GetSecretValueOutput
 
 	modifyElastiCacheClusterOptions client.ModifyElastiCacheClusterOptions
 	updateMask                      []string
@@ -105,4 +105,9 @@ func (s *State) UpdateTransitEncryptionEnabled(transitEncryptionEnabled bool, is
 
 	s.modifyElastiCacheClusterOptions.TransitEncryptionEnabled = ptr.To(transitEncryptionEnabled)
 	s.updateMask = append(s.updateMask, "transitEncryptionEnabled")
+}
+
+func (s *State) UpdatePreferredMaintenanceWindow(preferredMaintenanceWindow string) {
+	s.modifyElastiCacheClusterOptions.PreferredMaintenanceWindow = ptr.To(preferredMaintenanceWindow)
+	s.updateMask = append(s.updateMask, "preferredMaintenanceWindow")
 }
