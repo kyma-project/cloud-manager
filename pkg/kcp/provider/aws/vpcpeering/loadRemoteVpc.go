@@ -3,14 +3,11 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,13 +17,12 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	remoteVpcId := obj.Spec.VpcPeering.Aws.RemoteVpcId
 
-	vpcList, err := state.remoteClient.DescribeVpcs(ctx)
+	vpc, err := state.remoteClient.DescribeVpc(ctx, remoteVpcId)
 
+	if awsmeta.IsErrorRetryable(err) {
+		return awsmeta.LogErrorAndReturn(err, "Error loading remote AWS VPC Network", ctx)
+	}
 	if err != nil {
-		if awsmeta.IsErrorRetryable(err) {
-			return awsmeta.LogErrorAndReturn(err, "Error loading remote AWS VPC Networks", ctx)
-		}
-
 		logger.Error(err, "Error loading remote AWS VPC Networks")
 
 		condition := metav1.Condition{
@@ -47,30 +43,10 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, st)
 	}
 
-	var vpc *ec2Types.Vpc
-	var remoteVpcName string
-
-	for _, vv := range vpcList {
-		v := vv
-		if ptr.Deref(v.VpcId, "xxx") == remoteVpcId {
-			remoteVpcName = util.GetEc2TagValue(v.Tags, "Name")
-			vpc = &v
-			break
-		}
-	}
-
 	if vpc == nil {
-		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2Types.Vpc) string {
-			return fmt.Sprintf(
-				"%s{%s}",
-				ptr.Deref(x.VpcId, ""),
-				util.TagsToString(x.Tags))
-		})
-
 		logger.
 			WithValues(
 				"remoteVpcId", remoteVpcId,
-				"allLoadedVpcs", fmt.Sprintf("%v", allLoadedVpcs),
 			).
 			Info("VPC not found")
 
@@ -96,7 +72,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	ctx = composed.LoggerIntoCtx(ctx, logger.WithValues(
 		"remoteVpcId", remoteVpcId,
-		"remoteVpcName", remoteVpcName,
+		"remoteVpcName", util.GetEc2TagValue(vpc.Tags, "Name"),
 	))
 
 	return nil, ctx

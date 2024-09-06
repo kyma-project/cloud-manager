@@ -98,8 +98,9 @@ func (r *scopeReconciler) newAction() composed.Action {
 					//   * exist but waiting for api to be activated
 
 					addKymaFinalizer,
-					composed.BuildBranchingAction(
-						"scopeAlreadyCreatedBranching",
+					loadNetworks,
+					composed.If(
+						// scopeAlreadyCreatedBranching
 						composed.All(ObjIsLoadedPredicate(), composed.Not(UpdateIsNeededPredicate())),
 						composed.ComposeActions( // This is called only if scope exits, and it does not need to be updated.
 							"enableApisAndActivateSkr",
@@ -107,7 +108,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 							addReadyCondition,
 							skrActivate,
 							composed.StopAndForgetAction),
-						nil),
+					),
 					// scope does not exist or needs to be updated
 					createGardenerClient,
 					findShootName,
@@ -116,6 +117,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 					createScope,
 					ensureScopeCommonFields,
 					saveScope,
+					createKymaNetworkReference,
 					composed.StopWithRequeueAction, // enableApisAndActivateSkr will be called in the next loop
 				),
 			),
@@ -134,10 +136,12 @@ func UpdateIsNeededPredicate() composed.Predicate {
 	return func(ctx context.Context, st composed.State) bool {
 		if ObjIsLoadedPredicate()(ctx, st) {
 			state := st.(*State)
-			scope := state.ObjAsScope().Spec
-			switch scope.Provider {
+			if state.allNetworks.FindFirstByType(cloudcontrolv1beta1.NetworkTypeKyma) == nil {
+				return true
+			}
+			switch state.ObjAsScope().Spec.Provider {
 			case cloudcontrolv1beta1.ProviderGCP:
-				return scope.Scope.Gcp.Workers == nil || len(scope.Scope.Gcp.Workers) == 0
+				return state.ObjAsScope().Spec.Scope.Gcp.Workers == nil || len(state.ObjAsScope().Spec.Scope.Gcp.Workers) == 0
 			default:
 				return false
 			}

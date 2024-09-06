@@ -9,7 +9,8 @@ import (
 )
 
 type Client interface {
-	DescribeVpcs(ctx context.Context) ([]types.Vpc, error)
+	DescribeVpc(ctx context.Context, vpcId string) (*types.Vpc, error)
+	DescribeVpcs(ctx context.Context, name string) ([]types.Vpc, error)
 	CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tag []types.Tag) (*types.VpcPeeringConnection, error)
 	DescribeVpcPeeringConnections(ctx context.Context) ([]types.VpcPeeringConnection, error)
 	AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*types.VpcPeeringConnection, error)
@@ -35,8 +36,30 @@ type client struct {
 	svc *ec2.Client
 }
 
-func (c *client) DescribeVpcs(ctx context.Context) ([]types.Vpc, error) {
-	out, err := c.svc.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{})
+func (c *client) DescribeVpc(ctx context.Context, vpcId string) (*types.Vpc, error) {
+	out, err := c.svc.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{
+		VpcIds: []string{vpcId},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(out.Vpcs) > 0 {
+		return &out.Vpcs[0], nil
+	}
+	return nil, nil
+}
+
+func (c *client) DescribeVpcs(ctx context.Context, name string) ([]types.Vpc, error) {
+	in := &ec2.DescribeVpcsInput{}
+	if name != "" {
+		in.Filters = []types.Filter{
+			{
+				Name:   ptr.To("tag:Name"),
+				Values: []string{name},
+			},
+		}
+	}
+	out, err := c.svc.DescribeVpcs(ctx, in)
 	if err != nil {
 		return nil, err
 	}

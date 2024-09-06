@@ -122,14 +122,20 @@ func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc
 	return nil, nil
 }
 
-func (s *vpcStore) DescribeVpcs(ctx context.Context) ([]ec2Types.Vpc, error) {
+func (s *vpcStore) DescribeVpcs(ctx context.Context, name string) ([]ec2Types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	return pie.Map(s.items, func(e *vpcEntry) ec2Types.Vpc {
+	all := pie.Map(s.items, func(e *vpcEntry) ec2Types.Vpc {
 		return e.vpc
+	})
+	if name == "" {
+		return all, nil
+	}
+	return pie.Filter(all, func(vpc ec2Types.Vpc) bool {
+		return awsutil.NameEc2TagEquals(vpc.Tags, name)
 	}), nil
 }
 

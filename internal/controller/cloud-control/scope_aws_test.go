@@ -1,9 +1,11 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -18,6 +20,9 @@ var _ = Describe("Feature: KCP Scope", func() {
 		const (
 			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 		)
+
+		kymaNetworkName := fmt.Sprintf("%s-kyma", kymaName)
+		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenerTypes.Shoot{}
 
@@ -112,6 +117,13 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed())
 			Expect(controllerutil.ContainsFinalizer(kymaCR, cloudcontrolv1beta1.FinalizerName)).
 				To(BeTrue(), "expected Kyma CR to have finalizer, but it does not")
+		})
+
+		kymaNetwork := &cloudcontrolv1beta1.Network{}
+		By("And Then Kyma Network is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
+				Should(Succeed(), "expected Kyma Network to be created")
 		})
 	})
 

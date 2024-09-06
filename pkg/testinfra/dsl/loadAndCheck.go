@@ -22,7 +22,8 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 		*cloudcontrolv1beta1.NfsInstance,
 		*cloudcontrolv1beta1.Scope,
 		*cloudcontrolv1beta1.VpcPeering,
-		*cloudcontrolv1beta1.RedisInstance:
+		*cloudcontrolv1beta1.RedisInstance,
+		*cloudcontrolv1beta1.Network:
 		actions = actions.Append(WithNamespace(DefaultKcpNamespace))
 	case *cloudresourcesv1beta1.IpRange,
 		*cloudresourcesv1beta1.AwsNfsVolume,

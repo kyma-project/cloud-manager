@@ -18,7 +18,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
-	vpcList, err := state.client.DescribeVpcs(ctx)
+	vpcList, err := state.client.DescribeVpcs(ctx, vpcNetworkName)
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error loading AWS VPC Networks", ctx)
 	}
