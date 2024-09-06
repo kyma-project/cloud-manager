@@ -51,6 +51,18 @@ spec:
             properties:
               cidr:
                 type: string
+              network:
+                description: |-
+                  Network is a reference to the network where this IpRange belongs and where it creates subnets.
+                  If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                type: object
               options:
                 maxProperties: 1
                 minProperties: 0

@@ -4,30 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-  name: ipranges.cloud-control.kyma-project.io
+  name: networks.cloud-control.kyma-project.io
 spec:
   group: cloud-control.kyma-project.io
   names:
-    kind: IpRange
-    listKind: IpRangeList
-    plural: ipranges
-    singular: iprange
+    kind: Network
+    listKind: NetworkList
+    plural: networks
+    singular: network
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    - jsonPath: .status.cidr
-      name: Cidr
-      type: string
-    - jsonPath: .status.state
-      name: State
-      type: string
-    name: v1beta1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: IpRange is the Schema for the ipranges API
+        description: Network is the Schema for the networks API
         properties:
           apiVersion:
             description: |-
@@ -47,76 +37,117 @@ spec:
           metadata:
             type: object
           spec:
-            description: IpRangeSpec defines the desired state of IpRange
+            description: NetworkSpec defines the desired state of Network
             properties:
-              cidr:
-                type: string
               network:
-                description: |-
-                  Network is a reference to the network where this IpRange belongs and where it creates subnets.
-                  If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                type: object
-              options:
+                description: NetworkInfo can be one of ManagedNetwork or NetworkReference
                 maxProperties: 1
-                minProperties: 0
+                minProperties: 1
                 properties:
-                  aws:
-                    type: object
-                  azure:
-                    type: object
-                  gcp:
+                  managed:
+                    description: |-
+                      Managed described the parameters of the network that will be created and managed by Cloud Manager.
+                      The deletion of the Netowork resource will
+                      If specified, then Reference must be nil.
                     properties:
-                      psaService:
-                        default: servicenetworking.googleapis.com
-                        type: string
-                      purpose:
-                        default: VPC_PEERING
-                        enum:
-                        - VPC_PEERING
-                        - GCE_ENDPOINT
-                        - DNS_RESOLVER
-                        - NAT_AUTO
-                        - IPSEC_INTERCONNECT
-                        - SHARED_LOADBALANCER_VIP
-                        - PRIVATE_SERVICE_CONNECT
+                      cidr:
+                        description: Cidr address range. For AWS and Azure a valid
+                          CIDR must be specified. For GCP can be empty.
                         type: string
                     type: object
-                type: object
-              remoteRef:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
+                  reference:
+                    description: |-
+                      Reference describes externally managed network that Cloud Manager does not modify but only reads it attributes
+                      and uses in other managed resources.
+                    maxProperties: 1
+                    minProperties: 1
+                    properties:
+                      aws:
+                        properties:
+                          awsAccountId:
+                            type: string
+                          networkName:
+                            type: string
+                          region:
+                            type: string
+                          vpcId:
+                            type: string
+                        required:
+                        - awsAccountId
+                        - networkName
+                        - region
+                        - vpcId
+                        type: object
+                      azure:
+                        properties:
+                          networkName:
+                            type: string
+                          resourceGroup:
+                            type: string
+                          subscriptionId:
+                            type: string
+                          tenantId:
+                            type: string
+                        required:
+                        - networkName
+                        - resourceGroup
+                        type: object
+                      gcp:
+                        properties:
+                          gcpProject:
+                            type: string
+                          networkName:
+                            type: string
+                        required:
+                        - gcpProject
+                        - networkName
+                        type: object
+                      openstack:
+                        properties:
+                          domain:
+                            type: string
+                          networkId:
+                            type: string
+                          networkName:
+                            type: string
+                          project:
+                            type: string
+                        required:
+                        - domain
+                        - networkId
+                        - networkName
+                        - project
+                        type: object
+                    type: object
                 type: object
               scope:
+                description: |-
+                  Scope specifies to which SKR the Network resource belongs to. Managed networks are created in the cloud
+                  provider parameters specified in the Scope. If it's a network reference type of Network, it will probably
+                  be for some other cloud provider parameters (GCP project, AWS account, Azure tenant/subscription) but
+                  the Scope keeps track of the SKR that network was mentioned. The network reference has all parameters
+                  required for cloud provider access.
                 properties:
                   name:
                     type: string
                 required:
                 - name
                 type: object
+              type:
+                default: external
+                enum:
+                - external
+                - kyma
+                - cloud-resources
+                type: string
             required:
-            - remoteRef
+            - network
             - scope
+            - type
             type: object
           status:
-            description: IpRangeStatus defines the observed state of IpRange
+            description: NetworkStatus defines the observed state of Network
             properties:
-              addressSpaceId:
-                type: string
-              cidr:
-                type: string
               conditions:
                 description: List of status conditions to indicate the status of a
                   Peering.
@@ -191,34 +222,68 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
-              id:
-                description: Id to track the Hyperscaler IpRange identifier
-                type: string
-              opIdentifier:
-                description: Operation Identifier to track the Hyperscaler Operation
-                type: string
-              ranges:
-                items:
-                  type: string
-                type: array
+              network:
+                maxProperties: 1
+                minProperties: 1
+                properties:
+                  aws:
+                    properties:
+                      awsAccountId:
+                        type: string
+                      networkName:
+                        type: string
+                      region:
+                        type: string
+                      vpcId:
+                        type: string
+                    required:
+                    - awsAccountId
+                    - networkName
+                    - region
+                    - vpcId
+                    type: object
+                  azure:
+                    properties:
+                      networkName:
+                        type: string
+                      resourceGroup:
+                        type: string
+                      subscriptionId:
+                        type: string
+                      tenantId:
+                        type: string
+                    required:
+                    - networkName
+                    - resourceGroup
+                    type: object
+                  gcp:
+                    properties:
+                      gcpProject:
+                        type: string
+                      networkName:
+                        type: string
+                    required:
+                    - gcpProject
+                    - networkName
+                    type: object
+                  openstack:
+                    properties:
+                      domain:
+                        type: string
+                      networkId:
+                        type: string
+                      networkName:
+                        type: string
+                      project:
+                        type: string
+                    required:
+                    - domain
+                    - networkId
+                    - networkName
+                    - project
+                    type: object
+                type: object
               state:
-                type: string
-              subnets:
-                items:
-                  properties:
-                    id:
-                      type: string
-                    range:
-                      type: string
-                    zone:
-                      type: string
-                  required:
-                  - id
-                  - range
-                  - zone
-                  type: object
-                type: array
-              vpcId:
                 type: string
             type: object
         type: object

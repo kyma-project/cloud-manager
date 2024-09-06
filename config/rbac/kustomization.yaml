@@ -20,6 +20,8 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the Project itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- cloud-control_network_editor_role.yaml
+- cloud-control_network_viewer_role.yaml
 - cloud-resources_cceenfsvolume_editor_role.yaml
 - cloud-resources_cceenfsvolume_viewer_role.yaml
 

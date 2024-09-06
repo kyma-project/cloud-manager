@@ -41,6 +41,32 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - networks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - networks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - networks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
   - nfsinstances
   verbs:
   - create

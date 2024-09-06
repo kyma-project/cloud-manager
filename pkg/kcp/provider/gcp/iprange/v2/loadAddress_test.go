@@ -33,6 +33,10 @@ func (s *testState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 	return s.Obj().(*cloudcontrolv1beta1.IpRange)
 }
 
+func (s *testState) Network() *cloudcontrolv1beta1.Network {
+	return nil
+}
+
 type computeClientStubUtils interface {
 	ReturnOnFirstCall(address *compute.Address, err error)
 	ReturnOnSecondCall(address *compute.Address, err error)
