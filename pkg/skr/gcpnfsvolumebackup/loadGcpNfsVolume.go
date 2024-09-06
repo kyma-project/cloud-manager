@@ -2,13 +2,11 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -30,10 +28,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 
 	//Load the nfsVolume object
 	nfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-	nfsVolumeKey := types.NamespacedName{
-		Name:      backup.Spec.Source.Volume.Name,
-		Namespace: backup.Spec.Source.Volume.Namespace,
-	}
+	nfsVolumeKey := backup.Spec.Source.Volume.ToNamespacedName(backup.Namespace)
 	err := state.SkrCluster.K8sClient().Get(ctx, nfsVolumeKey, nfsVolume)
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
