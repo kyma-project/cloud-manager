@@ -182,6 +182,7 @@ type NetworkList struct {
 	Items           []Network `json:"items"`
 }
 
+// FindFirstByType returns first network of the given type.
 func (l *NetworkList) FindFirstByType(tp NetworkType) *Network {
 	if l == nil {
 		return nil
