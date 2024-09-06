@@ -21,6 +21,7 @@ type State struct {
 	parameterGroup              *elasticacheTypes.CacheParameterGroup
 	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
 	authTokenValue              *secretsmanager.GetSecretValueOutput
+	userGroup                   *elasticacheTypes.UserGroup
 
 	modifyElastiCacheClusterOptions client.ModifyElastiCacheClusterOptions
 	updateMask                      []string
@@ -110,4 +111,18 @@ func (s *State) UpdateTransitEncryptionEnabled(transitEncryptionEnabled bool, is
 func (s *State) UpdatePreferredMaintenanceWindow(preferredMaintenanceWindow string) {
 	s.modifyElastiCacheClusterOptions.PreferredMaintenanceWindow = ptr.To(preferredMaintenanceWindow)
 	s.updateMask = append(s.updateMask, "preferredMaintenanceWindow")
+}
+
+func (s *State) UpdateAuthEnabled(authEnabled bool) {
+	s.updateMask = append(s.updateMask, "authEnabled")
+	if authEnabled {
+		s.modifyElastiCacheClusterOptions.AuthTokenSecretString = s.authTokenValue.SecretString
+	} else {
+		if len(s.elastiCacheReplicationGroup.UserGroupIds) < 1 {
+			s.modifyElastiCacheClusterOptions.UserGroupIdsToAdd = []string{ptr.Deref(s.userGroup.UserGroupId, "")}
+		} else {
+			s.modifyElastiCacheClusterOptions.UserGroupIdsToRemove = []string{ptr.Deref(s.userGroup.UserGroupId, "")}
+		}
+	}
+
 }

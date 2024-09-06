@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,12 +12,18 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, context.Context) {
+func waitUserGroupDeleted(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.elastiCacheReplicationGroup == nil {
-		errorMsg := "Error: elasti cache cluster instance is not loaded"
+	if state.userGroup == nil {
+		return nil, nil
+	}
+
+	cacheState := ptr.Deref(state.userGroup.Status, "")
+
+	if cacheState != awsmeta.ElastiCache_UserGroup_DELETING {
+		errorMsg := fmt.Sprintf("Error: unexpected aws elasticache user group state: %s", cacheState)
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
@@ -30,11 +37,6 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			Run(ctx, st)
 	}
 
-	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
-	if cacheState == awsmeta.ElastiCache_AVAILABLE {
-		return nil, nil
-	}
-
-	logger.Info("Redis instance is not ready yet, requeueing with delay")
+	logger.Info("User group is still being deleted, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

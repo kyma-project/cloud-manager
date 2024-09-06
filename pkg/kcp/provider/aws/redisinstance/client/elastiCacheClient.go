@@ -52,6 +52,9 @@ type ModifyElastiCacheClusterOptions struct {
 	PreferredMaintenanceWindow *string
 	TransitEncryptionEnabled   *bool
 	TransitEncryptionMode      *elasticacheTypes.TransitEncryptionMode
+	AuthTokenSecretString      *string
+	UserGroupIdsToAdd          []string
+	UserGroupIdsToRemove       []string
 }
 
 type ElastiCacheClient interface {
@@ -75,6 +78,10 @@ type ElastiCacheClient interface {
 	ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error
 	DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error)
+
+	DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error)
+	CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error)
+	DeleteUserGroup(ctx context.Context, id string) error
 }
 
 func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
@@ -350,6 +357,16 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	if options.TransitEncryptionMode != nil {
 		params.TransitEncryptionMode = *options.TransitEncryptionMode
 	}
+	if options.AuthTokenSecretString != nil {
+		params.AuthToken = options.AuthTokenSecretString
+	}
+	if len(options.UserGroupIdsToAdd) > 0 {
+		params.UserGroupIdsToAdd = options.UserGroupIdsToAdd
+		params.AuthTokenUpdateStrategy = elasticacheTypes.AuthTokenUpdateStrategyTypeDelete
+	}
+	if len(options.UserGroupIdsToRemove) > 0 {
+		params.UserGroupIdsToRemove = options.UserGroupIdsToRemove
+	}
 
 	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)
 
@@ -383,4 +400,50 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]e
 		return nil, err
 	}
 	return out.CacheClusters, nil
+}
+
+func (c *client) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
+	res, err := c.elastiCacheSvc.DescribeUserGroups(ctx, &elasticache.DescribeUserGroupsInput{
+		UserGroupId: ptr.To(id),
+	})
+
+	if err != nil {
+		if awsmeta.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	if len(res.UserGroups) == 0 {
+		return nil, nil
+	}
+
+	return ptr.To(res.UserGroups[0]), nil
+}
+
+func (c *client) CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
+	res, err := c.elastiCacheSvc.CreateUserGroup(ctx, &elasticache.CreateUserGroupInput{
+		UserGroupId: ptr.To(id),
+		Engine:      ptr.To("redis"),
+		Tags:        tags,
+		UserIds:     []string{"default"},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (c *client) DeleteUserGroup(ctx context.Context, id string) error {
+	_, err := c.elastiCacheSvc.DeleteUserGroup(ctx, &elasticache.DeleteUserGroupInput{
+		UserGroupId: ptr.To(id),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

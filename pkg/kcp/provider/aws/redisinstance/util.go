@@ -16,6 +16,10 @@ func GetAwsElastiCacheParameterGroupName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
 }
 
+func GetAwsElastiCacheUserGroupName(name string) string {
+	return fmt.Sprintf("cm-%s", name)
+}
+
 func GetAwsElastiCacheParameterGroupFamily(engineVersion string) string {
 	if strings.HasPrefix(engineVersion, "2.6") {
 		return "redis2.6"

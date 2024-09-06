@@ -28,12 +28,14 @@ func New() Server {
 			subnetGroupMutex:    &sync.Mutex{},
 			parameterGroupMutex: &sync.Mutex{},
 			secretStoreMutex:    &sync.Mutex{},
+			userGroupsMutex:     &sync.Mutex{},
 			replicationGroups:   map[string]*elasticacheTypes.ReplicationGroup{},
 			cacheClusters:       map[string]*elasticacheTypes.CacheCluster{},
 			subnetGroups:        map[string]*elasticacheTypes.CacheSubnetGroup{},
 			parameterGroups:     map[string]*elasticacheTypes.CacheParameterGroup{},
 			parameters:          map[string]map[string]elasticacheTypes.Parameter{},
 			secretStore:         map[string]*secretsmanager.GetSecretValueOutput{},
+			userGroups:          map[string]*elasticacheTypes.UserGroup{},
 		},
 	}
 }

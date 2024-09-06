@@ -19,7 +19,9 @@ import (
 type AwsElastiCacheMockUtils interface {
 	GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup
 	SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState)
+	SetAwsElastiCacheUserGroupLifeCycleState(name string, state awsmeta.ElastiCacheUserGroupState)
 	DeleteAwsElastiCacheByName(name string)
+	DeleteAwsElastiCacheUserGroupByName(name string)
 	DescribeAwsElastiCacheParametersByName(groupName string) map[string]string
 }
 
@@ -45,11 +47,13 @@ type elastiCacheClientFake struct {
 	parameterGroupMutex *sync.Mutex
 	elasticacheMutex    *sync.Mutex
 	secretStoreMutex    *sync.Mutex
+	userGroupsMutex     *sync.Mutex
 	replicationGroups   map[string]*elasticacheTypes.ReplicationGroup
 	cacheClusters       map[string]*elasticacheTypes.CacheCluster
 	parameters          map[string]map[string]elasticacheTypes.Parameter
 	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
 	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
+	userGroups          map[string]*elasticacheTypes.UserGroup
 	secretStore         map[string]*secretsmanager.GetSecretValueOutput
 }
 
@@ -63,11 +67,24 @@ func (client *elastiCacheClientFake) SetAwsElastiCacheLifeCycleState(name string
 	}
 }
 
+func (client *elastiCacheClientFake) SetAwsElastiCacheUserGroupLifeCycleState(name string, state awsmeta.ElastiCacheUserGroupState) {
+	if instance, ok := client.userGroups[name]; ok {
+		instance.Status = ptr.To(state)
+	}
+}
+
 func (client *elastiCacheClientFake) DeleteAwsElastiCacheByName(name string) {
 	client.elasticacheMutex.Lock()
 	defer client.elasticacheMutex.Unlock()
 
 	delete(client.replicationGroups, name)
+}
+
+func (client *elastiCacheClientFake) DeleteAwsElastiCacheUserGroupByName(name string) {
+	client.userGroupsMutex.Lock()
+	defer client.userGroupsMutex.Unlock()
+
+	delete(client.userGroups, name)
 }
 
 func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(groupName string) map[string]string {
@@ -225,13 +242,20 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		PreferredMaintenanceWindow: options.PreferredMaintenanceWindow,
 	}
 
+	authTokenEnabled := false
+	if options.AuthTokenSecretString != nil {
+		authTokenEnabled = true
+	}
+
 	client.replicationGroups[options.Name] = &elasticacheTypes.ReplicationGroup{
 		ReplicationGroupId:       ptr.To(options.Name),
 		Status:                   ptr.To("creating"),
 		CacheNodeType:            ptr.To(options.CacheNodeType),
 		AutoMinorVersionUpgrade:  ptr.To(options.AutoMinorVersionUpgrade),
 		TransitEncryptionEnabled: ptr.To(options.TransitEncryptionEnabled),
+		AuthTokenEnabled:         ptr.To(authTokenEnabled),
 		MemberClusters:           []string{options.Name},
+		UserGroupIds:             []string{},
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
@@ -275,6 +299,19 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 		if options.TransitEncryptionMode != nil {
 			instance.TransitEncryptionMode = *options.TransitEncryptionMode
 		}
+
+		if len(options.UserGroupIdsToAdd) > 0 {
+			instance.UserGroupIds = append(instance.UserGroupIds, options.UserGroupIdsToAdd...)
+			instance.AuthTokenEnabled = ptr.To(false)
+		}
+		if len(options.UserGroupIdsToRemove) > 0 {
+			_, remaining := pie.Diff(instance.UserGroupIds, options.UserGroupIdsToRemove)
+			instance.UserGroupIds = remaining
+		}
+
+		if options.AuthTokenSecretString != nil {
+			instance.AuthTokenEnabled = ptr.To(true)
+		}
 	}
 
 	return &elasticache.ModifyReplicationGroupOutput{}, nil
@@ -302,4 +339,38 @@ func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Cont
 	}
 
 	return []elasticacheTypes.CacheCluster{*cacheCluster}, nil
+}
+
+func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
+	client.userGroupsMutex.Lock()
+	defer client.userGroupsMutex.Unlock()
+
+	userGroup := client.userGroups[id]
+
+	return userGroup, nil
+}
+
+func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
+	client.userGroupsMutex.Lock()
+	defer client.userGroupsMutex.Unlock()
+
+	client.userGroups[id] = &elasticacheTypes.UserGroup{
+		Engine:      ptr.To("redis"),
+		UserGroupId: ptr.To(id),
+		Status:      ptr.To("creating"),
+		UserIds:     []string{"default"},
+	}
+
+	return &elasticache.CreateUserGroupOutput{UserGroupId: ptr.To(id)}, nil
+}
+
+func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id string) error {
+	client.userGroupsMutex.Lock()
+	defer client.userGroupsMutex.Unlock()
+
+	if instance, ok := client.userGroups[id]; ok {
+		instance.Status = ptr.To("deleting")
+	}
+
+	return nil
 }
