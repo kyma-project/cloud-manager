@@ -64,7 +64,7 @@ func newState(nfsInstanceState types.State, fc client.FilestoreClient, gcpConfig
 
 func (s State) doesFilestoreMatch() bool {
 	nfsInstance := s.ObjAsNfsInstance()
-	return s.fsInstance != nil &&
+	return s.fsInstance != nil && len(s.fsInstance.FileShares) > 0 &&
 		s.fsInstance.FileShares[0].CapacityGb == int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
 }
 
