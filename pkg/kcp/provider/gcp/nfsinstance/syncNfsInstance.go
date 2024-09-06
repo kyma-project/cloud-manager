@@ -36,6 +36,9 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 		operation, err = state.filestoreClient.PatchFilestoreInstance(ctx, project, location, name, mask, state.toInstance())
 	case client.DELETE:
 		operation, err = state.filestoreClient.DeleteFilestoreInstance(ctx, project, location, name)
+	case client.NONE:
+		//If the operation is not ADD, MODIFY or DELETE, continue.
+		return nil, nil
 	}
 
 	if err != nil {

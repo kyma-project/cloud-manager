@@ -20,7 +20,7 @@ const fileBackupPattern = "projects/%s/locations/%s/backups/%s"
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
-const GcpApiTimeout = time.Second * 3
+const GcpApiTimeout = time.Second * 8
 
 type GcpConfig struct {
 	GcpRetryWaitTime     time.Duration
@@ -95,6 +95,7 @@ type FilestoreState string
 const (
 	READY    FilestoreState = "READY"
 	DELETING FilestoreState = "DELETING"
+	ERROR    FilestoreState = "ERROR"
 )
 
 type OperationType int

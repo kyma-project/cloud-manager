@@ -227,6 +227,82 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	assert.Equal(suite.T(), v1beta1.ReasonReady, updatedObject.Status.Conditions[0].Reason)
 }
 
+func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+	}))
+	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
+
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	testState.fsInstance = &file.Instance{
+		Name:          "test-gcp-nfs-volume-2",
+		State:         string(client.ERROR),
+		StatusMessage: "Some error",
+	}
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	err, _ = checkNUpdateState(ctx, testState.State)
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.State.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.curState)
+	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.ObjAsNfsInstance().Status.State)
+
+	updatedObject := &v1beta1.NfsInstance{}
+	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
+	assert.Nil(suite.T(), err)
+	assert.Equal(suite.T(), v1beta1.ErrorState, updatedObject.Status.State)
+	// validate status conditions
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, updatedObject.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, updatedObject.Status.Conditions[0].Reason)
+}
+
+func (suite *checkNUpdateStateSuite) TestCheckNUpdateFilestoreStateTransient() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+	}))
+	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
+
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	testState.fsInstance = &file.Instance{
+		Name:  "test-gcp-nfs-volume-2",
+		State: "somethingElse",
+		Networks: []*file.NetworkConfig{
+			{
+				IpAddresses: []string{"10.2.74.33"},
+			},
+		},
+		FileShares: []*file.FileShareConfig{
+			{
+				CapacityGb: int64(gcpNfsInstance.Spec.Instance.Gcp.CapacityGb),
+			},
+		},
+	}
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	err, _ = checkNUpdateState(ctx, testState.State)
+	assert.NotNil(suite.T(), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.State.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), gcpNfsInstance.Status.State, testState.State.curState)
+	assert.Equal(suite.T(), client.NONE, testState.State.operation)
+}
+
 func TestCheckNUpdateState(t *testing.T) {
 	suite.Run(t, new(checkNUpdateStateSuite))
 }

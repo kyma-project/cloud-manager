@@ -12,7 +12,7 @@ configMapGenerator:
   - GCP_CLIENT_RENEW_DURATION=5m
   - GCP_RETRY_WAIT_DURATION=5s
   - GCP_OPERATION_WAIT_DURATION=5s
-  - GCP_API_TIMEOUT_DURATION=3s
+  - GCP_API_TIMEOUT_DURATION=8s
   name: manager-env
 
 secretGenerator:
