@@ -87,7 +87,7 @@ type NetworkReference struct {
 	Aws *AwsNetworkReference `json:"aws,omitempty"`
 
 	// +optional
-	Openstack *OpenstackNetworkReference `json:"openstack,omitempty"`
+	OpenStack *OpenStackNetworkReference `json:"openstack,omitempty"`
 }
 
 type GcpNetworkReference struct {
@@ -109,7 +109,7 @@ type AwsNetworkReference struct {
 	NetworkName  string `json:"networkName"`
 }
 
-type OpenstackNetworkReference struct {
+type OpenStackNetworkReference struct {
 	Domain      string `json:"domain"`
 	Project     string `json:"project"`
 	NetworkId   string `json:"networkId"`
@@ -180,6 +180,19 @@ type NetworkList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Network `json:"items"`
+}
+
+// FindFirstByType returns first network of the given type.
+func (l *NetworkList) FindFirstByType(tp NetworkType) *Network {
+	if l == nil {
+		return nil
+	}
+	for _, item := range l.Items {
+		if item.Spec.Type == tp {
+			return &item
+		}
+	}
+	return nil
 }
 
 func init() {

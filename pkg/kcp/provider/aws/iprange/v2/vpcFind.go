@@ -23,7 +23,9 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 		return nil, nil
 	}
 
-	vpcList, err := state.awsClient.DescribeVpcs(ctx)
+	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
+
+	vpcList, err := state.awsClient.DescribeVpcs(ctx, vpcNetworkName)
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on list AWS VPC networks",
 		cloudcontrolv1beta1.ReasonUnknown, "Error getting AWS VPC network"); x != nil {
 		return x, nil
@@ -46,10 +48,9 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 		))
 	}
 
-	vpcNetworkName := state.Scope().Spec.Scope.Aws.VpcNetwork
 	var vpc *ec2Types.Vpc
 	for _, vv := range vpcList {
-		// loop var will change it's value, and we're taking a pointer to it below
+		// loop var will change its value, and we're taking a pointer to it below
 		// MUST make a copy to another var that will not change the value
 		v := vv
 		if util.NameEc2TagEquals(v.Tags, vpcNetworkName) {

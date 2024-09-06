@@ -88,6 +88,8 @@ type State struct {
 	shoot          *gardenerTypes.Shoot
 	credentialData map[string]string
 
+	allNetworks *cloudcontrolv1beta1.NetworkList
+
 	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 }

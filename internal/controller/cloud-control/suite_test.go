@@ -115,6 +115,10 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
 	))
+	// Network
+	Expect(SetupNetworkReconciler(
+		infra.KcpManager(),
+	))
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

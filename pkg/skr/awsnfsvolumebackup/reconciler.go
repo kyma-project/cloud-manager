@@ -2,7 +2,6 @@ package awsnfsvolumebackup
 
 import (
 	"context"
-	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -48,7 +47,6 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	fmt.Println("Received reconcile for :", request)
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
