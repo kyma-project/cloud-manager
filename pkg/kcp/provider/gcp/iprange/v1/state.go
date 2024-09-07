@@ -29,9 +29,6 @@ type State struct {
 
 	serviceNetworkingClient client3.ServiceNetworkingClient
 	computeClient           client3.ComputeClient
-
-	//gcp config
-	gcpConfig *client2.GcpConfig
 }
 
 type StateFactory interface {
@@ -42,7 +39,6 @@ type stateFactory struct {
 	serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient]
 	computeClientProvider           client2.ClientProvider[client3.ComputeClient]
 	env                             abstractions.Environment
-	gcpConfig                       *client2.GcpConfig
 }
 
 func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[client3.ServiceNetworkingClient], computeClientProvider client2.ClientProvider[client3.ComputeClient], env abstractions.Environment) StateFactory {
@@ -50,7 +46,6 @@ func NewStateFactory(serviceNetworkingClientProvider client2.ClientProvider[clie
 		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
 		computeClientProvider:           computeClientProvider,
 		env:                             env,
-		gcpConfig:                       client2.GetGcpConfig(env),
 	}
 }
 
@@ -71,15 +66,14 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (
 		return nil, err
 	}
 
-	return newState(ipRangeState, snc, cc, f.gcpConfig), nil
+	return newState(ipRangeState, snc, cc), nil
 }
 
-func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient, gcpConfig *client2.GcpConfig) *State {
+func newState(ipRangeState types.State, snc client3.ServiceNetworkingClient, cc client3.ComputeClient) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,
 		computeClient:           cc,
-		gcpConfig:               gcpConfig,
 	}
 }
 

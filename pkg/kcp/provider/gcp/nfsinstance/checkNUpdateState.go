@@ -45,7 +45,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			state.curState = v1beta1.ReadyState
 		} else {
 			//If the filestore exists but is not READY or in ERROR, it is in a transient state.
-			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), ctx
+			return composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), ctx
 		}
 	}
 
@@ -77,7 +77,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 					Reason:  v1beta1.ReasonGcpError,
 					Message: state.fsInstance.StatusMessage,
 				}).
-				SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime)).
 				Run(ctx, state)
 		}
 		return composed.UpdateStatus(nfsInstance).

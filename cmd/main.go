@@ -356,6 +356,7 @@ func loadConfig() config.Config {
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)
+	gcpclient.InitConfig(cfg)
 
 	cfg.Read()
 

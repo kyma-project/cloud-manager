@@ -6,7 +6,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -166,7 +165,6 @@ type testStateFactory struct {
 	skrCluster composed.StateCluster
 	kcpCluster composed.StateCluster
 	env        abstractions.Environment
-	gcpConfig  *gcpclient.GcpConfig
 }
 
 func newTestStateFactoryWithObj(object client.Object) (*testStateFactory, error) {
@@ -203,7 +201,6 @@ func newTestStateFactoryWithObj(object client.Object) (*testStateFactory, error)
 		skrCluster: skrCluster,
 		kcpCluster: kcpCluster,
 		env:        env,
-		gcpConfig:  gcpclient.GetGcpConfig(env),
 	}, nil
 
 }

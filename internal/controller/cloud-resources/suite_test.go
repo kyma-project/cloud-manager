@@ -80,12 +80,7 @@ var _ = BeforeSuite(func() {
 	quota.SkrQuota.Override(&cloudresourcesv1beta1.IpRange{}, infra.SKR().Scheme(), "", 1000)
 
 	// Setup environment variables
-	env := abstractions.NewMockedEnvironment(map[string]string{
-		"GCP_SA_JSON_KEY_PATH":        "test",
-		"GCP_RETRY_WAIT_DURATION":     "300ms",
-		"GCP_OPERATION_WAIT_DURATION": "300ms",
-		"GCP_API_TIMEOUT_DURATION":    "300ms",
-	})
+	env := abstractions.NewMockedEnvironment(map[string]string{})
 
 	testSetupLog := ctrl.Log.WithName("testSetup")
 

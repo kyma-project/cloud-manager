@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/cloudresourcemanager/v1"
@@ -70,7 +71,7 @@ func (suite *syncPsaConnectionSuite) TestCreateSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -120,7 +121,7 @@ func (suite *syncPsaConnectionSuite) TestCreateFailure() {
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -175,7 +176,7 @@ func (suite *syncPsaConnectionSuite) TestUpdate() {
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -245,7 +246,7 @@ func (suite *syncPsaConnectionSuite) TestDeleteSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -292,7 +293,7 @@ func (suite *syncPsaConnectionSuite) TestDeleteFailure() {
 
 	//Invoke the function under test
 	err, _ = syncPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

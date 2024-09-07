@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -69,7 +70,7 @@ func (suite *syncAddressSuite) TestCreateSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -110,7 +111,7 @@ func (suite *syncAddressSuite) TestCreateFailure() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -192,7 +193,7 @@ func (suite *syncAddressSuite) TestDeleteSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -245,7 +246,7 @@ func (suite *syncAddressSuite) TestDeleteFailure() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

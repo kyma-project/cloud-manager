@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -52,7 +53,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
 
-		return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If not able to find the operation or it is completed, reset OpIdentifier.

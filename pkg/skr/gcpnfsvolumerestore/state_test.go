@@ -149,7 +149,6 @@ type testStateFactory struct {
 	kcpCluster                composed.StateCluster
 	fileRestoreClientProvider client.ClientProvider[client2.FileRestoreClient]
 	env                       abstractions.Environment
-	gcpConfig                 *client.GcpConfig
 	fakeHttpServer            *httptest.Server
 }
 
@@ -201,7 +200,6 @@ func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRes
 		kcpCluster:                kcpCluster,
 		fileRestoreClientProvider: nfsRestoreClient,
 		env:                       env,
-		gcpConfig:                 client.GetGcpConfig(env),
 		fakeHttpServer:            fakeHttpServer,
 	}, nil
 

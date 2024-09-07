@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -43,7 +44,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 				Reason:  cloudresourcesv1beta1.ConditionReasonMissingNfsVolumeBackup,
 				Message: "Error loading GcpNfsVolumeBackup",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg("Error getting GcpNfsVolumeBackup").
 			Run(ctx, state)
 	}
@@ -62,7 +63,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 				Reason:  cloudresourcesv1beta1.ConditionReasonNfsVolumeBackupNotReady,
 				Message: "GcpNfsVolumeBackup is not ready",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg("Error loading GcpNfsVolumeBackup").
 			Run(ctx, state)
 	}

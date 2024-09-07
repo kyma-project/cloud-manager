@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"net/http"
@@ -91,7 +92,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
 	err, _ctx := loadNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	suite.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 	suite.Equal(ctx, _ctx)
 }
 

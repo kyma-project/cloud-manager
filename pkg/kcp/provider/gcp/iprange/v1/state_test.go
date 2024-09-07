@@ -58,7 +58,6 @@ type testStateFactory struct {
 	computeClientProvider           client.ClientProvider[iprangeclient.ComputeClient]
 	serviceNetworkingClientProvider client.ClientProvider[iprangeclient.ServiceNetworkingClient]
 	fakeHttpServer                  *httptest.Server
-	gcpConfig                       *client.GcpConfig
 }
 
 func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
@@ -90,7 +89,6 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 		computeClientProvider:           computeClientProvider,
 		serviceNetworkingClientProvider: svcNwClientProvider,
 		fakeHttpServer:                  fakeHttpServer,
-		gcpConfig:                       client.GetGcpConfig(env),
 	}, nil
 
 }
@@ -127,7 +125,7 @@ func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontr
 		},
 	})
 
-	return newState(newTypesState(focalState), snc, cc, f.gcpConfig), nil
+	return newState(newTypesState(focalState), snc, cc), nil
 
 }
 

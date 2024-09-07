@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
@@ -68,7 +69,7 @@ func (suite *syncAddressSuite) TestCreateSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -109,7 +110,7 @@ func (suite *syncAddressSuite) TestCreateFailure() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -188,7 +189,7 @@ func (suite *syncAddressSuite) TestDeleteSuccess() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
@@ -238,7 +239,7 @@ func (suite *syncAddressSuite) TestDeleteFailure() {
 
 	//Invoke the function under test
 	err, _ = syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 
 	//Load updated object
 	err = state.LoadObj(ctx)

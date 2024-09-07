@@ -20,9 +20,6 @@ type State struct {
 	memorystoreClient    client.MemorystoreClient
 
 	updateMask []string
-
-	//gcp config
-	gcpConfig *gcpClient.GcpConfig
 }
 
 type StateFactory interface {
@@ -32,14 +29,12 @@ type StateFactory interface {
 type stateFactory struct {
 	memorystoreClientProvider gcpClient.ClientProvider[client.MemorystoreClient]
 	env                       abstractions.Environment
-	gcpConfig                 *gcpClient.GcpConfig
 }
 
 func NewStateFactory(memorystoreClientProvider gcpClient.ClientProvider[client.MemorystoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		memorystoreClientProvider: memorystoreClientProvider,
 		env:                       env,
-		gcpConfig:                 gcpClient.GetGcpConfig(env),
 	}
 }
 
@@ -52,14 +47,13 @@ func (statefactory *stateFactory) NewState(ctx context.Context, redisInstanceSta
 	if err != nil {
 		return nil, err
 	}
-	return newState(redisInstanceState, memorystoreClient, statefactory.gcpConfig), nil
+	return newState(redisInstanceState, memorystoreClient), nil
 }
 
-func newState(redisInstanceState types.State, memorystoreClient client.MemorystoreClient, gcpConfig *gcpClient.GcpConfig) *State {
+func newState(redisInstanceState types.State, memorystoreClient client.MemorystoreClient) *State {
 	return &State{
 		State:             redisInstanceState,
 		memorystoreClient: memorystoreClient,
-		gcpConfig:         gcpConfig,
 		updateMask:        []string{},
 	}
 }
