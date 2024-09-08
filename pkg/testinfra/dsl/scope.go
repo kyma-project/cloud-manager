@@ -4,11 +4,26 @@ import (
 	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
+
+func WithScope(scopeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(focal.CommonObject); ok {
+				if x.ScopeRef().Name == "" {
+					x.SetScopeRef(cloudcontrolv1beta1.ScopeRef{Name: scopeName})
+				}
+			} else {
+				panic(fmt.Sprintf("type %T does not implement focal.CommonObject", obj))
+			}
+		},
+	}
+}
 
 func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
 	if scope == nil {

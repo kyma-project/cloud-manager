@@ -66,7 +66,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
 					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
-					WithKcpIpRangeSpecScope(kymaName),
+					WithScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
 				Should(Succeed())
@@ -191,7 +191,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
 					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
-					WithKcpIpRangeSpecScope(kymaName),
+					WithScope(kymaName),
 					WithKcpIpRangeSpecCidr(iprangeCidr),
 				).
 				Should(Succeed())
@@ -299,7 +299,7 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					WithName(iprangeName),
 					WithKcpIpRangeRemoteRef(iprangeName),
-					WithKcpIpRangeSpecScope(kymaName),
+					WithScope(kymaName),
 				).
 				Should(Succeed())
 		})

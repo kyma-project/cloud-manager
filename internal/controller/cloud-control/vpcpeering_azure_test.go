@@ -50,7 +50,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					WithName(vpcpeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
-					WithKcpVpcPeeringSpecScope(kymaName),
+					WithScope(kymaName),
 					WithKcpVpcPeeringSpecAzure(true, vpcpeeringName, remoteVnet, remoteResourceGroup),
 				).
 				Should(Succeed())

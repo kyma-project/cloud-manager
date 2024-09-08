@@ -55,7 +55,7 @@ func (n *node) print() {
 	color.NoColor = false
 	fmt.Println()
 	n.prepare()
-	n.printInternal(0, n.maxNameLen()+24) // 14 estimated max indent
+	n.printInternal(0, n.maxNameLen()+24, time.Second) // 14 estimated max indent
 }
 
 func (n *node) maxNameLen() int {
@@ -71,6 +71,23 @@ func (n *node) maxNameLen() int {
 
 func (n *node) coloredName() string {
 	return coloredText(n.name)
+}
+
+func (n *node) coloredRelativeDuration(totalTime time.Duration) (string, int) {
+	if totalTime == 0 {
+		return "", 0
+	}
+	pct := 100 * float64(n.duration) / float64(totalTime)
+	if pct <= 0.01 {
+		pct = 0.01234
+	}
+	ds := fmt.Sprintf("%.2f%%", pct)
+	if len(ds) == 5 {
+		ds = fmt.Sprintf(" %s", ds)
+	}
+	txt := color.BlueString(ds)
+
+	return txt, len(ds)
 }
 
 func (n *node) coloredDuration() (string, int) {
@@ -100,7 +117,7 @@ func (n *node) coloredState() string {
 	return color.RedString("×")
 }
 
-func (n *node) printInternal(level int, paddingRight int) {
+func (n *node) printInternal(level int, paddingRight int, totalDuration time.Duration) {
 	nameTxt := n.coloredName()
 	if n.root {
 		fmt.Println(color.BlueString("Feature flags:"))
@@ -108,22 +125,29 @@ func (n *node) printInternal(level int, paddingRight int) {
 		fmt.Printf("    ipRangeAutomaticCidrAllocation: %v\n", feature.IpRangeAutomaticCidrAllocation.Value(ctx))
 
 		for _, child := range n.items {
-			child.printInternal(0, paddingRight)
+			child.printInternal(0, paddingRight, n.duration)
 		}
+
+		fmt.Println(strings.Repeat("-", paddingRight+5))
+		durationTxt, durationLen := n.coloredDuration()
+		cnt := paddingRight - len(n.name) - durationLen - 2
+		fmt.Println(color.RedString(fmt.Sprintf("Total time:%s%s", spaces[:cnt], durationTxt)))
+
 	} else {
 		durationTxt, durationLen := n.coloredDuration()
+		relDurationTxt, relDurationLen := n.coloredRelativeDuration(totalDuration)
 
 		indent := level * 4
 		padding := ""
-		cnt := paddingRight - len(n.name) - indent - durationLen
+		cnt := paddingRight - len(n.name) - indent - durationLen - relDurationLen
 		if cnt > 0 {
 			padding = spaces[:cnt]
 		}
 
-		fmt.Printf("%s%v   %s  %v %v\n", spaces[:indent], nameTxt, padding, durationTxt, n.coloredState())
+		fmt.Printf("%s%v   %s  %v %v %v\n", spaces[:indent], nameTxt, padding, durationTxt, relDurationTxt, n.coloredState())
 
 		for _, child := range n.items {
-			child.printInternal(level+1, paddingRight)
+			child.printInternal(level+1, paddingRight, totalDuration)
 		}
 	}
 }

@@ -47,17 +47,6 @@ func WithKcpVpcPeeringRemoteRef(ns, name string) ObjAction {
 	}
 }
 
-func WithKcpVpcPeeringSpecScope(scopeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.VpcPeering)
-			if x.Spec.Scope.Name == "" {
-				x.Spec.Scope.Name = scopeName
-			}
-		},
-	}
-}
-
 func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

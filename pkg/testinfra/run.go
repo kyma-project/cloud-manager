@@ -15,6 +15,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
@@ -53,14 +55,14 @@ func Start() (Infra, error) {
 	}
 
 	infra := &infra{
-		clusters: map[ClusterType]*clusterInfo{
-			ClusterTypeKcp: &clusterInfo{
+		clusters: map[infraTypes.ClusterType]*clusterInfo{
+			infraTypes.ClusterTypeKcp: &clusterInfo{
 				crdDirs: []string{dirKcp},
 			},
-			ClusterTypeSkr: &clusterInfo{
+			infraTypes.ClusterTypeSkr: &clusterInfo{
 				crdDirs: []string{dirSkr},
 			},
-			ClusterTypeGarden: &clusterInfo{
+			infraTypes.ClusterTypeGarden: &clusterInfo{
 				crdDirs: []string{dirGarden},
 			},
 		},
@@ -68,7 +70,7 @@ func Start() (Infra, error) {
 
 	for name, cluster := range infra.clusters {
 		ginkgo.By(fmt.Sprintf("Startig cluster %s", name))
-		sch, ok := schemeMap[name]
+		sch, ok := infraScheme.SchemeMap[name]
 		if !ok {
 			return nil, fmt.Errorf("missing scheme for cluster %s", name)
 		}
@@ -100,11 +102,11 @@ func Start() (Infra, error) {
 
 		ce := &clusterEnv{}
 		switch name {
-		case ClusterTypeKcp:
+		case infraTypes.ClusterTypeKcp:
 			ce.namespace = "kcp-system"
-		case ClusterTypeSkr:
+		case infraTypes.ClusterTypeSkr:
 			ce.namespace = "kyma-system"
-		case ClusterTypeGarden:
+		case infraTypes.ClusterTypeGarden:
 			ce.namespace = "garden-kyma"
 		}
 		cluster.ClusterEnv = ce
@@ -113,7 +115,7 @@ func Start() (Infra, error) {
 	ginkgo.By("All started")
 
 	// Create ENV
-	kcpMgr, err := ctrl.NewManager(infra.clusters[ClusterTypeKcp].cfg, ctrl.Options{
+	kcpMgr, err := ctrl.NewManager(infra.clusters[infraTypes.ClusterTypeKcp].cfg, ctrl.Options{
 		Scheme: infra.KCP().Scheme(),
 		Client: ctrlclient.Options{
 			Cache: &ctrlclient.CacheOptions{

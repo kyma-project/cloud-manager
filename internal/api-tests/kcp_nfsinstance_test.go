@@ -21,6 +21,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					OpenStack: &cloudcontrolv1beta1.NfsInstanceOpenStack{
 						SizeGb: 10,
@@ -48,6 +49,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
@@ -82,6 +84,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					Aws: &cloudcontrolv1beta1.NfsInstanceAws{},
 				},
@@ -108,6 +111,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
@@ -139,6 +143,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
 						Location:      "us-east-1",
@@ -170,6 +175,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},

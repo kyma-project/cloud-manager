@@ -53,6 +53,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object

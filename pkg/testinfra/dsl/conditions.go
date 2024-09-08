@@ -53,6 +53,18 @@ func WithConditions(setConds ...metav1.Condition) ObjStatusAction {
 	}
 }
 
+func HavingState(state string) ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(composed.ObjWithConditionsAndState); ok {
+			if x.State() != state {
+				return fmt.Errorf("expected state %s but got %s", state, x.State())
+			}
+			return nil
+		}
+		return fmt.Errorf("type %T does not implement ObjWithConditionsAndState", obj)
+	}
+}
+
 func HavingConditionTrue(conditionType string) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(composed.ObjWithConditions); ok {

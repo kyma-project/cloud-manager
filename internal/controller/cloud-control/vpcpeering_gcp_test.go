@@ -38,7 +38,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
 					WithName(remotePeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
-					WithKcpVpcPeeringSpecScope(kymaName),
+					WithScope(kymaName),
 					WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName, importCustomRoutes),
 				).
 				Should(Succeed())

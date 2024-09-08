@@ -8,6 +8,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+func PatchAddFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, nil
+	}
+
+	_, err := state.PatchObjAddFinalizer(ctx, cloudcontrolv1beta1.FinalizerName)
+
+	return err, nil
+}
+
 func AddFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 
 	//KindsFromObject is being deleted, don't add finalizer

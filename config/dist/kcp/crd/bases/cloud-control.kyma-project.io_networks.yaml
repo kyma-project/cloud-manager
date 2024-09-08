@@ -54,7 +54,13 @@ spec:
                         description: Cidr address range. For AWS and Azure a valid
                           CIDR must be specified. For GCP can be empty.
                         type: string
+                        x-kubernetes-validations:
+                        - message: Cidr is immutable.
+                          rule: (self == oldSelf)
                     type: object
+                    x-kubernetes-validations:
+                    - message: Managed network is immutable.
+                      rule: (self == oldSelf)
                   reference:
                     description: |-
                       Reference describes externally managed network that Cloud Manager does not modify but only reads it attributes
@@ -119,7 +125,13 @@ spec:
                         - project
                         type: object
                     type: object
+                    x-kubernetes-validations:
+                    - message: Network reference is immutable.
+                      rule: (self == oldSelf)
                 type: object
+                x-kubernetes-validations:
+                - message: Network is immutable.
+                  rule: (self == oldSelf)
               scope:
                 description: |-
                   Scope specifies to which SKR the Network resource belongs to. Managed networks are created in the cloud
@@ -130,6 +142,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object
@@ -143,7 +160,6 @@ spec:
             required:
             - network
             - scope
-            - type
             type: object
           status:
             description: NetworkStatus defines the observed state of Network
@@ -283,6 +299,9 @@ spec:
                     - project
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Network reference is immutable.
+                  rule: (self == oldSelf)
               state:
                 type: string
             type: object

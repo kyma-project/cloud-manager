@@ -104,17 +104,6 @@ func WithKcpIpRangeStatusCidr(cidr string) ObjStatusAction {
 	}
 }
 
-func WithKcpIpRangeSpecScope(scopeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.IpRange)
-			if x.Spec.Scope.Name == "" {
-				x.Spec.Scope.Name = scopeName
-			}
-		},
-	}
-}
-
 func WithKcpIpRangeRemoteRef(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

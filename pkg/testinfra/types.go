@@ -19,14 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-type ClusterType string
-
-const (
-	ClusterTypeKcp    = ClusterType("kcp")
-	ClusterTypeSkr    = ClusterType("skr")
-	ClusterTypeGarden = ClusterType("garden")
-)
-
 type Infra interface {
 	InfraEnv
 	InfraDSL

@@ -68,6 +68,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
 					WithNamespace(DefaultKcpNamespace),
+					WithScope(infra.SkrKymaRef().Name),
 					WithLabels(map[string]string{
 						cloudcontrolv1beta1.LabelKymaName:        infra.SkrKymaRef().Name,
 						cloudcontrolv1beta1.LabelRemoteName:      skrIpRangeName,
