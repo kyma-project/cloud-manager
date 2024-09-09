@@ -129,6 +129,14 @@ func (in *VpcPeering) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }
 
+func (in *VpcPeering) State() string {
+	return in.Status.State
+}
+
+func (in *VpcPeering) SetState(v string) {
+	in.Status.State = v
+}
+
 //+kubebuilder:object:root=true
 
 // VpcPeeringList contains a list of VpcPeering
