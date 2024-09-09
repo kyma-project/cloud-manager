@@ -31,22 +31,22 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	redisInstanceName := state.ObjAsRedisInstance().Name
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 
-	redisInstance, error := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
-	if error != nil {
-		if azuremeta.IsNotFound(error) {
+	redisInstance, err := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
+	if err != nil {
+		if azuremeta.IsNotFound(err) {
 			return nil, nil
 		}
 
-		logger.Error(error, "Error loading Azure Redis")
+		logger.Error(err, "Error loading Azure Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
-			Message: fmt.Sprintf("Failed loading AzureRedis: %s", error),
+			Message: fmt.Sprintf("Failed loading AzureRedis: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis loading",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

@@ -36,24 +36,24 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 	logger.Info("Detected modified Redis configuration")
-	error := state.client.UpdateRedisInstance(
+	err := state.client.UpdateRedisInstance(
 		ctx,
 		resourceGroupName,
 		requestedAzureRedisInstance.Name,
 		updateParams,
 	)
 
-	if error != nil {
-		logger.Error(error, "Error updating Azure Redis")
+	if err != nil {
+		logger.Error(err, "Error updating Azure Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ConditionTypeError,
-			Message: fmt.Sprintf("Failed to modify AzureRedis: %s", error),
+			Message: fmt.Sprintf("Failed to modify AzureRedis: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis update",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

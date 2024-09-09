@@ -33,22 +33,22 @@ func deleteResourceGroup(ctx context.Context, st composed.State) (error, context
 
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 
-	error := state.client.DeleteResourceGroup(ctx, resourceGroupName)
-	if error != nil {
-		if azuremeta.IsNotFound(error) {
+	err := state.client.DeleteResourceGroup(ctx, resourceGroupName)
+	if err != nil {
+		if azuremeta.IsNotFound(err) {
 			return nil, nil
 		}
 
-		logger.Error(error, "Error deleting Azure resource group")
+		logger.Error(err, "Error deleting Azure resource group")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonCanNotDeleteResourceGroup,
-			Message: fmt.Sprintf("Failed deleting AzureRedis resource group: %s", error),
+			Message: fmt.Sprintf("Failed deleting AzureRedis resource group: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis resource group deleting",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

@@ -44,40 +44,40 @@ type server struct {
 	*memoryStoreClientFake
 }
 
-func (s *server) SetCreateError(error *googleapi.Error) {
-	s.createError = error
+func (s *server) SetCreateError(err *googleapi.Error) {
+	s.createError = err
 }
 
-func (s *server) SetPatchError(error *googleapi.Error) {
-	s.patchError = error
+func (s *server) SetPatchError(err *googleapi.Error) {
+	s.patchError = err
 }
 
-func (s *server) SetDeleteError(error *googleapi.Error) {
-	s.deleteError = error
+func (s *server) SetDeleteError(err *googleapi.Error) {
+	s.deleteError = err
 }
 
-func (s *server) SetGetError(error *googleapi.Error) {
-	s.getError = error
+func (s *server) SetGetError(err *googleapi.Error) {
+	s.getError = err
 }
 
-func (s *server) SetOperationError(error *googleapi.Error) {
-	s.operationError = error
+func (s *server) SetOperationError(err *googleapi.Error) {
+	s.operationError = err
 }
 
-func (s *server) SetSuEnableError(error *googleapi.Error) {
-	s.suEnableError = error
+func (s *server) SetSuEnableError(err *googleapi.Error) {
+	s.suEnableError = err
 }
 
-func (s *server) SetSuDisableError(error *googleapi.Error) {
-	s.suDisableError = error
+func (s *server) SetSuDisableError(err *googleapi.Error) {
+	s.suDisableError = err
 }
 
-func (s *server) SetSuOperationError(error *googleapi.Error) {
-	s.suOperationError = error
+func (s *server) SetSuOperationError(err *googleapi.Error) {
+	s.suOperationError = err
 }
 
-func (s *server) SetSuIsEnabledError(error *googleapi.Error) {
-	s.suIsEnabledError = error
+func (s *server) SetSuIsEnabledError(err *googleapi.Error) {
+	s.suIsEnabledError = err
 }
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient] {

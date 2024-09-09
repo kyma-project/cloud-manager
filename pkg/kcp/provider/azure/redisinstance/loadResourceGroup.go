@@ -24,22 +24,22 @@ func loadResourceGroup(ctx context.Context, st composed.State) (error, context.C
 	logger.Info("Loading Azure Redis resourceGroupName")
 
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
-	resourceGroupsClientGetResponse, error := state.client.GetResourceGroup(ctx, resourceGroupName)
-	if error != nil {
-		if azuremeta.IsNotFound(error) {
+	resourceGroupsClientGetResponse, err := state.client.GetResourceGroup(ctx, resourceGroupName)
+	if err != nil {
+		if azuremeta.IsNotFound(err) {
 			return nil, nil
 		}
 
-		logger.Error(error, "Error loading Azure resource group")
+		logger.Error(err, "Error loading Azure resource group")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonCanNotLoadResourceGroup,
-			Message: fmt.Sprintf("Failed loading AzureRedis resource group: %s", error),
+			Message: fmt.Sprintf("Failed loading AzureRedis resource group: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis resource group loading",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

@@ -25,22 +25,22 @@ func createResourceGroup(ctx context.Context, st composed.State) (error, context
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 	location := state.Scope().Spec.Region
 
-	error := state.client.CreateResourceGroup(ctx, resourceGroupName, location)
-	if error != nil {
-		if azuremeta.IsNotFound(error) {
+	err := state.client.CreateResourceGroup(ctx, resourceGroupName, location)
+	if err != nil {
+		if azuremeta.IsNotFound(err) {
 			return nil, nil
 		}
 
-		logger.Error(error, "Error crating Azure resource group")
+		logger.Error(err, "Error crating Azure resource group")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonCanNotCreateResourceGroup,
-			Message: fmt.Sprintf("Failed creating AzureRedis resource group: %s", error),
+			Message: fmt.Sprintf("Failed creating AzureRedis resource group: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis resource group create",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

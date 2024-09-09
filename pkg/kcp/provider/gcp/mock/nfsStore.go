@@ -141,10 +141,10 @@ func (s *nfsStore) PatchFilestoreInstance(ctx context.Context, projectId, locati
 	}
 }
 
-func newOperation(error string, done bool) *file.Operation {
+func newOperation(msg string, done bool) *file.Operation {
 	name := uuid.New().String()
-	if error != "" {
-		return &file.Operation{Name: name, Error: &file.Status{Code: 500, Message: error}, Done: done}
+	if msg != "" {
+		return &file.Operation{Name: name, Error: &file.Status{Code: 500, Message: msg}, Done: done}
 	}
 	return &file.Operation{Name: name, Done: done}
 }

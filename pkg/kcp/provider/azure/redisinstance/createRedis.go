@@ -25,24 +25,24 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
-	error := state.client.CreateRedisInstance(
+	err := state.client.CreateRedisInstance(
 		ctx,
 		resourceGroupName,
 		redisInstanceName,
 		getCreateParams(state),
 	)
 
-	if error != nil {
-		logger.Error(error, "Error creating Azure Redis")
+	if err != nil {
+		logger.Error(err, "Error creating Azure Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
-			Message: fmt.Sprintf("Failed creating AzureRedis: %s", error),
+			Message: fmt.Sprintf("Failed creating AzureRedis: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis creation",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,

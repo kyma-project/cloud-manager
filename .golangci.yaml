@@ -1,2 +1,14 @@
 issues:
   exclude-rules: []
+linters:
+  enable:
+    # enabled by default
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # added additionally
+    - predeclared
+
