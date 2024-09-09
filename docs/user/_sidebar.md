@@ -6,6 +6,7 @@
   * [AwsNfsVolume](/cloud-manager/user/resources/04-20-10-aws-nfs-volume.md)
   * [GcpNfsVolume](/cloud-manager/user/resources/04-30-10-gcp-nfs-volume.md)
   * [AzureVpcPeering](/cloud-manager/user/resources/04-40-10-azure-vpc-peering.md)
+  * [AwsVpcPeering](/cloud-manager/user/resources/04-70-10-aws-vpc-peering.md))
   * [GcpVpcPeering](/cloud-manager/user/resources/04-50-gcp-vpc-peering.md)
   * [GcpRedisInstance](/cloud-manager/user/resources/04-60-gcp-redis-instance.md)
 * [Tutorials](/cloud-manager/user/tutorials/README.md)
