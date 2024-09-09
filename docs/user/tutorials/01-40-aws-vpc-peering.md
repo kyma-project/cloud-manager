@@ -132,32 +132,32 @@ create those resources.
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-    name: awsvpcpeering-demo
+      name: awsvpcpeering-demo
     spec:
-    selector:
+      selector:
         matchLabels:
         app: awsvpcpeering-demo
-    template:
+      template:
         metadata:
         labels:
-            app: awsvpcpeering-demo
+          app: awsvpcpeering-demo
         spec:
-        containers:
-            - name: my-container
-        resources:
-            limits:
+          containers:
+          - name: my-container
+            resources:
+              limits:
                 memory: 512Mi
                 cpu: "1"
-            requests:
+              requests:
                 memory: 256Mi
                 cpu: "0.2"
-        image: ubuntu
-        command:
-            - "/bin/bash"
-            - "-c"
-            - "--"
-        args:
-            - "apt update; apt install iputils-ping -y; ping -c 20 $IP_ADDRESS"
+            image: ubuntu
+            command:
+              - "/bin/bash"
+              - "-c"
+              - "--"
+            args:
+             - "apt update; apt install iputils-ping -y; ping -c 20 $IP_ADDRESS"
     EOF
     ```
 
