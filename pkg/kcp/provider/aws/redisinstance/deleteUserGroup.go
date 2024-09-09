@@ -26,7 +26,7 @@ func deleteUserGroup(ctx context.Context, st composed.State) (error, context.Con
 
 	err := state.awsClient.DeleteUserGroup(ctx, *state.userGroup.UserGroupId)
 	if err != nil {
-		return awsmeta.LogErrorAndReturn(err, "Error deleting userGroup secret", ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error deleting userGroup", ctx)
 	}
 
 	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
