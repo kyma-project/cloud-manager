@@ -1,4 +1,4 @@
-# Create VPC peering in Azure
+# Create VPC peering in AWS
 
 This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in AWS. The tutorial
 assumes that the Cloud Manager module is enabled in your Kyma cluster. Follow the steps from this tutorial to create a 
