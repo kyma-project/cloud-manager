@@ -251,7 +251,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.State.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.curState)
 	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.ObjAsNfsInstance().Status.State)
 
@@ -298,7 +298,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateFilestoreStateTransient() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(testState.State.gcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(suite.T(), gcpNfsInstance.Status.State, testState.State.curState)
 	assert.Equal(suite.T(), client.NONE, testState.State.operation)
 }

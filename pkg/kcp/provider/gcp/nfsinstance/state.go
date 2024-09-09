@@ -19,9 +19,6 @@ type State struct {
 	validations     []string
 	fsInstance      *file.Instance
 	filestoreClient client.FilestoreClient
-
-	//gcp config
-	gcpConfig *client2.GcpConfig
 }
 
 type StateFactory interface {
@@ -31,14 +28,12 @@ type StateFactory interface {
 type stateFactory struct {
 	filestoreClientProvider client2.ClientProvider[client.FilestoreClient]
 	env                     abstractions.Environment
-	gcpConfig               *client2.GcpConfig
 }
 
 func NewStateFactory(filestoreClientProvider client2.ClientProvider[client.FilestoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		filestoreClientProvider: filestoreClientProvider,
 		env:                     env,
-		gcpConfig:               client2.GetGcpConfig(env),
 	}
 }
 
@@ -51,14 +46,13 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 	if err != nil {
 		return nil, err
 	}
-	return newState(nfsInstanceState, fc, f.gcpConfig), nil
+	return newState(nfsInstanceState, fc), nil
 }
 
-func newState(nfsInstanceState types.State, fc client.FilestoreClient, gcpConfig *client2.GcpConfig) *State {
+func newState(nfsInstanceState types.State, fc client.FilestoreClient) *State {
 	return &State{
 		State:           nfsInstanceState,
 		filestoreClient: fc,
-		gcpConfig:       gcpConfig,
 	}
 }
 

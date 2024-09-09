@@ -9,6 +9,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -39,7 +40,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudresourcesv1beta1.ConditionReasonMissingNfsVolume,
 				Message: "Error loading GcpNfsVolume",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg("Error getting GcpNfsVolume").
 			Run(ctx, state)
 	}
@@ -58,7 +59,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: "Error loading GcpNfsVolume",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg("Error getting GcpNfsVolume").
 			Run(ctx, state)
 	}

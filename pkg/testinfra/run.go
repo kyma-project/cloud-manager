@@ -10,6 +10,7 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
@@ -178,11 +179,18 @@ func Start() (Infra, error) {
 		gomega.Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 	}
 
+	//Setup GCP env variables
+	_ = os.Setenv("GCP_SA_JSON_KEY_PATH", "test")
+	_ = os.Setenv("GCP_RETRY_WAIT_DURATION", "300ms")
+	_ = os.Setenv("GCP_OPERATION_WAIT_DURATION", "300ms")
+	_ = os.Setenv("GCP_API_TIMEOUT_DURATION", "300ms")
+
 	// init config
 	awsconfig.InitConfig(infra.Config())
 	quota.InitConfig(infra.Config())
 	skrruntimeconfig.InitConfig(infra.Config())
 	scope.InitConfig(infra.Config())
+	gcpclient.InitConfig(infra.Config())
 	infra.Config().Read()
 	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
 

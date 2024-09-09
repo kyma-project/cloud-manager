@@ -22,7 +22,6 @@ type State struct {
 	GcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup
 
 	fileRestoreClient client.FileRestoreClient
-	gcpConfig         *client2.GcpConfig
 }
 
 type StateFactory interface {
@@ -38,7 +37,6 @@ func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, s
 		skrCluster:                skrCluster,
 		fileRestoreClientProvider: fileRestoreClientProvider,
 		env:                       env,
-		gcpConfig:                 client2.GetGcpConfig(env),
 	}
 }
 
@@ -48,7 +46,6 @@ type stateFactory struct {
 	skrCluster                composed.StateCluster
 	fileRestoreClientProvider client2.ClientProvider[client.FileRestoreClient]
 	env                       abstractions.Environment
-	gcpConfig                 *client2.GcpConfig
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
@@ -65,7 +62,6 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		KcpCluster:        f.kcpCluster,
 		SkrCluster:        f.skrCluster,
 		fileRestoreClient: fbc,
-		gcpConfig:         f.gcpConfig,
 	}, nil
 }
 
