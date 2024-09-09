@@ -100,11 +100,11 @@ create those resources.
     apiVersion: cloud-resources.kyma-project.io/v1beta1
     kind: AwsVpcPeering
     metadata:
-        name: peering-to-my-vpc
+      name: peering-to-my-vpc
     spec:
-        remoteAccount: $ACCOUNT_ID
-        remoteRegion: $AWS_DEFAULT_REGION
-        remoteVnet: $VPC_ID
+      remoteAccount: $ACCOUNT_ID
+      remoteRegion: $AWS_DEFAULT_REGION
+      remoteVnet: $VPC_ID
     EOF
     ```
 
@@ -136,11 +136,11 @@ create those resources.
     spec:
       selector:
         matchLabels:
-        app: awsvpcpeering-demo
+          app: awsvpcpeering-demo
       template:
         metadata:
-        labels:
-          app: awsvpcpeering-demo
+          labels:
+            app: awsvpcpeering-demo
         spec:
           containers:
           - name: my-container
