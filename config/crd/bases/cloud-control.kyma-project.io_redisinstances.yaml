@@ -48,9 +48,6 @@ spec:
                       authEnabled:
                         default: false
                         type: boolean
-                        x-kubernetes-validations:
-                        - message: AuthEnabled is immutable.
-                          rule: (self == oldSelf)
                       autoMinorVersionUpgrade:
                         default: false
                         type: boolean
@@ -84,6 +81,11 @@ spec:
                     required:
                     - cacheNodeType
                     type: object
+                    x-kubernetes-validations:
+                    - message: authEnabled can only be true if TransitEncryptionEnabled
+                        is also true
+                      rule: (self.authEnabled == false || self.transitEncryptionEnabled
+                        == true)
                   azure:
                     properties:
                       enableNonSslPort:

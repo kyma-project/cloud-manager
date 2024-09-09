@@ -43,6 +43,9 @@ func modifyPreferredMaintenanceWindow(ctx context.Context, st composed.State) (e
 	if currentPreferredMaintenanceWindow == desiredPreferredMaintenanceWindow {
 		return nil, nil
 	}
+	if desiredPreferredMaintenanceWindow == "" {
+		return nil, nil
+	}
 
 	state.UpdatePreferredMaintenanceWindow(desiredPreferredMaintenanceWindow)
 

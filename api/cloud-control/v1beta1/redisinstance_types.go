@@ -211,6 +211,7 @@ type RedisInstanceAzure struct {
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
 	CacheNodeType string `json:"cacheNodeType"`
@@ -230,7 +231,6 @@ type RedisInstanceAws struct {
 
 	// +optional
 	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
 	AuthEnabled bool `json:"authEnabled"`
 
 	// Specifies the weekly time range during which maintenance on the cluster is

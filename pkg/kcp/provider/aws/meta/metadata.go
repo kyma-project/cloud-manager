@@ -125,3 +125,12 @@ const (
 	ElastiCache_CREATE_FAILED ElastiCacheState = "create-failed"
 	ElastiCache_SNAPSHOTTING  ElastiCacheState = "snapshotting"
 )
+
+type ElastiCacheUserGroupState = string
+
+const (
+	ElastiCache_UserGroup_ACTIVE    ElastiCacheUserGroupState = "active"
+	ElastiCache_UserGroup_CREATING  ElastiCacheUserGroupState = "creating"
+	ElastiCache_UserGroup_DELETING  ElastiCacheUserGroupState = "deleting"
+	ElastiCache_UserGroup_MODIFYING ElastiCacheUserGroupState = "modifying"
+)
