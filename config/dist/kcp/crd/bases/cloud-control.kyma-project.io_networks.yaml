@@ -120,6 +120,9 @@ spec:
                         type: object
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Network is immutable.
+                  rule: (self == oldSelf)
               scope:
                 description: |-
                   Scope specifies to which SKR the Network resource belongs to. Managed networks are created in the cloud
@@ -130,6 +133,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object
@@ -143,7 +151,6 @@ spec:
             required:
             - network
             - scope
-            - type
             type: object
           status:
             description: NetworkStatus defines the observed state of Network

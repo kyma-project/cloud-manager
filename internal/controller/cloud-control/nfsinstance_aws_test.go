@@ -75,7 +75,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithIpRange(name),
 					WithNfsInstanceAws(),
 				).

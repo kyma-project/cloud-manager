@@ -90,7 +90,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(
 		infra.KcpManager(),
@@ -98,7 +98,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().FilestoreClientProvider(),
 		infra.CceeMock().NfsInstanceProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	//VpcPeering
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
@@ -106,7 +106,7 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().VpcPeeringSkrProvider(),
 		infra.GcpMock().VpcPeeringSkrProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	//RedisInstance
 	Expect(SetupRedisInstanceReconciler(
 		infra.KcpManager(),
@@ -114,11 +114,11 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().RedisClientProvider(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	// Network
 	Expect(SetupNetworkReconciler(
 		infra.KcpManager(),
-	))
+	)).NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

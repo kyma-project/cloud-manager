@@ -66,7 +66,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 						WithName(kcpIpRangeName),
-						WithKcpIpRangeSpecScope(scope.Name),
+						WithScope(scope.Name),
 					).
 					Should(Succeed())
 			})
@@ -87,7 +87,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-1"),
 						WithRemoteRef("gcp-nfs-instance-1"),
-						WithInstanceScope(scope.Name),
+						WithScope(scope.Name),
 						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).
@@ -212,7 +212,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 						WithName(kcpIpRangeName),
-						WithKcpIpRangeSpecScope(scope.Name),
+						WithScope(scope.Name),
 					).
 					Should(Succeed())
 			})
@@ -234,7 +234,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-2"),
 						WithRemoteRef("gcp-nfs-instance-2"),
-						WithInstanceScope(scope.Name),
+						WithScope(scope.Name),
 						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 					).
@@ -493,7 +493,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 						WithName(kcpIpRangeName),
-						WithKcpIpRangeSpecScope(scope.Name),
+						WithScope(scope.Name),
 					).
 					Should(Succeed())
 			})
@@ -514,7 +514,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-1"),
 						WithRemoteRef("gcp-nfs-instance-1"),
-						WithInstanceScope(scope.Name),
+						WithScope(scope.Name),
 						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
 						WithSourceBackup("projects/kyma/locations/us-west1/backups/gcp-nfs-backup-1"),

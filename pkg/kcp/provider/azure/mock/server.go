@@ -24,13 +24,15 @@ func New() Server {
 }
 
 type server struct {
+	m                    sync.Mutex
 	stores               map[string]*storeSubscriptionContext
 	redisCacheClientFake redisCacheClientFake
 }
 
 func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (client.Client, error) {
-
+		s.m.Lock()
+		defer s.m.Unlock()
 		return s.getStoreSubscriptionContext(subscription), nil
 	}
 }
@@ -43,6 +45,8 @@ func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinst
 }
 
 func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName string, tags map[string]*string) {
+	s.m.Lock()
+	defer s.m.Unlock()
 
 	entry := &networkEntry{
 		resourceGroup: resourceGroup,
@@ -58,6 +62,9 @@ func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName stri
 }
 
 func (s *server) SetPeeringStateConnected(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	store := s.getStoreSubscriptionContext(subscription)
 
 	for _, x := range store.peeringStore.items {
@@ -70,7 +77,6 @@ func (s *server) SetPeeringStateConnected(subscription, resourceGroup, virtualNe
 }
 
 func (s *server) getStoreSubscriptionContext(subscription string) *storeSubscriptionContext {
-
 	if s.stores[subscription] == nil {
 		s.stores[subscription] = &storeSubscriptionContext{
 			peeringStore: &peeringStore{},

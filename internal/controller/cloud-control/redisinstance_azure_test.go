@@ -38,7 +38,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
-					WithKcpIpRangeSpecScope(scope.Name),
+					WithScope(scope.Name),
 				).
 				Should(Succeed())
 		})
@@ -61,7 +61,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithName(name),
 					WithRemoteRef("skr-redis-example"),
 					WithIpRange(kcpIpRangeName),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithRedisInstanceAzure(),
 					WithSKU(2),
 					WithKcpAzureRedisVersion("6.0"),

@@ -13,7 +13,9 @@ func waitVpcPeeringReady(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if ptr.Deref(state.peering.Properties.PeeringState, "") != armnetwork.VirtualNetworkPeeringStateConnected {
-		logger.Info("Waiting for peering Connected state", "Id", *state.peering.ID, "PeeringState", *state.peering.Properties.PeeringState)
+		logger.Info("Waiting for peering Connected state",
+			"Id", ptr.Deref(state.peering.ID, ""),
+			"PeeringState", ptr.Deref(state.peering.Properties.PeeringState, ""))
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 

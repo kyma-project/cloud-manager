@@ -126,7 +126,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					WithName("1839c399-c52e-4b43-b156-4b51027508cd"),
 					WithKcpVpcPeeringRemoteRef("skr-namespace", "skr-aws-ip-range"),
-					WithKcpVpcPeeringSpecScope(kymaName),
+					WithScope(kymaName),
 					WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion),
 				).
 				Should(Succeed())

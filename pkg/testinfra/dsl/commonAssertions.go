@@ -39,19 +39,3 @@ func WithRemoteRef(name string) ObjAction {
 		},
 	}
 }
-
-func WithInstanceScope(scopeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
-				x.Spec.Scope.Name = scopeName
-				return
-			}
-			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				x.Spec.Scope.Name = scopeName
-				return
-			}
-			panic("unhandled type in WithInstanceScope")
-		},
-	}
-}
