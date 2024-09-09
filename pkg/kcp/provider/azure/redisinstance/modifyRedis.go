@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +33,7 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 		return nil, nil
 	}
 
-	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
+	resourceGroupName := state.resourceGroupName
 	logger.Info("Detected modified Redis configuration")
 	err := state.client.UpdateRedisInstance(
 		ctx,
@@ -66,21 +65,21 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 }
 
-func getUpdateParams(state *State) (armRedis.UpdateParameters, bool) {
+func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 
 	requestedAzureRedisInstance := state.ObjAsRedisInstance()
 	capacityChanged := int(*state.azureRedisInstance.Properties.SKU.Capacity) != requestedAzureRedisInstance.Spec.Instance.Azure.SKU.Capacity
-	updateParameters := armRedis.UpdateParameters{}
+	updateParameters := armredis.UpdateParameters{}
 
 	if !capacityChanged {
 		return updateParameters, false
 	}
 
-	updateProperties := &armRedis.UpdateProperties{
-		SKU: &armRedis.SKU{
-			Name:     to.Ptr(armRedis.SKUNamePremium),
+	updateProperties := &armredis.UpdateProperties{
+		SKU: &armredis.SKU{
+			Name:     to.Ptr(armredis.SKUNamePremium),
 			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-			Family:   to.Ptr(armRedis.SKUFamilyP),
+			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
 	}
 

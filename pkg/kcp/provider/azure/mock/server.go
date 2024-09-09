@@ -2,12 +2,10 @@ package mock
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"fmt"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	"k8s.io/utils/ptr"
+	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"sync"
 )
 
@@ -15,85 +13,44 @@ var _ Server = &server{}
 
 func New() Server {
 	return &server{
-		stores: map[string]*storeSubscriptionContext{},
-		redisCacheClientFake: redisCacheClientFake{
-			mutex:               sync.Mutex{},
-			redisResourceGroups: map[string]redisResourceGroup{},
-		},
+		subscriptions: map[string]*tenantSubscriptionStore{},
 	}
 }
 
 type server struct {
-	m                    sync.Mutex
-	stores               map[string]*storeSubscriptionContext
-	redisCacheClientFake redisCacheClientFake
+	m             sync.Mutex
+	subscriptions map[string]*tenantSubscriptionStore
 }
 
-func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client] {
-	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (client.Client, error) {
-		s.m.Lock()
-		defer s.m.Unlock()
-		return s.getStoreSubscriptionContext(subscription), nil
+func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string) (vpcpeeringclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(tenant, subscription), nil
 	}
 }
 
-func (s *server) RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client] {
-	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string) (azureredisinstanceclient.Client, error) {
-
-		return &s.redisCacheClientFake, nil
+func (s *server) RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client] {
+	return func(ctx context.Context, _, _, subscription, tenant string) (redisinstanceclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(tenant, subscription), nil
 	}
 }
 
-func (s *server) AddNetwork(subscription, resourceGroup, virtualNetworkName string, tags map[string]*string) {
+// MockConfigs returns all configs for the given subscription and tenant, and
+// should be used in tests for perform resource changes beside the official API
+// for things that normally cloud providers do in the background
+func (s *server) MockConfigs(subscription, tenant string) Configs {
+	return s.getTenantStoreSubscriptionContext(subscription, tenant)
+}
+
+func (s *server) getTenantStoreSubscriptionContext(tenant, subscription string) *tenantSubscriptionStore {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	entry := &networkEntry{
-		resourceGroup: resourceGroup,
-		network: armnetwork.VirtualNetwork{
-			Name: ptr.To(virtualNetworkName),
-			Tags: tags,
-		},
+	key := fmt.Sprintf("%s:%s", tenant, subscription)
+	sub, ok := s.subscriptions[key]
+	if !ok {
+		sub = newTenantSubscriptionStore(tenant, subscription)
+		s.subscriptions[key] = sub
 	}
 
-	store := s.getStoreSubscriptionContext(subscription)
-
-	store.networkStore.items = append(store.networkStore.items, entry)
-}
-
-func (s *server) SetPeeringStateConnected(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	store := s.getStoreSubscriptionContext(subscription)
-
-	for _, x := range store.peeringStore.items {
-		if virtualNetworkPeeringName == ptr.Deref(x.peering.Name, "") &&
-			resourceGroup == x.resourceGroupName &&
-			virtualNetworkName == x.virtualNetworkName {
-			x.peering.Properties.PeeringState = ptr.To(armnetwork.VirtualNetworkPeeringStateConnected)
-		}
-	}
-}
-
-func (s *server) getStoreSubscriptionContext(subscription string) *storeSubscriptionContext {
-	if s.stores[subscription] == nil {
-		s.stores[subscription] = &storeSubscriptionContext{
-			peeringStore: &peeringStore{},
-			networkStore: &networkStore{},
-			subscription: subscription,
-		}
-	}
-
-	return s.stores[subscription]
-}
-
-func (s *server) GetRedisCacheByResourceGroupName(resourceGroupName string) *armRedis.ResourceInfo {
-	redisInstance, _ := s.redisCacheClientFake.GetRedisInstance(context.TODO(), resourceGroupName, "")
-
-	return redisInstance
-}
-
-func (s *server) DeleteRedisCacheByResourceGroupName(resourceGroupName string) {
-	delete(s.redisCacheClientFake.redisResourceGroups, resourceGroupName)
+	return sub
 }

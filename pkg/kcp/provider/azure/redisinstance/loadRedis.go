@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +28,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	logger.Info("Loading Azure Redis")
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
-	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
+	resourceGroupName := state.resourceGroupName
 
 	redisInstance, err := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {

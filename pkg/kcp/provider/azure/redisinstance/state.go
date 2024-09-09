@@ -2,8 +2,9 @@ package redisinstance
 
 import (
 	"context"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/go-logr/logr"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -21,8 +22,10 @@ type State struct {
 	subscriptionId string
 	tenantId       string
 
-	azureRedisInstance *armRedis.ResourceInfo
-	resourceGroup      *armResources.ResourceGroup
+	resourceGroupName string
+
+	azureRedisInstance *armredis.ResourceInfo
+	resourceGroup      *armresources.ResourceGroup
 }
 
 type StateFactory interface {
@@ -70,5 +73,7 @@ func newState(state redisinstancetypes.State,
 		clientSecret:   clientSecret,
 		subscriptionId: subscriptionId,
 		tenantId:       tenantId,
+
+		resourceGroupName: fmt.Sprintf("cm-redis-%s", state.Obj().GetName()),
 	}
 }

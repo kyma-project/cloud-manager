@@ -4,19 +4,19 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
 
 type Client interface {
-	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) error
-	UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.UpdateParameters) error
-	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error)
+	CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.CreateParameters) error
+	UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error
+	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armredis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
-	GetResourceGroup(ctx context.Context, name string) (*armResources.ResourceGroupsClientGetResponse, error)
+	GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error)
 	CreateResourceGroup(ctx context.Context, name string, location string) error
 	DeleteResourceGroup(ctx context.Context, name string) error
 }
@@ -30,13 +30,13 @@ func NewClientProvider() azureClient.SkrClientProvider[Client] {
 			return nil, err
 		}
 
-		armRedisClientInstance, err := armRedis.NewClient(subscriptionId, cred, nil)
+		armRedisClientInstance, err := armredis.NewClient(subscriptionId, cred, nil)
 
 		if err != nil {
 			return nil, err
 		}
 
-		resourceGroupClientInstance, err := armResources.NewResourceGroupsClient(subscriptionId, cred, nil)
+		resourceGroupClientInstance, err := armresources.NewResourceGroupsClient(subscriptionId, cred, nil)
 
 		if err != nil {
 			return nil, err
@@ -47,18 +47,18 @@ func NewClientProvider() azureClient.SkrClientProvider[Client] {
 }
 
 type redisClient struct {
-	RedisClient         *armRedis.Client
-	ResourceGroupClient *armResources.ResourceGroupsClient
+	RedisClient         *armredis.Client
+	ResourceGroupClient *armresources.ResourceGroupsClient
 }
 
-func newClient(armRedisClientInstance *armRedis.Client, resourceGroupClientInstance *armResources.ResourceGroupsClient) Client {
+func newClient(armRedisClientInstance *armredis.Client, resourceGroupClientInstance *armresources.ResourceGroupsClient) Client {
 	return &redisClient{
 		RedisClient:         armRedisClientInstance,
 		ResourceGroupClient: resourceGroupClientInstance,
 	}
 }
 
-func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.CreateParameters) error {
+func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.CreateParameters) error {
 	logger := composed.LoggerFromCtx(ctx)
 	_, err := c.RedisClient.BeginCreate(
 		ctx,
@@ -75,7 +75,7 @@ func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName
 	return nil
 }
 
-func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armRedis.ResourceInfo, error) {
+func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armredis.ResourceInfo, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	clientGetResponse, err := c.RedisClient.Get(ctx, resourceGroupName, redisInstanceName, nil)
@@ -108,7 +108,7 @@ func (c *redisClient) GetRedisInstanceAccessKeys(ctx context.Context, resourceGr
 	return *redisAccessKeys.PrimaryKey, nil
 }
 
-func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armResources.ResourceGroupsClientGetResponse, error) {
+func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	resourceGroupsClientGetResponse, err := c.ResourceGroupClient.Get(ctx, name, nil)
@@ -124,7 +124,7 @@ func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armRe
 func (c *redisClient) CreateResourceGroup(ctx context.Context, name string, location string) error {
 	logger := composed.LoggerFromCtx(ctx)
 
-	resourceGroup := armResources.ResourceGroup{Location: to.Ptr(location)}
+	resourceGroup := armresources.ResourceGroup{Location: to.Ptr(location)}
 	_, err := c.ResourceGroupClient.CreateOrUpdate(ctx, name, resourceGroup, nil)
 
 	if err != nil {
@@ -147,7 +147,7 @@ func (c *redisClient) DeleteResourceGroup(ctx context.Context, name string) erro
 	return nil
 }
 
-func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armRedis.UpdateParameters) error {
+func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error {
 	logger := composed.LoggerFromCtx(ctx)
 	_, err := c.RedisClient.Update(
 		ctx,
