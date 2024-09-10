@@ -132,6 +132,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
+		By("Then KCP VpcPeering has finalizer", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+				).
+				Should(Succeed())
+		})
+
+		By("When Azure VPC Peering state is Connected", func() {
+			infra.AwsMock().SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(vpcId), ptr.To(remoteVpcId))
+		})
+
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,

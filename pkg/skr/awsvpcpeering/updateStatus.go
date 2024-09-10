@@ -12,6 +12,7 @@ import (
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+	obj := state.ObjAsAwsVpcPeering()
 
 	if state.KcpVpcPeering == nil {
 		// it's deleted
@@ -25,7 +26,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondReady := meta.FindStatusCondition(state.ObjAsAwsVpcPeering().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
 	if kcpCondErr != nil && (skrCondErr == nil || skrCondErr.Message != kcpCondErr.Message) {
-		return composed.UpdateStatus(state.ObjAsAwsVpcPeering()).
+		obj.Status.State = state.KcpVpcPeering.Status.State
+		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -42,7 +44,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR AwsVpcPeering status with Ready condition")
 
-		return composed.UpdateStatus(state.ObjAsAwsVpcPeering()).
+		obj.Status.State = state.KcpVpcPeering.Status.State
+		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
