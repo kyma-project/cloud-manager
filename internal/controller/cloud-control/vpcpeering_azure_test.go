@@ -71,7 +71,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
 					NewObjActions(),
-					HavingState("Initiated"),
+					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated),
 				).Should(Succeed())
 		})
 
