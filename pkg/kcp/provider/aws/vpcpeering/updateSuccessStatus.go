@@ -20,6 +20,8 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
+	obj.Status.State = string(state.vpcPeering.Status.Code)
+
 	return composed.UpdateStatus(state.ObjAsVpcPeering()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrol1beta1.ConditionTypeReady,

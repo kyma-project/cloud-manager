@@ -12,6 +12,7 @@ import (
 )
 
 type VpcPeeringConfig interface {
+	SetVpcPeeringConnectionActive(ctx context.Context, vpcId, remoteVpcId *string)
 }
 
 type vpcPeeringEntry struct {
@@ -36,6 +37,10 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 				VpcId:   remoteVpcId,
 				Region:  remoteRegion,
 				OwnerId: remoteAccountId,
+			},
+			Status: &ec2types.VpcPeeringConnectionStateReason{
+				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
+				Message: nil,
 			},
 		},
 	}
@@ -82,4 +87,17 @@ func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connec
 	}
 
 	return nil
+}
+
+func (s *vpcPeeringStore) SetVpcPeeringConnectionActive(ctx context.Context, vpcId, remoteVpcId *string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, x := range s.items {
+		if ptr.Equal(x.peering.AccepterVpcInfo.VpcId, remoteVpcId) &&
+			ptr.Equal(x.peering.RequesterVpcInfo.VpcId, vpcId) {
+			x.peering.Status.Code = ec2types.VpcPeeringConnectionStateReasonCodeActive
+			break
+		}
+	}
 }
