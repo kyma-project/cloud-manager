@@ -1,15 +1,17 @@
 package cloudcontrol
 
 import (
+	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
-	"time"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -25,7 +27,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteRefName       = "skr-azure-vpcpeering"
 		)
 
-		remoteVnet := util.VirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName)
+		remoteVnetId := util.VirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName)
+		remotePeeringId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName, vpcpeeringName)
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -37,12 +41,20 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		virtualNetworkName := scope.Spec.Scope.Azure.VpcNetwork
-		subscriptionId := scope.Spec.Scope.Azure.SubscriptionId
-		resourceGroupName := virtualNetworkName //TODO resource group name is the same as VPC name
+		localVirtualNetworkName := scope.Spec.Scope.Azure.VpcNetwork
+		localResourceGroupName := localVirtualNetworkName //TODO resource group name is the same as VPC name
 
-		By("And Given remote VPN exists with Kyma tag", func() {
-			infra.AzureMock().AddNetwork(remoteSubscription, remoteResourceGroup, remoteVnetName, map[string]*string{kymaName: ptr.To(kymaName)})
+		azureMockLocal := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
+		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
+
+		By("And Given local Azure VNET exists", func() {
+			_, err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		By("And Given remote Azure VNet exists with Kyma tag", func() {
+			_, err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		obj := &cloudcontrolv1beta1.VpcPeering{}
@@ -53,22 +65,70 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					WithName(vpcpeeringName),
 					WithKcpVpcPeeringRemoteRef(remoteRefNamespace, remoteRefName),
 					WithScope(kymaName),
-					WithKcpVpcPeeringSpecAzure(true, vpcpeeringName, remoteVnet, remoteResourceGroup),
+					WithKcpVpcPeeringSpecAzure(true, vpcpeeringName, remoteVnetId, remoteResourceGroup),
 				).
 				Should(Succeed())
 		})
 
-		By("Then KCP VpcPeering has finalizer", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
-					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-				).
-				Should(Succeed())
+		var localAzurePeering *armnetwork.VirtualNetworkPeering
+
+		By("Then local Azure VPC Peering is created", func() {
+			Eventually(func() error {
+				p, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, vpcpeeringName)
+				if err != nil {
+					return err
+				}
+				if p == nil {
+					return errors.New("nil peering received")
+				}
+				localAzurePeering = p
+				return nil
+			}).Should(Succeed())
+		})
+
+		// this was a bit confusing at first, but it's actually checking through the peering ID that
+		// it was created in the appropriate resource group, network and with name as specified in the KCP VpcPeering resource
+		By("And Then local Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering remote vpc id", func() {
+			Expect(ptr.Deref(localAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnetId))
+		})
+
+		var remoteAzurePeering *armnetwork.VirtualNetworkPeering
+
+		By("And Then remote Azure VPC Peering is created", func() {
+			Eventually(func() error {
+				p, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, vpcpeeringName)
+				if err != nil {
+					return err
+				}
+				if p == nil {
+					return errors.New("nil peering received")
+				}
+				remoteAzurePeering = p
+				return nil
+			}).Should(Succeed())
+		})
+
+		// this was a bit confusing at first, but it's actually checking through the peering ID that
+		// it was created in the appropriate resource group, network and with name as specified in the KCP VpcPeering resource
+		By("And Then remote Azure Peering has ID equal to KCP VpcPeering remote vpc peering id", func() {
+			Expect(ptr.Deref(remoteAzurePeering.ID, "xxx")).To(Equal(remotePeeringId))
 		})
 
 		By("When Azure VPC Peering state is Connected", func() {
-			infra.AzureMock().SetPeeringStateConnected(subscriptionId, resourceGroupName, virtualNetworkName, vpcpeeringName)
+			err := azureMockLocal.SetPeeringStateConnected(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, vpcpeeringName)
+			Expect(err).ToNot(HaveOccurred())
+			err = azureMockRemote.SetPeeringStateConnected(infra.Ctx(), remoteResourceGroup, remoteVnetName, vpcpeeringName)
+			Expect(err).ToNot(HaveOccurred())
+
+			p, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, vpcpeeringName)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(p).ToNot(BeNil())
+			localAzurePeering = p
+
+			p, err = azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, vpcpeeringName)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(p).ToNot(BeNil())
+			remoteAzurePeering = p
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -81,30 +141,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		c, _ := infra.AzureMock().VpcPeeringSkrProvider()(infra.Ctx(), "", "", subscriptionId, "")
-
-		peering, _ := c.GetPeering(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
-
-		By("And Then found VirtualNetworkPeering has ID equal to Status.Id", func() {
-			Expect(ptr.Deref(peering.ID, "xxx")).To(Equal(obj.Status.Id))
+		By("And Then KCP VpcPeering has finalizer", func() {
+			Expect(controllerutil.ContainsFinalizer(obj, cloudcontrolv1beta1.FinalizerName)).
+				To(BeTrue())
 		})
 
-		r, _ := infra.AzureMock().VpcPeeringSkrProvider()(infra.Ctx(), "", "", remoteSubscription, "")
-
-		remotePeering, _ := r.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, vpcpeeringName)
-
-		By("And Then found remote VirtualNetworkPeering has ID equal to Status.RemoteId", func() {
-			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(obj.Status.RemoteId))
+		By("And Then KCP VpcPeering has status.id equal to local Azure Peering ID", func() {
+			Expect(obj.Status.Id).To(Equal(ptr.Deref(localAzurePeering.ID, "xxx")))
 		})
 
-		By("And Then found VirtualNetworkPeering has RemoteVirtualNetwork.ID equal remote vpc id", func() {
-			Expect(ptr.Deref(peering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnet))
-		})
-
-		remotePeeringId := util.VirtualNetworkPeeringResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName, vpcpeeringName)
-
-		By("And Then found remote VirtualNetworkPeering has ID equal to remote vpc peering id", func() {
-			Expect(ptr.Deref(remotePeering.ID, "xxx")).To(Equal(remotePeeringId))
+		By("And Then KCP VpcPeering has status.remoteId equal to remote Azure Peering ID", func() {
+			Expect(obj.Status.RemoteId).To(Equal(ptr.Deref(remoteAzurePeering.ID, "xxx")))
 		})
 
 		// DELETE
@@ -115,15 +162,23 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed(), "failed deleting VpcPeering")
 		})
 
-		By("Then VpcPeering does not exist", func() {
-			Eventually(IsDeleted, 5*time.Second).
+		By("Then KCP VpcPeering does not exist", func() {
+			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), obj).
 				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
 		})
 
-		By("And Then VirtualNetworkPeering is deleted", func() {
-			peering, _ = c.GetPeering(infra.Ctx(), resourceGroupName, virtualNetworkName, vpcpeeringName)
-			Expect(peering).To(Equal((*armnetwork.VirtualNetworkPeering)(nil)))
+		By("And Then local Azure peering does not exist", func() {
+			peering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, vpcpeeringName)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(peering).To(BeNil())
+		})
+
+		By("// cleanup: Scope", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 
 	})

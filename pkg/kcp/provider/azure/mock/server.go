@@ -24,24 +24,24 @@ type server struct {
 
 func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string) (vpcpeeringclient.Client, error) {
-		return s.getTenantStoreSubscriptionContext(tenant, subscription), nil
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
 func (s *server) RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client] {
 	return func(ctx context.Context, _, _, subscription, tenant string) (redisinstanceclient.Client, error) {
-		return s.getTenantStoreSubscriptionContext(tenant, subscription), nil
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
 // MockConfigs returns all configs for the given subscription and tenant, and
 // should be used in tests for perform resource changes beside the official API
 // for things that normally cloud providers do in the background
-func (s *server) MockConfigs(subscription, tenant string) Configs {
+func (s *server) MockConfigs(subscription, tenant string) TenantSubscription {
 	return s.getTenantStoreSubscriptionContext(subscription, tenant)
 }
 
-func (s *server) getTenantStoreSubscriptionContext(tenant, subscription string) *tenantSubscriptionStore {
+func (s *server) getTenantStoreSubscriptionContext(subscription, tenant string) *tenantSubscriptionStore {
 	s.m.Lock()
 	defer s.m.Unlock()
 

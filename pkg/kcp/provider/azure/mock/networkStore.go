@@ -80,9 +80,12 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 		return nil, fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
 	}
 
-	netTags := make(map[string]*string, len(tags))
-	for k, v := range tags {
-		netTags[k] = ptr.To(v)
+	var netTags map[string]*string
+	if tags != nil {
+		netTags = make(map[string]*string, len(tags))
+		for k, v := range tags {
+			netTags[k] = ptr.To(v)
+		}
 	}
 
 	net := &armnetwork.VirtualNetwork{
@@ -107,10 +110,14 @@ func (s *networkStore) GetNetwork(ctx context.Context, resourceGroupName, virtua
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.getNetworkNoLock(resourceGroupName, virtualNetworkName)
+	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+	if err != nil {
+		return nil, err
+	}
+	return util.JsonClone(entry.network)
 }
 
-func (s *networkStore) getNetworkNoLock(resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
+func (s *networkStore) getNetworkEntryNoLock(resourceGroupName, virtualNetworkName string) (*networkEntry, error) {
 	_, ok := s.items[resourceGroupName]
 	if !ok {
 		return nil, azuremeta.NewAzureNotFoundError()
@@ -120,7 +127,7 @@ func (s *networkStore) getNetworkNoLock(resourceGroupName, virtualNetworkName st
 		return nil, azuremeta.NewAzureNotFoundError()
 	}
 
-	return util.JsonClone(s.items[resourceGroupName][virtualNetworkName].network)
+	return s.items[resourceGroupName][virtualNetworkName], nil
 }
 
 // VpcPeeringClient ==============================================
@@ -144,13 +151,13 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 		return nil, fmt.Errorf("vpc peering %s already exists", id)
 	}
 
-	net, err := s.getNetworkNoLock(resourceGroupName, virtualNetworkName)
+	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
 	if err != nil {
 		return nil, err
 	}
 
-	if net.Properties == nil {
-		net.Properties = &armnetwork.VirtualNetworkPropertiesFormat{}
+	if entry.network.Properties == nil {
+		entry.network.Properties = &armnetwork.VirtualNetworkPropertiesFormat{}
 	}
 
 	peering := &armnetwork.VirtualNetworkPeering{
@@ -168,7 +175,7 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 		},
 	}
 
-	net.Properties.VirtualNetworkPeerings = append(net.Properties.VirtualNetworkPeerings, peering)
+	entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
 
 	return util.JsonClone(peering)
 }
@@ -180,16 +187,16 @@ func (s *networkStore) ListPeerings(ctx context.Context, resourceGroup string, v
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	net, err := s.getNetworkNoLock(resourceGroup, virtualNetworkName)
+	entry, err := s.getNetworkEntryNoLock(resourceGroup, virtualNetworkName)
 	if err != nil {
 		return nil, err
 	}
-	if net.Properties == nil {
+	if entry.network.Properties == nil {
 		return nil, nil
 	}
 
-	result := make([]*armnetwork.VirtualNetworkPeering, 0, len(net.Properties.VirtualNetworkPeerings))
-	for _, originalPeering := range net.Properties.VirtualNetworkPeerings {
+	result := make([]*armnetwork.VirtualNetworkPeering, 0, len(entry.network.Properties.VirtualNetworkPeerings))
+	for _, originalPeering := range entry.network.Properties.VirtualNetworkPeerings {
 		copyPeering, err := util.JsonClone(originalPeering)
 		if err != nil {
 			return nil, err
@@ -207,21 +214,26 @@ func (s *networkStore) GetPeering(ctx context.Context, resourceGroup, virtualNet
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
-}
-
-func (s *networkStore) getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
-	net, err := s.getNetworkNoLock(resourceGroup, virtualNetworkName)
+	peering, err := s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
 	if err != nil {
 		return nil, err
 	}
-	if net.Properties == nil {
+
+	return util.JsonClone(peering)
+}
+
+func (s *networkStore) getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error) {
+	entry, err := s.getNetworkEntryNoLock(resourceGroup, virtualNetworkName)
+	if err != nil {
+		return nil, err
+	}
+	if entry.network.Properties == nil {
 		return nil, azuremeta.NewAzureNotFoundError()
 	}
 
-	for _, peering := range net.Properties.VirtualNetworkPeerings {
+	for _, peering := range entry.network.Properties.VirtualNetworkPeerings {
 		if ptr.Deref(peering.Name, "") == virtualNetworkPeeringName {
-			return util.JsonClone(peering)
+			return peering, nil
 		}
 	}
 
@@ -240,12 +252,12 @@ func (s *networkStore) DeletePeering(ctx context.Context, resourceGroup, virtual
 		// errors like network or peering not found
 		return err
 	}
-	net, err := s.getNetworkNoLock(resourceGroup, virtualNetworkName)
+	entry, err := s.getNetworkEntryNoLock(resourceGroup, virtualNetworkName)
 	if err != nil {
 		return err
 	}
 
-	net.Properties.VirtualNetworkPeerings = pie.Filter(net.Properties.VirtualNetworkPeerings, func(item *armnetwork.VirtualNetworkPeering) bool {
+	entry.network.Properties.VirtualNetworkPeerings = pie.Filter(entry.network.Properties.VirtualNetworkPeerings, func(item *armnetwork.VirtualNetworkPeering) bool {
 		return ptr.Deref(item.Name, "") != virtualNetworkPeeringName
 	})
 

@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
@@ -46,7 +47,8 @@ type NetworkConfig interface {
 }
 
 type RedisConfig interface {
-	DeleteRedisCacheByResourceGroupName(resourceGroupName string) error
+	AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
+	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
 }
 
 type Configs interface {
@@ -61,4 +63,6 @@ type TenantSubscription interface {
 
 type Server interface {
 	Providers
+
+	MockConfigs(subscription, tenant string) TenantSubscription
 }

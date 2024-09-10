@@ -103,7 +103,7 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
 		KymaName:  scope.Name,
 		ShootName: scope.Name,
-		Region:    "eu-west-1",
+		Region:    "westeurope",
 		Provider:  cloudcontrolv1beta1.ProviderAzure,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			Azure: &cloudcontrolv1beta1.AzureScope{

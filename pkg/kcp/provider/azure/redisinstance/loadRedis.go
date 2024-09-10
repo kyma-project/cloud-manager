@@ -20,11 +20,6 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		return nil, nil
 	}
 
-	if state.resourceGroup == nil {
-		logger.Info("Skip the Redis load, resource group is not present and needs to be created (or less possible, loaded)")
-		return nil, nil
-	}
-
 	logger.Info("Loading Azure Redis")
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
@@ -33,6 +28,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	redisInstance, err := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
+			logger.Info("Azure Redis instance not found")
 			return nil, nil
 		}
 

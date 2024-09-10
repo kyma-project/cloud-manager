@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.Context) {
@@ -28,7 +29,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 			Run(ctx, st)
 	}
 
-	if *state.azureRedisInstance.Properties.ProvisioningState == armredis.ProvisioningStateSucceeded {
+	if ptr.Deref(state.azureRedisInstance.Properties.ProvisioningState, "") == armredis.ProvisioningStateSucceeded {
 		return nil, nil
 	}
 

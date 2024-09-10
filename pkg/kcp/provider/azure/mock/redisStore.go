@@ -2,11 +2,13 @@ package mock
 
 import (
 	"context"
-	"errors"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/google/uuid"
+	"github.com/imdario/mergo"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
 )
@@ -16,149 +18,221 @@ var _ RedisConfig = &redisStore{}
 
 func newRedisStore(subscription string) *redisStore {
 	return &redisStore{
-		subscription:        subscription,
-		redisResourceGroups: map[string]redisResourceGroup{},
+		subscription: subscription,
+		items:        map[string]map[string]*instanceInfo{},
 	}
 }
 
-type redisStore struct {
-	m                   sync.Mutex
-	subscription        string
-	redisResourceGroups map[string]redisResourceGroup
+type instanceInfo struct {
+	redis      *armredis.ResourceInfo
+	accessKeys *armredis.AccessKeys
 }
 
-type redisResourceGroup struct {
-	redisGroupInstance *armresources.ResourceGroup
-	redisInstance      *armredis.ResourceInfo
+type redisStore struct {
+	m sync.Mutex
+
+	subscription string
+
+	// items is a map of resourceGroup => redisName => *armredis.ResourceInfo
+	items map[string]map[string]*instanceInfo
 }
 
 // Config =================================================================================================
 
-func (s *redisStore) DeleteRedisCacheByResourceGroupName(resourceGroupName string) error {
-	panic("implement me")
+func (s *redisStore) AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return err
+	}
+	delete(s.items[resourceGroupName], redisInstanceName)
+
+	return nil
+}
+
+func (s *redisStore) AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	info, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return err
+	}
+
+	info.redis.Properties.ProvisioningState = ptr.To(state)
+
+	return nil
 }
 
 // RedisInstanceClient ====================================================================================
 
-func (s *redisStore) GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error) {
+func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.CreateParameters) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	resourceGroup, resourceGroupPresent := s.redisResourceGroups[name]
-	if resourceGroupPresent {
-		resourceGroupsClientGetResponse := armresources.ResourceGroupsClientGetResponse{
-			ResourceGroup: *resourceGroup.redisGroupInstance,
+	_, ok := s.items[resourceGroupName]
+	if !ok {
+		s.items[resourceGroupName] = map[string]*instanceInfo{}
+	}
+	_, ok = s.items[resourceGroupName][redisInstanceName]
+	if ok {
+		return fmt.Errorf("redis instance %s already exist", azureutil.RedisInstanceResourceId(s.subscription, resourceGroupName, redisInstanceName))
+	}
+
+	if parameters.Properties == nil {
+		parameters.Properties = &armredis.CreateProperties{}
+	}
+
+	props := &armredis.Properties{}
+	err := util.JsonCloneInto(parameters.Properties, props)
+	if err != nil {
+		return err
+	}
+
+	props.ProvisioningState = ptr.To(armredis.ProvisioningStateCreating)
+	props.HostName = ptr.To("redis.tcp")
+	props.Port = ptr.To(int32(6379))
+	if props.SKU == nil {
+		props.SKU = &armredis.SKU{
+			Capacity: ptr.To(int32(1)),
 		}
-
-		return &resourceGroupsClientGetResponse, nil
 	}
 
-	responseErr := azcore.ResponseError{
-		StatusCode: 404,
+	item := &instanceInfo{
+		redis: &armredis.ResourceInfo{
+			Location:   parameters.Location,
+			Name:       ptr.To(redisInstanceName),
+			Properties: props,
+			Identity:   parameters.Identity,
+			Tags:       parameters.Tags,
+			Zones:      parameters.Zones,
+		},
+		accessKeys: &armredis.AccessKeys{
+			PrimaryKey:   ptr.To(uuid.NewString()),
+			SecondaryKey: ptr.To(uuid.NewString()),
+		},
 	}
-	return nil, errors.Join(&responseErr)
+
+	s.items[resourceGroupName][redisInstanceName] = item
+
+	return nil
 }
 
-func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.CreateParameters) error {
+func (s *redisStore) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	if resourceGroup, ok := s.redisResourceGroups[resourceGroupName]; ok {
+	info, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return err
+	}
 
-		provState := armredis.ProvisioningStateSucceeded
-		redisInstanceCreated := armredis.ResourceInfo{
-			Location: ptr.To("US east"),
-			Name:     &redisInstanceName,
-			Properties: &armredis.Properties{
-				ProvisioningState: &provState,
-				HostName:          ptr.To("tch.redis-host.com"),
-				Port:              to.Ptr[int32](6379),
-				AccessKeys: &armredis.AccessKeys{
-					PrimaryKey: ptr.To("primary-key"),
-				},
-				SKU: &armredis.SKU{
-					Capacity: to.Ptr[int32](1),
-				},
-			},
+	if parameters.Properties == nil {
+		parameters.Properties = &armredis.UpdateProperties{}
+	}
+	props := &armredis.Properties{}
+	err = util.JsonCloneInto(parameters.Properties, props)
+	if err != nil {
+		return err
+	}
+
+	if err = mergo.Merge(info.redis.Properties, props); err != nil {
+		return err
+	}
+
+	if parameters.Identity != nil {
+		if info.redis.Identity == nil {
+			info.redis.Identity = parameters.Identity
+		} else {
+			err = mergo.Merge(info.redis.Identity, parameters.Identity)
+			if err != nil {
+				return err
+			}
 		}
-		resourceGroup.redisInstance = &redisInstanceCreated
-		s.redisResourceGroups[resourceGroupName] = resourceGroup
-
-		return nil
+	}
+	if parameters.Tags != nil {
+		for k, v := range parameters.Tags {
+			info.redis.Tags[k] = v
+		}
 	}
 
 	return nil
 }
 
 func (s *redisStore) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armredis.ResourceInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	resourceGroup, resourceGroupPresent := s.redisResourceGroups[resourceGroupName]
-	if resourceGroupPresent {
-		return resourceGroup.redisInstance, nil
+	info, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	res, err := util.JsonClone(info.redis)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *redisStore) getRedisInfoNonLocking(resourceGroupName, redisInstanceName string) (*instanceInfo, error) {
+	group, ok := s.items[resourceGroupName]
+	if !ok {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+	info, ok := group[redisInstanceName]
+	if !ok {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+	return info, nil
 }
 
 func (s *redisStore) DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	resourceGroup, resourceGroupPresent := s.redisResourceGroups[resourceGroupName]
-	if resourceGroupPresent {
-		resourceGroup.redisInstance.Properties.ProvisioningState = to.Ptr(armredis.ProvisioningStateDeleting)
-		return nil
+	info, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return err
 	}
+
+	info.redis.Properties.ProvisioningState = ptr.To(armredis.ProvisioningStateDeleting)
 
 	return nil
 }
 
-func (s *redisStore) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error) {
+func (s *redisStore) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) ([]string, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	resourceGroup, resourceGroupPresent := s.redisResourceGroups[resourceGroupName]
-	if resourceGroupPresent {
-		return *resourceGroup.redisInstance.Properties.AccessKeys.PrimaryKey, nil
+	info, err := s.getRedisInfoNonLocking(resourceGroupName, redisInstanceName)
+	if err != nil {
+		return nil, err
 	}
 
-	return "", nil
-}
-
-func (s *redisStore) CreateResourceGroup(ctx context.Context, name string, location string) error {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	redisResourceGroup := redisResourceGroup{
-		redisGroupInstance: &armresources.ResourceGroup{
-			Location: &location,
-			Name:     &name,
-		},
-	}
-	s.redisResourceGroups[name] = redisResourceGroup
-
-	return nil
-}
-
-func (s *redisStore) DeleteResourceGroup(ctx context.Context, name string) error {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	delete(s.redisResourceGroups, name)
-
-	return nil
-}
-
-func (s *redisStore) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	resourceGroup, resourceGroupPresent := s.redisResourceGroups[resourceGroupName]
-	if resourceGroupPresent {
-		resourceGroup.redisInstance.Properties.SKU = parameters.Properties.SKU
-	}
-
-	return nil
+	return []string{ptr.Deref(info.accessKeys.PrimaryKey, ""), ptr.Deref(info.accessKeys.SecondaryKey, "")}, nil
 }

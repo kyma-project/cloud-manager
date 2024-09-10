@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/go-logr/logr"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -25,7 +24,6 @@ type State struct {
 	resourceGroupName string
 
 	azureRedisInstance *armredis.ResourceInfo
-	resourceGroup      *armresources.ResourceGroup
 }
 
 type StateFactory interface {
@@ -74,6 +72,6 @@ func newState(state redisinstancetypes.State,
 		subscriptionId: subscriptionId,
 		tenantId:       tenantId,
 
-		resourceGroupName: fmt.Sprintf("cm-redis-%s", state.Obj().GetName()),
+		resourceGroupName: fmt.Sprintf("cm-redis-%s", state.Obj().GetName()), // TODO this should be specified somehow
 	}
 }

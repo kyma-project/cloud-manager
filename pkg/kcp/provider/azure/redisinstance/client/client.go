@@ -2,12 +2,11 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	"k8s.io/utils/ptr"
 )
 
 type Client interface {
@@ -15,10 +14,10 @@ type Client interface {
 	UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error
 	GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armredis.ResourceInfo, error)
 	DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
-	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error)
-	GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error)
-	CreateResourceGroup(ctx context.Context, name string, location string) error
-	DeleteResourceGroup(ctx context.Context, name string) error
+	GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) ([]string, error)
+	//GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error)
+	//CreateResourceGroup(ctx context.Context, name string, location string) error
+	//DeleteResourceGroup(ctx context.Context, name string) error
 }
 
 func NewClientProvider() azureClient.SkrClientProvider[Client] {
@@ -59,16 +58,13 @@ func newClient(armRedisClientInstance *armredis.Client, resourceGroupClientInsta
 }
 
 func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.CreateParameters) error {
-	logger := composed.LoggerFromCtx(ctx)
 	_, err := c.RedisClient.BeginCreate(
 		ctx,
 		resourceGroupName,
 		redisInstanceName,
 		parameters,
 		nil)
-
 	if err != nil {
-		logger.Error(err, "Failed to create Azure Redis instance")
 		return err
 	}
 
@@ -76,79 +72,60 @@ func (c *redisClient) CreateRedisInstance(ctx context.Context, resourceGroupName
 }
 
 func (c *redisClient) GetRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) (*armredis.ResourceInfo, error) {
-	logger := composed.LoggerFromCtx(ctx)
-
 	clientGetResponse, err := c.RedisClient.Get(ctx, resourceGroupName, redisInstanceName, nil)
 	if err != nil {
-		logger.Error(err, "Failed to get Azure Redis instance")
 		return nil, err
 	}
 	return &clientGetResponse.ResourceInfo, nil
 }
 func (c *redisClient) DeleteRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error {
-	logger := composed.LoggerFromCtx(ctx)
-
 	_, err := c.RedisClient.BeginDelete(ctx, resourceGroupName, redisInstanceName, nil)
 	if err != nil {
-		logger.Error(err, "Failed to delete Azure Redis instance")
 		return err
 	}
 	return nil
 }
 
-func (c *redisClient) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) (string, error) {
-	logger := composed.LoggerFromCtx(ctx)
-
+func (c *redisClient) GetRedisInstanceAccessKeys(ctx context.Context, resourceGroupName, redisInstanceName string) ([]string, error) {
 	redisAccessKeys, err := c.RedisClient.ListKeys(ctx, resourceGroupName, redisInstanceName, nil)
 
 	if err != nil {
-		logger.Error(err, "Failed to get Azure Redis access keys")
-		return "", err
-	}
-	return *redisAccessKeys.PrimaryKey, nil
-}
-
-func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error) {
-	logger := composed.LoggerFromCtx(ctx)
-
-	resourceGroupsClientGetResponse, err := c.ResourceGroupClient.Get(ctx, name, nil)
-
-	if err != nil {
-		logger.Error(err, "Failed to get Azure Redis resource group")
 		return nil, err
 	}
-
-	return &resourceGroupsClientGetResponse, nil
+	return []string{ptr.Deref(redisAccessKeys.PrimaryKey, "")}, nil
 }
 
-func (c *redisClient) CreateResourceGroup(ctx context.Context, name string, location string) error {
-	logger := composed.LoggerFromCtx(ctx)
-
-	resourceGroup := armresources.ResourceGroup{Location: to.Ptr(location)}
-	_, err := c.ResourceGroupClient.CreateOrUpdate(ctx, name, resourceGroup, nil)
-
-	if err != nil {
-		logger.Error(err, "Failed to create Azure Redis resource group")
-		return err
-	}
-
-	return nil
-}
-func (c *redisClient) DeleteResourceGroup(ctx context.Context, name string) error {
-	logger := composed.LoggerFromCtx(ctx)
-
-	_, err := c.ResourceGroupClient.BeginDelete(ctx, name, nil)
-
-	if err != nil {
-		logger.Error(err, "Failed to delete Azure Redis resource group")
-		return err
-	}
-
-	return nil
-}
+//func (c *redisClient) GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroupsClientGetResponse, error) {
+//	resourceGroupsClientGetResponse, err := c.ResourceGroupClient.Get(ctx, name, nil)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &resourceGroupsClientGetResponse, nil
+//}
+//
+//func (c *redisClient) CreateResourceGroup(ctx context.Context, name string, location string) error {
+//	resourceGroup := armresources.ResourceGroup{Location: to.Ptr(location)}
+//	_, err := c.ResourceGroupClient.CreateOrUpdate(ctx, name, resourceGroup, nil)
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
+//func (c *redisClient) DeleteResourceGroup(ctx context.Context, name string) error {
+//	_, err := c.ResourceGroupClient.BeginDelete(ctx, name, nil)
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string, parameters armredis.UpdateParameters) error {
-	logger := composed.LoggerFromCtx(ctx)
 	_, err := c.RedisClient.Update(
 		ctx,
 		resourceGroupName,
@@ -157,7 +134,6 @@ func (c *redisClient) UpdateRedisInstance(ctx context.Context, resourceGroupName
 		nil)
 
 	if err != nil {
-		logger.Error(err, "Failed to update Azure Redis instance")
 		return err
 	}
 
