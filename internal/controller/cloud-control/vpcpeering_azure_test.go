@@ -67,6 +67,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
+		By("Then KCP VpcPeering state is Initiated", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), obj,
+					NewObjActions(),
+					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated),
+				).Should(Succeed())
+		})
+
 		By("When Azure VPC Peering state is Connected", func() {
 			infra.AzureMock().SetPeeringStateConnected(subscriptionId, resourceGroupName, virtualNetworkName, vpcpeeringName)
 		})
