@@ -33,3 +33,13 @@ func (s *nfsRestoreStore) GetRestoreOperation(ctx context.Context, _, operationN
 	}
 	return &file.Operation{Name: operationName, Done: true}, nil
 }
+
+func (s *nfsRestoreStore) FindRestoreOperation(ctx context.Context, _, _, _ string) (*file.Operation, error) {
+	if s.restoreOperationError != nil {
+		return nil, s.restoreOperationError
+	}
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	return newOperation("", false), nil
+}

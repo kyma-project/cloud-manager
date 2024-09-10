@@ -12,6 +12,7 @@ import (
 type FileRestoreClient interface {
 	RestoreFile(ctx context.Context, projectId, destFileFullPath, destFileShareName, srcBackupFullPath string) (*file.Operation, error)
 	GetRestoreOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
+	FindRestoreOperation(ctx context.Context, projectId, location, instanceId string) (*file.Operation, error)
 }
 
 func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
@@ -63,4 +64,29 @@ func (c *fileRestoreClient) GetRestoreOperation(ctx context.Context, projectId, 
 		return nil, err
 	}
 	return operation, nil
+}
+
+func (c *fileRestoreClient) FindRestoreOperation(ctx context.Context, projectId, location, instanceId string) (*file.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	filestoreParentPath := client.GetFilestoreParentPath(projectId, location)
+	destFileFullPath := client.GetFilestoreInstancePath(projectId, location, instanceId)
+	targetFilter := fmt.Sprintf("metadata.target=\"%s\"", destFileFullPath)
+	verbFilter := "metadata.verb=\"restore\""
+	filters := fmt.Sprintf("%s AND %s", targetFilter, verbFilter)
+	operationList, err := c.svcFile.Projects.Locations.Operations.List(filestoreParentPath).Filter(filters).Do()
+	client.IncrementCallCounter("File", "Operations.List", "", err)
+	if err != nil {
+		logger.Error(err, "FindRestoreOperation", "projectId", projectId, "destFileFullPath", destFileFullPath)
+		return nil, err
+	}
+	var runningOperation *file.Operation
+	for _, operation := range operationList.Operations {
+		if !operation.Done {
+			runningOperation = operation
+		}
+	}
+	if runningOperation == nil || runningOperation.Name == "" {
+		return nil, nil
+	}
+	return runningOperation, nil
 }

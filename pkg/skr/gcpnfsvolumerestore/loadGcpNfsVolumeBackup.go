@@ -25,7 +25,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	restore := state.ObjAsGcpNfsVolumeRestore()
-	logger.WithValues("Nfs Restore source:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
+	logger.WithValues("nfsRestoreSource:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
 		"destination:", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Loading GCPNfsVolumeBackup")
 
 	//Load the nfsVolumeBackup object

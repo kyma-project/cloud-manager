@@ -1,1 +1,2 @@
 providersDir: config/dist/skr/crd/bases/providers
+lockingLeaseDuration: 10m

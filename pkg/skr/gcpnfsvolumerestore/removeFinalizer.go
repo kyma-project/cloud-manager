@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func removeFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
@@ -30,11 +29,12 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
-	err := state.UpdateObj(ctx)
+	modified, err := st.PatchObjRemoveFinalizer(ctx, cloudresourcesv1beta1.Finalizer)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR GcpNfsVolumeRestore after finalizer remove", composed.StopWithRequeue, ctx)
 	}
-
+	if modified {
+		composed.LoggerFromCtx(ctx).Info("Finalizer removed")
+	}
 	return composed.StopAndForget, nil
 }

@@ -30,7 +30,7 @@ func (suite *setProcessingSuite) TestSetProcessingWhenDeleting() {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
 	defer fakeHttpServer.Close()
-	obj := deletingGpNfsVolumeRestore.DeepCopy()
+	obj := deletingGcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 	suite.Nil(err)
 
