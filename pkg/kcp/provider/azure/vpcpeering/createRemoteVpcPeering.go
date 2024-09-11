@@ -63,13 +63,22 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 
 		message := azuremeta.GetErrorMessage(err)
 
+		condition := metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  "True",
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+			Message: message,
+		}
+
+		if !composed.AnyConditionChanged(obj, condition) {
+			if obj.Status.State == cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected {
+				return composed.StopAndForget, ctx
+			}
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+		}
+
 		return composed.UpdateStatus(obj).
-			SetCondition(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: message,
-			}).
+			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
@@ -78,5 +87,5 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 
 	logger.Info("Azure remote VPC Peering created")
 
-	return composed.StopWithRequeue, nil
+	return nil, nil
 }

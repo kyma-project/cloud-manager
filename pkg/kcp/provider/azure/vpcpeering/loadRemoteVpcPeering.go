@@ -54,11 +54,13 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("Azure remote VPC peering loaded")
 
-	if len(obj.Status.RemoteId) > 0 {
+	remoteId := ptr.Deref(peering.ID, "")
+
+	if obj.Status.RemoteId == remoteId {
 		return nil, ctx
 	}
 
-	obj.Status.RemoteId = ptr.Deref(peering.ID, "")
+	obj.Status.RemoteId = remoteId
 
 	return composed.PatchStatus(obj).
 		ErrorLogMessage("Error updating VpcPeering status after loading vpc peering connection").

@@ -49,5 +49,5 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Azure VPC Peering created")
 
-	return composed.StopWithRequeue, ctx
+	return nil, nil
 }

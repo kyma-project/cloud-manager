@@ -34,15 +34,20 @@ func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Cont
 
 	logger.Info("Azure VPC Peering loaded")
 
-	if len(obj.Status.Id) > 0 {
+	id := ptr.Deref(peering.ID, "")
+
+	var peeringState string
+
+	if peering.Properties.PeeringState != nil {
+		peeringState = string(*peering.Properties.PeeringState)
+	}
+
+	if obj.Status.Id == id && obj.Status.State == peeringState {
 		return nil, ctx
 	}
 
-	obj.Status.Id = ptr.Deref(peering.ID, "")
-
-	if peering.Properties.PeeringState != nil {
-		obj.Status.State = string(*peering.Properties.PeeringState)
-	}
+	obj.Status.Id = id
+	obj.Status.State = peeringState
 
 	return composed.PatchStatus(obj).
 		ErrorLogMessage("Error updating VpcPeering status after loading vpc peering connection").
