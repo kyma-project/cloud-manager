@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,27 +21,27 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	logger.Info("Creating Azure Redis")
-	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
+	resourceGroupName := state.resourceGroupName
 
 	redisInstanceName := state.ObjAsRedisInstance().Name
-	error := state.client.CreateRedisInstance(
+	err := state.client.CreateRedisInstance(
 		ctx,
 		resourceGroupName,
 		redisInstanceName,
 		getCreateParams(state),
 	)
 
-	if error != nil {
-		logger.Error(error, "Error creating Azure Redis")
+	if err != nil {
+		logger.Error(err, "Error creating Azure Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
-			Message: fmt.Sprintf("Failed creating AzureRedis: %s", error),
+			Message: fmt.Sprintf("Failed creating AzureRedis: %s", err),
 		})
-		error = state.UpdateObjStatus(ctx)
-		if error != nil {
-			return composed.LogErrorAndReturn(error,
+		err = state.UpdateObjStatus(ctx)
+		if err != nil {
+			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed azure redis creation",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,
@@ -55,13 +54,13 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }
 
-func getCreateParams(state *State) armRedis.CreateParameters {
-	createProperties := &armRedis.CreateProperties{
+func getCreateParams(state *State) armredis.CreateParameters {
+	createProperties := &armredis.CreateProperties{
 		EnableNonSSLPort: to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.EnableNonSslPort),
-		SKU: &armRedis.SKU{
-			Name:     to.Ptr(armRedis.SKUNamePremium),
+		SKU: &armredis.SKU{
+			Name:     to.Ptr(armredis.SKUNamePremium),
 			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-			Family:   to.Ptr(armRedis.SKUFamilyP),
+			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
 		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
 	}
@@ -76,7 +75,7 @@ func getCreateParams(state *State) armRedis.CreateParameters {
 		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)
 	}
 
-	createParameters := armRedis.CreateParameters{
+	createParameters := armredis.CreateParameters{
 		Location:   to.Ptr(state.Scope().Spec.Region),
 		Properties: createProperties,
 	}

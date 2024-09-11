@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"net/http"
 )
 
 const (
@@ -22,18 +23,32 @@ const (
 	InvalidResourceNameMessage                           = "Resource name is invalid. The name can be up to 80 characters long. It must begin with a word character, and it must end with a word character. The name may contain word characters or '.', '-'."
 )
 
-func TooManyRequests(err error) bool {
+func IsTooManyRequests(err error) bool {
 	var respErr *azcore.ResponseError
 
 	// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling
-	return errors.As(err, &respErr) && respErr.StatusCode == 429
+	return errors.As(err, &respErr) && respErr.StatusCode == http.StatusTooManyRequests
+}
+
+func NewAzureNotFoundError() error {
+	return &azcore.ResponseError{
+		ErrorCode:  "ResourceNotFound",
+		StatusCode: http.StatusNotFound,
+	}
+}
+
+func IgnoreNotFoundError(err error) error {
+	if IsNotFound(err) {
+		return nil
+	}
+	return err
 }
 
 func IsNotFound(err error) bool {
 	var respErr *azcore.ResponseError
 
 	if ok := errors.As(err, &respErr); ok {
-		if respErr.StatusCode == 404 {
+		if respErr.StatusCode == http.StatusNotFound {
 			return true
 		}
 		return respErr.ErrorCode == "ResourceNotFound"
@@ -43,7 +58,7 @@ func IsNotFound(err error) bool {
 }
 
 func ErrorToRequeueResponse(err error) error {
-	if TooManyRequests(err) {
+	if IsTooManyRequests(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
 	}
 	return composed.StopWithRequeueDelay(util.Timing.T300000ms())

@@ -3,8 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,16 +19,18 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		*state.azureRedisInstance.Properties.HostName,
 		*state.azureRedisInstance.Properties.Port,
 	)
-	resourceGroupName := azureUtil.GetResourceGroupName("redis", state.ObjAsRedisInstance().Name)
-	primaryAccessKey, error := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
+	resourceGroupName := state.resourceGroupName
+	keys, err := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
 
-	if error != nil {
-		return composed.LogErrorAndReturn(error, "Error retrieving Azure RedisInstance access keys", composed.StopWithRequeue, ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error retrieving Azure RedisInstance access keys", composed.StopWithRequeue, ctx)
 	}
 
 	if state.azureRedisInstance != nil {
-		redisInstance.Status.AuthString = primaryAccessKey
+		redisInstance.Status.AuthString = pie.First(keys)
 	}
+
+	redisInstance.Status.State = cloudcontrolv1beta1.ReadyState
 
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{

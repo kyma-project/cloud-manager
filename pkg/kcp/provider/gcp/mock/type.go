@@ -39,11 +39,11 @@ type Providers interface {
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
 type ClientErrors interface {
-	SetCreateError(error *googleapi.Error)
-	SetPatchError(error *googleapi.Error)
-	SetDeleteError(error *googleapi.Error)
-	SetGetError(error *googleapi.Error)
-	SetOperationError(error *googleapi.Error)
+	SetCreateError(err *googleapi.Error)
+	SetPatchError(err *googleapi.Error)
+	SetDeleteError(err *googleapi.Error)
+	SetGetError(err *googleapi.Error)
+	SetOperationError(err *googleapi.Error)
 }
 
 type Server interface {

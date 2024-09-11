@@ -126,7 +126,6 @@ func (c *client) GetPeering(ctx context.Context, resourceGroupName, virtualNetwo
 
 func (c *client) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
 
-	// options := armnetwork.VirtualNetworksClientGetOptions{Expand: nil}
 	response, err := c.network.Get(ctx, resourceGroupName, virtualNetworkName, nil)
 
 	if err != nil {
