@@ -48,6 +48,12 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
+	peering = nil
+
+	if peering == nil {
+		return composed.StopWithRequeue, nil
+	}
+
 	state.peering = peering
 
 	logger = logger.WithValues("id", ptr.Deref(peering.ID, ""))
