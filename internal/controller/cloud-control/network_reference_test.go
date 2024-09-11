@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = Describe("Feature: Network", func() {
+var _ = Describe("Feature: KCP Network reference", func() {
 
 	It("Scenario: Network reference is created and deleted", func() {
 

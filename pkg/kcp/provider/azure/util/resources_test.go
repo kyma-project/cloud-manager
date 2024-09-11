@@ -147,24 +147,24 @@ func TestResourceDetails(t *testing.T) {
 
 func TestResourceGroupResourceId(t *testing.T) {
 	expected := "/subscriptions/30e0eb68-9aa7-45e9-8c47-57c1d0d6fa75/resourceGroups/MyResourceGroup"
-	actual := ResourceGroupResourceId("30e0eb68-9aa7-45e9-8c47-57c1d0d6fa75", "MyResourceGroup")
+	actual := NewResourceGroupResourceId("30e0eb68-9aa7-45e9-8c47-57c1d0d6fa75", "MyResourceGroup").String()
 	assert.Equal(t, expected, actual)
 }
 
 func TestVirtualNetworkResourceId(t *testing.T) {
 	expected := "/subscriptions/ecf40052-d84d-4282-9c4a-78bd50d6d59f/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet"
-	actual := VirtualNetworkResourceId("ecf40052-d84d-4282-9c4a-78bd50d6d59f", "MyResourceGroup", "MyVnet")
+	actual := NewVirtualNetworkResourceId("ecf40052-d84d-4282-9c4a-78bd50d6d59f", "MyResourceGroup", "MyVnet").String()
 	assert.Equal(t, expected, actual)
 }
 
 func TestVirtualNetworkPeeringResourceId(t *testing.T) {
 	expected := "/subscriptions/4f12b37a-2351-4973-95a3-0ee1bdcd9f5d/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet/virtualNetworkPeerings/MyVnet-123"
-	actual := VirtualNetworkPeeringResourceId("4f12b37a-2351-4973-95a3-0ee1bdcd9f5d", "MyResourceGroup", "MyVnet", "MyVnet-123")
+	actual := NewVirtualNetworkPeeringResourceId("4f12b37a-2351-4973-95a3-0ee1bdcd9f5d", "MyResourceGroup", "MyVnet", "MyVnet-123").String()
 	assert.Equal(t, expected, actual)
 }
 
 func TestRedisResourceId(t *testing.T) {
 	expected := "/subscriptions/10375acd-7dc2-47f3-adf2-4627c93b7d36/resourceGroups/MyRG08/providers/Microsoft.Cache/Redis/MyRedis08"
-	actual := RedisInstanceResourceId("10375acd-7dc2-47f3-adf2-4627c93b7d36", "MyRG08", "MyRedis08")
+	actual := NewRedisInstanceResourceId("10375acd-7dc2-47f3-adf2-4627c93b7d36", "MyRG08", "MyRedis08").String()
 	assert.Equal(t, expected, actual)
 }

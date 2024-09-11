@@ -37,7 +37,6 @@ func NewClientProvider() azureclient.SkrClientProvider[Client] {
 			return nil, err
 		}
 
-		clientFactory.NewVirtualNetworksClient()
 		return newClient(clientFactory.NewVirtualNetworkPeeringsClient(), clientFactory.NewVirtualNetworksClient()), nil
 	}
 }

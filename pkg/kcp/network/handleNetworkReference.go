@@ -51,6 +51,37 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 		changed = true
 	}
 
+	switch {
+	case state.ObjAsNetwork().Status.Network.Azure != nil:
+		if state.ObjAsNetwork().Status.Network.Azure.SubscriptionId == "" {
+			state.ObjAsNetwork().Status.Network.Azure.SubscriptionId = state.Scope().Spec.Scope.Azure.SubscriptionId
+			changed = true
+		}
+		if state.ObjAsNetwork().Status.Network.Azure.TenantId == "" {
+			state.ObjAsNetwork().Status.Network.Azure.TenantId = state.Scope().Spec.Scope.Azure.TenantId
+			changed = true
+		}
+	case state.ObjAsNetwork().Status.Network.Aws != nil:
+		if state.ObjAsNetwork().Status.Network.Aws.AwsAccountId == "" {
+			state.ObjAsNetwork().Status.Network.Aws.AwsAccountId = state.Scope().Spec.Scope.Aws.AccountId
+			changed = true
+		}
+	case state.ObjAsNetwork().Status.Network.Gcp != nil:
+		if state.ObjAsNetwork().Status.Network.Gcp.GcpProject == "" {
+			state.ObjAsNetwork().Status.Network.Gcp.GcpProject = state.Scope().Spec.Scope.Gcp.Project
+			changed = true
+		}
+	case state.ObjAsNetwork().Status.Network.OpenStack != nil:
+		if state.ObjAsNetwork().Status.Network.OpenStack.Domain == "" {
+			state.ObjAsNetwork().Status.Network.OpenStack.Domain = state.Scope().Spec.Scope.OpenStack.DomainName
+			changed = true
+		}
+		if state.ObjAsNetwork().Status.Network.OpenStack.Project == "" {
+			state.ObjAsNetwork().Status.Network.OpenStack.Project = state.Scope().Spec.Scope.OpenStack.TenantName
+			changed = true
+		}
+	}
+
 	if !changed {
 		return composed.StopAndForget, nil
 	}

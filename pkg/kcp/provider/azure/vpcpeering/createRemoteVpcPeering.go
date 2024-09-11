@@ -47,10 +47,10 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
 	// Since we are creating virtual network peering connection from remote to shoot we need to build shootNetworkID
-	virtualNetworkId := azureutil.VirtualNetworkResourceId(
+	virtualNetworkId := azureutil.NewVirtualNetworkResourceId(
 		state.Scope().Spec.Scope.Azure.SubscriptionId,
 		state.Scope().Spec.Scope.Azure.VpcNetwork, // ResourceGroup name is the same as VPC network name.
-		state.Scope().Spec.Scope.Azure.VpcNetwork)
+		state.Scope().Spec.Scope.Azure.VpcNetwork).String()
 
 	peering, err := c.CreatePeering(ctx,
 		resourceGroupName,

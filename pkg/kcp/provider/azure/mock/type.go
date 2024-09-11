@@ -2,24 +2,21 @@ package mock
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 )
 
 // ResourceClient not implemented yet in the reconcilers so fixed here as the future reference, since some methods needed in other places
 type ResourceClient interface {
-	GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroup, error)
-	CreateResourceGroup(ctx context.Context, name string, location string, tags map[string]string) (*armresources.ResourceGroup, error)
+	networkclient.ResourceGroupClient
 }
 
 // NetworkClient not implemented yet in the reconcilers so fixed here as the future reference, since some methods needed in peering
 type NetworkClient interface {
-	CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) (*armnetwork.VirtualNetwork, error)
-	GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error)
+	networkclient.NetworkClient
 }
 
 type VpcPeeringClient interface {
@@ -31,6 +28,7 @@ type RedisInstanceClient interface {
 }
 
 type Clients interface {
+	ResourceClient
 	NetworkClient
 	VpcPeeringClient
 	RedisInstanceClient
@@ -38,8 +36,8 @@ type Clients interface {
 
 type Providers interface {
 	VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringclient.Client]
-
 	RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client]
+	NetworkProvider() provider.SkrClientProvider[networkclient.Client]
 }
 
 type NetworkConfig interface {

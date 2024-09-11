@@ -51,8 +51,12 @@ spec:
                       If specified, then Reference must be nil.
                     properties:
                       cidr:
-                        description: Cidr address range. For AWS and Azure a valid
-                          CIDR must be specified. For GCP can be empty.
+                        description: Cidr address range. Not used for GCP. Defaults
+                          to default cloud manager cidr "10.250.4.0/22"
+                        type: string
+                      location:
+                        description: Location of the network for providers where applicable.
+                          If empty the shoot location is used
                         type: string
                     type: object
                   reference:

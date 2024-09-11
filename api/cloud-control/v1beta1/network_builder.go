@@ -30,6 +30,25 @@ func (b *NetworkBuilder) WithCidr(cidr string) *NetworkBuilder {
 	return b
 }
 
+func (b *NetworkBuilder) WithLocation(location string) *NetworkBuilder {
+	if location == "" {
+		b.Net.Spec.Network.Managed = nil
+		return b
+	}
+
+	if b.Net.Spec.Network.Managed == nil {
+		b.Net.Spec.Network.Managed = &ManagedNetwork{}
+	}
+	b.Net.Spec.Network.Managed.Location = location
+	return b
+}
+
+func (b *NetworkBuilder) WithManagedNetwork() *NetworkBuilder {
+	b.Net.Spec.Network.Reference = nil
+	b.Net.Spec.Network.Managed = &ManagedNetwork{}
+	return b
+}
+
 func (b *NetworkBuilder) WithGcpRef(project, name string) *NetworkBuilder {
 	if project == "" && name == "" {
 		if b.Net.Spec.Network.Reference == nil {

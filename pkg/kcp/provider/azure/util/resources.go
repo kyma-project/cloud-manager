@@ -106,15 +106,16 @@ func ParseResourceID(resourceID string) (ResourceDetails, error) {
 	return rd, nil
 }
 
-func ResourceGroupResourceId(subscription, resourceGroup string) string {
-	return (&ResourceDetails{
+func NewResourceGroupResourceId(subscription, resourceGroup string) *ResourceDetails {
+	return &ResourceDetails{
 		Subscription:  subscription,
 		ResourceGroup: resourceGroup,
-	}).String()
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0,
+	}
 }
 
-func VirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) string {
-	return (&ResourceDetails{
+func NewVirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) *ResourceDetails {
+	return &ResourceDetails{
 		Subscription:    subscription,
 		ResourceGroup:   resourceGroup,
 		Provider:        "Microsoft.Network",
@@ -122,26 +123,29 @@ func VirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetwork
 		ResourceName:    virtualNetworkName,
 		SubResourceType: "virtualNetworkPeerings",
 		SubResourceName: virtualNetworkPeeringName,
-	}).String()
+		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0 && len(virtualNetworkPeeringName) > 0,
+	}
 }
 
-func VirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName string) string {
-	return (&ResourceDetails{
+func NewVirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName string) *ResourceDetails {
+	return &ResourceDetails{
 		Subscription:  subscription,
 		ResourceGroup: resourceGroup,
 		Provider:      "Microsoft.Network",
 		ResourceType:  "virtualNetworks",
 		ResourceName:  virtualNetworkName,
-	}).String()
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0,
+	}
 }
 
 // https://portal.azure.com/#@sapsharedtenant.onmicrosoft.com/resource/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/cm-redis-0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/providers/Microsoft.Cache/Redis/0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/overview
-func RedisInstanceResourceId(subscription, resourceGroup, redisInstanceName string) string {
-	return (&ResourceDetails{
+func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName string) *ResourceDetails {
+	return &ResourceDetails{
 		Subscription:  subscription,
 		ResourceGroup: resourceGroup,
 		Provider:      "Microsoft.Cache",
 		ResourceType:  "Redis",
 		ResourceName:  redisInstanceName,
-	}).String()
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(redisInstanceName) > 0,
+	}
 }

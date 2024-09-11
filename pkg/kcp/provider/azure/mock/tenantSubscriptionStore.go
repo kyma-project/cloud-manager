@@ -5,6 +5,7 @@ var _ Configs = &tenantSubscriptionStore{}
 var _ TenantSubscription = &tenantSubscriptionStore{}
 
 type tenantSubscriptionStore struct {
+	*resourceStore
 	*networkStore
 	*redisStore
 	tenant       string
@@ -13,9 +14,10 @@ type tenantSubscriptionStore struct {
 
 func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscriptionStore {
 	return &tenantSubscriptionStore{
-		tenant:       tenant,
-		subscription: subscription,
-		networkStore: newNetworkStore(subscription),
-		redisStore:   newRedisStore(subscription),
+		resourceStore: newResourceStore(subscription),
+		networkStore:  newNetworkStore(subscription),
+		redisStore:    newRedisStore(subscription),
+		tenant:        tenant,
+		subscription:  subscription,
 	}
 }
