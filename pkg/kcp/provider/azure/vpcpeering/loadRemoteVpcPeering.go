@@ -19,20 +19,20 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
 	tenantId := state.tenantId
 
-	remote, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
+	resource, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error parsing remote virtual network peering ID", composed.StopAndForget, ctx)
 	}
 
-	subscriptionId := remote.Subscription
+	subscriptionId := resource.Subscription
 
 	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Failed to create azure loadRemoteVpcPeering client", composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx)
 	}
 
-	virtualNetworkName := remote.ResourceName
+	virtualNetworkName := resource.ResourceName
 	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
 	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
