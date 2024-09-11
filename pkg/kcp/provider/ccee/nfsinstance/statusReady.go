@@ -18,9 +18,10 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		changed = true
 	}
 
-	if len(state.ObjAsNfsInstance().Status.Conditions) > 1 {
+	if len(state.ObjAsNfsInstance().Status.Conditions) != 1 {
 		changed = true
 	}
+
 	cond := meta.FindStatusCondition(*state.ObjAsNfsInstance().Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 	if cond == nil {
 		changed = true

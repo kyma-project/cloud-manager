@@ -31,10 +31,16 @@ type networkReconciler struct {
 func NewNetworkReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
+	awsStateFactory awsnetwork.StateFactory,
+	azureStateFactory azurenetwork.StateFactory,
+	gcpStateFactory gcpnetwork.StateFactory,
 ) NetworkReconciler {
 	return &networkReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
+		awsStateFactory:      awsStateFactory,
+		azureStateFactory:    azureStateFactory,
+		gcpStateFactory:      gcpStateFactory,
 	}
 }
 
@@ -59,7 +65,10 @@ func (r *networkReconciler) newAction() composed.Action {
 				"networkCommon",
 				// common Network actions here
 				actions.PatchAddFinalizer,
+				// reconcile network reference and stop
 				handleNetworkReference,
+				// ensure no network reference pass further, allow only managed networks
+				logLogicalErrorOnManagedNetworkMissing,
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",

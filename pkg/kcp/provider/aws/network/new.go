@@ -1,8 +1,10 @@
 package network
 
-import "github.com/kyma-project/cloud-manager/pkg/composed"
+import (
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+)
 
-func New(_ StateFactory) composed.Action {
+func New(stateFactory StateFactory) composed.Action {
 	return composed.ComposeActions(
 		"awsNetwork",
 	)

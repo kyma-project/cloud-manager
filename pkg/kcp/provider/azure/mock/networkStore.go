@@ -63,9 +63,9 @@ func (s *networkStore) SetPeeringStateConnected(ctx context.Context, resourceGro
 
 // NetworkClient ===================================================
 
-func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) (*armnetwork.VirtualNetwork, error) {
+func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
 	if isContextCanceled(ctx) {
-		return nil, context.Canceled
+		return context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -77,7 +77,7 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 
 	_, ok = s.items[resourceGroupName][virtualNetworkName]
 	if ok {
-		return nil, fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
+		return fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
 	}
 
 	var netTags map[string]*string
@@ -89,7 +89,8 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 	}
 
 	net := &armnetwork.VirtualNetwork{
-		ID:       ptr.To(azureutil.VirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName)),
+		ID:       ptr.To(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String()),
+		Name:     ptr.To(virtualNetworkName),
 		Location: ptr.To(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
@@ -100,7 +101,7 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 	}
 	s.items[resourceGroupName][virtualNetworkName] = &networkEntry{network: net}
 
-	return util.JsonClone(net)
+	return nil
 }
 
 func (s *networkStore) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
@@ -130,6 +131,23 @@ func (s *networkStore) getNetworkEntryNoLock(resourceGroupName, virtualNetworkNa
 	return s.items[resourceGroupName][virtualNetworkName], nil
 }
 
+func (s *networkStore) DeleteNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+	if err != nil {
+		return err
+	}
+
+	delete(s.items[resourceGroupName], virtualNetworkName)
+
+	return nil
+}
+
 // VpcPeeringClient ==============================================
 
 func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error) {
@@ -139,7 +157,7 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	id := azureutil.VirtualNetworkPeeringResourceId(s.subscription, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+	id := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName).String()
 
 	_, err := s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 	if azuremeta.IgnoreNotFoundError(err) != nil {

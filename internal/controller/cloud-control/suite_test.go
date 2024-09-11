@@ -113,6 +113,7 @@ var _ = BeforeSuite(func() {
 	// Network
 	Expect(SetupNetworkReconciler(
 		infra.KcpManager(),
+		infra.AzureMock().NetworkProvider(),
 	)).NotTo(HaveOccurred())
 
 	// Start controllers

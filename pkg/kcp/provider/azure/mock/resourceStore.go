@@ -13,6 +13,13 @@ import (
 
 var _ ResourceClient = &resourceStore{}
 
+func newResourceStore(subscription string) *resourceStore {
+	return &resourceStore{
+		subscription: subscription,
+		items:        map[string]*armresources.ResourceGroup{},
+	}
+}
+
 type resourceStore struct {
 	m            sync.Mutex
 	subscription string
@@ -61,11 +68,28 @@ func (s *resourceStore) CreateResourceGroup(ctx context.Context, name string, lo
 	rg := &armresources.ResourceGroup{
 		Location: ptr.To(location),
 		Tags:     rgTags,
-		ID:       ptr.To(azureutil.ResourceGroupResourceId(s.subscription, name)),
+		ID:       ptr.To(azureutil.NewResourceGroupResourceId(s.subscription, name).String()),
 		Name:     ptr.To(name),
 	}
 
 	s.items[name] = rg
 
 	return rg, nil
+}
+
+func (s *resourceStore) DeleteResourceGroup(ctx context.Context, name string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.getResourceGroupNoLock(name)
+	if err != nil {
+		return err
+	}
+
+	delete(s.items, name)
+
+	return nil
 }
