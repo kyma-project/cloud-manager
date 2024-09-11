@@ -19,7 +19,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		composed.UpdateStatus(obj).
 			SetExclusiveConditions(*state.KcpVpcPeering.Conditions()...).
 			ErrorLogMessage("Error updating SKR AzureVpcPeering status").
-			SuccessLogMsg("Updated and forgot SKR AzureVpcPeering status with Error condition").
+			SuccessLogMsg("Updated and forgot SKR AzureVpcPeering status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
