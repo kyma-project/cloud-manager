@@ -14,7 +14,7 @@ type Client interface {
 		virtualNetworkName,
 		virtualNetworkPeeringName,
 		remoteVnetId string,
-		allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error)
+		allowVnetAccess bool) error
 
 	ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
 	GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
@@ -60,8 +60,8 @@ func (c *client) CreatePeering(
 	virtualNetworkName,
 	virtualNetworkPeeringName,
 	remoteVnetId string,
-	allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error) {
-	poller, err := c.peering.BeginCreateOrUpdate(
+	allowVnetAccess bool) error {
+	_, err := c.peering.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,
 		virtualNetworkName,
@@ -80,17 +80,7 @@ func (c *client) CreatePeering(
 		nil,
 	)
 
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := poller.PollUntilDone(ctx, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &res.VirtualNetworkPeering, nil
+	return err
 }
 
 func (c *client) ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
@@ -136,17 +126,6 @@ func (c *client) GetNetwork(ctx context.Context, resourceGroupName, virtualNetwo
 }
 
 func (c *client) DeletePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) error {
-	pooler, err := c.peering.BeginDelete(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = pooler.PollUntilDone(ctx, nil)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := c.peering.BeginDelete(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, nil)
+	return err
 }

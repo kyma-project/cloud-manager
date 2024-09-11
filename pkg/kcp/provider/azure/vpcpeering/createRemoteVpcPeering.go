@@ -6,10 +6,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
-
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -52,7 +50,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		state.Scope().Spec.Scope.Azure.VpcNetwork, // ResourceGroup name is the same as VPC network name.
 		state.Scope().Spec.Scope.Azure.VpcNetwork)
 
-	peering, err := c.CreatePeering(ctx,
+	err = c.CreatePeering(ctx,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,
@@ -78,25 +76,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			Run(ctx, state)
 	}
 
-	peering = nil
-
-	if peering == nil {
-		return composed.StopWithRequeue, nil
-	}
-
-	state.remotePeering = peering
-
-	logger = logger.WithValues("remotePeeringId", ptr.Deref(peering.ID, ""))
-
-	ctx = composed.LoggerIntoCtx(ctx, logger)
-
 	logger.Info("Azure remote VPC Peering created")
 
-	obj.Status.RemoteId = ptr.Deref(peering.ID, "")
-
-	return composed.UpdateStatus(obj).
-		ErrorLogMessage("Error updating VpcPeering status with remote connection id").
-		FailedError(composed.StopWithRequeue).
-		SuccessErrorNil().
-		Run(ctx, state)
+	return composed.StopWithRequeue, nil
 }

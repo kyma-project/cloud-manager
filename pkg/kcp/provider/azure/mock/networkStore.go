@@ -132,9 +132,9 @@ func (s *networkStore) getNetworkEntryNoLock(resourceGroupName, virtualNetworkNa
 
 // VpcPeeringClient ==============================================
 
-func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool) (*armnetwork.VirtualNetworkPeering, error) {
+func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool) error {
 	if isContextCanceled(ctx) {
-		return nil, context.Canceled
+		return context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -144,16 +144,16 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 	_, err := s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		// errors like network not found
-		return nil, err
+		return err
 	}
 	if err == nil {
 		// peering already exists
-		return nil, fmt.Errorf("vpc peering %s already exists", id)
+		return fmt.Errorf("vpc peering %s already exists", id)
 	}
 
 	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if entry.network.Properties == nil {
@@ -177,7 +177,7 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 
 	entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
 
-	return util.JsonClone(peering)
+	return nil
 }
 
 func (s *networkStore) ListPeerings(ctx context.Context, resourceGroup string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error) {
