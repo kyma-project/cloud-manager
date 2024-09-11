@@ -6,6 +6,7 @@ import (
 
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
@@ -43,6 +44,14 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (*State, error) {
 	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", redisInstace.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+
+	logger := composed.LoggerFromCtx(ctx)
+	logger.
+		WithValues(
+			"awsRegion", redisInstace.Scope().Spec.Region,
+			"awsRole", roleName,
+		).
+		Info("Assuming AWS role")
 
 	c, err := f.skrProvider(
 		ctx,
