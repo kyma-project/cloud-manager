@@ -51,6 +51,9 @@ func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string)
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
+			if x.Spec.VpcPeering == nil {
+				x.Spec.VpcPeering = &cloudcontrolv1beta1.VpcPeeringInfo{}
+			}
 			if x.Spec.VpcPeering.Aws == nil {
 				x.Spec.VpcPeering.Aws = &cloudcontrolv1beta1.AwsVpcPeering{
 					RemoteVpcId:     remoteVpcId,
@@ -66,6 +69,9 @@ func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remotePeeringName, remoteV
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
+			if x.Spec.VpcPeering == nil {
+				x.Spec.VpcPeering = &cloudcontrolv1beta1.VpcPeeringInfo{}
+			}
 			if x.Spec.VpcPeering.Azure == nil {
 				x.Spec.VpcPeering.Azure = &cloudcontrolv1beta1.AzureVpcPeering{
 					RemotePeeringName:   remotePeeringName,
@@ -81,6 +87,9 @@ func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName string
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.VpcPeering)
+			if x.Spec.VpcPeering == nil {
+				x.Spec.VpcPeering = &cloudcontrolv1beta1.VpcPeeringInfo{}
+			}
 			if x.Spec.VpcPeering.Gcp == nil {
 				x.Spec.VpcPeering.Gcp = &cloudcontrolv1beta1.GcpVpcPeering{
 					RemoteVpc:          remoteVpc,

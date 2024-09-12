@@ -39,7 +39,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},
-			VpcPeering: cloudcontrolv1beta1.VpcPeeringInfo{
+			VpcPeering: &cloudcontrolv1beta1.VpcPeeringInfo{
 				Azure: &cloudcontrolv1beta1.AzureVpcPeering{
 					RemotePeeringName:   obj.Spec.RemotePeeringName,
 					RemoteVnet:          obj.Spec.RemoteVnet,

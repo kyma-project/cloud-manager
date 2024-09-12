@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -35,10 +36,8 @@ const (
 	VirtualNetworkPeeringStateInitiated    = "Initiated"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // VpcPeeringSpec defines the desired state of VpcPeering
+// +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -46,12 +45,31 @@ type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
 
+	// +optional
+	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
+
+	// +optional
+	Details *VpcPeeringDetails `json:"details,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
+type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
-	VpcPeering VpcPeeringInfo `json:"vpcPeering"`
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."
+	LocalNetwork klog.ObjectRef `json:"localNetwork"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Remote network name is required."
+	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
+
+	PeeringName string `json:"peeringName,omitempty"`
+
+	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering info is immutable."
 type VpcPeeringInfo struct {
 	// +optional
 	Gcp *GcpVpcPeering `json:"gcp,omitempty"`

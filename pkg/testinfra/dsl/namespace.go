@@ -2,6 +2,8 @@ package dsl
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -10,6 +12,17 @@ const (
 	DefaultSkrNamespace = "test"
 	DefaultKcpNamespace = "kcp-system"
 )
+
+func SetDefaultNamespace(obj client.Object) {
+	switch infraScheme.ObjToClusterType(obj) {
+	case infraTypes.ClusterTypeKcp:
+		obj.SetNamespace(DefaultKcpNamespace)
+	case infraTypes.ClusterTypeSkr:
+		obj.SetNamespace(DefaultSkrNamespace)
+	case infraTypes.ClusterTypeGarden:
+		obj.SetNamespace(DefaultGardenNamespace)
+	}
+}
 
 func CreateNamespace(ctx context.Context, clnt client.Client, obj *corev1.Namespace, opts ...ObjAction) error {
 	if obj == nil {
