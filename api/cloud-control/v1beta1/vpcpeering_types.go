@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -135,6 +136,20 @@ func (in *VpcPeering) State() string {
 
 func (in *VpcPeering) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *VpcPeering) CloneForPatchStatus() client.Object {
+	return &VpcPeering{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "VpcPeering",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true

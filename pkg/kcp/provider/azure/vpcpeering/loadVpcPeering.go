@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -13,17 +12,15 @@ func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	if len(obj.Status.Id) == 0 {
+	virtualNetworkName := state.Scope().Spec.Scope.Azure.VpcNetwork
+	resourceGroupName := virtualNetworkName // resourceGroup name have the same name as VPC
+	virtualNetworkPeeringName := obj.Name
+
+	peering, err := state.client.GetPeering(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+
+	if azuremeta.IsNotFound(err) {
 		return nil, nil
 	}
-
-	resource, err := util.ParseResourceID(obj.Status.Id)
-
-	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Error parsing virtual network peering ID", ctx)
-	}
-
-	peering, err := state.client.GetPeering(ctx, resource.ResourceGroup, resource.ResourceName, resource.SubResourceName)
 
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error loading VPC Peering", ctx)
@@ -37,5 +34,23 @@ func loadVpcPeering(ctx context.Context, st composed.State) (error, context.Cont
 
 	logger.Info("Azure VPC Peering loaded")
 
-	return nil, ctx
+	id := ptr.Deref(peering.ID, "")
+
+	var peeringState string
+
+	if peering.Properties.PeeringState != nil {
+		peeringState = string(*peering.Properties.PeeringState)
+	}
+
+	if obj.Status.Id == id && obj.Status.State == peeringState {
+		return nil, ctx
+	}
+
+	obj.Status.Id = id
+	obj.Status.State = peeringState
+
+	return composed.PatchStatus(obj).
+		ErrorLogMessage("Error updating VpcPeering status after loading vpc peering connection").
+		SuccessErrorNil().
+		Run(ctx, state)
 }

@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
@@ -118,6 +119,20 @@ func (in *AwsRedisInstance) State() string {
 
 func (in *AwsRedisInstance) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *AwsRedisInstance) CloneForPatchStatus() client.Object {
+	return &AwsRedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AwsRedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true

@@ -7,7 +7,6 @@ import (
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func createVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -22,7 +21,7 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork // TBD resourceGroup name have the same name as VPC
 	virtualNetworkPeeringName := obj.Name
 
-	peering, err := state.client.CreatePeering(ctx,
+	err := state.client.CreatePeering(ctx,
 		resourceGroupName,
 		state.Scope().Spec.Scope.Azure.VpcNetwork,
 		virtualNetworkPeeringName,
@@ -48,22 +47,7 @@ func createVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
-	state.peering = peering
-
-	logger = logger.WithValues("id", ptr.Deref(peering.ID, ""))
-
-	ctx = composed.LoggerIntoCtx(ctx, logger)
-
 	logger.Info("Azure VPC Peering created")
 
-	obj.Status.Id = ptr.Deref(peering.ID, "")
-	obj.Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated
-
-	err = state.UpdateObjStatus(ctx)
-
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating VPC Peering status with connection id", composed.StopWithRequeue, ctx)
-	}
-
-	return nil, ctx
+	return nil, nil
 }
