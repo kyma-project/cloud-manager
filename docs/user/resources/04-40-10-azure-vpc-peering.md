@@ -53,5 +53,5 @@ metadata:
   name: peering-to-my-vnet
 spec:
   remotePeeringName: peering-to-my-kyma
-  remoteVnet: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/WestEurope/providers/Microsoft.Network/virtualNetworks/MyVnet
+  remoteVnet: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet
 ```
