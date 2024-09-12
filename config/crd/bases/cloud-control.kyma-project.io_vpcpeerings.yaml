@@ -39,6 +39,35 @@ spec:
           spec:
             description: VpcPeeringSpec defines the desired state of VpcPeering
             properties:
+              networks:
+                properties:
+                  localNetwork:
+                    description: ObjectRef references a kubernetes object
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  remoteNetwork:
+                    description: ObjectRef references a kubernetes object
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                required:
+                - localNetwork
+                - remoteNetwork
+                type: object
+                x-kubernetes-validations:
+                - message: Peering networks are immutable.
+                  rule: (self == oldSelf)
               remoteRef:
                 properties:
                   name:
@@ -98,11 +127,17 @@ spec:
                         type: string
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Peering info is immutable.
+                  rule: (self == oldSelf)
             required:
             - remoteRef
             - scope
-            - vpcPeering
             type: object
+            x-kubernetes-validations:
+            - message: Only one of networks or vpcPeering can be specified.
+              rule: (has(self.vpcPeering) && !has(self.networks) || !has(self.vpcPeering)
+                && has(self.networks))
           status:
             description: VpcPeeringStatus defines the observed state of VpcPeering
             properties:

@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -34,10 +35,8 @@ const (
 	VirtualNetworkPeeringStateInitiated    = "Initiated"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // VpcPeeringSpec defines the desired state of VpcPeering
+// +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.networks) || !has(self.vpcPeering) && has(self.networks)), message="Only one of networks or vpcPeering can be specified."
 type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -45,12 +44,25 @@ type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
 
+	// +optional
+	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
+
+	// +optional
+	Networks *VpcPeeringNetworks `json:"networks,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering networks are immutable."
+type VpcPeeringNetworks struct {
 	// +kubebuilder:validation:Required
-	VpcPeering VpcPeeringInfo `json:"vpcPeering"`
+	LocalNetwork klog.ObjectRef `json:"localNetwork"`
+
+	// +kubebuilder:validation:Required
+	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
 }
 
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering info is immutable."
 type VpcPeeringInfo struct {
 	// +optional
 	Gcp *GcpVpcPeering `json:"gcp,omitempty"`

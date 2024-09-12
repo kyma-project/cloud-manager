@@ -29,15 +29,11 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance CCEE without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance CCEE with IpRange can not be created", func() {
@@ -60,17 +56,12 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance CCEE with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	// AWS ============================================
@@ -90,16 +81,12 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance AWS without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance AWS with IpRange can be created", func() {
@@ -120,16 +107,11 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance AWS with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	// GCP ============================================
@@ -154,16 +136,12 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance GCP without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance GCP with IpRange can be created", func() {
@@ -189,15 +167,10 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance GCP with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 })
