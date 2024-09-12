@@ -5,8 +5,9 @@ import (
 )
 
 type AwsConfigStruct struct {
-	Default AwsCreds `json:"default" yaml:"default"`
-	Peering AwsCreds `json:"peering" yaml:"peering"`
+	Default     AwsCreds `json:"default" yaml:"default"`
+	Peering     AwsCreds `json:"peering" yaml:"peering"`
+	ElastiCache AwsCreds `json:"elastiCache" yaml:"elastiCache"`
 }
 
 var AwsConfig = &AwsConfigStruct{}
@@ -52,6 +53,22 @@ func InitConfig(cfg config.Config) {
 			"peering.assumeRoleName",
 			config.SourceEnv("AWS_PEERING_ROLE_NAME"),
 			config.SourceFile("AWS_PEERING_ROLE_NAME"),
+		),
+		config.Path(
+			"elastiCache.accessKeyId",
+			config.SourceEnv("AWS_ELASTICACHE_ACCESS_KEY_ID"),
+			config.SourceFile("AWS_ELASTICACHE_ACCESS_KEY_ID"),
+		),
+		config.Path(
+			"elastiCache.secretAccessKey",
+			config.Sensitive(),
+			config.SourceEnv("AWS_ELASTICACHE_SECRET_ACCESS_KEY"),
+			config.SourceFile("AWS_ELASTICACHE_SECRET_ACCESS_KEY"),
+		),
+		config.Path(
+			"elastiCache.assumeRoleName",
+			config.SourceEnv("AWS_ELASTICACHE_ROLE_NAME"),
+			config.SourceFile("AWS_ELASTICACHE_ROLE_NAME"),
 		),
 	)
 

@@ -43,7 +43,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", redisInstace.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", redisInstace.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.ElastiCache.AssumeRoleName)
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.
@@ -56,8 +56,8 @@ func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (
 	c, err := f.skrProvider(
 		ctx,
 		redisInstace.Scope().Spec.Region,
-		awsconfig.AwsConfig.Default.AccessKeyId,
-		awsconfig.AwsConfig.Default.SecretAccessKey,
+		awsconfig.AwsConfig.ElastiCache.AccessKeyId,
+		awsconfig.AwsConfig.ElastiCache.SecretAccessKey,
 		roleName,
 	)
 	if err != nil {
