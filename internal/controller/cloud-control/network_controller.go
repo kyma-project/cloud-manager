@@ -20,6 +20,11 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
+	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
+	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -32,11 +37,15 @@ import (
 
 func SetupNetworkReconciler(
 	kcpManager manager.Manager,
+	azureProvider provider.SkrClientProvider[networkclient.Client],
 ) error {
 	return NewNetworkReconciler(
 		network.NewNetworkReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
+			awsnetwork.NewStateFactory(),
+			azurenetwork.NewStateFactory(azureProvider),
+			gcpnetwork.NewStateFactory(),
 		),
 	).SetupWithManager(kcpManager)
 }

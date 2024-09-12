@@ -87,7 +87,7 @@ func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName,
 	}
 	_, ok = s.items[resourceGroupName][redisInstanceName]
 	if ok {
-		return fmt.Errorf("redis instance %s already exist", azureutil.RedisInstanceResourceId(s.subscription, resourceGroupName, redisInstanceName))
+		return fmt.Errorf("redis instance %s already exist", azureutil.NewRedisInstanceResourceId(s.subscription, resourceGroupName, redisInstanceName).String())
 	}
 
 	if parameters.Properties == nil {

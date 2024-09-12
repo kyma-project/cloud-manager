@@ -74,8 +74,11 @@ type NetworkInfo struct {
 // ManagedNetwork defines parameters for VPC network creation. In Azure and AWS networks must have CIDR address
 // space specified, while for GCP it can be empty.
 type ManagedNetwork struct {
-	// Cidr address range. For AWS and Azure a valid CIDR must be specified. For GCP can be empty.
+	// Cidr address range. Not used for GCP. Defaults to default cloud manager cidr "10.250.4.0/22"
 	Cidr string `json:"cidr,omitempty"`
+
+	// Location of the network for providers where applicable. If empty the shoot location is used
+	Location string `json:"location,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"sync"
@@ -30,6 +31,12 @@ func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringcl
 
 func (s *server) RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client] {
 	return func(ctx context.Context, _, _, subscription, tenant string) (redisinstanceclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) NetworkProvider() provider.SkrClientProvider[networkclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string) (networkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
