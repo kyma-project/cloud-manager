@@ -18,15 +18,22 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	canCreate(
 		"VpcPeering with GCP info can be created",
-		nb().WithScope("s").WithRemoteRef("ns", "n").WithGcpPeering("peering", "project", "vpc", true),
+		nb().WithScope("s").WithRemoteRef("ns", "n").
+			WithGcpPeering("peering", "project", "vpc", true),
+	)
+
+	canCreate(
+		"VpcPeering with network details",
+		nb().WithScope("s").WithRemoteRef("ns", "n").
+			WithDetails("loc", "loc-ns", "rem", "rem-ns", "name", true),
 	)
 
 	canNotCreate(
-		"VpcPeering with both Networks and GPC info can not be created",
+		"VpcPeering with both network details and GPC info can not be created",
 		nb().WithScope("s").WithRemoteRef("ns", "n").
 			WithGcpPeering("peering", "project", "vpc", true).
-			WithNetworks("loc", "loc-ns", "rem", "rem-ns"),
-		"Only one of networks or vpcPeering can be specified",
+			WithDetails("loc", "loc-ns", "rem", "rem-ns", "name", true),
+		"Only one of details or vpcPeering can be specified",
 	)
 
 	canNotChange(
@@ -36,5 +43,16 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			bb(b).WithGcpPeering("peering2", "project2", "vpc2", false)
 		},
 		"Peering info is immutable",
+	)
+
+	canNotChange(
+		"VpcPeering network reference can not change",
+		nb().WithScope("s").WithRemoteRef("ns", "n").
+			WithDetails("loc", "loc-ns", "rem", "rem-ns", "name", true),
+		func(b Builder[*cloudcontrolv1beta1.VpcPeering]) {
+			bb(b).
+				WithDetails("loc2", "loc-ns2", "rem2", "rem-ns2", "name2", false)
+		},
+		"Peering details are immutable",
 	)
 })

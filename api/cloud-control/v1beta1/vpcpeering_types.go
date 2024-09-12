@@ -36,7 +36,7 @@ const (
 )
 
 // VpcPeeringSpec defines the desired state of VpcPeering
-// +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.networks) || !has(self.vpcPeering) && has(self.networks)), message="Only one of networks or vpcPeering can be specified."
+// +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -48,16 +48,22 @@ type VpcPeeringSpec struct {
 	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
 
 	// +optional
-	Networks *VpcPeeringNetworks `json:"networks,omitempty"`
+	Details *VpcPeeringDetails `json:"details,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering networks are immutable."
-type VpcPeeringNetworks struct {
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
+type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."
 	LocalNetwork klog.ObjectRef `json:"localNetwork"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Remote network name is required."
 	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
+
+	PeeringName string `json:"peeringName,omitempty"`
+
+	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1

@@ -39,8 +39,10 @@ spec:
           spec:
             description: VpcPeeringSpec defines the desired state of VpcPeering
             properties:
-              networks:
+              details:
                 properties:
+                  importCustomRoutes:
+                    type: boolean
                   localNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
@@ -51,6 +53,11 @@ spec:
                     required:
                     - name
                     type: object
+                    x-kubernetes-validations:
+                    - message: Local network name is required.
+                      rule: (self.name != "")
+                  peeringName:
+                    type: string
                   remoteNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
@@ -61,12 +68,15 @@ spec:
                     required:
                     - name
                     type: object
+                    x-kubernetes-validations:
+                    - message: Remote network name is required.
+                      rule: (self.name != "")
                 required:
                 - localNetwork
                 - remoteNetwork
                 type: object
                 x-kubernetes-validations:
-                - message: Peering networks are immutable.
+                - message: Peering details are immutable.
                   rule: (self == oldSelf)
               remoteRef:
                 properties:
@@ -135,9 +145,9 @@ spec:
             - scope
             type: object
             x-kubernetes-validations:
-            - message: Only one of networks or vpcPeering can be specified.
-              rule: (has(self.vpcPeering) && !has(self.networks) || !has(self.vpcPeering)
-                && has(self.networks))
+            - message: Only one of details or vpcPeering can be specified.
+              rule: (has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering)
+                && has(self.details))
           status:
             description: VpcPeeringStatus defines the observed state of VpcPeering
             properties:

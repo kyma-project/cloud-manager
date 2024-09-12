@@ -78,21 +78,23 @@ func (b *VpcPeeringBuilder) WithAwsPeering(remoteVpcId, remoteRegion, remoteAcco
 	return b
 }
 
-func (b *VpcPeeringBuilder) WithNetworks(localName, localNamespace, remoteName, remoteNamespace string) *VpcPeeringBuilder {
+func (b *VpcPeeringBuilder) WithDetails(localName, localNamespace, remoteName, remoteNamespace, peeringName string, importCustomRoutes bool) *VpcPeeringBuilder {
 	if localName == "" {
-		if b.Obj.Spec.Networks == nil {
+		if b.Obj.Spec.Details == nil {
 			return b
 		}
-		b.Obj.Spec.Networks = nil
+		b.Obj.Spec.Details = nil
 		return b
 	}
-	if b.Obj.Spec.Networks == nil {
-		b.Obj.Spec.Networks = &VpcPeeringNetworks{}
+	if b.Obj.Spec.Details == nil {
+		b.Obj.Spec.Details = &VpcPeeringDetails{}
 	}
-	b.Obj.Spec.Networks.LocalNetwork.Name = localName
-	b.Obj.Spec.Networks.LocalNetwork.Namespace = localNamespace
-	b.Obj.Spec.Networks.RemoteNetwork.Name = remoteName
-	b.Obj.Spec.Networks.RemoteNetwork.Namespace = remoteNamespace
+	b.Obj.Spec.Details.LocalNetwork.Name = localName
+	b.Obj.Spec.Details.LocalNetwork.Namespace = localNamespace
+	b.Obj.Spec.Details.RemoteNetwork.Name = remoteName
+	b.Obj.Spec.Details.RemoteNetwork.Namespace = remoteNamespace
+	b.Obj.Spec.Details.PeeringName = peeringName
+	b.Obj.Spec.Details.ImportCustomRoutes = importCustomRoutes
 	return b
 }
 
