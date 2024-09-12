@@ -23,8 +23,6 @@
 - path: spec.authEnabled
   name: spec.authEnabledFull
   widget: Switch
-  disableOnEdit: true
-  description: Immutable once set.
 
 - path: spec.parameters
   name: spec.parameters
