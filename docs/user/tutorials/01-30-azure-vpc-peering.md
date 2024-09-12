@@ -81,7 +81,6 @@ the steps that create those resources.
      name: peering-to-my-vnet
    spec:
      remotePeeringName: peering-to-my-kyma
-     remoteResourceGroup: $RESOURCE_GROUP_NAME
      remoteVnet: $VNET_ID
    EOF
    ```
