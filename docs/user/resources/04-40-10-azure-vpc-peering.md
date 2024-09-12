@@ -27,7 +27,6 @@ This table lists the parameters of the given resource together with their descri
 | Parameter               | Type   | Description                                                                                                                                   |
 |-------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | **remotePeeringName**   | string | Specifies the name of the VNet peering in the remote subscription.                                                                            |
-| **remoteResourceGroup** | string | Specifies the name of the resource group in the remote subscription.                                                                          |
 | **remoteVnet**          | string | Specifies the ID of the VNet in the remote subscription.                                                                                      |
 
 **Status:**
@@ -54,6 +53,5 @@ metadata:
   name: peering-to-my-vnet
 spec:
   remotePeeringName: peering-to-my-kyma
-  remoteResourceGroup: MyResourceGroup
   remoteVnet: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/WestEurope/providers/Microsoft.Network/virtualNetworks/MyVnet
 ```
