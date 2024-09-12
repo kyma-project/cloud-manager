@@ -31,7 +31,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 	//Create a Backup Job
 	res, err := state.awsClient.StartBackupJob(ctx, &client.StartBackupJobInput{
 		BackupVaultName:   state.GetVaultName(),
-		IamRoleArn:        state.roleName,
+		IamRoleArn:        state.GetBackupRoleArn(),
 		ResourceArn:       state.GetFileSystemArn(),
 		RecoveryPointTags: state.GetTags(),
 		IdempotencyToken:  ptr.To(backup.Status.IdempotencyToken),

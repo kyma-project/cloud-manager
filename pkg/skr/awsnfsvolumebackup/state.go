@@ -87,6 +87,12 @@ func (s *State) GetRecoveryPointArn() string {
 	return arn
 }
 
+func (s *State) GetBackupRoleArn() string {
+	arn := fmt.Sprintf("arn:aws:iam::%s:role/service-role/AWSBackupDefaultServiceRole",
+		s.Scope().Spec.Scope.Aws.AccountId)
+	return arn
+}
+
 func (s *State) GetBackupName() string {
 	return fmt.Sprintf("%s/%s",
 		s.Obj().GetNamespace(), s.Obj().GetName())
