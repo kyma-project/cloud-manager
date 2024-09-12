@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type AuthSecretSpec struct {
@@ -167,6 +168,20 @@ func (in *GcpRedisInstance) State() string {
 
 func (in *GcpRedisInstance) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *GcpRedisInstance) CloneForPatchStatus() client.Object {
+	return &GcpRedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GcpRedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true
