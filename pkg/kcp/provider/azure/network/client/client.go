@@ -26,7 +26,7 @@ type Client interface {
 	NetworkClient
 }
 
-func NewClientProvider() azureclient.SkrClientProvider[Client] {
+func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
 		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
 		if err != nil {

@@ -13,6 +13,12 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 
 	changed := false
 
+	// status.networkType
+	if state.ObjAsNetwork().Status.NetworkType != state.ObjAsNetwork().Status.NetworkType {
+		state.ObjAsNetwork().Status.NetworkType = state.ObjAsNetwork().Status.NetworkType
+		changed = true
+	}
+
 	// status.state
 	if state.ObjAsNetwork().Status.State != string(cloudcontrolv1beta1.ReadyState) {
 		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.ReadyState)

@@ -59,7 +59,7 @@ func IsNotFound(err error) bool {
 
 func ErrorToRequeueResponse(err error) error {
 	if IsTooManyRequests(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms())
 	}
 	return composed.StopWithRequeueDelay(util.Timing.T300000ms())
 }

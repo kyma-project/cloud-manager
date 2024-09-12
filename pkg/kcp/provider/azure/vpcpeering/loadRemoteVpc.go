@@ -33,7 +33,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	subscriptionId := remote.Subscription
 
-	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+	c, err := state.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 
 	if err != nil {
 		return err, ctx

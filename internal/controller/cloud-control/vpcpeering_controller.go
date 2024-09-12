@@ -43,7 +43,7 @@ import (
 func SetupVpcPeeringReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
-	azureSkrProvider azureclient.SkrClientProvider[azurevpcpeeringclient.Client],
+	azureSkrProvider azureclient.ClientProvider[azurevpcpeeringclient.Client],
 	gcpSkrProvider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient],
 	env abstractions.Environment,
 ) error {
