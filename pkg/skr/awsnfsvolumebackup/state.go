@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -88,8 +89,8 @@ func (s *State) GetRecoveryPointArn() string {
 }
 
 func (s *State) GetBackupRoleArn() string {
-	arn := fmt.Sprintf("arn:aws:iam::%s:role/service-role/AWSBackupDefaultServiceRole",
-		s.Scope().Spec.Scope.Aws.AccountId)
+	arn := fmt.Sprintf("arn:aws:iam::%s:role/%s",
+		s.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.BackupRoleName)
 	return arn
 }
 
