@@ -26,7 +26,7 @@ func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
-	deletingObj := deletingGpNfsVolumeRestore.DeepCopy()
+	deletingObj := deletingGcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, deletingObj)
 	assert.Nil(suite.T(), err)
 

@@ -19,7 +19,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	opName := restore.Status.OpIdentifier
-	logger.WithValues("Nfs Restore source:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
+	logger.WithValues("nfsRestoreSource:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
 		"destination:", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Checking GCP Restore Operation Status")
 
 	//If no OpIdentifier, then continue to next action.

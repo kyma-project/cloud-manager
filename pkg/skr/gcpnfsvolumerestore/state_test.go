@@ -120,7 +120,7 @@ var gcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
 	},
 }
 
-var deletingGpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
+var deletingGcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
 	ObjectMeta: v1.ObjectMeta{
 		Name:              "test-gcp-nfs-volume-restore",
 		Namespace:         "test",
