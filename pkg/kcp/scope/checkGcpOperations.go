@@ -3,8 +3,9 @@ package scope
 import (
 	"context"
 	"fmt"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"os"
+
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -32,7 +33,7 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 	}
 	var unfinishedOperations = make([]string, 0)
 	for _, opName := range scope.Status.GcpOperations {
-		logger.WithValues("Scope :", scope.Name).Info("Checking Service Enablement GCP Operation Status")
+		logger.WithValues("Scope", scope.Name).Info("Checking Service Enablement GCP Operation Status")
 		op, err := client.GetServiceUsageOperation(ctx, opName)
 		if err != nil {
 			logger.Error(err, "Error getting Service Usage Operation from GCP. Retry via requeue.")
@@ -41,7 +42,7 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 
 		// This should not ever happen, but if it does, we can't do anything except removing the operation from the status
 		if op == nil {
-			logger.WithValues("Operation Name :", opName).Info("Operation not found in GCP.")
+			logger.WithValues("operationName", opName).Info("Operation not found in GCP.")
 		}
 
 		//Operation not completed yet
@@ -51,7 +52,7 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 
 		if op != nil && op.Done {
 			if op.Error != nil {
-				logger.WithValues("Operation Name :", opName).Info("Operation failed. Removing from status.")
+				logger.WithValues("operationName", opName).Info("Operation failed. Removing from status.")
 			}
 		}
 

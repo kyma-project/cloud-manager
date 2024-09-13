@@ -2,6 +2,7 @@ package backupschedule
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +21,7 @@ func loadBackupImpl(ctx context.Context, st composed.State) (error, context.Cont
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.WithValues("BackupSchedule :", schedule.GetName()).Info("Load Provider Specific Implementation")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Load Provider Specific Implementation")
 
 	if _, ok := schedule.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
 		state.backupImpl = &backupImplGcpNfs{}

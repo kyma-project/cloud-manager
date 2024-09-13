@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -18,7 +19,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	ipRange := state.ObjAsIpRange()
 	opName := ipRange.Status.OpIdentifier
-	logger.WithValues("ipRange :", ipRange.Name).Info("Checking Operation")
+	logger.WithValues("ipRange", ipRange.Name).Info("Checking Operation")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName == "" {

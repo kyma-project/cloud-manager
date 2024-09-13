@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -17,7 +18,7 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Saving GCP PSA Connection")
+	logger.WithValues("ipRange", ipRange.Name).Info("Saving GCP PSA Connection")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project

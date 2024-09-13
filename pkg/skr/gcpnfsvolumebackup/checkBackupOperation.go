@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 
 	backup := state.ObjAsGcpNfsVolumeBackup()
 	opName := backup.Status.OpIdentifier
-	logger.WithValues("NfsBackup :", backup.Name).Info("Checking GCP Backup Operation Status")
+	logger.WithValues("NfsBackup", backup.Name).Info("Checking GCP Backup Operation Status")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName == "" {

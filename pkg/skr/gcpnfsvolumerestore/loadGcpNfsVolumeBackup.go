@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,8 +26,8 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	restore := state.ObjAsGcpNfsVolumeRestore()
-	logger.WithValues("nfsRestoreSource:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
-		"destination:", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Loading GCPNfsVolumeBackup")
+	logger.WithValues("nfsRestoreSource", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
+		"destination", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Loading GCPNfsVolumeBackup")
 
 	//Load the nfsVolumeBackup object
 	nfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}

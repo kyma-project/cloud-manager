@@ -3,6 +3,8 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -12,7 +14,6 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func createNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -36,7 +37,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackup :", backup.Name).Info("Creating GCP File Backup")
+	logger.WithValues("NfsBackup", backup.Name).Info("Creating GCP File Backup")
 
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp

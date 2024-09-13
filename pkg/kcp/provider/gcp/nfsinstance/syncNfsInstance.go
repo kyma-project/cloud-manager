@@ -3,10 +3,11 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,7 +19,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Saving GCP Filestore")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Saving GCP Filestore")
 
 	//Get GCP details.
 	gcpScope := state.Scope().Spec.Scope.Gcp

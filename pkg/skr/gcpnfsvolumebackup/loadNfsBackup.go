@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -18,7 +19,7 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	backup := state.ObjAsGcpNfsVolumeBackup()
-	logger.WithValues("nfsBackup :", backup.Name).Info("Loading GCP FileBackup")
+	logger.WithValues("nfsBackup", backup.Name).Info("Loading GCP FileBackup")
 
 	if backup.Status.Id == "" {
 		// Backup is not created yet.

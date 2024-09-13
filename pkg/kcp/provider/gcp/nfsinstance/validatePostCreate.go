@@ -2,8 +2,9 @@ package nfsinstance
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -19,7 +20,7 @@ func validatePostCreate(ctx context.Context, st composed.State) (error, context.
 	}
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Validating Instance Details")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Validating Instance Details")
 
 	//Get GCP details.
 	gcpOptions := nfsInstance.Spec.Instance.Gcp

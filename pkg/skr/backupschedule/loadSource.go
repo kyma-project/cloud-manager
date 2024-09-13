@@ -2,6 +2,7 @@ package backupschedule
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -20,7 +21,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, nil
 	}
 
-	logger.WithValues("Nfs Backup BackupSchedule :", schedule.GetName()).Info("Loading SourceRef")
+	logger.WithValues("NfsBackupBackupSchedule", schedule.GetName()).Info("Loading SourceRef")
 
 	//Load the sourceRef object
 	sourceRef, err := getSourceRef(ctx, state)
