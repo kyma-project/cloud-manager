@@ -14,8 +14,8 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 	changed := false
 
 	// status.networkType
-	if state.ObjAsNetwork().Status.NetworkType != state.ObjAsNetwork().Status.NetworkType {
-		state.ObjAsNetwork().Status.NetworkType = state.ObjAsNetwork().Status.NetworkType
+	if state.ObjAsNetwork().Status.NetworkType != state.ObjAsNetwork().Spec.Type {
+		state.ObjAsNetwork().Status.NetworkType = state.ObjAsNetwork().Spec.Type
 		changed = true
 	}
 

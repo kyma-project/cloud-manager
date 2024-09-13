@@ -62,6 +62,7 @@ func newClient(resourceGroup *armresources.ResourceGroupsClient, networkClient *
 func (c *client) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
 	var azureTags map[string]*string
 	if tags != nil {
+		azureTags := make(map[string]*string, len(tags))
 		for k, v := range tags {
 			azureTags[k] = ptr.To(v)
 		}
