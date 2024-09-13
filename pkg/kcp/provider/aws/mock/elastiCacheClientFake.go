@@ -2,9 +2,11 @@ package mock
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	aws "github.com/aws/aws-sdk-go-v2/aws"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -48,6 +50,7 @@ type elastiCacheClientFake struct {
 	elasticacheMutex    *sync.Mutex
 	secretStoreMutex    *sync.Mutex
 	userGroupsMutex     *sync.Mutex
+	securityGroupsMutex *sync.Mutex
 	replicationGroups   map[string]*elasticacheTypes.ReplicationGroup
 	cacheClusters       map[string]*elasticacheTypes.CacheCluster
 	parameters          map[string]map[string]elasticacheTypes.Parameter
@@ -55,6 +58,7 @@ type elastiCacheClientFake struct {
 	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
 	userGroups          map[string]*elasticacheTypes.UserGroup
 	secretStore         map[string]*secretsmanager.GetSecretValueOutput
+	securityGroups      []*ec2Types.SecurityGroup
 }
 
 func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup {
@@ -372,5 +376,74 @@ func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id str
 		instance.Status = ptr.To("deleting")
 	}
 
+	return nil
+}
+
+func (client *elastiCacheClientFake) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
+	client.securityGroupsMutex.Lock()
+	defer client.securityGroupsMutex.Unlock()
+
+	list := append([]*ec2Types.SecurityGroup{}, client.securityGroups...)
+	if groupIds != nil {
+		list = pie.Filter(list, func(sg *ec2Types.SecurityGroup) bool {
+			return pie.Contains(groupIds, ptr.Deref(sg.GroupId, ""))
+		})
+	}
+	if filters != nil {
+		list = pie.Filter(list, func(sg *ec2Types.SecurityGroup) bool {
+			return anyFilterMatchTags(sg.Tags, filters)
+		})
+	}
+	result := make([]ec2Types.SecurityGroup, 0, len(list))
+	for _, x := range list {
+		result = append(result, *x)
+	}
+	return result, nil
+}
+
+func (client *elastiCacheClientFake) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId string, name string, tags []ec2Types.Tag) (string, error) {
+	client.securityGroupsMutex.Lock()
+	defer client.securityGroupsMutex.Unlock()
+
+	tags = append(tags, ec2Types.Tag{
+		Key:   ptr.To("vpc-id"),
+		Value: ptr.To(vpcId),
+	})
+	sg := &ec2Types.SecurityGroup{
+		Description: ptr.To(name),
+		GroupId:     ptr.To(uuid.NewString()),
+		GroupName:   ptr.To(name),
+		Tags:        tags,
+		VpcId:       ptr.To(vpcId),
+	}
+	client.securityGroups = append(client.securityGroups, sg)
+	return ptr.Deref(sg.GroupId, ""), nil
+}
+
+func (client *elastiCacheClientFake) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
+	client.securityGroupsMutex.Lock()
+	defer client.securityGroupsMutex.Unlock()
+
+	var securityGroup *ec2Types.SecurityGroup
+	for _, sg := range client.securityGroups {
+		if ptr.Deref(sg.GroupId, "") == groupId {
+			securityGroup = sg
+			break
+		}
+	}
+	if securityGroup == nil {
+		return fmt.Errorf("security group with id %s does not exist", groupId)
+	}
+	securityGroup.IpPermissions = ipPermissions
+	return nil
+}
+
+func (client *elastiCacheClientFake) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
+	client.securityGroupsMutex.Lock()
+	defer client.securityGroupsMutex.Unlock()
+
+	client.securityGroups = pie.Filter(client.securityGroups, func(sg *ec2Types.SecurityGroup) bool {
+		return ptr.Deref(sg.GroupId, "") != id
+	})
 	return nil
 }

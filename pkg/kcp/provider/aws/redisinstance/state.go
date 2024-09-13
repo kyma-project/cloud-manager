@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -23,6 +24,8 @@ type State struct {
 	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
 	authTokenValue              *secretsmanager.GetSecretValueOutput
 	userGroup                   *elasticacheTypes.UserGroup
+	securityGroup               *ec2Types.SecurityGroup
+	securityGroupId             string
 
 	modifyElastiCacheClusterOptions client.ModifyElastiCacheClusterOptions
 	updateMask                      []string
