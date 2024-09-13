@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,8 +23,8 @@ func findRestoreOperation(ctx context.Context, st composed.State) (error, contex
 
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	opName := restore.Status.OpIdentifier
-	logger.WithValues("nfsRestoreSource:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
-		"destination:", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Finding GCP Restore Operations")
+	logger.WithValues("nfsRestoreSource", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
+		"destination", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Finding GCP Restore Operations")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName != "" {

@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -17,7 +18,7 @@ func setProcessing(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("NfsRestore :", restore.Name).Info("Checking States")
+	logger.WithValues("NfsRestore", restore.Name).Info("Checking States")
 
 	// If the status is FAILED or DONE, i.e. completed, skip
 	if restore.Status.State == cloudresourcesv1beta1.JobStateFailed ||

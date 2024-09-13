@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +16,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Updating State Info")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Updating State Info")
 
 	//Compute State Info
 	//Check and see whether the desiredState == actualState

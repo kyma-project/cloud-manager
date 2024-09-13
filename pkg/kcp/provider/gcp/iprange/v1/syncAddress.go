@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +18,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Saving GCP Address")
+	logger.WithValues("ipRange", ipRange.Name).Info("Saving GCP Address")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
@@ -30,12 +31,12 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	case client.ADD:
 		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, name, name, state.ipAddress, int64(state.prefix))
 	case client.MODIFY:
-		logger.WithValues("ipRange :", ipRange.Name).Info("IpRange update not supported.")
+		logger.WithValues("ipRange", ipRange.Name).Info("IpRange update not supported.")
 		return composed.StopAndForget, nil
 	case client.DELETE:
 		operation, err = state.computeClient.DeleteIpRange(ctx, project, name)
 	default:
-		logger.WithValues("ipRange :", ipRange.Name).Info("Unknown Operation.")
+		logger.WithValues("ipRange", ipRange.Name).Info("Unknown Operation.")
 	}
 
 	if err != nil {

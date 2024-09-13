@@ -3,8 +3,9 @@ package v1
 import (
 	"context"
 	"errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,7 +17,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Loading GCP Address")
+	logger.WithValues("ipRange", ipRange.Name).Info("Loading GCP Address")
 
 	//Get from GCP.
 	gcpScope := state.Scope().Spec.Scope.Gcp

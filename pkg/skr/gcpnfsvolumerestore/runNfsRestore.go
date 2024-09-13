@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -32,7 +33,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("NfsRestore :", restore.Name).Info("Creating GCP File Restore")
+	logger.WithValues("NfsRestore", restore.Name).Info("Creating GCP File Restore")
 
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp

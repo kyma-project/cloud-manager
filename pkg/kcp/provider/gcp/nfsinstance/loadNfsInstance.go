@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -17,7 +18,7 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Loading GCP Filestore Instance")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Loading GCP Filestore Instance")
 
 	//Get GCP details.
 	gcpScope := state.Scope().Spec.Scope.Gcp

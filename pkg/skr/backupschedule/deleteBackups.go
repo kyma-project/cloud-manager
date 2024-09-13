@@ -3,10 +3,11 @@ package backupschedule
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func deleteBackups(ctx context.Context, st composed.State) (error, context.Context) {
@@ -28,7 +29,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 	//If the deletion for the nextRunTime is already done, return
 	if schedule.GetLastDeleteRun() != nil && !schedule.GetLastDeleteRun().IsZero() &&
 		state.nextRunTime.Unix() == schedule.GetLastDeleteRun().Time.Unix() {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
@@ -45,7 +46,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Deleting old File Backups")
+	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Deleting old File Backups")
 
 	nextDeleteTimes := map[string]string{}
 	var lastDeleted []corev1.ObjectReference

@@ -2,9 +2,10 @@ package backupschedule
 
 import (
 	"context"
+	"time"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"time"
 )
 
 func checkCompleted(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,11 +18,11 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Checking the State")
+	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Checking the State")
 
 	//If the schedule is in Done state, stop reconciliation
 	if schedule.State() == cloudresourcesv1beta1.JobStateDone {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Schedule already completed, stopping reconciliation.")
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Schedule already completed, stopping reconciliation.")
 		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
@@ -31,7 +32,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 	endTime := schedule.GetEndTime()
 	//If the current time is after the end time, stop reconciliation
 	if endTime != nil && !endTime.IsZero() && endTime.Time.Before(now) {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Current Time is after the EndTime. Stopping reconciliation.")
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Current Time is after the EndTime. Stopping reconciliation.")
 		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
 		schedule.SetNextRunTimes(nil)
 		return composed.PatchStatus(schedule).
@@ -47,7 +48,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 		!schedule.GetLastCreateRun().IsZero() &&
 		schedule.GetBackupCount() == 0 {
 
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("One-time schedule already ran. Stopping reconciliation.")
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("One-time schedule already ran. Stopping reconciliation.")
 		schedule.SetState(cloudresourcesv1beta1.JobStateDone)
 		schedule.SetNextRunTimes(nil)
 		return composed.PatchStatus(schedule).

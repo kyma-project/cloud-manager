@@ -3,13 +3,14 @@ package backupschedule
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func createBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -31,11 +32,11 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	//If the creation for the nextRunTime is already done, return
 	if schedule.GetLastCreateRun() != nil && !schedule.GetLastCreateRun().IsZero() &&
 		state.nextRunTime.Unix() == schedule.GetLastCreateRun().Time.Unix() {
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Creating File Backup")
+	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Creating File Backup")
 
 	//Get Backup details (name and index).
 	prefix := schedule.GetPrefix()
