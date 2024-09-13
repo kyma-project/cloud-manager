@@ -25,14 +25,14 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	tenantId := state.tenantId
 
 	// We are creating virtual network peering in remote subscription therefore we are decomposing remoteVnetID
-	remote, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
+	resource, err := azureutil.ParseResourceID(obj.Spec.VpcPeering.Azure.RemoteVnet)
 
 	if err != nil {
 		logger.Error(err, "Error parsing remoteVnet")
 		return err, ctx
 	}
 
-	subscriptionId := remote.Subscription
+	subscriptionId := resource.Subscription
 
 	c, err := state.provider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 
@@ -40,8 +40,8 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		return err, ctx
 	}
 
-	virtualNetworkName := remote.ResourceName
-	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
+	virtualNetworkName := resource.ResourceName
+	resourceGroupName := resource.ResourceGroup
 	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
 	// Since we are creating virtual network peering connection from remote to shoot we need to build shootNetworkID

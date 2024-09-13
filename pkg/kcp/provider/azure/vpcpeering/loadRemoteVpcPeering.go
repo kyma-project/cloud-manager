@@ -33,7 +33,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	}
 
 	virtualNetworkName := resource.ResourceName
-	resourceGroupName := obj.Spec.VpcPeering.Azure.RemoteResourceGroup
+	resourceGroupName := resource.ResourceGroup
 	virtualNetworkPeeringName := obj.Spec.VpcPeering.Azure.RemotePeeringName
 
 	peering, err := c.GetPeering(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)

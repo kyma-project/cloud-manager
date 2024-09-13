@@ -53,6 +53,16 @@ func WithConditions(setConds ...metav1.Condition) ObjStatusAction {
 	}
 }
 
+func WithState(state string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(composed.ObjWithConditionsAndState); ok {
+				x.SetState(state)
+			}
+		},
+	}
+}
+
 func HavingState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(composed.ObjWithConditionsAndState); ok {

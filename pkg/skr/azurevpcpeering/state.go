@@ -14,6 +14,7 @@ type State struct {
 	KcpCluster composed.StateCluster
 
 	KcpVpcPeering *cloudcontrolv1beta1.VpcPeering
+	RemoteNetwork *cloudcontrolv1beta1.Network
 }
 
 func newStateFactory(
