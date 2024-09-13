@@ -14,8 +14,8 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 
 	changed := false
 
-	if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.ReadyState) {
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ReadyState)
+	if state.ObjAsVpcPeering().Status.State != cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected {
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected
 		changed = true
 	}
 

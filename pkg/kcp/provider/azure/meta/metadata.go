@@ -69,23 +69,23 @@ func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, conte
 	return composed.LogErrorAndReturn(err, msg, result, ctx)
 }
 
-func GetErrorMessage(err error) string {
+func GetErrorMessage(err error) (string, bool) {
 	var respErr *azcore.ResponseError
 
 	if errors.As(err, &respErr) {
 		switch respErr.ErrorCode {
 		case RemotePeeringIsDisconnected:
-			return RemotePeeringIsDisconnectedMessage
+			return RemotePeeringIsDisconnectedMessage, true
 		case AnotherPeeringAlreadyReferencesRemoteVnet:
-			return AnotherPeeringAlreadyReferencesRemoteVnetMessage
+			return AnotherPeeringAlreadyReferencesRemoteVnetMessage, true
 		case AuthorizationFailed:
-			return AuthorizationFailedMessage
+			return AuthorizationFailedMessage, true
 		case VnetAddressSpaceOverlapsWithAlreadyPeeredVnet:
-			return VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage
+			return VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage, true
 		case InvalidResourceName:
-			return InvalidResourceNameMessage
+			return InvalidResourceNameMessage, true
 		}
 	}
 
-	return fmt.Sprintf("Failed creating VpcPeerings %s", err)
+	return fmt.Sprintf("Failed creating VpcPeerings %s", err), false
 }

@@ -34,9 +34,13 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 		}
 
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		message, isWarning := azuremeta.GetErrorMessage(err)
 
-		message := azuremeta.GetErrorMessage(err)
+		if isWarning {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+		} else {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{

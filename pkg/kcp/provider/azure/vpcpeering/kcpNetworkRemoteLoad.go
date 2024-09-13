@@ -6,6 +6,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -23,8 +25,38 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 		Name:      state.ObjAsVpcPeering().Spec.Details.RemoteNetwork.Name,
 	}, net)
 
-	if err != nil {
+	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error loading remote KCP Network for KCP VpcPeering", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
+
+	if apierrors.IsNotFound(err) {
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonMissingDependency,
+				Message: "Remote network not found",
+			}).
+			ErrorLogMessage("Error patching KCP VpcPeering status with missing remote network dependency").
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
+			SuccessLogMsg("KCP VpcPeering remote KCP Network not found").
+			Run(ctx, state)
+	}
+
+	if net.Status.State != string(cloudcontrolv1beta1.ReadyState) {
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
+				Message: "Remote network not ready",
+			}).
+			ErrorLogMessage("Error patching KCP VpcPeering status with remote network not ready").
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("KCP VpcPeering remote KCP Network not ready").
+			Run(ctx, state)
 	}
 
 	state.remoteNetworkId = azureutil.NewVirtualNetworkResourceIdFromNetworkReference(net.Status.Network)

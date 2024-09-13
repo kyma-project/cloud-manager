@@ -2,16 +2,17 @@ package vpcpeering
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func statusCreating(ctx context.Context, st composed.State) (error, context.Context) {
+func statusInitiated(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	changed := false
 
 	if state.ObjAsVpcPeering().Status.State == "" {
-		state.ObjAsVpcPeering().Status.State = "Creating"
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated
 		changed = true
 	}
 

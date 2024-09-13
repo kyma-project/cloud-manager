@@ -21,9 +21,9 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"azureVpcPeering",
-			statusCreating,
 			kcpNetworkLocalLoad,
 			kcpNetworkRemoteLoad,
+			statusInitiated,
 			peeringLocalLoad,
 			composed.IfElse(
 				composed.MarkedForDeletionPredicate,
@@ -40,7 +40,7 @@ func New(stateFactory StateFactory) composed.Action {
 					peeringRemoteLoad,
 					composed.If(
 						predicateRequireVNetShootTag,
-						loadRemoteVpc,
+						vpcRemoteLoad,
 						waitNetworkTag,
 					),
 					peeringLocalCreate,

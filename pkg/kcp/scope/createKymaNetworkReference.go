@@ -18,7 +18,7 @@ func createKymaNetworkReference(ctx context.Context, st composed.State) (error, 
 
 	kymaNet = &cloudcontrolv1beta1.Network{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-kyma", state.ObjAsScope().Name),
+			Name:      fmt.Sprintf("%s--kyma", state.ObjAsScope().Name),
 			Namespace: state.ObjAsScope().Namespace,
 		},
 		Spec: cloudcontrolv1beta1.NetworkSpec{

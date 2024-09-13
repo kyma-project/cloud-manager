@@ -35,6 +35,10 @@ func WithRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef = *remoteRef
 				return
 			}
+			if x, ok := obj.(*cloudcontrolv1beta1.VpcPeering); ok {
+				x.Spec.RemoteRef = *remoteRef
+				return
+			}
 			panic("unhandled type in WithRemoteRef")
 		},
 	}

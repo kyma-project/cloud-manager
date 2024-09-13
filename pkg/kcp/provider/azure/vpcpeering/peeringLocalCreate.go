@@ -35,14 +35,12 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 
-		message := azuremeta.GetErrorMessage(err)
-
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: message,
+				Message: "Error creating local Azure peering",
 			}).
 			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of local vpc peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
