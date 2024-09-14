@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -55,7 +56,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		localKcpNetworkName := scope.Name + "--kyma"
+		localKcpNetworkName := common.KymaNetworkCommonName(scope.Name)
 		remoteKcpNetworkName := scope.Name + "--remote"
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
