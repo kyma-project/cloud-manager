@@ -8,4 +8,4 @@ Cloud Manager custom resources:
 
 * [GcpVpcPeering Custom Resource](./04-50-gcp-vpc-peering.md)
 * [GcpRedisInstance Custom Resource](./04-60-gcp-redis-instance.md)
-
+* [AwsRedisInstance Custom Resource](./04-70-aws-redis-instance.md)
