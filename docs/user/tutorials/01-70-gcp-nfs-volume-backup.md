@@ -6,7 +6,7 @@ This tutorial explains how to create backups for ReadWriteMany (RWX) volumes in 
 
 Create a GcpNfsVolume by referring to [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md).
 
-All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as GcpNfsVolumeBackup resource.
+All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsVolumeBackup resource.
 
 ## Steps <!-- {docsify-ignore} -->
 

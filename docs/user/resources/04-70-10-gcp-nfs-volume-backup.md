@@ -24,7 +24,7 @@ This table lists the parameters of the given resource together with their descri
 | **source.volume**           | object              | Required. Reference of the existing source GcpNfsVolume that is backed up.                                                    |
 | **source.volume.name**      | string              | Required. Name of the source GcpNfsVolume.                                                                                    |
 | **source.volume.namespace** | string              | Optional. Namespace of the source GcpNfsVolume. Defaults to the namespace of the GcpNfsVolumeBackup resource if not provided. |
-| **location**                | string              | Optional. The Region where backup will reside. Defaults to the region of source GcpNfsVolume.                                 |
+| **location**                | string              | Optional. The Region where the backup resides. Defaults to the region of source GcpNfsVolume.                                 |
 
 **Status:**
 
