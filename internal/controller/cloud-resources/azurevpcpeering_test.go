@@ -26,8 +26,8 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 			Eventually(CreateAzureVpcPeering).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureVpcPeering,
-					WithName("skr-azure-vpcpeering"),
-					WithAzureRemotePeeringName("peering-to-my-vnet"),
+					WithName("0d247cc0-dffb-40c1-a9f3-fbd3b4591f9f"),
+					WithAzureRemotePeeringName("b5d42fd8-2623-49d6-8792-1fb50f7e1fb6"),
 					WithAzureRemoteVnet(remoteVnetId),
 				).Should(Succeed())
 		})
