@@ -3,6 +3,7 @@ package cloudresources
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -31,9 +32,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 				).Should(Succeed())
 		})
 
-		vpcPeering := &cloudcontrolv1beta1.VpcPeering{}
-
-		By("Then KCP VpcPeering is created", func() {
+		By("Then AzureVpcPeering has status.ID", func() {
 			// load SKR AzureVpcPeering to get ID
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -44,7 +43,30 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 					AssertAzureVpcPeeringHasId(),
 				).
 				Should(Succeed(), "expected AzureVpcPeering to get status.Id, but it didn't")
+		})
 
+		remoteNetwork := &cloudcontrolv1beta1.Network{}
+
+		By("Then KCP remote Network is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					remoteNetwork,
+					NewObjActions(WithName(azureVpcPeering.Status.Id)),
+				).
+				Should(Succeed(), "failed to load remote Network")
+		})
+
+		By("And Than KCP remote Network has AzureNetworkReference", func() {
+			Expect(remoteNetwork.Spec.Network.Reference.Azure.SubscriptionId).To(Equal(remoteSubscription))
+			Expect(remoteNetwork.Spec.Network.Reference.Azure.NetworkName).To(Equal(remoteVnetName))
+			Expect(remoteNetwork.Spec.Network.Reference.Azure.ResourceGroup).To(Equal(remoteResourceGroup))
+		})
+
+		vpcPeering := &cloudcontrolv1beta1.VpcPeering{}
+
+		By("Then KCP VpcPeering is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -53,21 +75,21 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 					NewObjActions(WithName(azureVpcPeering.Status.Id)),
 				).
 				Should(Succeed(), "failed to load KCP VpcPeering")
-
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
-				Should(Succeed(), "failed adding finalizer on KCP VpcPeering")
 		})
 
-		By("And Then KCP VpcPeering has annotation cloud-manager.kyma-project.io/kymaName", func() {
+		By("And Then KCP VpcPeering has RemoteNetwork object reference", func() {
+			Expect(vpcPeering.Spec.Details.RemoteNetwork.Name).To(Equal(azureVpcPeering.Status.Id))
+			Expect(vpcPeering.Spec.Details.RemoteNetwork.Namespace).To(Equal(DefaultKcpNamespace))
+		})
+
+		By("And Then KCP VpcPeering has LocalNetwork object reference", func() {
+			Expect(vpcPeering.Spec.Details.LocalNetwork.Name).To(Equal(common.KymaNetworkCommonName(vpcPeering.Spec.Scope.Name)))
+			Expect(vpcPeering.Spec.Details.LocalNetwork.Namespace).To(Equal(DefaultKcpNamespace))
+		})
+
+		By("And Then KCP VpcPeering has annotations", func() {
 			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
-		})
-
-		By("And Then KCP VpcPeering has annotation cloud-manager.kyma-project.io/remoteName", func() {
 			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(azureVpcPeering.Name))
-		})
-
-		By("And Then KCP VpcPeering has annotation cloud-manager.kyma-project.io/remoteNamespace", func() {
 			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(azureVpcPeering.Namespace))
 		})
 
@@ -98,27 +120,13 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 				Should(Succeed(), "failed to delete SKR AzureVpcPeering")
 		})
 
-		By("Then KCP VpcPeering is marked for deletion", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering, NewObjActions(), HavingDeletionTimestamp()).
-				Should(Succeed(), "expected KCP VpcPeering to be marked for deletion")
-		})
-
-		By("When KCP VpcPeering finalizer is removed and it is deleted", func() {
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
-				Should(Succeed(), "failed removing finalizer on KCP VpcPeering")
-		})
-
-		By("Then KCP VpcPeering is deleted", func() {
+		By("Then KCP VpcPeering does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering, WithName(azureVpcPeering.Status.Id)).
 				Should(Succeed(), "failed to delete KCP VpcPeering")
 		})
 
-		remoteNetwork := &cloudcontrolv1beta1.Network{}
-
-		By("Then KCP remote Network is deleted", func() {
+		By("Then KCP remote Network does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(azureVpcPeering.Status.Id)).
 				Should(Succeed(), "failed to delete KCP remote Network")
