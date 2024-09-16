@@ -190,7 +190,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			}).Should(Succeed())
 		})
 
-		By("And Then remote Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering remote vpc id", func() {
+		By("And Then remote Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering local vpc id", func() {
 			localeVnetId := util.NewVirtualNetworkResourceId(scope.Spec.Scope.Azure.SubscriptionId, localResourceGroupName, localVirtualNetworkName).String()
 			Expect(ptr.Deref(remoteAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(localeVnetId))
 		})

@@ -4,6 +4,7 @@ import "context"
 
 const ipRangeAutomaticCidrAllocationFlagName = "ipRangeAutomaticCidrAllocation"
 
+// Deprecated: Do not use anymore
 var IpRangeAutomaticCidrAllocation = &ipRangeAutomaticCidrAllocationInfo{}
 
 type ipRangeAutomaticCidrAllocationInfo struct{}

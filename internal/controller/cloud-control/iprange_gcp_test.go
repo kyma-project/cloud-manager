@@ -1,9 +1,7 @@
 package cloudcontrol
 
 import (
-	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
@@ -155,9 +153,6 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 	})
 
 	It("Scenario: IpRange CIDR is automatically allocated", func() {
-		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			Skip("IpRange CIDR auto allocation is disabled")
-		}
 		// Tell Scope reconciler to ignore this kymaName
 		scope.Ignore.AddName(kymaName)
 
