@@ -196,6 +196,18 @@ func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
+func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Client) (bool, error) {
+	if obj.GetAnnotations() != nil && obj.GetAnnotations()[k] == v {
+		return false, nil
+	}
+	if obj.GetAnnotations() == nil {
+		obj.SetAnnotations(map[string]string{})
+	}
+	obj.GetAnnotations()[k] = v
+	p := []byte(fmt.Sprintf(`{"metadata": {"annotations":{"%s": "%s"}}}`, k, v))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
 func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
 	idx := -1
 	for i, s := range obj.GetFinalizers() {

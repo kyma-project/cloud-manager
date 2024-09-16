@@ -294,6 +294,12 @@ spec:
                     - project
                     type: object
                 type: object
+              networkType:
+                enum:
+                - external
+                - kyma
+                - cloud-resources
+                type: string
               state:
                 type: string
             type: object

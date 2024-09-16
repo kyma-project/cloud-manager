@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"strings"
 )
 
@@ -114,27 +115,56 @@ func NewResourceGroupResourceId(subscription, resourceGroup string) *ResourceDet
 	}
 }
 
-func NewVirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) *ResourceDetails {
-	return &ResourceDetails{
-		Subscription:    subscription,
-		ResourceGroup:   resourceGroup,
-		Provider:        "Microsoft.Network",
-		ResourceType:    "virtualNetworks",
-		ResourceName:    virtualNetworkName,
-		SubResourceType: "virtualNetworkPeerings",
-		SubResourceName: virtualNetworkPeeringName,
-		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0 && len(virtualNetworkPeeringName) > 0,
+type NetworkResourceId struct {
+	*ResourceDetails
+}
+
+func (nr *NetworkResourceId) NetworkName() string {
+	return nr.ResourceName
+}
+
+func NewVirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName string) *NetworkResourceId {
+	return &NetworkResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription:  subscription,
+			ResourceGroup: resourceGroup,
+			Provider:      "Microsoft.Network",
+			ResourceType:  "virtualNetworks",
+			ResourceName:  virtualNetworkName,
+			valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0,
+		},
 	}
 }
 
-func NewVirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName string) *ResourceDetails {
-	return &ResourceDetails{
-		Subscription:  subscription,
-		ResourceGroup: resourceGroup,
-		Provider:      "Microsoft.Network",
-		ResourceType:  "virtualNetworks",
-		ResourceName:  virtualNetworkName,
-		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0,
+func NewVirtualNetworkResourceIdFromNetworkReference(ref *cloudcontrolv1beta1.NetworkReference) *NetworkResourceId {
+	if ref == nil || ref.Azure == nil {
+		return &NetworkResourceId{ResourceDetails: &ResourceDetails{}}
+	}
+	return NewVirtualNetworkResourceId(
+		ref.Azure.SubscriptionId, ref.Azure.ResourceGroup, ref.Azure.NetworkName,
+	)
+}
+
+type PeeringResourceId struct {
+	*ResourceDetails
+}
+
+func (pr *PeeringResourceId) PeeringName() string {
+	return pr.ResourceName
+}
+
+func NewVirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) *PeeringResourceId {
+	return &PeeringResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription:    subscription,
+			ResourceGroup:   resourceGroup,
+			Provider:        "Microsoft.Network",
+			ResourceType:    "virtualNetworks",
+			ResourceName:    virtualNetworkName,
+			SubResourceType: "virtualNetworkPeerings",
+			SubResourceName: virtualNetworkPeeringName,
+			valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(virtualNetworkName) > 0 && len(virtualNetworkPeeringName) > 0,
+		},
 	}
 }
 

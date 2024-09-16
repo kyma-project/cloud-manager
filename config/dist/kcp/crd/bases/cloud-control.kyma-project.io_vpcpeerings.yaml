@@ -14,7 +14,14 @@ spec:
     singular: vpcpeering
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.scope.name
+      name: Scope
+      type: string
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: VpcPeering is the Schema for the vpcpeerings API
@@ -101,6 +108,7 @@ spec:
                 - name
                 type: object
               vpcPeering:
+                description: 'Deprecated: use VpcPeeringSpec.Details instead'
                 maxProperties: 1
                 minProperties: 1
                 properties:

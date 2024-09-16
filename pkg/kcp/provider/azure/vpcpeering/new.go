@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
@@ -20,32 +21,35 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"azureVpcPeering",
-			composed.BuildSwitchAction(
-				"azureVpcPeering-switch",
-				// default action
+			kcpNetworkLocalLoad,
+			kcpNetworkRemoteLoad,
+			statusInitiated,
+			peeringLocalLoad,
+			composed.IfElse(
+				composed.MarkedForDeletionPredicate,
+				composed.ComposeActions(
+					"azureVpcPeering-delete",
+					deleteVpcPeering,
+					actions.PatchRemoveFinalizer,
+				),
 				composed.ComposeActions(
 					"azureVpcPeering-non-delete",
-					addFinalizer,
-					loadVpcPeering,
-					loadRemoteVpcPeering,
-					loadRemoteVpc,
-					waitNetworkTag,
-					createVpcPeering,
-					createRemoteVpcPeering,
-					waitVpcPeeringReady,
-					updateStatus,
+					actions.PatchAddFinalizer,
+					remoteClientCreate,
+					peeringRemoteRequireSpecifiedName,
+					peeringRemoteLoad,
+					composed.If(
+						predicateRequireVNetShootTag,
+						vpcRemoteLoad,
+						waitNetworkTag,
+					),
+					peeringLocalCreate,
+					peeringRemoteCreate,
+					peeringLocalWaitReady,
+					statusReady,
 					composed.StopAndForgetAction,
 				),
-				composed.NewCase(
-					composed.MarkedForDeletionPredicate,
-					composed.ComposeActions(
-						"azureVpcPeering-delete",
-						removeReadyCondition,
-						deleteVpcPeering,
-						removeFinalizer,
-					),
-				),
-			), // switch
+			),
 			composed.StopAndForgetAction,
 		)(ctx, state)
 	}

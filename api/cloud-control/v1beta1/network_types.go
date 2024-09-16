@@ -152,6 +152,9 @@ type NetworkStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// +optional
+	NetworkType NetworkType `json:"networkType,omitempty"`
+
+	// +optional
 	Network *NetworkReference `json:"network,omitempty"`
 }
 

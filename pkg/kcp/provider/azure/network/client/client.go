@@ -26,7 +26,7 @@ type Client interface {
 	NetworkClient
 }
 
-func NewClientProvider() azureclient.SkrClientProvider[Client] {
+func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
 		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
 		if err != nil {
@@ -60,6 +60,13 @@ func newClient(resourceGroup *armresources.ResourceGroupsClient, networkClient *
 }
 
 func (c *client) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
+	var azureTags map[string]*string
+	if tags != nil {
+		azureTags := make(map[string]*string, len(tags))
+		for k, v := range tags {
+			azureTags[k] = ptr.To(v)
+		}
+	}
 	_, err := c.network.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, armnetwork.VirtualNetwork{
 		Location: ptr.To(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
@@ -67,6 +74,7 @@ func (c *client) CreateNetwork(ctx context.Context, resourceGroupName, virtualNe
 				AddressPrefixes: []*string{ptr.To(addressSpace)},
 			},
 		},
+		Tags: azureTags,
 	}, nil)
 	if err != nil {
 		return err

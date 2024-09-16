@@ -23,19 +23,19 @@ type server struct {
 	subscriptions map[string]*tenantSubscriptionStore
 }
 
-func (s *server) VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringclient.Client] {
+func (s *server) VpcPeeringSkrProvider() provider.ClientProvider[vpcpeeringclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string) (vpcpeeringclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
-func (s *server) RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client] {
+func (s *server) RedisClientProvider() provider.ClientProvider[redisinstanceclient.Client] {
 	return func(ctx context.Context, _, _, subscription, tenant string) (redisinstanceclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
-func (s *server) NetworkProvider() provider.SkrClientProvider[networkclient.Client] {
+func (s *server) NetworkProvider() provider.ClientProvider[networkclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string) (networkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}

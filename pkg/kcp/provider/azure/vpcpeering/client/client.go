@@ -22,7 +22,7 @@ type Client interface {
 	DeletePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) error
 }
 
-func NewClientProvider() azureclient.SkrClientProvider[Client] {
+func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
 
 		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})

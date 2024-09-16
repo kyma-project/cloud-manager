@@ -37,7 +37,7 @@ import (
 
 func SetupNetworkReconciler(
 	kcpManager manager.Manager,
-	azureProvider provider.SkrClientProvider[networkclient.Client],
+	azureProvider provider.ClientProvider[networkclient.Client],
 ) error {
 	return NewNetworkReconciler(
 		network.NewNetworkReconciler(
