@@ -50,7 +50,7 @@ All the examples below assume that the GcpNfsVolume is named `my-vol` and is in 
 
 5. Clean up:
 
-   * Remove the created gcpnfsvolume:
+   * Remove the created gcpnfsvolumebackup:
      ```shell
      kubectl delete -n $NAMESPACE gcpnfsvolumebackup my-backup
      ```

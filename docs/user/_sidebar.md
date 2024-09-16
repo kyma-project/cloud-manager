@@ -12,6 +12,7 @@
 * [Tutorials](/cloud-manager/user/tutorials/README.md)
   * [Use RWX Volumes in AWS](/cloud-manager/user/tutorials/01-10-aws-nfs-volume.md)
   * [Use RWX Volumes in GCP](/cloud-manager/user/tutorials/01-20-gcp-nfs-volume.md)
+  * [Backup RWX Volumes in GCP](/cloud-manager/user/tutorials/01-70-gcp-nfs-volume-backup.md)
   * [Use VPC peering in Azure](/cloud-manager/user/tutorials/01-30-azure-vpc-peering.md)
   * [Create VPC Peering in GCP](/cloud-manager/user/tutorials/01-30-gcp-vpc-peering.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
