@@ -1,12 +1,10 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -428,12 +426,6 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
 	It("Scenario: SKR AwsNfsVolume is created with empty IpRange when default IpRange does not exist", func() {
 
-		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(infra.Ctx()) {
-				Skip("IpRangeAutomaticCidrAllocation is disabled")
-			}
-		})
-
 		awsNfsVolumeName := "10359994-aed2-4454-bb5f-7c246fa4d9e2"
 		skrIpRangeId := "ca4a3f9a-5539-4383-8e0a-3e7c86577a09"
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
@@ -593,12 +585,6 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
 	It("Scenario: SKR AwsNfsVolume is created with empty IpRangeRef when default IpRange already exist", func() {
 
-		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-				Skip("IpRangeAutomaticCidrAllocation is disabled")
-			}
-		})
-
 		awsNfsVolumeName := "50c9827a-76b7-4790-9343-d4ed457a3d25"
 		skrIpRangeId := "b42613aa-ece1-4c3d-84fc-a2467fc38cc6"
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
@@ -729,47 +715,6 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
-		})
-	})
-
-	It("Scenario: AwsNfsVolume IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
-
-		By("Given ff IpRangeAutomaticCidrAllocation is disabled", func() {
-			if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-				Skip("IpRangeAutomaticCidrAllocation is enabled")
-			}
-		})
-
-		awsNfsVolumeName := "d67cb9e9-3ac0-4205-be15-866aeedfeddd"
-		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
-
-		By("When AwsNfsVolume is created with empty IpRangeRef", func() {
-			Eventually(CreateAwsNfsVolume).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
-					WithName(awsNfsVolumeName),
-					WithAwsNfsVolumeCapacity("100G"),
-				).
-				Should(Succeed())
-		})
-
-		By("Then AwsNfsVolume has Error condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsNfsVolume,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
-				).
-				Should(Succeed())
-		})
-
-		By("And Then AwsNfsVolume has Error state", func() {
-			Expect(awsNfsVolume.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
-		})
-
-		By("And Then AwsNfsVolume Error condition message is: IpRangeRef is required", func() {
-			Expect(meta.FindStatusCondition(awsNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError).Message).
-				To(Equal("IpRangeRef is required"))
 		})
 	})
 

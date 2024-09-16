@@ -1,11 +1,9 @@
 package cloudcontrol
 
 import (
-	"context"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -262,10 +260,6 @@ var _ = Describe("Feature: KCP IpRange", func() {
 	})
 
 	It("Scenario: KCP AWS IpRange CIDR is automatically allocated", func() {
-		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			Skip("IpRange CIDR auto allocation is disabled")
-		}
-
 		const (
 			kymaName    = "446dda67-dd5b-4af4-9860-70557a5a1160"
 			vpcId       = "f79a4690-a580-43c9-bb02-b71f4e03a346"
