@@ -7,6 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreateKcpVpcPeering should not be used, use dsl.CreateObj and cloudcontrolv1beta1.VpcPeeringBuilder
 func CreateKcpVpcPeering(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.VpcPeering, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.VpcPeering{}
@@ -33,20 +34,12 @@ func CreateKcpVpcPeering(ctx context.Context, clnt client.Client, obj *cloudcont
 	return err
 }
 
+// Deprecated: use WithRemoteRef
 func WithKcpVpcPeeringRemoteRef(ns, name string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.VpcPeering)
-			if x.Spec.RemoteRef.Namespace == "" {
-				x.Spec.RemoteRef.Namespace = ns
-			}
-			if x.Spec.RemoteRef.Name == "" {
-				x.Spec.RemoteRef.Name = name
-			}
-		},
-	}
+	return WithRemoteRef(name)
 }
 
+// WithKcpVpcPeeringSpecAws should not be used, use cloudcontrolv1beta1.VpcPeeringBuilder
 func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -65,24 +58,7 @@ func WithKcpVpcPeeringSpecAws(remoteVpcId, remoteAccountId, remoteRegion string)
 	}
 }
 
-func WithKcpVpcPeeringSpecAzure(allowVnetAccess bool, remotePeeringName, remoteVnet, remoteResourceGroup string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.VpcPeering)
-			if x.Spec.VpcPeering == nil {
-				x.Spec.VpcPeering = &cloudcontrolv1beta1.VpcPeeringInfo{}
-			}
-			if x.Spec.VpcPeering.Azure == nil {
-				x.Spec.VpcPeering.Azure = &cloudcontrolv1beta1.AzureVpcPeering{
-					RemotePeeringName:   remotePeeringName,
-					RemoteVnet:          remoteVnet,
-					RemoteResourceGroup: remoteResourceGroup,
-				}
-			}
-		},
-	}
-}
-
+// WithKcpVpcPeeringSpecGCP should not be used, use cloudcontrolv1beta1.VpcPeeringBuilder
 func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName string, importCustomRoutes bool) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

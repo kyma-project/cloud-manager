@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func SkrReadyCondition() metav1.Condition {
@@ -84,6 +85,33 @@ func HavingConditionTrue(conditionType string) ObjAssertion {
 					obj,
 					obj.GetNamespace(), obj.GetName(),
 					conditionType,
+					pie.Map(*x.Conditions(), func(c metav1.Condition) string {
+						return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+					}),
+				)
+			}
+		}
+		return nil
+	}
+}
+
+func HavingCondition(conditionType string, status metav1.ConditionStatus, reason, msg string) ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(composed.ObjWithConditions); ok {
+			cond := meta.FindStatusCondition(*x.Conditions(), conditionType)
+			if cond == nil ||
+				cond.Status != status ||
+				cond.Reason != reason ||
+				!strings.Contains(cond.Message, msg) {
+				return fmt.Errorf(
+					"expected object %T %s/%s to have status condition %s %s %s with '%s', but following conditions found: %v",
+					obj,
+					obj.GetNamespace(),
+					obj.GetName(),
+					conditionType,
+					status,
+					reason,
+					msg,
 					pie.Map(*x.Conditions(), func(c metav1.Condition) string {
 						return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
 					}),

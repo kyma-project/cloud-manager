@@ -30,10 +30,10 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	azureProvider azureclient.SkrClientProvider[azurenetworkclient.Client]
+	azureProvider azureclient.ClientProvider[azurenetworkclient.Client]
 }
 
-func NewStateFactory(azureProvider azureclient.SkrClientProvider[azurenetworkclient.Client]) StateFactory {
+func NewStateFactory(azureProvider azureclient.ClientProvider[azurenetworkclient.Client]) StateFactory {
 	return &stateFactory{
 		azureProvider: azureProvider,
 	}

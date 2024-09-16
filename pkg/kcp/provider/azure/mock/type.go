@@ -35,9 +35,9 @@ type Clients interface {
 }
 
 type Providers interface {
-	VpcPeeringSkrProvider() provider.SkrClientProvider[vpcpeeringclient.Client]
-	RedisClientProvider() provider.SkrClientProvider[redisinstanceclient.Client]
-	NetworkProvider() provider.SkrClientProvider[networkclient.Client]
+	VpcPeeringSkrProvider() provider.ClientProvider[vpcpeeringclient.Client]
+	RedisClientProvider() provider.ClientProvider[redisinstanceclient.Client]
+	NetworkProvider() provider.ClientProvider[networkclient.Client]
 }
 
 type NetworkConfig interface {

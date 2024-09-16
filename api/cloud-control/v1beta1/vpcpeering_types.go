@@ -46,6 +46,7 @@ type VpcPeeringSpec struct {
 	Scope ScopeRef `json:"scope"`
 
 	// +optional
+	// Deprecated: use VpcPeeringSpec.Details instead
 	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
 
 	// +optional
@@ -102,6 +103,7 @@ type AwsVpcPeering struct {
 
 // VpcPeeringStatus defines the observed state of VpcPeering
 type VpcPeeringStatus struct {
+	// +optional
 	State string `json:"state,omitempty"`
 
 	// +optional
@@ -124,6 +126,8 @@ type VpcPeeringStatus struct {
 //+kubebuilder:subresource:status
 
 // VpcPeering is the Schema for the vpcpeerings API
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 type VpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

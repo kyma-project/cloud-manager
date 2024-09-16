@@ -20,7 +20,7 @@ type Client interface {
 	//DeleteResourceGroup(ctx context.Context, name string) error
 }
 
-func NewClientProvider() azureClient.SkrClientProvider[Client] {
+func NewClientProvider() azureClient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
 
 		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})

@@ -23,7 +23,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	lll = lll.WithValues("vpcPeeringId", obj.Status.Id)
 	lll.Info("Deleting VpcPeering")
 
-	err := state.client.DeletePeering(
+	err := state.localClient.DeletePeering(
 		ctx,
 		resourceGroupName,
 		state.Scope().Spec.Scope.Azure.VpcNetwork,
