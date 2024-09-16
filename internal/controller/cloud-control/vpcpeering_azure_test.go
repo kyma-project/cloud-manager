@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -168,6 +169,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			}).Should(Succeed())
 		})
 
+		By("And Then local Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering remote vpc id", func() {
+			remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
+			Expect(ptr.Deref(localAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnetId))
+		})
+
 		var remoteAzurePeering *armnetwork.VirtualNetworkPeering
 
 		By("And Then remote Azure VPC Peering is created", func() {
@@ -182,6 +188,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				remoteAzurePeering = p
 				return nil
 			}).Should(Succeed())
+		})
+
+		By("And Then remote Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering remote vpc id", func() {
+			localeVnetId := util.NewVirtualNetworkResourceId(scope.Spec.Scope.Azure.SubscriptionId, localResourceGroupName, localVirtualNetworkName).String()
+			Expect(ptr.Deref(remoteAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(localeVnetId))
 		})
 
 		By("Then KCP VpcPeering state is Initiated", func() {
