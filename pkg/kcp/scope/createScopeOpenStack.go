@@ -37,11 +37,11 @@ func createScopeOpenStack(ctx context.Context, st composed.State) (error, contex
 		},
 	}
 
-	state.SetObj(scope)
 	// Preserve loaded obj resource version before getting overwritten by newly created scope
 	if st.Obj() != nil && st.Obj().GetName() != "" {
 		scope.ResourceVersion = st.Obj().GetResourceVersion()
 	}
+	state.SetObj(scope)
 
 	ctx = cceemeta.SetCeeDomainProjectRegion(
 		ctx,
