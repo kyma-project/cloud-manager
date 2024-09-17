@@ -32,7 +32,6 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			preventCidrEdit,
-			allocateIpRange,
 			copyCidrToStatus,
 			validateCidr,
 			actions.AddFinalizer,

@@ -64,7 +64,29 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 			return composed.ComposeActions(
 				"ipRangeCommon",
 				// common IpRange common actions here
-				// ...
+				composed.If(
+					shouldAllocateIpRange,
+					composed.BuildSwitchAction(
+						"allocateIpRangeProviderSwitch",
+						nil,
+						composed.NewCase(focal.AwsProviderPredicate, awsiprange.NewAllocateIpRangeAction(r.awsStateFactory)),
+						composed.NewCase(focal.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
+						composed.NewCase(focal.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpStateFactory)),
+					),
+					allocateIpRange,
+				),
+				kcpNetworkInit,
+				kcpNetworkLoad,
+				kcpNetworkCreate,
+				kcpNetworkWait,
+				composed.If(
+					shouldPeerWithKymaNetwork,
+					kymaNetworkLoad,
+					kymaNetworkWait,
+					kymaPeeringLoad,
+					kymaPeeringWait,
+					kymaPeeringCreate,
+				),
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",

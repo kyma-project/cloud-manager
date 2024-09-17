@@ -2,6 +2,10 @@ package common
 
 import "fmt"
 
-func KymaNetworkCommonName(kymaName string) string {
-	return fmt.Sprintf("%s-kyma", kymaName)
+func KcpNetworkKymaCommonName(kymaName string) string {
+	return fmt.Sprintf("%s--kyma", kymaName)
+}
+
+func KcpNetworkCMCommonName(kymaName string) string {
+	return fmt.Sprintf("%s--cm", kymaName)
 }

@@ -158,7 +158,8 @@ func (in IpRangeSubnets) SubnetByZone(zone string) *IpRangeSubnet {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="Network",type="string",JSONPath=".spec.network.name"
 // +kubebuilder:printcolumn:name="Cidr",type="string",JSONPath=".status.cidr"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 

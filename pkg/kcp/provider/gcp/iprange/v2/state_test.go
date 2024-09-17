@@ -116,6 +116,8 @@ func (f *testStateFactory) newStateWithScope(ctx context.Context, ipRange *cloud
 
 }
 
+var _ iprangetypes.State = &typesState{}
+
 type typesState struct {
 	focal.State
 }
@@ -127,6 +129,12 @@ func (s *typesState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 func (s *typesState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
+
+func (s *typesState) ExistingCidrRanges() []string {
+	return nil
+}
+
+func (s *typesState) SetExistingCidrRanges(v []string) {}
 
 func newTypesState(focalState focal.State) iprangetypes.State {
 	return &typesState{State: focalState}
