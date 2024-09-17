@@ -22,7 +22,7 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 		ctx,
 		state.localNetworkId.ResourceGroup,
 		state.localNetworkId.NetworkName(),
-		state.ObjAsVpcPeering().Name,
+		state.ObjAsVpcPeering().GetLocalPeeringName(),
 		state.remoteNetworkId.String(),
 		true,
 	)
