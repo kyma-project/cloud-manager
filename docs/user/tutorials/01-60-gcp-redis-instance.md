@@ -18,6 +18,7 @@ metadata:
 spec:
   memorySizeGb: 1
   tier: "BASIC"
+  authEnabled: false
 ```
 
 2. Instantiate the redis-cli Pod
