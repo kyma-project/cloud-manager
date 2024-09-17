@@ -9,12 +9,10 @@ import (
 
 func createRemoteClient(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	obj := state.ObjAsVpcPeering()
-
 	logger := composed.LoggerFromCtx(ctx)
 
-	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
-	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
+	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
+	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 

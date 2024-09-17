@@ -45,7 +45,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		},
 	}
 
-	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
+	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
 
 	con, err := state.client.CreateVpcPeeringConnection(
 		ctx,
