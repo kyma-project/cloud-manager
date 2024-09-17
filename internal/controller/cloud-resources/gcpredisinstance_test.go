@@ -1,12 +1,10 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -403,12 +401,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 	It("Scenario: SKR GcpRedisInstance is created with empty IpRange when default IpRange does not exist", func() {
 
-		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-				Skip("IpRangeAutomaticCidrAllocation is disabled")
-			}
-		})
-
 		gcpRedisInstanceName := "64b571bd-dbab-40e4-9eeb-5a0eb3b3ed63"
 		skrIpRangeId := "209a331b-185f-4413-8d84-e27eaf02ce1d"
 		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
@@ -575,12 +567,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 	It("Scenario: SKR GcpRedisInstance is created with empty IpRangeRef when default IpRange already exist", func() {
 
-		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-				Skip("IpRangeAutomaticCidrAllocation is disabled")
-			}
-		})
-
 		gcpRedisInstanceName := "6fc84535-8702-4064-a1d4-92235d9d5dff"
 		skrIpRangeId := "343ab759-ed5f-4d0d-93f0-7d4f518bb92e"
 		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
@@ -716,49 +702,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
-		})
-	})
-
-	It("Scenario: SKR GcpRedisInstance IpRangeRef is required when ff IpRangeAutomaticCidrAllocation is disabled", func() {
-
-		By("Given ff IpRangeAutomaticCidrAllocation is disabled", func() {
-			if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-				Skip("IpRangeAutomaticCidrAllocation is enabled")
-			}
-		})
-
-		gcpRedisInstanceName := "d8037b59-18b7-45bb-8c3a-bc83578e976c"
-		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
-
-		By("When GcpRedisInstance is created with empty IpRangeRef", func() {
-			Eventually(CreateGcpRedisInstance).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
-				).
-				Should(Succeed())
-		})
-
-		By("Then GcpRedisInstance has Error condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeError),
-				).
-				Should(Succeed())
-		})
-
-		By("And Then GcpRedisInstance has Error state", func() {
-			Expect(gcpRedisInstance.Status.State).To(Equal(cloudresourcesv1beta1.StateError))
-		})
-
-		By("And Then GcpRedisInstance Error condition message is: IpRangeRef is required", func() {
-			Expect(meta.FindStatusCondition(gcpRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError).Message).
-				To(Equal("IpRangeRef is required"))
 		})
 	})
 

@@ -41,7 +41,6 @@ func New() composed.Action {
 
 		return composed.ComposeActions(
 			"defaultiprange",
-			checkIfIpRangeIsSpecified,
 			loadSpecifiedIpRange,
 			findDefaultSkrIpRange,
 			createDefaultSkrIpRange,

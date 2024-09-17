@@ -1,7 +1,6 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -34,17 +33,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 			Should(Succeed())
 	})
-
-	// since Describe() calls are random this might execute before features are initialized from static test config
-	// so this must be a function that will be called during spec execution, which is run
-	// after features are initialized
-
-	shouldSkipForIpRangeAutomaticCidrAllocation := func() string {
-		if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			return ""
-		}
-		return "IpRangeAutomaticCidrAllocation is disabled"
-	}
 
 	runSkrIpRangeCreateScenario := func(shouldSkip func() string, titleSuffix, skrIpRangeName string, cidrAction ObjAction) {
 
@@ -180,7 +168,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
 	)
 	runSkrIpRangeCreateScenario(
-		shouldSkipForIpRangeAutomaticCidrAllocation,
+		nil,
 		"with empty CIDR",
 		"a7c8cbf9-56f4-4ef2-bc41-98f5c6133ab0",
 		nil,
@@ -294,7 +282,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
 	)
 	runSkrIpRangeDeleteScenario(
-		shouldSkipForIpRangeAutomaticCidrAllocation,
+		nil,
 		"with empty CIDR",
 		"a05b3025-0874-455a-a852-80bf4f706192",
 		nil,
@@ -916,10 +904,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 	})
 
 	It("Scenario: SKR IpRange can be created with empty CIDR", func() {
-		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			Skip("IpRangeAutomaticCidrAllocation is disabled")
-		}
-
 		skrIpRangeName := "db19ab47-8361-448d-a841-227b686982e8"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}

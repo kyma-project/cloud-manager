@@ -122,7 +122,7 @@ func (n *node) printInternal(level int, paddingRight int, totalDuration time.Dur
 	if n.root {
 		fmt.Println(color.BlueString("Feature flags:"))
 		ctx := context.Background()
-		fmt.Printf("    ipRangeAutomaticCidrAllocation: %v\n", feature.IpRangeAutomaticCidrAllocation.Value(ctx))
+		fmt.Printf("    gcpNfsVolumeAutomaticLocationAllocation: %v\n", feature.GcpNfsVolumeAutomaticLocationAllocation.Value(ctx))
 
 		for _, child := range n.items {
 			child.printInternal(0, paddingRight, n.duration)

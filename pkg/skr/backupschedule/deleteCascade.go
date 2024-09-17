@@ -31,6 +31,10 @@ func deleteCascade(ctx context.Context, st composed.State) (error, context.Conte
 	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Cascade delete of created backups.")
 
 	for _, backup := range state.Backups {
+		if composed.IsMarkedForDeletion(backup) {
+			logger.WithValues("Backup", backup.GetName()).Info("Backup is already being deleted.")
+			continue
+		}
 		logger.WithValues("Backup", backup.GetName()).Info("Deleting backup object")
 		err := state.Cluster().K8sClient().Delete(ctx, backup)
 		if err != nil {

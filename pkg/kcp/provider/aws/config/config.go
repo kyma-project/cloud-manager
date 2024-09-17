@@ -5,8 +5,9 @@ import (
 )
 
 type AwsConfigStruct struct {
-	Default AwsCreds `json:"default" yaml:"default"`
-	Peering AwsCreds `json:"peering" yaml:"peering"`
+	Default        AwsCreds `json:"default" yaml:"default"`
+	Peering        AwsCreds `json:"peering" yaml:"peering"`
+	BackupRoleName string   `json:"backupRoleName" yaml:"backupRoleName"`
 }
 
 var AwsConfig = &AwsConfigStruct{}
@@ -52,6 +53,11 @@ func InitConfig(cfg config.Config) {
 			"peering.assumeRoleName",
 			config.SourceEnv("AWS_PEERING_ROLE_NAME"),
 			config.SourceFile("AWS_PEERING_ROLE_NAME"),
+		),
+		config.Path(
+			"backupRoleName",
+			config.DefaultScalar("service-role/AWSBackupDefaultServiceRole"),
+			config.SourceEnv("AWS_BACKUP_ROLE_NAME"),
 		),
 	)
 

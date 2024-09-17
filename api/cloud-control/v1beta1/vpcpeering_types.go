@@ -65,6 +65,8 @@ type VpcPeeringDetails struct {
 
 	PeeringName string `json:"peeringName,omitempty"`
 
+	LocalPeeringName string `json:"localPeeringName,omitempty"`
+
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 }
 

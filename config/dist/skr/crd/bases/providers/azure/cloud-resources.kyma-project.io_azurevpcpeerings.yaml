@@ -53,11 +53,6 @@ spec:
                       rule: (size(self) <= 80)
                     - message: RemotePeeringName must begin with a word character, and it must end with a word character. RemotePeeringName may contain word characters or '-'.
                       rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
-                remoteResourceGroup:
-                  type: string
-                  x-kubernetes-validations:
-                    - message: RemoteResourceGroup is immutable.
-                      rule: (self == oldSelf)
                 remoteVnet:
                   type: string
                   x-kubernetes-validations:

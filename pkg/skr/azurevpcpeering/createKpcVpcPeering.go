@@ -2,9 +2,11 @@ package azurevpcpeering
 
 import (
 	"context"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 )
 
 func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -23,7 +25,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 
 	state.KcpVpcPeering = &cloudcontrolv1beta1.VpcPeering{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      state.ObjAsAzureVpcPeering().Status.Id,
+			Name:      obj.Status.Id,
 			Namespace: state.KymaRef.Namespace,
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
@@ -39,11 +41,15 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},
-			VpcPeering: &cloudcontrolv1beta1.VpcPeeringInfo{
-				Azure: &cloudcontrolv1beta1.AzureVpcPeering{
-					RemotePeeringName:   obj.Spec.RemotePeeringName,
-					RemoteVnet:          obj.Spec.RemoteVnet,
-					RemoteResourceGroup: obj.Spec.RemoteResourceGroup,
+			Details: &cloudcontrolv1beta1.VpcPeeringDetails{
+				PeeringName: obj.Spec.RemotePeeringName,
+				RemoteNetwork: klog.ObjectRef{
+					Name:      state.RemoteNetwork.Name,
+					Namespace: state.RemoteNetwork.Namespace,
+				},
+				LocalNetwork: klog.ObjectRef{
+					Name:      fmt.Sprintf("%s-kyma", state.KymaRef.Name),
+					Namespace: state.KymaRef.Namespace,
 				},
 			},
 		},

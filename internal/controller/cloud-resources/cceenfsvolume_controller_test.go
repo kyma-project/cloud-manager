@@ -17,19 +17,12 @@ limitations under the License.
 package cloudresources
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 
 	It("Scenario: SKR CceeNfsVolume is created with empty IpRange when default IpRange does not exist", func() {
-
-		By("Given ff IpRangeAutomaticCidrAllocation is enabled", func() {
-			if !feature.IpRangeAutomaticCidrAllocation.Value(infra.Ctx()) {
-				Skip("IpRangeAutomaticCidrAllocation is disabled")
-			}
-		})
 
 	})
 })
