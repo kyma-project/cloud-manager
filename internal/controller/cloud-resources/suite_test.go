@@ -124,6 +124,9 @@ var _ = BeforeSuite(func() {
 	// NfsBackupSchedule
 	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testSetupLog)).NotTo(HaveOccurred())
 
+	// AzureVpcPeering
+	Expect(SetupAzureVpcPeeringReconciler(infra.Registry()))
+
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 
 	// Start controllers

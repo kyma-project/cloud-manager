@@ -15,4 +15,4 @@ yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azureredisinstances.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.3"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumebackups.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumerestores.yaml
-yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsbackupschedules.yaml
+yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.3"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsbackupschedules.yaml
