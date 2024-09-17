@@ -32,6 +32,12 @@ const (
 	ConditionTypeDeleteWhileUsed = "DeleteWhileUsed"
 )
 
+type IpRangeType string
+
+const (
+	IpRangeCloudResources IpRangeType = "cloud-resources"
+)
+
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +optional
@@ -92,7 +98,7 @@ func (in *IpRange) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *IpRange) SpecificToProviders() []string {
-	return []string{"aws", "gcp"}
+	return []string{"aws", "gcp", "azure"}
 }
 
 //+kubebuilder:object:root=true

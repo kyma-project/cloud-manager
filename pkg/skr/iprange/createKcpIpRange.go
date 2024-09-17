@@ -4,8 +4,10 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"time"
 )
 
@@ -45,7 +47,11 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Cidr: state.ObjAsIpRange().Spec.Cidr,
 		},
 	}
-
+	if _, exists := state.ObjAsIpRange().Annotations[string(cloudresourcesv1beta1.IpRangeCloudResources)]; exists {
+		state.KcpIpRange.Spec.Network = &klog.ObjectRef{
+			Name: common.KcpNetworkCMCommonName(state.KymaRef.Name),
+		}
+	}
 	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpIpRange)
 	if err != nil {
 		logger.Error(err, "Error creating KCP IpRange")

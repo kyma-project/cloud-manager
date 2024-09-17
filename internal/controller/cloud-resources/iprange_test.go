@@ -3,23 +3,24 @@ package cloudresources
 import (
 	"context"
 	"fmt"
-	"time"
-
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsredisinstance"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpredisinstance"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"time"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
@@ -117,6 +118,10 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			By("And Then KCP IpRange has spec.remoteRef matching to to SKR IpRange", func() {
 				Expect(kcpIpRange.Spec.RemoteRef.Namespace).To(Equal(skrIpRange.Namespace))
 				Expect(kcpIpRange.Spec.RemoteRef.Name).To(Equal(skrIpRange.Name))
+			})
+
+			By("And Then KCP IpRange has spec.network is nil, indicating Kyma network", func() {
+				Expect(kcpIpRange.Spec.Network).To(BeNil())
 			})
 
 			By("When KCP IpRange gets Ready condition", func() {
@@ -294,6 +299,53 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		"a05b3025-0874-455a-a852-80bf4f706192",
 		nil,
 	)
+
+	It("Scenario: SKR IpRange with CM managed network", func() {
+
+		skrIpRangeName := "4fa01092-2527-4b3d-a22a-b0eaf63d3cvg"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When SKR IpRange is created", func() {
+			Eventually(CreateSkrIpRange).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName(skrIpRangeName),
+					WithSkrIpRangeAnnotationType(cloudresourcesv1beta1.IpRangeCloudResources),
+				).
+				Should(Succeed(), "failed creating SKR IpRange")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					skrIpRange,
+					NewObjActions(),
+					AssertSkrIpRangeHasId(),
+				).
+				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
+		})
+
+		By("Then KCP IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpIpRange,
+					NewObjActions(WithName(skrIpRange.Status.Id)),
+				).
+				Should(Succeed(), "expected KCP IpRange to exists, but none found")
+		})
+
+		By("And Then KCP IpRange has spec.network.name is set to kymaRef--cm", func() {
+			Expect(kcpIpRange.Spec.Network.Name).To(Equal(common.KcpNetworkCMCommonName(infra.SkrKymaRef().Name)))
+		})
+
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+		})
+	})
 
 	It("Scenario: SKR IpRange can be created with max size /30", func() {
 

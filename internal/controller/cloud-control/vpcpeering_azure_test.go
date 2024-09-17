@@ -57,7 +57,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		localKcpNetworkName := common.KymaNetworkCommonName(scope.Name)
+		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
 		remoteKcpNetworkName := scope.Name + "--remote"
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering

@@ -46,6 +46,15 @@ func WithSkrIpRangeStatusId(id string) ObjStatusAction {
 	}
 }
 
+func WithSkrIpRangeAnnotationType(ipRangeType cloudresourcesv1beta1.IpRangeType) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudresourcesv1beta1.IpRange)
+			x.Annotations = map[string]string{string(ipRangeType): string(ipRangeType)}
+		},
+	}
+}
+
 func CreateSkrIpRange(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.IpRange, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.IpRange{}
