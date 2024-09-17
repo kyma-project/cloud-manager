@@ -38,6 +38,12 @@ The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filesto
 instance that can be used as RWX volume in the cluster.
 To learn more, read the [GcpNfsVolume Custom Resource](./resources/04-30-10-gcp-nfs-volume.md)  documentation.
 
+### GcpNfsVolumeBackup CR
+
+The `gcpnfsvolumeBackup.cloud-resources.kyma-project.io` CRD describes the backup of a GCP Filestore
+instance.
+To learn more, read the [GcpNfsVolumeBackup Custom Resource](./resources/04-70-10-gcp-nfs-volume-backup.md)  documentation.
+
 ### AzureVpcPeering CR
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection 
