@@ -1,12 +1,13 @@
-# Create scheduled automatic RWX Volume backups in GCP
+# Create Scheduled Automatic RWX Volume Backups in Google Cloud
 
-This tutorial explains how to create scheduled automatic backups for ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP).
+This tutorial explains how to create scheduled automatic backups for ReadWriteMany (RWX) volumes in Google Cloud (GCP).
 
-## Preparation <!-- {docsify-ignore} -->
+## Prerequisites <!-- {docsify-ignore} -->
 
-Create a GcpNfsVolume by referring to [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md).
+* You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
 
-All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsBackupSchedule resource.
+> [!NOTE]
+> All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsBackupSchedule resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
@@ -41,11 +42,11 @@ All the examples below assume that the GcpNfsVolume is named `my-vol` and is in 
    ```
    gcpnfsbackupschedule.cloud-resources.kyma-project.io/my-backup-schedule condition met
    ```
-4. Observe the nextRunTimes for the creating the backups.
+4. Observe the nextRunTimes for creating the backups.
    ```shell
    kubectl -n $NAMESPACE get gcpnfsbackupschedule my-backup-schedule -o jsonpath='{.status.nextRunTimes}{"\n"}' 
    ```
-5. Wait till the time specified in the nextRunTimes (in previous step) and see that the GcpNfsVolumeBackup objects get created.
+5. Wait till the time specified in the nextRunTimes (in the previous step) and see that the GcpNfsVolumeBackup objects get created.
    ```shell
    kubectl -n $NAMESPACE get gcpnfsvolumebackup -l cloud-resources.kyma-project.io/scheduleName=my-backup-schedule 
    ```

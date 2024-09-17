@@ -46,7 +46,7 @@ To learn more, read the [GcpNfsVolumeBackup Custom Resource](./resources/04-70-1
 
 ### GcpNfsBackupSchedule CR
 
-The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the user-defined schedule for creating backup
+The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the user-defined schedule for creating a backup
 of the `GcpNfsVolume` instances at regular intervals.
 To learn more, read the [GcpNfsBackupSchedule Custom Resource](./resources/04-30-30-gcp-nfs-backup-schedule.md)  documentation.
 
