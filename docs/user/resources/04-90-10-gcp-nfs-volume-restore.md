@@ -5,7 +5,7 @@ instance's restore operation on the same or an existing Filestore. This operatio
 To learn more, read [Supported tiers](https://cloud.google.com/filestore/docs/backup-restore).
 
 To restore a backup of a ZONAL or REGIONAL Filestore, the restore operation must be performed while a new Filestore instance is created.
-This is supported by sourceBackup field in the spec of `gcpnfsvolume.cloud-resources.kyma-project.io` CRD. To learn more, read [GcpNfsVolume Custom Resource](./04-30-10-gcp-nfs-volume.md).
+This is supported by the `sourceBackup` field in the spec of `gcpnfsvolume.cloud-resources.kyma-project.io` CRD. To learn more, read [GcpNfsVolume Custom Resource](./04-30-10-gcp-nfs-volume.md).
 
 While the GCP Filestore restore operation is running in the underlying cloud provider subscription, it needs its source GCP 
 Filestore backup and its destination GCP Filestore instance to be available. Upon its completion, the GCP Filestore instance

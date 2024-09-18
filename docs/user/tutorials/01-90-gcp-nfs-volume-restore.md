@@ -1,12 +1,12 @@
 # Restore RWX Volume Backups in GCP
 
-This tutorial explains how to initiate a restore operation for ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP). 
+This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP). 
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
+* You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
 
-You have created a GcpNfsVolumeBackup. Follow[Backup RWX Volumes in GCP](./01-70-gcp-nfs-volume-backup.md) to learn more.
+* You have created a GcpNfsVolumeBackup. Follow[Backup RWX Volumes in GCP](./01-70-gcp-nfs-volume-backup.md) to learn more.
 
 >[!NOTE]
 >All the examples below assume that the GcpNfsVolume is named `my-vol`, the GcpNfsVolumeBackup is named `my-backup` 
@@ -66,7 +66,7 @@ and both are in the same namespace as the GcpNfsVolumeRestore resource.
    export NAMESPACE={NAMESPACE_NAME}
    ```
 
-2. Create a new GcpNfsVolume resource with sourceBackup referring the existing backup.
+2. Create a new GcpNfsVolume resource with `sourceBackup` referring to the existing backup.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
