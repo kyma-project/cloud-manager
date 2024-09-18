@@ -16,7 +16,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 		ctx,
 		state.localNetworkId.ResourceGroup,
 		state.localNetworkId.NetworkName(),
-		state.ObjAsVpcPeering().Name,
+		state.ObjAsVpcPeering().GetLocalPeeringName(),
 	)
 	if azuremeta.IsNotFound(err) {
 		logger.Info("Local Azure Peering not found for KCP VpcPeering")
