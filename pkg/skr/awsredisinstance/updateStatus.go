@@ -19,8 +19,19 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	kcpCondErr := meta.FindStatusCondition(state.KcpRedisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	kcpCondReady := meta.FindStatusCondition(state.KcpRedisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 
+	kcpHasUpdatingCondition := meta.FindStatusCondition(state.KcpRedisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
+
 	skrCondErr := meta.FindStatusCondition(awsRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
 	skrCondReady := meta.FindStatusCondition(awsRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+
+	if kcpHasUpdatingCondition && skrCondErr == nil {
+		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateUpdating
+		return composed.UpdateStatus(awsRedisInstance).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+			ErrorLogMessage("Error: updating AwsRedisInstance status due to KCP updating").
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
+	}
 
 	if kcpCondErr != nil && skrCondErr == nil {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
