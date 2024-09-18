@@ -45,6 +45,7 @@ func New(stateFactory StateFactory) composed.Action {
 					authorizeSecurityGroupIngress,
 					createElastiCacheCluster,
 					updateStatusId,
+					addUpdatingCondition,
 					waitElastiCacheAvailable,
 					waitUserGroupActive,
 					modifyCacheNodeType,

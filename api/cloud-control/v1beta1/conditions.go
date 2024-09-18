@@ -4,6 +4,8 @@ const (
 	ConditionTypeError = "Error"
 	ConditionTypeReady = "Ready"
 
+	ConditionTypeUpdating = "Updating"
+
 	ReasonScopeNotFound = "ScopeNoFound"
 
 	ReasonUnknown           = "Unknown"
