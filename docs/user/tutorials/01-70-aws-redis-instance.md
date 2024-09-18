@@ -6,8 +6,6 @@ This example showcases how to instantiate Redis, connect a Pod to it, and send a
 
 1. Instantiate Redis. This may take 10+ minutes.
 
-> [!NOTE]
-> This action may take 10+ min
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -61,10 +59,8 @@ If your setup was successful, you get `PONG` back from the server.
 
 This example showcases how to instantiate Redis by using most of the spec fields, connect a Pod to it, and send a PING command.
 
-1. Instantiate Redis
+1. Instantiate Redis. This may take 10+ minutes.
 
-> [!NOTE]
-> This action may take 10+ min
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsRedisInstance
