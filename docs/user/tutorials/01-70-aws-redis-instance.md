@@ -1,11 +1,10 @@
 # AWS Redis Instance Tutorial
-This tutorial shows how to instantiate Redis and connect to it.
-s
+Learn how to instantiate Redis and connect to it.
 ## Simple Example
 
 This example showcases how to instantiate Redis, connect a Pod to it, and send a PING command.
 
-1. Instantiate Redis
+1. Instantiate Redis. This may take 10+ minutes.
 
 > [!NOTE]
 > This action may take 10+ min
@@ -19,7 +18,7 @@ spec:
   cacheNodeType: cache.t3.micro
 ```
 
-2. Instantiate the redis-cli Pod
+2. Instantiate the redis-cli Pod:
 
 ```yaml
 apiVersion: v1
@@ -51,12 +50,12 @@ spec:
 kubectl exec -i -t awsredisinstance-simple-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
 ```
 
-4. Exec a PING command:
+4. Run a PING command:
 
 ```bash
 redis-cli -h $HOST -p $PORT
 ```
-You should receive `PONG` back from the server.
+If your setup was successful, you get `PONG` back from the server.
 
 ## Complex Example
 
@@ -83,7 +82,7 @@ spec:
   autoMinorVersionUpgrade: true
 ```
 
-2. Instantiate the redis-cli Pod
+2. Instantiate the redis-cli Pod:
 
 ```yaml
 apiVersion: v1
@@ -128,9 +127,9 @@ apt-get update && \
   update-ca-certificate
 ```
 
-5. Exec a PING command:
+5. Run a PING command:
 
 ```bash
 redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls
 ```
-You should receive `PONG` back from the server.
+If your setup was successful, you get `PONG` back from the server.

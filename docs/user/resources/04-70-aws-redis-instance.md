@@ -1,13 +1,13 @@
 # AwsRedisInstance Custom Resource
 The `awsredisinstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the AWS ElastiCache Redis instance.
-Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
+After the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
 By default, the created auth Secret has the same name as the AwsRedisInstance, unless specified otherwise.
 
 The current implementation creates a single node replication group with cluster mode disabled.
 
 The AwsRedisInstance requires an `/28` iprange. Those IP addresses are allocated from the [IpRange](./04-10-iprange.md).
-If the IpRange is not specified in the AwsRedisInstance then the default IpRange is used.
+If the IpRange is not specified in the AwsRedisInstance, the default IpRange is used.
 If a default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified CIDR and use it only in advanced cases of network topology when you want to be in control of the network segments to avoid range conflicts with other networks.
 
