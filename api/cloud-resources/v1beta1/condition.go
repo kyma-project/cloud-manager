@@ -29,6 +29,10 @@ const (
 )
 
 const (
+	ConditionTypeUpdating = "Updating"
+)
+
+const (
 	ConditionTypeDeleting = "Deleting"
 
 	ConditionReasonDeletingPV         = "DeletingPersistentVolume"
