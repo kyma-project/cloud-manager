@@ -48,7 +48,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 					Namespace: state.RemoteNetwork.Namespace,
 				},
 				LocalNetwork: klog.ObjectRef{
-					Name:      fmt.Sprintf("%s-kyma", state.KymaRef.Name),
+					Name:      fmt.Sprintf("%s--kyma", state.KymaRef.Name),
 					Namespace: state.KymaRef.Namespace,
 				},
 			},

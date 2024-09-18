@@ -3,7 +3,6 @@ package cloudresources
 import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsredisinstance"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
