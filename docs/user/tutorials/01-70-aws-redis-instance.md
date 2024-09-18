@@ -1,8 +1,8 @@
 # AWS Redis Instance Tutorial
 Learn how to instantiate Redis and connect to it.
-## Simple Example
+## Minimal Setup
 
-This example showcases how to instantiate Redis, connect a Pod to it, and send a PING command.
+To instantiate Redis and connect the Pod with only the required fields, use the following setup:
 
 1. Instantiate Redis. This may take 10+ minutes.
 
@@ -11,7 +11,7 @@ This example showcases how to instantiate Redis, connect a Pod to it, and send a
    apiVersion: cloud-resources.kyma-project.io/v1beta1
    kind: AwsRedisInstance
    metadata:
-     name: awsredisinstance-simple-example
+     name: awsredisinstance-minimal-example
    spec:
      cacheNodeType: cache.t3.micro
    ```
@@ -22,7 +22,7 @@ This example showcases how to instantiate Redis, connect a Pod to it, and send a
    apiVersion: v1
    kind: Pod
    metadata:
-     name: awsredisinstance-simple-example-probe
+     name: awsredisinstance-minimal-example-probe
    spec:
      containers:
      - name: redis-cli
@@ -34,18 +34,18 @@ This example showcases how to instantiate Redis, connect a Pod to it, and send a
          valueFrom:
            secretKeyRef:
              key: host
-             name: simple-example-probe
+             name: minimal-example-probe
        - name: PORT
          valueFrom:
            secretKeyRef:
              key: port
-             name: simple-example-probe
+             name: minimal-example-probe
    ```
 
 3. Exec into the Pod:
 
    ```bash
-   kubectl exec -i -t awsredisinstance-simple-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
+   kubectl exec -i -t awsredisinstance-minimal-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
 4. Run a PING command:
@@ -55,9 +55,9 @@ This example showcases how to instantiate Redis, connect a Pod to it, and send a
    ```
    If your setup was successful, you get `PONG` back from the server.
 
-## Complex Example
+## Advanced Setup
 
-This example showcases how to instantiate Redis by using most of the spec fields, connect a Pod to it, and send a PING command.
+To specify advanced features (such as Redis version, configuration, and maintenance policy) and set up auth and TLS, use the following setup:
 
 1. Instantiate Redis. This may take 10+ minutes.
 
@@ -65,7 +65,7 @@ This example showcases how to instantiate Redis by using most of the spec fields
    apiVersion: cloud-resources.kyma-project.io/v1beta1
    kind: AwsRedisInstance
    metadata:
-     name: awsredisinstance-complex-example
+     name: awsredisinstance-advanced-example
    spec:
      cacheNodeType: cache.t3.micro
      engineVersion: "7.0"
@@ -84,7 +84,7 @@ This example showcases how to instantiate Redis by using most of the spec fields
    apiVersion: v1
    kind: Pod
    metadata:
-     name: awsredisinstance-complex-example-probe
+     name: awsredisinstance-advanced-example-probe
    spec:
      containers:
      - name: redis-cli
@@ -96,23 +96,23 @@ This example showcases how to instantiate Redis by using most of the spec fields
          valueFrom:
            secretKeyRef:
              key: host
-             name: awsredisinstance-complex-example
+             name: awsredisinstance-advanced-example
        - name: PORT
          valueFrom:
            secretKeyRef:
              key: port
-             name: awsredisinstance-complex-example
+             name: awsredisinstance-advanced-example
        - name: AUTH_STRING
          valueFrom:
            secretKeyRef:
              key: authString
-             name: awsredisinstance-complex-example
+             name: awsredisinstance-advanced-example
    ```
 
 3. Exec into the Pod:
 
    ```bash
-   kubectl exec -i -t awsredisinstance-complex-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
+   kubectl exec -i -t awsredisinstance-advanced-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
 4. Install and update ca-certificates:
