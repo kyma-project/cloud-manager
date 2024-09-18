@@ -6,6 +6,7 @@
   * [AwsNfsVolume](/cloud-manager/user/resources/04-20-10-aws-nfs-volume.md)
   * [GcpNfsVolume](/cloud-manager/user/resources/04-30-10-gcp-nfs-volume.md)
   * [GcpNfsVolumeBackup](/cloud-manager/user/resources/04-70-10-gcp-nfs-volume-backup.md)
+  * [GcpNfsBackupSchedule](/cloud-manager/user/resources/04-30-30-gcp-nfs-backup-schedule.md)
   * [AzureVpcPeering](/cloud-manager/user/resources/04-40-10-azure-vpc-peering.md)
   * [GcpVpcPeering](/cloud-manager/user/resources/04-50-gcp-vpc-peering.md)
   * [GcpRedisInstance](/cloud-manager/user/resources/04-60-gcp-redis-instance.md)
@@ -13,7 +14,8 @@
   * [Use RWX Volumes in AWS](/cloud-manager/user/tutorials/01-10-aws-nfs-volume.md)
   * [Use RWX Volumes in GCP](/cloud-manager/user/tutorials/01-20-gcp-nfs-volume.md)
   * [Backup RWX Volumes in GCP](/cloud-manager/user/tutorials/01-70-gcp-nfs-volume-backup.md)
-  * [Use VPC peering in Azure](/cloud-manager/user/tutorials/01-30-azure-vpc-peering.md)
+  * [Create Scheduled Automatic RWX Volume Backups in Google Cloud](/cloud-manager/user/tutorials/01-80-gcp-scheduled-nfs-backup.md)
+  * [Use VPC Peering in Azure](/cloud-manager/user/tutorials/01-30-azure-vpc-peering.md)
   * [Create VPC Peering in GCP](/cloud-manager/user/tutorials/01-30-gcp-vpc-peering.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
 <!-- markdown-link-check-enable -->
