@@ -1,5 +1,6 @@
 # AWS Redis Instance Tutorial
 Learn how to instantiate Redis and connect to it.
+
 ## Minimal Setup
 
 To instantiate Redis and connect the Pod with only the required fields, use the following setup:
