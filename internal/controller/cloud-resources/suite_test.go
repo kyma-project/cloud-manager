@@ -127,6 +127,9 @@ var _ = BeforeSuite(func() {
 	// AzureVpcPeering
 	Expect(SetupAzureVpcPeeringReconciler(infra.Registry()))
 
+	// AwsVpcPeering
+	Expect(SetupAwsVpcPeeringReconciler(infra.Registry()))
+
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 
 	// Start controllers
