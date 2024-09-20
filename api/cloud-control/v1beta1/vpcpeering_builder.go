@@ -1,9 +1,18 @@
 package v1beta1
 
+func NewVpcPeeringBuilder() *VpcPeeringBuilder {
+	return &VpcPeeringBuilder{}
+}
+
 // VpcPeeringBuilder each call to Build() returns the same VpcPeering instance and the builder
 // allows you to create invalid objects not implementing the VpcPeering CEL validation rules
 type VpcPeeringBuilder struct {
 	Obj VpcPeering
+}
+
+func (b *VpcPeeringBuilder) WithName(name string) *VpcPeeringBuilder {
+	b.Obj.Name = name
+	return b
 }
 
 func (b *VpcPeeringBuilder) WithScope(s string) *VpcPeeringBuilder {

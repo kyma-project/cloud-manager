@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
@@ -64,6 +65,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 			return composed.ComposeActions(
 				"ipRangeCommon",
 				// common IpRange common actions here
+				actions.PatchAddFinalizer,
 				composed.If(
 					shouldAllocateIpRange,
 					composed.BuildSwitchAction(
@@ -84,17 +86,35 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					kymaNetworkLoad,
 					kymaNetworkWait,
 					kymaPeeringLoad,
-					kymaPeeringWait,
 					kymaPeeringCreate,
+					kymaPeeringWait,
 				),
 				// and now branch to provider specific flow
-				composed.BuildSwitchAction(
-					"providerSwitch",
-					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+				composed.If(
+					// call providers only if network is not deleted yet, they have a strong
+					// dependency on the KCP IpRange's Network
+					// due to kcpNetworkDeleteWait() the requeue will happen when provider
+					// finished the deprovisioning and KCP Network is deleted and then
+					// waited for (requeued) to not exist any more
+					shouldCallProviderFlow,
+					composed.BuildSwitchAction(
+						"providerSwitch",
+						nil,
+						composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
+						composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
+						composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+					),
 				),
+				// delete
+				composed.If(
+					composed.MarkedForDeletionPredicate,
+					kymaPeeringDelete,
+					kcpNetworkDelete,
+					kymaPeeringDeleteWait,
+					kcpNetworkDeleteWait,
+					actions.PatchRemoveFinalizer,
+				),
+				statusReady,
 			)(ctx, newState(st.(focal.State)))
 		},
 	)
@@ -104,4 +124,12 @@ func (r *ipRangeReconciler) newFocalState(name types.NamespacedName) focal.State
 	return r.focalStateFactory.NewState(
 		r.composedStateFactory.NewState(name, &cloudcontrolv1beta1.IpRange{}),
 	)
+}
+
+func shouldCallProviderFlow(ctx context.Context, st composed.State) bool {
+	state := st.(*State)
+	if state.Network() == nil && composed.MarkedForDeletionPredicate(ctx, state) {
+		return false
+	}
+	return true
 }

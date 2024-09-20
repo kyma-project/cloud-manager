@@ -82,6 +82,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupIpRangeReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
+		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
 		env,
@@ -98,8 +99,8 @@ var _ = BeforeSuite(func() {
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
-		infra.AzureMock().VpcPeeringSkrProvider(),
-		infra.GcpMock().VpcPeeringSkrProvider(),
+		infra.AzureMock().VpcPeeringProvider(),
+		infra.GcpMock().VpcPeeringProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	//RedisInstance

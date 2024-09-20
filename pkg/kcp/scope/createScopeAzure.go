@@ -3,8 +3,13 @@ package scope
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
+	"k8s.io/apimachinery/pkg/util/json"
+	"k8s.io/utils/ptr"
 )
 
 func createScopeAzure(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,6 +30,12 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 		return composed.StopAndForget, nil // no requeue
 	}
 
+	infra := azuregardener.InfrastructureConfig{}
+	err := json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error unmarshalling Azure InfrastructureConfig", composed.StopAndForget, ctx)
+	}
+
 	// just create the scope with Azure specifics, the ensureScopeCommonFields will set common values
 	scope := &cloudcontrolv1beta1.Scope{
 		Spec: cloudcontrolv1beta1.ScopeSpec{
@@ -33,6 +44,18 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 					TenantId:       tenantID,
 					SubscriptionId: subscriptionID,
 					VpcNetwork:     commonVpcName(state.shootNamespace, state.shootName),
+					Network: cloudcontrolv1beta1.AzureNetwork{
+						Cidr: ptr.Deref(infra.Networks.VNet.CIDR, ""),
+						Zones: pie.Map(infra.Networks.Zones, func(z azuregardener.Zone) cloudcontrolv1beta1.AzureNetworkZone {
+							return cloudcontrolv1beta1.AzureNetworkZone{
+								Name: fmt.Sprintf("%d", z.Name),
+								Cidr: z.CIDR,
+							}
+						}),
+						Nodes:    ptr.Deref(state.shoot.Spec.Networking.Nodes, ""),
+						Pods:     ptr.Deref(state.shoot.Spec.Networking.Pods, ""),
+						Services: ptr.Deref(state.shoot.Spec.Networking.Services, ""),
+					},
 				},
 			},
 		},

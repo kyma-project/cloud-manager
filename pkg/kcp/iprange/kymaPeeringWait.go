@@ -38,5 +38,5 @@ func kymaPeeringWait(ctx context.Context, st composed.State) (error, context.Con
 
 	logger.Info("Waiting KCP IpRange kyma peering ready state")
 
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

@@ -9,12 +9,8 @@ import (
 func shouldPeerWithKymaNetwork(ctx context.Context, st composed.State) bool {
 	state := st.(*State)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return false
-	}
-
 	// can not peer with itself
-	if state.isCloudManagerNetwork {
+	if state.isKymaNetwork {
 		return false
 	}
 

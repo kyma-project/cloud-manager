@@ -3,7 +3,6 @@ package dsl
 import (
 	"context"
 	"errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -149,16 +148,16 @@ func Update(ctx context.Context, client client.Client, obj client.Object, opts .
 	return err
 }
 
-func Delete(ctx context.Context, client client.Client, obj client.Object) error {
+func Delete(ctx context.Context, clnt client.Client, obj client.Object) error {
 	if obj == nil {
 		return errors.New("the object for Delete() can not be nil")
 	}
 
-	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	err := LoadAndCheck(ctx, clnt, obj, NewObjActions())
 	if err != nil {
 		return err
 	}
 
-	err = client.Delete(ctx, obj)
+	err = clnt.Delete(ctx, obj)
 	return err
 }

@@ -9,6 +9,11 @@ import (
 
 func kymaPeeringLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx).
+		WithValues(
+			"kcpIpRangeVpcPeeringName", state.Scope().Name,
+		)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	peering := &cloudcontrolv1beta1.VpcPeering{}
 	err := state.Cluster().K8sClient().Get(ctx, client.ObjectKey{
@@ -19,9 +24,12 @@ func kymaPeeringLoad(ctx context.Context, st composed.State) (error, context.Con
 		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange kyma peering", composed.StopWithRequeue, ctx)
 	}
 
-	if err != nil {
+	if err == nil {
+		logger.Info("KCP IpRange VpcPeering loaded")
 		state.kymaPeering = peering
+	} else {
+		logger.Info("KCP IpRange VpcPeering does not exist")
 	}
 
-	return nil, nil
+	return nil, ctx
 }

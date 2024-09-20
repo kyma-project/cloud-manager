@@ -15,10 +15,6 @@ func kymaNetworkLoad(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, ctx
-	}
-
 	net := &cloudcontrolv1beta1.Network{}
 	err := state.Cluster().K8sClient().Get(ctx, client.ObjectKey{
 		Namespace: state.ObjAsIpRange().Namespace,

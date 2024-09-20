@@ -25,20 +25,23 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 func SetupIpRangeReconciler(
 	kcpManager manager.Manager,
-	awsProvider awsclient.SkrClientProvider[iprangeclient.Client],
-	gcpSvcNetProvider gcpclient.ClientProvider[client.ServiceNetworkingClient],
-	gcpComputeProvider gcpclient.ClientProvider[client.ComputeClient],
+	awsProvider awsclient.SkrClientProvider[awsiprangeclient.Client],
+	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
+	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -49,7 +52,7 @@ func SetupIpRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider),
-			azureiprange.NewStateFactory(),
+			azureiprange.NewStateFactory(azureProvider),
 			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
 		),
 	).SetupWithManager(kcpManager)

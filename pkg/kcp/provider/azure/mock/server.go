@@ -3,10 +3,11 @@ package mock
 import (
 	"context"
 	"fmt"
-	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
-	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"sync"
 )
 
@@ -18,25 +19,33 @@ func New() Server {
 	}
 }
 
+var _ Server = &server{}
+
 type server struct {
 	m             sync.Mutex
 	subscriptions map[string]*tenantSubscriptionStore
 }
 
-func (s *server) VpcPeeringSkrProvider() provider.ClientProvider[vpcpeeringclient.Client] {
-	return func(_ context.Context, _, _, subscription, tenant string) (vpcpeeringclient.Client, error) {
+func (s *server) IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string) (azureiprangeclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
-func (s *server) RedisClientProvider() provider.ClientProvider[redisinstanceclient.Client] {
-	return func(ctx context.Context, _, _, subscription, tenant string) (redisinstanceclient.Client, error) {
+func (s *server) VpcPeeringProvider() azureclient.ClientProvider[azurevpcpeeringclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string) (azurevpcpeeringclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 
-func (s *server) NetworkProvider() provider.ClientProvider[networkclient.Client] {
-	return func(_ context.Context, _, _, subscription, tenant string) (networkclient.Client, error) {
+func (s *server) RedisClientProvider() azureclient.ClientProvider[azureredisinstanceclient.Client] {
+	return func(ctx context.Context, _, _, subscription, tenant string) (azureredisinstanceclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string) (azurenetworkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

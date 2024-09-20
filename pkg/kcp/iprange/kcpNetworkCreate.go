@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -60,10 +59,6 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 	net := &cloudcontrolv1beta1.Network{}
 	net.Name = state.networkKey.Name
 	net.Namespace = state.networkKey.Namespace
-	err := controllerutil.SetOwnerReference(state.ObjAsIpRange(), net, state.Cluster().Scheme())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error setting owner reference", composed.StopAndForget, ctx)
-	}
 	net.Spec = cloudcontrolv1beta1.NetworkSpec{
 		Scope: cloudcontrolv1beta1.ScopeRef{
 			Name: state.Scope().Name,
@@ -79,7 +74,7 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Creating KCP Network for IpRange")
 
-	err = state.Cluster().K8sClient().Create(ctx, net)
+	err := state.Cluster().K8sClient().Create(ctx, net)
 	if err != nil {
 		logger.Error(err, "Error creating CM KCP Network")
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState

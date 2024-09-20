@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -13,7 +14,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-var _ = Describe("Feature: KCP IpRange", func() {
+var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 	It("Scenario: KCP AWS IpRange is created", func() {
 
@@ -53,6 +54,26 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				awsutil.Ec2Tags("Name", "wrong2"),
 				nil,
 			)
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
 		})
 
 		iprangeName := "b76ff161-c288-44fa-a295-8df2076af6a5"
@@ -182,6 +203,26 @@ var _ = Describe("Feature: KCP IpRange", func() {
 			)
 		})
 
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
 		iprange := &cloudcontrolv1beta1.IpRange{}
 
 		By("And Given KCP IpRange is created", func() {
@@ -286,6 +327,26 @@ var _ = Describe("Feature: KCP IpRange", func() {
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
 		})
 
 		By("When KCP IpRange is created", func() {

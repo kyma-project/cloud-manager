@@ -40,7 +40,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 
 	list, err := state.computeClient.ListGlobalAddresses(ctx, project, vpc)
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

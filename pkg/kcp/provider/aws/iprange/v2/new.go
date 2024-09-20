@@ -8,6 +8,11 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
 
+// New returns an Action that will provision and deprovision resource in the cloud.
+// Common post actions are executed after it in the common iprange flow
+// so in the case of success it must return nil error as a signal of success.
+// If it returns non-nil error then it will break the common iprange flow
+// immediately so it must as well set the error conditions properly.
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
@@ -21,7 +26,6 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"awsIpRangeI2-main",
-			finalizerAdd,
 			vpcLoad,
 			vpcFind,
 			subnetsLoadAll,
@@ -40,7 +44,6 @@ func New(stateFactory StateFactory) composed.Action {
 					subnetsCreate,
 					subnetsCheckState,
 					statusSuccess,
-					composed.StopAndForgetAction,
 				),
 				composed.ComposeActions(
 					"kcpIpRangeI2-delete",
@@ -49,8 +52,6 @@ func New(stateFactory StateFactory) composed.Action {
 					subnetsWaitDeleted,
 					rangeDisassociateVpcAddressSpace,
 					rangeWaitCidrBlockDisassociated,
-					finalizerRemove,
-					composed.StopAndForgetAction,
 				),
 			),
 		)(awsmeta.SetAwsAccountId(ctx, ipRangeState.Scope().Spec.Scope.Aws.AccountId), state)

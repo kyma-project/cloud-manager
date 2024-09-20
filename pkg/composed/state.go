@@ -165,11 +165,7 @@ func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResou
 }
 
 func (s *baseState) PatchObjStatus(ctx context.Context) error {
-	objToPatch := s.Obj()
-	if objClonable, ok := s.obj.(ObjWithCloneForPatchStatus); ok {
-		objToPatch = objClonable.CloneForPatchStatus()
-	}
-	return s.Cluster().K8sClient().Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+	return PatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
 }
 
 // PatchObjAddFinalizer uses controllerutil.AddFinalizer() to add finalizer, if it returns false
@@ -185,6 +181,14 @@ func (s *baseState) PatchObjAddFinalizer(ctx context.Context, f string) (bool, e
 // PatchObjRemoveFinalizer patches obj with JSONPatchType removing the specified finalizer name
 func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool, error) {
 	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
+}
+
+func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.Client) error {
+	objToPatch := obj
+	if objClonable, ok := obj.(ObjWithCloneForPatchStatus); ok {
+		objToPatch = objClonable.CloneForPatchStatus()
+	}
+	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
 }
 
 func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {

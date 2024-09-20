@@ -138,6 +138,25 @@ type IpRangeSubnet struct {
 	Range string `json:"range"`
 }
 
+func (in IpRangeSubnets) Equals(other IpRangeSubnets) bool {
+	if len(in) != len(other) {
+		return false
+	}
+	for _, mine := range in {
+		found := false
+		for _, his := range other {
+			if mine == his {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 func (in IpRangeSubnets) SubnetById(id string) *IpRangeSubnet {
 	for _, s := range in {
 		if s.Id == id {

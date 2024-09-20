@@ -15,7 +15,7 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 	ipRange.Status.State = state.curState
 
 	if state.curState == v1beta1.ReadyState {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
@@ -25,7 +25,7 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	} else if prevState != state.curState {
-		return composed.UpdateStatus(ipRange).SuccessError(composed.StopWithRequeue).Run(ctx, state)
+		return composed.PatchStatus(ipRange).SuccessError(composed.StopWithRequeue).Run(ctx, state)
 	}
 
 	return nil, nil

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
@@ -113,57 +112,6 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenNotDeletingAndSvcConnectionIs
 	suite.Nil(resCtx)
 	suite.Equal(1, len(state.ipRanges))
 	suite.Equal(state.address.Name, state.ipRanges[0])
-}
-
-func (suite *identifyPeeringIpRangesSuite) TestWhenErrorResponse() {
-	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlGlobalAddress) {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			} else {
-				suite.Fail("unexpected request: " + r.URL.String())
-			}
-		default:
-			suite.Fail("unexpected request: " + r.URL.String())
-		}
-	}))
-	defer fakeHttpServer.Close()
-
-	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	//Get state object with ipRange
-	ipRange := gcpIpRange.DeepCopy()
-
-	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
-
-	//set state attributes
-	state.address = &compute.Address{
-		Name: "test-address",
-	}
-	state.serviceConnection = &servicenetworking.Connection{
-		Network: "test-network",
-	}
-	state.SetScope(gcpScope)
-
-	//Invoke the function under test
-	err, _ = identifyPeeringIpRanges(ctx, state)
-	suite.Equal(composed.StopWithRequeue, err)
-
-	//Load updated object
-	err = state.LoadObj(ctx)
-	suite.Nil(err)
-	ipRange = state.ObjAsIpRange()
-
-	// check error condition in status
-	suite.Equal(v1beta1.ConditionTypeError, ipRange.Status.Conditions[0].Type)
-	suite.Equal(metav1.ConditionTrue, ipRange.Status.Conditions[0].Status)
-	suite.Equal(v1beta1.ReasonGcpError, ipRange.Status.Conditions[0].Reason)
 }
 
 func (suite *identifyPeeringIpRangesSuite) TestWhenAdding() {

@@ -41,7 +41,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -54,7 +54,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}

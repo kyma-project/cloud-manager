@@ -110,7 +110,6 @@ spec:
                 - name
                 type: object
               vpcPeering:
-                description: 'Deprecated: use VpcPeeringSpec.Details instead'
                 maxProperties: 1
                 minProperties: 1
                 properties:

@@ -17,11 +17,12 @@ func kcpNetworkWait(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	if meta.IsStatusConditionTrue(state.ObjAsIpRange().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
+	if meta.IsStatusConditionTrue(state.network.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
+		logger.Info("KCP VpcPeering network is Ready")
 		return nil, ctx
 	}
 
-	if meta.IsStatusConditionTrue(state.ObjAsIpRange().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError) {
+	if meta.IsStatusConditionTrue(state.network.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError) {
 		logger.Info("KCP IpRange network has error condition")
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
 		return composed.PatchStatus(state.ObjAsIpRange()).
@@ -36,7 +37,7 @@ func kcpNetworkWait(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	logger.Info("Waiting KCP IpRange network ready state")
+	logger.Info("Waiting KCP Network ready state for IpRange")
 
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }
