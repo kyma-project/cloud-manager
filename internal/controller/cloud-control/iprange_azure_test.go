@@ -94,8 +94,8 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		By("Then KCP IpRange has no Error condition", func() {
 			Consistently(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError)).
-				ShouldNot(Succeed())
+					NotHavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError)).
+				Should(Succeed())
 		})
 
 		By("Then KCP IpRange has allocated CIDR in status", func() {
