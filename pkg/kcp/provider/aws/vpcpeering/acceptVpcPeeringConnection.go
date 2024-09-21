@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
@@ -46,8 +45,10 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	if err != nil {
 		logger.Error(err, "Error accepting VPC Peering")
 
-		return composed.UpdateStatus(obj).
-			SetCondition(metav1.Condition{
+		obj.Status.State = string(cloudcontrolv1beta1.ErrorState)
+
+		return composed.PatchStatus(obj).
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedAcceptingVpcPeeringConnection,
@@ -55,7 +56,7 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to failed accepting vpc peering connection").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 

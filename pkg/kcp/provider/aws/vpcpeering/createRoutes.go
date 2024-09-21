@@ -51,15 +51,17 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 					changed = true
 				}
 
-				condition := metav1.Condition{
+				if meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
 					Message: fmt.Sprintf("AWS Failed to create route for route table %s", routeTableName),
+				}) {
+					changed = true
 				}
 
-				if meta.SetStatusCondition(obj.Conditions(), condition) {
-					changed = true
+				if obj.Status.State != string(cloudcontrolv1beta1.ErrorState) {
+					obj.Status.State = string(cloudcontrolv1beta1.ErrorState)
 				}
 
 				if changed {
