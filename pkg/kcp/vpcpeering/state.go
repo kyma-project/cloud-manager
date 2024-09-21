@@ -6,14 +6,14 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
 
-type state struct {
+type State struct {
 	focal.State
 }
 
-func (s *state) ObjAsVpcPeering() *cloudcontrolv1beta1.VpcPeering {
+func (s *State) ObjAsVpcPeering() *cloudcontrolv1beta1.VpcPeering {
 	return s.Obj().(*cloudcontrolv1beta1.VpcPeering)
 }
 
 func newState(focalState focal.State) types.State {
-	return &state{State: focalState}
+	return &State{State: focalState}
 }

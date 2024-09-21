@@ -3,6 +3,8 @@ package vpcpeering
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -22,17 +24,22 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 
 				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
+				if awsmeta.IsErrorRetryable(err) {
+					return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+				}
+
 				lll := logger.WithValues(
 					"vpcPeeringName", obj.Name,
 					"vpcPeeringId", obj.Status.Id,
 					"routeTableId", ptr.Deref(t.RouteTableId, "xxx"),
 				)
 
-				lll.Info("Deleting route")
-
 				if err != nil {
 					lll.Error(err, "Error deleting route")
+					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 				}
+
+				lll.Info("Route deleted")
 			}
 		}
 	}
