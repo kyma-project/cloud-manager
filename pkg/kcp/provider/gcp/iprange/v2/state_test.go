@@ -195,9 +195,5 @@ var gcpScope = &cloudcontrolv1beta1.Scope{
 
 var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
 var urlGlobalAddress = "/projects/test-project/global/addresses"
-var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, "test-ip-range")
 
 var urlSvcNetworking = "services/servicenetworking.googleapis.com/connections"
-var getUrlSvcNw = fmt.Sprintf("%s/%s", urlSvcNetworking, client.PsaPeeringName)
-
-var getUrlCrmSvc = "projects/test-project"
