@@ -26,7 +26,7 @@ func findRestoreOperation(ctx context.Context, st composed.State) (error, contex
 	logger.WithValues("nfsRestoreSource", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
 		"destination", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Finding GCP Restore Operations")
 
-	//If no OpIdentifier, then continue to next action.
+	//If OpIdentifier exists, then continue to next action.
 	if opName != "" {
 		return nil, nil
 	}

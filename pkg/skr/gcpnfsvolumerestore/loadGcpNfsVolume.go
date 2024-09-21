@@ -4,13 +4,11 @@ import (
 	"context"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -55,7 +53,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
-					Reason:  cloudcontrolv1beta1.ReasonGcpError,
+					Reason:  cloudresourcesv1beta1.ConditionReasonNfsVolumeNotReady,
 					Message: "Error loading GcpNfsVolume",
 				}).
 				SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
