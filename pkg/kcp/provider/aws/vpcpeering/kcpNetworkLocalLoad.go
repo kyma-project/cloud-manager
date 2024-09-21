@@ -5,7 +5,6 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -63,10 +62,6 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	state.localNetworkId = azureutil.NewVirtualNetworkResourceIdFromNetworkReference(net.Status.Network)
-	logger.WithValues(
-		"localNetworkAzureId", state.localNetworkId.String(),
-	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	state.localNetwork = net
 

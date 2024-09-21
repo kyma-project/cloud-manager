@@ -19,10 +19,10 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
-	remoteAccountId := obj.Spec.VpcPeering.Aws.RemoteAccountId
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
+	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
+	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
 
-	remoteRegion := obj.Spec.VpcPeering.Aws.RemoteRegion
+	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
 	logger = logger.WithValues("awsRegion", remoteRegion, "awsRole", roleArn)
 

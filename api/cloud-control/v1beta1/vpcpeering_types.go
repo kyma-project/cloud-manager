@@ -175,6 +175,13 @@ func (in *VpcPeering) CloneForPatchStatus() client.Object {
 	}
 }
 
+func (in *VpcPeering) GetLocalPeeringName() string {
+	if len(in.Spec.Details.LocalPeeringName) > 0 {
+		return in.Spec.Details.LocalPeeringName
+	}
+	return in.Name
+}
+
 //+kubebuilder:object:root=true
 
 // VpcPeeringList contains a list of VpcPeering

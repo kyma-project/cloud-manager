@@ -44,6 +44,12 @@ The `gcpnfsvolumeBackup.cloud-resources.kyma-project.io` CRD describes the backu
 instance.
 To learn more, read the [GcpNfsVolumeBackup Custom Resource](./resources/04-70-10-gcp-nfs-volume-backup.md)  documentation.
 
+### GcpNfsBackupSchedule CR
+
+The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the user-defined schedule for creating a backup
+of the `GcpNfsVolume` instances at regular intervals.
+To learn more, read the [GcpNfsBackupSchedule Custom Resource](./resources/04-30-30-gcp-nfs-backup-schedule.md)  documentation.
+
 ### AzureVpcPeering CR
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection 

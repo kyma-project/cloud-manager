@@ -60,5 +60,5 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 }
