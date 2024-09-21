@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -18,29 +19,11 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
-	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
-	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
+	peering, err := state.remoteClient.AcceptVpcPeeringConnection(ctx, state.vpcPeering.VpcPeeringConnectionId)
 
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
-
-	logger = logger.WithValues("awsRegion", remoteRegion, "awsRole", roleArn)
-
-	logger.Info("Assuming AWS role")
-
-	client, err := state.provider(
-		ctx,
-		remoteRegion,
-		state.awsAccessKeyid,
-		state.awsSecretAccessKey,
-		roleArn,
-	)
-	if err != nil {
-		logger.Error(err, "Failed to create aws acceptVpcPeeringConnection client")
-		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+	if awsmeta.IsErrorRetryable(err) {
+		return awsmeta.LogErrorAndReturn(err, "Error accepting VPC Peering connection. Retrying", ctx)
 	}
-
-	peering, err := client.AcceptVpcPeeringConnection(ctx,
-		state.vpcPeering.VpcPeeringConnectionId)
 
 	if err != nil {
 		logger.Error(err, "Error accepting VPC Peering")
@@ -50,7 +33,7 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		return composed.PatchStatus(obj).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
+				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonFailedAcceptingVpcPeeringConnection,
 				Message: fmt.Sprintf("Failed accepting VpcPeerings %s", err),
 			}).
