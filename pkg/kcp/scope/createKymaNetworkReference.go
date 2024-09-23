@@ -11,12 +11,11 @@ import (
 func createKymaNetworkReference(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	kymaNet := state.allNetworks.FindFirstByType(cloudcontrolv1beta1.NetworkTypeKyma)
-	if kymaNet != nil {
+	if state.kcpNetworkKyma != nil {
 		return nil, nil
 	}
 
-	kymaNet = &cloudcontrolv1beta1.Network{
+	kymaNet := &cloudcontrolv1beta1.Network{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.KcpNetworkKymaCommonName(state.ObjAsScope().Name),
 			Namespace: state.ObjAsScope().Namespace,
