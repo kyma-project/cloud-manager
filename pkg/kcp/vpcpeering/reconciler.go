@@ -10,6 +10,7 @@ import (
 	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	gcp "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
 	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -43,6 +44,10 @@ func NewVpcPeeringReconciler(
 }
 
 func (r *vpcPeeringReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	if Ignore != nil && Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.newFocalState(request.NamespacedName)
 	action := r.newAction()
 

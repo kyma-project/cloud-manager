@@ -94,6 +94,7 @@ type GcpWorkers struct {
 	// +kubebuilder:validation:Required
 	Zones []string `json:"zones"`
 }
+
 type GcpNetwork struct {
 	// +optional
 	Nodes string `json:"nodes,omitempty"`
@@ -114,6 +115,30 @@ type AzureScope struct {
 
 	// +kubebuilder:validation:Required
 	VpcNetwork string `json:"vpcNetwork"`
+
+	Network AzureNetwork `json:"network"`
+}
+
+type AzureNetwork struct {
+	// +optional
+	Cidr string `json:"cidr,omitempty"`
+
+	// +optional
+	Zones []AzureNetworkZone `json:"zones,omitempty"`
+
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+}
+
+type AzureNetworkZone struct {
+	Name string `json:"name,omitempty"`
+	Cidr string `json:"cidr,omitempty"`
 }
 
 type AwsScope struct {

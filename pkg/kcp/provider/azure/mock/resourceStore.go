@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-var _ ResourceClient = &resourceStore{}
+var _ ResourceGroupsClient = &resourceStore{}
 
 func newResourceStore(subscription string) *resourceStore {
 	return &resourceStore{

@@ -83,7 +83,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has LocalNetwork object reference", func() {
-			Expect(vpcPeering.Spec.Details.LocalNetwork.Name).To(Equal(common.KymaNetworkCommonName(vpcPeering.Spec.Scope.Name)))
+			Expect(vpcPeering.Spec.Details.LocalNetwork.Name).To(Equal(common.KcpNetworkKymaCommonName(vpcPeering.Spec.Scope.Name)))
 			Expect(vpcPeering.Spec.Details.LocalNetwork.Namespace).To(Equal(DefaultKcpNamespace))
 		})
 

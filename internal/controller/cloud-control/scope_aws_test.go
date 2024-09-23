@@ -21,7 +21,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 		)
 
-		kymaNetworkName := common.KymaNetworkCommonName(kymaName)
+		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenerTypes.Shoot{}

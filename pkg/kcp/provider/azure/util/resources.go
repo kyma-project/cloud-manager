@@ -136,6 +136,40 @@ func NewVirtualNetworkResourceId(subscription, resourceGroup, virtualNetworkName
 	}
 }
 
+type SubnetResourceId struct {
+	*ResourceDetails
+}
+
+func NewSubnetResourceId(subscription, resourceGroup, virtualNetworkName, subnetName string) *SubnetResourceId {
+	return &SubnetResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription:    subscription,
+			ResourceGroup:   resourceGroup,
+			Provider:        "Microsoft.Network",
+			ResourceType:    "virtualNetworks",
+			ResourceName:    virtualNetworkName,
+			SubResourceType: "subnets",
+			SubResourceName: subnetName,
+		},
+	}
+}
+
+type NetworkSecurityGroupResourceId struct {
+	*ResourceDetails
+}
+
+func NewNetworkSecurityGroupResourceId(subscription, resourceGroup, securityGroupName string) *NetworkSecurityGroupResourceId {
+	return &NetworkSecurityGroupResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription:  subscription,
+			ResourceGroup: resourceGroup,
+			Provider:      "Microsoft.Network",
+			ResourceType:  "networkSecurityGroups",
+			ResourceName:  securityGroupName,
+		},
+	}
+}
+
 func NewVirtualNetworkResourceIdFromNetworkReference(ref *cloudcontrolv1beta1.NetworkReference) *NetworkResourceId {
 	if ref == nil || ref.Azure == nil {
 		return &NetworkResourceId{ResourceDetails: &ResourceDetails{}}

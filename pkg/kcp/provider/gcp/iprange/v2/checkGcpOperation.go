@@ -40,7 +40,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 				}
 			}
 
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -64,7 +64,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -80,7 +80,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		project := state.Scope().Spec.Scope.Gcp.Project
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -112,7 +112,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 					msg = "Operation failed with no error message."
 				}
 			}
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,

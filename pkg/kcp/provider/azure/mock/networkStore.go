@@ -14,6 +14,7 @@ import (
 
 var _ NetworkClient = &networkStore{}
 var _ NetworkConfig = &networkStore{}
+var _ SubnetsClient = &networkStore{}
 var _ VpcPeeringClient = &networkStore{}
 
 type networkEntry struct {
@@ -144,6 +145,105 @@ func (s *networkStore) DeleteNetwork(ctx context.Context, resourceGroupName, vir
 	}
 
 	delete(s.items[resourceGroupName], virtualNetworkName)
+
+	return nil
+}
+
+// SubnetsClient =========
+
+func (s *networkStore) GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.getSubnetNoLock(resourceGroupName, virtualNetworkName, subnetName)
+}
+
+func (s *networkStore) getSubnetNoLock(resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error) {
+	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+	if err != nil {
+		return nil, err
+	}
+
+	if entry.network.Properties == nil {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+
+	for _, subnet := range entry.network.Properties.Subnets {
+		if ptr.Deref(subnet.Name, "") == subnetName {
+			return subnet, nil
+		}
+	}
+
+	return nil, azuremeta.NewAzureNotFoundError()
+}
+
+func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+	if err != nil {
+		return fmt.Errorf("azure network does not exist: %w", err)
+	}
+
+	if entry.network.Properties == nil {
+		entry.network.Properties = &armnetwork.VirtualNetworkPropertiesFormat{}
+	}
+
+	id := azureutil.NewSubnetResourceId(s.subscription, resourceGroupName, virtualNetworkName, subnetName)
+
+	for _, subnet := range entry.network.Properties.Subnets {
+		if ptr.Deref(subnet.Name, "") == subnetName {
+			return fmt.Errorf("subnet %s already exists", id)
+		}
+	}
+
+	subnet := &armnetwork.Subnet{
+		ID:   ptr.To(id.String()),
+		Name: ptr.To(subnetName),
+		Properties: &armnetwork.SubnetPropertiesFormat{
+			AddressPrefix:         ptr.To(addressPrefix),
+			DefaultOutboundAccess: ptr.To(false),
+			ProvisioningState:     ptr.To(armnetwork.ProvisioningStateSucceeded),
+		},
+	}
+	if securityGroupId != "" {
+		subnet.Properties.NetworkSecurityGroup = &armnetwork.SecurityGroup{
+			ID: ptr.To(securityGroupId),
+		}
+	}
+
+	entry.network.Properties.Subnets = append(entry.network.Properties.Subnets, subnet)
+
+	return nil
+}
+
+func (s *networkStore) DeleteSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.getSubnetNoLock(resourceGroupName, virtualNetworkName, subnetName)
+	if err != nil {
+		return err
+	}
+
+	entry.network.Properties.Subnets = pie.Filter(entry.network.Properties.Subnets, func(x *armnetwork.Subnet) bool {
+		return ptr.Deref(x.Name, "") != subnetName
+	})
 
 	return nil
 }

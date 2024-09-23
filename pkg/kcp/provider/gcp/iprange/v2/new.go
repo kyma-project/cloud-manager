@@ -12,13 +12,18 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
+// New returns an Action that will provision and deprovision resource in the cloud.
+// Common post actions are executed after it in the common iprange flow
+// so in the case of success it must return nil error as a signal of success.
+// If it returns non-nil error then it will break the common iprange flow
+// immediately so it must as well set the error conditions properly.
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 
 		state, err := stateFactory.NewState(ctx, st.(types.State))
 		if err != nil {
 			ipRange := st.Obj().(*v1beta1.IpRange)
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -32,7 +37,6 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			preventCidrEdit,
-			allocateIpRange,
 			copyCidrToStatus,
 			validateCidr,
 			actions.AddFinalizer,

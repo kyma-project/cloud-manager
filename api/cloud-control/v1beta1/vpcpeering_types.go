@@ -46,7 +46,6 @@ type VpcPeeringSpec struct {
 	Scope ScopeRef `json:"scope"`
 
 	// +optional
-	// Deprecated: use VpcPeeringSpec.Details instead
 	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
 
 	// +optional

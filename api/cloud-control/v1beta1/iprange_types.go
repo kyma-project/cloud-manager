@@ -138,6 +138,25 @@ type IpRangeSubnet struct {
 	Range string `json:"range"`
 }
 
+func (in IpRangeSubnets) Equals(other IpRangeSubnets) bool {
+	if len(in) != len(other) {
+		return false
+	}
+	for _, mine := range in {
+		found := false
+		for _, his := range other {
+			if mine == his {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 func (in IpRangeSubnets) SubnetById(id string) *IpRangeSubnet {
 	for _, s := range in {
 		if s.Id == id {
@@ -158,7 +177,8 @@ func (in IpRangeSubnets) SubnetByZone(zone string) *IpRangeSubnet {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="Network",type="string",JSONPath=".spec.network.name"
 // +kubebuilder:printcolumn:name="Cidr",type="string",JSONPath=".status.cidr"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 

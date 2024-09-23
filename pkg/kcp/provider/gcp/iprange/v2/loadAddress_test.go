@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	"sync"
 	"testing"
 
@@ -25,6 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+var _ iprangetypes.State = &testState{}
+
 type testState struct {
 	focal.State
 }
@@ -36,6 +39,12 @@ func (s *testState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 func (s *testState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
+
+func (s *testState) ExistingCidrRanges() []string {
+	return nil
+}
+
+func (s *testState) SetExistingCidrRanges(v []string) {}
 
 type computeClientStubUtils interface {
 	ReturnOnFirstCall(address *compute.Address, err error)

@@ -63,40 +63,40 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 			Expect(remoteNetwork.Spec.Network.Reference.Aws.VpcId).To(Equal(remoteVpcId))
 		})
 
-		vpcPeering := &cloudcontrolv1beta1.VpcPeering{}
+		kcpVpcPeering := &cloudcontrolv1beta1.VpcPeering{}
 
 		By("Then AwsVpcPeering is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
 					infra.KCP().Client(),
-					vpcPeering,
+					kcpVpcPeering,
 					NewObjActions(WithName(awsVpcPeering.Status.Id)),
 				).
 				Should(Succeed(), "failed to load KCP VpcPeering")
 		})
 
 		By("And Then KCP VpcPeering has RemoteNetwork object reference", func() {
-			Expect(vpcPeering.Spec.Details.RemoteNetwork.Name).To(Equal(awsVpcPeering.Status.Id))
-			Expect(vpcPeering.Spec.Details.RemoteNetwork.Namespace).To(Equal(DefaultKcpNamespace))
+			Expect(kcpVpcPeering.Spec.Details.RemoteNetwork.Name).To(Equal(awsVpcPeering.Status.Id))
+			Expect(kcpVpcPeering.Spec.Details.RemoteNetwork.Namespace).To(Equal(DefaultKcpNamespace))
 		})
 
 		By("And Then KCP VpcPeering has LocalNetwork object reference", func() {
-			Expect(vpcPeering.Spec.Details.LocalNetwork.Name).To(Equal(common.KymaNetworkCommonName(vpcPeering.Spec.Scope.Name)))
-			Expect(vpcPeering.Spec.Details.LocalNetwork.Namespace).To(Equal(DefaultKcpNamespace))
+			Expect(kcpVpcPeering.Spec.Details.LocalNetwork.Name).To(Equal(common.KcpNetworkKymaCommonName(kcpVpcPeering.Spec.Scope.Name)))
+			Expect(kcpVpcPeering.Spec.Details.LocalNetwork.Namespace).To(Equal(DefaultKcpNamespace))
 		})
 
 		By("And Then KCP VpcPeering has annotations", func() {
-			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
-			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsVpcPeering.Name))
-			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsVpcPeering.Namespace))
+			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsVpcPeering.Name))
+			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsVpcPeering.Namespace))
 		})
 
 		By("When KCP VpcPeering is Ready", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(),
 					infra.KCP().Client(),
-					vpcPeering,
+					kcpVpcPeering,
 					WithState(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected),
 					WithConditions(KcpReadyCondition()))
 		})
@@ -121,7 +121,7 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 
 		By("Then KCP VpcPeering does not exist", func() {
 			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering, WithName(awsVpcPeering.Status.Id)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpVpcPeering, WithName(awsVpcPeering.Status.Id)).
 				Should(Succeed(), "failed to delete KCP VpcPeering")
 		})
 
