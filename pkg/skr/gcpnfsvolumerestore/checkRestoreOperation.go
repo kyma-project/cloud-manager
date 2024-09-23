@@ -86,7 +86,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			}).
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 				return nil, nil
-			}). //proceed in case deletion is in progress
+			}). //proceed to release the lease
 			SuccessLogMsg(fmt.Sprintf("Filestore Operation error : %s", op.Error.Message)).
 			Run(ctx, state)
 	}
@@ -102,7 +102,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 		}).
 		OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 			return nil, nil
-		}). //proceed in case deletion is in progress
+		}). //proceed to release the lease
 		SuccessLogMsg("GcpNfsVolumeRestore status got updated with Ready condition and Done state.").
 		Run(ctx, state)
 }

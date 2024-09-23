@@ -14,7 +14,7 @@ func releaseLease(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	err := leases.Release(ctx, state.SkrCluster,
-		types.NamespacedName{Name: state.GcpNfsVolume.Name, Namespace: state.GcpNfsVolume.Namespace},
+		restore.Spec.Destination.Volume.ToNamespacedName(restore.Namespace),
 		types.NamespacedName{Name: restore.Name, Namespace: restore.Namespace},
 		"restore")
 	if err != nil && !apierrors.IsNotFound(err) {
