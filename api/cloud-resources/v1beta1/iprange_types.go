@@ -32,12 +32,6 @@ const (
 	ConditionTypeDeleteWhileUsed = "DeleteWhileUsed"
 )
 
-type IpRangeType string
-
-const (
-	IpRangeCloudResources IpRangeType = "cloud-resources"
-)
-
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +optional

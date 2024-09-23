@@ -286,49 +286,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		nil,
 	)
 
-	It("Scenario: SKR IpRange with CM managed network", func() {
-
-		skrIpRangeName := "4fa01092-2527-4b3d-a22a-b0eaf63d3cvg"
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
-
-		By("When SKR IpRange is created", func() {
-			Eventually(CreateSkrIpRange).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					WithName(skrIpRangeName),
-					WithSkrIpRangeAnnotationType(cloudresourcesv1beta1.IpRangeCloudResources),
-				).
-				Should(Succeed(), "failed creating SKR IpRange")
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					AssertSkrIpRangeHasId(),
-				).
-				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
-		})
-
-		By("Then KCP IpRange is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					NewObjActions(WithName(skrIpRange.Status.Id)),
-				).
-				Should(Succeed(), "expected KCP IpRange to exists, but none found")
-		})
-
-		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
-		})
-	})
-
 	It("Scenario: SKR IpRange can be created with max size /30", func() {
 
 		skrIpRangeName := "4fa01092-2527-4b3d-a22a-b0eaf63d3b3e"
