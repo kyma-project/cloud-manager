@@ -72,6 +72,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 		loadKyma, // stops if Kyma not found
 		findKymaModuleState,
 		loadScopeObj,
+		loadNetworks,
 
 		composed.BuildSwitchAction(
 			"scope-switch",
@@ -98,7 +99,6 @@ func (r *scopeReconciler) newAction() composed.Action {
 					//   * exist but waiting for api to be activated
 
 					addKymaFinalizer,
-					loadNetworks,
 					composed.If(
 						// scopeAlreadyCreatedBranching
 						composed.All(ObjIsLoadedPredicate(), composed.Not(UpdateIsNeededPredicate())),
@@ -136,7 +136,7 @@ func UpdateIsNeededPredicate() composed.Predicate {
 	return func(ctx context.Context, st composed.State) bool {
 		if ObjIsLoadedPredicate()(ctx, st) {
 			state := st.(*State)
-			if state.allNetworks.FindFirstByType(cloudcontrolv1beta1.NetworkTypeKyma) == nil {
+			if state.kcpNetworkKyma == nil {
 				return true
 			}
 			switch state.ObjAsScope().Spec.Provider {
