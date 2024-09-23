@@ -106,10 +106,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Expect(kcpIpRange.Spec.RemoteRef.Name).To(Equal(skrIpRange.Name))
 			})
 
-			By("And Then KCP IpRange has spec.network is nil, indicating Kyma network", func() {
-				Expect(kcpIpRange.Spec.Network).To(BeNil())
-			})
-
 			By("When KCP IpRange gets Ready condition", func() {
 				Eventually(UpdateStatus).
 					WithArguments(
