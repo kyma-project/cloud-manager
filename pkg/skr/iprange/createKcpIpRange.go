@@ -47,9 +47,14 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Cidr: state.ObjAsIpRange().Spec.Cidr,
 		},
 	}
-	if _, exists := state.ObjAsIpRange().Annotations[string(cloudresourcesv1beta1.IpRangeCloudResources)]; exists {
+	if state.Provider != nil && *state.Provider == cloudcontrolv1beta1.ProviderAzure {
 		state.KcpIpRange.Spec.Network = &klog.ObjectRef{
 			Name: common.KcpNetworkCMCommonName(state.KymaRef.Name),
+		}
+	}
+	if state.Provider != nil && *state.Provider != cloudcontrolv1beta1.ProviderAzure {
+		state.KcpIpRange.Spec.Network = &klog.ObjectRef{
+			Name: common.KcpNetworkKymaCommonName(state.KymaRef.Name),
 		}
 	}
 	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpIpRange)

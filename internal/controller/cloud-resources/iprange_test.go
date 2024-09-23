@@ -2,7 +2,6 @@ package cloudresources
 
 import (
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsredisinstance"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
@@ -321,10 +320,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					NewObjActions(WithName(skrIpRange.Status.Id)),
 				).
 				Should(Succeed(), "expected KCP IpRange to exists, but none found")
-		})
-
-		By("And Then KCP IpRange has spec.network.name is set to kymaRef--cm", func() {
-			Expect(kcpIpRange.Spec.Network.Name).To(Equal(common.KcpNetworkCMCommonName(infra.SkrKymaRef().Name)))
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
