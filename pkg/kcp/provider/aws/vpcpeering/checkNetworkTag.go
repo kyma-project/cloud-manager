@@ -4,9 +4,9 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Context) {
@@ -26,7 +26,7 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	hasShootTag := util.HasEc2Tag(state.remoteVpc.Tags, state.Scope().Spec.ShootName)
+	hasShootTag := awsutil.HasEc2Tag(state.remoteVpc.Tags, state.Scope().Spec.ShootName)
 
 	if !hasShootTag {
 
@@ -41,7 +41,7 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 			}).
 			ErrorLogMessage("Error updating VpcPeering status due to remote vpc network tag mismatch").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(time.Minute)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 

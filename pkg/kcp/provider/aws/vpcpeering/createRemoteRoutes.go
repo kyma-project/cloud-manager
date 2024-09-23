@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -38,20 +39,29 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 					return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 				}
 
-				condition := metav1.Condition{
+				changed := false
+
+				if meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
 					Message: fmt.Sprintf("Failed creating route for remote route table %s. %s", routeTableId, awsmeta.GetErrorMessage(err)),
+				}) {
+					changed = true
 				}
 
-				// User can recover by modifying routes
-				if !composed.AnyConditionChanged(obj, condition) {
+				if obj.Status.State != string(cloudcontrolv1beta1.WarningState) {
+					obj.Status.State = string(cloudcontrolv1beta1.WarningState)
+					changed = true
+				}
+
+				// Do not update status if nothing is changed
+				if !changed {
 					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 				}
 
-				return composed.UpdateStatus(obj).
-					SetExclusiveConditions(condition).
+				// User can recover by modifying routes
+				return composed.PatchStatus(obj).
 					ErrorLogMessage("Error updating VpcPeering status when creating routes").
 					SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 					Run(ctx, state)
