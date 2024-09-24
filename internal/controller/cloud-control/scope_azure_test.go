@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-var _ = Describe("Feature: KCP Scope AWS", func() {
+var _ = Describe("Feature: KCP Scope Azure", func() {
 
-	It("Scenario: KCP AWS Scope is created when module is activated in Kyma CR", func() {
+	It("Scenario: KCP Azure Scope is created when module is activated in Kyma CR", func() {
 		const (
-			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
+			kymaName = "ca5b791b-87df-40ed-bea8-f10b84c483dd"
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
@@ -27,9 +27,9 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 		shoot := &gardenerTypes.Shoot{}
 
 		By("Given Shoot exists", func() {
-			Eventually(CreateShootAws).
+			Eventually(CreateShootAzure).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for aws")
+				Should(Succeed(), "failed creating garden shoot for Azure")
 		})
 
 		kymaCR := util.NewKymaUnstructured()
@@ -73,8 +73,8 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				Should(Succeed(), "expected created Scope to have Ready condition")
 		})
 
-		By("And Then Scope provider is aws", func() {
-			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAws))
+		By("And Then Scope provider is Azure", func() {
+			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAzure))
 		})
 
 		By("And Then Scope has spec.kymaName to equal shoot.name", func() {
@@ -85,25 +85,25 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 			Expect(scope.Spec.Region).To(Equal(shoot.Spec.Region), "expected Shoot.spec.region equal to shoot.spec.region")
 		})
 
-		By("And Then Scope has spec.scope.azure equal to nil", func() {
-			Expect(scope.Spec.Scope.Azure).To(BeNil(), "expected Shoot.spec.scope.azure to be nil")
+		By("And Then Scope has spec.scope.aws equal to nil", func() {
+			Expect(scope.Spec.Scope.Aws).To(BeNil(), "expected Shoot.spec.scope.azure to be nil")
 		})
 
 		By("And Then Scope has spec.scope.gcp equal to nil", func() {
 			Expect(scope.Spec.Scope.Gcp).To(BeNil(), "expected Shoot.spec.scope.gcp to be nil")
 		})
 
-		By("And Then Scope has spec.scope.aws.accountId", func() {
-			Expect(scope.Spec.Scope.Aws).NotTo(BeNil())
-			Expect(scope.Spec.Scope.Aws.AccountId).NotTo(BeEmpty())
-			Expect(scope.Spec.Scope.Aws.AccountId).To(Equal(infra.AwsMock().GetAccount()))
+		By("And Then Scope has Azure subscriptionId and tenantId", func() {
+			Expect(scope.Spec.Scope.Azure).NotTo(BeNil())
+			Expect(scope.Spec.Scope.Azure.SubscriptionId).NotTo(BeEmpty())
+			Expect(scope.Spec.Scope.Azure.TenantId).NotTo(BeEmpty())
 		})
 
-		By("And Then Scope has spec.scope.aws.network.zones as shoot", func() {
-			Expect(scope.Spec.Scope.Aws.Network.Zones).To(HaveLen(3))
-			Expect(scope.Spec.Scope.Aws.Network.Zones[0].Name).To(Equal("eu-west-1a")) // as set in GivenGardenShootAwsExists
-			Expect(scope.Spec.Scope.Aws.Network.Zones[1].Name).To(Equal("eu-west-1b")) // as set in GivenGardenShootAwsExists
-			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
+		By("And Then Scope has spec.scope.azure.network.zones as shoot", func() {
+			Expect(scope.Spec.Scope.Azure.Network.Zones).To(HaveLen(3))
+			Expect(scope.Spec.Scope.Azure.Network.Zones[0].Name).To(Equal("2")) // as set in CreateShootAzure
+			Expect(scope.Spec.Scope.Azure.Network.Zones[1].Name).To(Equal("3")) // as set in CreateShootAzure
+			Expect(scope.Spec.Scope.Azure.Network.Zones[2].Name).To(Equal("1")) // as set in CreateShootAzure
 		})
 
 		By("And Then SKR is active", func() {
@@ -127,18 +127,18 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 		})
 	})
 
-	It("Scenario: KCP AWS Scope is deleted when module is deactivated in Kyma CR", func() {
+	It("Scenario: KCP Azure Scope is deleted when module is deactivated in Kyma CR", func() {
 		const (
-			kymaName = "d55ac1aa-288c-4af4-a0b7-96ce5b81046b"
+			kymaName = "1887bd00-3c68-4a28-ba8b-6ea66671c6f6"
 		)
 
 		shoot := &gardenerTypes.Shoot{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Shoot exists", func() {
-			Eventually(CreateShootAws).
+			Eventually(CreateShootAzure).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for aws")
+				Should(Succeed(), "failed creating garden shoot for azure")
 		})
 
 		kymaCR := util.NewKymaUnstructured()

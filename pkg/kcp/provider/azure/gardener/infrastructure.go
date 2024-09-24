@@ -1,6 +1,9 @@
 package gardener
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
 
 // InfrastructureConfig infrastructure configuration resource
 type InfrastructureConfig struct {
@@ -16,6 +19,16 @@ type InfrastructureConfig struct {
 	// Zoned indicates whether the cluster uses availability zones.
 	// +optional
 	Zoned bool `json:"zoned,omitempty"`
+}
+
+func (i *InfrastructureConfig) DeepCopyObject() runtime.Object {
+	return &InfrastructureConfig{
+		TypeMeta:      i.TypeMeta,
+		ResourceGroup: i.ResourceGroup,
+		Networks:      i.Networks,
+		Identity:      i.Identity,
+		Zoned:         i.Zoned,
+	}
 }
 
 // ResourceGroup is azure resource group

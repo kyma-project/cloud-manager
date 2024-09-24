@@ -30,7 +30,7 @@ func createScopeAzure(ctx context.Context, st composed.State) (error, context.Co
 		return composed.StopAndForget, nil // no requeue
 	}
 
-	infra := azuregardener.InfrastructureConfig{}
+	infra := &azuregardener.InfrastructureConfig{}
 	err := json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error unmarshalling Azure InfrastructureConfig", composed.StopAndForget, ctx)
