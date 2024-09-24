@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.9
+    cloud-resources.kyma-project.io/version: v0.0.10
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -45,7 +45,7 @@ spec:
               description: GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
               properties:
                 authEnabled:
-                  default: true
+                  default: false
                   description: Indicates whether OSS Redis AUTH is enabled for the instance.
                   type: boolean
                 authSecret:
