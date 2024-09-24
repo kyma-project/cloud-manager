@@ -46,15 +46,20 @@ func (r *Reconciler) newAction() composed.Action {
 		"crGcpNfsVolumeRestoreMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeRestore{}),
 		composed.LoadObj,
-		setProcessing,
-		addFinalizer,
-		loadGcpNfsVolume,
-		loadGcpNfsVolumeBackup,
-		loadScope,
-		acquireLease,
-		findRestoreOperation,
-		runNfsRestore,
-		checkRestoreOperation,
+		composed.IfElse(
+			composed.Not(CompletedRestorePredicate),
+			composed.ComposeActions("crGcpNfsVolumeNotCompleted",
+				setProcessing,
+				addFinalizer,
+				loadGcpNfsVolume,
+				loadGcpNfsVolumeBackup,
+				loadScope,
+				acquireLease,
+				findRestoreOperation,
+				runNfsRestore,
+				checkRestoreOperation,
+			),
+			nil),
 		releaseLease,
 		removeFinalizer,
 		composed.StopAndForgetAction,
@@ -71,4 +76,9 @@ func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluste
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,
 	}
+}
+
+func CompletedRestorePredicate(_ context.Context, state composed.State) bool {
+	currentState := state.Obj().(*cloudresourcesv1beta1.GcpNfsVolumeRestore).Status.State
+	return currentState == cloudresourcesv1beta1.JobStateDone || currentState == cloudresourcesv1beta1.JobStateFailed
 }

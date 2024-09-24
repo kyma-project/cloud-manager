@@ -17,7 +17,7 @@ func acquireLease(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	res, err := leases.Acquire(ctx, state.SkrCluster,
-		types.NamespacedName{Name: state.GcpNfsVolume.Name, Namespace: state.GcpNfsVolume.Namespace},
+		restore.Spec.Destination.Volume.ToNamespacedName(restore.Namespace),
 		types.NamespacedName{Name: restore.Name, Namespace: restore.Namespace},
 		"restore")
 	switch res {

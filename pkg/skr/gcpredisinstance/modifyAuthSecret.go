@@ -2,7 +2,6 @@ package gcpredisinstance
 
 import (
 	"context"
-	"errors"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -12,7 +11,7 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.AuthSecret == nil {
-		logger.Error(errors.New("auth secret not found"), "cant modify auth secret, not found")
+		logger.Info("cant modify auth secret, not found")
 		return nil, nil
 	}
 

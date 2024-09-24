@@ -91,7 +91,7 @@ type GcpRedisInstanceSpec struct {
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
 	// The TLS mode of the Redis instance.
 	// If not provided, TLS is disabled for the instance.
