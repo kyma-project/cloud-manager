@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - *
   pull_request_target:
     types: [opened, edited, synchronize, reopened, ready_for_review]
 
@@ -12,23 +14,18 @@ permissions:
   contents: read # This is required for actions/checkout
 
 jobs:
-  compute-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.get_tag.outputs.TAG }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Get the latest tag
-        id: get_tag
-        run: echo "TAG"="v$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-      - name: Echo the tag
-        run: echo ${{ steps.get_tag.outputs.TAG }}
-  build-image:
-    needs: compute-tag
+  build-image-with-tag:
+    if: github.ref_type == 'tag'
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      tags: ${{ needs.compute-tag.outputs.tag }}
+      tags: ${{ github.ref }}
+      name: cloud-manager
+      dockerfile: Dockerfile
+      export-tags: true
+  build-image-no-tag:
+    if: github.ref_type != 'tag'
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
