@@ -77,8 +77,7 @@ spec:
   tier: "STANDARD_HA"
   redisVersion: REDIS_7_1
   authEnabled: true
-  transitEncryption:
-    serverAuthentication: true
+  transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"
