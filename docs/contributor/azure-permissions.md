@@ -1,6 +1,6 @@
 # Azure Permissions
 
-## Default principal
+## Default Principal
 
 * Resource Groups
   * `Microsoft.Resources/subscriptions/resourceGroups/read`
@@ -29,7 +29,7 @@
   * `Microsoft.Cache/redis/listKeys/action`
   * `Microsoft.Cache/redis/regenerateKey/action`
 
-## Peering principal
+## Peering Principal
 
 * `Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write`
 * `Microsoft.Network/virtualNetworks/peer/action`
