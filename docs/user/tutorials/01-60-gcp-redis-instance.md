@@ -75,7 +75,7 @@ metadata:
 spec:
   memorySizeGb: 5
   tier: "STANDARD_HA"
-  redisVersion: REDIS_7_1
+  redisVersion: REDIS_7_2
   authEnabled: true
   transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
