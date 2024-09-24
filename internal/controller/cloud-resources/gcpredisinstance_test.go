@@ -271,6 +271,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceMemorySizeGb(int32(5)),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceTransitEncryptionMode("DISABLED"),
 					WithGcpRedisInstanceAuthEnabled(false),
 				).
 				Should(Succeed())
@@ -422,6 +423,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceMemorySizeGb(int32(5)),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceTransitEncryptionMode("DISABLED"),
 				).
 				Should(Succeed())
 		})
@@ -597,6 +599,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceMemorySizeGb(int32(5)),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceTransitEncryptionMode("DISABLED"),
 				).
 				Should(Succeed())
 		})
