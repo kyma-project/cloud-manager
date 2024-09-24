@@ -40,11 +40,14 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpVpcPeeringMain",
 		composed.LoadObj,
+		loadKcpRemoteNetwork,
 		loadKcpGcpVpcPeering,
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"gcpVpcPeering-create",
 				actions.AddFinalizer,
+				createKcpRemoteNetwork,
+				waitRemoteNetworkCreation,
 				createKcpVpcPeering,
 				waitKcpStatusUpdate,
 				updateStatus,
@@ -53,6 +56,7 @@ func (r *reconciler) newAction() composed.Action {
 			composed.ComposeActions(
 				"gcpVpcPeering-delete",
 				deleteKcpVpcPeering,
+				deleteKcpRemoteNetwork,
 				actions.RemoveFinalizer,
 			),
 		),

@@ -4,13 +4,10 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.1
   name: gcpvpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
-    categories:
-      - kyma-cloud-manager
     kind: GcpVpcPeering
     listKind: GcpVpcPeeringList
     plural: gcpvpcpeerings
@@ -41,6 +38,7 @@ spec:
             spec:
               properties:
                 importCustomRoutes:
+                  default: false
                   type: boolean
                   x-kubernetes-validations:
                     - message: ImportCustomRoutes is immutable.
@@ -50,23 +48,52 @@ spec:
                   x-kubernetes-validations:
                     - message: RemotePeeringName is immutable.
                       rule: (self == oldSelf)
+                    - message: RemotePeeringName should be at least 1 character, with
+                        a maximum of 63 characters.
+                      rule: (size(self) <= 63 && size(self) >= 1)
+                    - message: RemotePeeringName must start with a lowercase letter, end
+                        with a lowercase letter or number, and only contain lowercase
+                        letters, numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
                 remoteProject:
                   type: string
                   x-kubernetes-validations:
-                    - message: RemoteNetwork is immutable.
+                    - message: RemoteProject must be 6 to 30 characters in length.
+                      rule: (size(self) <= 30 && size(self) >= 6)
+                    - message: RemoteProject must start with a lowercase letter, end with
+                        a lowercase letter or number, and only contain lowercase letters,
+                        numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
+                    - message: RemoteProject is immutable.
                       rule: (self == oldSelf)
                 remoteVpc:
                   type: string
                   x-kubernetes-validations:
                     - message: RemoteVpc is immutable.
                       rule: (self == oldSelf)
+                    - message: RemoteVpc should be at least 1 character, with a maximum
+                        of 63 characters.
+                      rule: (size(self) <= 63 && size(self) >= 1)
+                    - message: RemoteVpc must start with a lowercase letter, end with
+                        a lowercase letter or number, and only contain lowercase letters,
+                        numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
               type: object
             status:
               properties:
                 conditions:
                   description: List of status conditions to indicate the Peering status.
                   items:
-                    description: "Condition contains details for one aspect of the current state of this API Resource.\n---\nThis struct is intended for direct use as an array at the field path .status.conditions.  For example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the observations of a foo's current state.\n\t    // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    // +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t    // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t    // other fields\n\t}"
+                    description: "Condition contains details for one aspect of the current
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
+                    \   // other fields\n\t}"
                     properties:
                       lastTransitionTime:
                         description: |-

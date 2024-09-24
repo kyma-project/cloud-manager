@@ -23,6 +23,8 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpVpcPeering",
 			actions.AddFinalizer,
+			loadLocalNetwork,
+			loadRemoteNetwork,
 			loadRemoteVpcPeering,
 			loadKymaVpcPeering,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),

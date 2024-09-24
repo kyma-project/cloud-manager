@@ -20,7 +20,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("Loading Remote VPC Peering")
 
-	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteProject, state.remoteVpc)
+	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Remote VpcPeering")
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
