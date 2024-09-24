@@ -214,22 +214,16 @@ spec:
                         x-kubernetes-validations:
                         - message: Tier is immutable.
                           rule: (self == oldSelf)
-                      transitEncryption:
-                        description: |-
-                          The TLS mode of the Redis instance.
-                          If not provided, TLS is disabled for the instance.
-                        properties:
-                          serverAuthentication:
-                            default: false
-                            description: Client to Server traffic encryption enabled
-                              with server authentication.
-                            type: boolean
-                            x-kubernetes-validations:
-                            - message: ServerAuthentication is immutable.
-                              rule: (self == oldSelf)
-                        type: object
+                      transitEncryptionMode:
+                        default: DISABLED
+                        description: The TLS mode of the Redis instance. If not provided,
+                          TLS is disabled for the instance.
+                        enum:
+                        - DISABLED
+                        - SERVER_AUTHENTICATION
+                        type: string
                         x-kubernetes-validations:
-                        - message: TransitEncryption is immutable.
+                        - message: TransitEncryptionMode is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb

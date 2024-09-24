@@ -104,16 +104,6 @@ func toGcpMaintenancePolicy(maintenancePolicy *cloudresourcesv1beta1.Maintenance
 	}
 }
 
-func toGcpTransitEncryption(transitEncryption *cloudresourcesv1beta1.TransitEncryption) *cloudcontrolv1beta1.TransitEncryptionGcp {
-	if transitEncryption == nil {
-		return nil
-	}
-
-	return &cloudcontrolv1beta1.TransitEncryptionGcp{
-		ServerAuthentication: transitEncryption.ServerAuthentication,
-	}
-}
-
 func areMapsDifferent(first, second map[string]string) bool {
 	if len(first) != len(second) {
 		return true

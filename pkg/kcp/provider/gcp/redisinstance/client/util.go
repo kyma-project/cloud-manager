@@ -40,15 +40,3 @@ func ToMaintenancePolicy(maintenancePolicy *cloudcontrolv1beta1.MaintenancePolic
 		WeeklyMaintenanceWindow: []*redispb.WeeklyMaintenanceWindow{maintenanceWindow},
 	}
 }
-
-func ToTransitEncryptionMode(transitEncryption *cloudcontrolv1beta1.TransitEncryptionGcp) redispb.Instance_TransitEncryptionMode {
-	if transitEncryption == nil {
-		return redispb.Instance_DISABLED
-	}
-
-	if transitEncryption.ServerAuthentication {
-		return redispb.Instance_SERVER_AUTHENTICATION
-	}
-
-	return redispb.Instance_DISABLED
-}
