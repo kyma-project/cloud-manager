@@ -4,25 +4,31 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.11
-  name: gcpredisinstances.cloud-resources.kyma-project.io
+    cloud-resources.kyma-project.io/version: v0.1.0
+  name: ipranges.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
-    kind: GcpRedisInstance
-    listKind: GcpRedisInstanceList
-    plural: gcpredisinstances
-    singular: gcpredisinstance
-  scope: Namespaced
+    kind: IpRange
+    listKind: IpRangeList
+    plural: ipranges
+    singular: iprange
+  scope: Cluster
   versions:
     - additionalPrinterColumns:
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+        - jsonPath: .spec.cidr
+          name: CIDR
+          type: string
         - jsonPath: .status.state
           name: State
           type: string
       name: v1beta1
       schema:
         openAPIV3Schema:
-          description: GcpRedisInstance is the Schema for the gcpredisinstances API
+          description: IpRange is the Schema for the ipranges API
           properties:
             apiVersion:
               description: |-
@@ -42,130 +48,16 @@ spec:
             metadata:
               type: object
             spec:
-              description: GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
+              description: IpRangeSpec defines the desired state of IpRange
               properties:
-                authEnabled:
-                  default: false
-                  description: Indicates whether OSS Redis AUTH is enabled for the instance.
-                  type: boolean
-                authSecret:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
-                      type: string
-                  type: object
-                  x-kubernetes-validations:
-                    - message: AuthSecret is immutable.
-                      rule: (self == oldSelf)
-                ipRange:
-                  properties:
-                    name:
-                      type: string
-                  required:
-                    - name
-                  type: object
-                maintenancePolicy:
-                  description: |-
-                    The maintenance policy for the instance.
-                    If not provided, maintenance events can be performed at any time.
-                  maxProperties: 1
-                  minProperties: 1
-                  properties:
-                    dayOfWeek:
-                      properties:
-                        day:
-                          enum:
-                            - MONDAY
-                            - TUESDAY
-                            - WEDNESDAY
-                            - THURSDAY
-                            - FRIDAY
-                            - SATURDAY
-                            - SUNDAY
-                          type: string
-                        startTime:
-                          description: Start time of the window in UTC time.
-                          properties:
-                            hours:
-                              description: Hours of day in 24 hour format. Should be from 0 to 23.
-                              format: int32
-                              maximum: 23
-                              minimum: 0
-                              type: integer
-                            minutes:
-                              description: Minutes of hour of day. Must be from 0 to 59.
-                              format: int32
-                              maximum: 59
-                              minimum: 0
-                              type: integer
-                          required:
-                            - hours
-                            - minutes
-                          type: object
-                      required:
-                        - day
-                        - startTime
-                      type: object
-                  type: object
-                memorySizeGb:
-                  description: Redis memory size in GiB.
-                  format: int32
-                  type: integer
-                redisConfigs:
-                  additionalProperties:
-                    type: string
-                  description: |-
-                    Redis configuration parameters, according to http://redis.io/topics/config.
-                    See docs for the list of the supported parameters
-                  type: object
-                redisVersion:
-                  default: REDIS_7_0
-                  description: The version of Redis software.
-                  enum:
-                    - REDIS_7_2
-                    - REDIS_7_0
-                    - REDIS_6_X
-                    - REDIS_5_0
-                    - REDIS_4_0
-                    - REDIS_3_2
+                cidr:
                   type: string
-                  x-kubernetes-validations:
-                    - message: RedisVersion is immutable.
-                      rule: (self == oldSelf)
-                tier:
-                  default: BASIC
-                  description: The service tier of the instance.
-                  enum:
-                    - BASIC
-                    - STANDARD_HA
-                  type: string
-                  x-kubernetes-validations:
-                    - message: Tier is immutable.
-                      rule: (self == oldSelf)
-                transitEncryptionMode:
-                  default: DISABLED
-                  description: The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
-                  enum:
-                    - DISABLED
-                    - SERVER_AUTHENTICATION
-                  type: string
-                  x-kubernetes-validations:
-                    - message: TransitEncryptionMode is immutable.
-                      rule: (self == oldSelf)
-              required:
-                - memorySizeGb
-                - tier
               type: object
             status:
-              description: GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
+              description: IpRangeStatus defines the observed state of IpRange
               properties:
+                cidr:
+                  type: string
                 conditions:
                   description: List of status conditions
                   items:

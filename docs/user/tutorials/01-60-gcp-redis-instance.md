@@ -75,10 +75,9 @@ metadata:
 spec:
   memorySizeGb: 5
   tier: "STANDARD_HA"
-  redisVersion: REDIS_7_1
+  redisVersion: REDIS_7_2
   authEnabled: true
-  transitEncryption:
-    serverAuthentication: true
+  transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"
