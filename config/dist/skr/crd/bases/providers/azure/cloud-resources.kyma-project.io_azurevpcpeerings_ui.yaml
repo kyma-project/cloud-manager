@@ -7,9 +7,6 @@ data:
           source: spec
           children:
             - widget: Labels
-              source: remoteResourceGroup
-              name: spec.remoteResourceGroup
-            - widget: Labels
               source: remoteVnet
               name: spec.remoteVnet
             - widget: Labels
@@ -26,11 +23,6 @@ data:
               source: id
               name: status.id
   form: |
-    - path: spec.remoteResourceGroup
-      name: spec.remoteResourceGroup
-      widget: Text
-      disableOnEdit: true
-      description: Immutable once set.
     - path: spec.remoteVnet
       name: spec.remoteVnet
       widget: Text
@@ -68,7 +60,6 @@ data:
       configuration: Configuration
       status: Status
       status.state: State
-      spec.remoteResourceGroup: Remote Resource Group
       spec.remoteVnet: Remote Vnet
       status.id: ID
       spec.remotePeeringName: Remote Peering Name
