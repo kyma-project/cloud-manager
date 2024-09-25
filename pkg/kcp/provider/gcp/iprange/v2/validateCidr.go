@@ -17,7 +17,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	ipRange := state.ObjAsIpRange()
 	logger.WithValues("ipRange", ipRange.Name).Info("Validating CIDR")
 	if len(ipRange.Status.Cidr) == 0 {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -32,7 +32,7 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	//Parse CIDR.
 	addr, prefix, err := util.CidrParseIPnPrefix(ipRange.Status.Cidr)
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

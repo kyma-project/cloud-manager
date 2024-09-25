@@ -59,7 +59,6 @@ type testStateFactory struct {
 	computeClientProvider           client.ClientProvider[iprangeclient.ComputeClient]
 	serviceNetworkingClientProvider client.ClientProvider[iprangeclient.ServiceNetworkingClient]
 	fakeHttpServer                  *httptest.Server
-	gcpConfig                       *client.GcpConfig
 }
 
 func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
@@ -91,7 +90,6 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 		computeClientProvider:           computeClientProvider,
 		serviceNetworkingClientProvider: svcNwClientProvider,
 		fakeHttpServer:                  fakeHttpServer,
-		gcpConfig:                       client.GetGcpConfig(env),
 	}, nil
 
 }
@@ -114,9 +112,11 @@ func (f *testStateFactory) newStateWithScope(ctx context.Context, ipRange *cloud
 
 	focalState.SetScope(scope)
 
-	return newState(newTypesState(focalState), snc, cc, f.gcpConfig), nil
+	return newState(newTypesState(focalState), snc, cc), nil
 
 }
+
+var _ iprangetypes.State = &typesState{}
 
 type typesState struct {
 	focal.State
@@ -129,6 +129,12 @@ func (s *typesState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 func (s *typesState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
+
+func (s *typesState) ExistingCidrRanges() []string {
+	return nil
+}
+
+func (s *typesState) SetExistingCidrRanges(v []string) {}
 
 func newTypesState(focalState focal.State) iprangetypes.State {
 	return &typesState{State: focalState}
@@ -189,9 +195,5 @@ var gcpScope = &cloudcontrolv1beta1.Scope{
 
 var opIdentifier = "/projects/test-project/locations/us-west1/operations/create-operation"
 var urlGlobalAddress = "/projects/test-project/global/addresses"
-var getUrlCompute = fmt.Sprintf("%s/%s", urlGlobalAddress, "test-ip-range")
 
 var urlSvcNetworking = "services/servicenetworking.googleapis.com/connections"
-var getUrlSvcNw = fmt.Sprintf("%s/%s", urlSvcNetworking, client.PsaPeeringName)
-
-var getUrlCrmSvc = "projects/test-project"

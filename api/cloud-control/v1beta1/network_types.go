@@ -18,9 +18,11 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// +kubebuilder:default:=external
 // +kubebuilder:validation:Enum=external;kyma;cloud-resources
 type NetworkType string
 
@@ -46,14 +48,16 @@ type NetworkSpec struct {
 	// +kubebuilder:validation:Required
 	Network NetworkInfo `json:"network"`
 
-	// +kubebuilder:default=external
-	Type NetworkType `json:"type"`
+	// +optional
+	// +kubebuilder:default:=external
+	Type NetworkType `json:"type,omitempty"`
 }
 
 // NetworkInfo can be one of ManagedNetwork or NetworkReference
 //
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Network is immutable."
 type NetworkInfo struct {
 	// Managed described the parameters of the network that will be created and managed by Cloud Manager.
 	// The deletion of the Netowork resource will
@@ -70,8 +74,11 @@ type NetworkInfo struct {
 // ManagedNetwork defines parameters for VPC network creation. In Azure and AWS networks must have CIDR address
 // space specified, while for GCP it can be empty.
 type ManagedNetwork struct {
-	// Cidr address range. For AWS and Azure a valid CIDR must be specified. For GCP can be empty.
+	// Cidr address range. Not used for GCP. Defaults to default cloud manager cidr "10.250.4.0/22"
 	Cidr string `json:"cidr,omitempty"`
+
+	// Location of the network for providers where applicable. If empty the shoot location is used
+	Location string `json:"location,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1
@@ -90,29 +97,46 @@ type NetworkReference struct {
 	OpenStack *OpenStackNetworkReference `json:"openstack,omitempty"`
 }
 
+func (r *NetworkReference) Equals(other *NetworkReference) bool {
+	if r == nil || other == nil {
+		return false
+	}
+	return reflect.DeepEqual(r, other)
+}
+
 type GcpNetworkReference struct {
-	GcpProject  string `json:"gcpProject"`
+	GcpProject string `json:"gcpProject"`
+
 	NetworkName string `json:"networkName"`
 }
 
 type AzureNetworkReference struct {
-	TenantId       string `json:"tenantId,omitempty"`
+	TenantId string `json:"tenantId,omitempty"`
+
 	SubscriptionId string `json:"subscriptionId,omitempty"`
-	ResourceGroup  string `json:"resourceGroup"`
-	NetworkName    string `json:"networkName"`
+
+	ResourceGroup string `json:"resourceGroup"`
+
+	NetworkName string `json:"networkName"`
 }
 
 type AwsNetworkReference struct {
 	AwsAccountId string `json:"awsAccountId"`
-	Region       string `json:"region"`
-	VpcId        string `json:"vpcId"`
-	NetworkName  string `json:"networkName"`
+
+	Region string `json:"region"`
+
+	VpcId string `json:"vpcId"`
+
+	NetworkName string `json:"networkName"`
 }
 
 type OpenStackNetworkReference struct {
-	Domain      string `json:"domain"`
-	Project     string `json:"project"`
-	NetworkId   string `json:"networkId"`
+	Domain string `json:"domain"`
+
+	Project string `json:"project"`
+
+	NetworkId string `json:"networkId"`
+
 	NetworkName string `json:"networkName"`
 }
 
@@ -126,6 +150,9 @@ type NetworkStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	NetworkType NetworkType `json:"networkType,omitempty"`
 
 	// +optional
 	Network *NetworkReference `json:"network,omitempty"`
@@ -171,6 +198,14 @@ func (in *Network) CloneForPatchStatus() client.Object {
 		},
 		Status: in.Status,
 	}
+}
+
+func (in *Network) State() string {
+	return in.Status.State
+}
+
+func (in *Network) SetState(v string) {
+	in.Status.State = v
 }
 
 // +kubebuilder:object:root=true

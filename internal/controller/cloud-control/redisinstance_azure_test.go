@@ -1,7 +1,9 @@
 package cloudcontrol
 
 import (
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"k8s.io/utils/ptr"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -38,7 +40,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
-					WithKcpIpRangeSpecScope(scope.Name),
+					WithScope(scope.Name),
 				).
 				Should(Succeed())
 		})
@@ -54,22 +56,52 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
+		redisCapacity := 2
 
-		By("When RedisInstance is created", func() {
+		resourceGroupName := fmt.Sprintf("cm-redis-%s", name)
+		var redis *armredis.ResourceInfo
+		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
+
+		By("When KCP RedisInstance is created", func() {
 			Eventually(CreateRedisInstance).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					WithName(name),
 					WithRemoteRef("skr-redis-example"),
 					WithIpRange(kcpIpRangeName),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithRedisInstanceAzure(),
-					WithSKU(2),
+					WithSKU(redisCapacity),
 					WithKcpAzureRedisVersion("6.0"),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
 		By("Then Azure Redis is created", func() {
+			Eventually(func() error {
+				r, err := azureMock.GetRedisInstance(infra.Ctx(), resourceGroupName, name)
+				if err != nil {
+					return err
+				}
+				redis = r
+				return nil
+			}).Should(Succeed())
+		})
+
+		By("And Then Azure Redis has capacity as specified in KCP RedisInstance", func() {
+			actualCapacity := ptr.Deref(redis.Properties.SKU.Capacity, int32(0))
+			Expect(actualCapacity).To(Equal(int32(redisCapacity)))
+		})
+
+		By("And Then Azure Redis has .... ", func() {
+			// TODO do other checks on Azure Redis to check if reconciler created it as specified in the KCP resource
+		})
+
+		By("When Azure Redis state is Succeeded", func() {
+			err := azureMock.AzureSetRedisInstanceState(infra.Ctx(), resourceGroupName, name, armredis.ProvisioningStateSucceeded)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		By("Then KCP RedisInstance has status.id", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
@@ -77,7 +109,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "expected RedisInstance to get status.id")
 		})
 
-		By("Then RedisInstance has Ready condition", func() {
+		By("And Then KCP RedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
@@ -86,28 +118,55 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "expected RedisInstance to has Ready state, but it didn't")
 		})
 
-		By("And Then RedisInstance has .status.primaryEndpoint set", func() {
-			Expect(len(redisInstance.Status.PrimaryEndpoint) > 0).To(Equal(true))
+		By("And Then KCP RedisInstance has status state Ready", func() {
+			Expect(redisInstance.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
 		})
-		By("And Then RedisInstance has .status.authString set", func() {
-			Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
+
+		By("And Then KCP RedisInstance has .status.primaryEndpoint set", func() {
+			expected := fmt.Sprintf(
+				"%s:%d",
+				ptr.Deref(redis.Properties.HostName, ""),
+				ptr.Deref(redis.Properties.Port, 0),
+			)
+			Expect(redisInstance.Status.PrimaryEndpoint).To(Equal(expected))
+		})
+
+		By("And Then KCP RedisInstance has .status.authString set", func() {
+			keys, err := azureMock.GetRedisInstanceAccessKeys(infra.Ctx(), resourceGroupName, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(keys).To(HaveLen(2))
+			Expect(redisInstance.Status.AuthString).To(Equal(keys[0]))
 		})
 
 		// DELETE
 
-		By("When RedisInstance is deleted", func() {
+		By("When KCP RedisInstance is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
 				Should(Succeed(), "failed deleting RedisInstance")
 		})
 
-		By("And When Azure Redis state is deleted", func() {
-			rgName := azureUtil.GetResourceGroupName("redis", redisInstance.Name)
-			infra.AzureMock().DeleteRedisCacheByResourceGroupName(rgName)
+		By("Then Azure Redis is in Deleting state", func() {
+			Eventually(func() error {
+				r, err := azureMock.GetRedisInstance(infra.Ctx(), resourceGroupName, name)
+				if err != nil {
+					return err
+				}
+				if ptr.Deref(r.Properties.ProvisioningState, "") != armredis.ProvisioningStateDeleting {
+					return fmt.Errorf("expected Azure Redis to be in Deleting state, but it was: %s", ptr.Deref(r.Properties.ProvisioningState, ""))
+				}
+				redis = r
+				return nil
+			})
 		})
 
-		By("Then RedisInstance does not exist", func() {
-			Eventually(IsDeleted, 5*time.Second).
+		By("When Azure Redis is deleted", func() {
+			err := azureMock.AzureRemoveRedisInstance(infra.Ctx(), resourceGroupName, redisInstance.Name)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		By("Then KCP RedisInstance does not exist", func() {
+			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
 				Should(Succeed(), "expected RedisInstance not to exist (be deleted), but it still exists")
 		})

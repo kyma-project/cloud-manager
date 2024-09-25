@@ -51,8 +51,12 @@ spec:
                       If specified, then Reference must be nil.
                     properties:
                       cidr:
-                        description: Cidr address range. For AWS and Azure a valid
-                          CIDR must be specified. For GCP can be empty.
+                        description: Cidr address range. Not used for GCP. Defaults
+                          to default cloud manager cidr "10.250.4.0/22"
+                        type: string
+                      location:
+                        description: Location of the network for providers where applicable.
+                          If empty the shoot location is used
                         type: string
                     type: object
                   reference:
@@ -120,6 +124,9 @@ spec:
                         type: object
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Network is immutable.
+                  rule: (self == oldSelf)
               scope:
                 description: |-
                   Scope specifies to which SKR the Network resource belongs to. Managed networks are created in the cloud
@@ -130,6 +137,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object
@@ -143,7 +155,6 @@ spec:
             required:
             - network
             - scope
-            - type
             type: object
           status:
             description: NetworkStatus defines the observed state of Network
@@ -283,6 +294,12 @@ spec:
                     - project
                     type: object
                 type: object
+              networkType:
+                enum:
+                - external
+                - kyma
+                - cloud-resources
+                type: string
               state:
                 type: string
             type: object

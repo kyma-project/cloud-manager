@@ -10,21 +10,22 @@ import (
 	redispb "cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type CreateRedisInstanceOptions struct {
-	VPCNetworkFullName string
-	IPRangeName        string
-	MemorySizeGb       int32
-	Tier               string
-	RedisVersion       string
-	AuthEnabled        bool
-	TransitEncryption  *cloudcontrolv1beta1.TransitEncryptionGcp
-	RedisConfigs       map[string]string
-	MaintenancePolicy  *cloudcontrolv1beta1.MaintenancePolicyGcp
-	Labels             map[string]string
+	VPCNetworkFullName    string
+	IPRangeName           string
+	MemorySizeGb          int32
+	Tier                  string
+	RedisVersion          string
+	AuthEnabled           bool
+	TransitEncryptionMode string
+	RedisConfigs          map[string]string
+	MaintenancePolicy     *cloudcontrolv1beta1.MaintenancePolicyGcp
+	Labels                map[string]string
 }
 
 type MemorystoreClient interface {
@@ -94,7 +95,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			ReservedIpRange:       options.IPRangeName,
 			RedisConfigs:          options.RedisConfigs,
 			AuthEnabled:           options.AuthEnabled,
-			TransitEncryptionMode: ToTransitEncryptionMode(options.TransitEncryption),
+			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
 			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
 			Labels:                options.Labels,
 		},
@@ -112,6 +113,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 }
 
 func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
 	if err != nil {
 		return nil, nil, err
@@ -125,7 +127,9 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 
 	instanceResponse, err := redisClient.GetInstance(ctx, req)
 	if err != nil {
-		logger := composed.LoggerFromCtx(ctx)
+		if gcpmeta.IsNotFound(err) {
+			return nil, nil, nil
+		}
 		logger.Error(err, "Failed to get Redis instance")
 		return nil, nil, err
 	}
@@ -136,7 +140,6 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 
 	authResponse, err := redisClient.GetInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
 	if err != nil {
-		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "Failed to get Redis instance Auth")
 		return nil, nil, err
 	}
@@ -159,6 +162,10 @@ func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Cont
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
+		if gcpmeta.IsNotFound(err) {
+			logger.Error(err, "target redis instance for delete not found, continuing")
+			return nil
+		}
 		logger.Error(err, "Failed to delete Redis instance")
 
 		return err

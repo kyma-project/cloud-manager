@@ -79,7 +79,7 @@ type GcpNfsBackupScheduleSpec struct {
 
 // GcpNfsBackupScheduleStatus defines the observed state of GcpNfsBackupSchedule
 type GcpNfsBackupScheduleStatus struct {
-	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Done;Error
+	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Done;Error;Deleting
 	State string `json:"state,omitempty"`
 
 	// List of status conditions

@@ -165,11 +165,7 @@ func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResou
 }
 
 func (s *baseState) PatchObjStatus(ctx context.Context) error {
-	objToPatch := s.Obj()
-	if objClonable, ok := s.obj.(ObjWithCloneForPatchStatus); ok {
-		objToPatch = objClonable.CloneForPatchStatus()
-	}
-	return s.Cluster().K8sClient().Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+	return PatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
 }
 
 // PatchObjAddFinalizer uses controllerutil.AddFinalizer() to add finalizer, if it returns false
@@ -187,12 +183,32 @@ func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool
 	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
 }
 
+func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.Client) error {
+	objToPatch := obj
+	if objClonable, ok := obj.(ObjWithCloneForPatchStatus); ok {
+		objToPatch = objClonable.CloneForPatchStatus()
+	}
+	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+}
+
 func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
 	added := controllerutil.AddFinalizer(obj, f)
 	if !added {
 		return false, nil
 	}
 	p := []byte(fmt.Sprintf(`{"metadata": {"finalizers":["%s"]}}`, f))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
+func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Client) (bool, error) {
+	if obj.GetAnnotations() != nil && obj.GetAnnotations()[k] == v {
+		return false, nil
+	}
+	if obj.GetAnnotations() == nil {
+		obj.SetAnnotations(map[string]string{})
+	}
+	obj.GetAnnotations()[k] = v
+	p := []byte(fmt.Sprintf(`{"metadata": {"annotations":{"%s": "%s"}}}`, k, v))
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 

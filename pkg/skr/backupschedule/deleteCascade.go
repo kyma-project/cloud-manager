@@ -2,6 +2,7 @@ package backupschedule
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -27,9 +28,13 @@ func deleteCascade(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Cascade delete of created backups.")
+	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Cascade delete of created backups.")
 
 	for _, backup := range state.Backups {
+		if composed.IsMarkedForDeletion(backup) {
+			logger.WithValues("Backup", backup.GetName()).Info("Backup is already being deleted.")
+			continue
+		}
 		logger.WithValues("Backup", backup.GetName()).Info("Deleting backup object")
 		err := state.Cluster().K8sClient().Delete(ctx, backup)
 		if err != nil {

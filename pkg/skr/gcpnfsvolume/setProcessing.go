@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -17,7 +18,7 @@ func setProcessing(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsVolume :", nfsVolume.Name).Info("Checking States")
+	logger.WithValues("GcpNfsVolume", nfsVolume.Name).Info("Checking States")
 
 	//If state is not empty, continue
 	if nfsVolume.Status.State != "" {

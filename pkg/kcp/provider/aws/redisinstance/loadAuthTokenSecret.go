@@ -13,12 +13,6 @@ func loadAuthTokenSecret(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	redisInstance := state.ObjAsRedisInstance()
-
-	if !redisInstance.Spec.Instance.Aws.AuthEnabled {
-		return nil, nil
-	}
-
 	logger := composed.LoggerFromCtx(ctx)
 
 	authTokenValue, err := state.awsClient.GetAuthTokenSecretValue(ctx, GetAwsAuthTokenSecretName(state.Obj().GetName()))

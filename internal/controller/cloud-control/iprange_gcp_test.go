@@ -1,215 +1,238 @@
 package cloudcontrol
 
 import (
-	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
+	"strconv"
+	"strings"
 )
 
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
 
-	const (
-		kymaName = "a179cd2d-5cb6-42b0-86bc-bc8720bccbc8"
+	It("Scenario: KCP IpRange with specified CIDR is created and deleted", func() {
+		const (
+			kymaName    = "570c0d27-d67a-44cc-908a-2c151d50303e"
+			ipRangeName = "81dbff76-33ce-4a2b-be48-a48ea4f2a25b"
+		)
 
-		interval = time.Millisecond * 250
-	)
-	var (
-		timeout = time.Second * 20
-	)
-
-	if debugged.Debugged {
-		timeout = time.Minute * 20
-	}
-
-	It("Scenario: IpRange GCP Creation", func() {
-
-		// Tell Scope reconciler to ignore this kymaName
-		scope.Ignore.AddName(kymaName)
-
-		// Given Scope exists
-		Expect(
-			infra.GivenScopeGcpExists(kymaName),
-		).NotTo(HaveOccurred())
-		time.Sleep(time.Second)
-
-		// Load created scope
 		scope := &cloudcontrolv1beta1.Scope{}
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
-			exists = err == nil
-			return exists, client.IgnoreNotFound(err)
-		}, timeout, interval).
-			Should(BeTrue(), "expected Scope to get created")
+		ipRange := &cloudcontrolv1beta1.IpRange{}
 
-		// When IpRange is created
-		iprange := &cloudcontrolv1beta1.IpRange{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "gcp-ip-range",
-			},
-			Spec: cloudcontrolv1beta1.IpRangeSpec{
-				RemoteRef: cloudcontrolv1beta1.RemoteRef{
-					Namespace: "skr-namespace",
-					Name:      "skr-ip-range",
-				},
-				Scope: cloudcontrolv1beta1.ScopeRef{
-					Name: kymaName,
-				},
-				Cidr: "10.20.30.0/24",
-			},
-		}
-		Expect(
-			infra.KCP().Client().Create(infra.Ctx(), iprange),
-		).NotTo(HaveOccurred())
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
 
-		// Then IpRange will get Ready condition
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(iprange), iprange)
-			if err != nil {
-				return false, err
-			}
-			exists = meta.IsStatusConditionTrue(iprange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-			return exists, nil
-		}, timeout, interval).
-			Should(BeTrue(), "expected IpRange with Ready condition")
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
 
-		Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr))
-		Expect(iprange.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
 
-	})
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithGcpRef(scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
 
-	It("Scenario: IpRange GCP Deletion", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
 
-		// Tell Scope reconciler to ignore this kymaName
-		scope.Ignore.AddName(kymaName)
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
 
-		// Given Scope exists
-		Expect(
-			infra.GivenScopeGcpExists(kymaName),
-		).NotTo(HaveOccurred())
-		time.Sleep(time.Second)
+		By("When KCP IpRange is created", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
+					WithName(ipRangeName),
+					WithKcpIpRangeRemoteRef(ipRangeName),
+					WithKcpIpRangeSpecCidr("10.20.30.0/24"),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
 
-		// Load created scope
-		scope := &cloudcontrolv1beta1.Scope{}
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
-			exists = err == nil
-			return exists, client.IgnoreNotFound(err)
-		}, timeout, interval).
-			Should(BeTrue(), "expected Scope to get created")
+		By("Then KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
 
-		// Check IpRange exists
-		iprange := &cloudcontrolv1beta1.IpRange{}
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey("gcp-ip-range"), iprange)
-			exists = err == nil
-			return exists, client.IgnoreNotFound(err)
-		}, timeout, interval).Should(BeTrue(), "expected IpRange to alreay exist")
-		// When IpRange is created
-		Eventually(CreateKcpIpRange).
-			WithArguments(
-				infra.Ctx(), infra.KCP().Client(), iprange,
-				WithName("gcp-ip-range"),
-				WithNamespace(infra.KCP().Namespace()),
-				WithKcpIpRangeRemoteRef("skr-ip-range"),
-				WithKcpIpRangeSpecScope(kymaName),
-				WithKcpIpRangeSpecCidr("10.20.30.0/24"),
-			).
-			Should(Succeed())
+		By("And Then KCP IpRange has status cidr equals to spec cidr", func() {
+			Expect(ipRange.Status.Cidr).To(Equal(ipRange.Spec.Cidr))
+		})
 
-		// Then IpRange will get Ready condition
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(iprange), iprange)
-			if err != nil {
-				return false, err
-			}
-			exists = meta.IsStatusConditionTrue(iprange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-			return exists, nil
-		}, timeout, interval).
-			Should(BeTrue(), "expected IpRange with Ready condition")
+		By("And Then GCP global address is created", func() {
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(gcpGlobalAddress).NotTo(BeNil())
+			chunks := strings.Split(ipRange.Status.Cidr, "/")
+			expectedAddress := chunks[0]
+			expectedPrefixLen, err := strconv.ParseInt(chunks[1], 10, 32)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(gcpGlobalAddress.Address).To(Equal(expectedAddress))
+			Expect(gcpGlobalAddress.PrefixLength).To(Equal(expectedPrefixLen))
+		})
 
-		Expect(iprange.Status.Cidr).To(Equal(iprange.Spec.Cidr))
-		Expect(iprange.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+		By("And Then GCP PSA is created", func() {
+			list, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(list).To(HaveLen(1))
+			Expect(list[0].Service).To(Equal(gcpclient.ServiceNetworkingServicePath))
+			Expect(list[0].ReservedPeeringRanges).To(HaveLen(1))
+			Expect(list[0].ReservedPeeringRanges[0]).To(Equal("cm-" + ipRange.Name))
+		})
+
+		// Delete
 
 		By("When KCP IpRange is deleted", func() {
 			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
 				Should(Succeed(), "failed deleting KCP IpRange")
 		})
 
 		By("Then KCP IpRange does not exist", func() {
 			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
 				Should(Succeed(), "expected KCP IpRange to be deleted, but it exists")
+		})
+
+		By("And Then GCP PSA does not exist", func() {
+			list, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(list).To(HaveLen(0))
+		})
+
+		By("And Then GCP global address does not exist", func() {
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			Expect(gcpGlobalAddress).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
 	})
 
-	It("Scenario: IpRange CIDR is automatically allocated", func() {
-		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			Skip("IpRange CIDR auto allocation is disabled")
-		}
-		// Tell Scope reconciler to ignore this kymaName
-		scope.Ignore.AddName(kymaName)
+	It("Scenario: KCP IpRange without CIDR is created and deleted", func() {
+		const (
+			kymaName    = "89668d12-0132-4748-b175-fe66dd1c4d93"
+			ipRangeName = "6a9123da-dacb-4803-abf9-6d238e903d40"
+		)
 
-		// Given Scope exists
-		Expect(
-			infra.GivenScopeGcpExists(kymaName),
-		).NotTo(HaveOccurred())
-		time.Sleep(time.Second)
-
-		// Load created scope
 		scope := &cloudcontrolv1beta1.Scope{}
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
-			exists = err == nil
-			return exists, client.IgnoreNotFound(err)
-		}, timeout, interval).
-			Should(BeTrue(), "expected Scope to get created")
+		ipRange := &cloudcontrolv1beta1.IpRange{}
 
-		// When IpRange is created without cidr
-		iprange := &cloudcontrolv1beta1.IpRange{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "gcp-ip-range",
-			},
-			Spec: cloudcontrolv1beta1.IpRangeSpec{
-				RemoteRef: cloudcontrolv1beta1.RemoteRef{
-					Namespace: "skr-namespace",
-					Name:      "skr-ip-range",
-				},
-				Scope: cloudcontrolv1beta1.ScopeRef{
-					Name: kymaName,
-				},
-				Cidr: "",
-			},
-		}
-		Expect(
-			infra.KCP().Client().Create(infra.Ctx(), iprange),
-		).NotTo(HaveOccurred())
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
 
-		// Then IpRange will get Ready condition
-		Eventually(func() (exists bool, err error) {
-			err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(iprange), iprange)
-			if err != nil {
-				return false, err
-			}
-			exists = meta.IsStatusConditionTrue(iprange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-			return exists, nil
-		}, timeout, interval).
-			Should(BeTrue(), "expected IpRange with Ready condition")
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
 
-		Expect(len(iprange.Status.Cidr)).To(BeNumerically(">", 0))
-		Expect(iprange.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithGcpRef(scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("When KCP IpRange is created", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
+					WithName(ipRangeName),
+					WithKcpIpRangeRemoteRef(ipRangeName),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then KCP IpRange has status cidr", func() {
+			Expect(ipRange.Status.Cidr).To(Equal(common.DefaultCloudManagerCidr))
+		})
+
+		By("And Then GCP global address is created", func() {
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(gcpGlobalAddress).NotTo(BeNil())
+			chunks := strings.Split(ipRange.Status.Cidr, "/")
+			expectedAddress := chunks[0]
+			expectedPrefixLen, err := strconv.ParseInt(chunks[1], 10, 32)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(gcpGlobalAddress.Address).To(Equal(expectedAddress))
+			Expect(gcpGlobalAddress.PrefixLength).To(Equal(expectedPrefixLen))
+		})
+
+		By("And Then GCP PSA is created", func() {
+			list, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(list).To(HaveLen(1))
+			Expect(list[0].Service).To(Equal(gcpclient.ServiceNetworkingServicePath))
+			Expect(list[0].ReservedPeeringRanges).To(HaveLen(1))
+			Expect(list[0].ReservedPeeringRanges[0]).To(Equal("cm-" + ipRange.Name))
+		})
+
+		// Delete
+
+		By("When KCP IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
+				Should(Succeed(), "failed deleting KCP IpRange")
+		})
+
+		By("Then KCP IpRange does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
+				Should(Succeed(), "expected KCP IpRange to be deleted, but it exists")
+		})
+
+		By("And Then GCP PSA does not exist", func() {
+			list, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(list).To(HaveLen(0))
+		})
+
+		By("And Then GCP global address does not exist", func() {
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			Expect(gcpGlobalAddress).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
 
 	})
 

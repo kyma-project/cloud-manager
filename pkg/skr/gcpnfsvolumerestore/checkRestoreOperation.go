@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudControl "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func checkRestoreOperation(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,8 +20,8 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	opName := restore.Status.OpIdentifier
-	logger.WithValues("Nfs Restore source:", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
-		"destination:", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Checking GCP Restore Operation Status")
+	logger.WithValues("nfsRestoreSource", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
+		"destination", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Checking GCP Restore Operation Status")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName == "" {
@@ -53,7 +55,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
 
-		return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If not able to find the operation or it is completed, reset OpIdentifier.
@@ -84,7 +86,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			}).
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 				return nil, nil
-			}). //proceed in case deletion is in progress
+			}). //proceed to release the lease
 			SuccessLogMsg(fmt.Sprintf("Filestore Operation error : %s", op.Error.Message)).
 			Run(ctx, state)
 	}
@@ -100,7 +102,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 		}).
 		OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
 			return nil, nil
-		}). //proceed in case deletion is in progress
+		}). //proceed to release the lease
 		SuccessLogMsg("GcpNfsVolumeRestore status got updated with Ready condition and Done state.").
 		Run(ctx, state)
 }

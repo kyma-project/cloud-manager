@@ -2,9 +2,10 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"strings"
 )
 
 func setIdempotencyToken(ctx context.Context, st composed.State) (error, context.Context) {
@@ -22,7 +23,7 @@ func setIdempotencyToken(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	logger.WithValues("AwsBackup :", backup.Name).Info("Setting the Idempotency Token")
+	logger.WithValues("AwsBackup", backup.Name).Info("Setting the Idempotency Token")
 	backup.Status.IdempotencyToken = uuid.NewString()
 	return composed.UpdateStatus(state.ObjAsAwsNfsVolumeBackup()).
 		ErrorLogMessage("Failed to set Idempotency Token").

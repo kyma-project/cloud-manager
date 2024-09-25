@@ -48,9 +48,6 @@ spec:
                       authEnabled:
                         default: false
                         type: boolean
-                        x-kubernetes-validations:
-                        - message: AuthEnabled is immutable.
-                          rule: (self == oldSelf)
                       autoMinorVersionUpgrade:
                         default: false
                         type: boolean
@@ -84,6 +81,11 @@ spec:
                     required:
                     - cacheNodeType
                     type: object
+                    x-kubernetes-validations:
+                    - message: authEnabled can only be true if TransitEncryptionEnabled
+                        is also true
+                      rule: (self.authEnabled == false || self.transitEncryptionEnabled
+                        == true)
                   azure:
                     properties:
                       enableNonSslPort:
@@ -129,7 +131,7 @@ spec:
                   gcp:
                     properties:
                       authEnabled:
-                        default: true
+                        default: false
                         description: Indicates whether OSS Redis AUTH is enabled for
                           the instance.
                         type: boolean
@@ -212,22 +214,16 @@ spec:
                         x-kubernetes-validations:
                         - message: Tier is immutable.
                           rule: (self == oldSelf)
-                      transitEncryption:
-                        description: |-
-                          The TLS mode of the Redis instance.
-                          If not provided, TLS is disabled for the instance.
-                        properties:
-                          serverAuthentication:
-                            default: false
-                            description: Client to Server traffic encryption enabled
-                              with server authentication.
-                            type: boolean
-                            x-kubernetes-validations:
-                            - message: ServerAuthentication is immutable.
-                              rule: (self == oldSelf)
-                        type: object
+                      transitEncryptionMode:
+                        default: DISABLED
+                        description: The TLS mode of the Redis instance. If not provided,
+                          TLS is disabled for the instance.
+                        enum:
+                        - DISABLED
+                        - SERVER_AUTHENTICATION
+                        type: string
                         x-kubernetes-validations:
-                        - message: TransitEncryption is immutable.
+                        - message: TransitEncryptionMode is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb
@@ -256,6 +252,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object

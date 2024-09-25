@@ -4,11 +4,26 @@ import (
 	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
+
+func WithScope(scopeName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(focal.CommonObject); ok {
+				if x.ScopeRef().Name == "" {
+					x.SetScopeRef(cloudcontrolv1beta1.ScopeRef{Name: scopeName})
+				}
+			} else {
+				panic(fmt.Sprintf("type %T does not implement focal.CommonObject", obj))
+			}
+		},
+	}
+}
 
 func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
 	if scope == nil {
@@ -88,13 +103,33 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
 		KymaName:  scope.Name,
 		ShootName: scope.Name,
-		Region:    "eu-west-1",
+		Region:    "westeurope",
 		Provider:  cloudcontrolv1beta1.ProviderAzure,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			Azure: &cloudcontrolv1beta1.AzureScope{
 				TenantId:       "fdd97055-c316-462f-8769-f99b670c2c4d",
 				SubscriptionId: "2bfba5a4-c5d1-4b03-a7db-4ead64232fd6",
 				VpcNetwork:     fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+				Network: cloudcontrolv1beta1.AzureNetwork{
+					Cidr: "10.250.0.0/22",
+					Zones: []cloudcontrolv1beta1.AzureNetworkZone{
+						{
+							Name: "1",
+							Cidr: "10.250.0.0/25",
+						},
+						{
+							Name: "2",
+							Cidr: "10.250.0.128/25",
+						},
+						{
+							Name: "3",
+							Cidr: "10.250.1.0/25",
+						},
+					},
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+				},
 			},
 		},
 	}

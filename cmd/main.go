@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	"os"
 
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
@@ -41,6 +42,7 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -52,6 +54,7 @@ import (
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -270,6 +273,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
 		mgr,
 		awsiprangeclient.NewClientProvider(),
+		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
 		env,
@@ -289,6 +293,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupNetworkReconciler(
 		mgr,
+		azurenetworkclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
 		os.Exit(1)
@@ -356,6 +361,7 @@ func loadConfig() config.Config {
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)
+	gcpclient.InitConfig(cfg)
 
 	cfg.Read()
 

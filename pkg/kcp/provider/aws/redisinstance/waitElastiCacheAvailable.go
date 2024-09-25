@@ -16,7 +16,7 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		errorMsg := "Error: elkasti cache cluster instance is not loaded"
+		errorMsg := "Error: elasti cache cluster instance is not loaded"
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{

@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +16,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Updating State Info")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Updating State Info")
 
 	//Compute State Info
 	//Check and see whether the desiredState == actualState
@@ -45,7 +46,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			state.curState = v1beta1.ReadyState
 		} else {
 			//If the filestore exists but is not READY or in ERROR, it is in a transient state.
-			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), ctx
+			return composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), ctx
 		}
 	}
 
@@ -77,7 +78,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 					Reason:  v1beta1.ReasonGcpError,
 					Message: state.fsInstance.StatusMessage,
 				}).
-				SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime)).
 				Run(ctx, state)
 		}
 		return composed.UpdateStatus(nfsInstance).

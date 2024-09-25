@@ -40,7 +40,7 @@ func createScopeAws(ctx context.Context, st composed.State) (error, context.Cont
 	infra := &awsgardener.InfrastructureConfig{}
 	err = json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error unmarshalling InfrastructureConfig", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(err, "Error unmarshalling AWS InfrastructureConfig", composed.StopAndForget, ctx)
 	}
 
 	scope := &cloudcontrolv1beta1.Scope{

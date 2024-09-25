@@ -2,8 +2,8 @@ package scope
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -11,14 +11,13 @@ import (
 func createKymaNetworkReference(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	kymaNet := state.allNetworks.FindFirstByType(cloudcontrolv1beta1.NetworkTypeKyma)
-	if kymaNet != nil {
+	if state.kcpNetworkKyma != nil {
 		return nil, nil
 	}
 
-	kymaNet = &cloudcontrolv1beta1.Network{
+	kymaNet := &cloudcontrolv1beta1.Network{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-kyma", state.ObjAsScope().Name),
+			Name:      common.KcpNetworkKymaCommonName(state.ObjAsScope().Name),
 			Namespace: state.ObjAsScope().Namespace,
 		},
 		Spec: cloudcontrolv1beta1.NetworkSpec{

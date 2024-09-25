@@ -19,9 +19,11 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
+// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type AwsRedisInstanceSpec struct {
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
@@ -48,7 +50,6 @@ type AwsRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
 	AuthEnabled bool `json:"authEnabled"`
 
 	// Specifies the weekly time range during which maintenance on the cluster is
@@ -118,6 +119,20 @@ func (in *AwsRedisInstance) State() string {
 
 func (in *AwsRedisInstance) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *AwsRedisInstance) CloneForPatchStatus() client.Object {
+	return &AwsRedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AwsRedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true

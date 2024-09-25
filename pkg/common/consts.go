@@ -8,3 +8,7 @@ const (
 )
 
 const FieldOwner = "cloud-manager"
+
+const (
+	DefaultCloudManagerCidr = "10.250.4.0/22"
+)

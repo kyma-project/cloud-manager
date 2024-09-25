@@ -3,10 +3,11 @@ package backupschedule
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,7 +21,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info("Evaluating next run time")
+	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Evaluating next run time")
 
 	if len(schedule.GetNextRunTimes()) == 0 {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
@@ -56,7 +57,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	//If it still not time to run, reconcile with delay
 	if nextRunTime.After(now) {
 		timeLeft := nextRunTime.Unix() - now.Unix()
-		logger.WithValues("GcpNfsBackupSchedule :", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
+		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
 		return composed.StopWithRequeueDelay(time.Duration(timeLeft) * time.Second), nil
 	}
 

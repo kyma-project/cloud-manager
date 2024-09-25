@@ -21,6 +21,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					OpenStack: &cloudcontrolv1beta1.NfsInstanceOpenStack{
 						SizeGb: 10,
@@ -28,15 +29,11 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance CCEE without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance CCEE with IpRange can not be created", func() {
@@ -48,6 +45,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
@@ -58,17 +56,12 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance CCEE with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	// AWS ============================================
@@ -82,21 +75,18 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					Aws: &cloudcontrolv1beta1.NfsInstanceAws{},
 				},
 			},
 		}
-		By("When KCP NfsInstance AWS without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance AWS with IpRange can be created", func() {
@@ -108,6 +98,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
@@ -116,16 +107,11 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance AWS with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	// GCP ============================================
@@ -139,6 +125,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 					Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
 						Location:      "us-east-1",
@@ -149,16 +136,12 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance GCP without IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it fails", func() {
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
-		})
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
 	It("Scenario: KCP NfsInstance GCP with IpRange can be created", func() {
@@ -170,6 +153,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				Namespace: infra.KCP().Namespace(),
 			},
 			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
+				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: "foo",
 				},
@@ -183,15 +167,10 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 				},
 			},
 		}
-		By("When KCP NfsInstance GCP with IpRange is created", func() {
-			err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		})
-		By("Then it succeeds", func() {
-			Expect(err).NotTo(HaveOccurred())
-		})
 
-		By("//cleanup", func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-		})
+		err = infra.KCP().Client().Create(infra.Ctx(), obj)
+		Expect(err).NotTo(HaveOccurred())
+
+		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 })

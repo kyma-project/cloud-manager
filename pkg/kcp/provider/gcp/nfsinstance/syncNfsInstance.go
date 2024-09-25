@@ -3,9 +3,11 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -17,7 +19,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	nfsInstance := state.ObjAsNfsInstance()
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Saving GCP Filestore")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Saving GCP Filestore")
 
 	//Get GCP details.
 	gcpScope := state.Scope().Spec.Scope.Gcp
@@ -49,7 +51,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error updating Filestore object in GCP :%s", err)).
 			Run(ctx, state)
 	}
@@ -60,7 +62,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 		}
 		nfsInstance.Status.OpIdentifier = operation.Name
 		return composed.UpdateStatus(nfsInstance).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
 	return nil, nil

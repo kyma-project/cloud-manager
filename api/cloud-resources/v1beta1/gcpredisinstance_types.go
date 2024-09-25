@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type AuthSecretSpec struct {
@@ -39,14 +40,6 @@ type TimeOfDay struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=59
 	Minutes int32 `json:"minutes"`
-}
-
-type TransitEncryption struct {
-	// Client to Server traffic encryption enabled with server authentication.
-	// +optional
-	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
-	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
 }
 
 type DayOfWeekPolicy struct {
@@ -90,13 +83,15 @@ type GcpRedisInstanceSpec struct {
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
-	// The TLS mode of the Redis instance.
-	// If not provided, TLS is disabled for the instance.
+
+	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
 	// +optional
+	// +kubebuilder:default=DISABLED
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	TransitEncryption *TransitEncryption `json:"transitEncryption,omitempty"`
+	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
+	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
@@ -167,6 +162,20 @@ func (in *GcpRedisInstance) State() string {
 
 func (in *GcpRedisInstance) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *GcpRedisInstance) CloneForPatchStatus() client.Object {
+	return &GcpRedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GcpRedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true

@@ -95,10 +95,10 @@ func (cs *CaseStruct) Action(ctx context.Context, state State) (error, context.C
 	return cs.A(ctx, state)
 }
 
-func If(condition Predicate, action Action) Action {
+func If(condition Predicate, actions ...Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		if condition(ctx, state) {
-			return action(ctx, state)
+			return ComposeActions("if", actions...)(ctx, state)
 		}
 		return nil, nil
 	}

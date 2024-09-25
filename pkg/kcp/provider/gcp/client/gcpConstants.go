@@ -2,9 +2,8 @@ package client
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/config"
 	"time"
-
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
@@ -22,22 +21,50 @@ const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
 const GcpApiTimeout = time.Second * 8
 
-type GcpConfig struct {
+type GcpConfigStruct struct {
 	GcpRetryWaitTime     time.Duration
 	GcpOperationWaitTime time.Duration
 	GcpApiTimeout        time.Duration
+
+	//Config from files...
+	RetryWaitTime     string `yaml:"retryWaitTime,omitempty" json:"retryWaitTime,omitempty"`
+	OperationWaitTime string `yaml:"operationWaitTime,omitempty" json:"operationWaitTime,omitempty"`
+	ApiTimeout        string `yaml:"apiTimeout,omitempty" json:"apiTimeout,omitempty"`
 }
 
-func GetGcpConfig(env abstractions.Environment) *GcpConfig {
-	return &GcpConfig{
-		GcpRetryWaitTime:     GetConfigDuration(env, "GCP_RETRY_WAIT_DURATION", GcpRetryWaitTime),
-		GcpOperationWaitTime: GetConfigDuration(env, "GCP_OPERATION_WAIT_DURATION", GcpOperationWaitTime),
-		GcpApiTimeout:        GetConfigDuration(env, "GCP_API_TIMEOUT_DURATION", GcpApiTimeout),
-	}
+func (c *GcpConfigStruct) AfterConfigLoaded() {
+	c.GcpRetryWaitTime = GetDuration(c.RetryWaitTime, GcpRetryWaitTime)
+	c.GcpOperationWaitTime = GetDuration(c.OperationWaitTime, GcpOperationWaitTime)
+	c.GcpApiTimeout = GetDuration(c.ApiTimeout, GcpApiTimeout)
 }
 
-func GetConfigDuration(env abstractions.Environment, key string, defaultValue time.Duration) time.Duration {
-	duration, err := time.ParseDuration(env.Get(key))
+func InitConfig(cfg config.Config) {
+	cfg.Path(
+		"gcpConfig",
+		config.Path(
+			"retryWaitTime",
+			config.DefaultScalar("5s"),
+			config.SourceEnv("GCP_RETRY_WAIT_DURATION"),
+		),
+		config.Path(
+			"operationWaitTime",
+			config.DefaultScalar("5s"),
+			config.SourceEnv("GCP_OPERATION_WAIT_DURATION"),
+		),
+		config.Path(
+			"apiTimeout",
+			config.DefaultScalar("8s"),
+			config.SourceEnv("GCP_API_TIMEOUT_DURATION"),
+		),
+		config.SourceFile("gcpclient.GcpConfig.yaml"),
+		config.Bind(GcpConfig),
+	)
+}
+
+var GcpConfig = &GcpConfigStruct{}
+
+func GetDuration(value string, defaultValue time.Duration) time.Duration {
+	duration, err := time.ParseDuration(value)
 	if err != nil {
 		return defaultValue
 	}

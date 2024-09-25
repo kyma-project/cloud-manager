@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/onsi/ginkgo/v2"
 	"io"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,19 +25,19 @@ type infra struct {
 	InfraEnv
 	InfraDSL
 
-	clusters map[ClusterType]*clusterInfo
+	clusters map[infraTypes.ClusterType]*clusterInfo
 }
 
 func (i *infra) KCP() ClusterInfo {
-	return i.clusters[ClusterTypeKcp]
+	return i.clusters[infraTypes.ClusterTypeKcp]
 }
 
 func (i *infra) SKR() ClusterInfo {
-	return i.clusters[ClusterTypeSkr]
+	return i.clusters[infraTypes.ClusterTypeSkr]
 }
 
 func (i *infra) Garden() ClusterInfo {
-	return i.clusters[ClusterTypeGarden]
+	return i.clusters[infraTypes.ClusterTypeGarden]
 }
 
 func (i *infra) Stop() error {

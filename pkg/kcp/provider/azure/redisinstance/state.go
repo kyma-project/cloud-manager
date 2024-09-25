@@ -2,8 +2,8 @@ package redisinstance
 
 import (
 	"context"
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	armResources "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/go-logr/logr"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -15,14 +15,15 @@ type State struct {
 	redisinstancetypes.State
 
 	client         azureredisclient.Client
-	provider       azureclient.SkrClientProvider[azureredisclient.Client]
+	provider       azureclient.ClientProvider[azureredisclient.Client]
 	clientId       string
 	clientSecret   string
 	subscriptionId string
 	tenantId       string
 
-	azureRedisInstance *armRedis.ResourceInfo
-	resourceGroup      *armResources.ResourceGroup
+	resourceGroupName string
+
+	azureRedisInstance *armredis.ResourceInfo
 }
 
 type StateFactory interface {
@@ -30,10 +31,10 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	skrProvider azureclient.SkrClientProvider[azureredisclient.Client]
+	skrProvider azureclient.ClientProvider[azureredisclient.Client]
 }
 
-func NewStateFactory(skrProvider azureclient.SkrClientProvider[azureredisclient.Client]) StateFactory {
+func NewStateFactory(skrProvider azureclient.ClientProvider[azureredisclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
@@ -57,7 +58,7 @@ func (f *stateFactory) NewState(ctx context.Context, redisinstanceState redisins
 
 func newState(state redisinstancetypes.State,
 	client azureredisclient.Client,
-	provider azureclient.SkrClientProvider[azureredisclient.Client],
+	provider azureclient.ClientProvider[azureredisclient.Client],
 	clientId string,
 	clientSecret string,
 	subscriptionId string,
@@ -70,5 +71,7 @@ func newState(state redisinstancetypes.State,
 		clientSecret:   clientSecret,
 		subscriptionId: subscriptionId,
 		tenantId:       tenantId,
+
+		resourceGroupName: fmt.Sprintf("cm-redis-%s", state.Obj().GetName()), // TODO this should be specified somehow
 	}
 }

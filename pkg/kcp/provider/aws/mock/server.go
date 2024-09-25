@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -28,12 +29,16 @@ func New() Server {
 			subnetGroupMutex:    &sync.Mutex{},
 			parameterGroupMutex: &sync.Mutex{},
 			secretStoreMutex:    &sync.Mutex{},
+			userGroupsMutex:     &sync.Mutex{},
+			securityGroupsMutex: &sync.Mutex{},
 			replicationGroups:   map[string]*elasticacheTypes.ReplicationGroup{},
 			cacheClusters:       map[string]*elasticacheTypes.CacheCluster{},
 			subnetGroups:        map[string]*elasticacheTypes.CacheSubnetGroup{},
 			parameterGroups:     map[string]*elasticacheTypes.CacheParameterGroup{},
 			parameters:          map[string]map[string]elasticacheTypes.Parameter{},
 			secretStore:         map[string]*secretsmanager.GetSecretValueOutput{},
+			userGroups:          map[string]*elasticacheTypes.UserGroup{},
+			securityGroups:      []*ec2Types.SecurityGroup{},
 		},
 	}
 }

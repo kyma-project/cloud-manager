@@ -1,25 +1,24 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsredisinstance"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpredisinstance"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
@@ -33,17 +32,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 			Should(Succeed())
 	})
-
-	// since Describe() calls are random this might execute before features are initialized from static test config
-	// so this must be a function that will be called during spec execution, which is run
-	// after features are initialized
-
-	shouldSkipForIpRangeAutomaticCidrAllocation := func() string {
-		if feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			return ""
-		}
-		return "IpRangeAutomaticCidrAllocation is disabled"
-	}
 
 	runSkrIpRangeCreateScenario := func(shouldSkip func() string, titleSuffix, skrIpRangeName string, cidrAction ObjAction) {
 
@@ -175,7 +163,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
 	)
 	runSkrIpRangeCreateScenario(
-		shouldSkipForIpRangeAutomaticCidrAllocation,
+		nil,
 		"with empty CIDR",
 		"a7c8cbf9-56f4-4ef2-bc41-98f5c6133ab0",
 		nil,
@@ -289,7 +277,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		WithSkrIpRangeSpecCidr(addressSpace.MustAllocate(24)),
 	)
 	runSkrIpRangeDeleteScenario(
-		shouldSkipForIpRangeAutomaticCidrAllocation,
+		nil,
 		"with empty CIDR",
 		"a05b3025-0874-455a-a852-80bf4f706192",
 		nil,
@@ -864,10 +852,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 	})
 
 	It("Scenario: SKR IpRange can be created with empty CIDR", func() {
-		if !feature.IpRangeAutomaticCidrAllocation.Value(context.Background()) {
-			Skip("IpRangeAutomaticCidrAllocation is disabled")
-		}
-
 		skrIpRangeName := "db19ab47-8361-448d-a841-227b686982e8"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
@@ -1091,6 +1075,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					WithGcpRedisInstanceMemorySizeGb(5),
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceTransitEncryptionMode("DISABLED"),
 				).
 				Should(Succeed(), "failed creating GcpRedisInstance")
 

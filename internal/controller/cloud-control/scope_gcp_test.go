@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var _ = Describe("Feature: KCP Scope for GCP", func() {
+var _ = Describe("Feature: KCP Scope GCP", func() {
 
 	const (
 		kymaName = "51485d74-0e28-44f9-ae80-3088128d8747"

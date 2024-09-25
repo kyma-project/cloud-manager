@@ -15,9 +15,12 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
+    - jsonPath: .spec.scope.name
+      name: Scope
+      type: string
+    - jsonPath: .spec.network.name
+      name: Network
+      type: string
     - jsonPath: .status.cidr
       name: Cidr
       type: string
@@ -103,6 +106,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object

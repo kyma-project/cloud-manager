@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -30,7 +31,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 		return nil, nil
 	}
 
-	logger.WithValues("ipRange :", ipRange.Name).Info("Loading IpRanges List")
+	logger.WithValues("ipRange", ipRange.Name).Info("Loading IpRanges List")
 
 	//Get GCP scope specific values
 	gcpScope := state.Scope().Spec.Scope.Gcp
@@ -39,7 +40,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 
 	list, err := state.computeClient.ListGlobalAddresses(ctx, project, vpc)
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

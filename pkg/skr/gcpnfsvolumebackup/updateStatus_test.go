@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -44,7 +45,7 @@ func (suite *updateStatusSuite) TestDeletingBackupExists() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	suite.Equal(err, composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime))
+	suite.Equal(err, composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime))
 	suite.Nil(_ctx)
 }
 
@@ -165,7 +166,7 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupNotReady() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), err)
+	suite.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 	suite.Nil(_ctx)
 }
 

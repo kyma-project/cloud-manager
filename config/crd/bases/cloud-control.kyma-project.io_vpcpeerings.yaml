@@ -14,7 +14,14 @@ spec:
     singular: vpcpeering
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.scope.name
+      name: Scope
+      type: string
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: VpcPeering is the Schema for the vpcpeerings API
@@ -39,6 +46,47 @@ spec:
           spec:
             description: VpcPeeringSpec defines the desired state of VpcPeering
             properties:
+              details:
+                properties:
+                  importCustomRoutes:
+                    type: boolean
+                  localNetwork:
+                    description: ObjectRef references a kubernetes object
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Local network name is required.
+                      rule: (self.name != "")
+                  localPeeringName:
+                    type: string
+                  peeringName:
+                    type: string
+                  remoteNetwork:
+                    description: ObjectRef references a kubernetes object
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Remote network name is required.
+                      rule: (self.name != "")
+                required:
+                - localNetwork
+                - remoteNetwork
+                type: object
+                x-kubernetes-validations:
+                - message: Peering details are immutable.
+                  rule: (self == oldSelf)
               remoteRef:
                 properties:
                   name:
@@ -53,6 +101,11 @@ spec:
                 properties:
                   name:
                     type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
                 required:
                 - name
                 type: object
@@ -93,11 +146,17 @@ spec:
                         type: string
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: Peering info is immutable.
+                  rule: (self == oldSelf)
             required:
             - remoteRef
             - scope
-            - vpcPeering
             type: object
+            x-kubernetes-validations:
+            - message: Only one of details or vpcPeering can be specified.
+              rule: (has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering)
+                && has(self.details))
           status:
             description: VpcPeeringStatus defines the observed state of VpcPeering
             properties:

@@ -57,7 +57,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithNfsInstanceCcee(10),
 				).
 				Should(Succeed(), "failed creating NfsInstance")

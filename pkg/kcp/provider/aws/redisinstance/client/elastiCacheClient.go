@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	elasticache "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -43,6 +45,7 @@ type CreateElastiCacheClusterOptions struct {
 	AuthTokenSecretString      *string
 	TransitEncryptionEnabled   bool
 	PreferredMaintenanceWindow *string
+	SecurityGroupIds           []string
 }
 
 type ModifyElastiCacheClusterOptions struct {
@@ -52,6 +55,9 @@ type ModifyElastiCacheClusterOptions struct {
 	PreferredMaintenanceWindow *string
 	TransitEncryptionEnabled   *bool
 	TransitEncryptionMode      *elasticacheTypes.TransitEncryptionMode
+	AuthTokenSecretString      *string
+	UserGroupIdsToAdd          []string
+	UserGroupIdsToRemove       []string
 }
 
 type ElastiCacheClient interface {
@@ -75,6 +81,15 @@ type ElastiCacheClient interface {
 	ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error
 	DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error)
+
+	DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error)
+	CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error)
+	DeleteUserGroup(ctx context.Context, id string) error
+
+	DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error)
+	CreateElastiCacheSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error)
+	DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error
+	AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error
 }
 
 func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
@@ -316,6 +331,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		AuthToken:                   options.AuthTokenSecretString,
 		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
+		SecurityGroupIds:            options.SecurityGroupIds,
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)
@@ -350,6 +366,16 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	if options.TransitEncryptionMode != nil {
 		params.TransitEncryptionMode = *options.TransitEncryptionMode
 	}
+	if options.AuthTokenSecretString != nil {
+		params.AuthToken = options.AuthTokenSecretString
+	}
+	if len(options.UserGroupIdsToAdd) > 0 {
+		params.UserGroupIdsToAdd = options.UserGroupIdsToAdd
+		params.AuthTokenUpdateStrategy = elasticacheTypes.AuthTokenUpdateStrategyTypeDelete
+	}
+	if len(options.UserGroupIdsToRemove) > 0 {
+		params.UserGroupIdsToRemove = options.UserGroupIdsToRemove
+	}
 
 	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)
 
@@ -383,4 +409,98 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]e
 		return nil, err
 	}
 	return out.CacheClusters, nil
+}
+
+func (c *client) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
+	res, err := c.elastiCacheSvc.DescribeUserGroups(ctx, &elasticache.DescribeUserGroupsInput{
+		UserGroupId: ptr.To(id),
+	})
+
+	if err != nil {
+		if awsmeta.IsNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	if len(res.UserGroups) == 0 {
+		return nil, nil
+	}
+
+	return ptr.To(res.UserGroups[0]), nil
+}
+
+func (c *client) CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
+	res, err := c.elastiCacheSvc.CreateUserGroup(ctx, &elasticache.CreateUserGroupInput{
+		UserGroupId: ptr.To(id),
+		Engine:      ptr.To("redis"),
+		Tags:        tags,
+		UserIds:     []string{"default"},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (c *client) DeleteUserGroup(ctx context.Context, id string) error {
+	_, err := c.elastiCacheSvc.DeleteUserGroup(ctx, &elasticache.DeleteUserGroupInput{
+		UserGroupId: ptr.To(id),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
+	out, err := c.ec2Svc.DescribeSecurityGroups(ctx, &ec2.DescribeSecurityGroupsInput{
+		Filters:  filters,
+		GroupIds: groupIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out.SecurityGroups, nil
+}
+
+func (c *client) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error) {
+	out, err := c.ec2Svc.CreateSecurityGroup(ctx, &ec2.CreateSecurityGroupInput{
+		Description: ptr.To(fmt.Sprintf("SecurityGroup for ElastiCache %s", name)),
+		GroupName:   ptr.To(name),
+		TagSpecifications: []ec2Types.TagSpecification{
+			{
+				ResourceType: ec2Types.ResourceTypeSecurityGroup,
+				Tags:         tags,
+			},
+		},
+		VpcId: ptr.To(vpcId),
+	})
+	if err != nil {
+		return "", err
+	}
+	return ptr.Deref(out.GroupId, ""), nil
+}
+
+func (c *client) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
+	in := &ec2.DeleteSecurityGroupInput{
+		GroupId: ptr.To(id),
+	}
+	_, err := c.ec2Svc.DeleteSecurityGroup(ctx, in)
+	return err
+}
+
+func (c *client) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
+	_, err := c.ec2Svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
+		GroupId:       ptr.To(groupId),
+		IpPermissions: ipPermissions,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

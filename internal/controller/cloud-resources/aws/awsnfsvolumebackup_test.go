@@ -71,7 +71,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrAwsNfsVolumeName),
-					WithInstanceScope(infra.SkrKymaRef().Name),
+					WithScope(infra.SkrKymaRef().Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).

@@ -16,9 +16,6 @@ type State struct {
 	client   vpcpeeringclient.VpcPeeringClient
 	provider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
 
-	//gcp config
-	gcpConfig *gcpclient.GcpConfig
-
 	remotePeeringName  string
 	remoteVpc          string
 	remoteProject      string
@@ -36,14 +33,12 @@ type StateFactory interface {
 type stateFactory struct {
 	skrProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
 	env         abstractions.Environment
-	gcpConfig   *gcpclient.GcpConfig
 }
 
 func NewStateFactory(skrProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 		env:         env,
-		gcpConfig:   gcpclient.GetGcpConfig(env),
 	}
 }
 
@@ -57,18 +52,17 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 		return nil, err
 	}
 
-	return newState(vpcPeeringState, c, f.skrProvider, f.gcpConfig), nil
+	return newState(vpcPeeringState, c, f.skrProvider), nil
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
 	client vpcpeeringclient.VpcPeeringClient,
 	provider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient],
-	gcpConfig *gcpclient.GcpConfig) *State {
+) *State {
 	return &State{
 		State:              vpcPeeringState,
 		client:             client,
 		provider:           provider,
-		gcpConfig:          gcpConfig,
 		remotePeeringName:  vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemotePeeringName,
 		remoteVpc:          vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteVpc,
 		remoteProject:      vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteProject,

@@ -24,10 +24,10 @@ func initServicesMap(sus *serviceUsageStore) {
 	}
 }
 
-func newServiceUsageOperation(error string, done bool) *serviceusage.Operation {
+func newServiceUsageOperation(msg string, done bool) *serviceusage.Operation {
 	name := uuid.New().String()
-	if error != "" {
-		return &serviceusage.Operation{Name: name, Error: &serviceusage.Status{Code: 500, Message: error}, Done: done}
+	if msg != "" {
+		return &serviceusage.Operation{Name: name, Error: &serviceusage.Status{Code: 500, Message: msg}, Done: done}
 	}
 	return &serviceusage.Operation{Name: name, Done: done}
 }

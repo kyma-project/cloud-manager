@@ -35,23 +35,11 @@ func WithRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef = *remoteRef
 				return
 			}
+			if x, ok := obj.(*cloudcontrolv1beta1.VpcPeering); ok {
+				x.Spec.RemoteRef = *remoteRef
+				return
+			}
 			panic("unhandled type in WithRemoteRef")
-		},
-	}
-}
-
-func WithInstanceScope(scopeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
-				x.Spec.Scope.Name = scopeName
-				return
-			}
-			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				x.Spec.Scope.Name = scopeName
-				return
-			}
-			panic("unhandled type in WithInstanceScope")
 		},
 	}
 }

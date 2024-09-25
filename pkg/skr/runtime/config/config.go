@@ -1,10 +1,16 @@
 package config
 
-import "github.com/kyma-project/cloud-manager/pkg/config"
+import (
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	"time"
+)
 
 type ConfigStruct struct {
-	ProvidersDir string `yaml:"providersDir,omitempty" json:"providersDir,omitempty"`
-	Concurrency  int    `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
+	SkrLockingLeaseDuration time.Duration
+
+	ProvidersDir         string `yaml:"providersDir,omitempty" json:"providersDir,omitempty"`
+	Concurrency          int    `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
+	LockingLeaseDuration string `yaml:"lockingLeaseDuration,omitempty" json:"lockingLeaseDuration,omitempty"`
 }
 
 func (c *ConfigStruct) AfterConfigLoaded() {
@@ -14,6 +20,8 @@ func (c *ConfigStruct) AfterConfigLoaded() {
 	if c.Concurrency > 100 {
 		c.Concurrency = 100
 	}
+	c.SkrLockingLeaseDuration = GetDuration(c.LockingLeaseDuration, 10*time.Minute)
+
 }
 
 var SkrRuntimeConfig = &ConfigStruct{}
@@ -30,7 +38,19 @@ func InitConfig(cfg config.Config) {
 			"concurrency",
 			config.DefaultScalar(1),
 		),
+		config.Path(
+			"lockingLeaseDuration",
+			config.DefaultScalar("600s"),
+		),
 		config.SourceFile("skrRuntime.yaml"),
 		config.Bind(SkrRuntimeConfig),
 	)
+}
+
+func GetDuration(value string, defaultValue time.Duration) time.Duration {
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return defaultValue
+	}
+	return duration
 }

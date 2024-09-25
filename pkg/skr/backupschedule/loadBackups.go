@@ -2,11 +2,12 @@ package backupschedule
 
 import (
 	"context"
+	"sort"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
 )
 
 func loadBackups(ctx context.Context, st composed.State) (error, context.Context) {
@@ -14,7 +15,7 @@ func loadBackups(ctx context.Context, st composed.State) (error, context.Context
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.WithValues("BackupSchedule :", schedule.GetName()).Info("Load Backups")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Load Backups")
 
 	list := state.backupImpl.emptyBackupList()
 	err := state.SkrCluster.K8sClient().List(

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestConfigFromEnv(t *testing.T) {
@@ -28,6 +29,7 @@ func TestConfigFromFile(t *testing.T) {
 	}()
 	err = os.WriteFile(filepath.Join(dir, "skrRuntime.yaml"), []byte(`
 providersDir: /some/path/from/file
+lockingLeaseDuration: 10s
 `), 0644)
 	assert.NoError(t, err, "error creating key file")
 
@@ -40,4 +42,5 @@ providersDir: /some/path/from/file
 	cfg.Read()
 
 	assert.Equal(t, "/some/path/from/file", SkrRuntimeConfig.ProvidersDir)
+	assert.Equal(t, 10*time.Second, SkrRuntimeConfig.SkrLockingLeaseDuration)
 }

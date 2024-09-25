@@ -120,7 +120,7 @@ var gcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
 	},
 }
 
-var deletingGpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
+var deletingGcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
 	ObjectMeta: v1.ObjectMeta{
 		Name:              "test-gcp-nfs-volume-restore",
 		Namespace:         "test",
@@ -149,7 +149,6 @@ type testStateFactory struct {
 	kcpCluster                composed.StateCluster
 	fileRestoreClientProvider client.ClientProvider[client2.FileRestoreClient]
 	env                       abstractions.Environment
-	gcpConfig                 *client.GcpConfig
 	fakeHttpServer            *httptest.Server
 }
 
@@ -201,7 +200,6 @@ func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRes
 		kcpCluster:                kcpCluster,
 		fileRestoreClientProvider: nfsRestoreClient,
 		env:                       env,
-		gcpConfig:                 client.GetGcpConfig(env),
 		fakeHttpServer:            fakeHttpServer,
 	}, nil
 

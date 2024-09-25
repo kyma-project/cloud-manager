@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -17,7 +19,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	nfsInstance := state.ObjAsNfsInstance()
 	opName := nfsInstance.Status.OpIdentifier
-	logger.WithValues("NfsInstance :", nfsInstance.Name).Info("Checking GCP Operation Status")
+	logger.WithValues("NfsInstance", nfsInstance.Name).Info("Checking GCP Operation Status")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName == "" {
@@ -50,7 +52,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
-		return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If not able to find the operation or it is completed, reset OpIdentifier.

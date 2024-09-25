@@ -1,35 +1,59 @@
 package iprange
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	"context"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 )
 
 type State struct {
-	focal.State
+	iprangetypes.State
 
-	client client.TbdAzureClient
+	azureClient azureiprange.Client
+
+	resourceGroupName  string
+	virtualNetworkName string
+	securityGroupName  string
+	subnetName         string
+
+	subnet        *armnetwork.Subnet
+	securityGroup *armnetwork.SecurityGroup
 }
 
 type StateFactory interface {
-	NewState(focalState focal.State) *State
+	NewState(ctx context.Context, baseState iprangetypes.State) (*State, error)
 }
 
 type stateFactory struct {
-	client client.TbdAzureClient
+	azureProvider azureclient.ClientProvider[azureiprange.Client]
 }
 
-func (f *stateFactory) NewState(focalState focal.State) *State {
-	return NewState(focalState, f.client)
+func (f *stateFactory) NewState(ctx context.Context, baseState iprangetypes.State) (*State, error) {
+	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
+	subscriptionId := baseState.Scope().Spec.Scope.Azure.SubscriptionId
+	tenantId := baseState.Scope().Spec.Scope.Azure.TenantId
+
+	c, err := f.azureProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+	if err != nil {
+		return nil, fmt.Errorf("error creating azure client: %w", err)
+	}
+	return NewState(c, baseState), nil
 }
 
-func NewStateFactory(client client.TbdAzureClient) StateFactory {
-	return &stateFactory{client: client}
+func NewStateFactory(azureProvider azureclient.ClientProvider[azureiprange.Client]) StateFactory {
+	return &stateFactory{
+		azureProvider: azureProvider,
+	}
 }
 
-func NewState(focalState focal.State, client client.TbdAzureClient) *State {
+func NewState(azureClient azureiprange.Client, baseState iprangetypes.State) *State {
 	return &State{
-		State:  focalState,
-		client: client,
+		State:       baseState,
+		azureClient: azureClient,
 	}
 }

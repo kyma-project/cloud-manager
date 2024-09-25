@@ -3,7 +3,9 @@ package v2
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -16,7 +18,7 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Saving GCP PSA Connection")
+	logger.WithValues("ipRange", ipRange.Name).Info("Saving GCP PSA Connection")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
@@ -39,22 +41,22 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Service Connection object in GCP :%s", err)).
 			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
-		return composed.UpdateStatus(ipRange).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
+		return composed.PatchStatus(ipRange).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
-	return composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), nil
+	return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), nil
 }

@@ -10,11 +10,14 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
+	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
@@ -53,14 +56,14 @@ func Start() (Infra, error) {
 	}
 
 	infra := &infra{
-		clusters: map[ClusterType]*clusterInfo{
-			ClusterTypeKcp: &clusterInfo{
+		clusters: map[infraTypes.ClusterType]*clusterInfo{
+			infraTypes.ClusterTypeKcp: &clusterInfo{
 				crdDirs: []string{dirKcp},
 			},
-			ClusterTypeSkr: &clusterInfo{
+			infraTypes.ClusterTypeSkr: &clusterInfo{
 				crdDirs: []string{dirSkr},
 			},
-			ClusterTypeGarden: &clusterInfo{
+			infraTypes.ClusterTypeGarden: &clusterInfo{
 				crdDirs: []string{dirGarden},
 			},
 		},
@@ -68,7 +71,7 @@ func Start() (Infra, error) {
 
 	for name, cluster := range infra.clusters {
 		ginkgo.By(fmt.Sprintf("Startig cluster %s", name))
-		sch, ok := schemeMap[name]
+		sch, ok := infraScheme.SchemeMap[name]
 		if !ok {
 			return nil, fmt.Errorf("missing scheme for cluster %s", name)
 		}
@@ -100,11 +103,11 @@ func Start() (Infra, error) {
 
 		ce := &clusterEnv{}
 		switch name {
-		case ClusterTypeKcp:
+		case infraTypes.ClusterTypeKcp:
 			ce.namespace = "kcp-system"
-		case ClusterTypeSkr:
+		case infraTypes.ClusterTypeSkr:
 			ce.namespace = "kyma-system"
-		case ClusterTypeGarden:
+		case infraTypes.ClusterTypeGarden:
 			ce.namespace = "garden-kyma"
 		}
 		cluster.ClusterEnv = ce
@@ -113,7 +116,7 @@ func Start() (Infra, error) {
 	ginkgo.By("All started")
 
 	// Create ENV
-	kcpMgr, err := ctrl.NewManager(infra.clusters[ClusterTypeKcp].cfg, ctrl.Options{
+	kcpMgr, err := ctrl.NewManager(infra.clusters[infraTypes.ClusterTypeKcp].cfg, ctrl.Options{
 		Scheme: infra.KCP().Scheme(),
 		Client: ctrlclient.Options{
 			Cache: &ctrlclient.CacheOptions{
@@ -121,12 +124,12 @@ func Start() (Infra, error) {
 			},
 		},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating KCP manager: %w", err)
+	}
 	reader := kcpMgr.GetAPIReader()
 	if reader == nil {
 		return nil, errors.New("KCP Manager API Reader is nil")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("error creating KCP manager: %w", err)
 	}
 
 	registry := skrruntime.NewRegistry(infra.SKR().Scheme())
@@ -165,9 +168,10 @@ func Start() (Infra, error) {
 	// github.com/onsi/gomega@v1.29.0/internal/duration_bundle.go
 	if debugged.Debugged {
 		ginkgo.By("Setting high GOMEGA timeouts and durations since debug build flag is set!!!")
-		gomega.Default.SetDefaultEventuallyTimeout(5 * time.Minute)
+		gomega.Default.SetDefaultEventuallyTimeout(10 * time.Minute)
 		gomega.Default.SetDefaultEventuallyPollingInterval(1 * time.Second)
-		gomega.Default.SetDefaultConsistentlyDuration(20 * time.Second)
+		// rarely used and usually not debugged, so left small, increase on demand but do not commit
+		gomega.Default.SetDefaultConsistentlyDuration(5 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
 	} else {
 		gomega.Default.SetDefaultEventuallyTimeout(4 * time.Second)
@@ -176,11 +180,18 @@ func Start() (Infra, error) {
 		gomega.Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 	}
 
+	//Setup GCP env variables
+	_ = os.Setenv("GCP_SA_JSON_KEY_PATH", "test")
+	_ = os.Setenv("GCP_RETRY_WAIT_DURATION", "300ms")
+	_ = os.Setenv("GCP_OPERATION_WAIT_DURATION", "300ms")
+	_ = os.Setenv("GCP_API_TIMEOUT_DURATION", "300ms")
+
 	// init config
 	awsconfig.InitConfig(infra.Config())
 	quota.InitConfig(infra.Config())
 	skrruntimeconfig.InitConfig(infra.Config())
 	scope.InitConfig(infra.Config())
+	gcpclient.InitConfig(infra.Config())
 	infra.Config().Read()
 	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
 

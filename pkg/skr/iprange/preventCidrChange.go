@@ -4,7 +4,6 @@ import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,7 +15,7 @@ func preventCidrChange(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	// cidr is optional by feature flag
-	if feature.IpRangeAutomaticCidrAllocation.Value(ctx) && len(state.ObjAsIpRange().Spec.Cidr) == 0 {
+	if len(state.ObjAsIpRange().Spec.Cidr) == 0 {
 		return nil, nil
 	}
 

@@ -18,6 +18,8 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -34,10 +36,8 @@ const (
 	VirtualNetworkPeeringStateInitiated    = "Initiated"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // VpcPeeringSpec defines the desired state of VpcPeering
+// +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
@@ -45,12 +45,33 @@ type VpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
 
+	// +optional
+	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
+
+	// +optional
+	Details *VpcPeeringDetails `json:"details,omitempty"`
+}
+
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
+type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
-	VpcPeering VpcPeeringInfo `json:"vpcPeering"`
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."
+	LocalNetwork klog.ObjectRef `json:"localNetwork"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Remote network name is required."
+	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
+
+	PeeringName string `json:"peeringName,omitempty"`
+
+	LocalPeeringName string `json:"localPeeringName,omitempty"`
+
+	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering info is immutable."
 type VpcPeeringInfo struct {
 	// +optional
 	Gcp *GcpVpcPeering `json:"gcp,omitempty"`
@@ -83,6 +104,7 @@ type AwsVpcPeering struct {
 
 // VpcPeeringStatus defines the observed state of VpcPeering
 type VpcPeeringStatus struct {
+	// +optional
 	State string `json:"state,omitempty"`
 
 	// +optional
@@ -105,6 +127,8 @@ type VpcPeeringStatus struct {
 //+kubebuilder:subresource:status
 
 // VpcPeering is the Schema for the vpcpeerings API
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 type VpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -127,6 +151,35 @@ func (in *VpcPeering) Conditions() *[]metav1.Condition {
 
 func (in *VpcPeering) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *VpcPeering) State() string {
+	return in.Status.State
+}
+
+func (in *VpcPeering) SetState(v string) {
+	in.Status.State = v
+}
+
+func (in *VpcPeering) CloneForPatchStatus() client.Object {
+	return &VpcPeering{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "VpcPeering",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
+}
+
+func (in *VpcPeering) GetLocalPeeringName() string {
+	if len(in.Spec.Details.LocalPeeringName) > 0 {
+		return in.Spec.Details.LocalPeeringName
+	}
+	return in.Name
 }
 
 //+kubebuilder:object:root=true

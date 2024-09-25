@@ -1,23 +1,76 @@
 package mock
 
 import (
-	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 )
 
-type Providers interface {
-	VpcPeeringSkrProvider() provider.SkrClientProvider[client.Client]
+type ResourceGroupsClient interface {
+	azureclient.ResourceGroupClient
+}
 
-	RedisClientProvider() provider.SkrClientProvider[azureredisinstanceclient.Client]
+type NetworkClient interface {
+	azureclient.NetworkClient
+}
+
+type SubnetsClient interface {
+	azureclient.SubnetsClient
+}
+
+type SecurityGroupsClient interface {
+	azureclient.SecurityGroupsClient
+}
+
+type VpcPeeringClient interface {
+	azureclient.VirtualNetworkPeeringClient
+}
+
+type RedisInstanceClient interface {
+	azureclient.RedisClient
+}
+
+type Clients interface {
+	ResourceGroupsClient
+	NetworkClient
+	SecurityGroupsClient
+	SubnetsClient
+	VpcPeeringClient
+	RedisInstanceClient
+}
+
+type Providers interface {
+	VpcPeeringProvider() azureclient.ClientProvider[vpcpeeringclient.Client]
+	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
+	RedisClientProvider() azureclient.ClientProvider[redisinstanceclient.Client]
+	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
+}
+
+type NetworkConfig interface {
+	SetPeeringStateConnected(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error
+}
+
+type RedisConfig interface {
+	AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
+	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
+}
+
+type Configs interface {
+	NetworkConfig
+	RedisConfig
+}
+
+type TenantSubscription interface {
+	Clients
+	Configs
 }
 
 type Server interface {
 	Providers
 
-	VpcNetworkConfig
-
-	VpcPeeringConfig
-
-	RedisCacheClientFakeUtils
+	MockConfigs(subscription, tenant string) TenantSubscription
 }

@@ -3,6 +3,7 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -25,7 +26,7 @@ func deleteAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.WithValues("AwsBackup :", backup.Name).Info("Deleting AWS File Backup")
+	logger.WithValues("AwsBackup", backup.Name).Info("Deleting AWS File Backup")
 
 	_, err := state.awsClient.DeleteRecoveryPoint(ctx, state.GetVaultName(), state.GetRecoveryPointArn())
 

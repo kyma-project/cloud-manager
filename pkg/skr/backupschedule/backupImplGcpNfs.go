@@ -21,7 +21,7 @@ func (impl *backupImplGcpNfs) emptyBackupList() client.ObjectList {
 func (impl *backupImplGcpNfs) toObjectSlice(list client.ObjectList) []client.Object {
 	var objects []client.Object
 
-	if x, ok := list.(*cloudresourcesv1beta1.GcpNfsVolumeList); ok {
+	if x, ok := list.(*cloudresourcesv1beta1.GcpNfsVolumeBackupList); ok {
 		for _, item := range x.Items {
 			objects = append(objects, &item)
 		}

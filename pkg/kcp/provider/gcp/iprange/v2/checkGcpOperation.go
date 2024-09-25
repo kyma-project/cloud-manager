@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,7 +19,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 	ipRange := state.ObjAsIpRange()
 	opName := ipRange.Status.OpIdentifier
-	logger.WithValues("ipRange :", ipRange.Name).Info("Checking Operation")
+	logger.WithValues("ipRange", ipRange.Name).Info("Checking Operation")
 
 	//If no OpIdentifier, then continue to next action.
 	if opName == "" {
@@ -38,7 +40,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 				}
 			}
 
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -52,7 +54,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && !op.Done {
-			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.
@@ -62,7 +64,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//If the operation failed, update the error status on the object.
 		if op != nil && op.Error != nil {
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -78,7 +80,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		project := state.Scope().Spec.Scope.Gcp.Project
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -92,7 +94,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && op.Status != "DONE" {
-			return composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.
@@ -110,7 +112,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 					msg = "Operation failed with no error message."
 				}
 			}
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,

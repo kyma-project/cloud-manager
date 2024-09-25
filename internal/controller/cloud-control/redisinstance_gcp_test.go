@@ -38,7 +38,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
-					WithKcpIpRangeSpecScope(scope.Name),
+					WithScope(scope.Name),
 				).
 				Should(Succeed())
 		})
@@ -61,14 +61,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithName(name),
 					WithRemoteRef("skr-redis-example"),
 					WithIpRange(kcpIpRangeName),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithRedisInstanceGcp(),
 					WithKcpGcpRedisInstanceTier("BASIC"),
 					WithKcpGcpRedisInstanceMemorySizeGb(5),
 					WithKcpGcpRedisInstanceRedisVersion("REDIS_7_0"),
-					WithKcpGcpRedisInstanceTransitEncryption(&cloudcontrolv1beta1.TransitEncryptionGcp{
-						ServerAuthentication: true,
-					}),
+					WithKcpGcpRedisInstanceTransitEncryptionMode("SERVER_AUTHENTICATION"),
 					WithKcpGcpRedisInstanceConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),

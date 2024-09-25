@@ -42,7 +42,7 @@ import (
 func SetupRedisInstanceReconciler(
 	kcpManager manager.Manager,
 	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClient],
-	azureFilestoreClientProvider azureclient.SkrClientProvider[azureredisinstanceclient.Client],
+	azureFilestoreClientProvider azureclient.ClientProvider[azureredisinstanceclient.Client],
 	awsFilestoreClientProvider awsclient.SkrClientProvider[awsredisinstanceclient.ElastiCacheClient],
 	env abstractions.Environment,
 ) error {

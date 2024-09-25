@@ -68,12 +68,7 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
 	// Setup environment variables
-	env := abstractions.NewMockedEnvironment(map[string]string{
-		"GCP_SA_JSON_KEY_PATH":        "test",
-		"GCP_RETRY_WAIT_DURATION":     "300ms",
-		"GCP_OPERATION_WAIT_DURATION": "300ms",
-		"GCP_API_TIMEOUT_DURATION":    "300ms",
-	})
+	env := abstractions.NewMockedEnvironment(map[string]string{})
 
 	// Setup controllers
 	// Scope
@@ -87,10 +82,11 @@ var _ = BeforeSuite(func() {
 	Expect(SetupIpRangeReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
+		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(
 		infra.KcpManager(),
@@ -98,15 +94,15 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().FilestoreClientProvider(),
 		infra.CceeMock().NfsInstanceProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	//VpcPeering
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
-		infra.AzureMock().VpcPeeringSkrProvider(),
-		infra.GcpMock().VpcPeeringSkrProvider(),
+		infra.AzureMock().VpcPeeringProvider(),
+		infra.GcpMock().VpcPeeringProvider(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	//RedisInstance
 	Expect(SetupRedisInstanceReconciler(
 		infra.KcpManager(),
@@ -114,11 +110,12 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().RedisClientProvider(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
-	))
+	)).NotTo(HaveOccurred())
 	// Network
 	Expect(SetupNetworkReconciler(
 		infra.KcpManager(),
-	))
+		infra.AzureMock().NetworkProvider(),
+	)).NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

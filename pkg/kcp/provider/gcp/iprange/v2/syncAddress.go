@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -17,7 +19,7 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	ipRange := state.ObjAsIpRange()
-	logger.WithValues("ipRange :", ipRange.Name).Info("Saving GCP Address")
+	logger.WithValues("ipRange", ipRange.Name).Info("Saving GCP Address")
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
@@ -30,31 +32,31 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	case client.ADD:
 		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, name, "Kyma cloud-manager IP Range", state.ipAddress, int64(state.prefix))
 	case client.MODIFY:
-		logger.WithValues("ipRange :", ipRange.Name).Info("IpRange update not supported.")
+		logger.WithValues("ipRange", ipRange.Name).Info("IpRange update not supported.")
 		return composed.StopAndForget, nil
 	case client.DELETE:
 		operation, err = state.computeClient.DeleteIpRange(ctx, project, state.address.Name)
 	default:
-		logger.WithValues("ipRange :", ipRange.Name).Info("Unknown Operation.")
+		logger.WithValues("ipRange", ipRange.Name).Info("Unknown Operation.")
 	}
 
 	if err != nil {
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Address object in GCP :%s", err)).
 			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
-		return composed.UpdateStatus(ipRange).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime)).
+		return composed.PatchStatus(ipRange).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
-	return composed.StopWithRequeueDelay(state.gcpConfig.GcpOperationWaitTime), nil
+	return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), nil
 }

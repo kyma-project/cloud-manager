@@ -3,15 +3,17 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func createNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -35,7 +37,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.WithValues("NfsBackup :", backup.Name).Info("Creating GCP File Backup")
+	logger.WithValues("NfsBackup", backup.Name).Info("Creating GCP File Backup")
 
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
@@ -82,7 +84,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating Filestore backup in GCP :%s", err)).
 			Run(ctx, state)
 	}
@@ -92,7 +94,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		// Give some time for backup to get created.
-		SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+		SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 		Run(ctx, state)
 }
 

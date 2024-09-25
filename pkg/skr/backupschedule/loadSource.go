@@ -20,7 +20,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, nil
 	}
 
-	logger.WithValues("Nfs Backup BackupSchedule :", schedule.GetName()).Info("Loading SourceRef")
+	logger.WithValues("NfsBackupBackupSchedule", schedule.GetName()).Info("Loading SourceRef")
 
 	//Load the sourceRef object
 	sourceRef, err := getSourceRef(ctx, state)
@@ -65,9 +65,14 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 
 func getSourceRef(ctx context.Context, state *State) (composed.ObjWithConditions, error) {
 	schedule := state.ObjAsBackupSchedule()
+	namespace := schedule.GetSourceRef().Namespace
+	if len(namespace) <= 0 {
+		namespace = schedule.GetNamespace()
+	}
+
 	key := types.NamespacedName{
 		Name:      schedule.GetSourceRef().Name,
-		Namespace: schedule.GetSourceRef().Namespace,
+		Namespace: namespace,
 	}
 
 	source := state.backupImpl.emptySourceObject()

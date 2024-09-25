@@ -10,12 +10,10 @@ var _ types.State = &state{}
 
 type state struct {
 	focal.State
-
-	network *cloudcontrolv1beta1.Network
 }
 
 func (s *state) ObjAsNetwork() *cloudcontrolv1beta1.Network {
-	return s.network
+	return s.Obj().(*cloudcontrolv1beta1.Network)
 }
 
 func newState(focalState focal.State) types.State {

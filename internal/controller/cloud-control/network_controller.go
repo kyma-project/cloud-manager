@@ -20,25 +20,32 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
+	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
+	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/network"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func SetupNetworkReconciler(
 	kcpManager manager.Manager,
+	azureProvider provider.ClientProvider[networkclient.Client],
 ) error {
 	return NewNetworkReconciler(
 		network.NewNetworkReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
+			awsnetwork.NewStateFactory(),
+			azurenetwork.NewStateFactory(azureProvider),
+			gcpnetwork.NewStateFactory(),
 		),
 	).SetupWithManager(kcpManager)
 }
@@ -61,11 +68,7 @@ type NetworkReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -40,7 +40,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
-					WithKcpIpRangeSpecScope(scope.Name),
+					WithScope(scope.Name),
 				).
 				Should(Succeed())
 		})
@@ -73,7 +73,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithName(name),
 					WithRemoteRef("skr-redis-example-aws"),
 					WithIpRange(kcpIpRangeName),
-					WithInstanceScope(name),
+					WithScope(name),
 					WithRedisInstanceAws(),
 					WithKcpAwsCacheNodeType(cacheNodeType),
 					WithKcpAwsEngineVersion(engineVersion),
@@ -104,6 +104,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 		By("When AWS Redis is Available", func() {
 			infra.AwsMock().SetAwsElastiCacheLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_AVAILABLE)
+		})
+
+		By("And when AWS Redis UserGroup is Active", func() {
+			infra.AwsMock().SetAwsElastiCacheUserGroupLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_UserGroup_ACTIVE)
 		})
 
 		By("Then RedisInstance has Ready condition", func() {
@@ -137,6 +141,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 		By("And When AWS Redis state is deleted", func() {
 			infra.AwsMock().DeleteAwsElastiCacheByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
+		})
+
+		By("And When AWS Redis user group is deleted", func() {
+			infra.AwsMock().DeleteAwsElastiCacheUserGroupByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
 		})
 
 		By("Then RedisInstance does not exist", func() {

@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -17,7 +19,7 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	backup := state.ObjAsGcpNfsVolumeBackup()
-	logger.WithValues("nfsBackup :", backup.Name).Info("Loading GCP FileBackup")
+	logger.WithValues("nfsBackup", backup.Name).Info("Loading GCP FileBackup")
 
 	if backup.Status.Id == "" {
 		// Backup is not created yet.
@@ -48,7 +50,7 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(state.gcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error getting GCP backup : %s", err)).
 			Run(ctx, state)
 	}

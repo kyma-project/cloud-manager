@@ -114,14 +114,6 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
-type TransitEncryptionGcp struct {
-	// Client to Server traffic encryption enabled with server authentication.
-	// +optional
-	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
-	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
-}
-
 type TimeOfDayGcp struct {
 	// Hours of day in 24 hour format. Should be from 0 to 23.
 	// +kubebuilder:validation:Required
@@ -171,14 +163,15 @@ type RedisInstanceGcp struct {
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
 
-	// The TLS mode of the Redis instance.
-	// If not provided, TLS is disabled for the instance.
+	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption is immutable."
-	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
+	// +kubebuilder:default=DISABLED
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
+	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
+	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
@@ -211,6 +204,7 @@ type RedisInstanceAzure struct {
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
 	CacheNodeType string `json:"cacheNodeType"`
@@ -230,7 +224,6 @@ type RedisInstanceAws struct {
 
 	// +optional
 	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthEnabled is immutable."
 	AuthEnabled bool `json:"authEnabled"`
 
 	// Specifies the weekly time range during which maintenance on the cluster is
