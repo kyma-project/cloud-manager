@@ -207,7 +207,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 
 		var azureSubnet *armnetwork.Subnet
 
-		By("Then Azure Subnet is created", func() {
+		By("And Then Azure Subnet is created", func() {
 			Eventually(func() error {
 				sn, err := azureMock.GetSubnet(infra.Ctx(), cmCommonName, cmCommonName, cmCommonName)
 				if err != nil {
@@ -228,7 +228,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 			Expect(ptr.Deref(azureSubnet.Properties.NetworkSecurityGroup.ID, "")).To(Equal(ptr.Deref(azureSecurityGroup.ID, "")))
 		})
 
-		By("Then KCP IpRange has Ready condition", func() {
+		By("And Then KCP IpRange has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).

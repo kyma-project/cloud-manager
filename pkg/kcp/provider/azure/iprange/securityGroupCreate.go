@@ -2,9 +2,7 @@ package iprange
 
 import (
 	"context"
-	"fmt"
 	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -25,12 +23,7 @@ func securityGroupCreate(ctx context.Context, st composed.State) (error, context
 		ctx, state.resourceGroupName, state.securityGroupName,
 		state.Scope().Spec.Region,
 		nil,
-		map[string]string{
-			common.TagScope:                  fmt.Sprintf("%s/%s", state.Scope().Namespace, state.Scope().Name),
-			common.TagShoot:                  state.Scope().Spec.ShootName,
-			common.TagCloudManagerRemoteName: state.ObjAsIpRange().Spec.RemoteRef.String(),
-			common.TagCloudManagerName:       fmt.Sprintf("%s/%s", state.ObjAsIpRange().Namespace, state.ObjAsIpRange().Name),
-		},
+		nil, // The following characters are not supported: <>%&\?/.
 	)
 
 	if azuremeta.IsTooManyRequests(err) {
@@ -38,6 +31,8 @@ func securityGroupCreate(ctx context.Context, st composed.State) (error, context
 	}
 
 	if err != nil {
+		logger.Error(err, "Error creating Azure KCP IpRange security group", ctx)
+
 		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
