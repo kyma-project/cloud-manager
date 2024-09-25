@@ -45,6 +45,7 @@ func (c *checker) IsReady(ctx context.Context, skrCluster cluster.Cluster) bool 
 // * Provisioning
 //   - CloudResources CRD is not yet installed by KLM
 //   - CloudResources default instance is not yet created by KLM
+//
 // * Deprovisioning
 //   - There are no CloudResources instances since they all have been deleted - KLM marked for deletion,
 //     CloudManager connected to SKR and uninstalled CRDs and removed finalized, K8S deleted CloudResources.
