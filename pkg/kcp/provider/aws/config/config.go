@@ -56,7 +56,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"backupRoleName",
-			config.DefaultScalar("service-role/AWSBackupDefaultServiceRole"),
+			config.DefaultScalar("CloudManagerBackupServiceRole"),
 			config.SourceEnv("AWS_BACKUP_ROLE_NAME"),
 		),
 	)
