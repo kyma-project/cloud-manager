@@ -60,7 +60,9 @@ the steps that create those resources.
    --vnet-name $VNET_NAME \
    --subnet "MySubnet" \
    --public-ip-address "" \
-   --nsg "" 
+   --nsg ""
+   
+   export IP_ADDRESS=$(az vm show --show-details --resource-group $RESOURCE_GROUP_NAME --name $VM_NAME --query privateIps --output tsv)
    ```
    
 7. Tag the VPC network with the Kyma shoot name
