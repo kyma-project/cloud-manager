@@ -4,9 +4,6 @@ body:
       source: spec
       children:
         - widget: Labels
-          source: remoteResourceGroup
-          name: spec.remoteResourceGroup
-        - widget: Labels
           source: remoteVnet
           name: spec.remoteVnet
         - widget: Labels
