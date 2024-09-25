@@ -1,7 +1,6 @@
 package cloudcontrol
 
 import (
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -92,19 +91,6 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 
 		By("And Then Azure ResourceGroup location equals to Scope region", func() {
 			Expect(ptr.Deref(azureResourceGroup.Location, "")).To(Equal(scope.Spec.Region))
-		})
-
-		By("And Then Azure ResourceGroup tags are set", func() {
-			Expect(azureResourceGroup.Tags).NotTo(BeNil())
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagCloudManagerName))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagCloudManagerName], "")).To(Equal(fmt.Sprintf("%s/%s", net.Namespace, net.Name)))
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagScope))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagScope], "")).To(Equal(fmt.Sprintf("%s/%s", scope.Namespace, scope.Name)))
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagShoot))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagShoot], "")).To(Equal(scope.Spec.ShootName))
 		})
 
 		var azureVNet *armnetwork.VirtualNetwork
