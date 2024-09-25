@@ -16,6 +16,8 @@ type vpcPeeringStore struct {
 	items map[string]*vpcPeeringEntry
 }
 
+//create a function to change the state by id (inactive,active)
+
 func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
@@ -37,7 +39,7 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 		return nil
 	}
 
-	state := pb.NetworkPeering_ACTIVE.String()
+	state := pb.NetworkPeering_INACTIVE.String()
 
 	item := &vpcPeeringEntry{
 		peering: &pb.NetworkPeering{

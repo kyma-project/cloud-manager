@@ -41,6 +41,8 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteVpcPeering,
 					waitKymaVpcPeeringDeletion,
+					//deleteRemoteNetwork,
+					//waitRemoteNetworkRemoval,
 					actions.RemoveFinalizer,
 				),
 			),
