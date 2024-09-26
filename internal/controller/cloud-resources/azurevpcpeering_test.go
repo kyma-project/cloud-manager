@@ -99,7 +99,8 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 					infra.KCP().Client(),
 					vpcPeering,
 					WithState(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected),
-					WithConditions(KcpReadyCondition()))
+					WithConditions(KcpReadyCondition())).
+				Should(Succeed(), "failed to update status on KCP VpcPeering")
 		})
 
 		By("Then SKR AzureVpcPeering is Ready", func() {
@@ -110,8 +111,8 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 					azureVpcPeering,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
-					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected),
-				)
+					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected)).
+				Should(Succeed(), "expect SKR AzureVpcPeering to be Ready, but it didn't")
 		})
 
 		By("When SKR AzureVpcPeering is deleted", func() {

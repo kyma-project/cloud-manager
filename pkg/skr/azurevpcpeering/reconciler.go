@@ -53,6 +53,7 @@ func (r *reconciler) newAction() composed.Action {
 		deleteRemoteNetwork,
 		removeFinalizer,
 		updateStatus,
+		waitStatusReady,
 		composed.StopAndForgetAction,
 	)
 }
