@@ -76,6 +76,13 @@ func (in *AwsVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 
 func (in *AwsVpcPeering) SpecificToProviders() []string { return []string{"aws"} }
 
+func (in *AwsVpcPeering) State() string {
+	return in.Status.State
+}
+func (in *AwsVpcPeering) SetState(v string) {
+	in.Status.State = v
+}
+
 //+kubebuilder:object:root=true
 
 // AwsVpcPeeringList contains a list of AwsVpcPeering

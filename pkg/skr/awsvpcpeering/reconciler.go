@@ -53,6 +53,7 @@ func (r *reconciler) newAction() composed.Action {
 		deleteKcpRemoteNetwork,
 		removeFinalizer,
 		updateStatus,
+		waitStatusActive,
 		composed.StopAndForgetAction,
 	)
 }
