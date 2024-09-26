@@ -16,8 +16,8 @@ create those resources.
    
 2.  Create trust policy document
     ```shell
-    export PRINCIPAL_PROFILE_AWS_ACCOUNT_ID={TBD}
-    export USER_NAME={TBD}
+    export PRINCIPAL_PROFILE_AWS_ACCOUNT_ID=194230256199
+    export USER_NAME=cloud-manager-peering-dev
     cat > trust_policy.json <<- EOF
     {
         "Version": "2012-10-17",
@@ -35,7 +35,7 @@ create those resources.
     ```
 3. Create VpcPeeringRole and attach a trust policy to document.
     ```shell
-    export AWS_ROLE_NAME={TBD}
+    export AWS_ROLE_NAME=CloudManagerPeeringRole
     aws iam create-role --role-name $AWS_ROLE_NAME --assume-role-policy-document file://./trust_policy.json 
     ```
 4.  Create policy document that will be used to create policy
