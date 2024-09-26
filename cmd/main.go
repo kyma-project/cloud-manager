@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	_ "crypto/tls/fipsonly"
 	"flag"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	"os"
