@@ -74,6 +74,9 @@ type AzureRedisInstanceSpec struct {
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
+
+	// +optional
+	IpRange IpRangeRef `json:"ipRange"`
 }
 
 // AzureRedisInstanceStatus defines the observed state of AzureRedisInstance
@@ -102,6 +105,10 @@ type AzureRedisInstance struct {
 
 	Spec   AzureRedisInstanceSpec   `json:"spec,omitempty"`
 	Status AzureRedisInstanceStatus `json:"status,omitempty"`
+}
+
+func (in *AzureRedisInstance) GetIpRangeRef() IpRangeRef {
+	return in.Spec.IpRange
 }
 
 func (in *AzureRedisInstance) Conditions() *[]metav1.Condition {
