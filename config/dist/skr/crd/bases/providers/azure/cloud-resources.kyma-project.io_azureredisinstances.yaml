@@ -50,6 +50,13 @@ spec:
                   x-kubernetes-validations:
                     - message: EnableNonSslPort is immutable.
                       rule: (self == oldSelf)
+                ipRange:
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+                  type: object
                 redisConfiguration:
                   properties:
                     maxclients:
