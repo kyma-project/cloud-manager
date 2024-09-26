@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsNfsBackupSchedule
+metadata:
+  labels:
+    app.kubernetes.io/name: awsnfsbackupschedule
+    app.kubernetes.io/instance: awsnfsbackupschedule-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: awsnfsbackupschedule-sample
+spec:
+  # TODO(user): Add fields here
