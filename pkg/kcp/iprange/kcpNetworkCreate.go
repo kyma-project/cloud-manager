@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,6 +76,9 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 	logger.Info("Creating KCP Network for IpRange")
 
 	err := state.Cluster().K8sClient().Create(ctx, net)
+	if apierrors.IsAlreadyExists(err) {
+		return composed.LogErrorAndReturn(err, "Error creating CM KCP Network - already exists", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
 	if err != nil {
 		logger.Error(err, "Error creating CM KCP Network")
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState

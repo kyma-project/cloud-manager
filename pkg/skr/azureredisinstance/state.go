@@ -4,6 +4,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 
@@ -16,8 +17,8 @@ type State struct {
 	KcpCluster composed.StateCluster
 
 	KcpRedisInstance *cloudcontrolv1beta1.RedisInstance
-
-	AuthSecret *corev1.Secret
+	SkrIpRange       *cloudresourcesv1beta1.IpRange
+	AuthSecret       *corev1.Secret
 }
 
 func newStateFactory(
@@ -48,4 +49,16 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 func (s *State) ObjAsAzureRedisInstance() *cloudresourcesv1beta1.AzureRedisInstance {
 	return s.Obj().(*cloudresourcesv1beta1.AzureRedisInstance)
+}
+
+func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
+	return s.ObjAsAzureRedisInstance()
+}
+
+func (s *State) GetSkrIpRange() *cloudresourcesv1beta1.IpRange {
+	return s.SkrIpRange
+}
+
+func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
+	s.SkrIpRange = skrIpRange
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -16,6 +17,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 	It("Scenario: SKR AzureRedisInstance is created", func() {
 
 		azureRedisInstanceName := "custom-redis-instance"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		enableNonSslPort := false
 		redisVersion := "6.0"
@@ -23,6 +25,9 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		sku.Capacity = 1
 		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
 		azureRedisInstanceRedisConfigs.MaxClients = "5"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
 
 		const (
 			authSecretName = "azure-custom-auth-secretname"
@@ -33,6 +38,13 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		authSecretAnnotations := map[string]string{
 			"bar": "2",
 		}
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
 
 		By("When AzureRedisInstance is created", func() {
 			Eventually(CreateAzureRedisInstance).
@@ -46,6 +58,23 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
 					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAzureRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
 				).
 				Should(Succeed())
 		})
@@ -168,11 +197,21 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisInstance).
 			Should(Succeed())
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR AzureRedisInstance is modified", func() {
 
 		azureRedisInstanceName := "modified-redis-instance"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		enableNonSslPort := false
 		redisVersion := "6.0"
@@ -180,6 +219,9 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		sku.Capacity = 1
 		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
 		azureRedisInstanceRedisConfigs.MaxClients = "5"
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
 
 		const (
 			authSecretName = "azure-custom-auth-secretname"
@@ -190,6 +232,13 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		authSecretAnnotations := map[string]string{
 			"bar": "2",
 		}
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
 
 		By("Given AzureRedisInstance exists", func() {
 			Eventually(CreateAzureRedisInstance).
@@ -203,6 +252,23 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
 					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAzureRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
 				).
 				Should(Succeed())
 		})
@@ -290,14 +356,34 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisInstance).
 			Should(Succeed())
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR AzureRedisInstance is deleted", func() {
 
 		azureRedisInstanceName := "another-azure-redis-instance"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rcr"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		sku := cloudresourcesv1beta1.AzureRedisSKU{}
 		sku.Capacity = 1
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
 
 		By("Given AzureRedisInstance is created", func() {
 			Eventually(CreateAzureRedisInstance).
@@ -307,6 +393,23 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					WithAzureRedisInstanceSKUCapacity(sku),
 					WithAzureRedisInstanceEnableNonSslPort(false),
 					WithAzureRedisInstanceRedisVersion("6.0"),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
 				).
 				Should(Succeed())
 		})
@@ -424,6 +527,15 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisInstance).
 				Should(Succeed(), "expected AzureRedisInstance not to exist")
+		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
 		})
 	})
 
