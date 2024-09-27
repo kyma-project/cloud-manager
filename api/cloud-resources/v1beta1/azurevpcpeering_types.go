@@ -74,6 +74,13 @@ func (in *AzureVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 
 func (in *AzureVpcPeering) SpecificToProviders() []string { return []string{"azure"} }
 
+func (in *AzureVpcPeering) State() string {
+	return in.Status.State
+}
+func (in *AzureVpcPeering) SetState(v string) {
+	in.Status.State = v
+}
+
 //+kubebuilder:object:root=true
 
 // AzureVpcPeeringList contains a list of AzureVpcPeering
