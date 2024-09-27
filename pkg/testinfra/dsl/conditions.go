@@ -105,7 +105,7 @@ func NotHavingConditionTrue(conditionType string) ObjAssertion {
 					obj.GetNamespace(), obj.GetName(),
 					conditionType,
 					pie.Map(*x.Conditions(), func(c metav1.Condition) string {
-						return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+						return fmt.Sprintf("%s:%s:%s:%s", c.Type, c.Status, c.Reason, c.Message)
 					}),
 				)
 			}
