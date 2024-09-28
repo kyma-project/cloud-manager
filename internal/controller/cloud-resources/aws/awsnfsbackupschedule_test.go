@@ -5,6 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
+	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 
@@ -99,6 +100,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
 
 		//Define variables.
+		backupschedule.ToleranceInterval = 120 * time.Second
 		nfsBackupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 		nfsBackupScheduleName := "nfs-backup-schedule-1"
 		nfsBackupHourlySchedule := "0 * * * *"

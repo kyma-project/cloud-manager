@@ -26,12 +26,12 @@ func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj client
 		ApplyOnObject(obj)
 
 	if obj.GetName() == "" {
-		return errors.New("the SKR GcpNfsBackupSchedule must have name set")
+		return errors.New("the SKR NfsBackupSchedule must have name set")
 	}
 
 	sourceRef := schedule.GetSourceRef()
 	if sourceRef.Name == "" {
-		return errors.New("the SKR GcpNfsBackupSchedule must have spec.NfsVolumeRef.name set")
+		return errors.New("the SKR NfsBackupSchedule must have spec.NfsVolumeRef.name set")
 	}
 	if sourceRef.Namespace == "" {
 		sourceRef.Namespace = DefaultSkrNamespace
