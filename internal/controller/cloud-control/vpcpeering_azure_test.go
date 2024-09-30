@@ -66,7 +66,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-azure-vpcpeering").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), remotePeeringName, true).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), remotePeeringName, true, true).
 				Build()
 
 			Eventually(CreateObj).
@@ -265,6 +265,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Then local Azure peering does not exist", func() {
 			peering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, kcpPeeringName)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(peering).To(BeNil())
+		})
+
+		By("And Then remote Azure peering exists", func() {
+			peering, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
 			Expect(err).To(HaveOccurred())
 			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
 			Expect(peering).To(BeNil())

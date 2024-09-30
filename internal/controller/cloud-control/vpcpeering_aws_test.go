@@ -136,7 +136,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, false).
 				Build()
 
 			Eventually(CreateObj).
