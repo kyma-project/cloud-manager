@@ -51,5 +51,5 @@ function extractPermissionArrays(rawFile, pathArray) {
     returnCode = 1;
   })
 
-  return returnCode;
+  process.exit(returnCode);
 })()
