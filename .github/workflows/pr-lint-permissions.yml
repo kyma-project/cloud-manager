@@ -1,4 +1,4 @@
-name: Contributor Docs Permission Lint
+name: PR Contributor Docs Permission Lint
 
 on:
   pull_request:
