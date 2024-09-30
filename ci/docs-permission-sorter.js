@@ -44,7 +44,7 @@ function extractPermissionArrays(rawFile, pathArray) {
 
     const sorted = [...arr].sort()
 
-    console.error("Expected sorted array, found unsorted.", arr)
+    console.error("Expected sorted array, found unsorted.")
     console.error("Found:\n", JSON.stringify(arr, null, 2));
     console.error("Expected:\n", JSON.stringify(sorted, null, 2));
 
