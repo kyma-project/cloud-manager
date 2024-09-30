@@ -9,9 +9,27 @@ Once an AwsVpcPeering CR is created and reconciled, the Cloud Manager controller
 connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the underlying cloud provider and accepts
 VPC peering connection in the remote cloud provider account.
 
-You must create CloudManagerPeeringRole and authorize Cloud Manager principal to assume that role in the remote cloud provider 
-account to accept VPC peering connection. Assign the following permissions to CloudManagerPeeringRole in the 
-remote account:
+Cloud Manager initiates VPC peering connection from the Kyma underlying cloud provider. Cloud Manager must be authorized
+to accept VPC peering connection in the remote cloud provider account. For cross-account access Cloud Manager uses
+[AssumeRole](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html). 
+
+You must create CloudManagerPeeringRole with trust policy that allows Cloud Manager principal
+arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV to assume that role. ENV corresponds to dev, stage or prod.
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"AWS": "arn:aws:iam::194230256199:user/cloud-manager-peering-ENV"
+			},
+			"Action": "sts:AssumeRole"
+		}
+	]
+}
+```
+Create new managed policy CloudManagerPeeringAccess with following permissions:
 * ec2:AcceptVpcPeeringConnection
 * ec2:DescribeVpcs
 * ec2:DescribeVpcPeeringConnections
@@ -19,8 +37,11 @@ remote account:
 * ec2:CreateRoute
 * ec2:CreateTags
 
-AwsVpcPeering can be deleted at any time but the VPC peering connection in the remote account must be deleted
-manually.
+Attach CloudManagerPeeringAccess policy to CloudManagerPeeringRole.
+
+Kyma underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion, but remote VPC 
+peering connection is left hanging, and must be deleted manually.
+
 
 ## Specification <!-- {docsify-ignore} -->
 
