@@ -39,7 +39,7 @@ Create new managed policy CloudManagerPeeringAccess with following permissions:
 
 Attach CloudManagerPeeringAccess policy to CloudManagerPeeringRole.
 
-Kyma underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion, but remote VPC 
+Kyma underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
 peering connection is left hanging, and must be deleted manually.
 
 
@@ -50,11 +50,11 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter           | Type   | Description                                                                        |
-|---------------------|--------|------------------------------------------------------------------------------------|
-| **remoteAccountId** | string | Specifies the the Amazon Web Services account ID of the owner of the accepter VPC. |
-| **remoteRegion**    | string | Specifies the Region code for the accepter VPC.                                    |
-| **remoteVpcId**     | string | Specifies the ID of the VPC with which you are creating the VPC peering connection |
+| Parameter           | Type   | Description                                                                                  |
+|---------------------|--------|----------------------------------------------------------------------------------------------|
+| **remoteAccountId** | string | Required. Specifies the the Amazon Web Services account ID of the owner of the accepter VPC. |
+| **remoteRegion**    | string | Required. Specifies the Region code for the accepter VPC.                                    |
+| **remoteVpcId**     | string | Required. Specifies the ID of the VPC with which you are creating the VPC peering connection |
 
 **Status:**
 
