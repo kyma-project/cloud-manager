@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ScopeSpec defines the desired state of Scope
@@ -179,6 +180,9 @@ type AwsZone struct {
 
 // ScopeStatus defines the observed state of Scope
 type ScopeStatus struct {
+	// +optional
+	State StatusState `json:"state,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map
@@ -211,6 +215,20 @@ func (in *Scope) Conditions() *[]metav1.Condition {
 
 func (in *Scope) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *Scope) CloneForPatchStatus() client.Object {
+	return &Scope{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Scope",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 //+kubebuilder:object:root=true
