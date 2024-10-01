@@ -4,25 +4,24 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func removeKymaFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	isRemoved := controllerutil.RemoveFinalizer(state.kyma, cloudcontrolv1beta1.FinalizerName)
-
-	if !isRemoved {
-		return nil, nil
+	if state.kyma == nil {
+		return nil, ctx
 	}
 
-	logger.Info("Removing finalizer from the Kyma CR")
-
-	err := state.Cluster().K8sClient().Update(ctx, state.kyma)
+	removed, err := composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, state.kyma, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating Kyma CR with removed finalizer", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	if removed {
+		logger.Info("Removed finalizer from the Kyma CR")
+	}
+
+	return nil, ctx
 }

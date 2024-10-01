@@ -60,13 +60,15 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 	scope.Status.GcpOperations = unfinishedOperations
 	if len(unfinishedOperations) > 0 {
 		scope.Status.GcpOperations = unfinishedOperations
-		return composed.UpdateStatus(scope).
+		return composed.PatchStatus(scope).
+			ErrorLogMessage("Error patching KCP Scope status with GCP unfinished operations").
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
 	// Even if all operations are done (which might take us several iterations to figure out), we have issues with failed or not found operations.
 	// We should requeue and verify that all APIs are really enabled.
-	return composed.UpdateStatus(scope).
+	return composed.PatchStatus(scope).
+		ErrorLogMessage("Error patching KCP Scope status with GCP operations").
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

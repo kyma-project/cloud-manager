@@ -11,6 +11,11 @@ func findKymaModuleState(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	if state.kyma == nil {
+		state.moduleState = util.KymaModuleStateNotPresent
+		return nil, ctx
+	}
+
 	moduleName := "cloud-manager"
 	moduleState := util.GetKymaModuleStateFromStatus(state.kyma, moduleName)
 	moduleInSpec := util.IsKymaModuleListedInSpec(state.kyma, moduleName)
