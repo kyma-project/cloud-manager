@@ -69,6 +69,11 @@ func (r *networkReconciler) newAction() composed.Action {
 				handleNetworkReference,
 				// ensure no network reference pass further, allow only managed networks
 				logLogicalErrorOnManagedNetworkMissing,
+
+				// currently we support only creation of the cm managed networks,
+				// if that's not the case this action will set error status and forget the KCP Network object
+				preventCreationOfNonCmManagedNetwork,
+
 				// and now branch to provider specific flow
 				composed.BuildSwitchAction(
 					"providerSwitch",

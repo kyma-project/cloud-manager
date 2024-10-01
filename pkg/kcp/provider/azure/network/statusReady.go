@@ -59,8 +59,8 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		state.ObjAsNetwork().Status.Network.Azure.ResourceGroup = state.resourceGroupName
 		changed = true
 	}
-	if state.ObjAsNetwork().Status.Network.Azure.NetworkName != state.ObjAsNetwork().Name {
-		state.ObjAsNetwork().Status.Network.Azure.NetworkName = state.ObjAsNetwork().Name
+	if state.ObjAsNetwork().Status.Network.Azure.NetworkName != state.vnetName {
+		state.ObjAsNetwork().Status.Network.Azure.NetworkName = state.vnetName
 		changed = true
 	}
 
