@@ -10,14 +10,12 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	lll := logger.WithValues("vpcPeeringName", state.ObjAsVpcPeering().Spec.Details.PeeringName)
-
 	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		return nil, nil
 	}
 
 	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
-		lll.Info("Remote VpcPeering deleted before Azure peering is created")
+		logger.Info("Remote VpcPeering deleted before Azure peering is created")
 		return nil, nil
 	}
 
@@ -29,14 +27,13 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 	)
 
-	lll = lll.WithValues("vpcPeeringId", state.ObjAsVpcPeering().Status.RemoteId)
-	lll.Info("Deleting VpcPeering")
+	logger.Info("Deleting remote VpcPeering")
 
 	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", composed.LoggerIntoCtx(ctx, lll))
+		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
 	}
 
-	lll.Info("Remote VpcPeering deleted")
+	logger.Info("Remote VpcPeering deleted")
 
 	return nil, nil
 }

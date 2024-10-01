@@ -27,7 +27,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteSubscription  = "afdbc79f-de19-4df4-94cd-6be2739dc0e0"
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
-			remotePeeringName   = "MyPeering"
+			remotePeeringName   = "my-peering"
 		)
 
 		scope := &cloudcontrolv1beta1.Scope{}
