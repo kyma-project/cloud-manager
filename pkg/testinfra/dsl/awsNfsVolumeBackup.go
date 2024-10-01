@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -70,4 +71,30 @@ func AssertAwsNfsVolumeBackupHasState(state string) ObjAssertion {
 		}
 		return nil
 	}
+}
+
+func GivenAwsNfsVolumeBackupExists(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AwsNfsVolumeBackup, opts ...ObjAction) error {
+	if obj == nil {
+		obj = &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultSkrNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the SKR AwsNfsVolumeBackup must have name set")
+	}
+
+	err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	if apierrors.IsNotFound(err) {
+		err = clnt.Create(ctx, obj)
+	} else {
+		err = clnt.Update(ctx, obj)
+	}
+	return err
 }

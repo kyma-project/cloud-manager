@@ -21,6 +21,7 @@ import (
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"os"
 	"testing"
@@ -80,6 +81,11 @@ var _ = BeforeSuite(func() {
 	// AwsNfsBackupSchedule
 	Expect(cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(
 		infra.Registry(), env)).NotTo(HaveOccurred())
+
+	// AwsNfsVolumeRestore
+	Expect(cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(
+		infra.Registry(), awsrestoreclient.NewMockClient(), env)).
+		NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
