@@ -2,7 +2,6 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -57,98 +56,63 @@ func (r *scopeReconciler) newState(req ctrl.Request) *State {
 }
 
 func (r *scopeReconciler) newAction() composed.Action {
-	// Deprovisioning is done from the skr.CloudManager module CR loop
-	// it will determine if all cloud resources are deleted from SKR
-	// and if so will delete installed CRDs, remove finalizers from Kyma and Scope,
-	// and remove skr from the looper
+	// Deprovisioning is started from the skr.CloudResources module CR loop
+	// when it will determine that module CR has deletion timestamp,
+	/// if all cloud resources are deleted from SKR,
+	// it will delete installed CRDs, and remove own finalizer
+	// KLM will figure it's deleted and remove it from the KCP Kyma status
+	// This KCP Scope reconciler will then detect cloud-manager module is not present
+	// in the Kyma status, and it will remove Kyma finalizer and deactivate SKR
+	// and remove it from the SKR runtime loop
 	//
-	// This Scope/Kyma loop is handling provisioning only, and
-	// if module is present in the Kyma and in Ready state it has to
-	//  * add finalizer to Kyma
-	//  * create Scope with finalizer
-	//  * add SKR to the looper
+	// This Scope/Kyma loop should:
+	// * if module is present in the Kyma and in Ready state:
+	//   * add finalizer to Kyma
+	//   * create Scope with finalizer
+	//   * add SKR to the looper
+	// * if module is not present in the Kyma status:
+	//   * remove Kyma finalizer
+	//   * deactivate SKR and remove it from the SKR runtime loop
 	return composed.ComposeActions(
 		"scopeMain",
-		loadKyma, // stops if Kyma not found
-		findKymaModuleState,
 		loadScopeObj,
 		loadNetworks,
+		loadKyma, // stops if Kyma not found
+		findKymaModuleState,
 
-		composed.BuildSwitchAction(
-			"scope-switch",
-			nil,
+		// module is disabled
+		// if module not present in status, remove kymaName from looper, delete scope, and stop and forget
+		composed.If(
+			predicateShouldDisable(),
+			removeKymaFinalizer,
+			skrDeactivate,
+			composed.StopAndForgetAction,
+		),
 
-			// module is disabled
-			composed.NewCase(
-				predicateShouldDisable(),
-				composed.ComposeActions(
-					"scope-disable",
-					removeKymaFinalizer,
-					skrDeactivate, // if module not present in status, remove kymaName from looper, delete scope, and stop and forget
-				),
+		// module exists in Kyma status in some state (processing, ready, deleting, warning)
+		// scope:
+		//   * does not exist - has to be created
+		//   * exists but waiting for api to be activated
+		composed.If(
+			predicateShouldEnable(),
+			addKymaFinalizer,
+
+			// scope does not exist or needs to be updated
+			composed.If(
+				predicateScopeCreateOrUpdateNeeded(),
+				createGardenerClient,
+				findShootName,
+				loadShoot,
+				loadGardenerCredentials,
+				createScope,
+				ensureScopeCommonFields,
+				saveScope,
+				createKymaNetworkReference,
 			),
 
-			// module is enabled
-			composed.NewCase(
-				predicateShouldEnable(),
-				composed.ComposeActions(
-					"scope-enable",
-					// module exists in Kyma status in some state (processing, ready, deleting, warning)
-					// scope:
-					//   * does not exist - has to be created
-					//   * exist but waiting for api to be activated
-
-					addKymaFinalizer,
-					composed.If(
-						// scopeAlreadyCreatedBranching
-						composed.All(ObjIsLoadedPredicate(), composed.Not(UpdateIsNeededPredicate())),
-						composed.ComposeActions( // This is called only if scope exits, and it does not need to be updated.
-							"enableApisAndActivateSkr",
-							enableApis,
-							addReadyCondition,
-							skrActivate,
-							composed.StopAndForgetAction),
-					),
-					// scope does not exist or needs to be updated
-					createGardenerClient,
-					findShootName,
-					loadShoot,
-					loadGardenerCredentials,
-					createScope,
-					ensureScopeCommonFields,
-					saveScope,
-					createKymaNetworkReference,
-					composed.StopWithRequeueAction, // enableApisAndActivateSkr will be called in the next loop
-				),
-			),
+			enableApis,
+			addReadyCondition,
+			skrActivate,
 		),
 	)
-}
-
-func ObjIsLoadedPredicate() composed.Predicate {
-	return func(ctx context.Context, st composed.State) bool {
-		obj := st.Obj()
-		return obj != nil && obj.GetName() != "" // empty object is created when state gets created
-	}
-}
-
-func UpdateIsNeededPredicate() composed.Predicate {
-	return func(ctx context.Context, st composed.State) bool {
-		if ObjIsLoadedPredicate()(ctx, st) {
-			state := st.(*State)
-			if state.kcpNetworkKyma == nil {
-				return true
-			}
-			switch state.ObjAsScope().Spec.Provider {
-			case cloudcontrolv1beta1.ProviderGCP:
-				return state.ObjAsScope().Spec.Scope.Gcp.Workers == nil || len(state.ObjAsScope().Spec.Scope.Gcp.Workers) == 0
-			case cloudcontrolv1beta1.ProviderAzure:
-				return state.ObjAsScope().Spec.Scope.Azure.Network.Nodes == ""
-			default:
-				return false
-			}
-		} else {
-			return false
-		}
-	}
 }
