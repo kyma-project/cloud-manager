@@ -44,6 +44,8 @@ spec:
             spec:
               description: AzureVpcPeeringSpec defines the desired state of AzureVpcPeering
               properties:
+                deleteRemotePeering:
+                  type: boolean
                 remotePeeringName:
                   type: string
                   x-kubernetes-validations:
