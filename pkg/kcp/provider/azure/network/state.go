@@ -18,6 +18,7 @@ type State struct {
 	location          string
 	tags              map[string]string
 	resourceGroupName string
+	vnetName          string
 	cidr              string
 
 	resourceGroup *armresources.ResourceGroup

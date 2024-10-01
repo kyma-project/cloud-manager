@@ -16,7 +16,7 @@ func vnetDelete(ctx context.Context, st composed.State) (error, context.Context)
 
 	logger.Info("Deleting Azure VNet for KCP Network")
 
-	err := state.azureClient.DeleteNetwork(ctx, state.resourceGroupName, state.ObjAsNetwork().Name)
+	err := state.azureClient.DeleteNetwork(ctx, state.resourceGroupName, state.vnetName)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error deleting Azure VNet for KCP Network", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
