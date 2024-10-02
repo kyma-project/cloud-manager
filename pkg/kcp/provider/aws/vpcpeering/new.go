@@ -38,9 +38,8 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteRoutes,
 					deleteVpcPeering,
-					remotePeeringDelete,
 					remoteRoutesDelete,
-
+					remotePeeringDelete,
 					actions.PatchRemoveFinalizer,
 				),
 				composed.ComposeActions(
