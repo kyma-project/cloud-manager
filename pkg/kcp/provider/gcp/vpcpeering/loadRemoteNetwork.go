@@ -8,10 +8,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	remoteNetwork := &cloudcontrolv1beta1.Network{}
 	namespace := state.ObjAsVpcPeering().Spec.Details.RemoteNetwork.Namespace
@@ -44,6 +46,11 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if remoteNetwork.Status.State != string(cloudcontrolv1beta1.ReadyState) {
+		if !remoteNetwork.ObjectMeta.CreationTimestamp.After(state.ObjAsVpcPeering().ObjectMeta.CreationTimestamp.Time.Add(10 * time.Minute)) {
+			return composed.LogErrorAndReturn(err, "[KCP GCP VPCPeering loadRemoteNetwork] KCP Remote Network is not ready yet, requeuing", composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil)
+		}
+
+		logger.Info("[KCP GCP VPCPeering loadRemoteNetwork] GCP KCP VpcPeering Remote Network didn't reach ready state after 10 minutes, setting error state")
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
@@ -58,7 +65,6 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 			Run(ctx, state)
 	}
 
-	logger := composed.LoggerFromCtx(ctx)
 	state.remoteNetwork = remoteNetwork
 
 	logger.Info("[KCP GCP VPCPeering loadRemoteNetwork] GCP KCP VpcPeering Remote Network loaded successfully")

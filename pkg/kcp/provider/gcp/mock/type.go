@@ -54,4 +54,6 @@ type Server interface {
 	ClientErrors
 
 	MemoryStoreClientFakeUtils
+
+	VpcPeeringMockClientUtils
 }

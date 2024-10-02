@@ -40,6 +40,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crGcpVpcPeeringMain",
 		composed.LoadObj,
+		updateId,
 		loadKcpRemoteNetwork,
 		loadKcpGcpVpcPeering,
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),

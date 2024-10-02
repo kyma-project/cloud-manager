@@ -30,18 +30,14 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	gcpScope := state.Scope().Spec.Scope.Gcp
-	project := gcpScope.Project
-	vpc := gcpScope.VpcNetwork
-
 	err := state.client.CreateRemoteVpcPeering(
 		ctx,
 		state.remotePeeringName,
 		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
 		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
 		state.importCustomRoutes,
-		project,
-		vpc)
+		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 
 	if err != nil {
 		message := fmt.Sprintf("Error creating Remote VpcPeering %s", err)

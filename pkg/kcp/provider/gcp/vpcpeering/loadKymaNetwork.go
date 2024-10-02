@@ -7,15 +7,17 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func loadLocalNetwork(ctx context.Context, st composed.State) (error, context.Context) {
+func loadKymaNetwork(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	net := &cloudcontrolv1beta1.Network{}
+	network := &cloudcontrolv1beta1.Network{}
 	namespace := state.ObjAsVpcPeering().Spec.Details.LocalNetwork.Namespace
 	if namespace == "" {
 		namespace = state.ObjAsVpcPeering().Namespace
@@ -27,7 +29,7 @@ func loadLocalNetwork(ctx context.Context, st composed.State) (error, context.Co
 	err := state.Cluster().K8sClient().Get(ctx, client.ObjectKey{
 		Namespace: namespace,
 		Name:      state.ObjAsVpcPeering().Spec.Details.LocalNetwork.Name,
-	}, net)
+	}, network)
 
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "[KCP GCP VPCPeering loadLocalNetwork] Error loading GCP KCP Local Network", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
@@ -48,25 +50,25 @@ func loadLocalNetwork(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
-	if net.Status.State != string(cloudcontrolv1beta1.ReadyState) {
+	if !meta.IsStatusConditionTrue(ptr.Deref(network.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady) {
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
-				Message: "Local network is not ready",
+				Message: "Local network not ready",
 			}).
 			ErrorLogMessage("Error patching KCP VpcPeering status with local network not ready").
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("KCP VpcPeering local Network is not ready").
+			SuccessLogMsg("KCP VpcPeering local KCP Network not ready").
 			Run(ctx, state)
 	}
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-	state.localNetwork = net
+	state.localNetwork = network
 
-	logger.Info("[SKR GCP VPCPeering createKcpRemoteNetwork] GCP KCP VpcPeering local network loaded successfully")
+	logger.Info("[KCP GCP VPCPeering loadLocalNetwork] GCP KCP VpcPeering local network loaded successfully")
 
 	return nil, ctx
 }

@@ -73,5 +73,5 @@ func newState(vpcPeeringState vpcpeeringtypes.State,
 // Using cm- prefix to make it clear it's a cloud manager resource
 // Using obj name suffix as the peering name since it is unique within the kcp namespace
 func (s *State) getKymaVpcPeeringName() string {
-	return "cm--" + s.Obj().GetName()
+	return "cm-" + s.Obj().GetName()
 }

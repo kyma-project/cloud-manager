@@ -23,10 +23,11 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpVpcPeering",
 			actions.AddFinalizer,
-			loadLocalNetwork,
+			loadKymaNetwork,
 			loadRemoteNetwork,
 			loadRemoteVpcPeering,
 			loadKymaVpcPeering,
+			setPeeringStatusIds,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"gcpVpcPeering-create",
@@ -41,8 +42,6 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteVpcPeering,
 					waitKymaVpcPeeringDeletion,
-					//deleteRemoteNetwork,
-					//waitRemoteNetworkRemoval,
 					actions.RemoveFinalizer,
 				),
 			),
