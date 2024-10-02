@@ -12,6 +12,8 @@ jobs:
         combination:
           - docsPath: docs/contributor/aws-permissions.md
             permissionPath: Statement.0.Action
+          - docsPath: docs/contributor/gcp-permissions.md
+            permissionPath: ""
 
     steps:
       - name: Checkout code
