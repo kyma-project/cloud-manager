@@ -67,6 +67,8 @@ type VpcPeeringDetails struct {
 	LocalPeeringName string `json:"localPeeringName,omitempty"`
 
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
+
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1

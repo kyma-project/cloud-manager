@@ -48,6 +48,8 @@ spec:
             properties:
               details:
                 properties:
+                  deleteRemotePeering:
+                    type: boolean
                   importCustomRoutes:
                     type: boolean
                   localNetwork:
