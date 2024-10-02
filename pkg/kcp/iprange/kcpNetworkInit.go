@@ -21,8 +21,8 @@ func kcpNetworkInit(ctx context.Context, st composed.State) (error, context.Cont
 		state.networkKey.Name = state.ObjAsIpRange().Spec.Network.Name
 	}
 
-	state.isCloudManagerNetwork = common.KcpNetworkCMCommonName(state.Scope().Name) == state.networkKey.Name
-	state.isKymaNetwork = common.KcpNetworkKymaCommonName(state.Scope().Name) == state.networkKey.Name
+	state.isCloudManagerNetwork = common.IsKcpNetworkCM(state.networkKey.Name, state.Scope().Name)
+	state.isKymaNetwork = common.IsKcpNetworkKyma(state.networkKey.Name, state.Scope().Name)
 
 	logger := composed.LoggerFromCtx(ctx).
 		WithValues(
