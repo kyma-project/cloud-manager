@@ -20,9 +20,8 @@ type vpcPeeringEntry struct {
 	peering ec2types.VpcPeeringConnection
 }
 type vpcPeeringStore struct {
-	m       sync.Mutex
-	account string
-	items   []*vpcPeeringEntry
+	m     sync.Mutex
+	items []*vpcPeeringEntry
 }
 
 func newVpcPeeringStore() *vpcPeeringStore {
