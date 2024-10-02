@@ -171,6 +171,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awsnfsbackupschedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsbackupschedules/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsbackupschedules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - awsnfsvolumebackups
   verbs:
   - create
@@ -379,6 +405,32 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - gcpnfsbackupschedules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpnfsbackupschedules/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - gcpnfsbackupschedules/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
   - gcpnfsvolumebackups
   verbs:
   - create
@@ -528,32 +580,6 @@ rules:
   - cloud-resources.kyma-project.io
   resources:
   - ipranges/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - cloud-resources.kyma-project.io
-  resources:
-  - nfsbackupschedules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - cloud-resources.kyma-project.io
-  resources:
-  - nfsbackupschedules/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - cloud-resources.kyma-project.io
-  resources:
-  - nfsbackupschedules/status
   verbs:
   - get
   - patch

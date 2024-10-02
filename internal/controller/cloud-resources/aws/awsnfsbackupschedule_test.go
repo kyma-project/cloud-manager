@@ -1,21 +1,22 @@
-package cloudresources
+package aws
 
 import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
+	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
+	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
+var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 	const (
 		interval = time.Millisecond * 50
@@ -24,25 +25,23 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		timeout = time.Second * 20
 	)
 	now := time.Now().UTC()
-	skrIpRangeName := "gcp-iprange-1-bs"
-	skrNfsVolumeName := "gcp-nfs-1-bs"
-	skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+	skrNfsVolumeName := "aws-nfs-1-bs"
+	skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+	nfsInstanceName := "aws-nfs-instance-01"
+	nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+	awsNfsId := "aws-filesystem-01"
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists
-			Expect(
-				infra.GivenScopeGcpExists(infra.SkrKymaRef().Name),
-			).NotTo(HaveOccurred())
-			// Load created scope
-			Eventually(func() (exists bool, err error) {
-				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
-				exists = err == nil
-				return exists, client.IgnoreNotFound(err)
-			}, timeout, interval).
-				Should(BeTrue(), "expected Scope to get created")
+			Eventually(GivenScopeAwsExists).
+				WithArguments(
+					infra.Ctx(), infra, scope,
+					WithName(infra.SkrKymaRef().Name),
+				).
+				Should(Succeed())
 		})
 		By("And Given SKR namespace exists", func() {
 			//Create namespace if it doesn't exist.
@@ -51,39 +50,62 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		By("And Given SKR SourceRef exists", func() {
-			// tell skrgcpnfsvol reconciler to ignore this SKR GcpNfsVolume
-			skrgcpnfsvol.Ignore.AddName(skrNfsVolumeName)
-			//Create SKR GcpNfsVolume if it doesn't exist.
-			Eventually(CreateGcpNfsVolume).
+		By("And Given SKR AwsNfsVolume exists", func() {
+			skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
+			//Create SKR AwsNfsVolume if it doesn't exist.
+			Eventually(GivenAwsNfsVolumeExists).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
 					WithName(skrNfsVolumeName),
-					WithGcpNfsVolumeIpRange(skrIpRangeName),
+					WithAwsNfsVolumeCapacity("1Gi"),
 				).
 				Should(Succeed())
 		})
-		By("And Given SKR SourceRef in Ready state", func() {
-			//Update SKR SourceRef status to Ready
+		By("And Given KCP NfsInstance exists", func() {
+			nfsinstance.Ignore.AddName(nfsInstanceName)
+			Eventually(GivenNfsInstanceExists).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithName(nfsInstanceName),
+					WithRemoteRef(skrNfsVolumeName),
+					WithScope(infra.SkrKymaRef().Name),
+					WithIpRange(nfsInstanceName),
+					WithNfsInstanceAws(),
+				).
+				Should(Succeed(), "failed creating NfsInstance")
+		})
+		By("And Given NfsInstance is in Ready state", func() {
+
+			//Update KCP NfsInstance status to Ready
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithConditions(KcpReadyCondition()),
+					WithNfsInstanceStatusId(awsNfsId),
+				).
+				Should(Succeed())
+		})
+		By("And Given AwsNfsVolume is in Ready state", func() {
+
+			//Update KCP NfsInstance status to Ready
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
 					WithConditions(SkrReadyCondition()),
+					WithAwsNfsVolumeStatusId(nfsInstanceName),
 				).
 				Should(Succeed())
 		})
-
 	})
 
-	Describe("Scenario: SKR Recurring GcpNfsBackupSchedule - Create", func() {
+	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
 
 		//Define variables.
-		nfsBackupSchedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
+		backupschedule.ToleranceInterval = 120 * time.Second
+		nfsBackupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 		nfsBackupScheduleName := "nfs-backup-schedule-1"
 		nfsBackupHourlySchedule := "0 * * * *"
-		nfsBackupLocation := "us-west1"
 
-		nfsBackup1Name := "gcp-nfs-backup-1-bs"
+		nfsBackup1Name := "aws-nfs-backup-1-bs"
 
 		expectedTimes := []time.Time{
 			time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location()).UTC(),
@@ -92,21 +114,20 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		}
 
 		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, now.Format("20060102-150405"))
-		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
-		skrNfsBackup1 := &cloudresourcesv1beta1.GcpNfsVolumeBackup{
+		skrNfsBackup1 := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      nfsBackup1Name,
 				Namespace: DefaultSkrNamespace,
 			},
-			Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
-				Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
-					Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
+			Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
+				Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
+					Volume: cloudresourcesv1beta1.VolumeRef{
 						Name:      skrNfsVolumeName,
 						Namespace: DefaultSkrNamespace,
 					},
 				},
-				Location: "us-west1-a",
 			},
 		}
 
@@ -114,7 +135,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 
 			By("And Given SKR NfsVolumeBackups exists", func() {
 				//Update SKR SourceRef status to Ready
-				Eventually(CreateGcpNfsVolumeBackup).
+				Eventually(CreateAwsNfsVolumeBackup).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), skrNfsBackup1,
 					).
@@ -129,18 +150,17 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 			})
 		})
 
-		It("When GcpNfsBackupSchedule Create is called", func() {
+		It("When AwsNfsBackupSchedule Create is called", func() {
 			Eventually(CreateNfsBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
 					WithSchedule(nfsBackupHourlySchedule),
-					WithGcpLocation(nfsBackupLocation),
 					WithNfsVolumeRef(skrNfsVolumeName),
 					WithRetentionDays(0),
 				).
 				Should(Succeed())
-			By("Then GcpNfsBackupSchedule is created in SKR", func() {
+			By("Then AwsNfsBackupSchedule is created in SKR", func() {
 				Eventually(LoadAndCheck).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
@@ -148,7 +168,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					).
 					Should(Succeed())
 			})
-			By("And Then GcpNfsBackupSchedule will get NextRun time(s)", func() {
+			By("And Then AwsNfsBackupSchedule will get NextRun time(s)", func() {
 				Eventually(LoadAndCheck).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
@@ -157,7 +177,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					).
 					Should(Succeed())
 			})
-			By("And Then GcpNfsBackupSchedule has Active state", func() {
+			By("And Then AwsNfsBackupSchedule has Active state", func() {
 				Expect(nfsBackupSchedule.Status.State).To(Equal(cloudresourcesv1beta1.JobStateActive))
 			})
 
@@ -193,31 +213,29 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		})
 	})
 
-	Describe("Scenario: SKR Onetime GcpNfsBackupSchedule - Create", func() {
+	Describe("Scenario: SKR Onetime AwsNfsBackupSchedule - Create", func() {
 		//Define variables.
-		nfsBackupSchedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
+		nfsBackupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 		nfsBackupScheduleName := "nfs-backup-schedule-2"
-		nfsBackupLocation := "us-west1"
 
 		now := time.Now().UTC()
 		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+2, 0, 0, now.Location()).UTC()
 		expectedTimes := []time.Time{start}
 
 		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, start.Format("20060102-150405"))
-		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
-		It("When GcpNfsBackupSchedule Create is called", func() {
+		It("When AwsNfsBackupSchedule Create is called", func() {
 			Eventually(CreateNfsBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
-					WithGcpLocation(nfsBackupLocation),
 					WithStartTime(start),
 					WithNfsVolumeRef(skrNfsVolumeName),
 				).
 				Should(Succeed())
 
-			By("Then GcpNfsBackupSchedule will be created in SKR and will have NextRun time", func() {
+			By("Then AwsNfsBackupSchedule will be created in SKR and will have NextRun time", func() {
 				Eventually(LoadAndCheck).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
@@ -226,7 +244,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					).
 					Should(Succeed())
 			})
-			By("And Then GcpNfsBackupSchedule has Active state", func() {
+			By("And Then AwsNfsBackupSchedule has Active state", func() {
 				Expect(nfsBackupSchedule.Status.State).To(Equal(cloudresourcesv1beta1.JobStateActive))
 			})
 
