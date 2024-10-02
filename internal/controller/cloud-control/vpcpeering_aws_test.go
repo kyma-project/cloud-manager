@@ -144,7 +144,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, false).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, true).
 				Build()
 
 			Eventually(CreateObj).
@@ -334,20 +334,20 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(routeCount(localRouteTables, *localPeering.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(0))
 		})
 
-		By("And Then remote VpcPeeringConnection is not deleted", func() {
+		By("And Then remote VpcPeeringConnection is deleted", func() {
 			remotePeerings, _ := awsMockRemote.DescribeVpcPeeringConnections(infra.Ctx())
 
 			found := pie.Any(remotePeerings, func(x ec2Types.VpcPeeringConnection) bool {
 				return ptr.Deref(x.VpcPeeringConnectionId, "xxx") == kcpPeering.Status.Id
 			})
 
-			Expect(found).To(Equal(true))
+			Expect(found).To(Equal(false))
 		})
 
-		By("And Then all remote route tables has routes with destination CIDR matching local VPC CIDR", func() {
+		By("And Then all remote route tables has no routes with destination CIDR matching local VPC CIDR", func() {
 			remoteRouteTables, _ := awsMockRemote.DescribeRouteTables(infra.Ctx(), remoteVpcId)
 
-			Expect(routeCount(remoteRouteTables, *localPeering.VpcPeeringConnectionId, vpcCidr)).To(Equal(2))
+			Expect(routeCount(remoteRouteTables, *localPeering.VpcPeeringConnectionId, vpcCidr)).To(Equal(0))
 		})
 	})
 })

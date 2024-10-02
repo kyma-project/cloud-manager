@@ -25,7 +25,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 		for _, r := range t.Routes {
 			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == state.ObjAsVpcPeering().Status.RemoteId {
 
-				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
+				err := state.remoteClient.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
 				if awsmeta.IsErrorRetryable(err) {
 					return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil

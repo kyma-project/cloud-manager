@@ -27,6 +27,10 @@ func New(stateFactory StateFactory) composed.Action {
 			loadVpcPeeringConnection,
 			loadVpc,
 			loadRouteTables,
+			createRemoteClient,
+			loadRemoteVpcPeeringConnection,
+			loadRemoteVpc,
+			loadRemoteRouteTables,
 			composed.IfElse(
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
@@ -34,17 +38,14 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteRoutes,
 					deleteVpcPeering,
-					//remotePeeringDelete,
-					//remoteRoutesDelete,
+					remotePeeringDelete,
+					remoteRoutesDelete,
+
 					actions.PatchRemoveFinalizer,
 				),
 				composed.ComposeActions(
 					"awsVpcPeering-non-delete",
 					actions.PatchAddFinalizer,
-					createRemoteClient,
-					loadRemoteVpcPeeringConnection,
-					loadRemoteVpc,
-					loadRemoteRouteTables,
 					checkNetworkTag,
 					createVpcPeeringConnection,
 					acceptVpcPeeringConnection,
