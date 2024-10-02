@@ -16,15 +16,14 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
+	if state.remoteVpcPeering == nil {
 		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
 	for _, t := range state.remoteRouteTables {
 		for _, r := range t.Routes {
-			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == state.ObjAsVpcPeering().Status.RemoteId {
-
+			if ptr.Equal(r.VpcPeeringConnectionId, state.remoteVpcPeering.VpcPeeringConnectionId) {
 				err := state.remoteClient.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
 				if awsmeta.IsErrorRetryable(err) {

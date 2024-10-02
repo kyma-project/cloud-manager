@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/ptr"
 )
 
 func remotePeeringDelete(ctx context.Context, st composed.State) (error, context.Context) {
@@ -15,14 +14,14 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
+	if state.remoteVpcPeering == nil {
 		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
 	logger.Info("Deleting remote VpcPeering")
 
-	err := state.remoteClient.DeleteVpcPeeringConnection(ctx, ptr.To(state.ObjAsVpcPeering().Status.RemoteId))
+	err := state.remoteClient.DeleteVpcPeeringConnection(ctx, state.remoteVpcPeering.VpcPeeringConnectionId)
 
 	if err != nil {
 

@@ -11,16 +11,15 @@ import (
 func deleteRoutes(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	obj := state.ObjAsVpcPeering()
 
-	if len(obj.Status.Id) == 0 {
-		logger.Info("VpcPeering deleted before AWS peering is created", "vpcPeeringName", obj.Name)
+	if state.vpcPeering == nil {
+		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
 	for _, t := range state.routeTables {
 		for _, r := range t.Routes {
-			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == obj.Status.Id {
+			if ptr.Equal(r.VpcPeeringConnectionId, state.vpcPeering.VpcPeeringConnectionId) {
 
 				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
