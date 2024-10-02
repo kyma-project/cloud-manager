@@ -53,8 +53,8 @@
 ```json
 [
   "compute.networks.addPeering",
-  "compute.networks.removePeering",
-  "compute.networks.get"
+  "compute.networks.get",
+  "compute.networks.removePeering"
 ]
 ```
 
