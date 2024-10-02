@@ -97,7 +97,9 @@ type AzureRedisInstanceStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // AzureRedisInstance is the Schema for the Azureredisinstances API
 type AzureRedisInstance struct {
 	metav1.TypeMeta   `json:",inline"`

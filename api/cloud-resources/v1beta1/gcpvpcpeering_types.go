@@ -34,8 +34,8 @@ type GcpVpcPeeringStatus struct {
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:resource:scope=Cluster
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 
 type GcpVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`

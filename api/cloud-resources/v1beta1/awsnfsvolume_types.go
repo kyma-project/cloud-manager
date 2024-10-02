@@ -93,9 +93,11 @@ type AwsNfsVolumeStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".spec.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // AwsNfsVolume is the Schema for the awsnfsvolumes API
 type AwsNfsVolume struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -104,8 +104,9 @@ type GcpNfsVolumeBackupStatus struct {
 	Location string `json:"location,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="GCP NFS Volume",type="string",JSONPath=".spec.source.volume.name"
 // +kubebuilder:printcolumn:name="Location",type="string",JSONPath=".status.location"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"

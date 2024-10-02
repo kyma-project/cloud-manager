@@ -4,11 +4,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   name: azurevpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+      - kyma-cloud-manager
     kind: AzureVpcPeering
     listKind: AzureVpcPeeringList
     plural: azurevpcpeerings
