@@ -21,7 +21,7 @@ type Client interface {
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
-	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
+	return func(ctx context.Context, account, region, key, secret, role string) (Client, error) {
 		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err

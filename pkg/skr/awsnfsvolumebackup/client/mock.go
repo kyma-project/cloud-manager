@@ -31,7 +31,7 @@ type mockClient struct {
 }
 
 func NewMockClient() awsclient.SkrClientProvider[Client] {
-	return func(ctx context.Context, region, key, secret, role string) (Client, error) {
+	return func(ctx context.Context, account, region, key, secret, role string) (Client, error) {
 		return mock, nil
 	}
 }

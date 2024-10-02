@@ -27,6 +27,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 
 	cli, err := state.awsClientProvider(
 		ctx,
+		state.Scope().Spec.Scope.Aws.AccountId,
 		state.Scope().Spec.Region,
 		awsconfig.AwsConfig.Default.AccessKeyId,
 		awsconfig.AwsConfig.Default.SecretAccessKey,

@@ -28,6 +28,7 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 
 	client, err := state.provider(
 		ctx,
+		remoteAccountId,
 		remoteRegion,
 		state.awsAccessKeyid,
 		state.awsSecretAccessKey,

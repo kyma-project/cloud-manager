@@ -8,19 +8,22 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func deleteRoutes(ctx context.Context, st composed.State) (error, context.Context) {
+func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	obj := state.ObjAsVpcPeering()
 
-	if len(obj.Status.Id) == 0 {
-		logger.Info("VpcPeering deleted before AWS peering is created", "vpcPeeringName", obj.Name)
+	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		return nil, nil
 	}
 
-	for _, t := range state.routeTables {
+	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
+		logger.Info("VpcPeering deleted before AWS peering is created")
+		return nil, nil
+	}
+
+	for _, t := range state.remoteRouteTables {
 		for _, r := range t.Routes {
-			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == obj.Status.Id {
+			if ptr.Deref(r.VpcPeeringConnectionId, "xxx") == state.ObjAsVpcPeering().Status.RemoteId {
 
 				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
@@ -34,11 +37,11 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 				)
 
 				if err != nil {
-					lll.Error(err, "Error deleting route")
+					lll.Error(err, "Error deleting remote route")
 					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 				}
 
-				lll.Info("Route deleted")
+				lll.Info("Remote route deleted")
 			}
 		}
 	}

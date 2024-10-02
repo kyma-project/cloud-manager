@@ -7,19 +7,22 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
+func remotePeeringDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	obj := state.ObjAsVpcPeering()
 
-	if len(obj.Status.Id) == 0 {
+	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
+		return nil, nil
+	}
+
+	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
 		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
-	logger.Info("Deleting VpcPeering")
+	logger.Info("Deleting remote VpcPeering")
 
-	err := state.client.DeleteVpcPeeringConnection(ctx, ptr.To(obj.Status.Id))
+	err := state.remoteClient.DeleteVpcPeeringConnection(ctx, ptr.To(state.ObjAsVpcPeering().Status.RemoteId))
 
 	if err != nil {
 
@@ -31,7 +34,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 		return awsmeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
 	}
 
-	logger.Info("VpcPeering deleted")
+	logger.Info("Remote VpcPeering deleted")
 
 	return nil, nil
 }

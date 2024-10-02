@@ -13,14 +13,20 @@ import (
 
 type VpcPeeringConfig interface {
 	SetVpcPeeringConnectionActive(ctx context.Context, vpcId, remoteVpcId *string)
+	InitiateVpcPeeringConnection(ctx context.Context, connectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string)
 }
 
 type vpcPeeringEntry struct {
 	peering ec2types.VpcPeeringConnection
 }
 type vpcPeeringStore struct {
-	m     sync.Mutex
-	items []*vpcPeeringEntry
+	m       sync.Mutex
+	account string
+	items   []*vpcPeeringEntry
+}
+
+func newVpcPeeringStore() *vpcPeeringStore {
+	return &vpcPeeringStore{}
 }
 
 func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tags []ec2types.Tag) (*ec2types.VpcPeeringConnection, error) {
@@ -68,7 +74,6 @@ func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connec
 			return &x.peering, nil
 		}
 	}
-
 	return nil, fmt.Errorf("an error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectionId)
 }
 
@@ -100,4 +105,29 @@ func (s *vpcPeeringStore) SetVpcPeeringConnectionActive(ctx context.Context, vpc
 			break
 		}
 	}
+}
+
+func (s *vpcPeeringStore) InitiateVpcPeeringConnection(ctx context.Context, connectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	item := &vpcPeeringEntry{
+		peering: ec2types.VpcPeeringConnection{
+			VpcPeeringConnectionId: connectionId,
+			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId: vpcId,
+			},
+			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
+				VpcId:   remoteVpcId,
+				Region:  remoteRegion,
+				OwnerId: remoteAccountId,
+			},
+			Status: &ec2types.VpcPeeringConnectionStateReason{
+				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
+				Message: nil,
+			},
+		},
+	}
+
+	s.items = append(s.items, item)
 }

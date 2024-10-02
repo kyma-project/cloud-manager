@@ -59,6 +59,10 @@ type vpcStore struct {
 	items []*vpcEntry
 }
 
+func newVpcStore() *vpcStore {
+	return &vpcStore{}
+}
+
 func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 	idx := pie.FindFirstUsing(s.items, func(e *vpcEntry) bool {
 		return ptr.Deref(e.vpc.VpcId, "") == vpcId

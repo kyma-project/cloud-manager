@@ -28,7 +28,6 @@ type ScopeClient interface {
 type Clients interface {
 	IpRangeClient
 	NfsClient
-	ScopeClient
 	VpcPeeringClient
 	redisinstanceclient.ElastiCacheClient
 }
@@ -41,15 +40,23 @@ type Providers interface {
 	ElastiCacheProviderFake() awsclient.SkrClientProvider[redisinstanceclient.ElastiCacheClient]
 }
 
-type Server interface {
-	Clients
-
-	Providers
-
+type Configs interface {
 	VpcConfig
 	NfsConfig
-	ScopeConfig
 	VpcPeeringConfig
 	RouteTableConfig
 	AwsElastiCacheMockUtils
+}
+
+type AccountRegion interface {
+	Clients
+	Configs
+}
+type Server interface {
+	Providers
+
+	ScopeClient
+	ScopeConfig
+
+	MockConfigs(account, region string) AccountRegion
 }

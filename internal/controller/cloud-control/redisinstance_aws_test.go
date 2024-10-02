@@ -86,6 +86,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
 		var awsElastiCacheClusterInstance *elasticacheTypes.ReplicationGroup
 		By("Then AWS Redis is created", func() {
 			Eventually(LoadAndCheck).
@@ -93,21 +95,21 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					NewObjActions(),
 					HavingRedisInstanceStatusId()).
 				Should(Succeed(), "expected RedisInstance to get status.id")
-			awsElastiCacheClusterInstance = infra.AwsMock().GetAwsElastiCacheByName(redisInstance.Status.Id)
+			awsElastiCacheClusterInstance = awsMock.GetAwsElastiCacheByName(redisInstance.Status.Id)
 		})
 
 		By("And Then AWS Redis has defined custom parameters", func() {
-			remoteParameters := infra.AwsMock().DescribeAwsElastiCacheParametersByName("cm-" + redisInstance.Name)
+			remoteParameters := awsMock.DescribeAwsElastiCacheParametersByName("cm-" + redisInstance.Name)
 
 			Expect(remoteParameters["active-defrag-cycle-max"]).To(Equal(parameters["active-defrag-cycle-max"]))
 		})
 
 		By("When AWS Redis is Available", func() {
-			infra.AwsMock().SetAwsElastiCacheLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_AVAILABLE)
+			awsMock.SetAwsElastiCacheLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_AVAILABLE)
 		})
 
 		By("And when AWS Redis UserGroup is Active", func() {
-			infra.AwsMock().SetAwsElastiCacheUserGroupLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_UserGroup_ACTIVE)
+			awsMock.SetAwsElastiCacheUserGroupLifeCycleState(*awsElastiCacheClusterInstance.ReplicationGroupId, awsmeta.ElastiCache_UserGroup_ACTIVE)
 		})
 
 		By("Then RedisInstance has Ready condition", func() {
@@ -140,11 +142,11 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		By("And When AWS Redis state is deleted", func() {
-			infra.AwsMock().DeleteAwsElastiCacheByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
+			awsMock.DeleteAwsElastiCacheByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
 		})
 
 		By("And When AWS Redis user group is deleted", func() {
-			infra.AwsMock().DeleteAwsElastiCacheUserGroupByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
+			awsMock.DeleteAwsElastiCacheUserGroupByName(*awsElastiCacheClusterInstance.ReplicationGroupId)
 		})
 
 		By("Then RedisInstance does not exist", func() {
