@@ -8,6 +8,9 @@ metadata:
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+    - kyma-modules
+    - kyma-cloud-manager
     kind: CloudResources
     listKind: CloudResourcesList
     plural: cloudresources

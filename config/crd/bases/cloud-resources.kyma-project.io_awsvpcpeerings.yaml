@@ -8,6 +8,8 @@ metadata:
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+    - kyma-cloud-manager
     kind: AwsVpcPeering
     listKind: AwsVpcPeeringList
     plural: awsvpcpeerings

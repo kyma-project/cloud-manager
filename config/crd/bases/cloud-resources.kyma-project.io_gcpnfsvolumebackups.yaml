@@ -9,6 +9,8 @@ metadata:
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+      - kyma-cloud-manager
     kind: GcpNfsVolumeBackup
     listKind: GcpNfsVolumeBackupList
     plural: gcpnfsvolumebackups

@@ -126,7 +126,9 @@ type GcpRedisInstanceStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // GcpRedisInstance is the Schema for the gcpredisinstances API
 type GcpRedisInstance struct {
 	metav1.TypeMeta   `json:",inline"`

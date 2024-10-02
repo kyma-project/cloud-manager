@@ -54,9 +54,10 @@ type AzureVpcPeeringStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // AzureVpcPeering is the Schema for the azurevpcpeerings API
 type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`

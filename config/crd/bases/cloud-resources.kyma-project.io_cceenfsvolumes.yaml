@@ -8,6 +8,8 @@ metadata:
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+    - kyma-cloud-manager
     kind: CceeNfsVolume
     listKind: CceeNfsVolumeList
     plural: cceenfsvolumes
