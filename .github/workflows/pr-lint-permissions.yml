@@ -14,6 +14,8 @@ jobs:
             permissionPath: Statement.0.Action
           - docsPath: docs/contributor/gcp-permissions.md
             permissionPath: ""
+          - docsPath: docs/contributor/azure-permissions.md
+            permissionPath: Actions
 
     steps:
       - name: Checkout code
