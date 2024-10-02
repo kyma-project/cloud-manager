@@ -1,0 +1,26 @@
+name: PR Contributor Docs Permission Lint
+
+on:
+  pull_request:
+
+jobs:
+  permission_lint:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        combination:
+          - docsPath: docs/contributor/aws-permissions.md
+            permissionPath: Statement.0.Action
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run permission lint script
+        run: node ci/docs-permission-sorter.js ${{ matrix.combination.docsPath }} ${{ matrix.combination.permissionPath }}
