@@ -4,6 +4,7 @@ import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"github.com/go-logr/logr"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
@@ -16,9 +17,10 @@ type State struct {
 	client   vpcpeeringclient.VpcPeeringClient
 	provider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
 
+	localNetwork  *cloudcontrolv1beta1.Network
+	remoteNetwork *cloudcontrolv1beta1.Network
+
 	remotePeeringName  string
-	remoteVpc          string
-	remoteProject      string
 	importCustomRoutes bool
 
 	//Peerings on both sides
@@ -31,19 +33,19 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	skrProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
-	env         abstractions.Environment
+	clientProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
+	env            abstractions.Environment
 }
 
-func NewStateFactory(skrProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(clientProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
-		skrProvider: skrProvider,
-		env:         env,
+		clientProvider: clientProvider,
+		env:            env,
 	}
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-	c, err := f.skrProvider(
+	c, err := f.clientProvider(
 		ctx,
 		f.env.Get(vpcpeeringclient.GcpVpcPeeringPath),
 	)
@@ -52,7 +54,7 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 		return nil, err
 	}
 
-	return newState(vpcPeeringState, c, f.skrProvider), nil
+	return newState(vpcPeeringState, c, f.clientProvider), nil
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
@@ -63,10 +65,8 @@ func newState(vpcPeeringState vpcpeeringtypes.State,
 		State:              vpcPeeringState,
 		client:             client,
 		provider:           provider,
-		remotePeeringName:  vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemotePeeringName,
-		remoteVpc:          vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteVpc,
-		remoteProject:      vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.RemoteProject,
-		importCustomRoutes: vpcPeeringState.ObjAsVpcPeering().Spec.VpcPeering.Gcp.ImportCustomRoutes,
+		remotePeeringName:  vpcPeeringState.ObjAsVpcPeering().Spec.Details.PeeringName,
+		importCustomRoutes: vpcPeeringState.ObjAsVpcPeering().Spec.Details.ImportCustomRoutes,
 	}
 }
 

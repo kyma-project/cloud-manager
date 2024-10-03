@@ -185,7 +185,7 @@ func (c *networkClient) CheckRemoteNetworkTags(context context.Context, remoteVp
 	}
 	//ListEffectiveTags requires the networkId instead of name therefore we need to convert the selfLinkId to the format that the tag bindings client expects
 	//more info here: https://cloud.google.com/iam/docs/full-resource-names
-	tagIterator := tbc.ListEffectiveTags(context, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(*remoteNetwork.SelfLinkWithId, "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
+	tagIterator := tbc.ListEffectiveTags(context, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
 	defer func(tbc *resourcemanager.TagBindingsClient) {
 		err := tbc.Close()
 		if err != nil {
