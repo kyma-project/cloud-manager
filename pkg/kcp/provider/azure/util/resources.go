@@ -213,3 +213,7 @@ func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName s
 		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(redisInstanceName) > 0,
 	}
 }
+
+func NewPrivateDnsZoneName(zoneNameUuid string) string {
+	return zoneNameUuid + ".redis.cache.windows.net"
+}
