@@ -1,19 +1,19 @@
-## AWS Vpc Peering
+## AWS VPC Peering
 
 
 The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between
 Kyma and the remote AWS Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
 
-Once an AwsVpcPeering CR is created and reconciled, the Cloud Manager controller first creates a virtual network peering
-connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the underlying cloud provider and accepts
+Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller first creates a virtual network peering
+connection in the VPC network of the Kyma cluster in the underlying cloud provider and accepts
 VPC peering connection in the remote cloud provider account.
 
 Cloud Manager initiates VPC peering connection from the Kyma underlying cloud provider. Cloud Manager must be authorized
 to accept VPC peering connection in the remote cloud provider account. For cross-account access, Cloud Manager uses
 [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html). 
 
-You must create CloudManagerPeeringRole with trust policy that allows Cloud Manager principal
+You must create **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal
 `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume that role. ENV corresponds to dev, stage, or prod.
 ```json
 {
@@ -29,22 +29,20 @@ You must create CloudManagerPeeringRole with trust policy that allows Cloud Mana
 	]
 }
 ```
-Create new managed policy CloudManagerPeeringAccess with following permissions:
-* ec2:AcceptVpcPeeringConnection
-* ec2:DescribeVpcs
-* ec2:DescribeVpcPeeringConnections
-* ec2:DescribeRouteTables
-* ec2:CreateRoute
-* ec2:CreateTags
+Create a new managed policy CloudManagerPeeringAccess with following permissions:
+* `ec2:AcceptVpcPeeringConnection`
+* `ec2:DescribeVpcs`
+* `ec2:DescribeVpcPeeringConnections`
+* `ec2:DescribeRouteTables`
+* `ec2:CreateRoute`
+* `ec2:CreateTags`
 
-Attach CloudManagerPeeringAccess policy to CloudManagerPeeringRole.
+Attach the CloudManagerPeeringAccess policy to **CloudManagerPeeringRole**.
 
-Kyma underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
+Kyma's underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
 peering connection is left hanging, and must be deleted manually.
 
-
 ## Specification <!-- {docsify-ignore} -->
-
 
 This table lists the parameters of the given resource together with their descriptions:
 
@@ -68,7 +66,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                         |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
 | **conditions.type**               | string     | Provides a short description of the condition.                                              |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

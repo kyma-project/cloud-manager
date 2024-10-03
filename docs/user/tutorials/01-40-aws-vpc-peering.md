@@ -1,20 +1,24 @@
-# Create VPC peering in AWS
+# Create VPC Peering in AWS
 
-This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in AWS. The tutorial
-assumes that the Cloud Manager module is enabled in your Kyma cluster. Follow the steps from this tutorial to create a 
-new VPC network, and VM, and assign required permissions to the provided Kyma account and role in your AWS account. If you want to
+This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in AWS. Follow the 
+steps from this tutorial to create a new VPC network, and VM, and assign required permissions to the provided Kyma account and role in your AWS account. If you want to
 use the existing resources instead of creating new ones, adjust variable names accordingly and skip the steps that 
 create those resources.
 
+## Prerequisites
+
+* The Cloud Manager module enabled in your Kyma cluster
+* Configure the AWS CLI [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
+
 ## Steps <!-- {docsify-ignore} -->
 
-1.  Set the default AWS CLI profile. If you haven't configured the profile yet, see the [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
+1.  Set the default AWS CLI profile. If you haven't configured the profile yet, see the 
     ```shell
     export AWS_PROFILE={PROFILE_NAME}
     export AWS_DEFAULT_REGION={REGION}
     ```
    
-2.  Create trust policy document
+2.  Create a trust policy document
     ```shell
     export PRINCIPAL_PROFILE_AWS_ACCOUNT_ID=194230256199
     export USER_NAME=cloud-manager-peering-dev
@@ -33,7 +37,7 @@ create those resources.
     }
     EOF
     ```
-3. Create VpcPeeringRole and attach a trust policy to document.
+3. Create **CloudManagerPeeringRole** and attach a trust policy document.
     ```shell
     export AWS_ROLE_NAME=CloudManagerPeeringRole
     aws iam create-role --role-name $AWS_ROLE_NAME --assume-role-policy-document file://./trust_policy.json 
@@ -61,15 +65,15 @@ create those resources.
     EOF
     ```
    
-5.  Creates a new managed policy for your Amazon Web Services account.
+5.  Create a new managed policy for your Amazon Web Services account.
     ```shell
     aws iam create-policy --policy-name CloudManagerPeeringAccess --policy-document file://./accept_policy.json
     ```
-6.  Attaches the specified managed policy to the specified IAM role.
+6.  Attach the specified managed policy to the specified IAM role.
     ```shell
     aws iam attach-role-policy --role-name $AWS_ROLE_NAME --policy-arn arn:aws:iam::$REMOTE_ACCOUNT_ID:policy/CloudManagerPeeringAccess
     ```
-7.  Create a VPC and tag it with Kyma shoot name
+7.  Create a VPC and tag it with a Kyma shoot name.
     ```shell
     export CIDR_BLOCK=10.3.0.0/16
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}')
@@ -77,17 +81,17 @@ create those resources.
     export VPC_NAME=my-vpc
     export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=""},{Key=Name,Value=$VPC_NAME}] --query Vpc.VpcId --output text)  
     ```
-8.  Create subnet
+8.  Create a subnet.
     ```shell
     export SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block $CIDR_BLOCK --query Subnet.SubnetId --output text) 
     ```
 
-9.  Run instance.
+9.  Run an instance.
     ```shell
     export INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0c38b837cd80f13bb --instance-type t2.micro --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
     export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
     ```
-10. Allow ICMP traffic from Kyma pods
+10. Allow ICMP traffic from Kyma Pods.
     ```shell
      export SG_ID=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text) 
      aws ec2 authorize-security-group-ingress --group-id $SG_ID --ip-permissions IpProtocol=icmp,FromPort=-1,ToPort=-1,IpRanges="[{CidrIp=$NODE_NETWORK}]"
@@ -109,7 +113,6 @@ create those resources.
     ```
 
 12. Wait for the AwsVpcPeering to be in the `Ready` state.
-
     ```shell
     kubectl wait --for=condition=Ready awsvpcpeering/peering-to-my-vpc --timeout=300s
     ```
@@ -161,14 +164,14 @@ create those resources.
     EOF
     ```
 
-This workload should print a sequence of 20 echo replies to stdout.
+    This workload should print a sequence of 20 echo replies to stdout.
 
-12. Print the logs of one of the workloads, run:
+15. Print the logs of one of the workloads, run:
     ```shell
     kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=awsvpcpeering-demo -o=jsonpath='{.items[0].metadata.name}'`
     ```
 
-    The command should print something like:
+    The command should print an output similar to the following:
     ```
     ...
     PING 172.0.0.4 (172.0.0.4) 56(84) bytes of data.
@@ -200,33 +203,29 @@ This workload should print a sequence of 20 echo replies to stdout.
     ```
 
 16. Clean up the Kubernetes resources.
-
-    * Remove the created workloads:
-      ```shell
-      kubectl delete -n $NAMESPACE deployment awsvpcpeering-demo
-      ```
-
-    * Remove the created `awsvpcpeering`:
-      ```shell
-      kubectl delete -n $NAMESPACE awsvpcpeering peering-to-my-vpc
-      ```
-
-    * Remove the created namespace:
-      ```shell
-      kubectl delete namespace $NAMESPACE
-      ```
+    1. Remove the created workloads:
+       ```shell
+       kubectl delete -n $NAMESPACE deployment awsvpcpeering-demo
+       ```
+    2. Remove the created `awsvpcpeering`:
+       ```shell
+       kubectl delete -n $NAMESPACE awsvpcpeering peering-to-my-vpc
+       ```
+    3. Remove the created namespace:
+       ```shell
+       kubectl delete namespace $NAMESPACE
+       ```
 
 17. Clean up the resources in your AWS account.
-    * Terminate the instance.
+    1. Terminate the instance.
        ```shell
        aws ec2 terminate-instances --instance-ids $INSTANCE_ID
        ```
-    * Delete the subnet.
-      ```shell
-      aws ec2 delete-subnet --subnet-id $SUBNET_ID
-      ```
-      
-    * Delete the VPC.
-      ```shell
-      aws ec2 delete-vpc --vpc-id  $VPC_ID
-      ```
+    2. Delete the subnet.
+       ```shell
+       aws ec2 delete-subnet --subnet-id $SUBNET_ID
+       ```
+    3. Delete the VPC.
+       ```shell
+       aws ec2 delete-vpc --vpc-id  $VPC_ID
+       ```
