@@ -10,11 +10,11 @@ connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the
 VPC peering connection in the remote cloud provider account.
 
 Cloud Manager initiates VPC peering connection from the Kyma underlying cloud provider. Cloud Manager must be authorized
-to accept VPC peering connection in the remote cloud provider account. For cross-account access Cloud Manager uses
-[AssumeRole](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html). 
+to accept VPC peering connection in the remote cloud provider account. For cross-account access, Cloud Manager uses
+[`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html). 
 
 You must create CloudManagerPeeringRole with trust policy that allows Cloud Manager principal
-arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV to assume that role. ENV corresponds to dev, stage or prod.
+`arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume that role. ENV corresponds to dev, stage, or prod.
 ```json
 {
 	"Version": "2012-10-17",
@@ -72,7 +72,7 @@ This table lists the parameters of the given resource together with their descri
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 
-See an exemplary AwsVpcPeering custom resource:
+See an exemplary `AwsVpcPeering` custom resource:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1

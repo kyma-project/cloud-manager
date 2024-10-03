@@ -8,7 +8,7 @@ create those resources.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1.  Set default AWS CLI profile. If you haven't configured the profile it yet please go see AWS documentation https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html
+1.  Set the default AWS CLI profile. If you haven't configured the profile yet, see the [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
     ```shell
     export AWS_PROFILE={PROFILE_NAME}
     export AWS_DEFAULT_REGION={REGION}
@@ -38,7 +38,7 @@ create those resources.
     export AWS_ROLE_NAME=CloudManagerPeeringRole
     aws iam create-role --role-name $AWS_ROLE_NAME --assume-role-policy-document file://./trust_policy.json 
     ```
-4.  Create policy document that will be used to create policy
+4.  Create a policy document that is used to create the policy.
     ```shell
     cat > accept_policy.json <<- EOF
     {
@@ -82,7 +82,7 @@ create those resources.
     export SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block $CIDR_BLOCK --query Subnet.SubnetId --output text) 
     ```
 
-9.  Run instance
+9.  Run instance.
     ```shell
     export INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0c38b837cd80f13bb --instance-type t2.micro --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
     export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
@@ -93,7 +93,7 @@ create those resources.
      aws ec2 authorize-security-group-ingress --group-id $SG_ID --ip-permissions IpProtocol=icmp,FromPort=-1,ToPort=-1,IpRanges="[{CidrIp=$NODE_NETWORK}]"
     ```
 
-11. Create an AwsVpcPeering resource
+11. Create an AwsVpcPeering resource.
     ```shell
     export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
     kubectl apply -f - <<EOF
@@ -199,7 +199,7 @@ This workload should print a sequence of 20 echo replies to stdout.
     ...
     ```
 
-13. Clean up Kubernetes resources
+16. Clean up the Kubernetes resources.
 
     * Remove the created workloads:
       ```shell
@@ -216,17 +216,17 @@ This workload should print a sequence of 20 echo replies to stdout.
       kubectl delete namespace $NAMESPACE
       ```
 
-14. Clean up resources in your AWS account
-    * Terminate instance
+17. Clean up the resources in your AWS account.
+    * Terminate the instance.
        ```shell
        aws ec2 terminate-instances --instance-ids $INSTANCE_ID
        ```
-    * Delete subnet
+    * Delete the subnet.
       ```shell
       aws ec2 delete-subnet --subnet-id $SUBNET_ID
       ```
       
-    * Delete VPC
+    * Delete the VPC.
       ```shell
       aws ec2 delete-vpc --vpc-id  $VPC_ID
       ```

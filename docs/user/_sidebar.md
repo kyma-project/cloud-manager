@@ -21,6 +21,6 @@
   * [Restore RWX Volume Backups in GCP](/cloud-manager/user/tutorials/01-90-gcp-nfs-volume-restore.md)
   * [Use VPC Peering in Azure](/cloud-manager/user/tutorials/01-30-azure-vpc-peering.md)
   * [Create VPC Peering in GCP](/cloud-manager/user/tutorials/01-30-gcp-vpc-peering.md)
-  * [Create VPC peering in AWS](/cloud-manager/user/tutorials/01-40-aws-vpc-peering.md)
+  * [Create VPC Peering in AWS](/cloud-manager/user/tutorials/01-40-aws-vpc-peering.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
 <!-- markdown-link-check-enable -->
