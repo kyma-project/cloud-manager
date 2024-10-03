@@ -14,7 +14,6 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
 
 	//If marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
@@ -55,10 +54,9 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If it still not time to run, reconcile with delay
-	if nextRunTime.After(now) {
-		timeLeft := nextRunTime.Unix() - now.Unix()
+	if timeLeft := GetRemainingTimeFromNow(&nextRunTime); timeLeft > 0 {
 		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
-		return composed.StopWithRequeueDelay(time.Duration(timeLeft) * time.Second), nil
+		return composed.StopWithRequeueDelay(timeLeft), nil
 	}
 
 	//If create and delete tasks already completed for currentRun, reset the next run times

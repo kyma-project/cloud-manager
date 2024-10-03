@@ -230,7 +230,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsBackupSchedule")
 		os.Exit(1)
 	}
@@ -242,6 +242,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsBackupSchedule")
 		os.Exit(1)
 	}
 

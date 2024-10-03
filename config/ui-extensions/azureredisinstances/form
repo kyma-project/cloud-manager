@@ -64,3 +64,12 @@
     - path: annotations
       name: spec.volume.annotations
       widget: KeyValuePair
+
+- path: spec.ipRange
+  name: spec.ipRange
+  required: true
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.ipRange.name
+      required: true

@@ -11,7 +11,11 @@ import (
 type backupImplGcpNfs struct {
 }
 
-func (impl *backupImplGcpNfs) emptySourceObject() composed.ObjWithConditions {
+func (impl *backupImplGcpNfs) emptyScheduleObject() composed.ObjWithConditionsAndState {
+	return &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
+}
+
+func (impl *backupImplGcpNfs) emptySourceObject() composed.ObjWithConditionsAndState {
 	return &cloudresourcesv1beta1.GcpNfsVolume{}
 }
 

@@ -3,8 +3,6 @@ package backupschedule
 import (
 	"context"
 	"fmt"
-	"time"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -17,7 +15,6 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
 
 	//If marked for deletion, return
 	if composed.MarkedForDeletionPredicate(ctx, st) {
@@ -25,13 +22,13 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	//Check next run time. If it is not time to run, return
-	if state.nextRunTime.IsZero() || now.Before(state.nextRunTime) {
+	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
 		return nil, nil
 	}
 
 	//If the creation for the nextRunTime is already done, return
 	if schedule.GetLastCreateRun() != nil && !schedule.GetLastCreateRun().IsZero() &&
-		state.nextRunTime.Unix() == schedule.GetLastCreateRun().Time.Unix() {
+		GetRemainingTime(&state.nextRunTime, &schedule.GetLastCreateRun().Time) == 0 {
 		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}

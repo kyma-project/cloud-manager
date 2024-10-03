@@ -30,45 +30,44 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
-// GcpNfsBackupScheduleReconciler reconciles a GcpNfsBackupSchedule object
-type GcpNfsBackupScheduleReconciler struct {
+// AwsNfsBackupScheduleReconciler reconciles a AwsNfsBackupSchedule object
+type AwsNfsBackupScheduleReconciler struct {
 	Reconciler backupschedule.Reconciler
 }
 
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsbackupschedules/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=awsnfsbackupschedules/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the GcpNfsBackupSchedule object against the actual cluster state, and then
+// the AwsNfsBackupSchedule object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.0/pkg/reconcile
-func (r *GcpNfsBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AwsNfsBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	return r.Reconciler.Run(ctx, req)
 }
 
-type GcpNfsBackupScheduleReconcilerFactory struct {
+type AwsNfsBackupScheduleReconcilerFactory struct {
 	env abstractions.Environment
 }
 
-func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	return &GcpNfsBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.GcpNfsBackupSchedule),
+func (f *AwsNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+	return &AwsNfsBackupScheduleReconciler{
+		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AwsNfsBackupSchedule),
 	}
 }
 
-func SetupGcpNfsBackupScheduleReconciler(reg skrruntime.SkrRegistry,
-	env abstractions.Environment) error {
+func SetupAwsNfsBackupScheduleReconciler(reg skrruntime.SkrRegistry, env abstractions.Environment) error {
 
 	return reg.Register().
-		WithFactory(&GcpNfsBackupScheduleReconcilerFactory{env: env}).
-		For(&cloudresourcesv1beta1.GcpNfsBackupSchedule{}).
+		WithFactory(&AwsNfsBackupScheduleReconcilerFactory{env: env}).
+		For(&cloudresourcesv1beta1.AwsNfsBackupSchedule{}).
 		Complete()
 }

@@ -66,6 +66,14 @@ data:
           - name: spec.volume.annotations
             source: annotations
             widget: Labels
+
+      - name: spec.ipRange
+        widget: Panel
+        source: spec.ipRange
+        children:
+          - name: spec.ipRange.name
+            source: name
+            widget: Labels
   form: |
     - path: spec.sku
       name: spec.sku
@@ -133,6 +141,15 @@ data:
         - path: annotations
           name: spec.volume.annotations
           widget: KeyValuePair
+
+    - path: spec.ipRange
+      name: spec.ipRange
+      required: true
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.ipRange.name
+          required: true
   general: |
     resource:
         kind: AzureRedisInstance
@@ -171,6 +188,8 @@ data:
       spec.volume.name: Name
       spec.volume.labels: Labels
       spec.volume.annotations: Annotations
+      spec.ipRange: IP Range
+      spec.ipRange.name: Name
 kind: ConfigMap
 metadata:
   labels:
