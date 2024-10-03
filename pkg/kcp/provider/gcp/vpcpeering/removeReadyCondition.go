@@ -2,6 +2,8 @@ package vpcpeering
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -12,7 +14,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	readyCondition := meta.FindStatusCondition(*state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
+	readyCondition := meta.FindStatusCondition(ptr.Deref(state.ObjAsVpcPeering().Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCondition == nil {
 		return nil, nil
 	}

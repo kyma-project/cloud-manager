@@ -19,3 +19,5 @@ en:
   spec.volume.name: Name
   spec.volume.labels: Labels
   spec.volume.annotations: Annotations
+  spec.ipRange: IP Range
+  spec.ipRange.name: Name

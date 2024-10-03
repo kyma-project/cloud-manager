@@ -87,7 +87,7 @@ func (b *VpcPeeringBuilder) WithAwsPeering(remoteVpcId, remoteRegion, remoteAcco
 	return b
 }
 
-func (b *VpcPeeringBuilder) WithDetails(localName, localNamespace, remoteName, remoteNamespace, peeringName string, importCustomRoutes bool) *VpcPeeringBuilder {
+func (b *VpcPeeringBuilder) WithDetails(localName, localNamespace, remoteName, remoteNamespace, peeringName string, importCustomRoutes, deleteRemotePeering bool) *VpcPeeringBuilder {
 	if localName == "" {
 		if b.Obj.Spec.Details == nil {
 			return b
@@ -104,6 +104,7 @@ func (b *VpcPeeringBuilder) WithDetails(localName, localNamespace, remoteName, r
 	b.Obj.Spec.Details.RemoteNetwork.Namespace = remoteNamespace
 	b.Obj.Spec.Details.PeeringName = peeringName
 	b.Obj.Spec.Details.ImportCustomRoutes = importCustomRoutes
+	b.Obj.Spec.Details.DeleteRemotePeering = deleteRemotePeering
 	return b
 }
 

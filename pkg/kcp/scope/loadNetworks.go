@@ -12,9 +12,20 @@ import (
 func loadNetworks(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	var kymaName string
+	if state.kyma != nil {
+		kymaName = state.kyma.GetName()
+	} else if predicateScopeExists()(ctx, state) {
+		kymaName = state.ObjAsScope().Name
+	}
+
+	if kymaName == "" {
+		return nil, nil
+	}
+
 	netList := &cloudcontrolv1beta1.NetworkList{}
 	listOps := &client.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector(cloudcontrolv1beta1.NetworkFieldScope, state.kyma.GetName()),
+		FieldSelector: fields.OneTermEqualSelector(cloudcontrolv1beta1.NetworkFieldScope, kymaName),
 	}
 	if err := state.Cluster().K8sClient().List(ctx, netList, listOps); err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing scope networks", composed.StopWithRequeue, ctx)
@@ -22,8 +33,8 @@ func loadNetworks(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	kymaNetworkName := common.KcpNetworkKymaCommonName(state.kyma.GetName())
-	cmNetworkName := common.KcpNetworkCMCommonName(state.kyma.GetName())
+	kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
+	cmNetworkName := common.KcpNetworkCMCommonName(kymaName)
 
 	for _, net := range netList.Items {
 		netCopy := net

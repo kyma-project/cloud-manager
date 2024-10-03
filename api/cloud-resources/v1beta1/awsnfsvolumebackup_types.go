@@ -100,8 +100,9 @@ type AwsNfsVolumeBackupStatus struct {
 	IdempotencyToken string `json:"idempotencyToken"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 
 // AwsNfsVolumeBackup is the Schema for the awsnfsvolumebackups API
 type AwsNfsVolumeBackup struct {

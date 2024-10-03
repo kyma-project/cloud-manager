@@ -13,7 +13,8 @@ type State struct {
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
 
-	KcpVpcPeering *cloudcontrolv1beta1.VpcPeering
+	KcpRemoteNetwork *cloudcontrolv1beta1.Network
+	KcpVpcPeering    *cloudcontrolv1beta1.VpcPeering
 }
 
 func newStateFactory(

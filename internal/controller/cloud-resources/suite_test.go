@@ -122,7 +122,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupAzureRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// NfsBackupSchedule
-	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testSetupLog)).NotTo(HaveOccurred())
+	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
 
 	// AzureVpcPeering
 	Expect(SetupAzureVpcPeeringReconciler(infra.Registry()))

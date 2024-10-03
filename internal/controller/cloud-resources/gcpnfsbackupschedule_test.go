@@ -135,7 +135,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
 					WithSchedule(nfsBackupHourlySchedule),
-					WithLocation(nfsBackupLocation),
+					WithGcpLocation(nfsBackupLocation),
 					WithNfsVolumeRef(skrNfsVolumeName),
 					WithRetentionDays(0),
 				).
@@ -211,7 +211,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
-					WithLocation(nfsBackupLocation),
+					WithGcpLocation(nfsBackupLocation),
 					WithStartTime(start),
 					WithNfsVolumeRef(skrNfsVolumeName),
 				).

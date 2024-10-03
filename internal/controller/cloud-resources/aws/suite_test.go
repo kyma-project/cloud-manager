@@ -77,6 +77,10 @@ var _ = BeforeSuite(func() {
 		infra.Registry(), awsbackupclient.NewMockClient(), env)).
 		NotTo(HaveOccurred())
 
+	// AwsNfsBackupSchedule
+	Expect(cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(
+		infra.Registry(), env)).NotTo(HaveOccurred())
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })

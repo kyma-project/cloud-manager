@@ -21,7 +21,7 @@ func vnetCreate(ctx context.Context, st composed.State) (error, context.Context)
 	err := state.azureClient.CreateNetwork(
 		ctx,
 		state.resourceGroupName,
-		state.ObjAsNetwork().Name,
+		state.vnetName,
 		state.location,
 		state.cidr,
 		state.tags,

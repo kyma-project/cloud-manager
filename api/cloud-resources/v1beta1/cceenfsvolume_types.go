@@ -63,6 +63,7 @@ type CceeNfsVolumeStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 
 // CceeNfsVolume is the Schema for the cceenfsvolumes API
 type CceeNfsVolume struct {

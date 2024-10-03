@@ -18,7 +18,6 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -36,9 +35,9 @@ type GcpNfsBackupScheduleReconciler struct {
 	Reconciler backupschedule.Reconciler
 }
 
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=nfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=nfsbackupschedules/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=nfsbackupschedules/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -61,12 +60,12 @@ type GcpNfsBackupScheduleReconcilerFactory struct {
 
 func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env),
+		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.GcpNfsBackupSchedule),
 	}
 }
 
 func SetupGcpNfsBackupScheduleReconciler(reg skrruntime.SkrRegistry,
-	env abstractions.Environment, logger logr.Logger) error {
+	env abstractions.Environment) error {
 
 	return reg.Register().
 		WithFactory(&GcpNfsBackupScheduleReconcilerFactory{env: env}).

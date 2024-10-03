@@ -82,8 +82,9 @@ type GcpNfsVolumeRestoreStatus struct {
 	OpIdentifier string `json:"opIdentifier,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Source",type="string",JSONPath=".spec.source.backup.name"
 // +kubebuilder:printcolumn:name="Destination",type="string",JSONPath=".spec.destination.volume.name"

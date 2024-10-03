@@ -33,6 +33,8 @@ type AzureVpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVnet is immutable."
 	RemoteVnet string `json:"remoteVnet,omitempty"`
+
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
@@ -52,9 +54,10 @@ type AzureVpcPeeringStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // AzureVpcPeering is the Schema for the azurevpcpeerings API
 type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`

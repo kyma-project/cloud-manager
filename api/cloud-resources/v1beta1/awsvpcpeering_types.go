@@ -53,9 +53,9 @@ type AwsVpcPeeringStatus struct {
 	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 
 // AwsVpcPeering is the Schema for the awsvpcpeerings API
 type AwsVpcPeering struct {

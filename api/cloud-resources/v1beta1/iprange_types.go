@@ -56,7 +56,7 @@ type IpRangeStatus struct {
 }
 
 // +kubebuilder:object:root=true
-//+kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="CIDR",type="string",JSONPath=".spec.cidr"

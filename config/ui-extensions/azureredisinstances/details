@@ -63,3 +63,11 @@ body:
       - name: spec.volume.annotations
         source: annotations
         widget: Labels
+
+  - name: spec.ipRange
+    widget: Panel
+    source: spec.ipRange
+    children:
+      - name: spec.ipRange.name
+        source: name
+        widget: Labels

@@ -15,13 +15,13 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	logger.Info("Deleting GCP VPC Peering " + obj.Spec.VpcPeering.Gcp.RemotePeeringName)
+	logger.Info("Deleting GCP VPC Peering " + obj.Spec.Details.PeeringName)
 
 	err := state.client.DeleteVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.Scope().Spec.Scope.Gcp.Project,
-		state.Scope().Spec.Scope.Gcp.VpcNetwork,
+		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName,
 	)
 
 	if err != nil {
