@@ -16,6 +16,11 @@ type vpcPeeringStore struct {
 	items map[string]*vpcPeeringEntry
 }
 
+type VpcPeeringMockClientUtils interface {
+	GetMockVpcPeering(project string, vpc string) *pb.NetworkPeering
+	SetMockVpcPeeringLifeCycleState(project string, vpc string, state pb.NetworkPeering_State)
+}
+
 func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
@@ -37,8 +42,6 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 		return nil
 	}
 
-	state := pb.NetworkPeering_ACTIVE.String()
-
 	item := &vpcPeeringEntry{
 		peering: &pb.NetworkPeering{
 			Name:                 &remotePeeringName,
@@ -46,9 +49,9 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 			ImportCustomRoutes:   &importCustomRoutes,
 			ExportCustomRoutes:   &exportCustomRoutes,
 			ExchangeSubnetRoutes: ptr.To(true),
+			State:                ptr.To(pb.NetworkPeering_INACTIVE.String()),
 		},
 	}
-	item.peering.State = &state
 	s.items[remoteNetwork] = item
 
 	return nil
@@ -72,8 +75,6 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 		return nil
 	}
 
-	state := pb.NetworkPeering_ACTIVE.String()
-
 	item := &vpcPeeringEntry{
 		peering: &pb.NetworkPeering{
 			Name:                 &remotePeeringName,
@@ -81,9 +82,9 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 			ImportCustomRoutes:   &importCustomRoutes,
 			ExportCustomRoutes:   &exportCustomRoutes,
 			ExchangeSubnetRoutes: ptr.To(true),
+			State:                ptr.To(pb.NetworkPeering_INACTIVE.String()),
 		},
 	}
-	item.peering.State = &state
 
 	s.items[kymaNetwork] = item
 
@@ -126,4 +127,20 @@ func (s *vpcPeeringStore) DeleteVpcPeering(ctx context.Context, remotePeeringNam
 	}
 	delete(s.items, kymaNetwork)
 	return nil
+}
+
+// Fake client implementations to mimic google API calls
+func (s *vpcPeeringStore) SetMockVpcPeeringLifeCycleState(project string, vpc string, state pb.NetworkPeering_State) {
+	stateString := state.String()
+	if s.items[getFullNetworkUrl(project, vpc)] != nil {
+		s.items[getFullNetworkUrl(project, vpc)].peering.State = &stateString
+	}
+}
+
+func (s *vpcPeeringStore) GetMockVpcPeering(project string, vpc string) *pb.NetworkPeering {
+	_, peeringExists := s.items[getFullNetworkUrl(project, vpc)]
+	if !peeringExists {
+		return nil
+	}
+	return s.items[getFullNetworkUrl(project, vpc)].peering
 }
