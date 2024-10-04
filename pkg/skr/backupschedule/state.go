@@ -20,8 +20,10 @@ type State struct {
 	SourceRef composed.ObjWithConditions
 	Backups   []client.Object
 
-	cronExpression *cronexpr.Expression
-	nextRunTime    time.Time
+	cronExpression     *cronexpr.Expression
+	nextRunTime        time.Time
+	createRunCompleted bool
+	deleteRunCompleted bool
 
 	backupImpl backupImpl
 	Scope      *cloudcontrolv1beta1.Scope

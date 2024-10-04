@@ -29,27 +29,27 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Evaluating next run time")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Evaluating next run time")
 
 	//If cron expression has not changed, and the nextRunTime is already set, continue
 	if schedule.GetSchedule() == schedule.GetActiveSchedule() && len(schedule.GetNextRunTimes()) > 0 {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Next RunTime is already set, continuing.")
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}
 
 	//Evaluate next run times.
 	var nextRunTimes []time.Time
 	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().Time.After(now) {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("StateTime is in future.")
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info("StartTime is in future, using it.")
 		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time.UTC(), MaxSchedules)
 	} else {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
 		nextRunTimes = state.cronExpression.NextN(now.UTC(), MaxSchedules)
 	}
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
 
 	//Update the status of the schedule with the next run times
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Next RunTime is set. Updating status.")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Next RunTime is set. Updating status.")
 	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
 	schedule.SetActiveSchedule(schedule.GetSchedule())
 

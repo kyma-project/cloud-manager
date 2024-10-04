@@ -79,6 +79,7 @@ func (suite *deleteBackupsSuite) TestWhenRunAlreadyCompleted() {
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
 	state.nextRunTime = runTime
+	state.deleteRunCompleted = true
 	suite.Nil(err)
 
 	//Invoke API under test
