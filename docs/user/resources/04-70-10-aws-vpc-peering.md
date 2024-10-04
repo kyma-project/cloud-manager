@@ -35,7 +35,7 @@ policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/clo
 
 ```
 
-Create a new managed policy CloudManagerPeeringAccess with following permissions:
+Create a new managed policy **CloudManagerPeeringAccess** with following permissions:
 ```json
 {
     "Version": "2012-10-17",
@@ -57,7 +57,7 @@ Create a new managed policy CloudManagerPeeringAccess with following permissions
 }
 ```
 
-Attach the CloudManagerPeeringAccess policy to **CloudManagerPeeringRole**.
+Attach the **CloudManagerPeeringAccess** policy to **CloudManagerPeeringRole**.
 
 ### Deleting `AwsVpcPeering`
 
