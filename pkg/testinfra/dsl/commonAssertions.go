@@ -21,25 +21,24 @@ func HavingDeletionTimestamp() ObjAssertion {
 }
 
 func WithRemoteRef(name string) ObjAction {
-	remoteRef := &cloudcontrolv1beta1.RemoteRef{
+	remoteRef := cloudcontrolv1beta1.RemoteRef{
 		Name:      name,
 		Namespace: DefaultSkrNamespace,
 	}
 	return &objAction{
 		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
-				x.Spec.RemoteRef = *remoteRef
-				return
+			switch x := obj.(type) {
+			case *cloudcontrolv1beta1.NfsInstance:
+				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.RedisInstance:
+				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.VpcPeering:
+				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.IpRange:
+				x.Spec.RemoteRef = remoteRef
+			default:
+				panic(fmt.Sprintf("unhandled type in WithRemoteRef: %T", obj))
 			}
-			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				x.Spec.RemoteRef = *remoteRef
-				return
-			}
-			if x, ok := obj.(*cloudcontrolv1beta1.VpcPeering); ok {
-				x.Spec.RemoteRef = *remoteRef
-				return
-			}
-			panic("unhandled type in WithRemoteRef")
 		},
 	}
 }
