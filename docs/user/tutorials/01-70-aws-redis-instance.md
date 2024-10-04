@@ -35,12 +35,12 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
          valueFrom:
            secretKeyRef:
              key: host
-             name: minimal-example-probe
+             name: awsredisinstance-minimal-example
        - name: PORT
          valueFrom:
            secretKeyRef:
              key: port
-             name: minimal-example-probe
+             name: awsredisinstance-minimal-example
    ```
 
 3. Exec into the Pod:
@@ -52,7 +52,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
 4. Run a PING command:
 
    ```bash
-   redis-cli -h $HOST -p $PORT
+   redis-cli -h $HOST -p $PORT PING
    ```
    If your setup was successful, you get `PONG` back from the server.
 
@@ -127,6 +127,6 @@ To specify advanced features (such as Redis version, configuration, and maintena
 5. Run a PING command:
 
    ```bash
-   redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls
+   redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls PING
    ```
    If your setup was successful, you get `PONG` back from the server.
