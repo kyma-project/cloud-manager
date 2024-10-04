@@ -35,20 +35,22 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 
 		vpcId := "85b43d7c-6488-4e15-9782-fff7bc31c286"
 
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
 		By("And Given AWS VPC exists", func() {
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong1",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong1"),
 				nil,
 			)
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				vpcId,
 				"10.180.0.0/16",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong2",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong2"),
@@ -64,7 +66,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			iprangePkg.Ignore.AddName(name)
 
 			Eventually(CreateAwsIpRangeWithSubnets).
-				WithArguments(infra.Ctx(), infra, iprange, vpcId, name, iprangeCidr).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), awsMock, iprange, vpcId, name, iprangeCidr).
 				Should(Succeed(), "failed creating IpRange")
 		})
 
@@ -89,11 +91,11 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 					NewObjActions(),
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
-			theEfs = infra.AwsMock().GetFileSystemById(nfsInstance.Status.Id)
+			theEfs = awsMock.GetFileSystemById(nfsInstance.Status.Id)
 		})
 
 		By("When EFS is Available", func() {
-			infra.AwsMock().SetFileSystemLifeCycleState(*theEfs.FileSystemId, efsTypes.LifeCycleStateAvailable)
+			awsMock.SetFileSystemLifeCycleState(*theEfs.FileSystemId, efsTypes.LifeCycleStateAvailable)
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -111,7 +113,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		})
 
 		By("And Then EFS has mount targets", func() {
-			list, err := infra.AwsMock().DescribeMountTargets(infra.Ctx(), ptr.Deref(theEfs.FileSystemId, ""))
+			list, err := awsMock.DescribeMountTargets(infra.Ctx(), ptr.Deref(theEfs.FileSystemId, ""))
 			Expect(err).NotTo(HaveOccurred(), "failed listing EFS mount targets")
 			Expect(list).To(HaveLen(3), "expected 3 EFS mount targets to exist")
 			subnetList := pie.Sort(pie.Map(list, func(x efsTypes.MountTargetDescription) string {
@@ -131,7 +133,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		})
 
 		By("And When AWS EFS state is deleted", func() {
-			infra.AwsMock().SetFileSystemLifeCycleState(ptr.Deref(theEfs.FileSystemId, ""), efsTypes.LifeCycleStateDeleted)
+			awsMock.SetFileSystemLifeCycleState(ptr.Deref(theEfs.FileSystemId, ""), efsTypes.LifeCycleStateDeleted)
 		})
 
 		By("Then NfsInstance does not exist", func() {

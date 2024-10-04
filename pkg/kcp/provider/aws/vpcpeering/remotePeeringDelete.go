@@ -6,18 +6,22 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
 
-func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
+func remotePeeringDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.vpcPeering == nil {
+	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
+		return nil, nil
+	}
+
+	if state.remoteVpcPeering == nil {
 		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
 	}
 
-	logger.Info("Deleting VpcPeering")
+	logger.Info("Deleting remote VpcPeering")
 
-	err := state.client.DeleteVpcPeeringConnection(ctx, state.vpcPeering.VpcPeeringConnectionId)
+	err := state.remoteClient.DeleteVpcPeeringConnection(ctx, state.remoteVpcPeering.VpcPeeringConnectionId)
 
 	if err != nil {
 
@@ -29,7 +33,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 		return awsmeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
 	}
 
-	logger.Info("VpcPeering deleted")
+	logger.Info("Remote VpcPeering deleted")
 
 	return nil, nil
 }

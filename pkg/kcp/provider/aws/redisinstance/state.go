@@ -58,6 +58,7 @@ func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (
 
 	c, err := f.skrProvider(
 		ctx,
+		redisInstace.Scope().Spec.Scope.Aws.AccountId,
 		redisInstace.Scope().Spec.Region,
 		awsconfig.AwsConfig.Default.AccessKeyId,
 		awsconfig.AwsConfig.Default.SecretAccessKey,

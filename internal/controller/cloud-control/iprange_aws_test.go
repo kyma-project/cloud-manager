@@ -34,21 +34,23 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 				Should(Succeed())
 		})
 
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
 		var theVpc *ec2Types.Vpc
 		By("And Given AWS VPC exists", func() {
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong1",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong1"),
 				nil,
 			)
-			theVpc = infra.AwsMock().AddVpc(
+			theVpc = awsMock.AddVpc(
 				vpcId,
 				"10.250.0.0/22",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong2",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong2"),
@@ -133,7 +135,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 		})
 
 		By("And Then KCP IpRange AWS Subnets are created", func() {
-			subnets, err := infra.AwsMock().DescribeSubnets(infra.Ctx(), vpcId)
+			subnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
 			Expect(err).NotTo(HaveOccurred())
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				found := false
@@ -180,22 +182,24 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 				Should(Succeed())
 		})
 
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
 		var theVpc *ec2Types.Vpc
 		By("And Given AWS VPC exists", func() {
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong1",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong1"),
 				nil,
 			)
-			theVpc = infra.AwsMock().AddVpc(
+			theVpc = awsMock.AddVpc(
 				vpcId,
 				vpcCidr,
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
 			Expect(theVpc).NotTo(BeNil(), "expected non nil aws vpc to be created")
-			infra.AwsMock().AddVpc(
+			awsMock.AddVpc(
 				"wrong2",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong2"),
@@ -247,7 +251,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		var theAwsSubnets []ec2Types.Subnet
 		By("And Given KCP IpRange AWS Subnets are created", func() {
-			awsSubnets, err := infra.AwsMock().DescribeSubnets(infra.Ctx(), vpcId)
+			awsSubnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
 			Expect(err).NotTo(HaveOccurred())
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				for _, awsSubnet := range awsSubnets {
@@ -272,7 +276,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 		})
 
 		By("And Then KCP IpRange VPC Subnets do not exist", func() {
-			subnets, err := infra.AwsMock().DescribeSubnets(infra.Ctx(), vpcId)
+			subnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, deletedSubnet := range theAwsSubnets {
@@ -320,8 +324,10 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 				Should(Succeed())
 		})
 
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
 		By("And Given AWS VPC exists", func() {
-			theVpc = infra.AwsMock().AddVpc(
+			theVpc = awsMock.AddVpc(
 				vpcId,
 				"10.250.0.0/22",
 				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
@@ -405,7 +411,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 		})
 
 		By("And Then KCP IpRange AWS Subnets are created", func() {
-			subnets, err := infra.AwsMock().DescribeSubnets(infra.Ctx(), vpcId)
+			subnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
 			Expect(err).NotTo(HaveOccurred())
 			for _, iprangeSubnet := range iprange.Status.Subnets {
 				found := false

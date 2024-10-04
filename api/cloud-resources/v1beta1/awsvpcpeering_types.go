@@ -35,6 +35,8 @@ type AwsVpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteAccountId is immutable."
 	RemoteAccountId string `json:"remoteAccountId"`
+
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering
