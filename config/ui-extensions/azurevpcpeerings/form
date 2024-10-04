@@ -8,3 +8,5 @@
   widget: Text
   disableOnEdit: true
   description: Immutable once set.
+- path: spec.deleteRemotePeering
+  name: spec.deleteRemotePeering
