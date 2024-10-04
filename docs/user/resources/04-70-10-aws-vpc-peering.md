@@ -17,7 +17,7 @@ For cross-account access, Cloud Manager uses [`AssumeRole`](https://awscli.amazo
 To authorize Cloud Manager in remote cloud provider account create new role named **CloudManagerPeeringRole** with a trust
 policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume that role.
 
-ENV corresponds to dev, stage, or prod.
+**ENV** corresponds to **dev**, **stage**, or **prod**.
 
 ```json
 {
@@ -59,7 +59,7 @@ Create a new managed policy CloudManagerPeeringAccess with following permissions
 
 Attach the CloudManagerPeeringAccess policy to **CloudManagerPeeringRole**.
 
-### Deleting AwsVpcPeering
+### Deleting `AwsVpcPeering`
 
 Kyma's underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
 peering connection is left hanging, and must be deleted manually.
