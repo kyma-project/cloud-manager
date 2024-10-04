@@ -38,7 +38,7 @@ func validateTimes(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	if start != nil && !start.IsZero() &&
-		start.Time.Before(refTime) {
+		GetRemainingTime(&refTime, &start.Time) > 0 {
 		logger.Info(fmt.Sprintf("Invalid start time : %s before %s", start, refTime))
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
@@ -57,7 +57,7 @@ func validateTimes(ctx context.Context, st composed.State) (error, context.Conte
 		refTime = start.Time
 	}
 
-	if end != nil && !end.IsZero() && end.Time.Before(refTime) {
+	if end != nil && !end.IsZero() && GetRemainingTime(&refTime, &end.Time) > 0 {
 		logger.Info("Invalid end time")
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
