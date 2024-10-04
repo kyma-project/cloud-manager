@@ -85,7 +85,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
 		}
 
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).

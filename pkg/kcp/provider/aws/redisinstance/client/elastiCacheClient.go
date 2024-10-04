@@ -21,7 +21,7 @@ import (
 )
 
 func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
-	return func(ctx context.Context, region, key, secret, role string) (ElastiCacheClient, error) {
+	return func(ctx context.Context, account, region, key, secret, role string) (ElastiCacheClient, error) {
 		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err

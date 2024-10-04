@@ -13,7 +13,6 @@ import (
 func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	obj := state.ObjAsVpcPeering()
 
 	if state.remoteVpcPeering != nil {
 		return nil, nil
@@ -28,9 +27,9 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	if err != nil {
 		logger.Error(err, "Error accepting VPC Peering")
 
-		obj.Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 
-		return composed.PatchStatus(obj).
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -43,7 +42,7 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("remotePeeringId", *peering.VpcPeeringConnectionId)
+	logger = logger.WithValues("remoteId", *peering.VpcPeeringConnectionId)
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
@@ -51,9 +50,9 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	state.remoteVpcPeering = peering
 
-	obj.Status.RemoteId = *peering.VpcPeeringConnectionId
+	state.ObjAsVpcPeering().Status.RemoteId = *peering.VpcPeeringConnectionId
 
-	return composed.UpdateStatus(obj).
+	return composed.PatchStatus(state.ObjAsVpcPeering()).
 		ErrorLogMessage("Error updating VpcPeering status with remote connection id").
 		FailedError(composed.StopWithRequeue).
 		SuccessErrorNil().
