@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,7 +21,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if meta.IsStatusConditionTrue(
-		*state.ObjAsVpcPeering().Conditions(),
+		ptr.Deref(state.ObjAsVpcPeering().Conditions(), []metav1.Condition{}),
 		cloudcontrol1beta1.ConditionTypeReady,
 	) {
 		return nil, nil

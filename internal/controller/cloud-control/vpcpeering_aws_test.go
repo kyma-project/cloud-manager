@@ -16,7 +16,6 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 var _ = Describe("Feature: KCP VpcPeering", func() {
@@ -47,20 +46,23 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		vpcName := scope.Spec.Scope.Aws.VpcNetwork
 		remoteVpcName := "Remote Network Name"
 
+		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+
 		By("And Given AWS VPC exists", func() {
-			infra.AwsMock().AddVpc(
+			awsMockLocal.AddVpc(
 				"wrong1",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong1"),
 				nil,
 			)
-			infra.AwsMock().AddVpc(
+			awsMockLocal.AddVpc(
 				vpcId,
 				vpcCidr,
 				awsutil.Ec2Tags("Name", vpcName),
 				awsmock.VpcSubnetsFromScope(scope),
 			)
-			infra.AwsMock().AddVpc(
+			awsMockLocal.AddVpc(
 				"wrong2",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong2"),
@@ -70,33 +72,37 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given AWS route table exists", func() {
 
-			infra.AwsMock().AddRouteTable(
+			awsMockLocal.AddRouteTable(
 				ptr.To("rtb-c6606c725da27ff10"),
 				ptr.To(vpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
+				[]ec2Types.RouteTableAssociation{
+					{
+						Main: ptr.To(true),
+					},
+				})
+
+			awsMockLocal.AddRouteTable(
+				ptr.To("rtb-ae17300793a424240"),
+				ptr.To("wrong2"),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", "wrong2"), "1"),
 				[]ec2Types.RouteTableAssociation{})
 
-			infra.AwsMock().AddRouteTable(
+			awsMockLocal.AddRouteTable(
 				ptr.To("rtb-0c65354e2979d9c83"),
 				ptr.To(vpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
 				[]ec2Types.RouteTableAssociation{})
-
-			infra.AwsMock().AddRouteTable(
-				ptr.To("rtb-ae17300793a424240"),
-				ptr.To(vpcId),
-				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", "wrong2"), "1"),
-				[]ec2Types.RouteTableAssociation{})
 		})
 
 		By("And Given AWS remote VPC exists", func() {
-			infra.AwsMock().AddVpc(
+			awsMockRemote.AddVpc(
 				remoteVpcId,
 				remoteVpcCidr,
 				awsutil.Ec2Tags("Name", remoteVpcName, kymaName, kymaName),
 				nil,
 			)
-			infra.AwsMock().AddVpc(
+			awsMockRemote.AddVpc(
 				"wrong3",
 				"10.200.0.0/16",
 				awsutil.Ec2Tags("Name", "wrong3"),
@@ -106,7 +112,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given AWS remote route table exists", func() {
 
-			infra.AwsMock().AddRouteTable(
+			awsMockRemote.AddRouteTable(
 				ptr.To("rtb-69a1e8a929a9eb5ed"),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
@@ -116,15 +122,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					},
 				})
 
-			infra.AwsMock().AddRouteTable(
+			awsMockRemote.AddRouteTable(
 				ptr.To("rtb-ae17300793a424247"),
+				ptr.To("wrong3"),
+				awsutil.Ec2Tags(),
+				[]ec2Types.RouteTableAssociation{})
+
+			awsMockRemote.AddRouteTable(
+				ptr.To("rtb-ae17300793a424248"),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{
-					{
-						SubnetId: ptr.To("10.200.1.0/24"),
-					},
-				})
+				[]ec2Types.RouteTableAssociation{})
 		})
 
 		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
@@ -136,7 +144,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, false).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, true).
 				Build()
 
 			Eventually(CreateObj).
@@ -221,6 +229,28 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed(), "expected remote kcp network to become ready but it didn't")
 		})
 
+		By("Then KCP VpcPeering is waiting for remote peering connection to be created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingState(string(cloudcontrolv1beta1.ErrorState)),
+				).Should(Succeed())
+		})
+
+		var localPeering ec2Types.VpcPeeringConnection
+
+		localPeerings, _ := awsMockLocal.DescribeVpcPeeringConnections(infra.Ctx())
+		for _, p := range localPeerings {
+			if kcpPeering.Status.Id == ptr.Deref(p.VpcPeeringConnectionId, "") {
+				localPeering = p
+			}
+		}
+
+		By("When remote VpcPeeringConnection is initiated", func() {
+			awsMockRemote.InitiateVpcPeeringConnection(infra.Ctx(), localPeering.VpcPeeringConnectionId, ptr.To(remoteVpcId), ptr.To(vpcId), ptr.To(scope.Spec.Region), ptr.To(scope.Spec.Scope.Aws.AccountId))
+		})
+
 		By("Then KCP VpcPeering is initiating-request", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
@@ -231,8 +261,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("When AWS VPC Peering state is Connected", func() {
-			infra.AwsMock().SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(vpcId), ptr.To(remoteVpcId))
+		By("When AWS VPC Peering state is active", func() {
+			awsMockLocal.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(vpcId), ptr.To(remoteVpcId))
+			awsMockRemote.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(remoteVpcId), ptr.To(vpcId))
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -248,33 +279,30 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(kcpPeering.Status.VpcId).To(Equal(vpcId))
 		})
 
-		list, _ := infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
+		localPeerings, _ = awsMockLocal.DescribeVpcPeeringConnections(infra.Ctx())
 
-		var connection ec2Types.VpcPeeringConnection
-		for _, p := range list {
+		for _, p := range localPeerings {
 			if kcpPeering.Status.Id == ptr.Deref(p.VpcPeeringConnectionId, "") {
-				connection = p
+				localPeering = p
 			}
 		}
 
-		By("And Then found VpcPeeringConnection has AccepterVpcInfo.VpcId equals remote vpc id", func() {
-			Expect(*connection.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
+		By("And Then found local VpcPeeringConnection has AccepterVpcInfo.VpcId equals remote vpc id", func() {
+			Expect(*localPeering.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
 		})
 
 		By("And Then KCP VpcPeering has status.Id equal to existing AWS Connection id", func() {
-			Expect(kcpPeering.Status.Id).To(Equal(ptr.Deref(connection.VpcPeeringConnectionId, "xxx")))
+			Expect(kcpPeering.Status.Id).To(Equal(ptr.Deref(localPeering.VpcPeeringConnectionId, "xxx")))
 		})
 
-		tables, _ := infra.AwsMock().DescribeRouteTables(infra.Ctx(), vpcId)
-
-		By("And Then all route table has one new route with destination CIDR matching remote VPC CIDR", func() {
-			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(3))
+		By("And Then all local route tables has one new route with destination CIDR matching remote VPC CIDR", func() {
+			localRouteTables, _ := awsMockLocal.DescribeRouteTables(infra.Ctx(), vpcId)
+			Expect(routeCount(localRouteTables, *localPeering.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(2))
 		})
 
-		tables, _ = infra.AwsMock().DescribeRouteTables(infra.Ctx(), remoteVpcId)
-
-		By("And Then all remote route table has one new route with destination CIDR matching VPC CIDR", func() {
-			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, vpcCidr)).To(Equal(2))
+		By("And Then all remote route tables has one new route with destination CIDR matching VPC CIDR", func() {
+			remoteRouteTables, _ := awsMockRemote.DescribeRouteTables(infra.Ctx(), remoteVpcId)
+			Expect(routeCount(remoteRouteTables, *localPeering.VpcPeeringConnectionId, vpcCidr)).To(Equal(2))
 		})
 
 		// DELETE
@@ -286,23 +314,40 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("Then VpcPeering does not exist", func() {
-			Eventually(IsDeleted, 5*time.Second).
+			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
 				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
 		})
 
-		By("And Then VpcPeeringConnection is deleted", func() {
-			list, _ = infra.AwsMock().DescribeVpcPeeringConnections(infra.Ctx())
+		By("And Then local VpcPeeringConnection is deleted", func() {
+			localPeerings, _ = awsMockLocal.DescribeVpcPeeringConnections(infra.Ctx())
 
-			found := pie.Any(list, func(x ec2Types.VpcPeeringConnection) bool {
+			found := pie.Any(localPeerings, func(x ec2Types.VpcPeeringConnection) bool {
 				return ptr.Deref(x.VpcPeeringConnectionId, "xxx") == kcpPeering.Status.Id
 			})
 
 			Expect(found).To(Equal(false))
 		})
 
-		By("And Then all route table has no routes with destination CIDR matching remote VPC CIDR", func() {
-			Expect(routeCount(tables, *connection.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(0))
+		By("And Then all local route tables has no routes with destination CIDR matching remote VPC CIDR", func() {
+			localRouteTables, _ := awsMockLocal.DescribeRouteTables(infra.Ctx(), vpcId)
+			Expect(routeCount(localRouteTables, *localPeering.VpcPeeringConnectionId, remoteVpcCidr)).To(Equal(0))
+		})
+
+		By("And Then remote VpcPeeringConnection is deleted", func() {
+			remotePeerings, _ := awsMockRemote.DescribeVpcPeeringConnections(infra.Ctx())
+
+			found := pie.Any(remotePeerings, func(x ec2Types.VpcPeeringConnection) bool {
+				return ptr.Deref(x.VpcPeeringConnectionId, "xxx") == kcpPeering.Status.Id
+			})
+
+			Expect(found).To(Equal(false))
+		})
+
+		By("And Then all remote route tables has no routes with destination CIDR matching local VPC CIDR", func() {
+			remoteRouteTables, _ := awsMockRemote.DescribeRouteTables(infra.Ctx(), remoteVpcId)
+
+			Expect(routeCount(remoteRouteTables, *localPeering.VpcPeeringConnectionId, vpcCidr)).To(Equal(0))
 		})
 	})
 })

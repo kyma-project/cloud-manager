@@ -63,6 +63,7 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 
 	c, err := f.skrProvider(
 		ctx,
+		vpcPeeringState.Scope().Spec.Scope.Aws.AccountId,
 		vpcPeeringState.Scope().Spec.Region,
 		awsAccessKeyId,
 		awsSecretAccessKey,

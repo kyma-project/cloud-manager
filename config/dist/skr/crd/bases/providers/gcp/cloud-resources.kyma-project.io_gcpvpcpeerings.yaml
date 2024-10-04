@@ -41,6 +41,7 @@ spec:
             spec:
               properties:
                 importCustomRoutes:
+                  default: false
                   type: boolean
                   x-kubernetes-validations:
                     - message: ImportCustomRoutes is immutable.
@@ -50,16 +51,28 @@ spec:
                   x-kubernetes-validations:
                     - message: RemotePeeringName is immutable.
                       rule: (self == oldSelf)
+                    - message: RemotePeeringName should be at least 1 character, with a maximum of 63 characters.
+                      rule: (size(self) <= 63 && size(self) >= 1)
+                    - message: RemotePeeringName must start with a lowercase letter, end with a lowercase letter or number, and only contain lowercase letters, numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
                 remoteProject:
                   type: string
                   x-kubernetes-validations:
-                    - message: RemoteNetwork is immutable.
+                    - message: RemoteProject must be 6 to 30 characters in length.
+                      rule: (size(self) <= 30 && size(self) >= 6)
+                    - message: RemoteProject must start with a lowercase letter, end with a lowercase letter or number, and only contain lowercase letters, numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
+                    - message: RemoteProject is immutable.
                       rule: (self == oldSelf)
                 remoteVpc:
                   type: string
                   x-kubernetes-validations:
                     - message: RemoteVpc is immutable.
                       rule: (self == oldSelf)
+                    - message: RemoteVpc should be at least 1 character, with a maximum of 63 characters.
+                      rule: (size(self) <= 63 && size(self) >= 1)
+                    - message: RemoteVpc must start with a lowercase letter, end with a lowercase letter or number, and only contain lowercase letters, numbers, and hyphens.
+                      rule: (self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != '')
               type: object
             status:
               properties:

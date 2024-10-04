@@ -42,6 +42,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 
 	c, err := f.skrProvider(
 		ctx,
+		nfsInstanceState.Scope().Spec.Scope.Aws.AccountId,
 		nfsInstanceState.Scope().Spec.Region,
 		awsconfig.AwsConfig.Default.AccessKeyId,
 		awsconfig.AwsConfig.Default.SecretAccessKey,

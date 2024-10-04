@@ -28,9 +28,9 @@ func deleteKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	err := state.KcpCluster.K8sClient().Delete(ctx, state.KcpVpcPeering)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error deleting KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	// give some time to cloud-control and cloud providers to delete it, and then run again
+	// waiting for the VpcPeering to be deleted
 	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 }

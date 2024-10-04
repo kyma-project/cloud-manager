@@ -51,7 +51,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 			).
 			Info("VPC not found")
 
-		return composed.UpdateStatus(obj).
+		return composed.PatchStatus(obj).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

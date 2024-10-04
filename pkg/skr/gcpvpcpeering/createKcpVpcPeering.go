@@ -2,11 +2,11 @@ package gcpvpcpeering
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 )
 
 func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -22,19 +22,6 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	}
 
 	obj := state.ObjAsGcpVpcPeering()
-
-	// If there is no guid, generate one before creating the KCP VpcPeering
-	if obj.Status.Id == "" {
-		statusId := uuid.NewString()
-
-		obj.Status.Id = statusId
-		err := state.UpdateObjStatus(ctx)
-
-		// If there is too many requests to the API, log and requeue the request
-		if err != nil {
-			return composed.LogErrorAndReturn(err, "[SKR GcpVpcPeering] Error updating status with ID "+err.Error(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
-		}
-	}
 
 	state.KcpVpcPeering = &cloudcontrolv1beta1.VpcPeering{
 		ObjectMeta: metav1.ObjectMeta{
@@ -54,12 +41,16 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},
-			VpcPeering: &cloudcontrolv1beta1.VpcPeeringInfo{
-				Gcp: &cloudcontrolv1beta1.GcpVpcPeering{
-					ImportCustomRoutes: obj.Spec.ImportCustomRoutes,
-					RemoteVpc:          obj.Spec.RemoteVpc,
-					RemoteProject:      obj.Spec.RemoteProject,
-					RemotePeeringName:  obj.Spec.RemotePeeringName,
+			Details: &cloudcontrolv1beta1.VpcPeeringDetails{
+				PeeringName:        obj.Spec.RemotePeeringName,
+				ImportCustomRoutes: obj.Spec.ImportCustomRoutes,
+				LocalNetwork: klog.ObjectRef{
+					Name:      fmt.Sprintf("%s--kyma", state.KymaRef.Name),
+					Namespace: state.KymaRef.Namespace,
+				},
+				RemoteNetwork: klog.ObjectRef{
+					Name:      state.KcpRemoteNetwork.Name,
+					Namespace: state.KcpRemoteNetwork.Namespace,
 				},
 			},
 		},
@@ -68,10 +59,10 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpVpcPeering)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "[SKR GcpVpcPeering] Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "[SKR GCP VPC createKcpVpcPeering] Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("[SKR GcpVpcPeering] Created KCP VpcPeering")
+	logger.Info("[SKR GCP VPC Peering createKcpVpcPeering] KCP VpcPeering created")
 
 	return nil, nil
 }
