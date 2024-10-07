@@ -49,7 +49,7 @@ func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*
 
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"NfsBackupScheduleMain",
+		"BackupScheduleMain",
 		feature.LoadFeatureContextFromObj(r.backupImpl.emptyScheduleObject()),
 		composed.LoadObj,
 		addFinalizer,

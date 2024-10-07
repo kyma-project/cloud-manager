@@ -8,19 +8,20 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"k8s.io/utils/ptr"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, iprange *cloudcontrolv1beta1.IpRange,
+func CreateAwsIpRangeWithSubnets(ctx context.Context, kcpClient ctrlclient.Client, client awsiprangeclient.Client, iprange *cloudcontrolv1beta1.IpRange,
 	vpcId string, name string, iprangeCidr string,
 ) error {
 	if iprange == nil {
 		return errors.New("iprange given to CreateAwsIpRangeWithSubnets() can not be nil")
 	}
 
-	err := CreateKcpIpRange(ctx, infra.KCP().Client(), iprange,
+	err := CreateKcpIpRange(ctx, kcpClient, iprange,
 		WithName(name),
 		WithKcpIpRangeRemoteRef(name),
 		WithScope(name),
@@ -30,7 +31,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 		return err
 	}
 
-	_, err = infra.AwsMock().AssociateVpcCidrBlock(infra.Ctx(), vpcId, iprangeCidr)
+	_, err = client.AssociateVpcCidrBlock(ctx, vpcId, iprangeCidr)
 	if err != nil {
 		return err
 	}
@@ -51,7 +52,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 	zones := []string{"eu-west-1a", "eu-west-1b", "eu-west-1c"}
 	for x, zone := range zones {
 		rng := iprange.Status.Ranges[x]
-		subnet, err := infra.AwsMock().CreateSubnet(infra.Ctx(), vpcId, zone, rng, awsutil.Ec2Tags(
+		subnet, err := client.CreateSubnet(ctx, vpcId, zone, rng, awsutil.Ec2Tags(
 			"Name", fmt.Sprintf("%s-%d", iprange.Name, x),
 			common.TagCloudManagerName, name,
 			common.TagCloudManagerRemoteName, iprange.Spec.RemoteRef.String(),
@@ -69,7 +70,7 @@ func CreateAwsIpRangeWithSubnets(ctx context.Context, infra testinfra.Infra, ipr
 		})
 	}
 
-	err = UpdateStatus(ctx, infra.KCP().Client(), iprange)
+	err = UpdateStatus(ctx, kcpClient, iprange)
 	if err != nil {
 		return err
 	}

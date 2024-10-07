@@ -42,6 +42,8 @@ spec:
             spec:
               description: AwsVpcPeeringSpec defines the desired state of AwsVpcPeering
               properties:
+                deleteRemotePeering:
+                  type: boolean
                 remoteAccountId:
                   type: string
                   x-kubernetes-validations:

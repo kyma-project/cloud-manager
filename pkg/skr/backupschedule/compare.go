@@ -10,6 +10,10 @@ var (
 )
 
 func GetRemainingTime(to, from *time.Time) time.Duration {
+	return GetRemainingTimeWithTolerance(to, from, ToleranceInterval)
+}
+
+func GetRemainingTimeWithTolerance(to, from *time.Time, tolerance time.Duration) time.Duration {
 	if to == nil {
 		to = &time.Time{}
 	}
@@ -18,7 +22,7 @@ func GetRemainingTime(to, from *time.Time) time.Duration {
 	}
 
 	timeLeft := to.Unix() - from.Unix()
-	if math.Abs(float64(timeLeft)) < ToleranceInterval.Seconds() {
+	if math.Abs(float64(timeLeft)) <= tolerance.Seconds() {
 		return 0
 	}
 	return time.Duration(timeLeft) * time.Second
@@ -27,4 +31,9 @@ func GetRemainingTime(to, from *time.Time) time.Duration {
 func GetRemainingTimeFromNow(to *time.Time) time.Duration {
 	now := time.Now().UTC()
 	return GetRemainingTime(to, &now)
+}
+
+func GetRemainingTimeFromNowWithTolerance(to *time.Time, tolerance time.Duration) time.Duration {
+	now := time.Now().UTC()
+	return GetRemainingTimeWithTolerance(to, &now, tolerance)
 }

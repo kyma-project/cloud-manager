@@ -6,4 +6,4 @@ import (
 
 type GardenClientProvider[T any] func(ctx context.Context, region, key, secret string) (T, error)
 
-type SkrClientProvider[T any] func(ctx context.Context, region, key, secret, role string) (T, error)
+type SkrClientProvider[T any] func(ctx context.Context, account, region, key, secret, role string) (T, error)

@@ -20,15 +20,14 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	//Check next run time. If it is not time to run, return
-	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
+	//If the deletion for the nextRunTime is already done, return
+	if state.deleteRunCompleted {
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	//If the deletion for the nextRunTime is already done, return
-	if schedule.GetLastDeleteRun() != nil && !schedule.GetLastDeleteRun().IsZero() &&
-		GetRemainingTime(&state.nextRunTime, &schedule.GetLastDeleteRun().Time) == 0 {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
+	//Check next run time. If it is not time to run, return
+	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
 		return nil, nil
 	}
 
@@ -45,7 +44,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Deleting old File Backups")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Deleting old File Backups")
 
 	nextDeleteTimes := map[string]string{}
 	var lastDeleted []corev1.ObjectReference
