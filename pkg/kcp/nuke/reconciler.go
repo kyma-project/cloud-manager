@@ -44,11 +44,13 @@ func (r *nukeReconciler) newAction() composed.Action {
 			// if Nuke not marked for deletion
 			composed.Not(composed.MarkedForDeletionPredicate),
 			loadResources,
-			statusDiscovered,
+			resourceStatusDiscovered,
 			deleteResources,
-			statusDeleting,
-			statusDeleted,
-			allDeleted,
+			resourceStatusDeleting,
+			resourceStatusDeleted,
+			checkIfAllDeleted,
+			scopeDelete,
+			statusCompleted,
 		),
 	)
 }

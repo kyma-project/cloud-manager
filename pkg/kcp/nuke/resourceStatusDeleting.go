@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func statusDeleting(ctx context.Context, st composed.State) (error, context.Context) {
+func resourceStatusDeleting(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	changed := false
