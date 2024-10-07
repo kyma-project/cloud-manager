@@ -28,7 +28,7 @@ func deleteCascade(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Cascade delete of created backups.")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Cascade delete of created backups.")
 
 	for _, backup := range state.Backups {
 		if composed.IsMarkedForDeletion(backup) {
