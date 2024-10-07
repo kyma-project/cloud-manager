@@ -12,15 +12,15 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func privateVirtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, context.Context) {
+func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.privateVirtualNetworkLink != nil {
+	if state.virtualNetworkLink != nil {
 		return nil, ctx
 	}
 
-	logger.Info("Creating Azure KCP IpRange privateVirtualNetworkLink")
+	logger.Info("Creating Azure KCP IpRange virtualNetworkLink")
 
 	virtualNetworkLinkName := state.ObjAsIpRange().Name
 	resourceGroupName := state.resourceGroupName
@@ -39,11 +39,11 @@ func privateVirtualNetworkLinkCreate(ctx context.Context, st composed.State) (er
 	err := state.azureClient.CreateVirtualNetworkLink(ctx, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName, virtualNetworkLink)
 
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create privateVirtualNetworkLink", ctx)
+		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create virtualNetworkLink", ctx)
 	}
 
 	if err != nil {
-		logger.Error(err, "Error creating Azure KCP IpRange privateVirtualNetworkLink", ctx)
+		logger.Error(err, "Error creating Azure KCP IpRange virtualNetworkLink", ctx)
 
 		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
 
@@ -52,9 +52,9 @@ func privateVirtualNetworkLinkCreate(ctx context.Context, st composed.State) (er
 				Type:    cloudcontrol1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrol1beta1.ConditionTypeError,
-				Message: "Error creating Azure privateVirtualNetworkLink",
+				Message: "Error creating Azure virtualNetworkLink",
 			}).
-			ErrorLogMessage("Error patching Azure KCP IpRange status after failed creating privateVirtualNetworkLink").
+			ErrorLogMessage("Error patching Azure KCP IpRange status after failed creating virtualNetworkLink").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 			Run(ctx, state)
 	}

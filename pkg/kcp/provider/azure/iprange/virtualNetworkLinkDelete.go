@@ -10,11 +10,11 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func privateVirtualNetworkLinkDelete(ctx context.Context, st composed.State) (error, context.Context) {
+func virtualNetworkLinkDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.privateVirtualNetworkLink == nil {
+	if state.virtualNetworkLink == nil {
 		return nil, ctx
 	}
 
@@ -22,7 +22,7 @@ func privateVirtualNetworkLinkDelete(ctx context.Context, st composed.State) (er
 
 	resourceGroupName := state.resourceGroupName
 	privateZoneName := state.privateDnsZone.Name
-	virtualNetworkLinkName := state.privateVirtualNetworkLink.Name
+	virtualNetworkLinkName := state.virtualNetworkLink.Name
 
 	err := state.azureClient.DeleteVirtualNetworkLink(ctx, resourceGroupName, ptr.Deref(privateZoneName, ""), ptr.Deref(virtualNetworkLinkName, ""))
 	if azuremeta.IsTooManyRequests(err) {

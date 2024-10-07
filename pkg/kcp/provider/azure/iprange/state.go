@@ -21,10 +21,10 @@ type State struct {
 	securityGroupName  string
 	subnetName         string
 
-	subnet                    *armnetwork.Subnet
-	securityGroup             *armnetwork.SecurityGroup
-	privateDnsZone            *armprivatedns.PrivateZone
-	privateVirtualNetworkLink *armprivatedns.VirtualNetworkLink
+	subnet             *armnetwork.Subnet
+	securityGroup      *armnetwork.SecurityGroup
+	privateDnsZone     *armprivatedns.PrivateZone
+	virtualNetworkLink *armprivatedns.VirtualNetworkLink
 }
 
 type StateFactory interface {

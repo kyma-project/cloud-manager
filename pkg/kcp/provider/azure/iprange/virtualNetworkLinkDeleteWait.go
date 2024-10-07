@@ -9,15 +9,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func privateVirtualNetworkLinkDeleteWait(ctx context.Context, st composed.State) (error, context.Context) {
+func virtualNetworkLinkDeleteWait(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.privateVirtualNetworkLink == nil {
+	if state.virtualNetworkLink == nil {
 		return nil, nil
 	}
 
-	if *state.privateVirtualNetworkLink.Properties.ProvisioningState != armprivatedns.ProvisioningStateDeleting {
+	if *state.virtualNetworkLink.Properties.ProvisioningState != armprivatedns.ProvisioningStateDeleting {
 		errorMsg := "Error: unexpected azure virtual network link state"
 		ipRange := st.Obj().(*v1beta1.IpRange)
 		return composed.UpdateStatus(ipRange).
