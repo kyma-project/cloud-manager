@@ -48,7 +48,7 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			azureclient.NewSecurityGroupsClient(networkClientFactory.NewSecurityGroupsClient()),
 			azureclient.NewSubnetsClient(networkClientFactory.NewSubnetsClient()),
 			azureclient.NewPrivateDnsZoneClient(privateDnsZoneClientFactory.NewPrivateZonesClient()),
-			azureclient.NewVirtualNetworkLInkClient(virtualNetworkLinkClientFactory.NewVirtualNetworkLinksClient()),
+			azureclient.NewVirtualNetworkLinkClient(virtualNetworkLinkClientFactory.NewVirtualNetworkLinksClient()),
 		), nil
 	}
 }

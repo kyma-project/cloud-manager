@@ -49,6 +49,8 @@ type Clients interface {
 	SubnetsClient
 	VpcPeeringClient
 	RedisInstanceClient
+	VirtualNetworkLinkClient
+	PrivateDnsZoneClient
 }
 
 type Providers interface {

@@ -11,7 +11,7 @@ type VirtualNetworkLinkClient interface {
 	DeleteVirtualNetworkLink(ctx context.Context, resourceGroupName, privateZoneName, virtualNetworkLinkName string) error
 }
 
-func NewVirtualNetworkLInkClient(svc *armprivatedns.VirtualNetworkLinksClient) VirtualNetworkLinkClient {
+func NewVirtualNetworkLinkClient(svc *armprivatedns.VirtualNetworkLinksClient) VirtualNetworkLinkClient {
 	return &virtualNetworkLinkClient{svc: svc}
 }
 
