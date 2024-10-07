@@ -20,4 +20,5 @@ resources:
 - cloud-resources_v1beta1_cceenfsvolume.yaml
 - cloud-control_v1beta1_network.yaml
 - cloud-resources_v1beta1_awsnfsbackupschedule.yaml
+- cloud-control_v1beta1_nuke.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
