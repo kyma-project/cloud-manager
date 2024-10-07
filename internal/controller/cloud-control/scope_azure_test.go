@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -72,6 +73,12 @@ var _ = Describe("Feature: KCP Scope Azure", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
 				Should(Succeed(), "expected created Scope to have Ready condition")
 		})
+
+		for _, label := range cloudcontrolv1beta1.ScopeLabels {
+			By(fmt.Sprintf("And Then Scope has label %s", label), func() {
+				Expect(scope.Labels).To(HaveKeyWithValue(label, kymaCR.GetLabels()[label]))
+			})
+		}
 
 		By("And Then Scope provider is Azure", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAzure))
