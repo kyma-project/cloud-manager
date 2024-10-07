@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
+	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
@@ -14,7 +15,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -24,8 +24,8 @@ import (
 )
 
 type ActiveSkrCollection interface {
-	AddKymaUnstructured(kyma *unstructured.Unstructured)
-	RemoveKymaUnstructured(kyma *unstructured.Unstructured)
+	AddScope(scope *cloudcontrol1beta1.Scope)
+	RemoveScope(scope *cloudcontrol1beta1.Scope)
 	Contains(kymaName string) bool
 	GetKymaNames() []string
 }
@@ -42,23 +42,22 @@ type activeSkrCollection struct {
 	logger logr.Logger
 }
 
-func (l *activeSkrCollection) AddKymaUnstructured(kyma *unstructured.Unstructured) {
-
-	kymaName := kyma.GetName()
+func (l *activeSkrCollection) AddScope(scope *cloudcontrol1beta1.Scope) {
+	kymaName := scope.GetName()
 
 	if l.queue.Contains(kymaName) {
 		return
 	}
 
-	labels := kyma.GetLabels()
+	labels := scope.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels["kyma-project.io/global-account-id"]
-	subaccountId := labels["kyma-project.io/subaccount-id"]
-	shootName := labels["kyma-project.io/shoot-name"]
-	region := labels["kyma-project.io/region"]
-	brokerPlanName := labels["kyma-project.io/broker-plan-name"]
+	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
+	region := labels[cloudcontrol1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,
@@ -76,21 +75,21 @@ func (l *activeSkrCollection) AddKymaUnstructured(kyma *unstructured.Unstructure
 		Add(1)
 }
 
-func (l *activeSkrCollection) RemoveKymaUnstructured(kyma *unstructured.Unstructured) {
-	kymaName := kyma.GetName()
+func (l *activeSkrCollection) RemoveScope(scope *cloudcontrol1beta1.Scope) {
+	kymaName := scope.GetName()
 	if !l.queue.Contains(kymaName) {
 		return
 	}
 
-	labels := kyma.GetLabels()
+	labels := scope.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels["kyma-project.io/global-account-id"]
-	subaccountId := labels["kyma-project.io/subaccount-id"]
-	shootName := labels["kyma-project.io/shoot-name"]
-	region := labels["kyma-project.io/region"]
-	brokerPlanName := labels["kyma-project.io/broker-plan-name"]
+	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
+	region := labels[cloudcontrol1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,
