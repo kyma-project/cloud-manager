@@ -19,8 +19,21 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 	if apierrors.IsNotFound(err) {
 		logger.Info("Kyma CR does not exist")
 
+		// TODO: this needs refactoring since skrRuntime can not decrease proper metrics w/out kyma labels
+		// a quick fix is to provide crafted (not loaded) kyma like this, but long term fix is to copy
+		// over necessary labels from Kyma into the Scope so that data is available here even when Kyma
+		// is deleted
+		kyma := util.NewKymaUnstructured()
+		kyma.SetNamespace(state.Name().Namespace)
+		kyma.SetName(state.Name().Name)
+		state.activeSkrCollection.RemoveKymaUnstructured(kyma)
+
 		if !NukeScopesWithoutKyma {
 			return composed.StopAndForget, nil
+		}
+
+		if !predicateScopeExists()(ctx, state) {
+			return composed.StopAndForget, ctx
 		}
 
 		nuke := &cloudcontrolv1beta1.Nuke{
