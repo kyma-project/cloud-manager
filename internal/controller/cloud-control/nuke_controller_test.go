@@ -194,6 +194,12 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 				).Should(Succeed())
 		})
 
+		By("And Then Scope is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+
 		By("// cleanup: Delete Nuke", func() {
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), nuke)).
 				To(Succeed())

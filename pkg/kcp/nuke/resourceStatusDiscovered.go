@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func statusDiscovered(ctx context.Context, st composed.State) (error, context.Context) {
+func resourceStatusDiscovered(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	changed := false
