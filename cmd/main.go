@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	"os"
 
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
@@ -42,6 +41,7 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
@@ -301,6 +301,10 @@ func main() {
 		azurenetworkclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupNukeReconciler(mgr, skrLoop); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

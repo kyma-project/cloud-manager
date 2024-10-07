@@ -14,13 +14,13 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	//Remove the finalizer so SKR GcpNfsVolumeBackup is also deleted
+	//Remove the finalizer so SKR BackupSchedule is also deleted
 	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
 	err := state.UpdateObj(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 
-	// bye, bye SKR GcpNfsVolume
+	// bye, bye SKR BackupSchedule
 	return composed.StopAndForget, nil
 }

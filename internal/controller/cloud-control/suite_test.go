@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"os"
 	"testing"
 
@@ -70,6 +71,8 @@ var _ = BeforeSuite(func() {
 	// Setup environment variables
 	env := abstractions.NewMockedEnvironment(map[string]string{})
 
+	kcpscope.NukeScopesWithoutKyma = false
+
 	// Setup controllers
 	// Scope
 	Expect(SetupScopeReconciler(
@@ -116,6 +119,11 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AzureMock().NetworkProvider(),
 	)).NotTo(HaveOccurred())
+	// Nuke
+	Expect(SetupNukeReconciler(
+		infra.KcpManager(),
+		infra.ActiveSkrCollection(),
+	)).To(Succeed())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

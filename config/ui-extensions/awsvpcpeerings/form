@@ -13,3 +13,5 @@
   required: false
   disableOnEdit: true
   description: Immutable once set.
+- path: spec.deleteRemotePeering
+  name: spec.deleteRemotePeering
