@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	"k8s.io/utils/ptr"
 	"time"
 
@@ -58,7 +59,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		redisCapacity := 2
 
-		resourceGroupName := fmt.Sprintf("cm-redis-%s", name)
+		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 		var redis *armredis.ResourceInfo
 		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
 
