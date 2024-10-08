@@ -306,29 +306,15 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		})
 
 		By("Then Azure Virtual Network Link does not exists", func() {
-			Eventually(func() error {
-				vnl, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
-				if err != nil {
-					return fmt.Errorf("error loading azure Virtual Network Link: %w", err)
-				}
-				virtualNetworkLink = vnl
-				return nil
-			}).
-				Should(Succeed())
+			virtualNetworkLink, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
 			Expect(virtualNetworkLink).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		By("Then Azure Private Dns Zone does not exists", func() {
-			Eventually(func() error {
-				pdz, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
-				if err != nil {
-					return fmt.Errorf("error loading azure Private Dns Zone: %w", err)
-				}
-				privateDnsZone = pdz
-				return nil
-			}).
-				Should(Succeed())
+			privateDnsZone, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
 			Expect(privateDnsZone).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		By("When KCP CM Network finalizer is removed", func() {
