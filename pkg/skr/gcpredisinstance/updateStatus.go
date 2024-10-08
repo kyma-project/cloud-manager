@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
+func PatchStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
@@ -28,7 +28,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpHasUpdatingCondition && skrCondErr == nil && !skrHasUpdatingCondition {
 		gcpRedisInstance.Status.State = cloudresourcesv1beta1.StateUpdating
-		return composed.UpdateStatus(gcpRedisInstance).
+		return composed.PatchStatus(gcpRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
@@ -43,7 +43,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpCondErr != nil && skrCondErr == nil {
 		gcpRedisInstance.Status.State = cloudresourcesv1beta1.StateError
-		return composed.UpdateStatus(gcpRedisInstance).
+		return composed.PatchStatus(gcpRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -60,7 +60,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR GcpRedisInstance status with Ready condition")
 		gcpRedisInstance.Status.State = cloudresourcesv1beta1.StateReady
-		return composed.UpdateStatus(gcpRedisInstance).
+		return composed.PatchStatus(gcpRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

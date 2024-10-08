@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
+func PatchStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
@@ -44,7 +44,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		redisInstance.Status.CaCert = state.gcpRedisInstance.ServerCaCerts[0].Cert
 	}
 
-	return composed.UpdateStatus(redisInstance).
+	return composed.PatchStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,

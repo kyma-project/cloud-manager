@@ -19,7 +19,7 @@ func New(stateFactory StateFactory) composed.Action {
 		state, err := stateFactory.NewState(ctx, st.(types.State))
 		if err != nil {
 			redisInstance := st.Obj().(*v1beta1.RedisInstance)
-			return composed.UpdateStatus(redisInstance).
+			return composed.PatchStatus(redisInstance).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -40,7 +40,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"redisInstance-create",
 					createRedis,
-					updateStatusId,
+					PatchStatusId,
 					addUpdatingCondition,
 					waitRedisAvailable,
 					modifyMemorySizeGb,
@@ -48,7 +48,7 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyMaintenancePolicy,
 					modifyAuthEnabled,
 					updateRedis,
-					updateStatus,
+					PatchStatus,
 				),
 				composed.ComposeActions(
 					"redisInstance-delete",

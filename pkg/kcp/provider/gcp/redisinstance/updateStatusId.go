@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func updateStatusId(ctx context.Context, st composed.State) (error, context.Context) {
+func PatchStatusId(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
@@ -21,7 +21,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 
 	redisInstance.Status.Id = state.gcpRedisInstance.Name
 
-	err := state.UpdateObjStatus(ctx)
+	err := state.PatchObjStatus(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating RedisInstance success .status.id", composed.StopWithRequeue, ctx)

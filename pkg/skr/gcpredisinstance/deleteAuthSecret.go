@@ -21,7 +21,7 @@ func deleteAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	err, _ := composed.UpdateStatus(state.ObjAsGcpRedisInstance()).
+	err, _ := composed.PatchStatus(state.ObjAsGcpRedisInstance()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
 			Status:  metav1.ConditionTrue,
