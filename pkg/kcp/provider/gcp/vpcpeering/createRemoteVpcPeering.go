@@ -51,7 +51,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		if matchesExistingPeering {
 			message = fmt.Sprintf("Error creating Remote VpcPeering: %s Please check the VPC peerings on your project.", err)
 		}
-
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

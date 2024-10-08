@@ -3,6 +3,7 @@ package gcpvpcpeering
 import (
 	"context"
 	"github.com/google/uuid"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -22,6 +23,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger.Info("[SKR GCP VPCPeering updateId] SKR GcpVpcPeering generating ID for VpcPeering")
 	id := uuid.NewString()
 
+	state.ObjAsGcpVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated
 	state.ObjAsGcpVpcPeering().Status.Id = id
 	err := state.UpdateObjStatus(ctx)
 
