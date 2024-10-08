@@ -25,7 +25,11 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		return nil, nil
 	}
 	if azuremeta.IsTooManyRequests(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+		return composed.LogErrorAndReturn(err,
+			"Azure vpc peering too many requests on peering remote load",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 
 	if err != nil {

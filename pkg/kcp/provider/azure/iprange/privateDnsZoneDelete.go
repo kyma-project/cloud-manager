@@ -25,7 +25,11 @@ func privateDnsZoneDelete(ctx context.Context, st composed.State) (error, contex
 
 	err := state.azureClient.DeletePrivateDnsZone(ctx, resourceGroupName, ptr.Deref(privateDnsZoneName, ""))
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on delete dnsZone", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on private dns zone delete",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange dnsZone")

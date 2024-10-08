@@ -19,7 +19,11 @@ func securityGroupLoad(ctx context.Context, st composed.State) (error, context.C
 		return nil, nil
 	}
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on security group load", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on security group load",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error loading Azure KCP IpRange subnet")

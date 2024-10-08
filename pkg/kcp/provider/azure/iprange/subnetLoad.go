@@ -19,7 +19,11 @@ func subnetLoad(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, nil
 	}
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on subnet load", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on subnet load",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error loading Azure KCP IpRange subnet")

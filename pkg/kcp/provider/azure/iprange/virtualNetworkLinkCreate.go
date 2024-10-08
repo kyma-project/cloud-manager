@@ -39,7 +39,11 @@ func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, co
 	err := state.azureClient.CreateVirtualNetworkLink(ctx, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName, virtualNetworkLink)
 
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create virtualNetworkLink", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on virtual network link create",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 
 	if err != nil {

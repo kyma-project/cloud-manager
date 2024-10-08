@@ -26,7 +26,11 @@ func virtualNetworkLinkDelete(ctx context.Context, st composed.State) (error, co
 
 	err := state.azureClient.DeleteVirtualNetworkLink(ctx, resourceGroupName, ptr.Deref(privateZoneName, ""), ptr.Deref(virtualNetworkLinkName, ""))
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on delete virtualNetworkLink", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on virtual network link delete",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange virtualNetworkLink")

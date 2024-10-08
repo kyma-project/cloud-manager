@@ -21,7 +21,11 @@ func securityGroupDelete(ctx context.Context, st composed.State) (error, context
 
 	err := state.azureClient.DeleteSecurityGroup(ctx, state.resourceGroupName, state.securityGroupName)
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on delete security group", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on security group delete",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange security group")

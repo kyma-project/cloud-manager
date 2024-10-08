@@ -30,7 +30,11 @@ func privateDnsZoneCreate(ctx context.Context, st composed.State) (error, contex
 	err := state.azureClient.CreatePrivateDnsZone(ctx, state.resourceGroupName, privateDnsZoneName, privateDNSZone)
 
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create privateDnsZone", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on private dns zone create",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 
 	if err != nil {
