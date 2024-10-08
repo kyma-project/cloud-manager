@@ -1,4 +1,4 @@
-# AWS VPC Peering Custom Resource
+# AwsVpcPeering Custom Resource
 
 
 The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between
