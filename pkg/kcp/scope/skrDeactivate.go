@@ -21,7 +21,7 @@ func skrDeactivate(ctx context.Context, st composed.State) (error, context.Conte
 
 	logger.Info("Stopping SKR and deleting Scope")
 
-	state.activeSkrCollection.RemoveKymaUnstructured(state.kyma)
+	state.activeSkrCollection.RemoveScope(state.ObjAsScope())
 
 	finalizerRemoved := controllerutil.RemoveFinalizer(state.Obj(), cloudcontrolv1beta1.FinalizerName)
 	if finalizerRemoved {

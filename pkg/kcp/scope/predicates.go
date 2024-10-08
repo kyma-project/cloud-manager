@@ -55,9 +55,20 @@ func predicateScopeCreateOrUpdateNeeded() composed.Predicate {
 	return func(ctx context.Context, st composed.State) bool {
 		if predicateScopeExists()(ctx, st) {
 			state := st.(*State)
+
+			// check if kyma network reference is created
 			if state.kcpNetworkKyma == nil {
 				return true
 			}
+
+			// check if labels from Kyma are copied to Scope
+			for _, label := range cloudcontrolv1beta1.ScopeLabels {
+				if _, ok := state.ObjAsScope().Labels[label]; !ok {
+					return true
+				}
+			}
+
+			// check provider specific shapes
 			switch state.ObjAsScope().Spec.Provider {
 			case cloudcontrolv1beta1.ProviderGCP:
 				return state.ObjAsScope().Spec.Scope.Gcp.Workers == nil || len(state.ObjAsScope().Spec.Scope.Gcp.Workers) == 0

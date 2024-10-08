@@ -29,14 +29,6 @@ func scopeDelete(ctx context.Context, st composed.State) (error, context.Context
 		return composed.LogErrorAndReturn(err, "Error loading Scope", composed.StopWithRequeue, ctx)
 	}
 
-	// Remove finalizer from Scope
-
-	// we don't have finalizer on Scope, but just in case if we by any chance add it so Nuke can keep working
-	_, err = composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, scope, state.Cluster().K8sClient())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error patch removing scope finalizer when Nuke has deleted all orphan resources", composed.StopWithRequeue, ctx)
-	}
-
 	// Delete Scope
 
 	err = state.Cluster().K8sClient().Delete(ctx, scope)
@@ -45,6 +37,13 @@ func scopeDelete(ctx context.Context, st composed.State) (error, context.Context
 	}
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error deleting Scope", composed.StopWithRequeue, ctx)
+	}
+
+	// Remove finalizer from Scope
+
+	_, err = composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, scope, state.Cluster().K8sClient())
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error patch removing scope finalizer when Nuke has deleted all orphan resources", composed.StopWithRequeue, ctx)
 	}
 
 	logger.Info("Scope deleted")
