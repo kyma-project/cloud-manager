@@ -21,6 +21,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	LabelScopeGlobalAccountId = "kyma-project.io/global-account-id"
+	LabelScopeSubaccountId    = "kyma-project.io/subaccount-id"
+	LabelScopeShootName       = "kyma-project.io/shoot-name"
+	LabelScopeRegion          = "kyma-project.io/region"
+	LabelScopeBrokerPlanName  = "kyma-project.io/broker-plan-name"
+)
+
+var ScopeLabels = []string{
+	LabelScopeGlobalAccountId,
+	LabelScopeSubaccountId,
+	LabelScopeShootName,
+	LabelScopeRegion,
+	LabelScopeBrokerPlanName,
+}
+
 // ScopeSpec defines the desired state of Scope
 type ScopeSpec struct {
 	// +kubebuilder:validation:Required

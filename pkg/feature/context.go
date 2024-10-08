@@ -122,11 +122,11 @@ func (b *contextBuilderImpl) LoadFromKyma(u *unstructured.Unstructured) ContextB
 	if u != nil && u.Object != nil {
 		b.Kyma(u.GetName())
 		if labels := u.GetLabels(); len(labels) > 0 {
-			b.BrokerPlan(labels["kyma-project.io/broker-plan-name"])
-			b.GlobalAccount(labels["kyma-project.io/global-account-id"])
-			b.SubAccount(labels["kyma-project.io/subaccount-id"])
-			b.Region(labels["kyma-project.io/region"])
-			b.Shoot(labels["kyma-project.io/shoot-name"])
+			b.BrokerPlan(labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName])
+			b.GlobalAccount(labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId])
+			b.SubAccount(labels[cloudcontrolv1beta1.LabelScopeSubaccountId])
+			b.Region(labels[cloudcontrolv1beta1.LabelScopeRegion])
+			b.Shoot(labels[cloudcontrolv1beta1.LabelScopeShootName])
 		}
 	}
 	return b

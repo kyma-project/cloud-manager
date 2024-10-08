@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -61,6 +62,12 @@ var _ = Describe("Feature: KCP Scope GCP", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed(), "expected Scope to have Ready condition")
 		})
+
+		for _, label := range cloudcontrolv1beta1.ScopeLabels {
+			By(fmt.Sprintf("And Then Scope has label %s", label), func() {
+				Expect(scope.Labels).To(HaveKeyWithValue(label, kymaCR.GetLabels()[label]))
+			})
+		}
 
 		By("And Then Scope has provider gcp", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderGCP))

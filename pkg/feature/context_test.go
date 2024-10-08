@@ -113,11 +113,11 @@ func TestContextBuilder(t *testing.T) {
 	t.Run("LoadFromKyma", func(t *testing.T) {
 		kyma := util.NewKymaUnstructured()
 		kyma.SetLabels(map[string]string{
-			"kyma-project.io/broker-plan-name":  "trial",
-			"kyma-project.io/global-account-id": "glob-123",
-			"kyma-project.io/subaccount-id":     "sub-456",
-			"kyma-project.io/region":            "us-east-1",
-			"kyma-project.io/shoot-name":        "shoot-67890",
+			cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "trial",
+			cloudcontrolv1beta1.LabelScopeGlobalAccountId: "glob-123",
+			cloudcontrolv1beta1.LabelScopeSubaccountId:    "sub-456",
+			cloudcontrolv1beta1.LabelScopeRegion:          "us-east-1",
+			cloudcontrolv1beta1.LabelScopeShootName:       "shoot-67890",
 		})
 
 		ffCtx := ContextBuilderFromCtx(context.Background()).

@@ -19,6 +19,12 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 	if apierrors.IsNotFound(err) {
 		logger.Info("Kyma CR does not exist")
 
+		if !predicateScopeExists()(ctx, state) {
+			return composed.StopAndForget, ctx
+		}
+
+		state.activeSkrCollection.RemoveScope(state.ObjAsScope())
+
 		if !NukeScopesWithoutKyma {
 			return composed.StopAndForget, nil
 		}

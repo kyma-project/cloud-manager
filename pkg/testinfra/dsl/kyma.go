@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -99,7 +100,7 @@ func CreateKymaCR(ctx context.Context, infra testinfra.Infra, kymaCR *unstructur
 	}
 
 	kymaCR.SetLabels(map[string]string{
-		"kyma-project.io/shoot-name": kymaCR.GetName(),
+		cloudcontrolv1beta1.LabelScopeShootName: kymaCR.GetName(),
 	})
 
 	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(kymaCR), kymaCR)
