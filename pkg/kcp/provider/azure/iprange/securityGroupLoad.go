@@ -26,7 +26,7 @@ func securityGroupLoad(ctx context.Context, st composed.State) (error, context.C
 		)
 	}
 	if err != nil {
-		logger.Error(err, "Error loading Azure KCP IpRange subnet")
+		logger.Error(err, "Error loading Azure KCP IpRange security group")
 
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
 
