@@ -30,7 +30,11 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 		logger.Error(err, "Error creating VPC Peering")
 
 		if azuremeta.IsTooManyRequests(err) {
-			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+			return composed.LogErrorAndReturn(err,
+				"Azure vpc peering too many requests on peering local create",
+				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+				ctx,
+			)
 		}
 
 		message, isWarning := azuremeta.GetErrorMessage(err)
