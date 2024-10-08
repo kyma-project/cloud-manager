@@ -8,17 +8,17 @@ create those resources.
 ## Prerequisites
 
 * The Cloud Manager module enabled in your Kyma cluster
-* Configure the AWS CLI [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
+* The AWS CLI configured. For instructions, see the [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
 
 ## Steps <!-- {docsify-ignore} -->
 
-1.  Set the default AWS CLI profile. If you haven't configured the profile yet, see the 
+1.  Set the default AWS CLI profile.
     ```shell
     export AWS_PROFILE={PROFILE_NAME}
     export AWS_DEFAULT_REGION={REGION}
     ```
    
-2.  Create a trust policy document
+2.  Create a trust policy document.
     ```shell
     export PRINCIPAL_PROFILE_AWS_ACCOUNT_ID=194230256199
     export USER_NAME=cloud-manager-peering-dev
@@ -166,7 +166,7 @@ create those resources.
 
     This workload should print a sequence of 20 echo replies to stdout.
 
-15. Print the logs of one of the workloads, run:
+15. To print the logs of one of the workloads, run:
     ```shell
     kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=awsvpcpeering-demo -o=jsonpath='{.items[0].metadata.name}'`
     ```

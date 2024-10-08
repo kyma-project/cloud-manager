@@ -14,7 +14,7 @@ Cloud Manager must be authorized in the remote cloud provider account to accept 
 
 For cross-account access, Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html). 
 
-To authorize Cloud Manager in remote cloud provider account, create a new role named **CloudManagerPeeringRole** with a trust
+To authorize Cloud Manager in the remote cloud provider account, create a new role named **CloudManagerPeeringRole** with a trust
 policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume the role.
 
 **ENV** corresponds to **dev**, **stage**, or **prod**.
@@ -35,7 +35,7 @@ policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/clo
 
 ```
 
-Create a new managed policy **CloudManagerPeeringAccess** with following permissions:
+Create a new managed policy **CloudManagerPeeringAccess** with the following permissions:
 ```json
 {
     "Version": "2012-10-17",
