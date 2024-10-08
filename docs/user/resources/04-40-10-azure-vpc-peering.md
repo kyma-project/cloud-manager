@@ -1,4 +1,4 @@
-# Azure Vpc Peering Custom Resource
+# AzureVpcPeering Custom Resource
 
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between 
