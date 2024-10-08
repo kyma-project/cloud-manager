@@ -15,9 +15,9 @@ data:
           - widget: Labels
             source: remoteRegion
             name: spec.remoteRegion
-          - widget: Labels
-            source: deleteRemotePeering
-            name: spec.deleteRemotePeering
+    #      - widget: Labels
+    #        source: deleteRemotePeering
+    #        name: spec.deleteRemotePeering
   form: |
     - path: spec.remoteAccountId
       name: spec.remoteAccountId
@@ -34,8 +34,8 @@ data:
       required: false
       disableOnEdit: true
       description: Immutable once set.
-    - path: spec.deleteRemotePeering
-      name: spec.deleteRemotePeering
+    # - path: spec.deleteRemotePeering
+    #   name: spec.deleteRemotePeering
   general: |
     resource:
         kind: AwsVpcPeering
