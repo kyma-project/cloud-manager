@@ -28,7 +28,11 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 	)
 
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create subnet", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on subnet create",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 
 	if err != nil {

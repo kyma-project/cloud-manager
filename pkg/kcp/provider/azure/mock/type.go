@@ -26,6 +26,14 @@ type SecurityGroupsClient interface {
 	azureclient.SecurityGroupsClient
 }
 
+type VirtualNetworkLinkClient interface {
+	azureclient.VirtualNetworkLinkClient
+}
+
+type PrivateDnsZoneClient interface {
+	azureclient.PrivateDnsZoneClient
+}
+
 type VpcPeeringClient interface {
 	azureclient.VirtualNetworkPeeringClient
 }
@@ -41,6 +49,8 @@ type Clients interface {
 	SubnetsClient
 	VpcPeeringClient
 	RedisInstanceClient
+	VirtualNetworkLinkClient
+	PrivateDnsZoneClient
 }
 
 type Providers interface {

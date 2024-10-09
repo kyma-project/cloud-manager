@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -20,8 +21,10 @@ type State struct {
 	securityGroupName  string
 	subnetName         string
 
-	subnet        *armnetwork.Subnet
-	securityGroup *armnetwork.SecurityGroup
+	subnet             *armnetwork.Subnet
+	securityGroup      *armnetwork.SecurityGroup
+	privateDnsZone     *armprivatedns.PrivateZone
+	virtualNetworkLink *armprivatedns.VirtualNetworkLink
 }
 
 type StateFactory interface {
@@ -33,8 +36,8 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState iprangetypes.State) (*State, error) {
-	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
+	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
 	subscriptionId := baseState.Scope().Spec.Scope.Azure.SubscriptionId
 	tenantId := baseState.Scope().Spec.Scope.Azure.TenantId
 

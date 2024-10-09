@@ -12,9 +12,9 @@ data:
             - widget: Labels
               source: remotePeeringName
               name: spec.remotePeeringName
-            - widget: Labels
-              source: deleteRemotePeering
-              name: spec.deleteRemotePeering
+    #         - widget: Labels
+    #           source: deleteRemotePeering
+    #           name: spec.deleteRemotePeering
         - name: status
           widget: Panel
           source: status
@@ -36,8 +36,8 @@ data:
       widget: Text
       disableOnEdit: true
       description: Immutable once set.
-    - path: spec.deleteRemotePeering
-      name: spec.deleteRemotePeering
+    # - path: spec.deleteRemotePeering
+    #   name: spec.deleteRemotePeering
   general: |-
     resource:
         kind: AzureVpcPeering

@@ -39,10 +39,15 @@ func New(stateFactory StateFactory) composed.Action {
 			namesDetermine,
 			securityGroupLoad,
 			subnetLoad,
+			privateDnsZoneLoad,
+			virtualNetworkLinkLoad,
 			composed.IfElse(
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
 					"azureIpRangeDelete",
+					virtualNetworkLinkDelete,
+					virtualNetworkLinkDeleteWait,
+					privateDnsZoneDelete,
 					subnetDelete,
 					securityGroupDelete,
 				),
@@ -52,6 +57,10 @@ func New(stateFactory StateFactory) composed.Action {
 					securityGroupWait,
 					subnetCreate,
 					subnetWait,
+					privateDnsZoneCreate,
+					privateDnsZoneWait,
+					virtualNetworkLinkCreate,
+					virtualNetworkLinkWait,
 				),
 			),
 		)(ctx, state)
