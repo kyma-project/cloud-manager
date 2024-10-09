@@ -38,6 +38,9 @@ type GcpVpcPeeringStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
