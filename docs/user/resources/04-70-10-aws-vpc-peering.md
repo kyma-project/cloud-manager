@@ -13,7 +13,7 @@ the Kyma cluster underlying cloud provider account and accepts VPC peering conne
 Cloud Manager must be authorized in the remote cloud provider account to accept VPC peering connection. For cross-account access,
 Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
 
-1.  Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal <br> `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume the role.
+1.  Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume the role.
 
     **ENV** corresponds to **dev**, **stage**, or **prod**.
 
