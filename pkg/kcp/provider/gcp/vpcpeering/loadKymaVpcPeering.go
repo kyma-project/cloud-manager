@@ -25,6 +25,7 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Spec.Network.Reference.Gcp.GcpProject, state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Kyma Vpc Peering")
+		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",

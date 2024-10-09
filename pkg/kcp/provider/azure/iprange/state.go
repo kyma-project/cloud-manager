@@ -36,8 +36,8 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState iprangetypes.State) (*State, error) {
-	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
+	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
 	subscriptionId := baseState.Scope().Spec.Scope.Azure.SubscriptionId
 	tenantId := baseState.Scope().Spec.Scope.Azure.TenantId
 

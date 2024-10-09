@@ -24,6 +24,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondErr := meta.FindStatusCondition(state.ObjAsGcpVpcPeering().Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
 	skrCondReady := meta.FindStatusCondition(state.ObjAsGcpVpcPeering().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
+	state.ObjAsGcpVpcPeering().Status.State = state.KcpVpcPeering.Status.State
+
 	if kcpCondErr != nil && skrCondErr == nil {
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
