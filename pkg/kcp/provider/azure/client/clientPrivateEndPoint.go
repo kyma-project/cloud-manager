@@ -8,6 +8,7 @@ import (
 type PrivateEndPointsClient interface {
 	GetPrivateEndPoint(ctx context.Context, resourceGroupName, privateEndPointName string) (*armnetwork.PrivateEndpoint, error)
 	CreatePrivateEndPoint(ctx context.Context, resourceGroupName, privateEndPointName string, parameters armnetwork.PrivateEndpoint) error
+	DeletePrivateEndPoint(ctx context.Context, resourceGroupName, privateEndPointName string) error
 }
 
 func NewPrivateEndPointClient(svc *armnetwork.PrivateEndpointsClient) PrivateEndPointsClient {
@@ -38,6 +39,18 @@ func (c *privateEndPointClient) CreatePrivateEndPoint(ctx context.Context, resou
 		resourceGroupName,
 		privateEndPointName,
 		parameters,
+		nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *privateEndPointClient) DeletePrivateEndPoint(ctx context.Context, resourceGroupName, privateEndPointName string) error {
+	_, err := c.svc.BeginDelete(
+		ctx,
+		resourceGroupName,
+		privateEndPointName,
 		nil)
 	if err != nil {
 		return err

@@ -89,3 +89,20 @@ func (s *privateEndPointsStore) CreatePrivateEndPoint(ctx context.Context, resou
 
 	return nil
 }
+
+func (s *privateEndPointsStore) DeletePrivateEndPoint(ctx context.Context, resourceGroupName, privateEndPointName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.getPrivateEndPointNonLocking(resourceGroupName, privateEndPointName)
+	if err != nil {
+		return err
+	}
+
+	s.items[resourceGroupName][privateEndPointName] = nil
+
+	return nil
+}

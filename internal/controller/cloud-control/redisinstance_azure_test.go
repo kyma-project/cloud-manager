@@ -191,6 +191,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dnsZoneGroup).To(BeNil())
 		})
+
+		By("Then Private Private End Point is deleted", func() {
+			dnsZoneGroup, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, redisInstance.Name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(dnsZoneGroup).To(BeNil())
+		})
 	})
 
 })
