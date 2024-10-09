@@ -8,7 +8,7 @@ create those resources.
 ## Prerequisites
 
 * The Cloud Manager module enabled in your Kyma cluster
-* The AWS CLI configured. For instructions, see the [AWS documentation] (https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
+* The AWS CLI configured. For instructions, see the [AWS documentation](https://docs.aws.amazon.com/cli/v1/userguide/cli-chap-configure.html).
 
 ## Steps <!-- {docsify-ignore} -->
 
