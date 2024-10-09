@@ -9,6 +9,7 @@ type tenantSubscriptionStore struct {
 	*networkStore
 	*securityGroupsStore
 	*redisStore
+	*privateEndPointsStore
 	*privateDnsZoneStore
 	*virtualNetworkLinkStore
 	tenant       string
@@ -21,6 +22,7 @@ func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscription
 		networkStore:            newNetworkStore(subscription),
 		securityGroupsStore:     newSecurityGroupsStore(subscription),
 		redisStore:              newRedisStore(subscription),
+		privateEndPointsStore:   newPrivateEndPointsStore(subscription),
 		privateDnsZoneStore:     newPrivateDnsZoneStore(subscription),
 		virtualNetworkLinkStore: newVirtualNetworkLinkStore(subscription),
 		tenant:                  tenant,

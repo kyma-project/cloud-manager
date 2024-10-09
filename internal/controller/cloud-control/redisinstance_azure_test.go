@@ -41,6 +41,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
+					WithKcpIpRangeRemoteRef("some-remote-ref"),
+					WithKcpIpRangeNetwork("kcpNetworkCm.Name"),
 					WithScope(scope.Name),
 				).
 				Should(Succeed())
@@ -137,6 +139,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(keys).To(HaveLen(2))
 			Expect(redisInstance.Status.AuthString).To(Equal(keys[0]))
+		})
+
+		By("And Then Private End Point is created", func() {
+			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(pep).NotTo(BeNil())
 		})
 
 		// DELETE
