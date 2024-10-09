@@ -8,6 +8,7 @@ import (
 type PrivateDnsZoneGroupClient interface {
 	GetPrivateDnsZoneGroup(ctx context.Context, resourceGroupName, privateEndPointName, privateDnsZoneGroupGroupName string) (*armnetwork.PrivateDNSZoneGroup, error)
 	CreatePrivateDnsZoneGroup(ctx context.Context, resourceGroupName, privateEndPointName, privateDnsZoneGroupName string, parameters armnetwork.PrivateDNSZoneGroup) error
+	DeletePrivateDnsZoneGroup(ctx context.Context, resourceGroupName, privateEndPointName, privateDnsZoneGroupName string) error
 }
 
 func NewPrivateDnsZoneGroupClient(svc *armnetwork.PrivateDNSZoneGroupsClient) PrivateDnsZoneGroupClient {
@@ -40,6 +41,19 @@ func (c *privateDnsZoneGroupClient) CreatePrivateDnsZoneGroup(ctx context.Contex
 		privateEndPointName,
 		privateDnsZoneGroupName,
 		parameters,
+		nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *privateDnsZoneGroupClient) DeletePrivateDnsZoneGroup(ctx context.Context, resourceGroupName, privateEndPointName, privateDnsZoneGroupName string) error {
+	_, err := c.svc.BeginDelete(
+		ctx,
+		resourceGroupName,
+		privateEndPointName,
+		privateDnsZoneGroupName,
 		nil)
 	if err != nil {
 		return err

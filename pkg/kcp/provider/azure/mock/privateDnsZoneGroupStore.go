@@ -98,3 +98,20 @@ func (s *privateDnsZoneGroupStore) CreatePrivateDnsZoneGroup(ctx context.Context
 
 	return nil
 }
+
+func (s *privateDnsZoneGroupStore) DeletePrivateDnsZoneGroup(ctx context.Context, resourceGroupName, privateEndPointName, privateDnsZoneGroupName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.getPrivateDnsZoneGroupNonLocking(resourceGroupName, privateEndPointName, privateDnsZoneGroupName)
+	if err != nil {
+		return err
+	}
+
+	s.items[resourceGroupName][privateEndPointName][privateDnsZoneGroupName] = nil
+
+	return nil
+}
