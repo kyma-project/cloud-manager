@@ -35,7 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 			"azureRedisInstance",
 			actions.AddFinalizer,
 			loadPrivateEndPoint,
-			// loadPrivateDnsZoneGroup,
+			loadPrivateDnsZoneGroup,
 			loadRedis,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
@@ -44,7 +44,7 @@ func New(stateFactory StateFactory) composed.Action {
 					updateStatusId,
 					waitRedisAvailable,
 					createPrivateEndPoint,
-					// createPrivateDnsZoneGroup,
+					createPrivateDnsZoneGroup,
 					modifyRedis,
 					updateStatus,
 				),

@@ -11,6 +11,7 @@ import (
 type Client interface {
 	azureclient.RedisClient
 	azureclient.PrivateEndPointsClient
+	azureclient.PrivateDnsZoneGroupClient
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -32,18 +33,29 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
-		return newClient(azureclient.NewRedisClient(armRedisClientInstance), azureclient.NewPrivateEndPointClient(privateEndPointsClient)), nil
+		privateDnsZoneGroupClient, err := armnetwork.NewPrivateDNSZoneGroupsClient(subscriptionId, cred, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		return newClient(
+			azureclient.NewRedisClient(armRedisClientInstance),
+			azureclient.NewPrivateEndPointClient(privateEndPointsClient),
+			azureclient.NewPrivateDnsZoneGroupClient(privateDnsZoneGroupClient),
+		), nil
 	}
 }
 
 type redisInstanceClient struct {
 	azureclient.RedisClient
 	azureclient.PrivateEndPointsClient
+	azureclient.PrivateDnsZoneGroupClient
 }
 
-func newClient(redisClient azureclient.RedisClient, privateEndPointsClient azureclient.PrivateEndPointsClient) Client {
+func newClient(redisClient azureclient.RedisClient, privateEndPointsClient azureclient.PrivateEndPointsClient, privateDnsZoneGroupClient azureclient.PrivateDnsZoneGroupClient) Client {
 	return &redisInstanceClient{
-		RedisClient:            redisClient,
-		PrivateEndPointsClient: privateEndPointsClient,
+		RedisClient:               redisClient,
+		PrivateEndPointsClient:    privateEndPointsClient,
+		PrivateDnsZoneGroupClient: privateDnsZoneGroupClient,
 	}
 }

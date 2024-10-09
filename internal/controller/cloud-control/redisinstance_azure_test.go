@@ -147,6 +147,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(pep).NotTo(BeNil())
 		})
 
+		By("And Then Private Dns Zone Group is created", func() {
+			pep, err := azureMock.GetPrivateDnsZoneGroup(infra.Ctx(), resourceGroupName, name, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(pep).ToNot(BeNil())
+		})
+
 		// DELETE
 
 		By("When KCP RedisInstance is deleted", func() {

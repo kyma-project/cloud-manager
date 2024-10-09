@@ -34,6 +34,10 @@ type PrivateEndPointsClient interface {
 	azureclient.PrivateEndPointsClient
 }
 
+type PrivateDnsZoneGroupClient interface {
+	azureclient.PrivateDnsZoneGroupClient
+}
+
 type PrivateDnsZoneClient interface {
 	azureclient.PrivateDnsZoneClient
 }
@@ -56,6 +60,7 @@ type Clients interface {
 	VirtualNetworkLinkClient
 	PrivateDnsZoneClient
 	PrivateEndPointsClient
+	PrivateDnsZoneGroupClient
 }
 
 type Providers interface {

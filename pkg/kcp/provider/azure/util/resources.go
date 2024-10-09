@@ -217,3 +217,15 @@ func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName s
 func NewPrivateDnsZoneName(zoneNameUuid string) string {
 	return zoneNameUuid + ".redis.cache.windows.net"
 }
+
+// /subscriptions/subId/resourceGroups/rg1/providers/Microsoft.Network/privateDnsZones/zone1.com
+func NewPrivateDnsZoneGroupResourceId(subscription, resourceGroup, privateDnsZoneInstanceName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "privateDnsZones",
+		ResourceName:  privateDnsZoneInstanceName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(privateDnsZoneInstanceName) > 0,
+	}
+}
