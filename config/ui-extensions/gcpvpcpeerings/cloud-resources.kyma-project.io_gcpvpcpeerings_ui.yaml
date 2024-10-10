@@ -23,8 +23,8 @@ data:
           source: status
           children:
             - widget: Labels
-              source: id
-              name: status.id
+              source: state
+              name: status.state
   form: |
     - path: spec.importCustomRoutes
       name: spec.importCustomRoutes
