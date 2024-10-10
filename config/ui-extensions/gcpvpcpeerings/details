@@ -20,5 +20,5 @@ body:
       source: status
       children:
         - widget: Labels
-          source: id
-          name: status.id
+          source: state
+          name: status.state
