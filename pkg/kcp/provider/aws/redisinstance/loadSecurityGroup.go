@@ -47,7 +47,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 			Message: "Unable to load security group",
 		})
 		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
-		err := state.UpdateObjStatus(ctx)
+		err := state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating RedisInstance status after missing created security group", composed.StopWithRequeue, ctx)
 		}

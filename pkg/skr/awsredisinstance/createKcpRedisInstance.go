@@ -62,7 +62,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	logger.Info("Created KCP RedisInstance")
 
 	awsRedisInstance.Status.State = cloudresourcesv1beta1.StateCreating
-	return composed.UpdateStatus(awsRedisInstance).
+	return composed.PatchStatus(awsRedisInstance).
 		ErrorLogMessage("Error setting Creating state on AwsRedisInstance").
 		SuccessErrorNil().
 		FailedError(composed.StopWithRequeue).
