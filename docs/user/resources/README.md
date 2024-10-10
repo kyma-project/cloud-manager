@@ -8,6 +8,7 @@ Cloud Manager custom resources:
 * [GcpNfsBackupSchedule Custom Resource](./04-30-30-gcp-nfs-backup-schedule.md)
 * [GcpNfsVolumeRestore Custom Resource](./04-90-10-gcp-nfs-volume-restore.md)
 * [AzureVpcPeering Custom Resource](./04-40-10-azure-vpc-peering.md)
+* [AwsVpcPeering Custom Resource](./04-70-10-aws-vpc-peering.md)
 * [GcpVpcPeering Custom Resource](./04-50-gcp-vpc-peering.md)
 * [GcpRedisInstance Custom Resource](./04-60-gcp-redis-instance.md)
 * [AwsRedisInstance Custom Resource](./04-70-aws-redis-instance.md)
