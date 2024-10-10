@@ -10,6 +10,8 @@ import (
 
 type RouteTableConfig interface {
 	AddRouteTable(routeTableId, vpcId *string, tags []ec2types.Tag, associations []ec2types.RouteTableAssociation) ec2types.RouteTable
+	GetRoute(ctc context.Context, vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route
+	GetRouteCount(ctx context.Context, vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int
 }
 type routeTableEntry struct {
 	routeTable ec2types.RouteTable
@@ -54,6 +56,22 @@ func (s *routeTablesStore) DescribeRouteTables(ctc context.Context, vpcId string
 
 	return pie.Map(filtered, func(e *routeTableEntry) ec2types.RouteTable { return e.routeTable }), nil
 }
+func (s *routeTablesStore) GetRoute(ctc context.Context, vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, e := range s.items {
+
+		if *e.routeTable.VpcId == vpcId && *e.routeTable.RouteTableId == routeTableId {
+			for _, r := range e.routeTable.Routes {
+				if *r.DestinationCidrBlock == destinationCidrBlock && *r.VpcPeeringConnectionId == vpcPeeringConnectionId {
+					return &r
+				}
+			}
+		}
+	}
+	return nil
+}
 func (s *routeTablesStore) CreateRoute(ctx context.Context, routeTableId, destinationCidrBlock, vpcPeeringConnectionId *string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -87,4 +105,18 @@ func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destin
 	})
 
 	return nil
+}
+
+func (s *routeTablesStore) GetRouteCount(ctx context.Context, vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
+	tables, _ := s.DescribeRouteTables(ctx, vpcId)
+	cnt := 0
+	for _, t := range tables {
+		for _, r := range t.Routes {
+			if *r.VpcPeeringConnectionId == vpcPeeringConnectionId &&
+				*r.DestinationCidrBlock == destinationCidrBlock {
+				cnt++
+			}
+		}
+	}
+	return cnt
 }
