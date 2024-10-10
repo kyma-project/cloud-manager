@@ -12,6 +12,9 @@ data:
             - widget: Labels
               source: remotePeeringName
               name: spec.remotePeeringName
+    #         - widget: Labels
+    #           source: deleteRemotePeering
+    #           name: spec.deleteRemotePeering
         - name: status
           widget: Panel
           source: status
@@ -33,6 +36,8 @@ data:
       widget: Text
       disableOnEdit: true
       description: Immutable once set.
+    # - path: spec.deleteRemotePeering
+    #   name: spec.deleteRemotePeering
   general: |-
     resource:
         kind: AzureVpcPeering
@@ -52,6 +57,9 @@ data:
     - source: spec.remoteVnet
       name: spec.remoteVnet
       sort: true
+    - source: spec.deleteRemotePeering
+      name: spec.deleteRemotePeering
+      sort: true
     - source: status.state
       name: status.state
       sort: true
@@ -63,6 +71,7 @@ data:
       spec.remoteVnet: Remote Vnet
       status.id: ID
       spec.remotePeeringName: Remote Peering Name
+      spec.deleteRemotePeering: Delete Remote Peering
 kind: ConfigMap
 metadata:
   labels:

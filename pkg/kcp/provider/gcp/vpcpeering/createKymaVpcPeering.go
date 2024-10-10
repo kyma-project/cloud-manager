@@ -39,6 +39,7 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	if !isVpcTagged {
 		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -62,6 +63,7 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 
 	if err != nil {
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

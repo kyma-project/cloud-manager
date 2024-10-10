@@ -132,6 +132,9 @@ var _ = BeforeSuite(func() {
 
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 
+	//GCP Vpc Peering
+	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })

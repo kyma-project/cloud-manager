@@ -27,6 +27,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
+	state.ObjAsVpcPeering().Status.State = cloudcontrol1beta1.VirtualNetworkPeeringStateConnected
+
 	return composed.UpdateStatus(state.ObjAsVpcPeering()).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrol1beta1.ConditionTypeReady,

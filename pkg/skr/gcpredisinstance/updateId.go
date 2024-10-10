@@ -25,7 +25,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.ObjAsGcpRedisInstance().Status.Id = id
 	state.ObjAsGcpRedisInstance().Status.State = cloudresourcesv1beta1.StateProcessing
-	err := state.UpdateObjStatus(ctx)
+	err := state.PatchObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR GcpRedisInstance status with ID label", composed.StopWithRequeue, ctx)
 	}

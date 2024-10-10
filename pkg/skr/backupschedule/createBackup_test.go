@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -81,6 +80,7 @@ func (suite *createBackupSuite) TestWhenRunAlreadyCompleted() {
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
 	state.nextRunTime = runTime
+	state.createRunCompleted = true
 	suite.Nil(err)
 
 	//Invoke API under test
@@ -181,7 +181,7 @@ func (suite *createBackupSuite) TestCreateGcpBackupFailure() {
 	err, _ = createBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(util.Timing.T10000ms()), err)
+	suite.Equal(composed.StopWithRequeue, err)
 
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
@@ -189,7 +189,7 @@ func (suite *createBackupSuite) TestCreateGcpBackupFailure() {
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
 	suite.Nil(err)
-	suite.Equal(v1beta1.JobStateError, fromK8s.Status.State)
+	suite.Equal(v1beta1.JobStateActive, fromK8s.Status.State)
 }
 
 func TestCreateBackupSuite(t *testing.T) {

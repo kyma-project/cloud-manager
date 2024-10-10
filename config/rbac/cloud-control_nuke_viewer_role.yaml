@@ -1,0 +1,23 @@
+# permissions for end users to view nukes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-control-nuke-viewer-role
+rules:
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - nukes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - nukes/status
+  verbs:
+  - get

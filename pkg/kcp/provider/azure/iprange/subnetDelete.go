@@ -21,7 +21,11 @@ func subnetDelete(ctx context.Context, st composed.State) (error, context.Contex
 
 	err := state.azureClient.DeleteSubnet(ctx, state.resourceGroupName, state.virtualNetworkName, state.subnetName)
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on delete subnet", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on subnet delete",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange subnet")

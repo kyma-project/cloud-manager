@@ -3,11 +3,13 @@ package cloudcontrol
 import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -205,6 +207,36 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 			Expect(azureSecurityGroup).NotTo(BeNil())
 		})
 
+		var virtualNetworkLink *armprivatedns.VirtualNetworkLink
+		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
+		privateDnsZoneName := azureutil.NewPrivateDnsZoneName(kcpIpRangeName)
+		By("Then Azure Virtual Network Link is created", func() {
+			Eventually(func() error {
+				vnl, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
+				if err != nil {
+					return fmt.Errorf("error loading azure Virtual Network Link: %w", err)
+				}
+				virtualNetworkLink = vnl
+				return nil
+			}).
+				Should(Succeed())
+			Expect(virtualNetworkLink).NotTo(BeNil())
+		})
+
+		var privateDnsZone *armprivatedns.PrivateZone
+		By("Then Azure Private Dns Zone is created", func() {
+			Eventually(func() error {
+				pdz, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
+				if err != nil {
+					return fmt.Errorf("error loading azure Private Dns Zone: %w", err)
+				}
+				privateDnsZone = pdz
+				return nil
+			}).
+				Should(Succeed())
+			Expect(privateDnsZone).NotTo(BeNil())
+		})
+
 		var azureSubnet *armnetwork.Subnet
 
 		By("And Then Azure Subnet is created", func() {
@@ -271,6 +303,18 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpVpcPeering).
 				Should(Succeed())
+		})
+
+		By("Then Azure Virtual Network Link does not exists", func() {
+			virtualNetworkLink, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
+			Expect(virtualNetworkLink).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("Then Azure Private Dns Zone does not exists", func() {
+			privateDnsZone, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
+			Expect(privateDnsZone).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		By("When KCP CM Network finalizer is removed", func() {

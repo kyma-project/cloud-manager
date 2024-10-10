@@ -27,7 +27,11 @@ func securityGroupCreate(ctx context.Context, st composed.State) (error, context
 	)
 
 	if azuremeta.IsTooManyRequests(err) {
-		return azuremeta.LogErrorAndReturn(err, "Azure KCP IpRange too many requests on create security group", ctx)
+		return composed.LogErrorAndReturn(err,
+			"Azure KCP IpRange too many requests on security group create",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
 
 	if err != nil {

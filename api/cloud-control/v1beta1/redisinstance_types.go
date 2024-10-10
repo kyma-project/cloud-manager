@@ -16,6 +16,7 @@ package v1beta1
 import (
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -292,6 +293,20 @@ func (in *RedisInstance) Conditions() *[]metav1.Condition {
 
 func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *RedisInstance) CloneForPatchStatus() client.Object {
+	return &RedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {

@@ -102,18 +102,19 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		//Define variables.
 		backupschedule.ToleranceInterval = 120 * time.Second
 		nfsBackupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
-		nfsBackupScheduleName := "nfs-backup-schedule-1"
-		nfsBackupHourlySchedule := "0 * * * *"
+		nfsBackupScheduleName := "aws-nfs-backup-schedule-1"
+		nfsBackupMinutelySchedule := "* * * * *"
+		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC()
 
 		nfsBackup1Name := "aws-nfs-backup-1-bs"
 
 		expectedTimes := []time.Time{
-			time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location()).UTC(),
-			time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+2, 0, 0, 0, now.Location()).UTC(),
-			time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+3, 0, 0, 0, now.Location()).UTC(),
+			time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+1, 0, 0, now.Location()).UTC(),
+			time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+2, 0, 0, now.Location()).UTC(),
+			time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+3, 0, 0, now.Location()).UTC(),
 		}
 
-		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, now.Format("20060102-150405"))
+		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, expectedTimes[0].Format("20060102-150405"))
 		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
 		skrNfsBackup1 := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
@@ -155,7 +156,8 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
-					WithSchedule(nfsBackupHourlySchedule),
+					WithSchedule(nfsBackupMinutelySchedule),
+					WithStartTime(start),
 					WithNfsVolumeRef(skrNfsVolumeName),
 					WithRetentionDays(0),
 				).
@@ -181,19 +183,9 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Expect(nfsBackupSchedule.Status.State).To(Equal(cloudresourcesv1beta1.JobStateActive))
 			})
 
-			By("When it is time for the Next Run", func() {
-				//Update SKR SourceRef status to Ready
-				Eventually(UpdateStatus).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
-						WithNextRunTime(now),
-					).
-					Should(Succeed())
-			})
-
-			By("Then the NfsVolumeBackup is created", func() {
+			By("And Then the NfsVolumeBackup is created", func() {
 				//Load and check whether the NfsVolumeBackup object got created.
-				Eventually(LoadAndCheck).
+				Eventually(LoadAndCheck, timeout*6, interval).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackup,
 						NewObjActions(WithName(nfsBackupName)),
@@ -201,7 +193,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 					Should(Succeed())
 			})
 
-			By("And Then previous NfsVolumeBackup(s) associated with the backupschedule exists", func() {
+			By("And Then previous NfsVolumeBackup(s) associated with the backup schedule exists", func() {
 				Eventually(LoadAndCheck).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), skrNfsBackup1,
@@ -216,10 +208,10 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 	Describe("Scenario: SKR Onetime AwsNfsBackupSchedule - Create", func() {
 		//Define variables.
 		nfsBackupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
-		nfsBackupScheduleName := "nfs-backup-schedule-2"
+		nfsBackupScheduleName := "aws-nfs-backup-schedule-2"
 
 		now := time.Now().UTC()
-		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+2, 0, 0, now.Location()).UTC()
+		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC()
 		expectedTimes := []time.Time{start}
 
 		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, start.Format("20060102-150405"))

@@ -9,17 +9,21 @@ type tenantSubscriptionStore struct {
 	*networkStore
 	*securityGroupsStore
 	*redisStore
+	*privateDnsZoneStore
+	*virtualNetworkLinkStore
 	tenant       string
 	subscription string
 }
 
 func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscriptionStore {
 	return &tenantSubscriptionStore{
-		resourceStore:       newResourceStore(subscription),
-		networkStore:        newNetworkStore(subscription),
-		securityGroupsStore: newSecurityGroupsStore(subscription),
-		redisStore:          newRedisStore(subscription),
-		tenant:              tenant,
-		subscription:        subscription,
+		resourceStore:           newResourceStore(subscription),
+		networkStore:            newNetworkStore(subscription),
+		securityGroupsStore:     newSecurityGroupsStore(subscription),
+		redisStore:              newRedisStore(subscription),
+		privateDnsZoneStore:     newPrivateDnsZoneStore(subscription),
+		virtualNetworkLinkStore: newVirtualNetworkLinkStore(subscription),
+		tenant:                  tenant,
+		subscription:            subscription,
 	}
 }

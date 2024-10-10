@@ -33,5 +33,13 @@ func ensureScopeCommonFields(ctx context.Context, st composed.State) (error, con
 	// set provider
 	state.ObjAsScope().Spec.Provider = state.provider
 
+	// copy kyma labels to scope that are used in metrics and features
+	if state.ObjAsScope().Labels == nil {
+		state.ObjAsScope().Labels = make(map[string]string, len(cloudcontrolv1beta1.ScopeLabels))
+	}
+	for _, label := range cloudcontrolv1beta1.ScopeLabels {
+		state.ObjAsScope().Labels[label] = state.kyma.GetLabels()[label]
+	}
+
 	return nil, nil
 }
