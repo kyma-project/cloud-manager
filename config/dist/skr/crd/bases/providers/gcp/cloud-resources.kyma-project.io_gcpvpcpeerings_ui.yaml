@@ -79,6 +79,7 @@ data:
       spec.remoteProject: Remote Project
       spec.remoteVpc: Remote VPC
       status.id: ID
+      status.state: State
 kind: ConfigMap
 metadata:
   labels:
