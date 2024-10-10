@@ -10,3 +10,14 @@
 - source: spec.remoteVpc
   name: spec.remoteVpc
   sort: true
+- source: status.state
+  name: status.state
+  sort: true
+  widget: Badge
+  highlights:
+    positive:
+     - Connected
+    warning:
+     - Initiated
+    critical:
+     - Disconnected
