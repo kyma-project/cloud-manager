@@ -45,7 +45,7 @@ func getDefaultParams() map[string]elasticacheTypes.Parameter {
 }
 
 type elastiCacheClientFake struct {
-	mutex             *sync.Mutex
+	mutex             sync.Mutex
 	replicationGroups map[string]*elasticacheTypes.ReplicationGroup
 	cacheClusters     map[string]*elasticacheTypes.CacheCluster
 	parameters        map[string]map[string]elasticacheTypes.Parameter
@@ -58,7 +58,7 @@ type elastiCacheClientFake struct {
 
 func newElastiCacheClientFake() *elastiCacheClientFake {
 	return &elastiCacheClientFake{
-		mutex:             &sync.Mutex{},
+		mutex:             sync.Mutex{},
 		replicationGroups: map[string]*elasticacheTypes.ReplicationGroup{},
 		cacheClusters:     map[string]*elasticacheTypes.CacheCluster{},
 		subnetGroups:      map[string]*elasticacheTypes.CacheSubnetGroup{},
