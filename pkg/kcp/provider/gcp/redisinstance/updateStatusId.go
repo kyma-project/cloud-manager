@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func PatchStatusId(ctx context.Context, st composed.State) (error, context.Context) {
+func updateStatusId(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {

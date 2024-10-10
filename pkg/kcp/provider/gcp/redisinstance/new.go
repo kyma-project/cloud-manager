@@ -40,7 +40,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"redisInstance-create",
 					createRedis,
-					PatchStatusId,
+					updateStatusId,
 					addUpdatingCondition,
 					waitRedisAvailable,
 					modifyMemorySizeGb,
@@ -48,7 +48,7 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyMaintenancePolicy,
 					modifyAuthEnabled,
 					updateRedis,
-					PatchStatus,
+					updateStatus,
 				),
 				composed.ComposeActions(
 					"redisInstance-delete",
