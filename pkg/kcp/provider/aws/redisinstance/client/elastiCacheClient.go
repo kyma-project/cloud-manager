@@ -332,6 +332,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		SecurityGroupIds:            options.SecurityGroupIds,
+		AtRestEncryptionEnabled:     aws.Bool(true),
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)
