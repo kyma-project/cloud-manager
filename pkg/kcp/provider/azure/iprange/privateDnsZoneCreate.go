@@ -22,7 +22,7 @@ func privateDnsZoneCreate(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("Creating Azure KCP IpRange privateDnsZone")
 
-	privateDnsZoneName := azureutil.NewPrivateDnsZoneName(state.ObjAsIpRange().Name)
+	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
 	privateDNSZone := armprivatedns.PrivateZone{
 		Location: to.Ptr("global"),
 	}

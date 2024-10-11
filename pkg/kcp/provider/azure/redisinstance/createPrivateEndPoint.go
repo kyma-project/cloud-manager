@@ -32,7 +32,7 @@ func createPrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 	subnetResourceId := azureutil.NewSubnetResourceId(
 		state.Scope().Spec.Scope.Azure.SubscriptionId,
 		resourceGroupName,
-		state.IpRange().Spec.Network.Name,
+		subnetName,
 		subnetName).String()
 	err := state.client.CreatePrivateEndPoint(
 		ctx,

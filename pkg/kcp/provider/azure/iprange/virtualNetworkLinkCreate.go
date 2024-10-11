@@ -25,7 +25,7 @@ func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, co
 	virtualNetworkLinkName := state.ObjAsIpRange().Name
 	resourceGroupName := state.resourceGroupName
 	kymaNetworkName := state.Scope().Spec.Scope.Azure.VpcNetwork
-	privateDnsZoneName := azureutil.NewPrivateDnsZoneName(state.ObjAsIpRange().Name)
+	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
 	virtualNetworkLink := armprivatedns.VirtualNetworkLink{
 		Location: ptr.To("global"),
 		Properties: &armprivatedns.VirtualNetworkLinkProperties{
