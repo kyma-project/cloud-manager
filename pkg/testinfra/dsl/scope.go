@@ -110,6 +110,26 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 				TenantId:       "fdd97055-c316-462f-8769-f99b670c2c4d",
 				SubscriptionId: "2bfba5a4-c5d1-4b03-a7db-4ead64232fd6",
 				VpcNetwork:     fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+				Network: cloudcontrolv1beta1.AzureNetwork{
+					Cidr: "10.250.0.0/22",
+					Zones: []cloudcontrolv1beta1.AzureNetworkZone{
+						{
+							Name: "1",
+							Cidr: "10.250.0.0/25",
+						},
+						{
+							Name: "2",
+							Cidr: "10.250.0.128/25",
+						},
+						{
+							Name: "3",
+							Cidr: "10.250.1.0/25",
+						},
+					},
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+				},
 			},
 		},
 	}

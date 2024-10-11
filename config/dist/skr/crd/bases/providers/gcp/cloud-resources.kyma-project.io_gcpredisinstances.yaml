@@ -4,11 +4,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.9
+    cloud-resources.kyma-project.io/version: v0.0.12
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+      - kyma-cloud-manager
     kind: GcpRedisInstance
     listKind: GcpRedisInstanceList
     plural: gcpredisinstances
@@ -45,7 +47,7 @@ spec:
               description: GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
               properties:
                 authEnabled:
-                  default: true
+                  default: false
                   description: Indicates whether OSS Redis AUTH is enabled for the instance.
                   type: boolean
                 authSecret:
@@ -149,19 +151,13 @@ spec:
                   x-kubernetes-validations:
                     - message: Tier is immutable.
                       rule: (self == oldSelf)
-                transitEncryption:
-                  description: |-
-                    The TLS mode of the Redis instance.
-                    If not provided, TLS is disabled for the instance.
-                  properties:
-                    serverAuthentication:
-                      default: false
-                      description: Client to Server traffic encryption enabled with server authentication.
-                      type: boolean
-                      x-kubernetes-validations:
-                        - message: ServerAuthentication is immutable.
-                          rule: (self == oldSelf)
-                  type: object
+                transitEncryptionMode:
+                  default: DISABLED
+                  description: The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
+                  enum:
+                    - DISABLED
+                    - SERVER_AUTHENTICATION
+                  type: string
                   x-kubernetes-validations:
                     - message: TransitEncryptionMode is immutable.
                       rule: (self == oldSelf)

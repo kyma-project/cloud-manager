@@ -42,14 +42,6 @@ type TimeOfDay struct {
 	Minutes int32 `json:"minutes"`
 }
 
-type TransitEncryption struct {
-	// Client to Server traffic encryption enabled with server authentication.
-	// +optional
-	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
-	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
-}
-
 type DayOfWeekPolicy struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=MONDAY;TUESDAY;WEDNESDAY;THURSDAY;FRIDAY;SATURDAY;SUNDAY;
@@ -91,13 +83,15 @@ type GcpRedisInstanceSpec struct {
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
-	// The TLS mode of the Redis instance.
-	// If not provided, TLS is disabled for the instance.
+
+	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
 	// +optional
+	// +kubebuilder:default=DISABLED
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	TransitEncryption *TransitEncryption `json:"transitEncryption,omitempty"`
+	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
+	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
@@ -132,7 +126,9 @@ type GcpRedisInstanceStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // GcpRedisInstance is the Schema for the gcpredisinstances API
 type GcpRedisInstance struct {
 	metav1.TypeMeta   `json:",inline"`

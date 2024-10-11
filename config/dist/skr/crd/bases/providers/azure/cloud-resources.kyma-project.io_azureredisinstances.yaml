@@ -4,11 +4,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+      - kyma-cloud-manager
     kind: AzureRedisInstance
     listKind: AzureRedisInstanceList
     plural: azureredisinstances
@@ -50,6 +52,13 @@ spec:
                   x-kubernetes-validations:
                     - message: EnableNonSslPort is immutable.
                       rule: (self == oldSelf)
+                ipRange:
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+                  type: object
                 redisConfiguration:
                   properties:
                     maxclients:

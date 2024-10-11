@@ -2,7 +2,7 @@ package backupschedule
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"errors"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -15,6 +15,7 @@ import (
 type Reconciler struct {
 	composedStateFactory composed.StateFactory
 	stateFactory         StateFactory
+	backupImpl           backupImpl
 }
 
 func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -34,17 +35,23 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 }
 
 func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*State, error) {
-	return r.stateFactory.NewState(ctx,
-		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.GcpNfsBackupSchedule{}),
+	if r.backupImpl == nil {
+		return nil, errors.New("unknown backup schedule type, no implementation available")
+	}
+	state, err := r.stateFactory.NewState(ctx,
+		r.composedStateFactory.NewState(name, r.backupImpl.emptyScheduleObject()),
 	)
+	if err == nil {
+		state.backupImpl = r.backupImpl
+	}
+	return state, err
 }
 
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"NfsBackupScheduleMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsBackupSchedule{}),
+		"BackupScheduleMain",
+		feature.LoadFeatureContextFromObj(r.backupImpl.emptyScheduleObject()),
 		composed.LoadObj,
-		loadBackupImpl,
 		addFinalizer,
 		checkCompleted,
 		checkSuspension,
@@ -65,13 +72,15 @@ func (r *Reconciler) newAction() composed.Action {
 }
 
 func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
-	env abstractions.Environment) Reconciler {
+	env abstractions.Environment, scheduleType ScheduleType) Reconciler {
 	compSkrCluster := composed.NewStateCluster(skrCluster.GetClient(), skrCluster.GetAPIReader(), skrCluster.GetEventRecorderFor("cloud-resources"), skrCluster.GetScheme())
 	compKcpCluster := composed.NewStateCluster(kcpCluster.GetClient(), kcpCluster.GetAPIReader(), kcpCluster.GetEventRecorderFor("cloud-control"), kcpCluster.GetScheme())
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
 	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, env)
+
 	return Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,
+		backupImpl:           getBackupImpl(scheduleType),
 	}
 }

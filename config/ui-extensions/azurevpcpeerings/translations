@@ -2,7 +2,7 @@ en:
   configuration: Configuration
   status: Status
   status.state: State
-  spec.remoteResourceGroup: Remote Resource Group
   spec.remoteVnet: Remote Vnet
   status.id: ID
   spec.remotePeeringName: Remote Peering Name
+  spec.deleteRemotePeering: Delete Remote Peering

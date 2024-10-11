@@ -3,7 +3,6 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -170,7 +169,7 @@ func (suite *findRestoreOperationSuite) TestFindRestoreOperationOtherError() {
 	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
 	assert.Equal(suite.T(), v1beta1.JobStateError, fromK8s.Status.State)
 	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
 func TestFindRestoreOperation(t *testing.T) {

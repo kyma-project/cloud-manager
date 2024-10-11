@@ -11,17 +11,14 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	lll := logger.WithValues("vpcPeeringName", obj.Name)
-
 	if len(obj.Status.Id) == 0 {
-		lll.Info("VpcPeering deleted before Azure peering is created")
+		logger.Info("VpcPeering deleted before Azure peering is created")
 		return nil, nil
 	}
 
 	resourceGroupName := state.Scope().Spec.Scope.Azure.VpcNetwork
 
-	lll = lll.WithValues("vpcPeeringId", obj.Status.Id)
-	lll.Info("Deleting VpcPeering")
+	logger.Info("Deleting VpcPeering")
 
 	err := state.localClient.DeletePeering(
 		ctx,
@@ -31,8 +28,10 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	)
 
 	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", composed.LoggerIntoCtx(ctx, lll))
+		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
 	}
+
+	logger.Info("VpcPeering deleted")
 
 	return nil, nil
 }

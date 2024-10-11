@@ -3,41 +3,61 @@ package mock
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
-	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 )
 
-// ResourceClient not implemented yet in the reconcilers so fixed here as the future reference, since some methods needed in other places
-type ResourceClient interface {
-	networkclient.ResourceGroupClient
+type ResourceGroupsClient interface {
+	azureclient.ResourceGroupClient
 }
 
-// NetworkClient not implemented yet in the reconcilers so fixed here as the future reference, since some methods needed in peering
 type NetworkClient interface {
-	networkclient.NetworkClient
+	azureclient.NetworkClient
+}
+
+type SubnetsClient interface {
+	azureclient.SubnetsClient
+}
+
+type SecurityGroupsClient interface {
+	azureclient.SecurityGroupsClient
+}
+
+type VirtualNetworkLinkClient interface {
+	azureclient.VirtualNetworkLinkClient
+}
+
+type PrivateDnsZoneClient interface {
+	azureclient.PrivateDnsZoneClient
 }
 
 type VpcPeeringClient interface {
-	vpcpeeringclient.Client
+	azureclient.VirtualNetworkPeeringClient
 }
 
 type RedisInstanceClient interface {
-	redisinstanceclient.Client
+	azureclient.RedisClient
 }
 
 type Clients interface {
-	ResourceClient
+	ResourceGroupsClient
 	NetworkClient
+	SecurityGroupsClient
+	SubnetsClient
 	VpcPeeringClient
 	RedisInstanceClient
+	VirtualNetworkLinkClient
+	PrivateDnsZoneClient
 }
 
 type Providers interface {
-	VpcPeeringSkrProvider() provider.ClientProvider[vpcpeeringclient.Client]
-	RedisClientProvider() provider.ClientProvider[redisinstanceclient.Client]
-	NetworkProvider() provider.ClientProvider[networkclient.Client]
+	VpcPeeringProvider() azureclient.ClientProvider[vpcpeeringclient.Client]
+	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
+	RedisClientProvider() azureclient.ClientProvider[redisinstanceclient.Client]
+	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
 }
 
 type NetworkConfig interface {

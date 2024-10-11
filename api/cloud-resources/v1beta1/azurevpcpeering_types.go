@@ -34,9 +34,7 @@ type AzureVpcPeeringSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVnet is immutable."
 	RemoteVnet string `json:"remoteVnet,omitempty"`
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteResourceGroup is immutable."
-	RemoteResourceGroup string `json:"remoteResourceGroup,omitempty"`
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering
@@ -56,9 +54,10 @@ type AzureVpcPeeringStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+
 // AzureVpcPeering is the Schema for the azurevpcpeerings API
 type AzureVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -77,6 +76,13 @@ func (in *AzureVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *AzureVpcPeering) SpecificToProviders() []string { return []string{"azure"} }
+
+func (in *AzureVpcPeering) State() string {
+	return in.Status.State
+}
+func (in *AzureVpcPeering) SetState(v string) {
+	in.Status.State = v
+}
 
 //+kubebuilder:object:root=true
 

@@ -2,11 +2,11 @@ package azureredisinstance
 
 import (
 	"context"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -44,7 +44,7 @@ func (r *reconciler) newAction() composed.Action {
 		"azureRedisInstance",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRedisInstance{}),
 		composed.LoadObj,
-
+		defaultiprange.New(),
 		updateId,
 		loadKcpRedisInstance,
 		loadAuthSecret,

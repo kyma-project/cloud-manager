@@ -38,12 +38,12 @@ spec:
       valueFrom:
         secretKeyRef:
           key: host
-          name: simple-example-probe
+          name: gcpredisinstance-simple-example
     - name: PORT
       valueFrom:
         secretKeyRef:
           key: port
-          name: simple-example-probe
+          name: gcpredisinstance-simple-example
 ```
 
 3. Exec into the Pod:
@@ -55,7 +55,7 @@ kubectl exec -i -t gcpredisinstance-simple-example-probe -c redis-cli -- sh -c "
 4. Exec a PING command:
 
 ```bash
-redis-cli -h $HOST -p $PORT
+redis-cli -h $HOST -p $PORT PING
 ```
 You should receive `PONG` back from the server.
 
@@ -75,10 +75,9 @@ metadata:
 spec:
   memorySizeGb: 5
   tier: "STANDARD_HA"
-  redisVersion: REDIS_7_1
+  redisVersion: REDIS_7_2
   authEnabled: true
-  transitEncryption:
-    serverAuthentication: true
+  transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"

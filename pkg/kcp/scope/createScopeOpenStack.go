@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -36,6 +37,10 @@ func createScopeOpenStack(ctx context.Context, st composed.State) (error, contex
 		},
 	}
 
+	// Preserve loaded obj resource version before getting overwritten by newly created scope
+	if st.Obj() != nil && st.Obj().GetName() != "" {
+		scope.ResourceVersion = st.Obj().GetResourceVersion()
+	}
 	state.SetObj(scope)
 
 	ctx = cceemeta.SetCeeDomainProjectRegion(

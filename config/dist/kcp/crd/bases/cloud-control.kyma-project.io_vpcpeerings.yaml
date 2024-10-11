@@ -48,6 +48,8 @@ spec:
             properties:
               details:
                 properties:
+                  deleteRemotePeering:
+                    type: boolean
                   importCustomRoutes:
                     type: boolean
                   localNetwork:
@@ -63,6 +65,8 @@ spec:
                     x-kubernetes-validations:
                     - message: Local network name is required.
                       rule: (self.name != "")
+                  localPeeringName:
+                    type: string
                   peeringName:
                     type: string
                   remoteNetwork:
@@ -108,7 +112,6 @@ spec:
                 - name
                 type: object
               vpcPeering:
-                description: 'Deprecated: use VpcPeeringSpec.Details instead'
                 maxProperties: 1
                 minProperties: 1
                 properties:

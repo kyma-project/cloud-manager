@@ -3,40 +3,38 @@ package backupschedule
 import (
 	"context"
 	"fmt"
-	"time"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func createBackup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
 
 	//If marked for deletion, return
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 
-	//Check next run time. If it is not time to run, return
-	if state.nextRunTime.IsZero() || now.Before(state.nextRunTime) {
-		return nil, nil
-	}
-
 	//If the creation for the nextRunTime is already done, return
-	if schedule.GetLastCreateRun() != nil && !schedule.GetLastCreateRun().IsZero() &&
-		state.nextRunTime.Unix() == schedule.GetLastCreateRun().Time.Unix() {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
+	if state.createRunCompleted {
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Creating File Backup")
+	//Check next run time. If it is not time to run, return
+	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
+		return nil, nil
+	}
+
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Creating File Backup")
 
 	//Get Backup details (name and index).
 	prefix := schedule.GetPrefix()
@@ -59,7 +57,13 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	//Create Backup object
 	backup, err := state.backupImpl.getBackupObject(state, &objectMeta)
 	if err == nil {
-		err = state.Cluster().K8sClient().Create(ctx, backup)
+		err = state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
+			Name:      backup.GetName(),
+			Namespace: backup.GetNamespace(),
+		}, backup)
+		if err != nil && apierrors.IsNotFound(err) {
+			err = state.Cluster().K8sClient().Create(ctx, backup)
+		}
 	}
 
 	if err != nil {
@@ -72,7 +76,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessLogMsg(fmt.Sprintf("Error updating File backup object in GCP :%s", err)).
+			SuccessLogMsg(fmt.Sprintf("Error updating File backup object in %s :%s", state.Scope.Spec.Provider, err)).
 			Run(ctx, state)
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func addKymaFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,19 +15,14 @@ func addKymaFinalizer(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	added := controllerutil.AddFinalizer(state.kyma, cloudcontrolv1beta1.FinalizerName)
-
-	if !added {
-		// finalizer already added on Kyma CR
-		return nil, nil
-	}
-
-	logger.Info("Adding finalizer to the Kyma CR")
-
-	err := state.Cluster().K8sClient().Update(ctx, state.kyma)
+	added, err := composed.PatchObjAddFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, state.kyma, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating Kyma CR with added finalizer", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	if added {
+		logger.Info("Added finalizer to the Kyma CR")
+	}
+
+	return nil, ctx
 }

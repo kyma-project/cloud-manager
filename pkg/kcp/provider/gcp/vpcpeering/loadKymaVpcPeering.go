@@ -18,13 +18,14 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	logger.Info("Loading VPC Peering")
+	logger.Info("Loading Kyma VPC Peering")
 
 	//Using cm- prefix to make it clear it's a cloud manager resource
 	//Using obj name suffix as the peering name since it is unique within the kcp namespace
-	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.Scope().Spec.Scope.Gcp.Project, state.Scope().Spec.Scope.Gcp.VpcNetwork)
+	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Spec.Network.Reference.Gcp.GcpProject, state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Kyma Vpc Peering")
+		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",

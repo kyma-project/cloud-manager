@@ -8,5 +8,7 @@ import (
 type State interface {
 	focal.State
 	ObjAsIpRange() *cloudcontrolv1beta1.IpRange
+	ExistingCidrRanges() []string
+	SetExistingCidrRanges(v []string)
 	Network() *cloudcontrolv1beta1.Network
 }

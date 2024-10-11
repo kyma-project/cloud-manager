@@ -45,20 +45,29 @@ func getDefaultParams() map[string]elasticacheTypes.Parameter {
 }
 
 type elastiCacheClientFake struct {
-	subnetGroupMutex    *sync.Mutex
-	parameterGroupMutex *sync.Mutex
-	elasticacheMutex    *sync.Mutex
-	secretStoreMutex    *sync.Mutex
-	userGroupsMutex     *sync.Mutex
-	securityGroupsMutex *sync.Mutex
-	replicationGroups   map[string]*elasticacheTypes.ReplicationGroup
-	cacheClusters       map[string]*elasticacheTypes.CacheCluster
-	parameters          map[string]map[string]elasticacheTypes.Parameter
-	parameterGroups     map[string]*elasticacheTypes.CacheParameterGroup
-	subnetGroups        map[string]*elasticacheTypes.CacheSubnetGroup
-	userGroups          map[string]*elasticacheTypes.UserGroup
-	secretStore         map[string]*secretsmanager.GetSecretValueOutput
-	securityGroups      []*ec2Types.SecurityGroup
+	mutex             sync.Mutex
+	replicationGroups map[string]*elasticacheTypes.ReplicationGroup
+	cacheClusters     map[string]*elasticacheTypes.CacheCluster
+	parameters        map[string]map[string]elasticacheTypes.Parameter
+	parameterGroups   map[string]*elasticacheTypes.CacheParameterGroup
+	subnetGroups      map[string]*elasticacheTypes.CacheSubnetGroup
+	userGroups        map[string]*elasticacheTypes.UserGroup
+	secretStore       map[string]*secretsmanager.GetSecretValueOutput
+	securityGroups    []*ec2Types.SecurityGroup
+}
+
+func newElastiCacheClientFake() *elastiCacheClientFake {
+	return &elastiCacheClientFake{
+		mutex:             sync.Mutex{},
+		replicationGroups: map[string]*elasticacheTypes.ReplicationGroup{},
+		cacheClusters:     map[string]*elasticacheTypes.CacheCluster{},
+		subnetGroups:      map[string]*elasticacheTypes.CacheSubnetGroup{},
+		parameterGroups:   map[string]*elasticacheTypes.CacheParameterGroup{},
+		parameters:        map[string]map[string]elasticacheTypes.Parameter{},
+		secretStore:       map[string]*secretsmanager.GetSecretValueOutput{},
+		userGroups:        map[string]*elasticacheTypes.UserGroup{},
+		securityGroups:    []*ec2Types.SecurityGroup{},
+	}
 }
 
 func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup {
@@ -78,15 +87,15 @@ func (client *elastiCacheClientFake) SetAwsElastiCacheUserGroupLifeCycleState(na
 }
 
 func (client *elastiCacheClientFake) DeleteAwsElastiCacheByName(name string) {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	delete(client.replicationGroups, name)
 }
 
 func (client *elastiCacheClientFake) DeleteAwsElastiCacheUserGroupByName(name string) {
-	client.userGroupsMutex.Lock()
-	defer client.userGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	delete(client.userGroups, name)
 }
@@ -102,8 +111,8 @@ func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(grou
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error) {
-	client.subnetGroupMutex.Lock()
-	defer client.subnetGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	subnetGroup := client.subnetGroups[name]
 
@@ -115,8 +124,8 @@ func (client *elastiCacheClientFake) DescribeElastiCacheSubnetGroup(ctx context.
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error) {
-	client.subnetGroupMutex.Lock()
-	defer client.subnetGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.subnetGroups[name] = &elasticacheTypes.CacheSubnetGroup{
 		CacheSubnetGroupName: ptr.To(name),
@@ -128,8 +137,8 @@ func (client *elastiCacheClientFake) CreateElastiCacheSubnetGroup(ctx context.Co
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) error {
-	client.subnetGroupMutex.Lock()
-	defer client.subnetGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	delete(client.subnetGroups, name)
 
@@ -137,8 +146,8 @@ func (client *elastiCacheClientFake) DeleteElastiCacheSubnetGroup(ctx context.Co
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error) {
-	client.parameterGroupMutex.Lock()
-	defer client.parameterGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	parameterGroup := client.parameterGroups[name]
 
@@ -150,8 +159,8 @@ func (client *elastiCacheClientFake) DescribeElastiCacheParameterGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
-	client.parameterGroupMutex.Lock()
-	defer client.parameterGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.parameterGroups[name] = &elasticacheTypes.CacheParameterGroup{
 		CacheParameterGroupName:   ptr.To(name),
@@ -166,8 +175,8 @@ func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
-	client.parameterGroupMutex.Lock()
-	defer client.parameterGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	delete(client.parameterGroups, name)
 
@@ -175,15 +184,15 @@ func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error) {
-	client.parameterGroupMutex.Lock()
-	defer client.parameterGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	return pie.Values(client.parameters[groupName]), nil
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error {
-	client.parameterGroupMutex.Lock()
-	defer client.parameterGroupMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	for _, parameter := range parameters {
 		client.parameters[groupName][ptr.Deref(parameter.ParameterName, "")] = elasticacheTypes.Parameter{ParameterName: parameter.ParameterName, ParameterValue: parameter.ParameterValue}
@@ -197,15 +206,15 @@ func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context
 }
 
 func (client *elastiCacheClientFake) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
-	client.secretStoreMutex.Lock()
-	defer client.secretStoreMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	return client.secretStore[secretName], nil
 }
 
 func (client *elastiCacheClientFake) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error {
-	client.secretStoreMutex.Lock()
-	defer client.secretStoreMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.secretStore[secretName] = &secretsmanager.GetSecretValueOutput{
 		Name:         ptr.To(secretName),
@@ -216,8 +225,8 @@ func (client *elastiCacheClientFake) CreateAuthTokenSecret(ctx context.Context, 
 }
 
 func (client *elastiCacheClientFake) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
-	client.secretStoreMutex.Lock()
-	defer client.secretStoreMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	delete(client.secretStore, secretName)
 
@@ -225,8 +234,8 @@ func (client *elastiCacheClientFake) DeleteAuthTokenSecret(ctx context.Context, 
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	cacheCluster := client.replicationGroups[clusterId]
 
@@ -238,8 +247,8 @@ func (client *elastiCacheClientFake) DescribeElastiCacheReplicationGroup(ctx con
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options awsclient.CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.cacheClusters[options.Name] = &elasticacheTypes.CacheCluster{
 		CacheClusterId:             ptr.To(options.Name),
@@ -260,6 +269,7 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		AuthTokenEnabled:         ptr.To(authTokenEnabled),
 		MemberClusters:           []string{options.Name},
 		UserGroupIds:             []string{},
+		AtRestEncryptionEnabled:  ptr.To(true),
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
@@ -281,8 +291,8 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options awsclient.ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	if instance, ok := client.replicationGroups[id]; ok {
 		instance.Status = ptr.To("modifying")
@@ -322,8 +332,8 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	if instance, ok := client.replicationGroups[id]; ok {
 		instance.Status = ptr.To("deleting")
@@ -333,8 +343,8 @@ func (client *elastiCacheClientFake) DeleteElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error) {
-	client.elasticacheMutex.Lock()
-	defer client.elasticacheMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	cacheCluster := client.cacheClusters[id]
 
@@ -346,8 +356,8 @@ func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Cont
 }
 
 func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
-	client.userGroupsMutex.Lock()
-	defer client.userGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	userGroup := client.userGroups[id]
 
@@ -355,8 +365,8 @@ func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id s
 }
 
 func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
-	client.userGroupsMutex.Lock()
-	defer client.userGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.userGroups[id] = &elasticacheTypes.UserGroup{
 		Engine:      ptr.To("redis"),
@@ -369,8 +379,8 @@ func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id str
 }
 
 func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id string) error {
-	client.userGroupsMutex.Lock()
-	defer client.userGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	if instance, ok := client.userGroups[id]; ok {
 		instance.Status = ptr.To("deleting")
@@ -380,8 +390,8 @@ func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id str
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
-	client.securityGroupsMutex.Lock()
-	defer client.securityGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	list := append([]*ec2Types.SecurityGroup{}, client.securityGroups...)
 	if groupIds != nil {
@@ -402,8 +412,8 @@ func (client *elastiCacheClientFake) DescribeElastiCacheSecurityGroups(ctx conte
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId string, name string, tags []ec2Types.Tag) (string, error) {
-	client.securityGroupsMutex.Lock()
-	defer client.securityGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	tags = append(tags, ec2Types.Tag{
 		Key:   ptr.To("vpc-id"),
@@ -421,8 +431,8 @@ func (client *elastiCacheClientFake) CreateElastiCacheSecurityGroup(ctx context.
 }
 
 func (client *elastiCacheClientFake) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
-	client.securityGroupsMutex.Lock()
-	defer client.securityGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	var securityGroup *ec2Types.SecurityGroup
 	for _, sg := range client.securityGroups {
@@ -439,8 +449,8 @@ func (client *elastiCacheClientFake) AuthorizeElastiCacheSecurityGroupIngress(ct
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
-	client.securityGroupsMutex.Lock()
-	defer client.securityGroupsMutex.Unlock()
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
 	client.securityGroups = pie.Filter(client.securityGroups, func(sg *ec2Types.SecurityGroup) bool {
 		return ptr.Deref(sg.GroupId, "") != id

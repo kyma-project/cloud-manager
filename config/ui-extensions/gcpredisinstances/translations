@@ -8,8 +8,7 @@ en:
   spec.authEnabled: Auth Enabled
   spec.ipRange: Ip Range
   spec.ipRange.name: Ip Range Name
-  spec.transitEncryption: Transit Encryption
-  spec.transitEncryption.serverAuthentication: Server Authentication
+  spec.transitEncryptionMode: Transit Encryption Mode
   spec.authSecret: Authentication Secret
   spec.authSecret.name: Name
   spec.authSecret.labels: Labels

@@ -40,7 +40,7 @@ func Start() (Infra, error) {
 	}
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
-		envtestK8sVersion = "1.29.3"
+		envtestK8sVersion = "1.29.4"
 	}
 
 	ginkgo.By("Preparing CRDs")
@@ -124,12 +124,12 @@ func Start() (Infra, error) {
 			},
 		},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating KCP manager: %w", err)
+	}
 	reader := kcpMgr.GetAPIReader()
 	if reader == nil {
 		return nil, errors.New("KCP Manager API Reader is nil")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("error creating KCP manager: %w", err)
 	}
 
 	registry := skrruntime.NewRegistry(infra.SKR().Scheme())
@@ -168,9 +168,10 @@ func Start() (Infra, error) {
 	// github.com/onsi/gomega@v1.29.0/internal/duration_bundle.go
 	if debugged.Debugged {
 		ginkgo.By("Setting high GOMEGA timeouts and durations since debug build flag is set!!!")
-		gomega.Default.SetDefaultEventuallyTimeout(5 * time.Minute)
+		gomega.Default.SetDefaultEventuallyTimeout(10 * time.Minute)
 		gomega.Default.SetDefaultEventuallyPollingInterval(1 * time.Second)
-		gomega.Default.SetDefaultConsistentlyDuration(20 * time.Second)
+		// rarely used and usually not debugged, so left small, increase on demand but do not commit
+		gomega.Default.SetDefaultConsistentlyDuration(5 * time.Second)
 		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
 	} else {
 		gomega.Default.SetDefaultEventuallyTimeout(4 * time.Second)

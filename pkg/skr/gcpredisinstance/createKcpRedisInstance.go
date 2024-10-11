@@ -42,13 +42,13 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Gcp: &cloudcontrolv1beta1.RedisInstanceGcp{
-					Tier:              gcpRedisInstance.Spec.Tier,
-					MemorySizeGb:      gcpRedisInstance.Spec.MemorySizeGb,
-					RedisVersion:      gcpRedisInstance.Spec.RedisVersion,
-					AuthEnabled:       gcpRedisInstance.Spec.AuthEnabled,
-					TransitEncryption: toGcpTransitEncryption(gcpRedisInstance.Spec.TransitEncryption),
-					RedisConfigs:      gcpRedisInstance.Spec.RedisConfigs,
-					MaintenancePolicy: toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy),
+					Tier:                  gcpRedisInstance.Spec.Tier,
+					MemorySizeGb:          gcpRedisInstance.Spec.MemorySizeGb,
+					RedisVersion:          gcpRedisInstance.Spec.RedisVersion,
+					AuthEnabled:           gcpRedisInstance.Spec.AuthEnabled,
+					TransitEncryptionMode: gcpRedisInstance.Spec.TransitEncryptionMode,
+					RedisConfigs:          gcpRedisInstance.Spec.RedisConfigs,
+					MaintenancePolicy:     toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy),
 				},
 			},
 		},
@@ -62,7 +62,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	logger.Info("Created KCP RedisInstance")
 
 	gcpRedisInstance.Status.State = cloudresourcesv1beta1.StateCreating
-	return composed.UpdateStatus(gcpRedisInstance).
+	return composed.PatchStatus(gcpRedisInstance).
 		ErrorLogMessage("Error setting Creating state on GcpRedisInstance").
 		SuccessErrorNil().
 		FailedError(composed.StopWithRequeue).

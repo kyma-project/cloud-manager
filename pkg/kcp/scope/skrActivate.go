@@ -13,7 +13,7 @@ func skrActivate(ctx context.Context, st composed.State) (error, context.Context
 		WithValues("skrKymaName", state.kyma.GetName()).
 		Info("Activating SKR")
 
-	state.activeSkrCollection.AddKymaUnstructured(state.kyma)
+	state.activeSkrCollection.AddScope(state.ObjAsScope())
 
 	return nil, nil
 }

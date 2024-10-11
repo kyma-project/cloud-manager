@@ -30,21 +30,21 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	vpcNetworkFullName := fmt.Sprintf("projects/%s/global/networks/%s", gcpScope.Project, gcpScope.VpcNetwork)
 
 	labels := util.NewLabelBuilder().WithGcpLabels(
-		state.Name().Name,
+		redisInstance.Spec.Scope.Name,
 		state.Scope().Spec.ShootName,
 	).Build()
 
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
-		VPCNetworkFullName: vpcNetworkFullName,
-		IPRangeName:        state.IpRange().Status.Id,
-		MemorySizeGb:       redisInstance.Spec.Instance.Gcp.MemorySizeGb,
-		Tier:               redisInstance.Spec.Instance.Gcp.Tier,
-		RedisVersion:       redisInstance.Spec.Instance.Gcp.RedisVersion,
-		AuthEnabled:        redisInstance.Spec.Instance.Gcp.AuthEnabled,
-		TransitEncryption:  redisInstance.Spec.Instance.Gcp.TransitEncryption,
-		RedisConfigs:       redisInstance.Spec.Instance.Gcp.RedisConfigs,
-		MaintenancePolicy:  redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
-		Labels:             labels,
+		VPCNetworkFullName:    vpcNetworkFullName,
+		IPRangeName:           state.IpRange().Status.Id,
+		MemorySizeGb:          redisInstance.Spec.Instance.Gcp.MemorySizeGb,
+		Tier:                  redisInstance.Spec.Instance.Gcp.Tier,
+		RedisVersion:          redisInstance.Spec.Instance.Gcp.RedisVersion,
+		AuthEnabled:           redisInstance.Spec.Instance.Gcp.AuthEnabled,
+		TransitEncryptionMode: redisInstance.Spec.Instance.Gcp.TransitEncryptionMode,
+		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs,
+		MaintenancePolicy:     redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
+		Labels:                labels,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
@@ -57,7 +57,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  v1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed creating GcpRedis: %s", err),
 		})
-		err = state.UpdateObjStatus(ctx)
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis creation",

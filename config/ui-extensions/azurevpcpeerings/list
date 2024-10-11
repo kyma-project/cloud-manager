@@ -4,6 +4,9 @@
 - source: spec.remoteVnet
   name: spec.remoteVnet
   sort: true
+- source: spec.deleteRemotePeering
+  name: spec.deleteRemotePeering
+  sort: true
 - source: status.state
   name: status.state
   sort: true

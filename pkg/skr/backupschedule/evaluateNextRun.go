@@ -14,14 +14,13 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
 
 	//If marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Evaluating next run time")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Evaluating next run time")
 
 	if len(schedule.GetNextRunTimes()) == 0 {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
@@ -55,22 +54,38 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If it still not time to run, reconcile with delay
-	if nextRunTime.After(now) {
-		timeLeft := nextRunTime.Unix() - now.Unix()
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
-		return composed.StopWithRequeueDelay(time.Duration(timeLeft) * time.Second), nil
+	if timeLeft := GetRemainingTimeFromNow(&nextRunTime); timeLeft > 0 {
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
+		return composed.StopWithRequeueDelay(timeLeft), nil
 	}
 
+	//Set the state attributes
+	state.nextRunTime = nextRunTime
+	state.createRunCompleted = schedule.GetLastCreateRun() != nil && nextRunTime.Equal(schedule.GetLastCreateRun().Time)
+	state.deleteRunCompleted = schedule.GetLastDeleteRun() != nil && nextRunTime.Equal(schedule.GetLastDeleteRun().Time)
+
 	//If create and delete tasks already completed for currentRun, reset the next run times
-	if schedule.GetLastCreateRun() != nil && nextRunTime.Equal(schedule.GetLastCreateRun().Time) &&
-		schedule.GetLastDeleteRun() != nil && nextRunTime.Equal(schedule.GetLastDeleteRun().Time) {
+	if state.createRunCompleted && state.deleteRunCompleted {
+
+		//If we still have some time to reach the actual nextRunTime, reconcile with delay.
+		//It may happen if we used tolerance when comparing.
+		if timeLeft := GetRemainingTimeFromNowWithTolerance(&nextRunTime, 0); timeLeft > 0 {
+			logger.WithValues("BackupSchedule", schedule.GetName()).Info(
+				fmt.Sprintf("Run already completed for %s. Requeueing with delay : %d seconds", nextRunTime, timeLeft))
+			return composed.StopWithRequeueDelay(timeLeft), nil
+		}
+
 		schedule.SetNextRunTimes(nil)
 		return composed.PatchStatus(schedule).
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
 
-	//Set the next run time in the state object, and continue to next task
-	state.nextRunTime = nextRunTime
+	//log details
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info(
+		fmt.Sprintf("NextRunTimes: %s. CreateRunComplted : %t, DeleteRunCompleted : %t",
+			schedule.GetNextRunTimes(), state.createRunCompleted, state.deleteRunCompleted))
+
+	//continue to next task
 	return nil, nil
 }

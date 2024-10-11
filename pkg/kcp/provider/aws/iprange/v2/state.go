@@ -48,6 +48,7 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 
 	c, err := f.skrProvider(
 		ctx,
+		ipRangeState.Scope().Spec.Scope.Aws.AccountId,
 		ipRangeState.Scope().Spec.Region,
 		awsconfig.AwsConfig.Default.AccessKeyId,
 		awsconfig.AwsConfig.Default.SecretAccessKey,

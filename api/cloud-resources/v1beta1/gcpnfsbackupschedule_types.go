@@ -79,7 +79,7 @@ type GcpNfsBackupScheduleSpec struct {
 
 // GcpNfsBackupScheduleStatus defines the observed state of GcpNfsBackupSchedule
 type GcpNfsBackupScheduleStatus struct {
-	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Done;Error
+	// +kubebuilder:validation:Enum=Processing;Pending;Suspended;Active;Done;Error;Deleting
 	State string `json:"state,omitempty"`
 
 	// List of status conditions
@@ -126,8 +126,9 @@ type GcpNfsBackupScheduleStatus struct {
 	BackupCount int `json:"backupCount,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Schedule",type="string",JSONPath=".spec.schedule"
 // +kubebuilder:printcolumn:name="Last Run Time",type="date",JSONPath=".status.lastCreateRun"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"

@@ -44,11 +44,16 @@ func (r *reconciler) newAction() composed.Action {
 		composed.LoadObj,
 		addFinalizer,
 		updateId,
+		loadKcpRemoteNetwork,
+		createKcpRemoteNetwork,
 		loadKcpAzureVpcPeering,
 		createKcpVpcPeering,
 		deleteKcpVpcPeering,
+		waitKcpVpcPeeringDeleted,
+		deleteRemoteNetwork,
 		removeFinalizer,
 		updateStatus,
+		waitStatusReady,
 		composed.StopAndForgetAction,
 	)
 }

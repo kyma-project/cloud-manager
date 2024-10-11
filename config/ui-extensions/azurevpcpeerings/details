@@ -4,14 +4,14 @@ body:
       source: spec
       children:
         - widget: Labels
-          source: remoteResourceGroup
-          name: spec.remoteResourceGroup
-        - widget: Labels
           source: remoteVnet
           name: spec.remoteVnet
         - widget: Labels
           source: remotePeeringName
           name: spec.remotePeeringName
+#         - widget: Labels
+#           source: deleteRemotePeering
+#           name: spec.deleteRemotePeering
     - name: status
       widget: Panel
       source: status

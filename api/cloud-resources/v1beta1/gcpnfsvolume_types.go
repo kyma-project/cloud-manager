@@ -130,8 +130,9 @@ type GcpNfsVolumeStatus struct {
 	Location string `json:"location,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.fileShareName"
 // +kubebuilder:printcolumn:name="Capacity (GB)",type="string",JSONPath=".status.capacityGb"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"

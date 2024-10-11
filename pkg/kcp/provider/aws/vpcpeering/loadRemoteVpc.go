@@ -15,7 +15,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
-	remoteVpcId := obj.Spec.VpcPeering.Aws.RemoteVpcId
+	remoteVpcId := state.remoteNetwork.Spec.Network.Reference.Aws.VpcId
 
 	vpc, err := state.remoteClient.DescribeVpc(ctx, remoteVpcId)
 
@@ -36,7 +36,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			return composed.StopAndForget, nil
 		}
 
-		return composed.UpdateStatus(obj).
+		return composed.PatchStatus(obj).
 			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
@@ -61,7 +61,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			return composed.StopAndForget, nil
 		}
 
-		return composed.UpdateStatus(obj).
+		return composed.PatchStatus(obj).
 			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).

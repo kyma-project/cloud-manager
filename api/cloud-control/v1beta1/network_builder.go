@@ -17,6 +17,11 @@ func (b *NetworkBuilder) WithScope(s string) *NetworkBuilder {
 	return b
 }
 
+func (b *NetworkBuilder) WithType(t NetworkType) *NetworkBuilder {
+	b.Net.Spec.Type = t
+	return b
+}
+
 func (b *NetworkBuilder) WithCidr(cidr string) *NetworkBuilder {
 	if cidr == "" {
 		b.Net.Spec.Network.Managed = nil

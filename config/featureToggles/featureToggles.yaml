@@ -12,6 +12,9 @@ apiDisabled:
     - name: Enabled redis on aws stage
       query: feature == "redis" and landscape == "stage" and provider == "aws"
       variation: enabled
+    - name: Enabled redis on gcp stage
+      query: feature == "redis" and landscape == "stage" and provider == "gcp"
+      variation: enabled
     - name: Disabled APIs on stage and prod
       query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
       variation: disabled

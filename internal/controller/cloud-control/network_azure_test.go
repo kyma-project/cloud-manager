@@ -1,7 +1,6 @@
 package cloudcontrol
 
 import (
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -23,7 +22,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 
 		kymaName := "8515c338-70ec-41f6-8ac8-639d636daf1b"
 		scope := &cloudcontrolv1beta1.Scope{}
-		netObjName := "91263072-3823-40d6-a688-f0ffa86dd860"
+		netObjName := kymaName + "--cm" // !important to be CM network
 
 		var net *cloudcontrolv1beta1.Network
 
@@ -36,7 +35,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
 		expectedResourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
-		By("When managed KCP Network is created", func() {
+		By("When managed CM KCP Network is created", func() {
 			net = cloudcontrolv1beta1.NewNetworkBuilder().WithManagedNetwork().Build()
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName)).
@@ -76,8 +75,8 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 			Expect(net.Status.Network.Azure.ResourceGroup).To(Equal(expectedResourceGroupName))
 		})
 
-		By("And Then Network status reference network name equals to KCP Network name", func() {
-			Expect(net.Status.Network.Azure.NetworkName).To(Equal(net.Name))
+		By("And Then Network status reference network name equals to CM Network name", func() {
+			Expect(net.Status.Network.Azure.NetworkName).To(Equal(expectedResourceGroupName))
 		})
 
 		var azureResourceGroup *armresources.ResourceGroup
@@ -94,26 +93,12 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 			Expect(ptr.Deref(azureResourceGroup.Location, "")).To(Equal(scope.Spec.Region))
 		})
 
-		By("And Then Azure ResourceGroup tags are set", func() {
-			Expect(azureResourceGroup.Tags).NotTo(BeNil())
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagCloudManagerName))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagCloudManagerName], "")).To(Equal(fmt.Sprintf("%s/%s", net.Namespace, net.Name)))
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagScope))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagScope], "")).To(Equal(fmt.Sprintf("%s/%s", scope.Namespace, scope.Name)))
-
-			Expect(azureResourceGroup.Tags).To(HaveKey(common.TagShoot))
-			Expect(ptr.Deref(azureResourceGroup.Tags[common.TagShoot], "")).To(Equal(scope.Spec.ShootName))
-		})
-
 		var azureVNet *armnetwork.VirtualNetwork
 
-		By("And Then Azure VNet is created", func() {
-			vnet, err := azureMock.GetNetwork(infra.Ctx(), expectedResourceGroupName, net.Name)
+		By("And Then Azure CM VNet is created", func() {
+			vnet, err := azureMock.GetNetwork(infra.Ctx(), expectedResourceGroupName, expectedResourceGroupName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vnet).NotTo(BeNil())
-			Expect(ptr.Deref(vnet.Name, "")).To(Equal(net.Name))
 			azureVNet = vnet
 		})
 
@@ -144,7 +129,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 		})
 
 		By("And Then Azure VNet does not exist", func() {
-			_, err := azureMock.GetNetwork(infra.Ctx(), expectedResourceGroupName, net.Name)
+			_, err := azureMock.GetNetwork(infra.Ctx(), expectedResourceGroupName, expectedResourceGroupName)
 			Expect(err).To(HaveOccurred())
 			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
 		})

@@ -14,22 +14,20 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
 
 	//If marked for deletion, return
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 
-	//Check next run time. If it is not time to run, return
-	if state.nextRunTime.IsZero() || now.Before(state.nextRunTime) {
+	//If the deletion for the nextRunTime is already done, return
+	if state.deleteRunCompleted {
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	//If the deletion for the nextRunTime is already done, return
-	if schedule.GetLastDeleteRun() != nil && !schedule.GetLastDeleteRun().IsZero() &&
-		state.nextRunTime.Unix() == schedule.GetLastDeleteRun().Time.Unix() {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Deletion already completed for %s ", state.nextRunTime))
+	//Check next run time. If it is not time to run, return
+	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
 		return nil, nil
 	}
 
@@ -46,7 +44,7 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("Deleting old File Backups")
+	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Deleting old File Backups")
 
 	nextDeleteTimes := map[string]string{}
 	var lastDeleted []corev1.ObjectReference

@@ -16,8 +16,8 @@
 - path: spec.ipRange.name
   name: spec.ipRange.name
   required: false
-- path: spec.transitEncryption.serverAuthentication
-  name: spec.transitEncryption.serverAuthentication
+- path: spec.transitEncryptionMode
+  name: spec.transitEncryptionMode
   required: false
   disableOnEdit: true
   description: Immutable once set.

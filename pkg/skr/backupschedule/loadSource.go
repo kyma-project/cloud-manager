@@ -2,7 +2,6 @@ package backupschedule
 
 import (
 	"context"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -44,7 +43,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 
 	//If the sourceRef is not ready, return an error
 	if volumeReady == nil || volumeReady.Status != metav1.ConditionTrue {
-		logger.WithValues("GcpNfsBackupSchedule", schedule.GetName()).Info("SourceRef is not ready")
+		logger.WithValues("BackupSchedule", schedule.GetName()).Info("SourceRef is not ready")
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
 		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
@@ -66,9 +65,14 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 
 func getSourceRef(ctx context.Context, state *State) (composed.ObjWithConditions, error) {
 	schedule := state.ObjAsBackupSchedule()
+	namespace := schedule.GetSourceRef().Namespace
+	if len(namespace) <= 0 {
+		namespace = schedule.GetNamespace()
+	}
+
 	key := types.NamespacedName{
 		Name:      schedule.GetSourceRef().Name,
-		Namespace: schedule.GetSourceRef().Namespace,
+		Namespace: namespace,
 	}
 
 	source := state.backupImpl.emptySourceObject()

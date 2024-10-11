@@ -30,19 +30,16 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	gcpScope := state.Scope().Spec.Scope.Gcp
-	project := gcpScope.Project
-	vpc := gcpScope.VpcNetwork
-
 	//First we need to check if the remote VPC is tagged with the shoot name.
-	isVpcTagged, err := state.client.CheckRemoteNetworkTags(ctx, state.remoteVpc, state.remoteProject, state.Scope().Spec.ShootName)
+	isVpcTagged, err := state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.Scope().Spec.ShootName)
 	if err != nil {
-		logger.Error(err, "Error creating GCP Kyma VPC Peering while checking remote network tags")
+		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
 		return err, ctx
 	}
 
 	if !isVpcTagged {
-		logger.Error(err, "Remote network "+state.remoteVpc+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
+		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -59,13 +56,14 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 	err = state.client.CreateKymaVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.remoteVpc,
-		state.remoteProject,
+		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
+		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
 		state.importCustomRoutes,
-		project,
-		vpc)
+		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 
 	if err != nil {
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -78,6 +76,6 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
-	logger.Info("Kyma VPC Peering Connection created")
+	logger.Info("[KCP GCP VPCPeering createKymaVpcPeering] Kyma VPC Peering Connection created")
 	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), nil
 }

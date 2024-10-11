@@ -71,7 +71,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Reason:  v1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed creating AWS Elasticache: %s", err),
 		})
-		err = state.UpdateObjStatus(ctx)
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed aws elasticache creation",

@@ -46,7 +46,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 
 		if err2 != nil {
 			logger.Error(err2, "Error getting fallback ipRange Addresses from GCP")
-			return composed.UpdateStatus(ipRange).
+			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
@@ -69,7 +69,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 
 	if err != nil {
 		logger.Error(err, "Error getting fallback ipRange Addresses from GCP")
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -83,7 +83,7 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 
 	if !strings.HasSuffix(addr.Network, fmt.Sprintf("/%s", vpcName)) {
 		logger.Error(errors.New("obtained IpRange belongs to another VPC"), "Obtained IpRange belongs to another VPC")
-		return composed.UpdateStatus(ipRange).
+		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

@@ -22,7 +22,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 
 	redisInstance.Status.Id = ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, "")
 
-	err := state.UpdateObjStatus(ctx)
+	err := state.PatchObjStatus(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating RedisInstance .status.id", composed.StopWithRequeue, ctx)

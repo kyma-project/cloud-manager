@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -14,14 +15,14 @@ import (
 	"time"
 )
 
-var _ = Describe("Feature: KCP Scope", func() {
+var _ = Describe("Feature: KCP Scope AWS", func() {
 
 	It("Scenario: KCP AWS Scope is created when module is activated in Kyma CR", func() {
 		const (
 			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 		)
 
-		kymaNetworkName := common.KymaNetworkCommonName(kymaName)
+		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenerTypes.Shoot{}
@@ -72,6 +73,12 @@ var _ = Describe("Feature: KCP Scope", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
 				Should(Succeed(), "expected created Scope to have Ready condition")
 		})
+
+		for _, label := range cloudcontrolv1beta1.ScopeLabels {
+			By(fmt.Sprintf("And Then Scope has label %s", label), func() {
+				Expect(scope.Labels).To(HaveKeyWithValue(label, kymaCR.GetLabels()[label]))
+			})
+		}
 
 		By("And Then Scope provider is aws", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAws))

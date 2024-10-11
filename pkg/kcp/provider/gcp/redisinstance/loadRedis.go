@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/googleapis/gax-go/v2/apierror"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"google.golang.org/grpc/codes"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,12 +28,6 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	redisInstance, redisAuth, err := state.memorystoreClient.GetRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
 
 	if err != nil {
-		if apiErr, ok := err.(*apierror.APIError); ok {
-			if apiErr.GRPCStatus().Code() == codes.NotFound {
-				return nil, nil
-			}
-		}
-
 		logger.Error(err, "Error loading GCP Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
@@ -43,7 +35,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
 			Message: fmt.Sprintf("Failed loading GcpRedis: %s", err),
 		})
-		err = state.UpdateObjStatus(ctx)
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis loading",
@@ -55,8 +47,11 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	state.gcpRedisInstance = redisInstance
-	state.gcpRedisInstanceAuth = redisAuth
+	if redisInstance != nil {
+		logger.Info("redis instance found and loaded")
+		state.gcpRedisInstance = redisInstance
+		state.gcpRedisInstanceAuth = redisAuth
+	}
 
 	return nil, nil
 }

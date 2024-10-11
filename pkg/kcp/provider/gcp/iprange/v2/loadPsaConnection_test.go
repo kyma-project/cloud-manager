@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/servicenetworking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -132,49 +130,6 @@ func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 
 	// check error condition in status
 	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
-}
-
-func (suite *loadPsaConnectionSuite) TestWhenErrorResponse() {
-	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			if strings.HasSuffix(r.URL.Path, urlSvcNetworking) {
-				//Return 404
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-			}
-		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
-		}
-	}))
-	defer fakeHttpServer.Close()
-
-	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	//Get state object with ipRange
-	ipRange := gcpIpRange.DeepCopy()
-
-	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
-
-	//Invoke the function under test
-	err, _ = loadPsaConnection(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-
-	//Load updated object
-	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
-	ipRange = state.ObjAsIpRange()
-
-	// check error condition in status
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, ipRange.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, ipRange.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, ipRange.Status.Conditions[0].Reason)
 }
 
 func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {

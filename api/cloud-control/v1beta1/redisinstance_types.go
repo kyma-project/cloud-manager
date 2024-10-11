@@ -16,6 +16,7 @@ package v1beta1
 import (
 	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -114,14 +115,6 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 }
 
-type TransitEncryptionGcp struct {
-	// Client to Server traffic encryption enabled with server authentication.
-	// +optional
-	// +kubebuilder:default=false
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ServerAuthentication is immutable."
-	ServerAuthentication bool `json:"serverAuthentication,omitempty"`
-}
-
 type TimeOfDayGcp struct {
 	// Hours of day in 24 hour format. Should be from 0 to 23.
 	// +kubebuilder:validation:Required
@@ -171,14 +164,15 @@ type RedisInstanceGcp struct {
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
-	// +kubebuilder:default=true
+	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
 
-	// The TLS mode of the Redis instance.
-	// If not provided, TLS is disabled for the instance.
+	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryption is immutable."
-	TransitEncryption *TransitEncryptionGcp `json:"transitEncryption,omitempty"`
+	// +kubebuilder:default=DISABLED
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
+	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
+	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
@@ -299,6 +293,20 @@ func (in *RedisInstance) Conditions() *[]metav1.Condition {
 
 func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *RedisInstance) CloneForPatchStatus() client.Object {
+	return &RedisInstance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RedisInstance",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {

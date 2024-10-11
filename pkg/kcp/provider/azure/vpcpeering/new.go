@@ -25,19 +25,20 @@ func New(stateFactory StateFactory) composed.Action {
 			kcpNetworkRemoteLoad,
 			statusInitiated,
 			peeringLocalLoad,
+			remoteClientCreate,
+			peeringRemoteLoad,
 			composed.IfElse(
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
 					"azureVpcPeering-delete",
 					deleteVpcPeering,
+					peeringRemoteDelete,
 					actions.PatchRemoveFinalizer,
 				),
 				composed.ComposeActions(
 					"azureVpcPeering-non-delete",
 					actions.PatchAddFinalizer,
-					remoteClientCreate,
 					peeringRemoteRequireSpecifiedName,
-					peeringRemoteLoad,
 					composed.If(
 						predicateRequireVNetShootTag,
 						vpcRemoteLoad,

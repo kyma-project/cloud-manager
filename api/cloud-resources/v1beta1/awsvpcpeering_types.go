@@ -35,6 +35,8 @@ type AwsVpcPeeringSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteAccountId is immutable."
 	RemoteAccountId string `json:"remoteAccountId"`
+
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering
@@ -53,9 +55,9 @@ type AwsVpcPeeringStatus struct {
 	State string `json:"state,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 
 // AwsVpcPeering is the Schema for the awsvpcpeerings API
 type AwsVpcPeering struct {
@@ -75,6 +77,13 @@ func (in *AwsVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *AwsVpcPeering) SpecificToProviders() []string { return []string{"aws"} }
+
+func (in *AwsVpcPeering) State() string {
+	return in.Status.State
+}
+func (in *AwsVpcPeering) SetState(v string) {
+	in.Status.State = v
+}
 
 //+kubebuilder:object:root=true
 

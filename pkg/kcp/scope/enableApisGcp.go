@@ -66,7 +66,8 @@ func enableApisGcp(ctx context.Context, st composed.State) (error, context.Conte
 		logger.Info("All APIs are enabled. Proceeding to next step.")
 		return nil, nil
 	}
-	return composed.UpdateStatus(scope).
+	return composed.PatchStatus(scope).
+		ErrorLogMessage("Error patching KCP Scope status with updates of pending operations").
 		SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpOperationWaitTime)).
 		Run(ctx, state)
 }
@@ -75,13 +76,34 @@ func verifyAndAddOperationToStatus(ctx context.Context, scope *v1beta1.Scope, cl
 	operation, err := verifyAndEnable(ctx, scope, client, service)
 	if err != nil {
 		return composed.LogErrorAndReturn(
-			fmt.Errorf("error enabling service %s: %w", gcpclient.ComputeService, err),
+			fmt.Errorf("error enabling service %s: %w", service, err),
 			"Error enabling GCP APIs",
 			composed.StopAndForget,
 			ctx)
 	}
-	scope.Status.GcpOperations = make([]string, 0)
 	if operation != nil {
+		if operation.Done {
+			if operation.Error != nil {
+				return composed.LogErrorAndReturn(
+					fmt.Errorf("Enabling service %s operation failed: %s. Retry with delay", service, operation.Error.Message),
+					"Error enabling GCP APIs",
+					composed.StopWithRequeueDelay(gcpclient.GcpRetryWaitTime),
+					ctx)
+			} else {
+				//operation already succeeded.
+				return nil, ctx
+			}
+		}
+		if operation.Name == "operations/noop.DONE_OPERATION" {
+			return composed.LogErrorAndReturn(
+				fmt.Errorf("enabling service %s returned an invalid operation id '%s'. Retry with delay", service, "operations/noop.DONE_OPERATION"),
+				"Error enabling GCP APIs",
+				composed.StopWithRequeueDelay(gcpclient.GcpRetryWaitTime),
+				ctx)
+		}
+		if scope.Status.GcpOperations == nil {
+			scope.Status.GcpOperations = make([]string, 0)
+		}
 		scope.Status.GcpOperations = append(scope.Status.GcpOperations, operation.Name)
 	}
 	return nil, ctx

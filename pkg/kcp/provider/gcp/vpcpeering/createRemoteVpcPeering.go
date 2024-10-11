@@ -30,18 +30,14 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	gcpScope := state.Scope().Spec.Scope.Gcp
-	project := gcpScope.Project
-	vpc := gcpScope.VpcNetwork
-
 	err := state.client.CreateRemoteVpcPeering(
 		ctx,
 		state.remotePeeringName,
-		state.remoteVpc,
-		state.remoteProject,
+		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
+		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
 		state.importCustomRoutes,
-		project,
-		vpc)
+		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
 
 	if err != nil {
 		message := fmt.Sprintf("Error creating Remote VpcPeering %s", err)
@@ -55,7 +51,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		if matchesExistingPeering {
 			message = fmt.Sprintf("Error creating Remote VpcPeering: %s Please check the VPC peerings on your project.", err)
 		}
-
+		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

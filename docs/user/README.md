@@ -38,6 +38,25 @@ The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filesto
 instance that can be used as RWX volume in the cluster.
 To learn more, read the [GcpNfsVolume Custom Resource](./resources/04-30-10-gcp-nfs-volume.md)  documentation.
 
+### GcpNfsVolumeBackup CR
+
+The `gcpnfsvolumeBackup.cloud-resources.kyma-project.io` CRD describes the backup of a GCP Filestore
+instance.
+To learn more, read the [GcpNfsVolumeBackup Custom Resource](./resources/04-70-10-gcp-nfs-volume-backup.md)  documentation.
+
+
+### GcpNfsBackupSchedule CR
+
+The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the user-defined schedule for creating a backup
+of the `GcpNfsVolume` instances at regular intervals.
+To learn more, read the [GcpNfsBackupSchedule Custom Resource](./resources/04-30-30-gcp-nfs-backup-schedule.md)  documentation.
+
+### GcpNfsVolumeRestore CR
+
+The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore
+restore operation.
+To learn more, read the [GcpNfsVolumeRestore Custom Resource](./resources/04-90-10-gcp-nfs-volume-restore.md)  documentation.
+
 ### AzureVpcPeering CR
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection 
@@ -47,6 +66,11 @@ between Kyma and the remote Azure Virtual Network. To learn more, read the [Azur
 The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC Peering
 that you can use to peer the Kyma cluster with your Google Cloud project VPC.
 To learn more, read the [GcpVpcPeering Custom Resource](./resources/04-50-gcp-vpc-peering.md) documentation.
+
+### AwsVpcPeering CR
+
+The `awsvpcpeering.cloud-resources.kyma-project.io` CRD describes the AWS peering connection
+between Kyma and the remote AWS Virtual Network. To learn more, read the [AwsVpcPeering Custom Resource](./resources/04-70-10-aws-vpc-peering.md) documentation.
 
 ### GcpRedisInstance CR
 The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Redis instance provisioned inside Google Memorystore.

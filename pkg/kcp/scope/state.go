@@ -15,6 +15,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// NukeScopesWithoutKyma defines if during the Scope reconciliation a Nuke resource will be created
+// if Kyma does not exist. For the normal behavior it should be true, so that Nuke could
+// clean up the Scope's orphaned resources. But since the majority of tests creates Scope
+// but doesn't create Kyma, this flag in test suite setup is set to `false`, to prevent deletion
+// of all the Scope resources and allow tests to function
+var NukeScopesWithoutKyma = true
+
 type StateFactory interface {
 	NewState(req ctrl.Request) *State
 }
@@ -88,7 +95,8 @@ type State struct {
 	shoot          *gardenerTypes.Shoot
 	credentialData map[string]string
 
-	allNetworks *cloudcontrolv1beta1.NetworkList
+	kcpNetworkKyma *cloudcontrolv1beta1.Network
+	kcpNetworkCm   *cloudcontrolv1beta1.Network
 
 	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]

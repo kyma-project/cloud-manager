@@ -18,7 +18,24 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const (
+	LabelScopeGlobalAccountId = "kyma-project.io/global-account-id"
+	LabelScopeSubaccountId    = "kyma-project.io/subaccount-id"
+	LabelScopeShootName       = "kyma-project.io/shoot-name"
+	LabelScopeRegion          = "kyma-project.io/region"
+	LabelScopeBrokerPlanName  = "kyma-project.io/broker-plan-name"
+)
+
+var ScopeLabels = []string{
+	LabelScopeGlobalAccountId,
+	LabelScopeSubaccountId,
+	LabelScopeShootName,
+	LabelScopeRegion,
+	LabelScopeBrokerPlanName,
+}
 
 // ScopeSpec defines the desired state of Scope
 type ScopeSpec struct {
@@ -94,6 +111,7 @@ type GcpWorkers struct {
 	// +kubebuilder:validation:Required
 	Zones []string `json:"zones"`
 }
+
 type GcpNetwork struct {
 	// +optional
 	Nodes string `json:"nodes,omitempty"`
@@ -114,6 +132,30 @@ type AzureScope struct {
 
 	// +kubebuilder:validation:Required
 	VpcNetwork string `json:"vpcNetwork"`
+
+	Network AzureNetwork `json:"network"`
+}
+
+type AzureNetwork struct {
+	// +optional
+	Cidr string `json:"cidr,omitempty"`
+
+	// +optional
+	Zones []AzureNetworkZone `json:"zones,omitempty"`
+
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+}
+
+type AzureNetworkZone struct {
+	Name string `json:"name,omitempty"`
+	Cidr string `json:"cidr,omitempty"`
 }
 
 type AwsScope struct {
@@ -154,15 +196,18 @@ type AwsZone struct {
 
 // ScopeStatus defines the observed state of Scope
 type ScopeStatus struct {
+	// +optional
+	State StatusState `json:"state,omitempty"`
+
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions"`
 
 	// Operation Identifier to track the ServiceUsage Operation
 	// +optional
-	GcpOperations []string `json:"gcpOperations,omitempty"`
+	GcpOperations []string `json:"gcpOperations"`
 }
 
 //+kubebuilder:object:root=true
@@ -186,6 +231,27 @@ func (in *Scope) Conditions() *[]metav1.Condition {
 
 func (in *Scope) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *Scope) CloneForPatchStatus() client.Object {
+	result := &Scope{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Scope",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Status: in.Status,
+	}
+	if result.Status.GcpOperations == nil {
+		result.Status.GcpOperations = []string{}
+	}
+	if result.Status.Conditions == nil {
+		result.Status.Conditions = []metav1.Condition{}
+	}
+	return result
 }
 
 //+kubebuilder:object:root=true

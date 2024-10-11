@@ -4,11 +4,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: gcpnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+      - kyma-cloud-manager
     kind: GcpNfsVolumeBackup
     listKind: GcpNfsVolumeBackupList
     plural: gcpnfsvolumebackups

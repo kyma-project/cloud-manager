@@ -21,7 +21,7 @@ import (
 )
 
 func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
-	return func(ctx context.Context, region, key, secret, role string) (ElastiCacheClient, error) {
+	return func(ctx context.Context, account, region, key, secret, role string) (ElastiCacheClient, error) {
 		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err
@@ -332,6 +332,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		SecurityGroupIds:            options.SecurityGroupIds,
+		AtRestEncryptionEnabled:     aws.Bool(true),
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)

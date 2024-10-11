@@ -12,3 +12,6 @@ body:
       - widget: Labels
         source: remoteRegion
         name: spec.remoteRegion
+#      - widget: Labels
+#        source: deleteRemotePeering
+#        name: spec.deleteRemotePeering

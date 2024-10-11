@@ -2,10 +2,12 @@ package scope
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
-
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/api/googleapi"
+	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -35,6 +37,25 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 	for _, opName := range scope.Status.GcpOperations {
 		logger.WithValues("Scope", scope.Name).Info("Checking Service Enablement GCP Operation Status")
 		op, err := client.GetServiceUsageOperation(ctx, opName)
+		//If the operation is not found, reset the operation to retry
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			if e.Code == 404 {
+				logger.WithValues("operationName", opName).Info("Operation not found in GCP. "+
+					"Removing operation id from status and retry.", "error", err)
+				continue
+				// By not adding it to unfinished, it will be removed and retried
+			}
+			if e.Code == 400 {
+				logger.WithValues("operationName", opName).
+					Info("Operation failed because of invalid request. "+
+						"This can happen because of invalid operation id. "+
+						"Removing operation id from status and retry.", "error", err)
+				// By not adding it to unfinished, it will be removed and retried
+				continue
+
+			}
+		}
 		if err != nil {
 			logger.Error(err, "Error getting Service Usage Operation from GCP. Retry via requeue.")
 			return composed.StopWithRequeueDelay(gcpclient.GcpRetryWaitTime), nil
@@ -52,7 +73,9 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 
 		if op != nil && op.Done {
 			if op.Error != nil {
-				logger.WithValues("operationName", opName).Info("Operation failed. Removing from status.")
+				logger.WithValues("operationName", opName).
+					Info("Operation failed. Removing from status to retry.", "error message",
+						op.Error.Message, "error code", op.Error.Code)
 			}
 		}
 
@@ -60,13 +83,15 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 	scope.Status.GcpOperations = unfinishedOperations
 	if len(unfinishedOperations) > 0 {
 		scope.Status.GcpOperations = unfinishedOperations
-		return composed.UpdateStatus(scope).
+		return composed.PatchStatus(scope).
+			ErrorLogMessage("Error patching KCP Scope status with GCP unfinished operations").
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
 	// Even if all operations are done (which might take us several iterations to figure out), we have issues with failed or not found operations.
 	// We should requeue and verify that all APIs are really enabled.
-	return composed.UpdateStatus(scope).
-		SuccessError(composed.StopWithRequeue).
+	return composed.PatchStatus(scope).
+		ErrorLogMessage("Error patching KCP Scope status with GCP operations").
+		SuccessError(composed.StopWithRequeueDelay(util.Timing.T100ms())).
 		Run(ctx, state)
 }

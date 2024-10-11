@@ -33,7 +33,7 @@ type Providers interface {
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[backupclient.FileBackupClient]
-	VpcPeeringSkrProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
+	VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.ClientProvider[memoryStoreClient.MemorystoreClient]
 }
 
@@ -54,4 +54,6 @@ type Server interface {
 	ClientErrors
 
 	MemoryStoreClientFakeUtils
+
+	VpcPeeringMockClientUtils
 }

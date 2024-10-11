@@ -70,8 +70,9 @@ type CloudResourcesStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-modules,kyma-cloud-manager}
 
 // CloudResources is the Schema for the cloudresources API
 type CloudResources struct {

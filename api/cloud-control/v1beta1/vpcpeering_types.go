@@ -46,7 +46,6 @@ type VpcPeeringSpec struct {
 	Scope ScopeRef `json:"scope"`
 
 	// +optional
-	// Deprecated: use VpcPeeringSpec.Details instead
 	VpcPeering *VpcPeeringInfo `json:"vpcPeering"`
 
 	// +optional
@@ -65,7 +64,11 @@ type VpcPeeringDetails struct {
 
 	PeeringName string `json:"peeringName,omitempty"`
 
+	LocalPeeringName string `json:"localPeeringName,omitempty"`
+
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
+
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1
@@ -172,6 +175,13 @@ func (in *VpcPeering) CloneForPatchStatus() client.Object {
 		},
 		Status: in.Status,
 	}
+}
+
+func (in *VpcPeering) GetLocalPeeringName() string {
+	if len(in.Spec.Details.LocalPeeringName) > 0 {
+		return in.Spec.Details.LocalPeeringName
+	}
+	return in.Name
 }
 
 //+kubebuilder:object:root=true

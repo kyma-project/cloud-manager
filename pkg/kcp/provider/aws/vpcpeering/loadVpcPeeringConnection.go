@@ -16,18 +16,13 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 		return nil, nil
 	}
 
-	list, err := state.client.DescribeVpcPeeringConnections(ctx)
+	peering, err := state.client.DescribeVpcPeeringConnection(ctx, obj.Status.Id)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing AWS peering connections", composed.StopWithRequeue, ctx)
 	}
 
-	for _, c := range list {
-		if obj.Status.Id == ptr.Deref(c.VpcPeeringConnectionId, "") {
-			state.vpcPeering = &c
-			break
-		}
-	}
+	state.vpcPeering = peering
 
 	if state.vpcPeering == nil {
 		return nil, nil

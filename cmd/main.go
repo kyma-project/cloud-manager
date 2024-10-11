@@ -41,6 +41,7 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
@@ -229,7 +230,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsBackupSchedule")
 		os.Exit(1)
 	}
@@ -241,6 +242,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsBackupSchedule")
 		os.Exit(1)
 	}
 
@@ -272,6 +278,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
 		mgr,
 		awsiprangeclient.NewClientProvider(),
+		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
 		env,
@@ -294,6 +301,10 @@ func main() {
 		azurenetworkclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupNukeReconciler(mgr, skrLoop); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
