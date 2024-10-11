@@ -57,7 +57,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  v1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed creating GcpRedis: %s", err),
 		})
-		err = state.UpdateObjStatus(ctx)
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis creation",

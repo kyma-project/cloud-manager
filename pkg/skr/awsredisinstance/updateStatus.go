@@ -28,7 +28,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpHasUpdatingCondition && skrCondErr == nil && !skrHasUpdatingCondition {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateUpdating
-		return composed.UpdateStatus(awsRedisInstance).
+		return composed.PatchStatus(awsRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
@@ -43,7 +43,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if kcpCondErr != nil && skrCondErr == nil {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
-		return composed.UpdateStatus(awsRedisInstance).
+		return composed.PatchStatus(awsRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -60,7 +60,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR AwsRedisInstance status with Ready condition")
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateReady
-		return composed.UpdateStatus(awsRedisInstance).
+		return composed.PatchStatus(awsRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

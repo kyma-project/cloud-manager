@@ -38,7 +38,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
 			Message: fmt.Sprintf("Failed deleting GcpRedis: %s", err),
 		})
-		err = state.UpdateObjStatus(ctx)
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis deleting",
