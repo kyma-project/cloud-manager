@@ -55,6 +55,19 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 	return &item.peering, nil
 }
 
+func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcPeeringConnectionId string) (*ec2types.VpcPeeringConnection, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, x := range s.items {
+		if ptr.Equal(x.peering.VpcPeeringConnectionId, ptr.To(vpcPeeringConnectionId)) {
+			return &x.peering, nil
+		}
+	}
+
+	return nil, nil
+}
+
 func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
