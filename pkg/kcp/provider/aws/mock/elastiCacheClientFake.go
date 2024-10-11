@@ -269,6 +269,7 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		AuthTokenEnabled:         ptr.To(authTokenEnabled),
 		MemberClusters:           []string{options.Name},
 		UserGroupIds:             []string{},
+		AtRestEncryptionEnabled:  ptr.To(true),
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
