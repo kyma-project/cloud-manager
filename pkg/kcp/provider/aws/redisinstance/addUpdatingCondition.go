@@ -35,7 +35,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 
 	if isModifying && !hasUpdatingCondition {
 		logger.Info("Adding updating condition to redis instance.")
-		return composed.UpdateStatus(redisInstance).
+		return composed.PatchStatus(redisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
@@ -49,7 +49,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 
 	if !isModifying && hasUpdatingCondition {
 		logger.Info("Removing updating condition from redis instance")
-		return composed.UpdateStatus(redisInstance).
+		return composed.PatchStatus(redisInstance).
 			RemoveConditions(cloudcontrolv1beta1.ConditionTypeUpdating).
 			SuccessErrorNil().
 			ErrorLogMessage("Failed to remove updating condition from redis instance").
