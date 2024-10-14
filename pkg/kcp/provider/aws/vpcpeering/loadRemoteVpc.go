@@ -30,19 +30,16 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	if err != nil {
 		logger.Error(err, "Error loading remote AWS VPC Networks")
 
-		condition := metav1.Condition{
+		if !composed.SetExclusiveConditions(obj.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
 			Message: err.Error(),
-		}
-
-		if !composed.AnyConditionChanged(obj, condition) {
+		}) {
 			return composed.StopAndForget, nil
 		}
 
 		return composed.PatchStatus(obj).
-			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, st)
@@ -55,19 +52,16 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 			).
 			Info("VPC not found")
 
-		condition := metav1.Condition{
+		if !composed.SetExclusiveConditions(obj.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
 			Message: fmt.Sprintf("AWS VPC ID %s not found", remoteVpcId),
-		}
-
-		if !composed.AnyConditionChanged(obj, condition) {
+		}) {
 			return composed.StopAndForget, nil
 		}
 
 		return composed.PatchStatus(obj).
-			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating VpcPeering status when loading vpc").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, st)
