@@ -177,6 +177,8 @@ data:
       spec.redisConfigs: Redis Configuration
 kind: ConfigMap
 metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
