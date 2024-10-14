@@ -2,6 +2,7 @@ package gcpvpcpeering
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -31,6 +32,10 @@ func deleteKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 		return composed.LogErrorAndReturn(err, "Error deleting KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	// waiting for the VpcPeering to be deleted
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	state.ObjAsGcpVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDeleting
+	return composed.PatchStatus(state.ObjAsGcpVpcPeering()).
+		ErrorLogMessage("[SKR GCP VPCPeering deleteKcpVpcPeering] Error patching status").
+		FailedError(composed.StopWithRequeue).
+		SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
+		Run(ctx, state)
 }

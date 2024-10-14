@@ -81,6 +81,8 @@ data:
          - Initiated
         critical:
          - Disconnected
+        warning:
+         - Deleting
   translations: |-
     en:
       configuration: Configuration
