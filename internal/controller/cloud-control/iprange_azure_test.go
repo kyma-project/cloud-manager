@@ -286,13 +286,6 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 				Should(Succeed())
 		})
 
-		By("And Then KCP CM Network is deleted", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkCm, NewObjActions(),
-					HavingDeletionTimestamp()).
-				Should(Succeed())
-		})
-
 		By("When KCP VpcPeering finalizer is removed", func() {
 			removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, kcpVpcPeering, infra.KCP().Client())
 			Expect(removed).To(BeTrue())
@@ -305,16 +298,11 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 				Should(Succeed())
 		})
 
-		By("Then Azure Virtual Network Link does not exists", func() {
-			virtualNetworkLink, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
-			Expect(virtualNetworkLink).To(BeNil())
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		By("Then Azure Private Dns Zone does not exists", func() {
-			privateDnsZone, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
-			Expect(privateDnsZone).To(BeNil())
-			Expect(err).NotTo(HaveOccurred())
+		By("And Then KCP CM Network is deleted", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkCm, NewObjActions(),
+					HavingDeletionTimestamp()).
+				Should(Succeed())
 		})
 
 		By("When KCP CM Network finalizer is removed", func() {
@@ -334,6 +322,19 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange).
 				Should(Succeed())
 		})
+
+		By("Then Azure Virtual Network Link does not exists", func() {
+			virtualNetworkLink, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
+			Expect(virtualNetworkLink).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("Then Azure Private Dns Zone does not exists", func() {
+			privateDnsZone, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
+			Expect(privateDnsZone).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 	})
 
 })

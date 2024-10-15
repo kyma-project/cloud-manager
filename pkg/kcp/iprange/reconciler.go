@@ -109,8 +109,8 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 				composed.If(
 					composed.MarkedForDeletionPredicate,
 					kymaPeeringDelete,
-					kcpNetworkDelete,
 					kymaPeeringDeleteWait,
+					kcpNetworkDelete,
 					kcpNetworkDeleteWait,
 					actions.PatchRemoveFinalizer,
 				),
