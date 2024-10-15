@@ -54,6 +54,7 @@ import (
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -247,6 +248,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsBackupSchedule")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(skrRegistry, awsnfsrestoreclient.NewClientProvider(), env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeRestore")
 		os.Exit(1)
 	}
 
