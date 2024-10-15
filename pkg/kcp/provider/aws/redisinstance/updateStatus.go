@@ -27,8 +27,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	)
 	redisInstance.Status.ReadEndpoint = readEndpoint
 
+	authString := ""
 	if state.authTokenValue != nil {
-		redisInstance.Status.AuthString = ptr.Deref(state.authTokenValue.SecretString, "")
+		authString = ptr.Deref(state.authTokenValue.SecretString, "")
+	}
+	if redisInstance.Status.AuthString != authString {
+		redisInstance.Status.AuthString = authString
 	}
 
 	return composed.PatchStatus(redisInstance).
