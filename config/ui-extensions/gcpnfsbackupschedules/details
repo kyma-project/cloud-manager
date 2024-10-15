@@ -52,3 +52,11 @@ body:
       - widget: Labels
         source: uid
         name: spec.nfsVolumeRef.uid
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels
