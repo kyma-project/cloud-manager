@@ -7,7 +7,7 @@ en:
   spec.tier: Tier
   spec.authEnabled: Auth Enabled
   spec.ipRange: Ip Range
-  spec.ipRange.name: Ip Range Name
+  spec.ipRange.name: Name
   spec.transitEncryptionMode: Transit Encryption Mode
   spec.authSecret: Authentication Secret
   spec.authSecret.name: Name
