@@ -62,6 +62,7 @@ func (r *reconciler) newAction() composed.Action {
 				waitSkrStatusReady,
 				modifyKcpRedisInstance,
 				createAuthSecret,
+				modifyAuthSecret,
 			),
 			composed.ComposeActions(
 				"awsRedisInstance-delete",
