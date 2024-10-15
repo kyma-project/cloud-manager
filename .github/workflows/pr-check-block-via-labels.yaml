@@ -9,6 +9,11 @@ on:
       - opened
       - reopened
 
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+
 jobs:
   fail-for-labels:
     runs-on: ubuntu-latest
