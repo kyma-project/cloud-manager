@@ -2,6 +2,7 @@ package allocate
 
 import (
 	"errors"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 )
 
@@ -34,7 +35,11 @@ func AllocateCidr(maskOnes int, existingRanges []string) (string, error) {
 		return "", err
 	}
 
-	current, _ := parseRange(existingRanges[0])
+	var current *rng
+	current, err = parseRange(existingRanges[0])
+	if err != nil {
+		return "", fmt.Errorf("failed to parse existing ranges: %w", err)
+	}
 	current.nextWithOnes(maskOnes)
 	for occupied.overlaps(current) {
 		current = current.next()
