@@ -25,7 +25,7 @@ jobs:
             const { pullRequest } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.issue.number
+              pull_number: context.payload.pull_request.number
             });
 
             const blockingKeywords = ["do-not-merge", "hold"];
