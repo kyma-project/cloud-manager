@@ -21,7 +21,7 @@ func virtualNetworkLinkLoad(ctx context.Context, st composed.State) (error, cont
 	}
 	logger.Info("Loading Azure virtual network link")
 	resourceGroupName := state.resourceGroupName
-	privateDnsZoneName := azureutil.NewPrivateDnsZoneName(state.ObjAsIpRange().Name)
+	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
 	virtualNetworkLinkName := state.ObjAsIpRange().Name
 	virtualNetworkLinkInstance, err := state.azureClient.GetVirtualNetworkLink(ctx, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName)
 	if err != nil {

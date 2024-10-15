@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
-	rediscommon "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/common"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -33,7 +32,6 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"redisInstance",
-			rediscommon.LoadIpRange,
 			actions.AddFinalizer,
 			loadRedis,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),

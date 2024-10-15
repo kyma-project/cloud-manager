@@ -1,4 +1,4 @@
-package common
+package redisinstance
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func LoadIpRange(ctx context.Context, st composed.State) (error, context.Context) {
+func loadIpRange(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(types2.State)
 	logger := composed.LoggerFromCtx(ctx)
 

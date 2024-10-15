@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	"k8s.io/utils/ptr"
 	"time"
 
@@ -40,6 +41,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithName(kcpIpRangeName),
+					WithKcpIpRangeRemoteRef("some-remote-ref"),
+					WithKcpIpRangeNetwork("kcpNetworkCm.Name"),
 					WithScope(scope.Name),
 				).
 				Should(Succeed())
@@ -58,7 +61,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		redisCapacity := 2
 
-		resourceGroupName := fmt.Sprintf("cm-redis-%s", name)
+		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 		var redis *armredis.ResourceInfo
 		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
 
@@ -138,6 +141,18 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(redisInstance.Status.AuthString).To(Equal(keys[0]))
 		})
 
+		By("And Then Private End Point is created", func() {
+			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(pep).NotTo(BeNil())
+		})
+
+		By("And Then Private Dns Zone Group is created", func() {
+			pep, err := azureMock.GetPrivateDnsZoneGroup(infra.Ctx(), resourceGroupName, name, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(pep).ToNot(BeNil())
+		})
+
 		// DELETE
 
 		By("When KCP RedisInstance is deleted", func() {
@@ -169,6 +184,18 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
 				Should(Succeed(), "expected RedisInstance not to exist (be deleted), but it still exists")
+		})
+
+		By("Then Private Dns Zone Group is deleted", func() {
+			dnsZoneGroup, err := azureMock.GetPrivateDnsZoneGroup(infra.Ctx(), resourceGroupName, redisInstance.Name, redisInstance.Name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(dnsZoneGroup).To(BeNil())
+		})
+
+		By("Then Private Private End Point is deleted", func() {
+			dnsZoneGroup, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, redisInstance.Name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(dnsZoneGroup).To(BeNil())
 		})
 	})
 

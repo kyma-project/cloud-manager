@@ -100,7 +100,7 @@ func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName,
 		return err
 	}
 
-	props.ProvisioningState = ptr.To(armredis.ProvisioningStateCreating)
+	props.ProvisioningState = ptr.To(armredis.ProvisioningStateSucceeded)
 	props.HostName = ptr.To("redis.tcp")
 	props.Port = ptr.To(int32(6379))
 	if props.SKU == nil {

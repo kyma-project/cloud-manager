@@ -1,4 +1,4 @@
-package iprange
+package redisinstance
 
 import (
 	"context"
@@ -6,45 +6,44 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func privateDnsZoneLoad(ctx context.Context, st composed.State) (error, context.Context) {
+func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	if state.privateDnsZone != nil {
-		logger.Info("Azure Private DnsZone already loaded")
+	if state.privateEndPoint != nil {
+		logger.Info("Azure Private EndPoint already loaded")
 		return nil, nil
 	}
-	logger.Info("Loading Azure Private DnsZone")
+	logger.Info("Loading Azure Private EndPoint")
+	privateEndPointName := state.ObjAsRedisInstance().Name
 	resourceGroupName := state.resourceGroupName
-	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
-	privateDnsZoneInstance, err := state.azureClient.GetPrivateDnsZone(ctx, resourceGroupName, privateDnsZoneName)
+	privateEndPointInstance, err := state.client.GetPrivateEndPoint(ctx, resourceGroupName, privateEndPointName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			logger.Info("Azure Private DnsZone instance not found")
+			logger.Info("Azure Private EndPoint instance not found")
 			return nil, nil
 		}
-		logger.Error(err, "Error loading Azure Private DnsZone")
-		meta.SetStatusCondition(state.ObjAsIpRange().Conditions(), metav1.Condition{
+		logger.Error(err, "Error loading Azure Private EndPoint")
+		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ConditionTypeError,
-			Message: fmt.Sprintf("Failed loading AzureIpRange: %s", err),
+			Message: fmt.Sprintf("Failed loading AzureRedis: %s", err),
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating IpRangeInstance status due failed azure Private DnsZone loading",
+				"Error updating RedisInstance status due failed azure Private EndPoint loading",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,
 			)
 		}
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
-	state.privateDnsZone = privateDnsZoneInstance
+	state.privateEndPoint = privateEndPointInstance
 	return nil, nil
 }

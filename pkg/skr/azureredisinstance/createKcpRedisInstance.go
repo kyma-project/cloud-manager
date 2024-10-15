@@ -37,6 +37,9 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},
+			IpRange: cloudcontrolv1beta1.IpRangeRef{
+				Name: state.SkrIpRange.Status.Id,
+			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
 					SKU:                cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},

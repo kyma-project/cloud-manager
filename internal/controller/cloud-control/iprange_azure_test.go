@@ -209,7 +209,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 
 		var virtualNetworkLink *armprivatedns.VirtualNetworkLink
 		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
-		privateDnsZoneName := azureutil.NewPrivateDnsZoneName(kcpIpRangeName)
+		privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
 		By("Then Azure Virtual Network Link is created", func() {
 			Eventually(func() error {
 				vnl, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
