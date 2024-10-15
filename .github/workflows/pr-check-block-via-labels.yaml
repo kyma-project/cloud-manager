@@ -22,10 +22,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const pullNumber = context.payload.pull_request.number;
             const { data: pullRequest } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
+              pull_number: pullNumber,
             });
 
             const blockingKeywords = ["do-not-merge", "hold"];
@@ -38,3 +39,5 @@ jobs:
                 }
               })
             )
+
+            console.log(`No blocking labels found for PR ${pullNumber}`);
