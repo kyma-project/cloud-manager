@@ -71,3 +71,11 @@ body:
       - name: spec.ipRange.name
         source: name
         widget: Labels
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels
