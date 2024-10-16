@@ -93,17 +93,17 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 
 		if options.provider != nil {
-			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", *options.provider))
+			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", ptr.Deref(options.provider, "")))
 			instlr := &installer{
 				skrProvidersPath: config.SkrRuntimeConfig.ProvidersDir,
 				scheme:           skrManager.GetScheme(),
 				logger:           logger,
 			}
-			err = instlr.Handle(ctx, string(*options.provider), skrManager)
+			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), skrManager)
 			if err != nil {
 				err = fmt.Errorf("installer error: %w", err)
 				logger.
-					WithValues("provider", options.provider).
+					WithValues("optionsProvider", ptr.Deref(options.provider, "")).
 					Error(err, "Error installing dependencies")
 				return
 			}
@@ -135,7 +135,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					WithValues(
 						"object", fmt.Sprintf("%T", indexer.Obj()),
 						"field", indexer.Field(),
-						"provider", ptr.Deref(options.provider, ""),
+						"optionsProvider", ptr.Deref(options.provider, ""),
 					).
 					Info("Starting indexer")
 			} else {
@@ -143,7 +143,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 					WithValues(
 						"object", fmt.Sprintf("%T", indexer.Obj()),
 						"field", indexer.Field(),
-						"provider", string(*options.provider),
+						"optionsProvider", ptr.Deref(options.provider, ""),
 					).
 					Info("Not creating indexer due to disabled API")
 			}
@@ -166,15 +166,15 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				}
 				logger.
 					WithValues(
-						"object", fmt.Sprintf("%T", b.GetForObj()),
-						"provider", ptr.Deref(options.provider, ""),
+						"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
+						"optionsProvider", ptr.Deref(options.provider, ""),
 					).
 					Info("Starting controller")
 			} else {
 				logger.
 					WithValues(
-						"object", fmt.Sprintf("%T", b.GetForObj()),
-						"provider", string(*options.provider),
+						"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
+						"optionsProvider", ptr.Deref(options.provider, ""),
 					).
 					Info("Not starting controller due to disabled API")
 			}
