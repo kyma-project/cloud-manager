@@ -1,14 +1,29 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"reflect"
+)
 
 func CastInterfaceToString(x interface{}) string {
 	if x == nil {
 		return ""
 	}
-	s, ok := x.(string)
-	if !ok {
-		return fmt.Sprintf("%v", x)
+	switch x.(type) {
+	case string:
+		return x.(string)
+	case *string:
+		return *x.(*string)
+	case cloudcontrolv1beta1.ProviderType:
+		return string(x.(cloudcontrolv1beta1.ProviderType))
+	case *cloudcontrolv1beta1.ProviderType:
+		return string(*x.(*cloudcontrolv1beta1.ProviderType))
+	default:
+		v := reflect.ValueOf(x)
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		return fmt.Sprintf("%v", v.Interface())
 	}
-	return s
 }
