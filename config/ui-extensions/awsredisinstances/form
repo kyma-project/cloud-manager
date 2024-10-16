@@ -15,10 +15,6 @@
   name: spec.preferredMaintenanceWindow
   required: false
 
-- path: spec.transitEncryptionEnabled
-  name: spec.transitEncryptionEnabled
-  required: false
-  widget: Switch
 
 - path: spec.authEnabled
   name: spec.authEnabledFull
