@@ -18,9 +18,6 @@ data:
           - name: spec.authEnabled
             source: authEnabled
             widget: Labels
-          - name: spec.transitEncryptionMode
-            source: transitEncryptionMode
-            widget: Labels
 
 
       - name: spec.redisConfigs
@@ -91,11 +88,6 @@ data:
     - path: spec.ipRange.name
       name: spec.ipRange.name
       required: false
-    - path: spec.transitEncryptionMode
-      name: spec.transitEncryptionMode
-      required: false
-      disableOnEdit: true
-      description: Immutable once set.
 
     - path: spec.redisConfigs
       name: spec.redisConfigs
@@ -178,7 +170,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
