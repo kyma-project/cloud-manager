@@ -66,7 +66,6 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpGcpRedisInstanceTier("BASIC"),
 					WithKcpGcpRedisInstanceMemorySizeGb(5),
 					WithKcpGcpRedisInstanceRedisVersion("REDIS_7_0"),
-					WithKcpGcpRedisInstanceTransitEncryptionMode("SERVER_AUTHENTICATION"),
 					WithKcpGcpRedisInstanceConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),

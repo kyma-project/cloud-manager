@@ -75,18 +75,6 @@ func WithGcpRedisInstanceAuthEnabled(authEnabled bool) ObjAction {
 	}
 }
 
-func WithGcpRedisInstanceTransitEncryptionMode(transitEncryptionMode string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
-				gcpRedisInstance.Spec.TransitEncryptionMode = transitEncryptionMode
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceTransitEncryptionMode", obj))
-		},
-	}
-}
-
 func WithGcpRedisInstanceRedisConfigs(redisConfigs map[string]string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

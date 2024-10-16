@@ -116,18 +116,6 @@ func WithKcpGcpRedisInstanceRedisVersion(redisVersion string) ObjAction {
 	}
 }
 
-func WithKcpGcpRedisInstanceTransitEncryptionMode(transitEncryptionMode string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				gcpRedisInstance.Spec.Instance.Gcp.TransitEncryptionMode = transitEncryptionMode
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithKcpGcpRedisInstanceTransitEncryption", obj))
-		},
-	}
-}
-
 func WithKcpGcpRedisInstanceConfigs(redisConfigs map[string]string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
