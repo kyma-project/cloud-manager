@@ -198,18 +198,6 @@ func WithKcpAwsAuthEnabled(authEnabled bool) ObjAction {
 	}
 }
 
-func WithKcpAwsTransitEncryptionEnabled(transitEncryptionEnabled bool) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				gcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled = transitEncryptionEnabled
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithKcpAwsTransitEncryptionEnabled", obj))
-		},
-	}
-}
-
 func WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow *string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
