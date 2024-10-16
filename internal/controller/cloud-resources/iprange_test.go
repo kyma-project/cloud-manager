@@ -1075,7 +1075,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					WithGcpRedisInstanceMemorySizeGb(5),
 					WithGcpRedisInstanceTier("BASIC"),
 					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
-					WithGcpRedisInstanceTransitEncryptionMode("DISABLED"),
 				).
 				Should(Succeed(), "failed creating GcpRedisInstance")
 
