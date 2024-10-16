@@ -48,7 +48,6 @@ func New(stateFactory StateFactory) composed.Action {
 					waitUserGroupActive,
 					modifyCacheNodeType,
 					modifyAutoMinorVersionUpgrade,
-					modifyTransitEncryptionEnabled,
 					modifyPreferredMaintenanceWindow,
 					modifyAuthEnabled,
 					updateElastiCacheCluster,

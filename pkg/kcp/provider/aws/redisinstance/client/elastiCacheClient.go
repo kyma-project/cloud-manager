@@ -43,7 +43,6 @@ type CreateElastiCacheClusterOptions struct {
 	EngineVersion              string
 	AutoMinorVersionUpgrade    bool
 	AuthTokenSecretString      *string
-	TransitEncryptionEnabled   bool
 	PreferredMaintenanceWindow *string
 	SecurityGroupIds           []string
 }
@@ -53,8 +52,6 @@ type ModifyElastiCacheClusterOptions struct {
 	EngineVersion              *string
 	AutoMinorVersionUpgrade    *bool
 	PreferredMaintenanceWindow *string
-	TransitEncryptionEnabled   *bool
-	TransitEncryptionMode      *elasticacheTypes.TransitEncryptionMode
 	AuthTokenSecretString      *string
 	UserGroupIdsToAdd          []string
 	UserGroupIdsToRemove       []string
@@ -329,7 +326,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		EngineVersion:               aws.String(options.EngineVersion),
 		AutoMinorVersionUpgrade:     aws.Bool(options.AutoMinorVersionUpgrade),
 		AuthToken:                   options.AuthTokenSecretString,
-		TransitEncryptionEnabled:    aws.Bool(options.TransitEncryptionEnabled),
+		TransitEncryptionEnabled:    aws.Bool(true),
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		SecurityGroupIds:            options.SecurityGroupIds,
 		AtRestEncryptionEnabled:     aws.Bool(true),
@@ -360,12 +357,6 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	}
 	if options.AutoMinorVersionUpgrade != nil {
 		params.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
-	}
-	if options.TransitEncryptionEnabled != nil {
-		params.TransitEncryptionEnabled = options.TransitEncryptionEnabled
-	}
-	if options.TransitEncryptionMode != nil {
-		params.TransitEncryptionMode = *options.TransitEncryptionMode
 	}
 	if options.AuthTokenSecretString != nil {
 		params.AuthToken = options.AuthTokenSecretString

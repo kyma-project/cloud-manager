@@ -59,7 +59,6 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
-		transitEncryptionEnabled := true
 		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
 		authEnabled := true
 
@@ -79,7 +78,6 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpAwsEngineVersion(engineVersion),
 					WithKcpAwsAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
 					WithKcpAwsAuthEnabled(authEnabled),
-					WithKcpAwsTransitEncryptionEnabled(transitEncryptionEnabled),
 					WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithKcpAwsParameters(parameters),
 				).

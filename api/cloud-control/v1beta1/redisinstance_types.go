@@ -205,7 +205,6 @@ type RedisInstanceAzure struct {
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
 	CacheNodeType string `json:"cacheNodeType"`
@@ -218,10 +217,6 @@ type RedisInstanceAws struct {
 	// +optional
 	// +kubebuilder:default=false
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
-
-	// +optional
-	// +kubebuilder:default=false
-	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
 	// +optional
 	// +kubebuilder:default=false
