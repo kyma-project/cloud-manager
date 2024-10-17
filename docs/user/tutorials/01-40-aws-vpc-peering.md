@@ -15,7 +15,7 @@ create those resources.
 1.  Set the default AWS CLI profile.
     ```shell
     export AWS_PROFILE={PROFILE_NAME}
-    export AWS_DEFAULT_REGION={REGION}
+    export AWS_REGION={REGION}
     ```
    
 2.  Create a trust policy document.
@@ -79,7 +79,7 @@ create those resources.
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}')
     export NODE_NETWORK=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.nodeNetwork}')
     export VPC_NAME=my-vpc
-    export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=""},{Key=Name,Value=$VPC_NAME}] --query Vpc.VpcId --output text)  
+    export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications "ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=''},{Key=Name,Value=$VPC_NAME}]" --query Vpc.VpcId --output text)
     ```
 8.  Create a subnet.
     ```shell
@@ -106,9 +106,9 @@ create those resources.
     metadata:
       name: peering-to-my-vpc
     spec:
-      remoteAccount: $ACCOUNT_ID
-      remoteRegion: $AWS_DEFAULT_REGION
-      remoteVnet: $VPC_ID
+      remoteAccountId: "$ACCOUNT_ID"
+      remoteRegion: "$AWS_DEFAULT_REGION"
+      remoteVpcId: "$VPC_ID"
     EOF
     ```
 
@@ -220,6 +220,7 @@ create those resources.
     1. Terminate the instance.
        ```shell
        aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+       aws ec2 wait instance-terminated --instance-ids $INSTANCE_ID
        ```
     2. Delete the subnet.
        ```shell
