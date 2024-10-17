@@ -9,6 +9,11 @@ import (
 func loadRemoteRouteTables(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	routeTables, err := state.remoteClient.DescribeRouteTables(ctx, *state.remoteVpc.VpcId)
 
 	if err != nil {
