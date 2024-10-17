@@ -16,7 +16,6 @@ spec:
   # optional fields
   redisVersion: REDIS_7_0
   authEnabled: true
-  transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"
