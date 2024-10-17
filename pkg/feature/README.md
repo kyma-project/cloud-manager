@@ -38,4 +38,5 @@ The evaluation context is stored in the golang context and is built using the [`
 | nfs       | All NFS Volume related features.        |
 | nfsBackup | All NFS Volume Backup related features. |
 | peering   | All VPC Peering related features.       |
+| redis     | All Redis Peering related features.       |
 
