@@ -5,6 +5,7 @@
 ```json
 {
   "Actions": [
+    "Microsoft.Cache/redis/delete",
     "Microsoft.Cache/redis/listKeys/action",
     "Microsoft.Cache/redis/privateEndpointConnectionsApproval/action",
     "Microsoft.Cache/redis/read",
@@ -37,8 +38,7 @@
     "Microsoft.Network/virtualNetworks/write",
     "Microsoft.Resources/subscriptions/resourceGroups/delete",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
-    "Microsoft.Resources/subscriptions/resourceGroups/write",
-    "Microsoft.Cache/redis/delete"
+    "Microsoft.Resources/subscriptions/resourceGroups/write"
   ]
 }
 ```
