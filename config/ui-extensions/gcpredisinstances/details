@@ -15,9 +15,6 @@ body:
       - name: spec.authEnabled
         source: authEnabled
         widget: Labels
-      - name: spec.transitEncryptionMode
-        source: transitEncryptionMode
-        widget: Labels
 
 
   - name: spec.redisConfigs

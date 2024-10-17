@@ -21,9 +21,6 @@ data:
           - name: spec.preferredMaintenanceWindow
             source: preferredMaintenanceWindow
             widget: Labels
-          - name: spec.transitEncryptionEnabled
-            source: transitEncryptionEnabled
-            widget: Labels
 
       - name: spec.ipRange
         widget: Panel
@@ -73,10 +70,6 @@ data:
       name: spec.preferredMaintenanceWindow
       required: false
 
-    - path: spec.transitEncryptionEnabled
-      name: spec.transitEncryptionEnabled
-      required: false
-      widget: Switch
 
     - path: spec.authEnabled
       name: spec.authEnabledFull
@@ -153,7 +146,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

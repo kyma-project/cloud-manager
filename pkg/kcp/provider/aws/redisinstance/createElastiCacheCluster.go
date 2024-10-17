@@ -58,7 +58,6 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		EngineVersion:              redisInstance.Spec.Instance.Aws.EngineVersion,
 		AutoMinorVersionUpgrade:    redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
 		AuthTokenSecretString:      authTokenSecetString,
-		TransitEncryptionEnabled:   redisInstance.Spec.Instance.Aws.TransitEncryptionEnabled,
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 		SecurityGroupIds:           []string{state.securityGroupId},
 	})

@@ -86,13 +86,6 @@ type GcpRedisInstanceSpec struct {
 	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
 
-	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
-	// +optional
-	// +kubebuilder:default=DISABLED
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
-	TransitEncryptionMode string `json:"transitEncryptionMode"`
-
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
 	// +optional
