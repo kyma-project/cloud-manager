@@ -5,6 +5,7 @@ Cloud Manager custom resources:
 * [AwsNfsVolume Custom Resource](./04-20-10-aws-nfs-volume.md)
 * [AwsNfsVolumeBackup Custom Resource](./04-110-10-aws-nfs-volume-backup.md)
 * [AwsNfsBackupSchedule Custom Resource](./04-120-10-aws-nfs-backup-schedule.md)
+* [AwsNfsVolumeRestore Custom Resource](./04-100-10-aws-nfs-volume-restore.md)
 * [GcpNfsVolume Custom Resource](./04-30-10-gcp-nfs-volume.md)
 * [GcpNfsVolumeBackup Custom Resource](./04-70-10-gcp-nfs-volume-backup.md)
 * [GcpNfsBackupSchedule Custom Resource](./04-30-30-gcp-nfs-backup-schedule.md)

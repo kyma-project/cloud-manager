@@ -44,6 +44,12 @@ The `awsnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the use
 of the `AwsNfsVolume` instances at regular intervals.
 To learn more, read the [AwsNfsBackupSchedule Custom Resource](./resources/04-120-10-aws-nfs-backup-schedule.md)  documentation.
 
+### AwsNfsVolumeRestore CR
+
+The `awsnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore
+restore operation.
+To learn more, read the [AwsNfsVolumeRestore Custom Resource](./resources/04-100-10-aws-nfs-volume-restore.md)  documentation.
+
 ### GcpNfsVolume CR
 
 The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filestore
