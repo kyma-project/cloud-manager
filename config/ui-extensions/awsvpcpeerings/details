@@ -15,3 +15,11 @@ body:
 #      - widget: Labels
 #        source: deleteRemotePeering
 #        name: spec.deleteRemotePeering
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels

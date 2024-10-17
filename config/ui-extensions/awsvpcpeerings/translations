@@ -4,3 +4,5 @@ en:
   spec.remoteVpcId: Remote VPC Id
   spec.remoteRegion: Remote Region
   spec.deleteRemotePeering: Delete Remote Peering
+  status: Status
+  status.state: State

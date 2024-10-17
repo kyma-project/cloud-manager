@@ -1,5 +1,6 @@
 en:
   configuration: Configuration
+  status: Status
   status.state: State
   spec.enableNonSslPort: Enable Non SSL Port
   spec.replicasPerPrimary: Replicas Per Primary

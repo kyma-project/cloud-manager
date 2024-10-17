@@ -55,6 +55,14 @@ data:
           - widget: Labels
             source: uid
             name: spec.nfsVolumeRef.uid
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.state
+            source: state
+            widget: Labels
   form: |
     - path: spec.nfsVolumeRef
       name: nfsVolumeRef
@@ -119,6 +127,7 @@ data:
       nfsVolumeRef: NFS Volume Reference
       spec.schedule: Schedule
       status.lastCreateRun: Last Run Time
+      status: Status
       status.state: State
       spec.nfsVolumeRef.apiVersion: API Version
       spec.nfsVolumeRef.kind: Kind
@@ -137,7 +146,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
