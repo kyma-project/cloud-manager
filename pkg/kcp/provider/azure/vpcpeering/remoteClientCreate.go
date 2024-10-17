@@ -14,6 +14,11 @@ func remoteClientCreate(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// remote client can't be created if remote network is not found
+	if state.remoteNetwork == nil {
+		return nil, nil
+	}
+
 	tenantId := state.remoteNetwork.Status.Network.Azure.TenantId
 	if tenantId == "" {
 		tenantId = state.Scope().Spec.Scope.Azure.TenantId
