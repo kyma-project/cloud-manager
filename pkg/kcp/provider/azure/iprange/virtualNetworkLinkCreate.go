@@ -47,7 +47,7 @@ func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, co
 	}
 
 	if err != nil {
-		logger.Error(err, "Error creating Azure KCP IpRange virtualNetworkLink")
+		logger.Error(err, "Error creating Azure KCP IpRange virtualNetworkLink", ctx)
 
 		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
 
