@@ -38,6 +38,10 @@ func TestCastInterfaceToString(t *testing.T) {
 			s: string(cloudcontrolv1beta1.ProviderGCP),
 		},
 		{
+			t: "*cloudcontrolv1beta1.ProviderType nil",
+			x: (*cloudcontrolv1beta1.ProviderType)(nil),
+			s: "",
+		}, {
 			t: "someStringishType",
 			x: someStringishType("value"),
 			s: "value",
@@ -48,6 +52,11 @@ func TestCastInterfaceToString(t *testing.T) {
 			s: "value",
 		},
 		{
+			t: "*someStringishType nil",
+			x: (*someStringishType)(nil),
+			s: "",
+		},
+		{
 			t: "someIntishType",
 			x: someIntishType(123),
 			s: "123",
@@ -56,6 +65,16 @@ func TestCastInterfaceToString(t *testing.T) {
 			t: "*someIntishType",
 			x: ptr.To(someIntishType(123)),
 			s: "123",
+		},
+		{
+			t: "*someIntishType nil",
+			x: (*someIntishType)(nil),
+			s: "",
+		},
+		{
+			t: "nil",
+			x: nil,
+			s: "",
 		},
 	}
 
