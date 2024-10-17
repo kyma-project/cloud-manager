@@ -7,20 +7,20 @@ import (
 )
 
 func CastInterfaceToString(x interface{}) string {
-	if x == nil {
+	v := reflect.ValueOf(x)
+	if x == nil || (v.Kind() == reflect.Ptr && v.IsNil()) || (v.Interface() == nil) {
 		return ""
 	}
-	switch x.(type) {
+	switch xx := x.(type) {
 	case string:
-		return x.(string)
+		return xx
 	case *string:
-		return *x.(*string)
+		return *xx
 	case cloudcontrolv1beta1.ProviderType:
-		return string(x.(cloudcontrolv1beta1.ProviderType))
+		return string(xx)
 	case *cloudcontrolv1beta1.ProviderType:
-		return string(*x.(*cloudcontrolv1beta1.ProviderType))
+		return string(*xx)
 	default:
-		v := reflect.ValueOf(x)
 		if v.Kind() == reflect.Ptr {
 			v = v.Elem()
 		}

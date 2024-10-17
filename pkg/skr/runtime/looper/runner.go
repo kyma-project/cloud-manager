@@ -28,6 +28,12 @@ type RunOptions struct {
 
 type RunOption = func(options *RunOptions)
 
+func WithoutProvider() RunOption {
+	return func(options *RunOptions) {
+		options.provider = nil
+	}
+}
+
 func WithProvider(provider cloudcontrolv1beta1.ProviderType) RunOption {
 	return func(options *RunOptions) {
 		options.checkSkrReadiness = true

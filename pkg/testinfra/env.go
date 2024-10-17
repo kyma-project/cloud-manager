@@ -103,7 +103,7 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
 	go func() {
 		defer ginkgo.GinkgoRecover()
-		err = ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute))
+		err = ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute), looper.WithoutProvider())
 		if err != nil {
 			ie.skrManager.GetLogger().Error(err, "Error running SKR Runner")
 		}
