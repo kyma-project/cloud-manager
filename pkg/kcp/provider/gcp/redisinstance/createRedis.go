@@ -35,16 +35,15 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	).Build()
 
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
-		VPCNetworkFullName:    vpcNetworkFullName,
-		IPRangeName:           state.IpRange().Status.Id,
-		MemorySizeGb:          redisInstance.Spec.Instance.Gcp.MemorySizeGb,
-		Tier:                  redisInstance.Spec.Instance.Gcp.Tier,
-		RedisVersion:          redisInstance.Spec.Instance.Gcp.RedisVersion,
-		AuthEnabled:           redisInstance.Spec.Instance.Gcp.AuthEnabled,
-		TransitEncryptionMode: redisInstance.Spec.Instance.Gcp.TransitEncryptionMode,
-		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs,
-		MaintenancePolicy:     redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
-		Labels:                labels,
+		VPCNetworkFullName: vpcNetworkFullName,
+		IPRangeName:        state.IpRange().Status.Id,
+		MemorySizeGb:       redisInstance.Spec.Instance.Gcp.MemorySizeGb,
+		Tier:               redisInstance.Spec.Instance.Gcp.Tier,
+		RedisVersion:       redisInstance.Spec.Instance.Gcp.RedisVersion,
+		AuthEnabled:        redisInstance.Spec.Instance.Gcp.AuthEnabled,
+		RedisConfigs:       redisInstance.Spec.Instance.Gcp.RedisConfigs,
+		MaintenancePolicy:  redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
+		Labels:             labels,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)

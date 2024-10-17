@@ -167,13 +167,6 @@ type RedisInstanceGcp struct {
 	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
 
-	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
-	// +optional
-	// +kubebuilder:default=DISABLED
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
-	TransitEncryptionMode string `json:"transitEncryptionMode"`
-
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
 	// +optional
@@ -205,7 +198,6 @@ type RedisInstanceAzure struct {
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
 	CacheNodeType string `json:"cacheNodeType"`
@@ -218,10 +210,6 @@ type RedisInstanceAws struct {
 	// +optional
 	// +kubebuilder:default=false
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
-
-	// +optional
-	// +kubebuilder:default=false
-	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
 	// +optional
 	// +kubebuilder:default=false
