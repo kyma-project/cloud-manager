@@ -183,9 +183,6 @@ type RedisInstanceAzure struct {
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional
-	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
-
-	// +optional
 	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 
 	// +optional

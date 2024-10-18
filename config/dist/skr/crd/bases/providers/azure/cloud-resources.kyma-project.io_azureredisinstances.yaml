@@ -46,12 +46,6 @@ spec:
             spec:
               description: AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
               properties:
-                enableNonSslPort:
-                  default: false
-                  type: boolean
-                  x-kubernetes-validations:
-                    - message: EnableNonSslPort is immutable.
-                      rule: (self == oldSelf)
                 ipRange:
                   properties:
                     name:
