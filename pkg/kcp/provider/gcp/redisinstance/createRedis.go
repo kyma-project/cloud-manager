@@ -53,7 +53,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ConditionTypeError,
+			Reason:  v1beta1.ReasonGcpError,
 			Message: fmt.Sprintf("Failed creating GcpRedis: %s", err),
 		})
 		err = state.PatchObjStatus(ctx)

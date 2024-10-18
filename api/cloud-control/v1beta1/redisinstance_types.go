@@ -252,7 +252,7 @@ type RedisInstanceStatus struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 //+kubebuilder:object:root=true
@@ -284,7 +284,7 @@ func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *RedisInstance) CloneForPatchStatus() client.Object {
-	return &RedisInstance{
+	result := &RedisInstance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "RedisInstance",
 			APIVersion: GroupVersion.String(),
@@ -295,6 +295,12 @@ func (in *RedisInstance) CloneForPatchStatus() client.Object {
 		},
 		Status: in.Status,
 	}
+
+	if result.Status.Conditions == nil {
+		result.Status.Conditions = []metav1.Condition{}
+	}
+
+	return result
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {
