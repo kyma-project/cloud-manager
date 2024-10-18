@@ -14,7 +14,7 @@ If the default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
 When creating GcpRedisInstance, two fields are mandatry: `memorySizeGb`, and `tier`.
-As in-transit encryption is always enabled, communication with Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
 
 Optionally, you can specify the `redisVersion`, `authEnabled`, `transitEncryption`, `redisConfigs`, and `maintenancePolicy` fields.
 

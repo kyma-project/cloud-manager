@@ -14,7 +14,7 @@ Manually create a non-default IpRange with specified CIDR and use it only in adv
 When creating AwsRedisInstance, there is only one mandatory field: `cacheNodeType`.
 It specifies the underlying machine that will be used for the cache.
 
-As in-transit encryption is always enabled, communication with Redis instance requires a trusted CA (Certificate Authority). It should be installed on the container (e.g. via `apt-get install -y ca-certificates && update-ca-certificate`).
+As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
 
 Optionally, you can specify the `engineVersion`, `authEnabled`, `transitEncryptionEnabled`, `parameters`, and `preferredMaintenanceWindow` fields.
 

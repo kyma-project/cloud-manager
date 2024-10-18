@@ -49,7 +49,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
    kubectl exec -i -t awsredisinstance-minimal-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
-4. Install and update ca-certificates:
+4. Install and update CA certificates:
 
    ```bash
    apt-get update && \
