@@ -95,8 +95,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(actualCapacity).To(Equal(int32(redisCapacity)))
 		})
 
-		By("And Then Azure Redis has .... ", func() {
-			// TODO do other checks on Azure Redis to check if reconciler created it as specified in the KCP resource
+		By("And Then Azure Redis has nonSSl port disabled ", func() {
+			nonSSLPortEnabled := ptr.Deref(redis.Properties.EnableNonSSLPort, true)
+			Expect(nonSSLPortEnabled).To(Equal(false))
 		})
 
 		By("When Azure Redis state is Succeeded", func() {
@@ -129,7 +130,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			expected := fmt.Sprintf(
 				"%s:%d",
 				ptr.Deref(redis.Properties.HostName, ""),
-				ptr.Deref(redis.Properties.Port, 0),
+				ptr.Deref(redis.Properties.SSLPort, 0),
 			)
 			Expect(redisInstance.Status.PrimaryEndpoint).To(Equal(expected))
 		})

@@ -17,7 +17,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf(
 		"%s:%d",
 		*state.azureRedisInstance.Properties.HostName,
-		*state.azureRedisInstance.Properties.Port,
+		*state.azureRedisInstance.Properties.SSLPort,
 	)
 	resourceGroupName := state.resourceGroupName
 	keys, err := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
