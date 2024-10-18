@@ -88,7 +88,8 @@ create those resources.
 
 9.  Run an instance.
     ```shell
-    export INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0c38b837cd80f13bb --instance-type t2.micro --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
+    export IMAGE_ID=$(aws ec2 describe-images --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+    export INSTANCE_ID=$(aws ec2 run-instances --image-id $IMAGE_ID --instance-type t2.micro --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
     export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
     ```
 10. Allow ICMP traffic from Kyma Pods.
