@@ -1,13 +1,13 @@
 # Backup RWX Volumes in AWS
 
-This tutorial explains how to create backups for ReadWriteMany (RWX) volumes in Google Cloud Platform (AWS). 
+This tutorial explains how to create backups for ReadWriteMany (RWX) volumes in AWS. 
 
 ## Preparation <!-- {docsify-ignore} -->
 
-You have created a AwsNfsVolume. Follow [Use RWX Volumes in AWS](./01-10-aws-nfs-volume.md) to learn more.
+You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-volume.md) to learn more.
 
-[!NOTE]
-All the examples below assume that the AwsNfsVolume is named `my-vol` and is in the same namespace as the AwsNfsVolumeBackup resource.
+> [!NOTE]
+> All the examples below assume that the AwsNfsVolume is named `my-vol` and is in the same namespace as the AwsNfsVolumeBackup resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
@@ -49,9 +49,16 @@ All the examples below assume that the AwsNfsVolume is named `my-vol` and is in 
    kubectl -n $NAMESPACE get awsnfsvolumebackup my-backup -o jsonpath='{.status.location}{"\n"}' 
    ```
 
-5. Clean up:
+## Clean Up <!-- {docsify-ignore} -->
+1. Export the namespace as an environment variable. Run:
 
-   * Remove the created awsnfsvolumebackup:
+   ```shell
+   export NAMESPACE={NAMESPACE_NAME}
+   ```
+   
+2. Clean up:
+
+   * Remove the created AwsNfsVolumeBackup:
      ```shell
      kubectl delete -n $NAMESPACE awsnfsvolumebackup my-backup
      ```

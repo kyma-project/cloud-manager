@@ -21,7 +21,7 @@ This table lists the parameters of the given resource together with their descri
 | **prefix**                  | string              | Optional. Prefix for the name of the created `AwsNfsVolumeBackup` resources. Defaults to name of this schedule.                                                                                                                                                                       |
 | **startTime**               | metav1.Time         | Optional. Start time for the schedule. Value cannot be from the past. When not specified, the schedule becomes effective immediately.                                                                                                                                                 |
 | **endTime**                 | metav1.Time         | Optional. End time for the schedule. Value cannot be from the past or before the `startTime`. When not specified, the schedule runs indefinitely.                                                                                                                                     |
-| **maxRetentionDays**        | int                 | Optional. Maximum number of days to retain the backup resources. If not specified, the backups are retained indefinitely. If `deleteCascade` is `true` for this schedule, then all the backups will be deleted when the schedule is deleted irrespective of this configuration value. |
+| **maxRetentionDays**        | int                 | Optional. Maximum number of days to retain the backup resources. If not specified, the backups are retained indefinitely. If `deleteCascade` is `true` for this schedule, then all the backups are deleted when the schedule is deleted irrespective of this configuration value. |
 | **suspend**                 | boolean             | Optional. Specifies whether or not to suspend the schedule temporarily. Defaults to `false`.                                                                                                                                                                                          |
 | **deleteCascade**           | boolean             | Optional. Specifies whether to cascade delete the backup resources when this schedule is deleted. Defaults to `false`.                                                                                                                                                                |
 
@@ -36,19 +36,19 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string              | Defines the reason for the condition status change.                                                                                                        |
 | **conditions.status** (required)  | string              | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                                                 |
 | **conditions.type**               | string              | Provides a short description of the condition.                                                                                                             |
-| **nextRunTimes**                  | \[\]string          | Provides the preview of the times when the next backups will be created.                                                                                   |
+| **nextRunTimes**                  | \[\]string          | Provides the preview of the times when the next backups are created.                                                                                   |
 | **nextDeleteTimes**               | map\[string\]string | Provides the backup objects and their expected deletion time (calculated based on `maxRetentionDays`).                                                     |
 | **lastCreateRun**                 | string              | Provides the time when the last backup was created.                                                                                                        |
 | **lastCreatedBackup**             | objectRef           | Provides the object reference of the last created backup.                                                                                                  |
 | **lastDeleteRun**                 | string              | Provides the time when the last backup was deleted.                                                                                                        |
 | **lastDeletedBackups**            | \[\]objectRef       | Provides the object references of the last deleted backups.                                                                                                |
-| **schedule**                      | string              | Provides the cron expression of the current active schedule.                                                                                               |
+| **schedule**                      | string              | Provides the CRON expression of the current active schedule.                                                                                               |
 | **backupIndex**                   | int                 | Provides the current index of the backup created by this schedule.                                                                                         |
 | **backupCount**                   | int                 | Provides the the number of backups currently present in the system.                                                                                        |
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 
-See an example AwsNfsBackupSchedule custom resource:
+See an example of the AwsNfsBackupSchedule CR:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
