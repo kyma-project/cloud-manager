@@ -1,0 +1,12 @@
+- path: spec.source.backup
+  name: spec.source.backup
+  widget: FormGroup
+  children:
+    - path: name
+      widget: Text
+      name: spec.source.backup.name
+      required: true
+    - path: namespace
+      name: spec.source.backup.namespace
+      widget: Text
+      required: false

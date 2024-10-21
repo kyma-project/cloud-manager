@@ -1,0 +1,11 @@
+resource:
+    kind: AwsNfsVolumeRestore
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsnfsvolumerestores
+name: AWS NFS Volume Restores
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AWS NFS Volume Restores description here
