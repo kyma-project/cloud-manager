@@ -32,7 +32,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonFailedCreatingFileSystem,
+			Reason:  v1beta1.ReasonGcpError,
 			Message: fmt.Sprintf("Failed loading GcpRedis: %s", err),
 		})
 		err = state.PatchObjStatus(ctx)

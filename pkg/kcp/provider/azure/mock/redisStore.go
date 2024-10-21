@@ -102,7 +102,7 @@ func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName,
 
 	props.ProvisioningState = ptr.To(armredis.ProvisioningStateSucceeded)
 	props.HostName = ptr.To("redis.tcp")
-	props.Port = ptr.To(int32(6379))
+	props.SSLPort = ptr.To(int32(6380))
 	if props.SKU == nil {
 		props.SKU = &armredis.SKU{
 			Capacity: ptr.To(int32(1)),
