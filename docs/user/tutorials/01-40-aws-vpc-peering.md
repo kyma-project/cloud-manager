@@ -37,7 +37,7 @@ create those resources.
     }
     EOF
     ```
-3. Create **CloudManagerPeeringRole** and attach a trust policy document.
+3.  Create **CloudManagerPeeringRole** and attach a trust policy document.
     ```shell
     export AWS_ROLE_NAME=CloudManagerPeeringRole
     aws iam create-role --role-name $AWS_ROLE_NAME --assume-role-policy-document file://./trust_policy.json 
@@ -81,25 +81,29 @@ create those resources.
     export VPC_NAME=my-vpc
     export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications "ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=''},{Key=Name,Value=$VPC_NAME}]" --query Vpc.VpcId --output text)
     ```
-8.  Create a subnet.
-    ```shell
-    export SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block $CIDR_BLOCK --query Subnet.SubnetId --output text) 
-    ```
-
-9.  Run an instance.
+8.  Find an Availability Zone that supports instance type compatible with specified image.
     ```shell
     export IMAGE_ID=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
     export INSTANCE_TYPE=$(aws ec2 describe-instance-types --filter "Name=instance-type,Values=*.micro" "Name=processor-info.supported-architecture,Values=arm64" --query 'InstanceTypes[0].InstanceType' | tr -d '"')
-    export INSTANCE_ID=$(aws ec2 run-instances --image-id $IMAGE_ID --instance-type $INSTANCE_TYPE --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
-    export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
+    export AVAILABILITY_ZONE=$(aws ec2 describe-instance-type-offerings --location-type availability-zone --filters "Name=instance-type,Values=$INSTANCE_TYPE" --query 'InstanceTypeOfferings[0].Location' --output text)
     ```
-10. Allow ICMP traffic from Kyma Pods.
+9.  Create a subnet.
+    ```shell
+    export SUBNET_ID=$(aws ec2 create-subnet --vpc-id $VPC_ID --availability-zone $AVAILABILITY_ZONE --cidr-block $CIDR_BLOCK --query Subnet.SubnetId --output text) 
+    ```
+
+10. Run an instance.
+     ```shell
+     export INSTANCE_ID=$(aws ec2 run-instances --image-id $IMAGE_ID --instance-type $INSTANCE_TYPE --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
+     export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
+     ```
+11. Allow ICMP traffic from Kyma Pods.
     ```shell
      export SG_ID=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC_ID --query "SecurityGroups[0].GroupId" --output text) 
      aws ec2 authorize-security-group-ingress --group-id $SG_ID --ip-permissions IpProtocol=icmp,FromPort=-1,ToPort=-1,IpRanges="[{CidrIp=$NODE_NETWORK}]"
     ```
 
-11. Create an AwsVpcPeering resource.
+12. Create an AwsVpcPeering resource.
     ```shell
     export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
     kubectl apply -f - <<EOF
@@ -114,7 +118,7 @@ create those resources.
     EOF
     ```
 
-12. Wait for the AwsVpcPeering to be in the `Ready` state.
+13. Wait for the AwsVpcPeering to be in the `Ready` state.
     ```shell
     kubectl wait --for=condition=Ready awsvpcpeering/peering-to-my-vpc --timeout=300s
     ```
@@ -125,13 +129,13 @@ create those resources.
     awsvpcpeering.cloud-resources.kyma-project.io/peering-to-my-vpc condition met
     ```
 
-13. Create a namespace and export its value as an environment variable. Run:
+14. Create a namespace and export its value as an environment variable. Run:
     ```shell
     export NAMESPACE={NAMESPACE_NAME}
     kubectl create ns $NAMESPACE
     ```
 
-14. Create a workload that pings the VM in the remote network.
+15. Create a workload that pings the VM in the remote network.
     ```shell
     kubectl apply -n $NAMESPACE -f - <<EOF
     apiVersion: apps/v1
@@ -168,7 +172,7 @@ create those resources.
 
     This workload should print a sequence of 20 echo replies to stdout.
 
-15. To print the logs of one of the workloads, run:
+16. To print the logs of one of the workloads, run:
     ```shell
     kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=awsvpcpeering-demo -o=jsonpath='{.items[0].metadata.name}'`
     ```
@@ -204,7 +208,7 @@ create those resources.
     ...
     ```
 
-16. Clean up the Kubernetes resources.
+17. Clean up the Kubernetes resources.
     1. Remove the created workloads:
        ```shell
        kubectl delete -n $NAMESPACE deployment awsvpcpeering-demo
@@ -218,7 +222,7 @@ create those resources.
        kubectl delete namespace $NAMESPACE
        ```
 
-17. Clean up the resources in your AWS account.
+18. Clean up the resources in your AWS account.
     1. Terminate the instance.
        ```shell
        aws ec2 terminate-instances --instance-ids $INSTANCE_ID
