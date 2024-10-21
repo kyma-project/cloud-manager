@@ -109,7 +109,7 @@ create those resources.
       name: peering-to-my-vpc
     spec:
       remoteAccountId: "$ACCOUNT_ID"
-      remoteRegion: "$AWS_DEFAULT_REGION"
+      remoteRegion: "$AWS_REGION"
       remoteVpcId: "$VPC_ID"
     EOF
     ```
