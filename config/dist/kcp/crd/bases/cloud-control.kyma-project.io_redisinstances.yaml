@@ -94,8 +94,6 @@ spec:
                             type: string
                           notify-keyspace-events:
                             type: string
-                          zonal-configuration:
-                            type: string
                         type: object
                       redisVersion:
                         type: string

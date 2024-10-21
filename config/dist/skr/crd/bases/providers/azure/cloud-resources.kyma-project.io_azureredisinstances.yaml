@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -66,8 +66,6 @@ spec:
                     maxmemory-reserved:
                       type: string
                     notify-keyspace-events:
-                      type: string
-                    zonal-configuration:
                       type: string
                   type: object
                   x-kubernetes-validations:

@@ -71,8 +71,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
@@ -97,9 +95,6 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 	}
 	if redisConfigs.MaxClients != "" {
 		redisConfiguration.Maxclients = &redisConfigs.MaxClients
-	}
-	if redisConfigs.ZonalConfiguration != "" {
-		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
 	}
 
 	if len(additionalProperties) > 0 {
