@@ -53,7 +53,6 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 						MaxMemoryPolicy:                azureRedisInstance.Spec.RedisConfiguration.MaxMemoryPolicy,
 						MaxMemoryReserved:              azureRedisInstance.Spec.RedisConfiguration.MaxMemoryReserved,
 						NotifyKeyspaceEvents:           azureRedisInstance.Spec.RedisConfiguration.NotifyKeyspaceEvents,
-						ZonalConfiguration:             azureRedisInstance.Spec.RedisConfiguration.ZonalConfiguration,
 					},
 				},
 			},

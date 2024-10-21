@@ -31,8 +31,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 type RedisAuthSecretSpec struct {
