@@ -1,0 +1,9 @@
+- source: spec.source.backup.name
+  name: spec.source.backup.name
+  sort: true
+- source: spec.source.backup.namespace
+  name: spec.source.backup.namespace
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true

@@ -1,0 +1,20 @@
+body:
+  - name: spec.source.backup
+    widget: Panel
+    source: spec.source.backup
+    children:
+      - widget: Labels
+        source: name
+        name: spec.source.backup.name
+      - widget: Labels
+        source: source.backup.namespace
+        name: spec.source.backup.namespace
+
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state
