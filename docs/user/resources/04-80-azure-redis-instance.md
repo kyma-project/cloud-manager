@@ -18,7 +18,9 @@ Manually create a non-default IpRange with specified Classless Inter-Domain Rout
 
 When creating AzureRedisInstance, one field is mandatory: `sku.capacity`.
 
-Optionally, you can specify the `enableNonSslPort`, `redisConfiguration`, `redisVersion`, `shardCount`, `replicasPerPrimary` and `redisConfiguration` fields.
+Optionally, you can specify the `redisConfiguration`, `redisVersion`, `shardCount`, `replicasPerPrimary` and `redisConfiguration` fields.
+
+> [!Note] Non SSL port is disabled.
 
 # Specification
 
@@ -29,7 +31,6 @@ This table lists the parameters of AzureRedisInstance, together with their descr
 | **ipRange**                                             | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                                                        |
 | **ipRange.name**                                        | string | Required. Name of the existing IpRange to use.                                                                                                                                                                                          | 
 | **sku.capacity**                                        | int    | Required. The service capacity of the instance. Supported values are 1, 2, 3, and 4. Note that tear is 'P' - Premium.                                                                                                                   |
-| **enableNonSslPort**                                    | bool   | Optional. False by default.                                                                                                                                                                                                             |
 | **redisVersion**                                        | int    | Optional. The version of Redis software. Defaults to `6.0`.                                                                                                                                                                             |
 | **shardCount**                                          | int    | Optional. Number of shards.                                                                                                                                                                                                             |
 | **replicasPerPrimary**                                  | int    | Optional. Number of replicas, for `Premium` tier it is [up to 3.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-high-availability)                                                                                |
@@ -63,7 +64,6 @@ kind: AzureRedisInstance
 metadata:
   name: azureRedisInstanceExample
 spec:
-  enableNonSslPort: false
   redisConfiguration:
     maxclients: "8"
   redisVersion: "6.0"
