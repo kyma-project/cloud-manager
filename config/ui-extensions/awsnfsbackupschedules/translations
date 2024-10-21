@@ -4,7 +4,6 @@ en:
   spec.schedule: Schedule
   spec.startTime: Start Time
   spec.endTime: End Time
-  spec.location: Location
   spec.prefix: Prefix
   spec.maxRetentionDays: Max Retention Days
   spec.deleteCascade: Delete Cascade
