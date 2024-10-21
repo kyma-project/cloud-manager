@@ -1,0 +1,42 @@
+- path: spec.nfsVolumeRef
+  name: spec.nfsVolumeRef
+  required: true
+  widget: FormGroup
+  children:
+    - path: apiVersion
+      name: spec.nfsVolumeRef.apiVersion
+      required: true
+    - path: kind
+      name: spec.nfsVolumeRef.kind
+      required: true
+    - path: name
+      name: spec.nfsVolumeRef.name
+      required: true
+    - path: namespace
+      name: spec.nfsVolumeRef.namespace
+      required: true
+
+- path: spec.schedule
+  name: spec.schedule
+  required: false
+- path: spec.startTime
+  name: spec.startTime
+  required: false
+- path: spec.endTime
+  name: spec.endTime
+  required: false
+- path: spec.location
+  name: spec.location
+  required: false
+- path: spec.prefix
+  name: spec.prefix
+  required: false
+- path: spec.maxRetentionDays
+  name: spec.maxRetentionDays
+  required: false
+- path: spec.deleteCascade
+  name: spec.deleteCascade
+  required: false
+- path: spec.suspend
+  name: spec.suspend
+  required: false
