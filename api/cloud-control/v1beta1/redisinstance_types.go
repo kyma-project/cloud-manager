@@ -185,9 +185,6 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {
