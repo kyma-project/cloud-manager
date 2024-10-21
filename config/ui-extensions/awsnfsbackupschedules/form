@@ -25,9 +25,6 @@
 - path: spec.endTime
   name: spec.endTime
   required: false
-- path: spec.location
-  name: spec.location
-  required: false
 - path: spec.prefix
   name: spec.prefix
   required: false

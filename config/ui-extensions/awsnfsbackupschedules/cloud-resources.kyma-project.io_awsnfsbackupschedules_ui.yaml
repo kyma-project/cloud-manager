@@ -33,9 +33,6 @@ data:
             source: endTime
             name: spec.endTime
           - widget: Labels
-            source: location
-            name: spec.location
-          - widget: Labels
             source: prefix
             name: spec.prefix
           - widget: Labels
@@ -84,9 +81,6 @@ data:
       required: false
     - path: spec.endTime
       name: spec.endTime
-      required: false
-    - path: spec.location
-      name: spec.location
       required: false
     - path: spec.prefix
       name: spec.prefix

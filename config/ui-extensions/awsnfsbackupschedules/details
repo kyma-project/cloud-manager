@@ -30,9 +30,6 @@ body:
         source: endTime
         name: spec.endTime
       - widget: Labels
-        source: location
-        name: spec.location
-      - widget: Labels
         source: prefix
         name: spec.prefix
       - widget: Labels
