@@ -19,6 +19,11 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	// params must be the same as in peeringRemoteCreate()
 	err := state.remoteClient.DeletePeering(
 		ctx,

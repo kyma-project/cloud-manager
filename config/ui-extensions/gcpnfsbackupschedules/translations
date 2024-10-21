@@ -3,6 +3,7 @@ en:
   nfsVolumeRef: NFS Volume Reference
   spec.schedule: Schedule
   status.lastCreateRun: Last Run Time
+  status: Status
   status.state: State
   spec.nfsVolumeRef.apiVersion: API Version
   spec.nfsVolumeRef.kind: Kind

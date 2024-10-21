@@ -114,6 +114,9 @@ data:
     - source: spec.volume.name
       name: spec.volume.name
       sort: true
+    - source: status.state
+      name: status.state
+      sort: true
   translations: |-
     en:
       spec.capacity: Capacity
@@ -134,7 +137,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

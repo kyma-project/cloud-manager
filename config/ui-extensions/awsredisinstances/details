@@ -49,3 +49,10 @@ body:
       - source: authSecret.annotations
         name: spec.authSecret.annotations
         widget: Labels
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels

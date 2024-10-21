@@ -12,6 +12,11 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	// skip loading of vpc peering connections if remoteId is empty
 	if len(obj.Status.RemoteId) == 0 {
 		return nil, nil

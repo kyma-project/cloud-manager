@@ -19,7 +19,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstanceName := "custom-redis-instance"
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
-		enableNonSslPort := false
 		redisVersion := "6.0"
 		sku := cloudresourcesv1beta1.AzureRedisSKU{}
 		sku.Capacity = 1
@@ -51,7 +50,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
-					WithAzureRedisInstanceEnableNonSslPort(enableNonSslPort),
 					WithAzureRedisInstanceRedisVersion(redisVersion),
 					WithAzureRedisInstanceSKUCapacity(sku),
 					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
@@ -122,7 +120,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Azure.EnableNonSslPort).To(Equal(azureRedisInstance.Spec.EnableNonSslPort))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
@@ -213,7 +210,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstanceName := "modified-redis-instance"
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
-		enableNonSslPort := false
 		redisVersion := "6.0"
 		sku := cloudresourcesv1beta1.AzureRedisSKU{}
 		sku.Capacity = 1
@@ -245,7 +241,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
-					WithAzureRedisInstanceEnableNonSslPort(enableNonSslPort),
 					WithAzureRedisInstanceRedisVersion(redisVersion),
 					WithAzureRedisInstanceSKUCapacity(sku),
 					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
@@ -316,7 +311,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Azure.EnableNonSslPort).To(Equal(azureRedisInstance.Spec.EnableNonSslPort))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
@@ -391,7 +385,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
 					WithAzureRedisInstanceSKUCapacity(sku),
-					WithAzureRedisInstanceEnableNonSslPort(false),
 					WithAzureRedisInstanceRedisVersion("6.0"),
 				).
 				Should(Succeed())

@@ -52,11 +52,6 @@ type AzureRedisInstanceSpec struct {
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EnableNonSslPort is immutable."
-	// +kubebuilder:default=false
-	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
-
-	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfiguration is immutable."
 	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 

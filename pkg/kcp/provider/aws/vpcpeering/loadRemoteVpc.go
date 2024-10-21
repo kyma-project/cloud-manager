@@ -15,6 +15,11 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	remoteVpcId := state.remoteNetwork.Spec.Network.Reference.Aws.VpcId
 
 	vpc, err := state.remoteClient.DescribeVpc(ctx, remoteVpcId)

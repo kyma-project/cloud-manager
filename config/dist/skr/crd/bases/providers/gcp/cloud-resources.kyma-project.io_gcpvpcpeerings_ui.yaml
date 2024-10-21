@@ -96,7 +96,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
