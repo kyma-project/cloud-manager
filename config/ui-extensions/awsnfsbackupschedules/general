@@ -1,0 +1,11 @@
+resource:
+    kind: AwsNfsBackupSchedule
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsnfsbackupschedules
+name: AWS NFS Backup Schedules
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AWS NFS Backup Schedules description here

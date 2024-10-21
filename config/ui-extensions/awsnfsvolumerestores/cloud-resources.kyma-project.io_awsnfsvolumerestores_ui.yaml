@@ -1,0 +1,28 @@
+apiVersion: v1
+data:
+  details: ""
+  form: ""
+  general: |-
+    resource:
+        kind: AwsNfsVolumeRestore
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsnfsvolumerestores
+    name: AWS NFS Volume Restores
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AWS NFS Volume Restores description here
+  list: ""
+  translations: ""
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsnfsvolumerestores-ui.operator.kyma-project.io
+  namespace: kyma-system
