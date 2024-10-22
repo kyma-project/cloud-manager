@@ -1,0 +1,17 @@
+en:
+  configuration: Configuration
+  status: Status
+  spec.schedule: Schedule
+  spec.startTime: Start Time
+  spec.endTime: End Time
+  spec.prefix: Prefix
+  spec.maxRetentionDays: Max Retention Days
+  spec.deleteCascade: Delete Cascade
+  spec.suspend: Suspend
+  status.lastCreateRun: Last Run Time
+  status.state: State
+  spec.nfsVolumeRef: NFS Volume
+  spec.nfsVolumeRef.apiVersion: API Version
+  spec.nfsVolumeRef.kind: Kind
+  spec.nfsVolumeRef.name: Name
+  spec.nfsVolumeRef.namespace: Namespace
