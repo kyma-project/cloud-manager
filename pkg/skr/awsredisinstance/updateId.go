@@ -25,7 +25,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.ObjAsAwsRedisInstance().Status.Id = id
 	state.ObjAsAwsRedisInstance().Status.State = cloudresourcesv1beta1.StateProcessing
-	err := state.PatchObjStatus(ctx)
+	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR AwsRedisInstance status with ID label", composed.StopWithRequeue, ctx)
 	}

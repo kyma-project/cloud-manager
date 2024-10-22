@@ -44,7 +44,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		redisInstance.Status.CaCert = state.gcpRedisInstance.ServerCaCerts[0].Cert
 	}
 
-	return composed.PatchStatus(redisInstance).
+	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,
