@@ -26,7 +26,7 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	logger.Info("Removing ready state to begin update")
 	meta.RemoveStatusCondition(redisInstance.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
-	err := state.PatchObjStatus(ctx)
+	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error updating RedisInstance status",
@@ -46,7 +46,7 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  cloudcontrolv1beta1.ReasonGcpError,
 			Message: fmt.Sprintf("Failed updating GcpRedis: %s", err),
 		})
-		err = state.PatchObjStatus(ctx)
+		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis creation",
