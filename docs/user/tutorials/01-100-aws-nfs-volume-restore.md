@@ -9,7 +9,7 @@ This tutorial explains how to initiate a restore operation for the ReadWriteMany
 * You have created an AwsNfsVolumeBackup. See [Backup RWX Volumes in AWS](./01-110-aws-nfs-volume-backup.md) to learn more.
 
 >[!NOTE]
->All the examples below assume that the AwsNfsVolumeBackup is named `my-backup` 
+>The following examples assume that the AwsNfsVolumeBackup is named `my-backup` 
 and is in the same namespace as the AwsNfsVolumeRestore resource.
 
 ## Steps <!-- {docsify-ignore} -->

@@ -3,11 +3,10 @@
 The `awsnfsvolumerestore.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes the AWS EFS file 
 system full restore operation on the same existing EFS file system.
 
-Out-of-place restore and Item-Level restore are not supported at this version of the `Cloud Manager`.
+Out-of-place restore and Item-Level restore are not supported by the `Cloud Manager`.
 
 While the EFS file system restore operation is running in the underlying cloud provider subscription, it needs its 
-source backup and its destination file system to be available. Upon its completion, restored file system 
-would be available on a recovery directory, named aws-backup-restore_{datetime}, off of the root directory. 
+source backup and its destination file system to be available. When the restore operation is finished, the restored file system is available on a recovery directory, named `aws-backup-restore_{datetime}`, off of the root directory.
 
 ## Specification <!-- {docsify-ignore} -->
 This table lists the parameters of the given resource together with their descriptions:
@@ -17,7 +16,7 @@ This table lists the parameters of the given resource together with their descri
 | Parameter                        | Type    | Description                                                                                                                                                                                                        |
 |----------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **source**                       | object  | Required. Specifies the source backup of the restore operation.                                                                                                                                                    |
-| **source.backup**                | object  | Required. Reference of the existing AwsNfsVolumeBackup that is restored. The source volume of the AwsNfsVolumeBackup object which is referenced here, is used as the destination volume for the restore operation. |
+| **source.backup**                | object  | Required. Reference of the existing AwsNfsVolumeBackup that is restored. The source volume of the AwsNfsVolumeBackup object that is referenced here, is used as the destination volume for the restore operation. |
 | **source.backup.name**           | string  | Required. Name of the source AwsNfsVolumeBackup.                                                                                                                                                                   |
 | **source.backup.namespace**      | string  | Optional. The namespace of the source AwsNfsVolumeBackup. Defaults to the namespace of the AwsNfsVolumeBackup resource if not provided.                                                                            |
 
