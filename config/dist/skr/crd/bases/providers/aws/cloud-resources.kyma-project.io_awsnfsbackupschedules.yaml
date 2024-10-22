@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: awsnfsbackupschedules.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -63,9 +63,6 @@ spec:
                     EndTime specifies the time when the backup should end
                     If not provided, schedule will run indefinitely
                   format: date-time
-                  type: string
-                location:
-                  description: Location specifies the location where the backup has to be stored.
                   type: string
                 maxRetentionDays:
                   description: |-
