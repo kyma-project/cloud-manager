@@ -81,7 +81,7 @@ create those resources.
     export VPC_NAME=my-vpc
     export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications "ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=''},{Key=Name,Value=$VPC_NAME}]" --query Vpc.VpcId --output text)
     ```
-8.  Find an Availability Zone that supports instance type compatible with specified image.
+8.  Find an availability zone that supports instance type compatible with specified image.
     ```shell
     export IMAGE_ID=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
     export INSTANCE_TYPE=$(aws ec2 describe-instance-types --filter "Name=instance-type,Values=*.micro" "Name=processor-info.supported-architecture,Values=arm64" --query 'InstanceTypes[0].InstanceType' | tr -d '"')
