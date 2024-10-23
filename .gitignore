@@ -29,3 +29,4 @@ Dockerfile.cross
 # Local featureToggles file
 
 config/featureToggles/featureToggles.local.yaml
+/tmp
