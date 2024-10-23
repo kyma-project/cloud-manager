@@ -24,7 +24,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 
 	meta.RemoveStatusCondition(redisInstance.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 
-	serializedJson, err := json.Marshal(redisInstance.CloneForPatchStatus().Status)
+	serializedJson, err := json.Marshal(redisInstance.CloneForPatchStatus())
 	if err != nil {
 		logger.Info("Failed to serialize to json")
 	}
