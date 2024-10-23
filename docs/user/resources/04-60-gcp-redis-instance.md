@@ -16,7 +16,7 @@ Manually create a non-default IpRange with specified Classless Inter-Domain Rout
 When creating GcpRedisInstance, two fields are mandatry: `memorySizeGb`, and `tier`.
 As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
 
-Optionally, you can specify the `redisVersion`, `authEnabled`, `transitEncryption`, `redisConfigs`, and `maintenancePolicy` fields.
+Optionally, you can specify the `redisVersion`, `authEnabled`, `redisConfigs`, and `maintenancePolicy` fields.
 
 # Specification
 

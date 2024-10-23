@@ -16,7 +16,7 @@ It specifies the underlying machine that will be used for the cache.
 
 As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
 
-Optionally, you can specify the `engineVersion`, `authEnabled`, `transitEncryptionEnabled`, `parameters`, and `preferredMaintenanceWindow` fields.
+Optionally, you can specify the `engineVersion`, `authEnabled`, `parameters`, and `preferredMaintenanceWindow` fields.
 
 # Specification
 
