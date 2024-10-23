@@ -18,6 +18,9 @@ data:
           - name: spec.authEnabled
             source: authEnabled
             widget: Labels
+          - name: spec.transitEncryptionMode
+            source: transitEncryptionMode
+            widget: Labels
 
 
       - name: spec.redisConfigs
@@ -69,7 +72,11 @@ data:
           - widget: Labels
             source: state
             name: status.state
-  form: |
+  form: |+
+    - path: spec.tier
+      name: spec.tier
+      required: true
+      disableOnEdit: true
     - path: spec.memorySizeGb
       name: spec.memorySizeGb
       required: true
@@ -77,22 +84,47 @@ data:
       name: spec.redisVersion
       required: true
       disableOnEdit: true
-    - path: spec.tier
-      name: spec.tier
-      required: true
-      disableOnEdit: true
-
-    - path: spec.authEnabled
-      name: spec.authEnabled
-      required: false
-    - path: spec.ipRange.name
-      name: spec.ipRange.name
-      required: false
-
     - path: spec.redisConfigs
       name: spec.redisConfigs
       required: false
       widget: KeyValuePair
+
+    - path: spec
+      name: spec.security
+      widget: FormGroup
+      children:
+        - path: authEnabled
+          name: spec.authEnabled
+          required: false
+        - path: transitEncryptionMode
+          name: spec.transitEncryptionMode
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+
+    - path: spec.maintenancePolicy
+      name: spec.maintenancePolicy
+      required: false
+      widget: FormGroup
+      children:
+        - path: dayOfWeek.day
+          name: spec.maintenancePolicy.dayOfWeek.day
+          required: true
+        - path: dayOfWeek.startTime.hours
+          name: spec.maintenancePolicy.dayOfWeek.startTime.hours
+          required: true
+        - path: dayOfWeek.startTime.minutes
+          name: spec.maintenancePolicy.dayOfWeek.startTime.minutes
+          required: true
+
+    - path: spec.ipRange
+      name: spec.ipRange
+      required: false
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.ipRange.name
+          required: false
 
     - path: spec.authSecret
       name: spec.authSecret
@@ -115,20 +147,20 @@ data:
           widget: KeyValuePair
           disableOnEdit: true
 
-    - path: spec.maintenancePolicy
-      name: spec.maintenancePolicy
-      required: false
-      widget: FormGroup
-      children:
-        - path: dayOfWeek.day
-          name: spec.maintenancePolicy.dayOfWeek.day
-          required: true
-        - path: dayOfWeek.startTime.hours
-          name: spec.maintenancePolicy.dayOfWeek.startTime.hours
-          required: true
-        - path: dayOfWeek.startTime.minutes
-          name: spec.maintenancePolicy.dayOfWeek.startTime.minutes
-          required: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   general: |
     resource:
         kind: GcpRedisInstance
@@ -155,7 +187,7 @@ data:
       spec.tier: Tier
       spec.authEnabled: Auth Enabled
       spec.ipRange: Ip Range
-      spec.ipRange.name: Ip Range Name
+      spec.ipRange.name: Name
       spec.transitEncryptionMode: Transit Encryption Mode
       spec.authSecret: Authentication Secret
       spec.authSecret.name: Name
@@ -169,8 +201,6 @@ data:
       spec.redisConfigs: Redis Configuration
 kind: ConfigMap
 metadata:
-  annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

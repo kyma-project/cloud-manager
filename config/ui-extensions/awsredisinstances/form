@@ -2,28 +2,32 @@
   name: spec.cacheNodeType
   required: true
 
-- path: spec.autoMinorVersionUpgrade
-  name: spec.autoMinorVersionUpgrade
-  required: false
-  widget: Switch
-
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
-
-- path: spec.preferredMaintenanceWindow
-  name: spec.preferredMaintenanceWindow
-  required: false
-
-
-- path: spec.authEnabled
-  name: spec.authEnabledFull
-  widget: Switch
 
 - path: spec.parameters
   name: spec.parameters
   required: false
   widget: KeyValuePair
+
+- path: spec
+  name: spec.security
+  widget: FormGroup
+  children:
+    - path: transitEncryptionEnabled
+      name: spec.transitEncryptionEnabled
+      widget: Switch
+      required: false
+    - path: authEnabled
+      name: spec.authEnabledFull
+      widget: Switch
+      required: false
+
+
+- path: spec.preferredMaintenanceWindow
+  name: spec.preferredMaintenanceWindow
+  required: false
 
 - path: spec.ipRange
   name: spec.ipRange
