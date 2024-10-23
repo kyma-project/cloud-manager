@@ -93,11 +93,6 @@ data:
         - path: authEnabled
           name: spec.authEnabled
           required: false
-        - path: transitEncryptionMode
-          name: spec.transitEncryptionMode
-          required: false
-          disableOnEdit: true
-          description: Immutable once set.
 
 
     - path: spec.maintenancePolicy
@@ -186,7 +181,6 @@ data:
       spec.authEnabled: Auth Enabled
       spec.ipRange: Ip Range
       spec.ipRange.name: Name
-      spec.transitEncryptionMode: Transit Encryption Mode
       spec.authSecret: Authentication Secret
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels

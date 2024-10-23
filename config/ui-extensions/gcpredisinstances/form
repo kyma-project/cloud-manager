@@ -21,11 +21,6 @@
     - path: authEnabled
       name: spec.authEnabled
       required: false
-    - path: transitEncryptionMode
-      name: spec.transitEncryptionMode
-      required: false
-      disableOnEdit: true
-      description: Immutable once set.
 
 
 - path: spec.maintenancePolicy
