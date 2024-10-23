@@ -97,8 +97,6 @@ spec:
                         type: object
                       redisVersion:
                         type: string
-                      replicasPerPrimary:
-                        type: integer
                       shardCount:
                         type: integer
                       sku:

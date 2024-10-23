@@ -42,10 +42,9 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
-					SKU:                cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},
-					RedisVersion:       azureRedisInstance.Spec.RedisVersion,
-					ShardCount:         azureRedisInstance.Spec.ShardCount,
-					ReplicasPerPrimary: azureRedisInstance.Spec.ReplicasPerPrimary,
+					SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},
+					RedisVersion: azureRedisInstance.Spec.RedisVersion,
+					ShardCount:   azureRedisInstance.Spec.ShardCount,
 					RedisConfiguration: cloudcontrolv1beta1.RedisInstanceAzureConfigs{
 						MaxClients:                     azureRedisInstance.Spec.RedisConfiguration.MaxClients,
 						MaxFragmentationMemoryReserved: azureRedisInstance.Spec.RedisConfiguration.MaxFragmentationMemoryReserved,
