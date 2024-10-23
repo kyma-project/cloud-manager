@@ -6,6 +6,11 @@
   name: spec.engineVersion
   required: false
 
+- path: spec.autoMinorVersionUpgrade
+  name: spec.autoMinorVersionUpgrade
+  widget: Switch
+  required: false
+
 - path: spec.parameters
   name: spec.parameters
   required: false
@@ -15,10 +20,6 @@
   name: spec.security
   widget: FormGroup
   children:
-    - path: transitEncryptionEnabled
-      name: spec.transitEncryptionEnabled
-      widget: Switch
-      required: false
     - path: authEnabled
       name: spec.authEnabledFull
       widget: Switch
