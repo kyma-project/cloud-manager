@@ -154,7 +154,6 @@ data:
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
       spec.preferredMaintenanceWindow: Preferred Maintenance Window
-      spec.transitEncryptionEnabled: Transit Encryption Enabled
 kind: ConfigMap
 metadata:
   annotations:
