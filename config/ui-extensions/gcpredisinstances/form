@@ -16,11 +16,6 @@
 - path: spec.ipRange.name
   name: spec.ipRange.name
   required: false
-- path: spec.transitEncryptionMode
-  name: spec.transitEncryptionMode
-  required: false
-  disableOnEdit: true
-  description: Immutable once set.
 
 - path: spec.redisConfigs
   name: spec.redisConfigs

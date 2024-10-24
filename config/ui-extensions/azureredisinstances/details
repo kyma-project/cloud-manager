@@ -3,9 +3,6 @@ body:
     widget: Panel
     source: spec
     children:
-      - name: spec.enableNonSslPort
-        source: enableNonSslPort
-        widget: Labels
       - name: spec.replicasPerPrimary
         source: replicasPerPrimary
         widget: Labels
@@ -46,9 +43,6 @@ body:
       - name: spec.redisConfiguration.notify-keyspace-events
         source: notify-keyspace-events
         widget: Labels
-      - name: spec.redisConfiguration.zonal-configuration
-        source: zonal-configuration
-        widget: Labels
 
   - name: spec.volume
     widget: Panel
@@ -70,4 +64,12 @@ body:
     children:
       - name: spec.ipRange.name
         source: name
+        widget: Labels
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
         widget: Labels

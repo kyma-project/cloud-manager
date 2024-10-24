@@ -30,6 +30,14 @@ type VirtualNetworkLinkClient interface {
 	azureclient.VirtualNetworkLinkClient
 }
 
+type PrivateEndPointsClient interface {
+	azureclient.PrivateEndPointsClient
+}
+
+type PrivateDnsZoneGroupClient interface {
+	azureclient.PrivateDnsZoneGroupClient
+}
+
 type PrivateDnsZoneClient interface {
 	azureclient.PrivateDnsZoneClient
 }
@@ -51,6 +59,8 @@ type Clients interface {
 	RedisInstanceClient
 	VirtualNetworkLinkClient
 	PrivateDnsZoneClient
+	PrivateEndPointsClient
+	PrivateDnsZoneGroupClient
 }
 
 type Providers interface {

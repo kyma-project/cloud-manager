@@ -37,13 +37,14 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},
+			IpRange: cloudcontrolv1beta1.IpRangeRef{
+				Name: state.SkrIpRange.Status.Id,
+			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
-					SKU:                cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},
-					EnableNonSslPort:   azureRedisInstance.Spec.EnableNonSslPort,
-					RedisVersion:       azureRedisInstance.Spec.RedisVersion,
-					ShardCount:         azureRedisInstance.Spec.ShardCount,
-					ReplicasPerPrimary: azureRedisInstance.Spec.ReplicasPerPrimary,
+					SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},
+					RedisVersion: azureRedisInstance.Spec.RedisVersion,
+					ShardCount:   azureRedisInstance.Spec.ShardCount,
 					RedisConfiguration: cloudcontrolv1beta1.RedisInstanceAzureConfigs{
 						MaxClients:                     azureRedisInstance.Spec.RedisConfiguration.MaxClients,
 						MaxFragmentationMemoryReserved: azureRedisInstance.Spec.RedisConfiguration.MaxFragmentationMemoryReserved,
@@ -51,7 +52,6 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 						MaxMemoryPolicy:                azureRedisInstance.Spec.RedisConfiguration.MaxMemoryPolicy,
 						MaxMemoryReserved:              azureRedisInstance.Spec.RedisConfiguration.MaxMemoryReserved,
 						NotifyKeyspaceEvents:           azureRedisInstance.Spec.RedisConfiguration.NotifyKeyspaceEvents,
-						ZonalConfiguration:             azureRedisInstance.Spec.RedisConfiguration.ZonalConfiguration,
 					},
 				},
 			},

@@ -23,6 +23,7 @@ resources:
 - bases/cloud-control.kyma-project.io_networks.yaml
 - bases/cloud-resources.kyma-project.io_awsnfsbackupschedules.yaml
 - bases/cloud-control.kyma-project.io_nukes.yaml
+- bases/cloud-resources.kyma-project.io_awsnfsvolumerestores.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -39,6 +40,7 @@ patches:
 #- path: patches/webhook_in_cloud-resources_awsnfsvolumebackups.yaml
 #- path: patches/webhook_in_cloud-resources_gcpnfsvolumebackups.yaml
 #- path: patches/webhook_in_cloud-resources_gcpnfsvolumerestores.yaml
+#- path: patches/webhook_in_cloud-resources_awsnfsvolumerestores.yaml
 #- path: patches/webhook_in_cloud-resources_azurevpcpeerings.yaml
 #- path: patches/webhook_in_cloud-resources_nfsbackupschedules.yaml
 #- path: patches/webhook_in_cloud-control_redisinstances.yaml
@@ -73,6 +75,7 @@ patches:
 #- path: patches/cainjection_in_cloud-control_networks.yaml
 #- path: patches/cainjection_in_cloud-resources_awsnfsbackupschedules.yaml
 #- path: patches/cainjection_in_cloud-control_nukes.yaml
+#- path: patches/cainjection_in_cloud-resources_awsnfsvolumerestores.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

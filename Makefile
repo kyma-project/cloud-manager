@@ -149,6 +149,8 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
 
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml

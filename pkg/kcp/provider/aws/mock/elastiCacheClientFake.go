@@ -265,10 +265,11 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		Status:                   ptr.To("creating"),
 		CacheNodeType:            ptr.To(options.CacheNodeType),
 		AutoMinorVersionUpgrade:  ptr.To(options.AutoMinorVersionUpgrade),
-		TransitEncryptionEnabled: ptr.To(options.TransitEncryptionEnabled),
+		TransitEncryptionEnabled: ptr.To(true),
 		AuthTokenEnabled:         ptr.To(authTokenEnabled),
 		MemberClusters:           []string{options.Name},
 		UserGroupIds:             []string{},
+		AtRestEncryptionEnabled:  ptr.To(true),
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
@@ -281,9 +282,6 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 				},
 			},
 		},
-	}
-	if options.TransitEncryptionEnabled {
-		client.replicationGroups[options.Name].TransitEncryptionMode = elasticacheTypes.TransitEncryptionModeRequired
 	}
 
 	return &elasticache.CreateReplicationGroupOutput{}, nil
@@ -300,17 +298,6 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 		}
 		if options.AutoMinorVersionUpgrade != nil {
 			instance.AutoMinorVersionUpgrade = options.AutoMinorVersionUpgrade
-		}
-		if options.TransitEncryptionEnabled != nil {
-			instance.TransitEncryptionEnabled = options.TransitEncryptionEnabled
-			if *options.TransitEncryptionEnabled {
-				instance.TransitEncryptionMode = elasticacheTypes.TransitEncryptionModeRequired
-			} else {
-				instance.TransitEncryptionMode = ""
-			}
-		}
-		if options.TransitEncryptionMode != nil {
-			instance.TransitEncryptionMode = *options.TransitEncryptionMode
 		}
 
 		if len(options.UserGroupIdsToAdd) > 0 {

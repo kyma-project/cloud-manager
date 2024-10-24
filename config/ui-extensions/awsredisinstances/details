@@ -18,9 +18,6 @@ body:
       - name: spec.preferredMaintenanceWindow
         source: preferredMaintenanceWindow
         widget: Labels
-      - name: spec.transitEncryptionEnabled
-        source: transitEncryptionEnabled
-        widget: Labels
 
   - name: spec.ipRange
     widget: Panel
@@ -51,4 +48,11 @@ body:
         widget: Labels
       - source: authSecret.annotations
         name: spec.authSecret.annotations
+        widget: Labels
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
         widget: Labels

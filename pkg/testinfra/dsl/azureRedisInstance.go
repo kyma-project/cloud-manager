@@ -26,18 +26,6 @@ func CreateAzureRedisInstance(ctx context.Context, clnt client.Client, obj *clou
 	return err
 }
 
-func WithAzureRedisInstanceEnableNonSslPort(enableNonSslPort bool) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
-				azureRedisInstance.Spec.EnableNonSslPort = enableNonSslPort
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceEnableNonSslPort", obj))
-		},
-	}
-}
-
 func WithAzureRedisInstanceRedisVersion(redisVersion string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -46,12 +46,6 @@ spec:
             spec:
               description: AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
               properties:
-                enableNonSslPort:
-                  default: false
-                  type: boolean
-                  x-kubernetes-validations:
-                    - message: EnableNonSslPort is immutable.
-                      rule: (self == oldSelf)
                 ipRange:
                   properties:
                     name:
@@ -73,8 +67,6 @@ spec:
                       type: string
                     notify-keyspace-events:
                       type: string
-                    zonal-configuration:
-                      type: string
                   type: object
                   x-kubernetes-validations:
                     - message: RedisConfiguration is immutable.
@@ -84,11 +76,6 @@ spec:
                   type: string
                   x-kubernetes-validations:
                     - message: RedisVersion is immutable.
-                      rule: (self == oldSelf)
-                replicasPerPrimary:
-                  type: integer
-                  x-kubernetes-validations:
-                    - message: ReplicasPerPrimary is immutable.
                       rule: (self == oldSelf)
                 shardCount:
                   type: integer

@@ -78,20 +78,13 @@ type GcpRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
 	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
-
-	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
-	// +optional
-	// +kubebuilder:default=DISABLED
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
-	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters

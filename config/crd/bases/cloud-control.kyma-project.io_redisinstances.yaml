@@ -75,21 +75,11 @@ spec:
 
                           Example: sun:23:00-mon:01:30
                         type: string
-                      transitEncryptionEnabled:
-                        default: false
-                        type: boolean
                     required:
                     - cacheNodeType
                     type: object
-                    x-kubernetes-validations:
-                    - message: authEnabled can only be true if TransitEncryptionEnabled
-                        is also true
-                      rule: (self.authEnabled == false || self.transitEncryptionEnabled
-                        == true)
                   azure:
                     properties:
-                      enableNonSslPort:
-                        type: boolean
                       redisConfiguration:
                         properties:
                           maxclients:
@@ -104,13 +94,9 @@ spec:
                             type: string
                           notify-keyspace-events:
                             type: string
-                          zonal-configuration:
-                            type: string
                         type: object
                       redisVersion:
                         type: string
-                      replicasPerPrimary:
-                        type: integer
                       shardCount:
                         type: integer
                       sku:
@@ -197,9 +183,6 @@ spec:
                         - REDIS_7_2
                         - REDIS_7_0
                         - REDIS_6_X
-                        - REDIS_5_0
-                        - REDIS_4_0
-                        - REDIS_3_2
                         type: string
                         x-kubernetes-validations:
                         - message: RedisVersion is immutable.
@@ -213,17 +196,6 @@ spec:
                         type: string
                         x-kubernetes-validations:
                         - message: Tier is immutable.
-                          rule: (self == oldSelf)
-                      transitEncryptionMode:
-                        default: DISABLED
-                        description: The TLS mode of the Redis instance. If not provided,
-                          TLS is disabled for the instance.
-                        enum:
-                        - DISABLED
-                        - SERVER_AUTHENTICATION
-                        type: string
-                        x-kubernetes-validations:
-                        - message: TransitEncryptionMode is immutable.
                           rule: (self == oldSelf)
                     required:
                     - memorySizeGb

@@ -10,3 +10,6 @@
 - source: spec.volume.name
   name: spec.volume.name
   sort: true
+- source: status.state
+  name: status.state
+  sort: true

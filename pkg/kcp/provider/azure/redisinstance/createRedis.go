@@ -56,20 +56,17 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 func getCreateParams(state *State) armredis.CreateParameters {
 	createProperties := &armredis.CreateProperties{
-		EnableNonSSLPort: to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.EnableNonSslPort),
 		SKU: &armredis.SKU{
 			Name:     to.Ptr(armredis.SKUNamePremium),
 			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
 			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
 		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
+		EnableNonSSLPort:   to.Ptr(false),
 	}
 
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount != 0 {
 		createProperties.ShardCount = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount))
-	}
-	if state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary != 0 {
-		createProperties.ReplicasPerPrimary = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary))
 	}
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion != "" {
 		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)

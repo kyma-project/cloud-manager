@@ -14,6 +14,11 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	// params must be the same as in peeringRemoteCreate()
 	peering, err := state.remoteClient.GetPeering(
 		ctx,

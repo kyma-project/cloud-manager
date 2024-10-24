@@ -35,16 +35,15 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	).Build()
 
 	redisInstanceOptions := client.CreateRedisInstanceOptions{
-		VPCNetworkFullName:    vpcNetworkFullName,
-		IPRangeName:           state.IpRange().Status.Id,
-		MemorySizeGb:          redisInstance.Spec.Instance.Gcp.MemorySizeGb,
-		Tier:                  redisInstance.Spec.Instance.Gcp.Tier,
-		RedisVersion:          redisInstance.Spec.Instance.Gcp.RedisVersion,
-		AuthEnabled:           redisInstance.Spec.Instance.Gcp.AuthEnabled,
-		TransitEncryptionMode: redisInstance.Spec.Instance.Gcp.TransitEncryptionMode,
-		RedisConfigs:          redisInstance.Spec.Instance.Gcp.RedisConfigs,
-		MaintenancePolicy:     redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
-		Labels:                labels,
+		VPCNetworkFullName: vpcNetworkFullName,
+		IPRangeName:        state.IpRange().Status.Id,
+		MemorySizeGb:       redisInstance.Spec.Instance.Gcp.MemorySizeGb,
+		Tier:               redisInstance.Spec.Instance.Gcp.Tier,
+		RedisVersion:       redisInstance.Spec.Instance.Gcp.RedisVersion,
+		AuthEnabled:        redisInstance.Spec.Instance.Gcp.AuthEnabled,
+		RedisConfigs:       redisInstance.Spec.Instance.Gcp.RedisConfigs,
+		MaintenancePolicy:  redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
+		Labels:             labels,
 	}
 
 	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
@@ -54,10 +53,10 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ConditionTypeError,
+			Reason:  v1beta1.ReasonGcpError,
 			Message: fmt.Sprintf("Failed creating GcpRedis: %s", err),
 		})
-		err = state.PatchObjStatus(ctx)
+		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed gcp redis creation",

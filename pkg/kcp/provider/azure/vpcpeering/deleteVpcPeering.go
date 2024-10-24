@@ -24,7 +24,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 		ctx,
 		resourceGroupName,
 		state.Scope().Spec.Scope.Azure.VpcNetwork,
-		obj.Name,
+		obj.GetLocalPeeringName(),
 	)
 
 	if err != nil {

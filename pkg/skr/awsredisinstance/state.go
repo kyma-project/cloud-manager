@@ -70,14 +70,12 @@ func (s *State) ShouldModifyKcp() bool {
 
 	areCacheNodeTypesDifferent := s.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType != awsRedisInstance.Spec.CacheNodeType
 	isAutoMinorVersionUpgradeDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade != awsRedisInstance.Spec.AutoMinorVersionUpgrade
-	isTransitEncryptionEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.TransitEncryptionEnabled != awsRedisInstance.Spec.TransitEncryptionEnabled
 	isAuthEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AuthEnabled != awsRedisInstance.Spec.AuthEnabled
 	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisInstance.Spec.PreferredMaintenanceWindow, "")
 
 	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
 		areCacheNodeTypesDifferent ||
 		isAutoMinorVersionUpgradeDifferent ||
-		isTransitEncryptionEnabledDifferent ||
 		isAuthEnabledDifferent ||
 		arePreferredMaintenanceWindowDifferent
 }

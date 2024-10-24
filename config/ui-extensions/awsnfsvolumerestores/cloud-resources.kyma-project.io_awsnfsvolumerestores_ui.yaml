@@ -1,0 +1,76 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: spec.source.backup
+        widget: Panel
+        source: spec.source.backup
+        children:
+          - widget: Labels
+            source: name
+            name: spec.source.backup.name
+          - widget: Labels
+            source: source.backup.namespace
+            name: spec.source.backup.namespace
+
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+  form: |-
+    - path: spec.source.backup
+      name: spec.source.backup
+      widget: FormGroup
+      children:
+        - path: name
+          widget: Text
+          name: spec.source.backup.name
+          required: true
+        - path: namespace
+          name: spec.source.backup.namespace
+          widget: Text
+          required: false
+  general: |-
+    resource:
+        kind: AwsNfsVolumeRestore
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsnfsvolumerestores
+    name: AWS NFS Volume Restores
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AWS NFS Volume Restores description here
+  list: |-
+    - source: spec.source.backup.name
+      name: spec.source.backup.name
+      sort: true
+    - source: spec.source.backup.namespace
+      name: spec.source.backup.namespace
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      spec.source.backup: Backup
+      spec.source.backup.name: Name
+      spec.source.backup.namespace: Namespace
+      status.state: State
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsnfsvolumerestores-ui.operator.kyma-project.io
+  namespace: kyma-system

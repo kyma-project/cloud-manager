@@ -14,6 +14,11 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// remote client can't be created if remote network is not found
+	if state.remoteNetwork == nil {
+		return nil, nil
+	}
+
 	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
 	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
 

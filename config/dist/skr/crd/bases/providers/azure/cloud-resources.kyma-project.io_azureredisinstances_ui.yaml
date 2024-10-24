@@ -1,14 +1,11 @@
 apiVersion: v1
 data:
-  details: |
+  details: |-
     body:
       - name: configuration
         widget: Panel
         source: spec
         children:
-          - name: spec.enableNonSslPort
-            source: enableNonSslPort
-            widget: Labels
           - name: spec.replicasPerPrimary
             source: replicasPerPrimary
             widget: Labels
@@ -49,9 +46,6 @@ data:
           - name: spec.redisConfiguration.notify-keyspace-events
             source: notify-keyspace-events
             widget: Labels
-          - name: spec.redisConfiguration.zonal-configuration
-            source: zonal-configuration
-            widget: Labels
 
       - name: spec.volume
         widget: Panel
@@ -74,6 +68,14 @@ data:
           - name: spec.ipRange.name
             source: name
             widget: Labels
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.state
+            source: state
+            widget: Labels
   form: |
     - path: spec.sku
       name: spec.sku
@@ -84,10 +86,6 @@ data:
           name: spec.sku.capacity
           required: true
 
-    - path: spec.enableNonSslPort
-      name: spec.enableNonSslPort
-      required: false
-      disableOnEdit: true
     - path: spec.replicasPerPrimary
       name: spec.replicasPerPrimary
       required: false
@@ -123,9 +121,6 @@ data:
           disableOnEdit: true
         - path: notify-keyspace-events
           name: spec.redisConfiguration.notify-keyspace-events
-          disableOnEdit: true
-        - path: zonal-configuration
-          name: spec.redisConfiguration.zonal-configuration
           disableOnEdit: true
 
     - path: spec.volume
@@ -169,6 +164,7 @@ data:
   translations: |-
     en:
       configuration: Configuration
+      status: Status
       status.state: State
       spec.enableNonSslPort: Enable Non SSL Port
       spec.replicasPerPrimary: Replicas Per Primary
@@ -192,6 +188,8 @@ data:
       spec.ipRange.name: Name
 kind: ConfigMap
 metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.3
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

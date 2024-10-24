@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/ptr"
 )
 
 func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (error, context.Context) {
@@ -13,23 +12,23 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 	logger := composed.LoggerFromCtx(ctx)
 	obj := state.ObjAsVpcPeering()
 
+	// remote client not created
+	if state.remoteClient == nil {
+		return nil, nil
+	}
+
 	// skip loading of vpc peering connections if remoteId is empty
 	if len(obj.Status.RemoteId) == 0 {
 		return nil, nil
 	}
 
-	list, err := state.remoteClient.DescribeVpcPeeringConnections(ctx)
+	peering, err := state.remoteClient.DescribeVpcPeeringConnection(ctx, obj.Status.RemoteId)
 
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error listing AWS peering connections", ctx)
 	}
 
-	for _, c := range list {
-		if obj.Status.RemoteId == ptr.Deref(c.VpcPeeringConnectionId, "") {
-			state.remoteVpcPeering = &c
-			break
-		}
-	}
+	state.remoteVpcPeering = peering
 
 	ctx = composed.LoggerIntoCtx(ctx, logger.WithValues("remoteId", obj.Status.RemoteId))
 

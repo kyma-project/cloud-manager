@@ -23,7 +23,6 @@ import (
 )
 
 // AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
-// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type AwsRedisInstanceSpec struct {
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
@@ -43,10 +42,6 @@ type AwsRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:default=false
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
-
-	// +optional
-	// +kubebuilder:default=false
-	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
 	// +optional
 	// +kubebuilder:default=false

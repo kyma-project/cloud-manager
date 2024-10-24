@@ -34,6 +34,7 @@ const (
 	VirtualNetworkPeeringStateConnected    = "Connected"
 	VirtualNetworkPeeringStateDisconnected = "Disconnected"
 	VirtualNetworkPeeringStateInitiated    = "Initiated"
+	VirtualNetworkPeeringStateDeleting     = "Deleting"
 )
 
 // VpcPeeringSpec defines the desired state of VpcPeering

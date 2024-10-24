@@ -46,7 +46,6 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 					EngineVersion:              awsRedisInstance.Spec.EngineVersion,
 					AutoMinorVersionUpgrade:    awsRedisInstance.Spec.AutoMinorVersionUpgrade,
 					AuthEnabled:                awsRedisInstance.Spec.AuthEnabled,
-					TransitEncryptionEnabled:   awsRedisInstance.Spec.TransitEncryptionEnabled,
 					PreferredMaintenanceWindow: awsRedisInstance.Spec.PreferredMaintenanceWindow,
 					Parameters:                 awsRedisInstance.Spec.Parameters,
 				},

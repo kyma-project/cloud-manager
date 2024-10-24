@@ -16,16 +16,15 @@ import (
 )
 
 type CreateRedisInstanceOptions struct {
-	VPCNetworkFullName    string
-	IPRangeName           string
-	MemorySizeGb          int32
-	Tier                  string
-	RedisVersion          string
-	AuthEnabled           bool
-	TransitEncryptionMode string
-	RedisConfigs          map[string]string
-	MaintenancePolicy     *cloudcontrolv1beta1.MaintenancePolicyGcp
-	Labels                map[string]string
+	VPCNetworkFullName string
+	IPRangeName        string
+	MemorySizeGb       int32
+	Tier               string
+	RedisVersion       string
+	AuthEnabled        bool
+	RedisConfigs       map[string]string
+	MaintenancePolicy  *cloudcontrolv1beta1.MaintenancePolicyGcp
+	Labels             map[string]string
 }
 
 type MemorystoreClient interface {
@@ -95,7 +94,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			ReservedIpRange:       options.IPRangeName,
 			RedisConfigs:          options.RedisConfigs,
 			AuthEnabled:           options.AuthEnabled,
-			TransitEncryptionMode: redispb.Instance_TransitEncryptionMode(redispb.Instance_TransitEncryptionMode_value[options.TransitEncryptionMode]),
+			TransitEncryptionMode: redispb.Instance_SERVER_AUTHENTICATION,
 			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
 			Labels:                options.Labels,
 		},

@@ -26,7 +26,7 @@ func setProcessing(ctx context.Context, st composed.State) (error, context.Conte
 		return composed.StopAndForget, nil
 	}
 
-	//If state is empty or error, Reset the error conditions, and restart with processing state
+	//If state is empty, restart with processing state
 	if restore.Status.State == "" {
 		restore.Status.State = cloudresourcesv1beta1.JobStateProcessing
 		return composed.PatchStatus(restore).

@@ -14,8 +14,9 @@ If the default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
 When creating GcpRedisInstance, two fields are mandatry: `memorySizeGb`, and `tier`.
+As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
 
-Optionally, you can specify the `redisVersion`, `authEnabled`, `transitEncryption`, `redisConfigs`, and `maintenancePolicy` fields.
+Optionally, you can specify the `redisVersion`, `authEnabled`, `redisConfigs`, and `maintenancePolicy` fields.
 
 # Specification
 
@@ -27,9 +28,8 @@ This table lists the parameters of GcpRedisInstance, together with their descrip
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                              |
 | **tier**                                          | string | Required. The service tier of the instance. Supported values are `BASIC` and `STANDARD_HA`                                                                                                                  |
 | **memorySizeGb**                                  | int    | Required. Redis memory size in GiB.                                                                                                                                                                         |
-| **redisVersion**                                  | int    | Optional. The version of Redis software. Defaults to `REDIS_7_0`.                                                                                                                                           |
+| **redisVersion**                                  | int    | Optional. The version of Redis software. Supported values are `REDIS_7_2`, `REDIS_7_0`, and `REDIS_6_X`. Defaults to `REDIS_7_0`. |
 | **authEnabled**                                   | bool   | Optional. Indicates whether OSS Redis AUTH is enabled for the instance. If set to `true,` AUTH is enabled on the instance. Defaults to `false`                                                              |
-| **transitEncryptionMode**                         | object | Optional. Defines the way TLS is executed. Supports two modes, `SERVER_AUTHENTICATION` and `DISABLED`. When set to `SERVER_AUTHENTICATION`, Client to Server traffic encryption is enabled with server authentication. If set to `DISABLED`, or not provided, in-transit encryption is disabled. To learn more about in-transit encryption, see [About in-transit encryption](https://cloud.google.com/memorystore/docs/redis/about-in-transit-encryption). |
 | **redisConfigs**                                  | object | Optional. Provided values are passed to the Redis configuration. Supported values can be read on [Google's Supported Redis configurations page](https://cloud.google.com/memorystore/docs/redis/supported-redis-configurations). If left empty, defaults to an empty object. |
 | **maintenancePolicy**                             | object | Optional. Defines a desired maintenance policy. Only one policy can be active at a time.  If not provided, maintenance events can be performed at any time. To learn more about maintenance policy limitations and requirements, see [About maintenance on Memorystore for Redis](https://cloud.google.com/memorystore/docs/redis/about-maintenance). |
 | **maintenancePolicy.dayOfWeek**                   | object | Optional. Defines maintenance policy to a specific day.                                                                                                                                                     |
@@ -70,7 +70,6 @@ spec:
   tier: "STANDARD_HA"
   redisVersion: REDIS_7_0
   authEnabled: true
-  transitEncryptionMode: SERVER_AUTHENTICATION
   redisConfigs:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"

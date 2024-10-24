@@ -23,8 +23,8 @@ data:
           source: status
           children:
             - widget: Labels
-              source: id
-              name: status.id
+              source: state
+              name: status.state
   form: |
     - path: spec.importCustomRoutes
       name: spec.importCustomRoutes
@@ -70,6 +70,19 @@ data:
     - source: spec.remoteVpc
       name: spec.remoteVpc
       sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+      widget: Badge
+      highlights:
+        positive:
+         - Connected
+        warning:
+         - Initiated
+        critical:
+         - Disconnected
+        warning:
+         - Deleting
   translations: |-
     en:
       configuration: Configuration
@@ -79,8 +92,11 @@ data:
       spec.remoteProject: Remote Project
       spec.remoteVpc: Remote VPC
       status.id: ID
+      status.state: State
 kind: ConfigMap
 metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

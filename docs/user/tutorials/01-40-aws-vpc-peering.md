@@ -15,7 +15,7 @@ create those resources.
 1.  Set the default AWS CLI profile.
     ```shell
     export AWS_PROFILE={PROFILE_NAME}
-    export AWS_DEFAULT_REGION={REGION}
+    export AWS_REGION={REGION}
     ```
    
 2.  Create a trust policy document.
@@ -79,7 +79,7 @@ create those resources.
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}')
     export NODE_NETWORK=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.nodeNetwork}')
     export VPC_NAME=my-vpc
-    export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=""},{Key=Name,Value=$VPC_NAME}] --query Vpc.VpcId --output text)  
+    export VPC_ID=$(aws ec2 create-vpc --cidr-block $CIDR_BLOCK --tag-specifications "ResourceType=vpc,Tags=[{Key=$SHOOT_NAME,Value=''},{Key=Name,Value=$VPC_NAME}]" --query Vpc.VpcId --output text)
     ```
 8.  Create a subnet.
     ```shell
@@ -88,7 +88,9 @@ create those resources.
 
 9.  Run an instance.
     ```shell
-    export INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0c38b837cd80f13bb --instance-type t2.micro --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
+    export IMAGE_ID=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+    export INSTANCE_TYPE=$(aws ec2 describe-instance-types --filter "Name=instance-type,Values=*.micro" "Name=processor-info.supported-architecture,Values=arm64" --query 'InstanceTypes[0].InstanceType' | tr -d '"')
+    export INSTANCE_ID=$(aws ec2 run-instances --image-id $IMAGE_ID --instance-type $INSTANCE_TYPE --subnet-id $SUBNET_ID --query "Instances[0].InstanceId" --output text)
     export IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PrivateIpAddress" --output text)
     ```
 10. Allow ICMP traffic from Kyma Pods.
@@ -106,9 +108,9 @@ create those resources.
     metadata:
       name: peering-to-my-vpc
     spec:
-      remoteAccount: $ACCOUNT_ID
-      remoteRegion: $AWS_DEFAULT_REGION
-      remoteVnet: $VPC_ID
+      remoteAccountId: "$ACCOUNT_ID"
+      remoteRegion: "$AWS_REGION"
+      remoteVpcId: "$VPC_ID"
     EOF
     ```
 
@@ -220,6 +222,7 @@ create those resources.
     1. Terminate the instance.
        ```shell
        aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+       aws ec2 wait instance-terminated --instance-ids $INSTANCE_ID
        ```
     2. Delete the subnet.
        ```shell

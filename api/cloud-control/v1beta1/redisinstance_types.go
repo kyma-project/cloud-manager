@@ -71,8 +71,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
@@ -97,9 +95,6 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 	}
 	if redisConfigs.MaxClients != "" {
 		redisConfiguration.Maxclients = &redisConfigs.MaxClients
-	}
-	if redisConfigs.ZonalConfiguration != "" {
-		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
 	}
 
 	if len(additionalProperties) > 0 {
@@ -159,20 +154,13 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
 	// +optional
 	// +kubebuilder:default=false
 	AuthEnabled bool `json:"authEnabled"`
-
-	// The TLS mode of the Redis instance. If not provided, TLS is disabled for the instance.
-	// +optional
-	// +kubebuilder:default=DISABLED
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TransitEncryptionMode is immutable."
-	// +kubebuilder:validation:Enum=DISABLED;SERVER_AUTHENTICATION
-	TransitEncryptionMode string `json:"transitEncryptionMode"`
 
 	// Redis configuration parameters, according to http://redis.io/topics/config.
 	// See docs for the list of the supported parameters
@@ -190,9 +178,6 @@ type RedisInstanceAzure struct {
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional
-	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
-
-	// +optional
 	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 
 	// +optional
@@ -200,12 +185,8 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self.authEnabled == false || self.transitEncryptionEnabled == true), message="authEnabled can only be true if TransitEncryptionEnabled is also true"
 type RedisInstanceAws struct {
 	// +kubebuilder:validation:Required
 	CacheNodeType string `json:"cacheNodeType"`
@@ -218,10 +199,6 @@ type RedisInstanceAws struct {
 	// +optional
 	// +kubebuilder:default=false
 	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
-
-	// +optional
-	// +kubebuilder:default=false
-	TransitEncryptionEnabled bool `json:"transitEncryptionEnabled"`
 
 	// +optional
 	// +kubebuilder:default=false
@@ -264,7 +241,7 @@ type RedisInstanceStatus struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 //+kubebuilder:object:root=true
@@ -296,7 +273,7 @@ func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *RedisInstance) CloneForPatchStatus() client.Object {
-	return &RedisInstance{
+	result := &RedisInstance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "RedisInstance",
 			APIVersion: GroupVersion.String(),
@@ -307,6 +284,12 @@ func (in *RedisInstance) CloneForPatchStatus() client.Object {
 		},
 		Status: in.Status,
 	}
+
+	if result.Status.Conditions == nil {
+		result.Status.Conditions = []metav1.Condition{}
+	}
+
+	return result
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {

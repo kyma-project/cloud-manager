@@ -21,7 +21,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 
 	redisInstance.Status.Id = state.gcpRedisInstance.Name
 
-	err := state.PatchObjStatus(ctx)
+	err := state.UpdateObjStatus(ctx)
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating RedisInstance success .status.id", composed.StopWithRequeue, ctx)

@@ -90,18 +90,6 @@ func WithAwsRedisInstanceAuthEnabled(authEnabled bool) ObjAction {
 	}
 }
 
-func WithAwsRedisInstanceTransitEncryptionEnabled(transitEncryptionEnabled bool) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
-				awsRedisInstance.Spec.TransitEncryptionEnabled = transitEncryptionEnabled
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceTransitEncryptionEnabled", obj))
-		},
-	}
-}
-
 func WithAwsRedisInstancePreferredMaintenanceWindow(preferredMaintenanceWindow *string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

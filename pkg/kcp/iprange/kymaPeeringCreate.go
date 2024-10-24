@@ -39,8 +39,9 @@ func kymaPeeringCreate(ctx context.Context, st composed.State) (error, context.C
 				RemoteNetwork: klog.ObjectRef{
 					Name: state.network.Name,
 				},
-				PeeringName:      fmt.Sprintf("kyma--%s", state.Scope().Spec.ShootName), // remote
-				LocalPeeringName: fmt.Sprintf("cm--%s", state.Scope().Spec.ShootName),   // local
+				PeeringName:         fmt.Sprintf("kyma--%s", state.Scope().Spec.ShootName), // remote
+				LocalPeeringName:    fmt.Sprintf("cm--%s", state.Scope().Spec.ShootName),   // local
+				DeleteRemotePeering: true,
 			},
 		},
 	}

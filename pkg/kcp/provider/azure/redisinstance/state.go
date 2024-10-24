@@ -2,10 +2,11 @@ package redisinstance
 
 import (
 	"context"
-	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/go-logr/logr"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	redisinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
@@ -21,9 +22,10 @@ type State struct {
 	subscriptionId string
 	tenantId       string
 
-	resourceGroupName string
-
-	azureRedisInstance *armredis.ResourceInfo
+	resourceGroupName   string
+	privateEndPoint     *armnetwork.PrivateEndpoint
+	privateDnsZoneGroup *armnetwork.PrivateDNSZoneGroup
+	azureRedisInstance  *armredis.ResourceInfo
 }
 
 type StateFactory interface {
@@ -72,6 +74,6 @@ func newState(state redisinstancetypes.State,
 		subscriptionId: subscriptionId,
 		tenantId:       tenantId,
 
-		resourceGroupName: fmt.Sprintf("cm-redis-%s", state.Obj().GetName()), // TODO this should be specified somehow
+		resourceGroupName: azurecommon.AzureCloudManagerResourceGroupName(state.Scope().Spec.Scope.Azure.VpcNetwork),
 	}
 }

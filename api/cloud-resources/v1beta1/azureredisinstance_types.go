@@ -31,8 +31,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 type RedisAuthSecretSpec struct {
@@ -52,11 +50,6 @@ type AzureRedisInstanceSpec struct {
 	SKU AzureRedisSKU `json:"sku"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EnableNonSslPort is immutable."
-	// +kubebuilder:default=false
-	EnableNonSslPort bool `json:"enableNonSslPort,omitempty"`
-
-	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfiguration is immutable."
 	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
 
@@ -68,10 +61,6 @@ type AzureRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerPrimary is immutable."
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
 

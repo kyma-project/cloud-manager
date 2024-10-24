@@ -19,3 +19,10 @@ body:
       - name: spec.source.volume.namespace
         source: namespace
         widget: Labels
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state

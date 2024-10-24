@@ -21,7 +21,7 @@ func privateDnsZoneLoad(ctx context.Context, st composed.State) (error, context.
 	}
 	logger.Info("Loading Azure Private DnsZone")
 	resourceGroupName := state.resourceGroupName
-	privateDnsZoneName := azureutil.NewPrivateDnsZoneName(state.ObjAsIpRange().Name)
+	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
 	privateDnsZoneInstance, err := state.azureClient.GetPrivateDnsZone(ctx, resourceGroupName, privateDnsZoneName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
