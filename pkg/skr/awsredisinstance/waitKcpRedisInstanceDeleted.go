@@ -25,7 +25,7 @@ func waitKcpRedisInstanceDeleted(ctx context.Context, st composed.State) (error,
 	kcpCondErr := meta.FindStatusCondition(state.KcpRedisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	if kcpCondErr != nil {
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
-		return composed.PatchStatus(awsRedisInstance).
+		return composed.UpdateStatus(awsRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

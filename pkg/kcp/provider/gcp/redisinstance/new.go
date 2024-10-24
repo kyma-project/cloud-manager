@@ -18,7 +18,7 @@ func New(stateFactory StateFactory) composed.Action {
 		state, err := stateFactory.NewState(ctx, st.(types.State))
 		if err != nil {
 			redisInstance := st.Obj().(*v1beta1.RedisInstance)
-			return composed.PatchStatus(redisInstance).
+			return composed.UpdateStatus(redisInstance).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,

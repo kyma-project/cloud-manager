@@ -1,0 +1,146 @@
+apiVersion: v1
+data:
+  details: |+
+    body:
+      - name: spec.nfsVolumeRef
+        widget: Panel
+        source: spec.nfsVolumeRef
+        children:
+          - widget: Labels
+            source: apiVersion
+            name: spec.nfsVolumeRef.apiVersion
+          - widget: Labels
+            source: kind
+            name: spec.nfsVolumeRef.kind
+          - widget: Labels
+            source: name
+            name: spec.nfsVolumeRef.name
+          - widget: Labels
+            source: namespace
+            name: spec.nfsVolumeRef.namespace
+
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - widget: Labels
+            source: schedule
+            name: spec.schedule
+          - widget: Labels
+            source: startTime
+            name: spec.startTime
+          - widget: Labels
+            source: endTime
+            name: spec.endTime
+          - widget: Labels
+            source: prefix
+            name: spec.prefix
+          - widget: Labels
+            source: maxRetentionDays
+            name: spec.maxRetentionDays
+          - widget: Labels
+            source: deleteCascade
+            name: spec.deleteCascade
+          - widget: Labels
+            source: suspend
+            name: spec.suspend
+
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.state
+            source: state
+            widget: Labels
+
+  form: |
+    - path: spec.nfsVolumeRef
+      name: spec.nfsVolumeRef
+      required: true
+      widget: FormGroup
+      children:
+        - path: apiVersion
+          name: spec.nfsVolumeRef.apiVersion
+          required: true
+        - path: kind
+          name: spec.nfsVolumeRef.kind
+          required: true
+        - path: name
+          name: spec.nfsVolumeRef.name
+          required: true
+        - path: namespace
+          name: spec.nfsVolumeRef.namespace
+          required: true
+
+    - path: spec.schedule
+      name: spec.schedule
+      required: false
+    - path: spec.startTime
+      name: spec.startTime
+      required: false
+    - path: spec.endTime
+      name: spec.endTime
+      required: false
+    - path: spec.prefix
+      name: spec.prefix
+      required: false
+    - path: spec.maxRetentionDays
+      name: spec.maxRetentionDays
+      required: false
+    - path: spec.deleteCascade
+      name: spec.deleteCascade
+      required: false
+    - path: spec.suspend
+      name: spec.suspend
+      required: false
+  general: |-
+    resource:
+        kind: AwsNfsBackupSchedule
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awsnfsbackupschedules
+    name: AWS NFS Backup Schedules
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AWS NFS Backup Schedules description here
+  list: |-
+    - source: spec.schedule
+      name: spec.schedule
+      sort: true
+    - source: status.lastCreateRun
+      name: status.lastCreateRun
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      spec.schedule: Schedule
+      spec.startTime: Start Time
+      spec.endTime: End Time
+      spec.prefix: Prefix
+      spec.maxRetentionDays: Max Retention Days
+      spec.deleteCascade: Delete Cascade
+      spec.suspend: Suspend
+      status.lastCreateRun: Last Run Time
+      status.state: State
+      spec.nfsVolumeRef: NFS Volume
+      spec.nfsVolumeRef.apiVersion: API Version
+      spec.nfsVolumeRef.kind: Kind
+      spec.nfsVolumeRef.name: Name
+      spec.nfsVolumeRef.namespace: Namespace
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awsnfsbackupschedules-ui.operator.kyma-project.io
+  namespace: kyma-system

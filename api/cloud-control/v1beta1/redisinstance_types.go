@@ -154,7 +154,7 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
@@ -185,9 +185,6 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {

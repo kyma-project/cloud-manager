@@ -97,8 +97,6 @@ spec:
                         type: object
                       redisVersion:
                         type: string
-                      replicasPerPrimary:
-                        type: integer
                       shardCount:
                         type: integer
                       sku:
@@ -185,9 +183,6 @@ spec:
                         - REDIS_7_2
                         - REDIS_7_0
                         - REDIS_6_X
-                        - REDIS_5_0
-                        - REDIS_4_0
-                        - REDIS_3_2
                         type: string
                         x-kubernetes-validations:
                         - message: RedisVersion is immutable.
