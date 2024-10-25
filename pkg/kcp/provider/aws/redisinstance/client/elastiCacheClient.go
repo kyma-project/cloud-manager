@@ -45,6 +45,7 @@ type CreateElastiCacheClusterOptions struct {
 	AuthTokenSecretString      *string
 	PreferredMaintenanceWindow *string
 	SecurityGroupIds           []string
+	ReplicasPerNodeGroup       int32
 }
 
 type ModifyElastiCacheClusterOptions struct {
@@ -313,13 +314,13 @@ func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, cluste
 }
 
 func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
+	automaticFailoverEnabled := options.ReplicasPerNodeGroup > 0
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(options.Name),
 		ReplicationGroupDescription: aws.String("ElastiCache managed by Kyma Cloud Manager"),
 		CacheSubnetGroupName:        aws.String(options.SubnetGroupName),
 		CacheParameterGroupName:     aws.String(options.ParameterGroupName),
 		CacheNodeType:               aws.String(options.CacheNodeType),
-		NumCacheClusters:            aws.Int32(1),
 		NumNodeGroups:               aws.Int32(1),
 		ClusterMode:                 elasticacheTypes.ClusterModeDisabled,
 		Engine:                      aws.String("redis"),
@@ -330,6 +331,8 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		SecurityGroupIds:            options.SecurityGroupIds,
 		AtRestEncryptionEnabled:     aws.Bool(true),
+		AutomaticFailoverEnabled:    aws.Bool(automaticFailoverEnabled),
+		ReplicasPerNodeGroup:        aws.Int32(options.ReplicasPerNodeGroup),
 		Tags:                        tags,
 	}
 	res, err := c.elastiCacheSvc.CreateReplicationGroup(ctx, params)

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.14
+    cloud-resources.kyma-project.io/version: v0.0.15
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -99,6 +99,15 @@ spec:
 
                     Example: sun:23:00-mon:01:30
                   type: string
+                readReplicas:
+                  default: 0
+                  format: int32
+                  maximum: 1
+                  minimum: 0
+                  type: integer
+                  x-kubernetes-validations:
+                    - message: ReadReplicas is immutable.
+                      rule: (self == oldSelf)
               required:
                 - cacheNodeType
               type: object

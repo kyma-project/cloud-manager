@@ -14,6 +14,7 @@ spec:
 
   # optional fields
   engineVersion: "7.0"
+  readReplicas: 1
   autoMinorVersionUpgrade: true
   parameters:
     maxmemory-policy: volatile-lru

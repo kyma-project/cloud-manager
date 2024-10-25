@@ -48,6 +48,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 					AuthEnabled:                awsRedisInstance.Spec.AuthEnabled,
 					PreferredMaintenanceWindow: awsRedisInstance.Spec.PreferredMaintenanceWindow,
 					Parameters:                 awsRedisInstance.Spec.Parameters,
+					ReadReplicas:               awsRedisInstance.Spec.ReadReplicas,
 				},
 			},
 		},
