@@ -59,6 +59,13 @@ type AwsRedisInstanceSpec struct {
 
 	// +optional
 	Parameters map[string]string `json:"parameters,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=1
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReadReplicas is immutable."
+	ReadReplicas int32 `json:"readReplicas"`
 }
 
 // AwsRedisInstanceStatus defines the observed state of AwsRedisInstance

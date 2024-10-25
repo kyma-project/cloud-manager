@@ -198,6 +198,18 @@ func WithKcpAwsAuthEnabled(authEnabled bool) ObjAction {
 	}
 }
 
+func WithKcpAwsReadReplicas(readReplicas int32) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Aws.ReadReplicas = readReplicas
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAwsReadReplicas", obj))
+		},
+	}
+}
+
 func WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow *string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

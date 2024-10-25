@@ -60,6 +60,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		AuthTokenSecretString:      authTokenSecetString,
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 		SecurityGroupIds:           []string{state.securityGroupId},
+		ReplicasPerNodeGroup:       redisInstance.Spec.Instance.Aws.ReadReplicas,
 	})
 
 	if err != nil {
