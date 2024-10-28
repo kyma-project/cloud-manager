@@ -30,6 +30,11 @@
   name: spec.preferredMaintenanceWindow
   required: false
 
+- path: spec.readReplicas
+  name: spec.readReplicas
+  required: false
+  disabled: true
+
 - path: spec.ipRange
   name: spec.ipRange
   widget: FormGroup

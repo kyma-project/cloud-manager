@@ -16,3 +16,4 @@ en:
   spec.engineVersion: Engine Version
   spec.parameters: Parameters
   spec.preferredMaintenanceWindow: Preferred Maintenance Window
+  spec.readReplicas: Read Replicas
