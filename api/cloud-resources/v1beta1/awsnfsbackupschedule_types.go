@@ -151,7 +151,7 @@ func (sc *AwsNfsBackupSchedule) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (sc *AwsNfsBackupSchedule) SpecificToProviders() []string {
-	return []string{"Aws"}
+	return []string{"aws"}
 }
 
 func (sc *AwsNfsBackupSchedule) State() string {
