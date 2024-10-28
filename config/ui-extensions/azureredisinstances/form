@@ -7,10 +7,6 @@
       name: spec.sku.capacity
       required: true
 
-- path: spec.replicasPerPrimary
-  name: spec.replicasPerPrimary
-  required: false
-  disableOnEdit: true
 - path: spec.shardCount
   name: spec.shardCount
   required: false

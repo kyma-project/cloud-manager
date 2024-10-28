@@ -21,6 +21,9 @@ data:
           - name: spec.preferredMaintenanceWindow
             source: preferredMaintenanceWindow
             widget: Labels
+          - name: spec.readReplicas
+            source: readReplicas
+            widget: Labels
 
       - name: spec.ipRange
         widget: Panel
@@ -92,6 +95,11 @@ data:
       name: spec.preferredMaintenanceWindow
       required: false
 
+    - path: spec.readReplicas
+      name: spec.readReplicas
+      required: false
+      disabled: true
+
     - path: spec.ipRange
       name: spec.ipRange
       widget: FormGroup
@@ -154,10 +162,11 @@ data:
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
       spec.preferredMaintenanceWindow: Preferred Maintenance Window
+      spec.readReplicas: Read Replicas
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

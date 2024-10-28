@@ -6,9 +6,6 @@ data:
         widget: Panel
         source: spec
         children:
-          - name: spec.replicasPerPrimary
-            source: replicasPerPrimary
-            widget: Labels
           - name: spec.shardCount
             source: shardCount
             widget: Labels
@@ -86,10 +83,6 @@ data:
           name: spec.sku.capacity
           required: true
 
-    - path: spec.replicasPerPrimary
-      name: spec.replicasPerPrimary
-      required: false
-      disableOnEdit: true
     - path: spec.shardCount
       name: spec.shardCount
       required: false
@@ -167,7 +160,6 @@ data:
       status: Status
       status.state: State
       spec.enableNonSslPort: Enable Non SSL Port
-      spec.replicasPerPrimary: Replicas Per Primary
       spec.shardCount: Shard Count
       spec.redisVersion: Redis Version
       spec.sku: SKU
@@ -189,7 +181,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
