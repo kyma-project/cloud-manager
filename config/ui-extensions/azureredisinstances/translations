@@ -3,7 +3,6 @@ en:
   status: Status
   status.state: State
   spec.enableNonSslPort: Enable Non SSL Port
-  spec.replicasPerPrimary: Replicas Per Primary
   spec.shardCount: Shard Count
   spec.redisVersion: Redis Version
   spec.sku: SKU
