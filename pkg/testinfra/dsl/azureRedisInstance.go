@@ -160,3 +160,17 @@ func UpdateAzureRedisInstance(ctx context.Context, clnt client.Client, obj *clou
 	err := clnt.Update(ctx, obj)
 	return err
 }
+
+func WithAzureRedisInstanceDefautSpecs() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
+				azureRedisInstance.Spec.ShardCount = 1
+				azureRedisInstance.Spec.SKU.Capacity = 1
+				azureRedisInstance.Spec.RedisVersion = "7"
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceDefautSpecs", obj))
+		},
+	}
+}

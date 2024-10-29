@@ -61,6 +61,7 @@ func (r *reconciler) newAction() composed.Action {
 		setProcessingStateForDeletion,
 		preventDeleteOnAwsNfsVolumeUsage,
 		preventDeleteOnGcpNfsVolumeUsage,
+		preventDeleteOnAzureRedisInstanceUsage,
 		preventDeleteOnAwsRedisInstanceUsage,
 		preventDeleteOnGcpRedisInstanceUsage,
 		deleteKcpIpRange,
