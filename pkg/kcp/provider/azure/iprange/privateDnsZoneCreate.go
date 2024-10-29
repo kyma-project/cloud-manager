@@ -38,7 +38,7 @@ func privateDnsZoneCreate(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if err != nil {
-		logger.Error(err, "Error creating Azure KCP IpRange privateDnsZone", ctx)
+		logger.Error(err, "Error creating Azure KCP IpRange privateDnsZone")
 
 		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
 
