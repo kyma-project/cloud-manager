@@ -183,6 +183,9 @@ func (i *installer) copyForUpdate(from, to *unstructured.Unstructured) (err erro
 	if err = i.copyField(from, to, "spec"); err != nil {
 		return fmt.Errorf("error copying spec field: %w", err)
 	}
+	if err = i.copyField(from, to, "body"); err != nil {
+		return fmt.Errorf("error copying body field: %w", err)
+	}
 	if err = i.copyField(from, to, "metadata", "labels"); err != nil {
 		return fmt.Errorf("error copying labels field: %w", err)
 	}
