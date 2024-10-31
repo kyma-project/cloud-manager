@@ -25,6 +25,7 @@ type CreateRedisInstanceOptions struct {
 	RedisConfigs       map[string]string
 	MaintenancePolicy  *cloudcontrolv1beta1.MaintenancePolicyGcp
 	Labels             map[string]string
+	ReplicaCount       int32
 }
 
 type MemorystoreClient interface {
@@ -80,6 +81,11 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 	}
 	defer redisClient.Close()
 
+	readReplicasMode := redispb.Instance_READ_REPLICAS_DISABLED
+	if options.Tier != "BASIC" {
+		readReplicasMode = redispb.Instance_READ_REPLICAS_ENABLED
+	}
+
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
 	req := &redispb.CreateInstanceRequest{
 		Parent:     parent,
@@ -97,6 +103,8 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 			TransitEncryptionMode: redispb.Instance_SERVER_AUTHENTICATION,
 			MaintenancePolicy:     ToMaintenancePolicy(options.MaintenancePolicy),
 			Labels:                options.Labels,
+			ReplicaCount:          options.ReplicaCount,
+			ReadReplicasMode:      readReplicasMode,
 		},
 	}
 

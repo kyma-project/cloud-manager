@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.14
+    cloud-resources.kyma-project.io/version: v0.0.15
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -138,6 +138,15 @@ spec:
                   x-kubernetes-validations:
                     - message: RedisVersion is immutable.
                       rule: (self == oldSelf)
+                replicaCount:
+                  default: 0
+                  format: int32
+                  maximum: 5
+                  minimum: 0
+                  type: integer
+                  x-kubernetes-validations:
+                    - message: ReplicaCount is immutable.
+                      rule: (self == oldSelf)
                 tier:
                   default: BASIC
                   description: The service tier of the instance.
@@ -152,6 +161,11 @@ spec:
                 - memorySizeGb
                 - tier
               type: object
+              x-kubernetes-validations:
+                - message: replicaCount must be zero for BASIC tier
+                  rule: (self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA")
+                - message: replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier
+                  rule: (self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC")
             status:
               description: GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
               properties:
