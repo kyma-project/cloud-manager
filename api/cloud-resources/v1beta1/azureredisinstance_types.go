@@ -40,7 +40,7 @@ type RedisAuthSecretSpec struct {
 }
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=1;2;3;4
+	// +kubebuilder:validation:Enum=1;2;3;4;5
 	Capacity int `json:"capacity"`
 }
 
@@ -61,6 +61,10 @@ type AzureRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
 	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerPrimary is immutable."
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
 

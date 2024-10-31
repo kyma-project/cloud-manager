@@ -106,7 +106,7 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=1;2;3;4
+	// +kubebuilder:validation:Enum=1;2;3;4;5
 	Capacity int `json:"capacity"`
 }
 
@@ -185,6 +185,10 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:Enum=1;2;3
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {
