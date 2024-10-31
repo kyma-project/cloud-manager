@@ -13,5 +13,5 @@ configMapGenerator:
         busola.io/extension: resource
         busola.io/extension-version: "0.5"
       annotations:
-        cloud-resources.kyma-project.io/version: "v0.0.2"
+        cloud-resources.kyma-project.io/version: "v0.0.3"
     namespace: kyma-system
