@@ -55,6 +55,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		gcpRedisInstanceRedisConfigs := map[string]string{
 			configKey: configValue,
 		}
+		gcpRedisInstanceReplicaCount := int32(0)
 
 		const (
 			authSecretName = "custom-auth-secretname"
@@ -91,6 +92,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceAuthSecretName(authSecretName),
 					WithGcpRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithGcpRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+					WithGcpRedisInstanceReplicaCount(gcpRedisInstanceReplicaCount),
 				).
 				Should(Succeed())
 		})
@@ -140,6 +142,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			By("And has spec.instance.gcp equal to SKR GcpRedisInstance.spec values")
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.Tier).To(Equal(gcpRedisInstance.Spec.Tier))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb).To(Equal(gcpRedisInstance.Spec.MemorySizeGb))
+			Expect(kcpRedisInstance.Spec.Instance.Gcp.ReplicaCount).To(Equal(gcpRedisInstance.Spec.ReplicaCount))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisVersion).To(Equal(gcpRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.AuthEnabled).To(Equal(gcpRedisInstance.Spec.AuthEnabled))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs[configKey]).To(Equal(configValue))
@@ -264,10 +267,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
 					WithName(gcpRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
-					WithGcpRedisInstanceAuthEnabled(false),
+					WithGcpRedisInstanceDefaultSpec(),
 				).
 				Should(Succeed())
 		})
@@ -415,9 +415,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
 					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceDefaultSpec(),
 				).
 				Should(Succeed())
 		})
@@ -590,9 +588,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
 					WithName(gcpRedisInstanceName),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceMemorySizeGb(int32(5)),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceDefaultSpec(),
 				).
 				Should(Succeed())
 		})

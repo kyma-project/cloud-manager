@@ -139,6 +139,8 @@ type MaintenancePolicyGcp struct {
 	DayOfWeek *DayOfWeekPolicyGcp `json:"dayOfWeek,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule=(self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA"), message="replicaCount must be zero for BASIC tier"
+// +kubebuilder:validation:XValidation:rule=(self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC"), message="replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier"
 type RedisInstanceGcp struct {
 	// The service tier of the instance.
 	// +kubebuilder:default=BASIC
@@ -171,6 +173,13 @@ type RedisInstanceGcp struct {
 	// If not provided, maintenance events can be performed at any time.
 	// +optional
 	MaintenancePolicy *MaintenancePolicyGcp `json:"maintenancePolicy,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicaCount is immutable."
+	ReplicaCount int32 `json:"replicaCount"`
 }
 
 type RedisInstanceAzure struct {

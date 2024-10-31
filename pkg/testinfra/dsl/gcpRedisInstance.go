@@ -27,6 +27,22 @@ func CreateGcpRedisInstance(ctx context.Context, clnt client.Client, obj *cloudr
 	return err
 }
 
+func WithGcpRedisInstanceDefaultSpec() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
+				gcpRedisInstance.Spec.Tier = "STANDARD_HA"
+				gcpRedisInstance.Spec.ReplicaCount = 1
+				gcpRedisInstance.Spec.RedisVersion = "REDIS_7_0"
+				gcpRedisInstance.Spec.AuthEnabled = true
+				gcpRedisInstance.Spec.MemorySizeGb = 16
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceDefaultSpec", obj))
+		},
+	}
+}
+
 func WithGcpRedisInstanceTier(tier string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -47,6 +63,18 @@ func WithGcpRedisInstanceMemorySizeGb(memorySizeGb int32) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceMemorySizeGb", obj))
+		},
+	}
+}
+
+func WithGcpRedisInstanceReplicaCount(replicaCount int32) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
+				gcpRedisInstance.Spec.ReplicaCount = replicaCount
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceReplicaCount", obj))
 		},
 	}
 }

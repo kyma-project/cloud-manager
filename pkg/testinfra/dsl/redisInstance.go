@@ -104,6 +104,18 @@ func WithKcpGcpRedisInstanceMemorySizeGb(memorySizeGb int32) ObjAction {
 	}
 }
 
+func WithKcpGcpRedisInstanceReplicaCount(replicaCount int32) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Gcp.ReplicaCount = replicaCount
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpGcpRedisInstanceReplicaCount", obj))
+		},
+	}
+}
+
 func WithKcpGcpRedisInstanceRedisVersion(redisVersion string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

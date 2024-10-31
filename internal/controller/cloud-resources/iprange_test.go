@@ -1073,9 +1073,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpRedisInstance,
 					WithName(gcpRedisName),
 					WithIpRange(skrIpRange.Name),
-					WithGcpRedisInstanceMemorySizeGb(5),
-					WithGcpRedisInstanceTier("BASIC"),
-					WithGcpRedisInstanceRedisVersion("REDIS_7_0"),
+					WithGcpRedisInstanceDefaultSpec(),
 				).
 				Should(Succeed(), "failed creating GcpRedisInstance")
 
