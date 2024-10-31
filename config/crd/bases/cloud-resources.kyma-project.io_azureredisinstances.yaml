@@ -78,6 +78,10 @@ spec:
                     - message: RedisVersion is immutable.
                       rule: (self == oldSelf)
                 replicasPerPrimary:
+                  enum:
+                    - 1
+                    - 2
+                    - 3
                   type: integer
                   x-kubernetes-validations:
                     - message: ReplicasPerPrimary is immutable.
