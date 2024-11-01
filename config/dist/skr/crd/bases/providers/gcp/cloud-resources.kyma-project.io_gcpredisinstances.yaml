@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.15
+    cloud-resources.kyma-project.io/version: v0.0.16
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -166,6 +166,8 @@ spec:
                   rule: (self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA")
                 - message: replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier
                   rule: (self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC")
+                - message: memorySizeGb must be at least 5 GiB for STANDARD_HA tier
+                  rule: (self.tier == "STANDARD_HA" && self.memorySizeGb >= 5 || self.tier == "BASIC")
             status:
               description: GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
               properties:

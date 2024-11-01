@@ -61,6 +61,7 @@ type MaintenancePolicy struct {
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
 // +kubebuilder:validation:XValidation:rule=(self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA"), message="replicaCount must be zero for BASIC tier"
 // +kubebuilder:validation:XValidation:rule=(self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC"), message="replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier"
+// +kubebuilder:validation:XValidation:rule=(self.tier == "STANDARD_HA" && self.memorySizeGb >= 5 || self.tier == "BASIC"), message="memorySizeGb must be at least 5 GiB for STANDARD_HA tier"
 type GcpRedisInstanceSpec struct {
 
 	// +optional
