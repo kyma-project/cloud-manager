@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   name: awsvpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -17,7 +17,11 @@ spec:
     singular: awsvpcpeering
   scope: Cluster
   versions:
-    - name: v1beta1
+    - additionalPrinterColumns:
+        - jsonPath: .status.state
+          name: State
+          type: string
+      name: v1beta1
       schema:
         openAPIV3Schema:
           description: AwsVpcPeering is the Schema for the awsvpcpeerings API

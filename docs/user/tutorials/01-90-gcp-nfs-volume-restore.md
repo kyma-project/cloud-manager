@@ -6,7 +6,7 @@ This tutorial explains how to initiate a restore operation for the ReadWriteMany
 
 * You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
 
-* You have created a GcpNfsVolumeBackup. Follow[Backup RWX Volumes in GCP](./01-70-gcp-nfs-volume-backup.md) to learn more.
+* You have created a GcpNfsVolumeBackup. Follow [Backup RWX Volumes in GCP](./01-70-gcp-nfs-volume-backup.md) to learn more.
 
 >[!NOTE]
 >All the examples below assume that the GcpNfsVolume is named `my-vol`, the GcpNfsVolumeBackup is named `my-backup` 
@@ -41,13 +41,13 @@ and both are in the same namespace as the GcpNfsVolumeRestore resource.
    EOF
    ```
    
-3. Wait for the GcpNfsVolumeRestore to be in the `Ready` state.
+3. Wait for the GcpNfsVolumeRestore to be in the `Done` state and have the `Ready` condition.
 
    ```shell
    kubectl -n $NAMESPACE wait --for=condition=Ready gcpnfsvolumerestore/my-restore --timeout=600s
    ```
 
-   Once the GcpNfsVolumeRestore is created, you should see the following message:
+   Once the GcpNfsVolumeRestore is completed, you should see the following message:
 
    ```
    gcpnfsvolumerestore.cloud-resources.kyma-project.io/my-restore condition met

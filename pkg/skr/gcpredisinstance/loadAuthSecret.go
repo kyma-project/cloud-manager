@@ -36,7 +36,7 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 		errMsg := fmt.Sprintf("Auth secret %s belongs to another resource", authSecretName)
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(errors.New("auth secret error"), errMsg)
-		return composed.PatchStatus(gcpRedisInstance).
+		return composed.UpdateStatus(gcpRedisInstance).
 			SetCondition(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

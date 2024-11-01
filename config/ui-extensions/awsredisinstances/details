@@ -18,6 +18,9 @@ body:
       - name: spec.preferredMaintenanceWindow
         source: preferredMaintenanceWindow
         widget: Labels
+      - name: spec.readReplicas
+        source: readReplicas
+        widget: Labels
 
   - name: spec.ipRange
     widget: Panel

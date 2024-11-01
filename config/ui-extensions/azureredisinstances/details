@@ -3,12 +3,6 @@ body:
     widget: Panel
     source: spec
     children:
-      - name: spec.enableNonSslPort
-        source: enableNonSslPort
-        widget: Labels
-      - name: spec.replicasPerPrimary
-        source: replicasPerPrimary
-        widget: Labels
       - name: spec.shardCount
         source: shardCount
         widget: Labels
@@ -45,9 +39,6 @@ body:
         widget: Labels
       - name: spec.redisConfiguration.notify-keyspace-events
         source: notify-keyspace-events
-        widget: Labels
-      - name: spec.redisConfiguration.zonal-configuration
-        source: zonal-configuration
         widget: Labels
 
   - name: spec.volume

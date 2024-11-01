@@ -7,14 +7,6 @@
       name: spec.sku.capacity
       required: true
 
-- path: spec.enableNonSslPort
-  name: spec.enableNonSslPort
-  required: false
-  disableOnEdit: true
-- path: spec.replicasPerPrimary
-  name: spec.replicasPerPrimary
-  required: false
-  disableOnEdit: true
 - path: spec.shardCount
   name: spec.shardCount
   required: false
@@ -46,9 +38,6 @@
       disableOnEdit: true
     - path: notify-keyspace-events
       name: spec.redisConfiguration.notify-keyspace-events
-      disableOnEdit: true
-    - path: zonal-configuration
-      name: spec.redisConfiguration.zonal-configuration
       disableOnEdit: true
 
 - path: spec.volume

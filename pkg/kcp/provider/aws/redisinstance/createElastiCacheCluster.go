@@ -60,6 +60,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		AuthTokenSecretString:      authTokenSecetString,
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 		SecurityGroupIds:           []string{state.securityGroupId},
+		ReplicasPerNodeGroup:       redisInstance.Spec.Instance.Aws.ReadReplicas,
 	})
 
 	if err != nil {
@@ -70,7 +71,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Reason:  v1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed creating AWS Elasticache: %s", err),
 		})
-		err = state.PatchObjStatus(ctx)
+		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed aws elasticache creation",

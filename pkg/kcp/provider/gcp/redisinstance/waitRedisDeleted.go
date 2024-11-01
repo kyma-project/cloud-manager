@@ -21,7 +21,7 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 	if state.gcpRedisInstance.State != redispb.Instance_DELETING {
 		errorMsg := "Error: unexpected gcp redis state"
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
-		return composed.PatchStatus(redisInstance).
+		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,

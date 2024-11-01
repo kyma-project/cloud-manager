@@ -108,6 +108,11 @@ func (b *VpcPeeringBuilder) WithDetails(localName, localNamespace, remoteName, r
 	return b
 }
 
+func (b *VpcPeeringBuilder) WithLocalPeeringName(localPeeringName string) *VpcPeeringBuilder {
+	b.Obj.Spec.Details.LocalPeeringName = localPeeringName
+	return b
+}
+
 func (b *VpcPeeringBuilder) Build() *VpcPeering {
 	return &b.Obj
 }

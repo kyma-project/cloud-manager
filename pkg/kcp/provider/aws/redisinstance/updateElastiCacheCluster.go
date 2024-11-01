@@ -28,7 +28,7 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	logger.Info("Removing ready state to begin update")
 	meta.RemoveStatusCondition(redisInstance.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
-	err := state.PatchObjStatus(ctx)
+	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error updating RedisInstance status",
@@ -48,7 +48,7 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Reason:  cloudcontrolv1beta1.ConditionTypeError,
 			Message: fmt.Sprintf("Failed updating GwsRedis: %s", err),
 		})
-		err = state.PatchObjStatus(ctx)
+		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating RedisInstance status due failed aws redis creation",

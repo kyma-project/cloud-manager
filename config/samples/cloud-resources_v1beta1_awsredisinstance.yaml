@@ -14,7 +14,10 @@ spec:
 
   # optional fields
   engineVersion: "7.0"
+  readReplicas: 1
   autoMinorVersionUpgrade: true
-  transitEncryptionEnabled: true
+  parameters:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
   preferredMaintenanceWindow: sun:23:00-mon:01:30
 

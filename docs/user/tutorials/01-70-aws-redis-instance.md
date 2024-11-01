@@ -49,10 +49,17 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
    kubectl exec -i -t awsredisinstance-minimal-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
-4. Run a PING command:
+4. Install and update CA certificates:
 
    ```bash
-   redis-cli -h $HOST -p $PORT PING
+   apt-get update && \
+     apt-get install -y ca-certificates && \
+     update-ca-c
+
+5. Run a PING command:
+
+   ```bash
+   redis-cli -h $HOST -p $PORT --tls PING
    ```
    If your setup was successful, you get `PONG` back from the server.
 
@@ -71,7 +78,7 @@ To specify advanced features (such as Redis version, configuration, and maintena
      cacheNodeType: cache.t3.micro
      engineVersion: "7.0"
      authEnabled: true
-     transitEncryptionEnabled: true
+     readReplicas: 1
      parameters:
        maxmemory-policy: volatile-lru
        activedefrag: "yes"

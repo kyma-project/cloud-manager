@@ -71,8 +71,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
@@ -98,9 +96,6 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 	if redisConfigs.MaxClients != "" {
 		redisConfiguration.Maxclients = &redisConfigs.MaxClients
 	}
-	if redisConfigs.ZonalConfiguration != "" {
-		redisConfiguration.ZonalConfiguration = &redisConfigs.ZonalConfiguration
-	}
 
 	if len(additionalProperties) > 0 {
 		redisConfiguration.AdditionalProperties = additionalProperties
@@ -111,7 +106,7 @@ func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.Common
 
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=1;2;3;4
+	// +kubebuilder:validation:Enum=1;2;3;4;5
 	Capacity int `json:"capacity"`
 }
 
@@ -144,6 +139,8 @@ type MaintenancePolicyGcp struct {
 	DayOfWeek *DayOfWeekPolicyGcp `json:"dayOfWeek,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule=(self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA"), message="replicaCount must be zero for BASIC tier"
+// +kubebuilder:validation:XValidation:rule=(self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC"), message="replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier"
 type RedisInstanceGcp struct {
 	// The service tier of the instance.
 	// +kubebuilder:default=BASIC
@@ -159,7 +156,7 @@ type RedisInstanceGcp struct {
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
@@ -176,6 +173,13 @@ type RedisInstanceGcp struct {
 	// If not provided, maintenance events can be performed at any time.
 	// +optional
 	MaintenancePolicy *MaintenancePolicyGcp `json:"maintenancePolicy,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicaCount is immutable."
+	ReplicaCount int32 `json:"replicaCount"`
 }
 
 type RedisInstanceAzure struct {
@@ -192,6 +196,7 @@ type RedisInstanceAzure struct {
 	ShardCount int `json:"shardCount,omitempty"`
 
 	// +optional
+	// +kubebuilder:validation:Enum=1;2;3
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
@@ -224,6 +229,13 @@ type RedisInstanceAws struct {
 
 	// +optional
 	Parameters map[string]string `json:"parameters,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=1
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReadReplicas is immutable."
+	ReadReplicas int32 `json:"readReplicas"`
 }
 
 // RedisInstanceStatus defines the observed state of RedisInstance

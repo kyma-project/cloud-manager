@@ -61,6 +61,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		autoMinorVersionUpgrade := true
 		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
 		authEnabled := true
+		readReplicas := 1
 
 		parameters := map[string]string{
 			"active-defrag-cycle-max": "85",
@@ -80,6 +81,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithKcpAwsAuthEnabled(authEnabled),
 					WithKcpAwsPreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithKcpAwsParameters(parameters),
+					WithKcpAwsReadReplicas(int32(readReplicas)),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
 		})

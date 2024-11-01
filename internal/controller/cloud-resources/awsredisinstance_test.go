@@ -70,6 +70,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		parameters := map[string]string{
 			parameterKey: parameterValue,
 		}
+		readReplicas := 1
 
 		By("When AwsRedisInstance is created", func() {
 			Eventually(CreateAwsRedisInstance).
@@ -86,6 +87,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceAuthEnabled(authEnabled),
 					WithAwsRedisInstancePreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithAwsRedisInstanceParameters(parameters),
+					WithAwsRedisInstanceReadReplicas(int32(readReplicas)),
 				).
 				Should(Succeed())
 		})

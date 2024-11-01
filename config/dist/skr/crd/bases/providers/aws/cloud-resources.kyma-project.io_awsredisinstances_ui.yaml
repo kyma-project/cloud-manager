@@ -21,6 +21,9 @@ data:
           - name: spec.preferredMaintenanceWindow
             source: preferredMaintenanceWindow
             widget: Labels
+          - name: spec.readReplicas
+            source: readReplicas
+            widget: Labels
 
       - name: spec.ipRange
         widget: Panel
@@ -64,28 +67,38 @@ data:
       name: spec.cacheNodeType
       required: true
 
-    - path: spec.autoMinorVersionUpgrade
-      name: spec.autoMinorVersionUpgrade
-      required: false
-      widget: Switch
-
     - path: spec.engineVersion
       name: spec.engineVersion
       required: false
 
-    - path: spec.preferredMaintenanceWindow
-      name: spec.preferredMaintenanceWindow
-      required: false
-
-
-    - path: spec.authEnabled
-      name: spec.authEnabledFull
+    - path: spec.autoMinorVersionUpgrade
+      name: spec.autoMinorVersionUpgrade
       widget: Switch
+      required: false
 
     - path: spec.parameters
       name: spec.parameters
       required: false
       widget: KeyValuePair
+
+    - path: spec
+      name: spec.security
+      widget: FormGroup
+      children:
+        - path: authEnabled
+          name: spec.authEnabledFull
+          widget: Switch
+          required: false
+
+
+    - path: spec.preferredMaintenanceWindow
+      name: spec.preferredMaintenanceWindow
+      required: false
+
+    - path: spec.readReplicas
+      name: spec.readReplicas
+      required: false
+      disabled: true
 
     - path: spec.ipRange
       name: spec.ipRange
@@ -149,11 +162,11 @@ data:
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
       spec.preferredMaintenanceWindow: Preferred Maintenance Window
-      spec.transitEncryptionEnabled: Transit Encryption Enabled
+      spec.readReplicas: Read Replicas
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.7
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

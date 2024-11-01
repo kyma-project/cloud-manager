@@ -20,6 +20,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		redisVersion := "6.0"
+		replicasPerPrimary := 3
 		sku := cloudresourcesv1beta1.AzureRedisSKU{}
 		sku.Capacity = 1
 		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
@@ -51,6 +52,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
 					WithAzureRedisInstanceRedisVersion(redisVersion),
+					WithAzureRedisInstanceReplicasPerPrimary(replicasPerPrimary),
 					WithAzureRedisInstanceSKUCapacity(sku),
 					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
@@ -123,6 +125,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.ReplicasPerPrimary).To(Equal(azureRedisInstance.Spec.ReplicasPerPrimary))
 		})
 
 		kcpRedisInstancePrimaryEndpoint := "192.168.0.1:6576"

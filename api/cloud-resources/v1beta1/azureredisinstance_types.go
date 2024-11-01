@@ -31,8 +31,6 @@ type RedisInstanceAzureConfigs struct {
 	MaxMemoryReserved string `json:"maxmemory-reserved,omitempty"`
 	// +optional
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
-	// +optional
-	ZonalConfiguration string `json:"zonal-configuration,omitempty"`
 }
 
 type RedisAuthSecretSpec struct {
@@ -42,7 +40,7 @@ type RedisAuthSecretSpec struct {
 }
 type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=1;2;3;4
+	// +kubebuilder:validation:Enum=1;2;3;4;5
 	Capacity int `json:"capacity"`
 }
 
@@ -66,6 +64,7 @@ type AzureRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerPrimary is immutable."
+	// +kubebuilder:validation:Enum=1;2;3
 	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`

@@ -89,6 +89,13 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 		}
 		return []string{redisInstance.Spec.IpRange.Name}
 	})
+	reg.IndexField(&cloudresourcesv1beta1.AzureRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		redisInstance := object.(*cloudresourcesv1beta1.AzureRedisInstance)
+		if redisInstance.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{redisInstance.Spec.IpRange.Name}
+	})
 
 	return reg.Register().
 		WithFactory(&IpRangeReconcilerFactory{}).

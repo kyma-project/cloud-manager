@@ -59,6 +59,8 @@ type MaintenancePolicy struct {
 }
 
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
+// +kubebuilder:validation:XValidation:rule=(self.tier == "BASIC" && self.replicaCount == 0 || self.tier == "STANDARD_HA"), message="replicaCount must be zero for BASIC tier"
+// +kubebuilder:validation:XValidation:rule=(self.tier == "STANDARD_HA" && self.replicaCount > 0 || self.tier == "BASIC"), message="replicaCount must be defined with value between 1 and 5 for STANDARD_HA tier"
 type GcpRedisInstanceSpec struct {
 
 	// +optional
@@ -78,7 +80,7 @@ type GcpRedisInstanceSpec struct {
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X;REDIS_5_0;REDIS_4_0;REDIS_3_2
+	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
@@ -99,6 +101,13 @@ type GcpRedisInstanceSpec struct {
 	// If not provided, maintenance events can be performed at any time.
 	// +optional
 	MaintenancePolicy *MaintenancePolicy `json:"maintenancePolicy,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicaCount is immutable."
+	ReplicaCount int32 `json:"replicaCount"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
