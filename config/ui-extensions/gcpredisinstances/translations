@@ -18,3 +18,4 @@ en:
   spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
   spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
   spec.redisConfigs: Redis Configuration
+  spec.replicaCount: Replica Count
