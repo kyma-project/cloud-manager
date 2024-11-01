@@ -43,6 +43,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		AuthEnabled:        redisInstance.Spec.Instance.Gcp.AuthEnabled,
 		RedisConfigs:       redisInstance.Spec.Instance.Gcp.RedisConfigs,
 		MaintenancePolicy:  redisInstance.Spec.Instance.Gcp.MaintenancePolicy,
+		ReplicaCount:       redisInstance.Spec.Instance.Gcp.ReplicaCount,
 		Labels:             labels,
 	}
 
