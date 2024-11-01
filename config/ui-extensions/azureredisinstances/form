@@ -15,6 +15,11 @@
   name: spec.redisVersion
   required: false
   disableOnEdit: true
+- path: spec.replicasPerPrimary
+  name: spec.replicasPerPrimary
+  required: false
+  disableOnEdit: true
+  widget: Number
 
 - path: spec.redisConfiguration
   name: spec.redisConfiguration
