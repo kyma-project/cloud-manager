@@ -234,6 +234,10 @@ spec:
                         5 for STANDARD_HA tier
                       rule: (self.tier == "STANDARD_HA" && self.replicaCount > 0 ||
                         self.tier == "BASIC")
+                    - message: memorySizeGb must be at least 5 GiB for STANDARD_HA
+                        tier
+                      rule: (self.tier == "STANDARD_HA" && self.memorySizeGb >= 5
+                        || self.tier == "BASIC")
                 type: object
               ipRange:
                 properties:
