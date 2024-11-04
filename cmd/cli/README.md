@@ -2,6 +2,7 @@
 
 Set the following env vars before running CLI
 ```shell
+export CM_NAMESPACE_GARDEN=garden-kyma
 export CM_CONTEXT_SKR=kind-skr
 export CM_CONTEXT_GARDEN=kind-garden
 export CM_CONTEXT_KCP=kind-kcp
