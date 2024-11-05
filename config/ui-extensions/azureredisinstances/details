@@ -9,6 +9,9 @@ body:
       - name: spec.redisVersion
         source: redisVersion
         widget: Labels
+      - name: spec.replicasPerPrimary
+        source: replicasPerPrimary
+        widget: Labels
 
   - name: spec.sku
     widget: Panel
