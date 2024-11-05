@@ -100,6 +100,36 @@ func (me *SetStatusConditionsSuite) TestConditionChanged() {
 
 }
 
+func (me *SetStatusConditionsSuite) TestConditionNotChanged() {
+
+	conditions := &[]metav1.Condition{
+		{
+			Type:   conditionTypeReady,
+			Status: metav1.ConditionTrue,
+		},
+		{
+			Type:   conditionTypeError,
+			Status: metav1.ConditionTrue,
+		},
+	}
+
+	assert.False(me.T(), SetExclusiveConditions(conditions,
+		[]metav1.Condition{
+			{
+				Type:   conditionTypeReady,
+				Status: metav1.ConditionTrue,
+			},
+			{
+				Type:   conditionTypeError,
+				Status: metav1.ConditionTrue,
+			},
+		}...,
+	), "Conditions changes should not be detected, but did")
+
+	assert.Equal(me.T(), 2, len(*conditions))
+
+}
+
 func TestSetStatusConditionsSuite(t *testing.T) {
 	suite.Run(t, new(SetStatusConditionsSuite))
 }
