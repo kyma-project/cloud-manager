@@ -93,7 +93,7 @@ type GcpRedisInstanceSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="only redisTier type cannot be changed."
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="redisTier category cannot be changed."
 	RedisTier GcpRedisTier `json:"redisTier"`
 
 	// The version of Redis software.
