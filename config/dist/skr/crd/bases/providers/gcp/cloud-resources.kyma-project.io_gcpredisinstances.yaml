@@ -142,7 +142,7 @@ spec:
                     - P7
                   type: string
                   x-kubernetes-validations:
-                    - message: only redisTier type cannot be changed.
+                    - message: redisTier category cannot be changed.
                       rule: (self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P'))
                 redisVersion:
                   default: REDIS_7_0
