@@ -209,9 +209,6 @@ spec:
                         maximum: 5
                         minimum: 0
                         type: integer
-                        x-kubernetes-validations:
-                        - message: ReplicaCount is immutable.
-                          rule: (self == oldSelf)
                       tier:
                         default: BASIC
                         description: The service tier of the instance.

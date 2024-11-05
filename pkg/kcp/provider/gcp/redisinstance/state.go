@@ -85,3 +85,8 @@ func (s *State) UpdateAuthEnabled(authEnabled bool) {
 	s.updateMask = append(s.updateMask, "auth_enabled")
 	s.gcpRedisInstance.AuthEnabled = authEnabled
 }
+
+func (s *State) UpdateReplicaCount(replicaCount int32) {
+	s.updateMask = append(s.updateMask, "replica_count")
+	s.gcpRedisInstance.ReplicaCount = replicaCount
+}
