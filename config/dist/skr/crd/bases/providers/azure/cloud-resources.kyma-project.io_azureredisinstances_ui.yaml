@@ -12,6 +12,9 @@ data:
           - name: spec.redisVersion
             source: redisVersion
             widget: Labels
+          - name: spec.replicasPerPrimary
+            source: replicasPerPrimary
+            widget: Labels
 
       - name: spec.sku
         widget: Panel
@@ -91,6 +94,11 @@ data:
       name: spec.redisVersion
       required: false
       disableOnEdit: true
+    - path: spec.replicasPerPrimary
+      name: spec.replicasPerPrimary
+      required: false
+      disableOnEdit: true
+      widget: Number
 
     - path: spec.redisConfiguration
       name: spec.redisConfiguration
@@ -162,6 +170,7 @@ data:
       spec.enableNonSslPort: Enable Non SSL Port
       spec.shardCount: Shard Count
       spec.redisVersion: Redis Version
+      spec.replicasPerPrimary: Replicas Per Primary
       spec.sku: SKU
       spec.sku.capacity: Capacity
       spec.redisConfiguration: Redis Configuration
@@ -181,7 +190,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.5
+    cloud-resources.kyma-project.io/version: v0.0.6
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
