@@ -60,7 +60,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 	canNotCreateSkr(
 		"GcpRedisInstance cannot be created with replicas in standard category",
 		newTestGcpRedisInstanceBuilder().WithReplicaCount(1),
-		"replicaCount must be zero for Standard redisTier offering",
+		"replicaCount must be zero for Standard service tier",
 	)
 
 	canCreateSkr(
@@ -70,7 +70,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 	canNotCreateSkr(
 		"GcpRedisInstance cannot be created without replicas in premium category",
 		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2).WithReplicaCount(0),
-		"replicaCount must be defined with value between 1 and 5 for Premium redisTier offering",
+		"replicaCount must be defined with value between 1 and 5 for Premium service tier",
 	)
 
 	canChangeSkr(
@@ -94,7 +94,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 		func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
 			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2).WithReplicaCount(1)
 		},
-		"redisTier category cannot be changed.",
+		"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 	)
 	canNotChangeSkr(
 		"GcpRedisInstance redisTier can not be changed if category changes (standard->premium)",
@@ -102,6 +102,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 		func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
 			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS2).WithReplicaCount(0)
 		},
-		"redisTier category cannot be changed.",
+		"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 	)
 })

@@ -44,10 +44,6 @@ const (
 	GcpRedisTierP7 GcpRedisTier = "P7"
 )
 
-func (tier GcpRedisTier) String() string {
-	return string(tier)
-}
-
 type AuthSecretSpec struct {
 	Name        string            `json:"name,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
@@ -85,15 +81,16 @@ type MaintenancePolicy struct {
 }
 
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
-// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('S') && self.replicaCount == 0 || self.redisTier.startsWith('P')), message="replicaCount must be zero for Standard redisTier offering"
-// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('P') && self.replicaCount > 0 || self.redisTier.startsWith('S')), message="replicaCount must be defined with value between 1 and 5 for Premium redisTier offering"
+// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('S') && self.replicaCount == 0 || self.redisTier.startsWith('P')), message="replicaCount must be zero for Standard service tier"
+// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('P') && self.replicaCount > 0 || self.redisTier.startsWith('S')), message="replicaCount must be defined with value between 1 and 5 for Premium service tier"
 type GcpRedisInstanceSpec struct {
 
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
+	// Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="redisTier category cannot be changed."
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="Service tier cannot be changed within redisTier. Only capacity tier can be changed."
 	RedisTier GcpRedisTier `json:"redisTier"`
 
 	// The version of Redis software.

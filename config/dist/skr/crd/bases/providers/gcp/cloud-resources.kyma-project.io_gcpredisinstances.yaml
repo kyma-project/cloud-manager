@@ -124,6 +124,7 @@ spec:
                     See docs for the list of the supported parameters
                   type: object
                 redisTier:
+                  description: Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
                   enum:
                     - S1
                     - S2
@@ -142,7 +143,7 @@ spec:
                     - P7
                   type: string
                   x-kubernetes-validations:
-                    - message: redisTier category cannot be changed.
+                    - message: Service tier cannot be changed within redisTier. Only capacity tier can be changed.
                       rule: (self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P'))
                 redisVersion:
                   default: REDIS_7_0
@@ -165,9 +166,9 @@ spec:
                 - redisTier
               type: object
               x-kubernetes-validations:
-                - message: replicaCount must be zero for Standard redisTier offering
+                - message: replicaCount must be zero for Standard service tier
                   rule: (self.redisTier.startsWith('S') && self.replicaCount == 0 || self.redisTier.startsWith('P'))
-                - message: replicaCount must be defined with value between 1 and 5 for Premium redisTier offering
+                - message: replicaCount must be defined with value between 1 and 5 for Premium service tier
                   rule: (self.redisTier.startsWith('P') && self.replicaCount > 0 || self.redisTier.startsWith('S'))
             status:
               description: GcpRedisInstanceStatus defines the observed state of GcpRedisInstance
