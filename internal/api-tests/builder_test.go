@@ -66,15 +66,15 @@ func updateScenario[T client.Object](clientFn func() client.Client, title string
 	}
 }
 
-func canCreate[T client.Object](title string, b Builder[T]) {
+func canCreateKcp[T client.Object](title string, b Builder[T]) {
 	createScenario(func() client.Client { return infra.KCP().Client() },
 		title, b, true, "", false)
 }
-func canNotCreate[T client.Object](title string, b Builder[T], errMsg string) {
+func canNotCreateKcp[T client.Object](title string, b Builder[T], errMsg string) {
 	createScenario(func() client.Client { return infra.KCP().Client() },
 		title, b, false, errMsg, false)
 }
-func canNotChange[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
+func canNotChangeKcp[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
 	updateScenario(func() client.Client { return infra.KCP().Client() },
 		title, b, cb, false, errMsg, false)
 }

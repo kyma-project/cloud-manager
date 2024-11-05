@@ -17,23 +17,23 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 
 	var _ Builder[*cloudcontrolv1beta1.Network] = &cloudcontrolv1beta1.NetworkBuilder{}
 
-	canNotCreate(
+	canNotCreateKcp(
 		"Managed network w/out scope can not be created",
 		nb().WithCidr("10.0.0.0/24"),
 		"Scope is required",
 	)
-	canNotCreate(
+	canNotCreateKcp(
 		"GCP network reference w/out scope can not be created",
 		nb().WithGcpRef("proj", "net"),
 		"Scope is required",
 	)
-	canNotCreate(
+	canNotCreateKcp(
 		"Network can not be managed and reference at the same time",
 		nb().WithScope("s").WithCidr("10.0.0.0/24").WithGcpRef("proj", "net"),
 		"Too many: 2: must have at most 1 items",
 	)
 
-	canNotChange(
+	canNotChangeKcp(
 		"Managed network can not change scope",
 		nb().WithScope("s").WithCidr("10.11.0.0/25"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
@@ -41,7 +41,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 		},
 		"Scope is immutable",
 	)
-	canNotChange(
+	canNotChangeKcp(
 		"Managed network can not change cidr",
 		nb().WithScope("s").WithCidr("10.11.0.0/25"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
@@ -49,7 +49,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 		},
 		"Network is immutable",
 	)
-	canNotChange(
+	canNotChangeKcp(
 		"GCP network reference can not change scope",
 		nb().WithScope("s").WithGcpRef("proj", "net"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
@@ -58,7 +58,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 		"Scope is immutable",
 	)
 
-	canNotChange(
+	canNotChangeKcp(
 		"GCP network reference can not change to AWS",
 		nb().WithScope("s").WithGcpRef("proj", "net"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
@@ -66,7 +66,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 		},
 		"Network is immutable",
 	)
-	canNotChange(
+	canNotChangeKcp(
 		"Managed network can not change to GCP reference",
 		nb().WithScope("s").WithCidr("10.10.0.0/25"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
@@ -74,7 +74,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 		},
 		"Network is immutable",
 	)
-	canNotChange(
+	canNotChangeKcp(
 		"Network reference can not change GCP attribute",
 		nb().WithScope("s").WithGcpRef("proj", "net"),
 		func(b Builder[*cloudcontrolv1beta1.Network]) {
