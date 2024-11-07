@@ -16,8 +16,7 @@ kind: GcpRedisInstance
 metadata:
   name: gcpredisinstance-simple-example
 spec:
-  memorySizeGb: 1
-  tier: "BASIC"
+  redisTier: "S1"
 ```
 
 2. Instantiate the redis-cli Pod
@@ -80,8 +79,7 @@ kind: GcpRedisInstance
 metadata:
   name: gcpredisinstance-complex-example
 spec:
-  memorySizeGb: 5
-  tier: "STANDARD_HA"
+  redisTier: "P1"
   redisVersion: REDIS_7_2
   authEnabled: true
   redisConfigs:

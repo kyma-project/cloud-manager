@@ -13,10 +13,43 @@ If an IpRange CR is not specified in the GcpRedisInstance, then the default IpRa
 If the default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
-When creating GcpRedisInstance, two fields are mandatry: `memorySizeGb`, and `tier`.
-As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+When creating GcpRedisInstance, only one field is mandatory: `redisTier`.
+It specifies service tier (*Standard* or *Premium*), and capacity tier.
+More details regarding tiers can be found in the chapter below.
 
 Optionally, you can specify the `redisVersion`, `authEnabled`, `redisConfigs`, and `maintenancePolicy` fields.
+
+As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+
+
+# Redis Tiers
+
+## Standard Tier
+
+In the *Standard* service tier, instance does not have a replica, and thus it cannot be considered highly available.
+
+| RedisTier | Capacity (GiB) | Network (minimum Gbps) |
+| --------- | -------------- | ---------------------- |
+| S1        | 1              | 10                     |
+| S2        | 3              | 10                     |
+| S3        | 6              | 10                     |
+| S4        | 12             | 10                     |
+| S5        | 24             | 10                     |
+| S6        | 48             | 16                     |
+| S7        | 101            | 16                     |
+| S8        | 200            | 16                     |
+
+## Premium tier
+In the *Premium* service tier, instance comes with a read replica, and automatic failover enabled. This instance can be considered highly available.
+
+| RedisTier | Capacity (GiB) | Network (minimum Gbps) |
+| --------- | -------------- | ---------------------- |
+| P1        | 5              | 10                     |
+| P2        | 12             | 10                     |
+| P3        | 24             | 10                     |
+| P4        | 48             | 16                     |
+| P5        | 101            | 16                     |
+| P6        | 200            | 16                     |
 
 # Specification
 
@@ -26,8 +59,7 @@ This table lists the parameters of GcpRedisInstance, together with their descrip
 | --------------------------------------------------| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ipRange**                                       | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                            |
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                              |
-| **tier**                                          | string | Required. The service tier of the instance. Supported values are `BASIC` and `STANDARD_HA`                                                                                                                  |
-| **memorySizeGb**                                  | int    | Required. Redis memory size in GiB.                                                                                                                                                                         |
+| **redisTier**                                     | string | Required. The redis tier of the instance. Supported values are `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `S7`, `S8` for the *Standard* offering, and `P1`, `P2`, `P3`, `P4`, `P5`, `P6` for the *Premium* offering. |
 | **redisVersion**                                  | int    | Optional. The version of Redis software. Supported values are `REDIS_7_2`, `REDIS_7_0`, and `REDIS_6_X`. Defaults to `REDIS_7_0`. |
 | **authEnabled**                                   | bool   | Optional. Indicates whether OSS Redis AUTH is enabled for the instance. If set to `true,` AUTH is enabled on the instance. Defaults to `false`                                                              |
 | **redisConfigs**                                  | object | Optional. Provided values are passed to the Redis configuration. Supported values can be read on [Google's Supported Redis configurations page](https://cloud.google.com/memorystore/docs/redis/supported-redis-configurations). If left empty, defaults to an empty object. |
@@ -66,8 +98,7 @@ kind: GcpRedisInstance
 metadata:
   name: gcpredisinstance-sample
 spec:
-  memorySizeGb: 5
-  tier: "STANDARD_HA"
+  redisTier: "P1"
   redisVersion: REDIS_7_0
   authEnabled: true
   redisConfigs:
