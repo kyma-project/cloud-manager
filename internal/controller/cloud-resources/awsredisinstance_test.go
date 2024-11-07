@@ -58,7 +58,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			"bar": "2",
 		}
 
-		cacheNodeType := "cache.m5.large"
+		redisTier := cloudresourcesv1beta1.AwsRedisTierP1
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
 		authEnabled := true
@@ -70,7 +70,6 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		parameters := map[string]string{
 			parameterKey: parameterValue,
 		}
-		readReplicas := 1
 
 		By("When AwsRedisInstance is created", func() {
 			Eventually(CreateAwsRedisInstance).
@@ -81,13 +80,12 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceAuthSecretName(authSecretName),
 					WithAwsRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAwsRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
-					WithAwsRedisInstanceCacheNodeType(cacheNodeType),
+					WithAwsRedisInstanceRedisTier(redisTier),
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
 					WithAwsRedisInstanceAuthEnabled(authEnabled),
 					WithAwsRedisInstancePreferredMaintenanceWindow(preferredMaintenanceWindow),
 					WithAwsRedisInstanceParameters(parameters),
-					WithAwsRedisInstanceReadReplicas(int32(readReplicas)),
 				).
 				Should(Succeed())
 		})
@@ -135,7 +133,8 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(awsRedisInstance.Name))
 
 			By("And has spec.instance.aws equal to SKR AwsRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Aws.CacheNodeType).To(Equal(awsRedisInstance.Spec.CacheNodeType))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.CacheNodeType).To(Not(Equal("")))
+			Expect(kcpRedisInstance.Spec.Instance.Aws.ReadReplicas).To(Equal(int32(1)))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.EngineVersion).To(Equal(awsRedisInstance.Spec.EngineVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade).To(Equal(awsRedisInstance.Spec.AutoMinorVersionUpgrade))
 			Expect(kcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow).To(Equal(awsRedisInstance.Spec.PreferredMaintenanceWindow))

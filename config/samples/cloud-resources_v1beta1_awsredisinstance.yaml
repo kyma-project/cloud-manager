@@ -10,11 +10,10 @@ metadata:
   name: awsredisinstance-sample
 spec:
   # required fields
-  cacheNodeType: cache.t2.micro
+  redisTier: "P1"
 
   # optional fields
   engineVersion: "7.0"
-  readReplicas: 1
   autoMinorVersionUpgrade: true
   parameters:
     maxmemory-policy: volatile-lru
