@@ -41,7 +41,6 @@ const (
 	GcpRedisTierP4 GcpRedisTier = "P4"
 	GcpRedisTierP5 GcpRedisTier = "P5"
 	GcpRedisTierP6 GcpRedisTier = "P6"
-	GcpRedisTierP7 GcpRedisTier = "P7"
 )
 
 type AuthSecretSpec struct {
@@ -81,8 +80,6 @@ type MaintenancePolicy struct {
 }
 
 // GcpRedisInstanceSpec defines the desired state of GcpRedisInstance
-// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('S') && self.replicaCount == 0 || self.redisTier.startsWith('P')), message="replicaCount must be zero for Standard service tier"
-// +kubebuilder:validation:XValidation:rule=(self.redisTier.startsWith('P') && self.replicaCount > 0 || self.redisTier.startsWith('S')), message="replicaCount must be defined with value between 1 and 5 for Premium service tier"
 type GcpRedisInstanceSpec struct {
 
 	// +optional
@@ -118,12 +115,6 @@ type GcpRedisInstanceSpec struct {
 	// If not provided, maintenance events can be performed at any time.
 	// +optional
 	MaintenancePolicy *MaintenancePolicy `json:"maintenancePolicy,omitempty"`
-
-	// +optional
-	// +kubebuilder:default=0
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=5
-	ReplicaCount int32 `json:"replicaCount"`
 }
 
 // GcpRedisInstanceStatus defines the observed state of GcpRedisInstance

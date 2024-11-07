@@ -1,6 +1,8 @@
 package api_tests
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -21,7 +23,6 @@ func newTestGcpRedisInstanceBuilder() *testGcpRedisInstanceBuilder {
 					Name: uuid.NewString(),
 				},
 				RedisTier:    "S1",
-				ReplicaCount: 0,
 				RedisVersion: "REDIS_7_0",
 				AuthEnabled:  true,
 				RedisConfigs: map[string]string{
@@ -50,11 +51,6 @@ func (b *testGcpRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1be
 	return b
 }
 
-func (b *testGcpRedisInstanceBuilder) WithReplicaCount(replicaCount int32) *testGcpRedisInstanceBuilder {
-	b.instance.Spec.ReplicaCount = replicaCount
-	return b
-}
-
 var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 
 	It("Given SKR default namespace exists", func() {
@@ -62,26 +58,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 			Should(Succeed())
 	})
-
-	canCreateSkr(
-		"GcpRedisInstance can be created with no replicas in standard category",
-		newTestGcpRedisInstanceBuilder(),
-	)
-	canNotCreateSkr(
-		"GcpRedisInstance cannot be created with replicas in standard category",
-		newTestGcpRedisInstanceBuilder().WithReplicaCount(1),
-		"replicaCount must be zero for Standard service tier",
-	)
-
-	canCreateSkr(
-		"GcpRedisInstance can be created with replicas in premium category",
-		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2).WithReplicaCount(1),
-	)
-	canNotCreateSkr(
-		"GcpRedisInstance cannot be created without replicas in premium category",
-		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2).WithReplicaCount(0),
-		"replicaCount must be defined with value between 1 and 5 for Premium service tier",
-	)
 
 	canChangeSkr(
 		"GcpRedisInstance redisTier can be changed if category stays the same (standard->standard)",
@@ -92,7 +68,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 	)
 	canChangeSkr(
 		"GcpRedisInstance redisTier can be changed if category stays the same (premium->premium)",
-		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP1).WithReplicaCount(int32(2)),
+		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP1),
 		func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
 			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2)
 		},
@@ -102,16 +78,46 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 		"GcpRedisInstance redisTier can not be changed if category changes (standard->premium)",
 		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS1),
 		func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
-			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2).WithReplicaCount(1)
+			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP2)
 		},
 		"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 	)
 	canNotChangeSkr(
 		"GcpRedisInstance redisTier can not be changed if category changes (standard->premium)",
-		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP1).WithReplicaCount(1),
+		newTestGcpRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.GcpRedisTierP1),
 		func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
-			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS2).WithReplicaCount(0)
+			b.(*testGcpRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS2)
 		},
 		"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
+	)
+
+	allowedRedisTiers := []cloudresourcesv1beta1.GcpRedisTier{
+		cloudresourcesv1beta1.GcpRedisTierS1,
+		cloudresourcesv1beta1.GcpRedisTierS2,
+		cloudresourcesv1beta1.GcpRedisTierS3,
+		cloudresourcesv1beta1.GcpRedisTierS4,
+		cloudresourcesv1beta1.GcpRedisTierS5,
+		cloudresourcesv1beta1.GcpRedisTierS6,
+		cloudresourcesv1beta1.GcpRedisTierS7,
+		cloudresourcesv1beta1.GcpRedisTierS8,
+		cloudresourcesv1beta1.GcpRedisTierP1,
+		cloudresourcesv1beta1.GcpRedisTierP2,
+		cloudresourcesv1beta1.GcpRedisTierP3,
+		cloudresourcesv1beta1.GcpRedisTierP4,
+		cloudresourcesv1beta1.GcpRedisTierP5,
+		cloudresourcesv1beta1.GcpRedisTierP6,
+	}
+
+	for _, testCaseTier := range allowedRedisTiers {
+		canCreateSkr(
+			fmt.Sprintf("GcpRedisInstance can be created with tier %s", testCaseTier),
+			newTestGcpRedisInstanceBuilder().WithRedisTier(testCaseTier),
+		)
+	}
+
+	canNotCreateSkr(
+		"GcpRedisInstance cannot be created with unknown tier",
+		newTestGcpRedisInstanceBuilder().WithRedisTier("unknown"),
+		"",
 	)
 })

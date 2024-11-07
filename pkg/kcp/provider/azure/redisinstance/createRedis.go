@@ -71,9 +71,6 @@ func getCreateParams(state *State) armredis.CreateParameters {
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion != "" {
 		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)
 	}
-	if state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary != 0 {
-		createProperties.ReplicasPerPrimary = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ReplicasPerPrimary))
-	}
 
 	createParameters := armredis.CreateParameters{
 		Location:   to.Ptr(state.Scope().Spec.Region),

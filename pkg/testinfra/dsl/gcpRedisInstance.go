@@ -32,7 +32,6 @@ func WithGcpRedisInstanceDefaultSpec() ObjAction {
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
 				gcpRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.GcpRedisTierP3
-				gcpRedisInstance.Spec.ReplicaCount = 1
 				gcpRedisInstance.Spec.RedisVersion = "REDIS_7_0"
 				gcpRedisInstance.Spec.AuthEnabled = true
 				return
@@ -50,18 +49,6 @@ func WithGcpRedisInstanceRedisTier(redisTier cloudresourcesv1beta1.GcpRedisTier)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceRedisTier", obj))
-		},
-	}
-}
-
-func WithGcpRedisInstanceReplicaCount(replicaCount int32) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
-				gcpRedisInstance.Spec.ReplicaCount = replicaCount
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceReplicaCount", obj))
 		},
 	}
 }
