@@ -69,7 +69,7 @@ the steps that create those resources.
     ```shell
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
     export VNET_ID=$(az network vnet show --name $VNET_NAME --resource-group $RESOURCE_GROUP_NAME --query id --output tsv)
-    az tag update --resource-id $VNET_ID --operation Merge --tags SHOOT_NAME
+    az tag update --resource-id $VNET_ID --operation Merge --tags $SHOOT_NAME
     ```
     
 8.  Create an AzureVpcPeering resource
