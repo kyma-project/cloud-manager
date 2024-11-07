@@ -14,7 +14,7 @@ the steps that create those resources.
     az login
     az account set --subscription $SUBSCRIPTION
     ```
-2.  Assign required roles to the Cloud Manager peering service principal
+2.  Assign the required roles to the Cloud Manager peering service principal
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
     export PRINCIPAL_NAME=kyma-cloud-manager-peering-dev
