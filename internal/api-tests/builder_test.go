@@ -12,16 +12,16 @@ type Builder[T client.Object] interface {
 	Build() T
 }
 
-func createScenario[T client.Object](title string, b Builder[T], ok bool, errMsg string, focus bool) {
+func createScenario[T client.Object](clientFn func() client.Client, title string, b Builder[T], ok bool, errMsg string, focus bool) {
 	handler := func() {
 		obj := b.Build()
 		obj.SetName(uuid.NewString())
 		dsl.SetDefaultNamespace(obj)
 
-		err := infra.KCP().Client().Create(infra.Ctx(), obj)
+		err := clientFn().Create(infra.Ctx(), obj)
 		if ok {
 			Expect(err).NotTo(HaveOccurred(), title)
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
+			_ = clientFn().Delete(infra.Ctx(), obj)
 		} else {
 			Expect(err).To(HaveOccurred(), title)
 			if errMsg != "" {
@@ -36,20 +36,20 @@ func createScenario[T client.Object](title string, b Builder[T], ok bool, errMsg
 	}
 }
 
-func updateScenario[T client.Object](title string, b Builder[T], cb func(b Builder[T]), ok bool, errMsg string, focus bool) {
+func updateScenario[T client.Object](clientFn func() client.Client, title string, b Builder[T], cb func(b Builder[T]), ok bool, errMsg string, focus bool) {
 	handler := func() {
 		obj := b.Build()
 		obj.SetName(uuid.NewString())
 		dsl.SetDefaultNamespace(obj)
-		err := infra.KCP().Client().Create(infra.Ctx(), obj)
+		err := clientFn().Create(infra.Ctx(), obj)
 		Expect(err).NotTo(HaveOccurred())
-		err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(obj), obj)
+		err = clientFn().Get(infra.Ctx(), client.ObjectKeyFromObject(obj), obj)
 		Expect(err).NotTo(HaveOccurred())
 		defer func() {
-			_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
+			_ = clientFn().Delete(infra.Ctx(), obj)
 		}()
 		cb(b)
-		err = infra.KCP().Client().Update(infra.Ctx(), obj)
+		err = clientFn().Update(infra.Ctx(), obj)
 		if ok {
 			Expect(err).NotTo(HaveOccurred(), title)
 		} else {
@@ -66,12 +66,28 @@ func updateScenario[T client.Object](title string, b Builder[T], cb func(b Build
 	}
 }
 
-func canCreate[T client.Object](title string, b Builder[T]) {
-	createScenario(title, b, true, "", false)
+func canCreateKcp[T client.Object](title string, b Builder[T]) {
+	createScenario(func() client.Client { return infra.KCP().Client() },
+		title, b, true, "", false)
 }
-func canNotCreate[T client.Object](title string, b Builder[T], errMsg string) {
-	createScenario(title, b, false, errMsg, false)
+func canNotCreateKcp[T client.Object](title string, b Builder[T], errMsg string) {
+	createScenario(func() client.Client { return infra.KCP().Client() },
+		title, b, false, errMsg, false)
 }
-func canNotChange[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
-	updateScenario(title, b, cb, false, errMsg, false)
+func canNotChangeKcp[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
+	updateScenario(func() client.Client { return infra.KCP().Client() },
+		title, b, cb, false, errMsg, false)
+}
+
+func canCreateSkr[T client.Object](title string, b Builder[T]) {
+	createScenario(func() client.Client { return infra.SKR().Client() }, title, b, true, "", false)
+}
+func canNotCreateSkr[T client.Object](title string, b Builder[T], errMsg string) {
+	createScenario(func() client.Client { return infra.SKR().Client() }, title, b, false, errMsg, false)
+}
+func canChangeSkr[T client.Object](title string, b Builder[T], cb func(b Builder[T])) {
+	updateScenario(func() client.Client { return infra.SKR().Client() }, title, b, cb, true, "", false)
+}
+func canNotChangeSkr[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
+	updateScenario(func() client.Client { return infra.SKR().Client() }, title, b, cb, false, errMsg, false)
 }

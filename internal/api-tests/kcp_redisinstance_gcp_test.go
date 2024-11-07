@@ -40,11 +40,11 @@ func (b *redisInstanceBuilderGcp) Build() *cloudcontrolv1beta1.RedisInstance {
 
 var _ = Describe("Feature: KCP RedisInstance GCP", Ordered, func() {
 
-	canCreate("RedisInstance GCP can be created with zero replicas if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 0, memorySizeGb: 16})
-	canCreate("RedisInstance GCP can be created with under memory size under 5GiB if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 0, memorySizeGb: 1})
-	canNotCreate("RedisInstance GCP can not be created with non-zero replicas if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 1, memorySizeGb: 16}, "")
+	canCreateKcp("RedisInstance GCP can be created with zero replicas if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 0, memorySizeGb: 16})
+	canCreateKcp("RedisInstance GCP can be created with under memory size under 5GiB if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 0, memorySizeGb: 1})
+	canNotCreateKcp("RedisInstance GCP can not be created with non-zero replicas if tier is BASIC", &redisInstanceBuilderGcp{tier: "BASIC", replicaCount: 1, memorySizeGb: 16}, "")
 
-	canCreate("RedisInstance GCP can be created with non-zero replicas if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 1, memorySizeGb: 16})
-	canNotCreate("RedisInstance GCP can not be created with zero replicas if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 0, memorySizeGb: 16}, "")
-	canNotCreate("RedisInstance GCP can not be created with memory size under 5GiB if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 0, memorySizeGb: 1}, "")
+	canCreateKcp("RedisInstance GCP can be created with non-zero replicas if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 1, memorySizeGb: 16})
+	canNotCreateKcp("RedisInstance GCP can not be created with zero replicas if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 0, memorySizeGb: 16}, "")
+	canNotCreateKcp("RedisInstance GCP can not be created with memory size under 5GiB if tier is STANDARD_HA", &redisInstanceBuilderGcp{tier: "STANDARD_HA", replicaCount: 0, memorySizeGb: 1}, "")
 })

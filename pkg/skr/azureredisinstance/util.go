@@ -1,11 +1,11 @@
 package azureredisinstance
 
 import (
-	"strings"
-
+	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"strings"
 )
 
 func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) string {
@@ -77,4 +77,22 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	}
 
 	return result
+}
+
+var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisTier]int{
+	cloudresourcesv1beta1.AzureRedisTierP1: 1,
+	cloudresourcesv1beta1.AzureRedisTierP2: 2,
+	cloudresourcesv1beta1.AzureRedisTierP3: 3,
+	cloudresourcesv1beta1.AzureRedisTierP4: 4,
+	cloudresourcesv1beta1.AzureRedisTierP5: 5,
+}
+
+func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisTier) (int, error) {
+	azureRedisSKUValue, exists := azureRedisTierToAzureRedisSKUCapacityValueMap[redisTier]
+
+	if !exists {
+		return 0, errors.New("unknown azure redis tier")
+	}
+
+	return azureRedisSKUValue, nil
 }

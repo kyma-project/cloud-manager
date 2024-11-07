@@ -10,8 +10,7 @@ metadata:
   name: gcpredisinstance-sample
 spec:
   # required fields
-  memorySizeGb: 1
-  tier: "BASIC"
+  redisTier: "P1"
 
   # optional fields
   redisVersion: REDIS_7_0
