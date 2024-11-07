@@ -2,6 +2,7 @@ package awsredisinstance
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -112,4 +113,39 @@ func areByteMapsEqual(first, second map[string][]byte) bool {
 	}
 
 	return true
+}
+
+var awsRedisTierToCacheNodeTypeMap = map[cloudresourcesv1beta1.AwsRedisTier]string{
+	cloudresourcesv1beta1.AwsRedisTierS1: "cache.t4g.small",
+	cloudresourcesv1beta1.AwsRedisTierS2: "cache.t4g.medium",
+	cloudresourcesv1beta1.AwsRedisTierS3: "cache.m7g.large",
+	cloudresourcesv1beta1.AwsRedisTierS4: "cache.m7g.xlarge",
+	cloudresourcesv1beta1.AwsRedisTierS5: "cache.m7g.2xlarge",
+	cloudresourcesv1beta1.AwsRedisTierS6: "cache.m7g.4xlarge",
+	cloudresourcesv1beta1.AwsRedisTierS7: "cache.m7g.8xlarge",
+	cloudresourcesv1beta1.AwsRedisTierS8: "cache.m7g.16xlarge",
+
+	cloudresourcesv1beta1.AwsRedisTierP1: "cache.m7g.large",
+	cloudresourcesv1beta1.AwsRedisTierP2: "cache.m7g.xlarge",
+	cloudresourcesv1beta1.AwsRedisTierP3: "cache.m7g.2xlarge",
+	cloudresourcesv1beta1.AwsRedisTierP4: "cache.m7g.4xlarge",
+	cloudresourcesv1beta1.AwsRedisTierP5: "cache.m7g.8xlarge",
+	cloudresourcesv1beta1.AwsRedisTierP6: "cache.m7g.16xlarge",
+}
+
+func redisTierToCacheNodeTypeConvertor(awsRedisTier cloudresourcesv1beta1.AwsRedisTier) (string, error) {
+	cacheNode, exists := awsRedisTierToCacheNodeTypeMap[awsRedisTier]
+
+	if !exists {
+		return "", errors.New("unknown redis tier")
+	}
+
+	return cacheNode, nil
+}
+
+func redisTierToReadReplicas(awsRedisTier cloudresourcesv1beta1.AwsRedisTier) int32 {
+	if strings.HasPrefix(string(awsRedisTier), "P") {
+		return 1
+	}
+	return 0
 }
