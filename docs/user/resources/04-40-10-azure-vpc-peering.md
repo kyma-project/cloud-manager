@@ -11,7 +11,7 @@ the remote cloud provider subscription.
 
 ### Authorization
 
-Cloud Manager must be authorized in the remote cloud provider subscription to accept VPC peering connection.
+Cloud Manager must be authorized in the remote cloud provider subscription to accept a VPC peering connection.
 
 Assign the following IAM roles to the Cloud Manager service principal `kyma-cloud-manager-peering-ENV` in the remote subscription: 
 * Classic Network Contributor
