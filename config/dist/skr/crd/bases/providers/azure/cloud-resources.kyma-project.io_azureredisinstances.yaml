@@ -71,6 +71,14 @@ spec:
                   x-kubernetes-validations:
                     - message: RedisConfiguration is immutable.
                       rule: (self == oldSelf)
+                redisTier:
+                  enum:
+                    - P1
+                    - P2
+                    - P3
+                    - P4
+                    - P5
+                  type: string
                 redisVersion:
                   default: "6.0"
                   type: string
@@ -91,19 +99,6 @@ spec:
                   x-kubernetes-validations:
                     - message: ShardCount is immutable.
                       rule: (self == oldSelf)
-                sku:
-                  properties:
-                    capacity:
-                      enum:
-                        - 1
-                        - 2
-                        - 3
-                        - 4
-                        - 5
-                      type: integer
-                  required:
-                    - capacity
-                  type: object
                 volume:
                   properties:
                     annotations:
@@ -118,7 +113,7 @@ spec:
                       type: string
                   type: object
               required:
-                - sku
+                - redisTier
               type: object
             status:
               description: AzureRedisInstanceStatus defines the observed state of AzureRedisInstance

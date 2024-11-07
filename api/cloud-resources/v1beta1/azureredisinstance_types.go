@@ -18,6 +18,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +kubebuilder:validation:Enum=P1;P2;P3;P4;P5
+type AzureRedisTier string
+
+const (
+	AzureRedisTierP1 AzureRedisTier = "P1"
+	AzureRedisTierP2 AzureRedisTier = "P2"
+	AzureRedisTierP3 AzureRedisTier = "P3"
+	AzureRedisTierP4 AzureRedisTier = "P4"
+	AzureRedisTierP5 AzureRedisTier = "P5"
+)
+
 type RedisInstanceAzureConfigs struct {
 	// +optional
 	MaxClients string `json:"maxclients,omitempty"`
@@ -38,16 +49,11 @@ type RedisAuthSecretSpec struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
-type AzureRedisSKU struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=1;2;3;4;5
-	Capacity int `json:"capacity"`
-}
 
 // AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
 type AzureRedisInstanceSpec struct {
 	// +kubebuilder:validation:Required
-	SKU AzureRedisSKU `json:"sku"`
+	RedisTier AzureRedisTier `json:"redisTier"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfiguration is immutable."

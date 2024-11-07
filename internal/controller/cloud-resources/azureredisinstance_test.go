@@ -4,6 +4,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	azureUtil "github.com/kyma-project/cloud-manager/pkg/skr/azureredisinstance"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -21,8 +22,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		redisVersion := "6.0"
 		replicasPerPrimary := 3
-		sku := cloudresourcesv1beta1.AzureRedisSKU{}
-		sku.Capacity = 1
+		tier := cloudresourcesv1beta1.AzureRedisTierP4
 		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
 		azureRedisInstanceRedisConfigs.MaxClients = "5"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -53,7 +53,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					WithName(azureRedisInstanceName),
 					WithAzureRedisInstanceRedisVersion(redisVersion),
 					WithAzureRedisInstanceReplicasPerPrimary(replicasPerPrimary),
-					WithAzureRedisInstanceSKUCapacity(sku),
+					WithAzureRedisInstanceRedisTier(tier),
 					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
 					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
@@ -122,7 +122,8 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
+			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.ReplicasPerPrimary).To(Equal(azureRedisInstance.Spec.ReplicasPerPrimary))
@@ -214,8 +215,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		redisVersion := "6.0"
-		sku := cloudresourcesv1beta1.AzureRedisSKU{}
-		sku.Capacity = 1
+		tier := cloudresourcesv1beta1.AzureRedisTierP2
 		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
 		azureRedisInstanceRedisConfigs.MaxClients = "5"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -245,7 +245,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
 					WithAzureRedisInstanceRedisVersion(redisVersion),
-					WithAzureRedisInstanceSKUCapacity(sku),
+					WithAzureRedisInstanceRedisTier(tier),
 					WithAzureRedisInstanceRedisConfigs(azureRedisInstanceRedisConfigs),
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
 					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
@@ -314,24 +314,25 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(azureRedisInstance.Spec.SKU.Capacity))
+			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
 		})
 
-		sku.Capacity = 2
+		tier = cloudresourcesv1beta1.AzureRedisTierP1
 
 		By("When AzureRedisInstance is modified", func() {
 			Eventually(UpdateAzureRedisInstance).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
-					WithAzureRedisInstanceSKUCapacity(sku),
+					WithAzureRedisInstanceRedisTier(tier),
 				).
 				Should(Succeed())
 		})
 
 		By("And AzureRedsiInstance SKU.Capacity has modified value")
-		Expect(azureRedisInstance.Spec.SKU.Capacity).To(Equal(sku.Capacity))
+		Expect(azureRedisInstance.Spec.RedisTier).To(Equal(tier))
 
 		By("Then KCP RedisInstance SKU.Capacity is modified", func() {
 			Eventually(LoadAndCheck).
@@ -346,7 +347,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				Should(Succeed())
 
 			By("And KCP RedisInstance SKU.Capacity has modified value")
-			Expect(azureRedisInstance.Spec.SKU.Capacity).To(Equal(sku.Capacity))
+			Expect(azureRedisInstance.Spec.RedisTier).To(Equal(tier))
 		})
 
 		// CleanUp
@@ -369,8 +370,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstanceName := "another-azure-redis-instance"
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rcr"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
-		sku := cloudresourcesv1beta1.AzureRedisSKU{}
-		sku.Capacity = 1
+		tier := cloudresourcesv1beta1.AzureRedisTierP4
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")
@@ -387,7 +387,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
 					WithName(azureRedisInstanceName),
-					WithAzureRedisInstanceSKUCapacity(sku),
+					WithAzureRedisInstanceRedisTier(tier),
 					WithAzureRedisInstanceRedisVersion("6.0"),
 				).
 				Should(Succeed())

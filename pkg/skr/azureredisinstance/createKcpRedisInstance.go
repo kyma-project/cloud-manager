@@ -2,7 +2,6 @@ package azureredisinstance
 
 import (
 	"context"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,6 +17,8 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
+
+	redisSKUCapacity, _ := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 
 	state.KcpRedisInstance = &cloudcontrolv1beta1.RedisInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -42,7 +43,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
-					SKU:                cloudcontrolv1beta1.AzureRedisSKU{Capacity: azureRedisInstance.Spec.SKU.Capacity},
+					SKU:                cloudcontrolv1beta1.AzureRedisSKU{Capacity: redisSKUCapacity},
 					RedisVersion:       azureRedisInstance.Spec.RedisVersion,
 					ShardCount:         azureRedisInstance.Spec.ShardCount,
 					ReplicasPerPrimary: azureRedisInstance.Spec.ReplicasPerPrimary,

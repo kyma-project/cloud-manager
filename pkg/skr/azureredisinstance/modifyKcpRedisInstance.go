@@ -23,13 +23,15 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	capacityChanged := state.KcpRedisInstance.Spec.Instance.Azure.SKU.Capacity != azureRedisInstance.Spec.SKU.Capacity
+	redisSKUCapacity, _ := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+
+	capacityChanged := state.KcpRedisInstance.Spec.Instance.Azure.SKU.Capacity != redisSKUCapacity
 
 	if !capacityChanged {
 		return nil, nil
 	}
 
-	state.KcpRedisInstance.Spec.Instance.Azure.SKU.Capacity = azureRedisInstance.Spec.SKU.Capacity
+	state.KcpRedisInstance.Spec.Instance.Azure.SKU.Capacity = redisSKUCapacity
 	logger.Info("Detected modified Redis SKU capacity")
 	err := state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 
