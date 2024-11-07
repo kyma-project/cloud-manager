@@ -6,7 +6,7 @@ Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network p
 of the same cloud provider.
 
 Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in
-the VPC network of the Kyma cluster in the underlying cloud provider subscription and accepts VPC peering connection in 
+the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in 
 the remote cloud provider subscription.
 
 ### Authorization
