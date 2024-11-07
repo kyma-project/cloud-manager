@@ -106,12 +106,6 @@ spec:
                         type: object
                       redisVersion:
                         type: string
-                      replicasPerPrimary:
-                        enum:
-                        - 1
-                        - 2
-                        - 3
-                        type: integer
                       shardCount:
                         type: integer
                       sku:

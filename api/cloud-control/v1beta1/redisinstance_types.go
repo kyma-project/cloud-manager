@@ -194,10 +194,6 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	// +kubebuilder:validation:Enum=1;2;3
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {
