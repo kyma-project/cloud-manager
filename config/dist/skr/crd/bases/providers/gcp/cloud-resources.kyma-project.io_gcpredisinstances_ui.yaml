@@ -9,9 +9,6 @@ data:
           - name: spec.redisVersion
             source: redisVersion
             widget: Labels
-          - name: spec.replicaCount
-            source: replicaCount
-            widget: Labels
           - name: spec.redisTier
             source: redisTier
             widget: Labels
@@ -78,10 +75,6 @@ data:
       name: spec.redisVersion
       required: true
       disableOnEdit: true
-    - path: spec.replicaCount
-      name: spec.replicaCount
-      required: false
-      disableOnEdit: false
     - path: spec.redisConfigs
       name: spec.redisConfigs
       required: false
@@ -191,11 +184,10 @@ data:
       spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
       spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
       spec.redisConfigs: Redis Configuration
-      spec.replicaCount: Replica Count
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.7
+    cloud-resources.kyma-project.io/version: v0.0.8
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

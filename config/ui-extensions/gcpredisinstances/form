@@ -6,10 +6,6 @@
   name: spec.redisVersion
   required: true
   disableOnEdit: true
-- path: spec.replicaCount
-  name: spec.replicaCount
-  required: false
-  disableOnEdit: false
 - path: spec.redisConfigs
   name: spec.redisConfigs
   required: false
