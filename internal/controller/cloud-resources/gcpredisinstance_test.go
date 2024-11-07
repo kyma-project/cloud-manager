@@ -46,7 +46,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		gcpRedisInstanceName := "custom-redis-instance"
 		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
-		gcpRedisInstanceTier := cloudresourcesv1beta1.GcpRedisTierS2
+		gcpRedisInstanceTier := cloudresourcesv1beta1.GcpRedisTierP2
 		gcpRedisInstanceRedisVersion := "REDIS_7_0"
 		gcpRedisInstanceAuthEnabled := true
 		configKey := "maxmemory-policy"
@@ -54,7 +54,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 		gcpRedisInstanceRedisConfigs := map[string]string{
 			configKey: configValue,
 		}
-		gcpRedisInstanceReplicaCount := int32(0)
 
 		const (
 			authSecretName = "custom-auth-secretname"
@@ -90,7 +89,6 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					WithGcpRedisInstanceAuthSecretName(authSecretName),
 					WithGcpRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithGcpRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
-					WithGcpRedisInstanceReplicaCount(gcpRedisInstanceReplicaCount),
 				).
 				Should(Succeed())
 		})
@@ -141,7 +139,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.Tier).To(Not(Equal("")))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb).To(Not(Equal(int32(0))))
-			Expect(kcpRedisInstance.Spec.Instance.Gcp.ReplicaCount).To(Equal(gcpRedisInstance.Spec.ReplicaCount))
+			Expect(kcpRedisInstance.Spec.Instance.Gcp.ReplicaCount).To(Equal(int32(1)))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisVersion).To(Equal(gcpRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.AuthEnabled).To(Equal(gcpRedisInstance.Spec.AuthEnabled))
 			Expect(kcpRedisInstance.Spec.Instance.Gcp.RedisConfigs[configKey]).To(Equal(configValue))

@@ -48,7 +48,6 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 
 	state.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb = memorySizeGb
-	state.KcpRedisInstance.Spec.Instance.Gcp.ReplicaCount = gcpRedisInstance.Spec.ReplicaCount
 	state.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs = gcpRedisInstance.Spec.RedisConfigs
 	state.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy = toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy)
 	state.KcpRedisInstance.Spec.Instance.Gcp.AuthEnabled = gcpRedisInstance.Spec.AuthEnabled
