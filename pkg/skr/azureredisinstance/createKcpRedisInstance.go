@@ -18,7 +18,25 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
 
-	redisSKUCapacity, _ := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+
+	if err != nil {
+		errMsg := "Failed to map redisTier to SKU Capacity"
+		logger.Error(err, errMsg, "redisTier", azureRedisInstance.Spec.RedisTier)
+		azureRedisInstance.Status.State = cloudresourcesv1beta1.StateError
+		return composed.UpdateStatus(azureRedisInstance).
+			SetCondition(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonError,
+				Message: errMsg,
+			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+			ErrorLogMessage("Error: updating AzureRedisInstance status with not ready condition due to KCP error").
+			SuccessLogMsg("Updated and forgot SKR azureRedisInstance status with Error condition").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
 
 	state.KcpRedisInstance = &cloudcontrolv1beta1.RedisInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -60,7 +78,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		},
 	}
 
-	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpRedisInstance)
+	err = state.KcpCluster.K8sClient().Create(ctx, state.KcpRedisInstance)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating KCP RedisInstance", composed.StopWithRequeue, ctx)
 	}
