@@ -22,7 +22,7 @@ Assign the following IAM roles to the Cloud Manager service principal `kyma-clou
 ### Deleting `AzureVpcPeering`
 
 Kyma's underlying cloud provider VPC peering connection is deleted as a part of the AzureVpcPeering deletion. The remote VPC
-peering connection is left hanging, and must be deleted manually.
+peering connection is left hanging, and you must delete it manually.
 
 ## Specification <!-- {docsify-ignore} -->
 
