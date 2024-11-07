@@ -8,13 +8,13 @@ the steps that create those resources.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1.  Log in to Azure and set the active subscription
+1.  Log in to Azure and set the active subscription:
     ```shell
     export SUBSCRIPTION={SUBSCRIPTION}
     az login
     az account set --subscription $SUBSCRIPTION
     ```
-2.  Assign the required roles to the Cloud Manager peering service principal
+2.  Assign the required roles to the Cloud Manager peering service principal:
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
     export PRINCIPAL_NAME=kyma-cloud-manager-peering-dev
@@ -33,13 +33,13 @@ the steps that create those resources.
     ```shell
     export REGION={REGION}
     ```
-4.  Create a resource group that will be a container for related resources
+4.  Create a resource group that will be a container for related resources:
     ```shell
     export RANDOM_ID="$(openssl rand -hex 3)"
     export RESOURCE_GROUP_NAME="myResourceGroup$RANDOM_ID"
     az group create --name $RESOURCE_GROUP_NAME --location $REGION
     ```
-5.  Create a network
+5.  Create a network:
     ```shell
     export VNET_NAME="myVnet$RANDOM_ID"
     export ADDRESS_PREFIX=172.0.0.0/16
@@ -48,7 +48,7 @@ the steps that create those resources.
 
     az network vnet create -g $RESOURCE_GROUP_NAME -n $VNET_NAME --address-prefix $ADDRESS_PREFIX --subnet-name $SUBNET_NAME --subnet-prefixes $SUBNET_PREFIX
     ```
-6.  Create a virtual machine
+6.  Create a virtual machine:
     ```shell
     export VM_NAME="myVM$RANDOM_ID"
     export VM_IMAGE="Canonical:0001-com-ubuntu-minimal-jammy:minimal-22_04-lts-gen2:latest"
@@ -65,14 +65,14 @@ the steps that create those resources.
     export IP_ADDRESS=$(az vm show --show-details --resource-group $RESOURCE_GROUP_NAME --name $VM_NAME --query privateIps --output tsv)
     ```
    
-7.  Tag the VPC network with the Kyma shoot name
+7.  Tag the VPC network with the Kyma shoot name:
     ```shell
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
     export VNET_ID=$(az network vnet show --name $VNET_NAME --resource-group $RESOURCE_GROUP_NAME --query id --output tsv)
     az tag update --resource-id $VNET_ID --operation Merge --tags $SHOOT_NAME
     ```
     
-8.  Create an AzureVpcPeering resource
+8.  Create an AzureVpcPeering resource:
     ```shell
     kubectl apply -f - <<EOF
     apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -95,8 +95,7 @@ the steps that create those resources.
     azurevpcpeering.cloud-resources.kyma-project.io/peering-to-my-vnet condition met
     ```
 
-10. Create a namespace and export its value as an environment variable. Run:
-
+10. Create a namespace and export its value as an environment variable:
     ```shell
     export NAMESPACE={NAMESPACE_NAME}
     kubectl create ns $NAMESPACE
@@ -175,7 +174,7 @@ the steps that create those resources.
     rtt min/avg/max/mdev = 1.800/3.060/8.096/1.847 ms
     ...
     ```
-13. Clean up Kubernetes resources
+13. Clean up Kubernetes resources:
 
     * Remove the created workloads:
       ```shell
@@ -192,8 +191,8 @@ the steps that create those resources.
       kubectl delete namespace $NAMESPACE
       ```
    
-14. Clean up resources in your subscription
-    * Remove the created Azure resource group
+14. Clean up resources in your subscription:
+    * Remove the created Azure resource group:
       ```shell
       az group delete --name $RESOURCE_GROUP_NAME --yes
       ```
