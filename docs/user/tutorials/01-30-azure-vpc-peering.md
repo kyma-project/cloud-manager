@@ -145,7 +145,7 @@ the steps that create those resources.
     kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=azurevpcpeering-demo -o=jsonpath='{.items[0].metadata.name}'`
     ```
 
-    The command should print an output similar to the following:
+    The command prints an output similar to the following:
     ```
     ...
     PING 172.0.0.4 (172.0.0.4) 56(84) bytes of data.
