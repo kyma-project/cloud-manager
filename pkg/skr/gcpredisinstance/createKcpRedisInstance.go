@@ -68,7 +68,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 					AuthEnabled:       gcpRedisInstance.Spec.AuthEnabled,
 					RedisConfigs:      gcpRedisInstance.Spec.RedisConfigs,
 					MaintenancePolicy: toGcpMaintenancePolicy(gcpRedisInstance.Spec.MaintenancePolicy),
-					ReplicaCount:      gcpRedisInstance.Spec.ReplicaCount,
+					ReplicaCount:      redisTierToReplicaCount(gcpRedisInstance.Spec.RedisTier),
 				},
 			},
 		},
