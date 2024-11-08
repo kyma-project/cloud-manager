@@ -16,7 +16,7 @@ If an IpRange CR is not specified in the AzureRedisInstance, then the default Ip
 If the default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
-When creating AzureRedisInstance, one field is mandatory: `sku.capacity`.
+When creating AzureRedisInstance, one field is mandatory: `redisTier`.
 
 Optionally, you can specify the `redisConfiguration`, `redisVersion`, `shardCount` and `redisConfiguration` fields.
 
@@ -31,10 +31,9 @@ This table lists the parameters of AzureRedisInstance, together with their descr
 |--------------------------------------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **ipRange**                                            | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                                                        |
 | **ipRange.name**                                       | string | Required. Name of the existing IpRange to use.                                                                                                                                                                                          | 
-| **sku.capacity**                                       | int    | Required. The service capacity of the instance. Supported values are 1, 2, 3, and 4. Note that tier is 'P' - Premium.                                                                                                                   |
+| **rediTier**                                           | string | Required. The service capacity of the instance. Supported values are P1, P2, P3, P4 and P5.                                                                                                                                             |
 | **redisVersion**                                       | int    | Optional. The version of Redis software. Defaults to `6.0`.                                                                                                                                                                             |
 | **shardCount**                                         | int    | Optional. Number of shards.                                                                                                                                                                                                             |
-| **replicasPerPrimary**                                 | int    | Optional. The number of replicas to be created per primary.                                                                                                                                                                             |
 | **redisConfiguration**                                 | object | Optional. Object containing Redis configuration options.                                                                                                                                                                                |
 | **redisConfiguration.maxclients**                      | int    | Optional. Max number of Redis clients. Limited to [7,500 to 40,000.](https://azure.microsoft.com/en-us/pricing/details/cache/)                                                                                                          |
 | **redisConfiguration.maxmemory-reserved**              | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting) |
@@ -68,6 +67,5 @@ spec:
   redisConfiguration:
     maxclients: "8"
   redisVersion: "6.0"
-  sku:
-    capacity: 1
+  redisTier: "P1"
 ```
