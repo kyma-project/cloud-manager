@@ -36,6 +36,11 @@ func (b *testGcpNfsVolumeBuilder) WithCapacityGb(capacityGb int) *testGcpNfsVolu
 	return b
 }
 
+func (b *testGcpNfsVolumeBuilder) WithFileShareName(fileShareName string) *testGcpNfsVolumeBuilder {
+	b.instance.Spec.FileShareName = fileShareName
+	return b
+}
+
 func (b *testGcpNfsVolumeBuilder) WithValidFileShareName() *testGcpNfsVolumeBuilder {
 	b.instance.Spec.FileShareName = "foo"
 	return b
@@ -62,6 +67,12 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 			"REGIONAL tier capacityGb must be between 1024 and 9984, and it must be divisble by 256, or between 10240 and 102400, and divisible by 2560",
 		)
 	}
+	fileShareName65char := "tcteafkhhfhxkocrtvbvgrzqvysxpfxeeauvgwqnbassacgejobhcuvjvdlrgbkypkuxteaztzjxrdfipqfxdpercpogqdslhm"
+	canNotCreateSkr(
+		"GcpNfsVolume REGIONAL tier instance can not be created with invalid fileShareName length",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.REGIONAL).WithCapacityGb(1024).WithFileShareName(fileShareName65char),
+		"REGIONAL tier fileShareName length must be 64 or less characters",
+	)
 
 	for _, validCapacity := range []int{2560, 2561, 65399, 65400} {
 		canCreateSkr(
@@ -76,4 +87,11 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 			"BASIC_SSD tier capacityGb must be between 2560 and 65400",
 		)
 	}
+	fileShareName17char := "bwjfjlecorewsakjikpj"
+	canNotCreateSkr(
+		"GcpNfsVolume REGIONAL tier instance can not be created with invalid fileShareName length",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_SSD).WithCapacityGb(1024).WithFileShareName(fileShareName17char),
+		"BASIC_SSD tier fileShareName length must be 16 or less characters",
+	)
+
 })
