@@ -62,6 +62,8 @@ const (
 )
 
 // GcpNfsVolumeSpec defines the desired state of GcpNfsVolume
+// +kubebuilder:validation:XValidation:rule=(self.tier != "REGIONAL" || self.tier == "REGIONAL" && (self.capacityGb >= 1024 && self.capacityGb <= 9984 && (self.capacityGb - 1024) % 256 == 0 || self.capacityGb >= 10240 && self.capacityGb <= 102400 && (self.capacityGb - 10240) % 2560 == 0)), message="REGIONAL tier capacityGb must be between 1024 and 9984, and it must be divisble by 256, or between 10240 and 102400, and divisible by 2560"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= 2560 && self.capacityGb <= 65400), message="BASIC_SSD tier capacityGb must be between 2560 and 65400"
 type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
