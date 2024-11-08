@@ -14,7 +14,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
    metadata:
      name: awsredisinstance-minimal-example
    spec:
-     cacheNodeType: cache.t3.micro
+     redisTier: S1
    ```
 
 2. Instantiate the redis-cli Pod:
@@ -75,7 +75,7 @@ To specify advanced features (such as Redis version, configuration, and maintena
    metadata:
      name: awsredisinstance-advanced-example
    spec:
-     cacheNodeType: cache.t3.micro
+     redisTier: P1
      engineVersion: "7.0"
      authEnabled: true
      readReplicas: 1
