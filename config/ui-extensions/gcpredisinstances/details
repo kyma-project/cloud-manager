@@ -6,9 +6,6 @@ body:
       - name: spec.redisVersion
         source: redisVersion
         widget: Labels
-      - name: spec.replicaCount
-        source: replicaCount
-        widget: Labels
       - name: spec.redisTier
         source: redisTier
         widget: Labels

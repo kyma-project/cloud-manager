@@ -12,8 +12,7 @@ en:
   spec.authSecret.labels: Labels
   spec.authSecret.annotations: Annotations
   spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
-  spec.cacheNodeType: Cache Node Type
   spec.engineVersion: Engine Version
   spec.parameters: Parameters
   spec.preferredMaintenanceWindow: Preferred Maintenance Window
-  spec.readReplicas: Read Replicas
+  spec.redisTier: Redis Tier
