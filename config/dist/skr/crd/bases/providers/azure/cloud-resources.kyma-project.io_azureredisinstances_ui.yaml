@@ -69,7 +69,7 @@ data:
           - name: status.state
             source: state
             widget: Labels
-  form: |2
+  form: |
 
     - path: spec.shardCount
       name: spec.shardCount
