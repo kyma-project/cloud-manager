@@ -13,9 +13,9 @@ If an IpRange CR is not specified in the GcpRedisInstance, then the default IpRa
 If the default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
-When creating GcpRedisInstance, only one field is mandatory: `redisTier`.
-It specifies service tier (*Standard* or *Premium*), and capacity tier.
-More details regarding tiers can be found in the chapter below.
+When creating GcpRedisInstance, only the `redisTier` field is mandatory.
+It specifies the service tier (**Standard** or **Premium**), and the capacity tier.
+Read on for more details.
 
 Optionally, you can specify the `redisVersion`, `authEnabled`, `redisConfigs`, and `maintenancePolicy` fields.
 
@@ -26,7 +26,7 @@ As in-transit encryption is always enabled, communication with the Redis instanc
 
 ## Standard Tier
 
-In the *Standard* service tier, instance does not have a replica, and thus it cannot be considered highly available.
+In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
 
 | RedisTier | Capacity (GiB) | Network (minimum Gbps) |
 | --------- | -------------- | ---------------------- |
@@ -40,7 +40,7 @@ In the *Standard* service tier, instance does not have a replica, and thus it ca
 | S8        | 200            | 16                     |
 
 ## Premium tier
-In the *Premium* service tier, instance comes with a read replica, and automatic failover enabled. This instance can be considered highly available.
+In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
 
 | RedisTier | Capacity (GiB) | Network (minimum Gbps) |
 | --------- | -------------- | ---------------------- |
@@ -59,7 +59,7 @@ This table lists the parameters of GcpRedisInstance, together with their descrip
 | --------------------------------------------------| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ipRange**                                       | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                            |
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                              |
-| **redisTier**                                     | string | Required. The redis tier of the instance. Supported values are `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `S7`, `S8` for the *Standard* offering, and `P1`, `P2`, `P3`, `P4`, `P5`, `P6` for the *Premium* offering. |
+| **redisTier**                                     | string | Required. The Redis tier of the instance. Supported values are `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `S7`, `S8` for the **Standard** offering, and `P1`, `P2`, `P3`, `P4`, `P5`, `P6` for the **Premium** offering. |
 | **redisVersion**                                  | int    | Optional. The version of Redis software. Supported values are `REDIS_7_2`, `REDIS_7_0`, and `REDIS_6_X`. Defaults to `REDIS_7_0`. |
 | **authEnabled**                                   | bool   | Optional. Indicates whether OSS Redis AUTH is enabled for the instance. If set to `true,` AUTH is enabled on the instance. Defaults to `false`                                                              |
 | **redisConfigs**                                  | object | Optional. Provided values are passed to the Redis configuration. Supported values can be read on [Google's Supported Redis configurations page](https://cloud.google.com/memorystore/docs/redis/supported-redis-configurations). If left empty, defaults to an empty object. |
