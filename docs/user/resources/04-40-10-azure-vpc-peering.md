@@ -5,20 +5,26 @@ The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) speci
 Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
 
-Once an AzureVpcPeering CR is created and reconciled, the Cloud Manager controller first creates a virtual network peering 
-connection in the Virtual Private Cloud (VPC) network of the Kyma cluster in the underlying cloud provider and accepts
-VPC peering connection in the remote cloud provider subscription.
+Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in
+the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in 
+the remote cloud provider subscription.
 
-You must authorize Cloud Manager service principal `kyma-cloud-manager-ENV` in the remote cloud provider subscription to
-accept VPC peering connection. Assign the following IAM roles to the Cloud Manager service principal in the remote subscription: 
+### Authorization
+
+Cloud Manager must be authorized in the remote cloud provider subscription to accept a VPC peering connection.
+
+Assign the following IAM roles to the Cloud Manager service principal `kyma-cloud-manager-peering-ENV` in the remote subscription: 
 * Classic Network Contributor
 * Network Contributor
 
-AzureVpcPeering can be deleted at any time but the VPC peering connection in the remote subscription must be deleted
-manually.
+**ENV** corresponds to **dev**, **stage**, or **prod**.
+
+### Deleting `AzureVpcPeering`
+
+Kyma's underlying cloud provider VPC peering connection is deleted as a part of the AzureVpcPeering deletion. The remote VPC
+peering connection is left hanging, and you must delete it manually.
 
 ## Specification <!-- {docsify-ignore} -->
-
 
 This table lists the parameters of the given resource together with their descriptions:
 
