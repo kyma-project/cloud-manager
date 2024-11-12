@@ -20,7 +20,7 @@ Use the following table to identify Cloud Manager service principal based on you
 | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
 | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
 
-And assign the following IAM roles to the Cloud Manager service principal: 
+And assign the following Identity and Access Management (IAM) roles to the Cloud Manager service principal: 
 * Classic Network Contributor
 * Network Contributor
 
