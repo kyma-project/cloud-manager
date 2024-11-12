@@ -9,9 +9,6 @@ data:
           - name: spec.autoMinorVersionUpgrade
             source: autoMinorVersionUpgrade
             widget: Labels
-          - name: spec.cacheNodeType
-            source: cacheNodeType
-            widget: Labels
           - name: spec.engineVersion
             source: engineVersion
             widget: Labels
@@ -21,8 +18,8 @@ data:
           - name: spec.preferredMaintenanceWindow
             source: preferredMaintenanceWindow
             widget: Labels
-          - name: spec.readReplicas
-            source: readReplicas
+          - name: spec.redisTier
+            source: redisTier
             widget: Labels
 
       - name: spec.ipRange
@@ -63,10 +60,6 @@ data:
             source: state
             widget: Labels
   form: |
-    - path: spec.cacheNodeType
-      name: spec.cacheNodeType
-      required: true
-
     - path: spec.engineVersion
       name: spec.engineVersion
       required: false
@@ -95,10 +88,9 @@ data:
       name: spec.preferredMaintenanceWindow
       required: false
 
-    - path: spec.readReplicas
-      name: spec.readReplicas
-      required: false
-      disabled: true
+    - path: spec.redisTier
+      name: spec.redisTier
+      required: true
 
     - path: spec.ipRange
       name: spec.ipRange
@@ -158,15 +150,14 @@ data:
       spec.authSecret.labels: Labels
       spec.authSecret.annotations: Annotations
       spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
-      spec.cacheNodeType: Cache Node Type
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
       spec.preferredMaintenanceWindow: Preferred Maintenance Window
-      spec.readReplicas: Read Replicas
+      spec.redisTier: Redis Tier
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.7
+    cloud-resources.kyma-project.io/version: v0.0.8
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
