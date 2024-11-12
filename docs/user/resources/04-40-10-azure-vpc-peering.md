@@ -13,11 +13,16 @@ the remote cloud provider subscription.
 
 Cloud Manager must be authorized in the remote cloud provider subscription to accept a VPC peering connection.
 
-Assign the following IAM roles to the Cloud Manager service principal `kyma-cloud-manager-peering-ENV` in the remote subscription: 
+Use the following table to identify Cloud Manager service principal based on your Kyma landscape:
+
+| Kyma Dashboard Url                     | Cloud Manager service principal  |
+|----------------------------------------|----------------------------------|
+| https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
+| https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
+
+And assign the following IAM roles to the Cloud Manager service principal: 
 * Classic Network Contributor
 * Network Contributor
-
-**ENV** corresponds to **dev**, **stage**, or **prod**.
 
 ### Deleting `AzureVpcPeering`
 
