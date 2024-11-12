@@ -15,7 +15,7 @@ Cloud Manager must be authorized in the remote cloud provider subscription to ac
 
 Use the following table to identify Cloud Manager service principal based on your Kyma landscape:
 
-| Kyma Dashboard Url                     | Cloud Manager service principal  |
+| Kyma dashboard URL                     | Cloud Manager service principal  |
 |----------------------------------------|----------------------------------|
 | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
 | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
