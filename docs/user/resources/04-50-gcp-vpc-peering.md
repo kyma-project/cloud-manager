@@ -5,8 +5,7 @@ The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describ
 It enables you to consume services available in the remote VPC from the Kyma cluster.
 
 ## Required Permissions in the Remote Project <!-- {docsify-ignore} -->
-In order to create a VPC peering, the following permissions are required and must be granted to the Kyma service account provided
-in the Service Account table below:
+To create VPC peering, the following permissions must be granted to the Kyma service account in your GCP project:
 
 | Permission                           | Description                                                                 |
 |--------------------------------------|-----------------------------------------------------------------------------|
@@ -22,8 +21,8 @@ Use the following table to identify the correct Cloud Manager service account fo
 
 | BTP cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager service account                                          |
 |------------------------------------|----------------------------------------|------------------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com  |
+| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
+| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 
 ## Specification <!-- {docsify-ignore} -->
 This table lists the parameters of the given resource together with their descriptions:
