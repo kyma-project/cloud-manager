@@ -17,7 +17,7 @@ Use the following table to identify Cloud Manager principal based on your Kyma l
 
 | BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager principal                                    |
 |------------------------------------|----------------------------------------|------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | arn:aws:iam::194230256199:user/cloud-manager-peering-stage |
+| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage` |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | arn:aws:iam::194230256199:user/cloud-manager-peering-prod  |
 
 1.  Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal to assume the role:
