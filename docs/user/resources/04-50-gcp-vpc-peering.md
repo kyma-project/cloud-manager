@@ -1,18 +1,28 @@
 # GcpVpcPeering Custom Resource
 
-The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describes the VPC peering
-connection that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
-It allows you to consume services available on the remote VPC from the Kyma cluster.
+The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describes the Virtual Private Cloud (VPC) peering
+ that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
+It enables you to consume services available in the remote VPC from the Kyma cluster.
 
-### Required Permissions on the Remote Project <!-- {docsify-ignore} -->
-In order to create a VPC peering connection, the following permissions are required and must be granted to the Kyma service account provided:
+## Required Permissions in the Remote Project <!-- {docsify-ignore} -->
+To create VPC peering, the following permissions must be granted to the Kyma service account in your GCP project:
 
-| Parameter                          | Description                                                                 |
-|------------------------------------|-----------------------------------------------------------------------------|
-| compute.networks.addPeering        | Required to create the peering request in the remote project and VPC.       |
-| compute.networks.get               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
-| compute.networks.ListEffectiveTags | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
+| Permission                           | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `compute.networks.addPeering`        | Required to create the peering request in the remote project and VPC.       |
+| `compute.networks.get`               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
+| `compute.networks.ListEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
 
+For more information on how to manage access to service accounts, see the [Google Cloud documentation](https://cloud.google.com/iam/docs/manage-access-service-accounts).
+
+### Service Account
+For security reasons, each Kyma landscape has its own service account.
+Use the following table to identify the correct Cloud Manager service account for your Kyma landscape:
+
+| BTP cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager service account                                          |
+|------------------------------------|----------------------------------------|------------------------------------------------------------------------|
+| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
+| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 
 ## Specification <!-- {docsify-ignore} -->
 This table lists the parameters of the given resource together with their descriptions:
@@ -28,15 +38,15 @@ This table lists the parameters of the given resource together with their descri
 
 **Status:**
 
-| Parameter                         | Type       | Description                                                                                                                         |
-|-----------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required)              | string     | Represents the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
-| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                                |
-| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                               |
-| **conditions.message**            | string     | Provides more details about the condition status change.                                                                            |
-| **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                 |
-| **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                          |
-| **conditions.type**               | string     | Provides a short description of the condition.                                                                                      |
+| Parameter                         | Type       | Description                                              |
+|-----------------------------------|------------|----------------------------------------------------------|
+| **state** (required)              | string     | Represents the current state of **CustomObject**.        |
+| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.     |
+| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.    |
+| **conditions.message**            | string     | Provides more details about the condition status change. |
+| **conditions.reason**             | string     | Defines the reason for the condition status change.      |
+| **conditions.status** (required)  | string     | Represents the status of the condition.                  |
+| **conditions.type**               | string     | Provides a short description of the condition.           |
 
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
