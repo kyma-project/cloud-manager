@@ -29,7 +29,7 @@ Use the following table to identify Cloud Manager principal based on your Kyma l
             {
                 "Effect": "Allow",
                 "Principal": {
-                    "AWS": "<Cloud Manager principal>"
+                    "AWS": "{CLOUD_MANAGER_PRINCIPAL}"
                 },
                 "Action": "sts:AssumeRole"
             }
