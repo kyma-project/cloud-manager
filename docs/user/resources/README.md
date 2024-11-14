@@ -41,16 +41,16 @@ of the `AwsNfsVolume` instances at regular intervals. For more information, see 
 
 ## AwsNfsVolumeRestore CR
 
-The `awsnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore restore operation. For more information, see the [AwsNfsVolumeRestore Custom Resource](./04-20-13-aws-nfs-volume-restore.md)  documentation.
+The `awsnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore restore operation. For more information, see the [AwsNfsVolumeRestore Custom Resource](./04-20-13-aws-nfs-volume-restore.md) documentation.
 
 ## GcpNfsVolume CR
 
-The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filestore instance that can be used as RWX volume in the cluster. For more information, see the [GcpNfsVolume Custom Resource](./04-20-20-gcp-nfs-volume.md)  documentation.
+The `gcpnfsvolume.cloud-resources.kyma-project.io` CRD describes the GCP Filestore instance that can be used as RWX volume in the cluster. For more information, see the [GcpNfsVolume Custom Resource](./04-20-20-gcp-nfs-volume.md) documentation.
 
 ## GcpNfsVolumeBackup CR
 
 The `gcpnfsvolumeBackup.cloud-resources.kyma-project.io` CRD describes the backup of a GCP Filestore
-instance. For more information, see the [GcpNfsVolumeBackup Custom Resource](./04-20-21-gcp-nfs-volume-backup.mdd)  documentation.
+instance. For more information, see the [GcpNfsVolumeBackup Custom Resource](./04-20-21-gcp-nfs-volume-backup.md) documentation.
 
 ## GcpNfsBackupSchedule CR
 
@@ -59,7 +59,7 @@ of the `GcpNfsVolume` instances at regular intervals. For more information, see 
 
 ## GcpNfsVolumeRestore CR
 
-The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore restore operation. For more information, see the [GcpNfsVolumeRestore Custom Resource](./04-20-23-gcp-nfs-volume-restore.md)  documentation.
+The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the GCP Filestore restore operation. For more information, see the [GcpNfsVolumeRestore Custom Resource](./04-20-23-gcp-nfs-volume-restore.md) documentation.
 
 ## AzureVpcPeering CR
 
