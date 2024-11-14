@@ -1,6 +1,5 @@
 # AwsVpcPeering Custom Resource
 
-
 The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between
 Kyma and the remote AWS Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
@@ -8,7 +7,7 @@ of the same cloud provider.
 Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in 
 the Kyma cluster underlying cloud provider account and accepts VPC peering connection in the remote cloud provider account.
 
-### Authorization
+## Authorization
 
 Cloud Manager must be authorized in the remote cloud provider account to accept VPC peering connection. For cross-account access,
 Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).

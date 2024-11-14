@@ -19,7 +19,6 @@ when you want to be in control of the network segments in order to avoid range c
 You must specify the GcpNfsVolume capacity. Scalability and minimum/maximum capacity depend on the chosen GCP Filestore tier.
 To learn more, read [GCP Filestore service tiers](https://cloud.google.com/filestore/docs/service-tiers).
 
-
 You can optionally specify the `Tier` GCP Filestore configuration options. Its default value is `BASIC_HDD`, 
 and can be one of `BASIC_HDD`, `BASIC_SSD`, `ZONAL` or `REGIONAL`. Legacy tiers are not supported.
 
@@ -28,6 +27,7 @@ specify their names, labels and annotations if needed. If PV or PVC already exis
 being created, the provisioned GCP Filestore remains and the GcpNfsVolume is put into the `Error` state.
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -64,7 +64,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 
