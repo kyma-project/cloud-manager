@@ -1,7 +1,7 @@
 # IpRange Custom Resource
 
 The `iprange.cloud-resources.kyma-project.io` custom resource (CR) specifies the VPC network
-IP range that is used for IP address allocation for cloud resources that require an IP address. 
+IP range that is used for IP address allocation for cloud resources that require an IP address.
 
 You are allowed to have one IpRange CR. If there are multiple IpRange resources in the cluster, the
 oldest one is reconciled and the other is ignored and put into the `Error` state.
