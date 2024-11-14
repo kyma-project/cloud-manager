@@ -68,7 +68,12 @@ func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 func (s *State) ShouldModifyKcp() bool {
 	awsRedisInstance := s.ObjAsAwsRedisInstance()
 
-	areCacheNodeTypesDifferent := s.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType != awsRedisInstance.Spec.CacheNodeType
+	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisInstance.Spec.RedisTier)
+	if err != nil {
+		return true
+	}
+
+	areCacheNodeTypesDifferent := s.KcpRedisInstance.Spec.Instance.Aws.CacheNodeType != cacheNodeType
 	isAutoMinorVersionUpgradeDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade != awsRedisInstance.Spec.AutoMinorVersionUpgrade
 	isAuthEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AuthEnabled != awsRedisInstance.Spec.AuthEnabled
 	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisInstance.Spec.PreferredMaintenanceWindow, "")

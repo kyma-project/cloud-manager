@@ -179,7 +179,6 @@ type RedisInstanceGcp struct {
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=5
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicaCount is immutable."
 	ReplicaCount int32 `json:"replicaCount"`
 }
 
@@ -195,10 +194,6 @@ type RedisInstanceAzure struct {
 
 	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
-
-	// +optional
-	// +kubebuilder:validation:Enum=1;2;3
-	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
 }
 
 type RedisInstanceAws struct {

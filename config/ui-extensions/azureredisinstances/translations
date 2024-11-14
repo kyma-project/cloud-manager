@@ -5,7 +5,7 @@ en:
   spec.enableNonSslPort: Enable Non SSL Port
   spec.shardCount: Shard Count
   spec.redisVersion: Redis Version
-  spec.sku: SKU
+  spec.redisTier: Redis Tier
   spec.sku.capacity: Capacity
   spec.redisConfiguration: Redis Configuration
   spec.redisConfiguration.maxclients: Max Clients

@@ -31,11 +31,10 @@ func WithAwsRedisInstanceDefautSpecs() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
-				awsRedisInstance.Spec.CacheNodeType = "cache.m5.large"
+				awsRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.AwsRedisTierP1
 				awsRedisInstance.Spec.EngineVersion = "6.x"
 				awsRedisInstance.Spec.AutoMinorVersionUpgrade = true
 				awsRedisInstance.Spec.AuthEnabled = false
-				awsRedisInstance.Spec.ReadReplicas = 0
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceDefautSpecs", obj))
@@ -43,14 +42,14 @@ func WithAwsRedisInstanceDefautSpecs() ObjAction {
 	}
 }
 
-func WithAwsRedisInstanceCacheNodeType(cacheNodeType string) ObjAction {
+func WithAwsRedisInstanceRedisTier(redisTier cloudresourcesv1beta1.AwsRedisTier) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
-				awsRedisInstance.Spec.CacheNodeType = cacheNodeType
+				awsRedisInstance.Spec.RedisTier = redisTier
 				return
 			}
-			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceCacheNodeType", obj))
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceRedisTier", obj))
 		},
 	}
 }
@@ -87,18 +86,6 @@ func WithAwsRedisInstanceAuthEnabled(authEnabled bool) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceAuthEnabled", obj))
-		},
-	}
-}
-
-func WithAwsRedisInstanceReadReplicas(readReplicas int32) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
-				awsRedisInstance.Spec.ReadReplicas = readReplicas
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceReadReplicas", obj))
 		},
 	}
 }

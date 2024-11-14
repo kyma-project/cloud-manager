@@ -3,14 +3,11 @@ body:
     widget: Panel
     source: spec
     children:
-      - name: spec.memorySizeGb
-        source: memorySizeGb
-        widget: Labels
       - name: spec.redisVersion
         source: redisVersion
         widget: Labels
-      - name: spec.tier
-        source: tier
+      - name: spec.redisTier
+        source: redisTier
         widget: Labels
       - name: spec.authEnabled
         source: authEnabled

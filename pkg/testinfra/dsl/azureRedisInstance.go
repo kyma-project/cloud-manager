@@ -38,26 +38,14 @@ func WithAzureRedisInstanceRedisVersion(redisVersion string) ObjAction {
 	}
 }
 
-func WithAzureRedisInstanceReplicasPerPrimary(replicasPerPrimary int) ObjAction {
+func WithAzureRedisInstanceRedisTier(redisTier cloudresourcesv1beta1.AzureRedisTier) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
-				azureRedisInstance.Spec.ReplicasPerPrimary = replicasPerPrimary
+				azureRedisInstance.Spec.RedisTier = redisTier
 				return
 			}
-			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceReplicasPerPrimary", obj))
-		},
-	}
-}
-
-func WithAzureRedisInstanceSKUCapacity(sku cloudresourcesv1beta1.AzureRedisSKU) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
-				azureRedisInstance.Spec.SKU = sku
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceSKUCapacity", obj))
+			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceRedisTire", obj))
 		},
 	}
 }
@@ -173,16 +161,16 @@ func UpdateAzureRedisInstance(ctx context.Context, clnt client.Client, obj *clou
 	return err
 }
 
-func WithAzureRedisInstanceDefautSpecs() ObjAction {
+func WithAzureRedisInstanceDefaultSpecs() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
 				azureRedisInstance.Spec.ShardCount = 1
-				azureRedisInstance.Spec.SKU.Capacity = 1
+				azureRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.AzureRedisTierP5
 				azureRedisInstance.Spec.RedisVersion = "7"
 				return
 			}
-			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceDefautSpecs", obj))
+			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceDefaultSpecs", obj))
 		},
 	}
 }

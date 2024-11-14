@@ -9,14 +9,10 @@ body:
       - name: spec.redisVersion
         source: redisVersion
         widget: Labels
-
-  - name: spec.sku
-    widget: Panel
-    source: spec.sku
-    children:
-      - name: spec.sku.capacity
-        source: capacity
+      - name: spec.redisTier
+        source: redisTier
         widget: Labels
+
 
   - name: spec.redisConfiguration
     widget: Panel

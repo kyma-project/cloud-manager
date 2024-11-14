@@ -1,10 +1,7 @@
-- path: spec.tier
-  name: spec.tier
+- path: spec.redisTier
+  name: spec.redisTier
   required: true
-  disableOnEdit: true
-- path: spec.memorySizeGb
-  name: spec.memorySizeGb
-  required: true
+  disableOnEdit: false
 - path: spec.redisVersion
   name: spec.redisVersion
   required: true

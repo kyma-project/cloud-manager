@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.15
+    cloud-resources.kyma-project.io/version: v0.0.16
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -68,8 +68,6 @@ spec:
                 autoMinorVersionUpgrade:
                   default: false
                   type: boolean
-                cacheNodeType:
-                  type: string
                 engineVersion:
                   default: "7.0"
                   type: string
@@ -99,17 +97,28 @@ spec:
 
                     Example: sun:23:00-mon:01:30
                   type: string
-                readReplicas:
-                  default: 0
-                  format: int32
-                  maximum: 1
-                  minimum: 0
-                  type: integer
+                redisTier:
+                  description: Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
+                  enum:
+                    - S1
+                    - S2
+                    - S3
+                    - S4
+                    - S5
+                    - S6
+                    - S7
+                    - P1
+                    - P2
+                    - P3
+                    - P4
+                    - P5
+                    - P6
+                  type: string
                   x-kubernetes-validations:
-                    - message: ReadReplicas is immutable.
-                      rule: (self == oldSelf)
+                    - message: Service tier cannot be changed within redisTier. Only capacity tier can be changed.
+                      rule: (self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P'))
               required:
-                - cacheNodeType
+                - redisTier
               type: object
             status:
               description: AwsRedisInstanceStatus defines the observed state of AwsRedisInstance

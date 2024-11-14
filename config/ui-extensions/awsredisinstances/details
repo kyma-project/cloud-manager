@@ -6,9 +6,6 @@ body:
       - name: spec.autoMinorVersionUpgrade
         source: autoMinorVersionUpgrade
         widget: Labels
-      - name: spec.cacheNodeType
-        source: cacheNodeType
-        widget: Labels
       - name: spec.engineVersion
         source: engineVersion
         widget: Labels
@@ -18,8 +15,8 @@ body:
       - name: spec.preferredMaintenanceWindow
         source: preferredMaintenanceWindow
         widget: Labels
-      - name: spec.readReplicas
-        source: readReplicas
+      - name: spec.redisTier
+        source: redisTier
         widget: Labels
 
   - name: spec.ipRange
