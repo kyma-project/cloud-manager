@@ -360,7 +360,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
-	It("Scenario: KCP AWS VpcPeering is deleted when remote network is missing", func() {
+	It("Scenario: KCP AWS VpcPeering is deleted when local and remote networks are missing", func() {
 		const (
 			kymaName             = "76f1dec7-c7d3-4129-9730-478f4cba241a"
 			kcpPeeringName       = "f658c189-0f09-4c4b-8da6-49b3db61546d"
@@ -568,6 +568,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(awsMockRemote.GetRoute(infra.Ctx(), remoteVpcId, remoteRouteTable, kcpPeering.Status.RemoteId, localVpcCidr)).
 				ToNot(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
 					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+		})
+
+		// Deleting KCP remote Network before VpcPeering deletion
+		By("When KCP local Network is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet).
+				Should(Succeed(), "failed deleting local KCP Network")
+		})
+
+		By("Then KCP local Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet).
+				Should(Succeed(), "expected KCP local Network not to exist (be deleted), but it still exists")
 		})
 
 		// Deleting KCP remote Network before VpcPeering deletion
