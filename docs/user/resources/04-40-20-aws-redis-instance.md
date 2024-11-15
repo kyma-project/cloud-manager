@@ -93,7 +93,7 @@ kind: AwsRedisInstance
 metadata:
   name: awsredisinstance-sample
 spec:
-  redisVersion: P1
+  redisTier: P1
   engineVersion: "7.0"
   autoMinorVersionUpgrade: true
   authEnabled: true
