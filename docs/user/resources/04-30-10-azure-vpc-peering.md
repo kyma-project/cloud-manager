@@ -1,15 +1,14 @@
 # AzureVpcPeering Custom Resource
 
-
 The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between 
 Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
 
 Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in
-the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in 
+the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in
 the remote cloud provider subscription.
 
-### Authorization
+## Authorization
 
 Cloud Manager must be authorized in the remote cloud provider subscription to accept a VPC peering connection.
 
@@ -20,11 +19,12 @@ Use the following table to identify Cloud Manager service principal based on you
 | https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
 
-And assign the following Identity and Access Management (IAM) roles to the Cloud Manager service principal: 
+And assign the following Identity and Access Management (IAM) roles to the Cloud Manager service principal:
+
 * Classic Network Contributor
 * Network Contributor
 
-### Deleting `AzureVpcPeering`
+## Deleting `AzureVpcPeering`
 
 Kyma's underlying cloud provider VPC peering connection is deleted as a part of the AzureVpcPeering deletion. The remote VPC
 peering connection is left hanging, and you must delete it manually.
@@ -52,7 +52,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                         |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
 | **conditions.type**               | string     | Provides a short description of the condition.                                              |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

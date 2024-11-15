@@ -26,8 +26,8 @@ By default, the created PV and PVC have the same name as the AwsNfsVolume resour
 specify their names, labels and annotations if needed. If PV or PVC already exists with a name equal to the one
 being created, the provisioned AWS EFS remains and the AwsNfsVolume is put into the `Error`state.
 
-
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -59,7 +59,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 
