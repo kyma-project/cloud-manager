@@ -1,6 +1,6 @@
 # Cloud Manager Custom Resources
 
-This is a list of Cloud Manager's custom resources.
+This is a list of Cloud Manager's custom resources (CRs).
 
 * IP Range
   * [IpRange CR](#iprange-cr)
@@ -24,7 +24,7 @@ This is a list of Cloud Manager's custom resources.
 
 ## IpRange CR
 
-The `iprange.cloud-resources.kyma-project.io` CRD describes the VPC network IP range used for IP address allocation for cloud resources that require an IP address. For more information, see the [IpRange Custom Resource](./04-10-iprange.md) documentation.
+The `iprange.cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the VPC network IP range used for IP address allocation for cloud resources that require an IP address. For more information, see the [IpRange Custom Resource](./04-10-iprange.md) documentation.
 
 ## AwsNfsVolume CR
 
