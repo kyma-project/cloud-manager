@@ -69,8 +69,7 @@ data:
           - name: status.state
             source: state
             widget: Labels
-  form: |2
-
+  form: |
     - path: spec.shardCount
       name: spec.shardCount
       required: false
@@ -174,7 +173,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.7
+    cloud-resources.kyma-project.io/version: v0.0.8
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
