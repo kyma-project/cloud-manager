@@ -1,10 +1,11 @@
-# Create Scheduled Automatic RWX Volume Backups in Google Cloud
+# Create Scheduled Automatic Network File System Volume Backups in Google Cloud
 
-This tutorial explains how to create scheduled automatic backups for ReadWriteMany (RWX) volumes in Google Cloud (GCP).
+This tutorial explains how to create scheduled automatic backups for Network File System (NFS) volumes in Google Cloud.
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-* You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created a GcpNfsVolume. See [Use Network File System in Google Cloud](./01-20-20-gcp-nfs-volume.md).
 
 > [!NOTE]
 > All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsBackupSchedule resource.

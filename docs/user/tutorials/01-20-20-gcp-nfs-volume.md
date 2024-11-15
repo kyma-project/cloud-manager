@@ -1,6 +1,6 @@
-# Use RWX Volumes in GCP
+# Use Network File System in Google Cloud
 
-This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP). You can use the created RWX volume from multiple workloads.
+This tutorial explains how to use Network File System (NFS) to create ReadWriteMany (RWX) volumes in Google Cloud. You can use the created RWX volume from multiple workloads.
 
 ## Steps <!-- {docsify-ignore} -->
 
@@ -10,7 +10,7 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
    export NAMESPACE={NAMESPACE_NAME}
    kubectl create ns $NAMESPACE
    ```
-   
+  
 2. Create an GcpNfsVolume resource.
 
    ```shell
@@ -24,7 +24,7 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
      capacityGb: 1024
    EOF
    ```
-   
+  
 3. Wait for the GcpNfsVolume to be in the `Ready` state.
 
    ```shell
@@ -33,27 +33,27 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
 
    Once the newly created GcpNfsVolume is provisioned, you should see the following message:
 
-   ```
+   ```console
    gcpnfsvolume.cloud-resources.kyma-project.io/my-vol condition met
    ```
-   
+
 4. Observe the generated PersistentVolume:
-   
+
    ```shell
    export PV_NAME=`kubectl get gcpnfsvolume my-vol -n $NAMESPACE -o jsonpath='{.status.id}'`
    kubectl get persistentvolume $PV_NAME
    ```
-   
+
    You should see the following details:
-   
-   ```
+
+   ```console
    NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS
    {PV_NAME}  1Ti        RWX            Retain           Bound    {NAMESPACE_NAME}/my-vol                             
    ```
-   
+
    Note the `RWX` access mode which allows the volume to be readable and writable from multiple workloads, and the
    the `Bound` status which means the PersistentVolumeClaim claiming this PV is created.
-   
+
 5. Observe the generated PersistentVolumeClaim:
 
    ```shell
@@ -62,7 +62,7 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
 
    You should see the following message:
 
-   ```
+   ```console
    NAME     STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS 
    my-vol   Bound    {PV_NAME}  1Ti        RWX                                                
    ```
@@ -128,19 +128,20 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
              persistentVolumeClaim:
                claimName: my-vol 
    EOF
-   ``` 
-   
+   ```
+
    This workload should print a sequence of 20 lines to stdout and a file on the NFS volume.
    Then it should print the content of the file.
-   
+
 7. Print the logs of one of the workloads, run:
 
    ```shell
    kubectl logs -n $NAMESPACE `kubectl get pod -n $NAMESPACE -l app=gcpnfsvolume-demo -o=jsonpath='{.items[0].metadata.name}'`
    ```
-   
+
    The command should print a result similar to the following one:
-   ```
+
+   ```console
    ...
     Hello from gcpnfsvolume-demo-557dc8cbcb-kwwjt: 19
     Hello from gcpnfsvolume-demo-557dc8cbcb-kwwjt: 20
@@ -153,37 +154,43 @@ This tutorial explains how to create ReadWriteMany (RWX) volumes in Google Cloud
     Hello from gcpnfsvolume-demo-557dc8cbcb-kwwjt: 3
    ...
    ```
-   
+
    >[!NOTE] The `File content:` contains prints from both workloads. This demonstrates the ReadWriteMany capability of the volume.
 
-8. Clean up:
+## Next Steps
 
-   * Remove the created workloads:
-     ```shell
-     kubectl delete -n $NAMESPACE deployment gcpnfsvolume-demo
-     ```
- 
-   * Remove the created configmap:
-     ```shell
-     kubectl delete -n $NAMESPACE configmap my-script
-     ```
- 
-   * Remove the created gcpnfsvolume:
-     ```shell
-     kubectl delete -n $NAMESPACE gcpnfsvolume my-vol
-     ```
- 
-   * Remove the created default iprange:
- 
-     > [!NOTE]
-     > If you have other cloud resources using the default IpRange,
-     > skip this step, and do not delete the default IpRange.
- 
-     ```shell
-     kubectl delete iprange default
-     ```
- 
-   * Remove the created namespace:
-     ```shell
-     kubectl delete namespace $NAMESPACE
-     ```
+To clean up, follow these steps:
+
+1. Remove the created workloads:
+
+   ```shell
+   kubectl delete -n $NAMESPACE deployment gcpnfsvolume-demo
+   ```
+
+2. Remove the created configmap:
+
+   ```shell
+   kubectl delete -n $NAMESPACE configmap my-script
+   ```
+
+3. Remove the created gcpnfsvolume:
+
+   ```shell
+   kubectl delete -n $NAMESPACE gcpnfsvolume my-vol
+   ```
+
+4. Remove the created default iprange:
+
+   > [!NOTE]
+   > If you have other cloud resources using the default IpRange,
+   > skip this step, and do not delete the default IpRange.
+
+   ```shell
+   kubectl delete iprange default
+   ```
+
+5. Remove the created namespace:
+
+   ```shell
+   kubectl delete namespace $NAMESPACE
+   ```

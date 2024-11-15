@@ -1,12 +1,22 @@
-# AWS Redis Instance Tutorial
-Learn how to instantiate Redis and connect to it.
+# Create Redis Instances in Amazon Web Services
 
-## Minimal Setup
+Learn how to create a Redis instance in Amazon Web Service (AWS) and connect to it.
+
+## Prerequisites  <!-- {docsify-ignore} -->
+
+- You have the Cloud Manager module added.
+- Install [Redis CLI](https://redis.io/docs/latest/develop/tools/cli/).
+
+## Steps
+
+### Minimal Setup
 
 To instantiate Redis and connect the Pod with only the required fields, use the following setup:
 
-1. Instantiate Redis. This may take 10+ minutes.
+1. Create a Redis instance.
 
+   > [!NOTE]
+   > The operation may take more than 10 minutes.
 
    ```yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -61,13 +71,17 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
    ```bash
    redis-cli -h $HOST -p $PORT --tls PING
    ```
+  
    If your setup was successful, you get `PONG` back from the server.
 
 ## Advanced Setup
 
-To specify advanced features (such as Redis version, configuration, and maintenance policy) and set up auth and TLS, use the following setup:
+To specify advanced features, such as Redis version, configuration, and maintenance policy, and set up auth and TLS, use the following setup:
 
-1. Instantiate Redis. This may take 10+ minutes.
+1. Instantiate Redis.
+
+   > [!NOTE]
+   > The operation may take more than 10 minutes.
 
    ```yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -136,4 +150,5 @@ To specify advanced features (such as Redis version, configuration, and maintena
    ```bash
    redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls PING
    ```
+
    If your setup was successful, you get `PONG` back from the server.

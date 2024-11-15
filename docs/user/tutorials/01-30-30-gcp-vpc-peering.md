@@ -1,15 +1,16 @@
-# Create Vpc Peering in GCP
+# Create Virtual Private Cloud Peering in Google Cloud
 
-This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in Google Cloud Platform (GCP).
+This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and Kyma in Google Cloud.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
+
 - You have the Cloud Manager module added.
 - Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
 
 ## Steps <!-- {docsify-ignore} -->
 
 1. Fetch your Kyma ID.
-    
+
     ```shell
    kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'
    ```
@@ -30,21 +31,24 @@ This tutorial explains how to create a VPC peering connection between a remote V
 
    > [!NOTE]  
 Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
-   
+
    ```shell
    gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$REMOTE_PROJECT_ID
    ```
-   
+
 5. Fetch the tag created in the previous step.
 
    ```shell
    gcloud resource-manager tags keys list --parent=projects/$REMOTE_PROJECT_ID
    ```
+
    The command returns an output similar to this one:
+
    ```console
    NAME                     SHORT_NAME                DESCRIPTION
    tagKeys/123456789012345  shoot--kyma-dev--abc1234
    ```
+
 6. Replace the `tagKeys/123456789012345` placeholder with your tag key and export it as an environment variable. Your tag key is the value returned in the `NAME` column of the previous command's output.
 
     ```shell
@@ -86,6 +90,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
     ```shell
     gcloud compute networks describe $REMOTE_VPC_NETWORK
     ```
+
     The command returns an output similar to this one:
 
     ```shell
@@ -103,7 +108,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
     ```shell
     export RESOURCE_ID="//compute.googleapis.com/projects/remote-project-id/global/networks/1234567890123456789"
-    ``` 
+    ```
 
 14. Add the tag to the VPC network.
 
@@ -133,7 +138,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
    kubectl apply -f vpc-peering.yaml
    ```
 
-    This operation usually takes less than 2 minutes. To check the status of the VPC Peering, run:
+   This operation usually takes less than 2 minutes. To check the status of the VPC Peering, run:
 
    ```shell
     kubectl get gcpvpcpeering vpcpeering-dev -o yaml
@@ -162,4 +167,5 @@ Due to security reasons, the VPC network in the remote project, which receives t
           status: "True"
           type: Ready
    ```
+
 The **status.conditions** field contains information about the VPC Peering status.

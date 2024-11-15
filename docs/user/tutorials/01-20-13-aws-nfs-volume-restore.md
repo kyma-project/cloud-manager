@@ -1,20 +1,20 @@
-# Restore RWX Volume Backups in AWS
+# Restore Network File System Volume Backups in Amazon Web Services
 
-This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Amazon Web Services (AWS). 
+This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Amazon Web Services (AWS).
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-* You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-volume.md) to learn more.
-
-* You have created an AwsNfsVolumeBackup. See [Backup RWX Volumes in AWS](./01-110-aws-nfs-volume-backup.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created an AwsNfsVolume. See [Use Network File System in Amazon Web Services](./01-20-10-aws-nfs-volume.md).
+* You have created an AwsNfsVolumeBackup. See [Back Up Network File System Volumes in Amazon Web Services](./01-20-11-aws-nfs-volume-backup.md).
 
 >[!NOTE]
->The following examples assume that the AwsNfsVolumeBackup is named `my-backup` 
-and is in the same namespace as the AwsNfsVolumeRestore resource.
+>The following examples assume that the AwsNfsVolumeBackup is named `my-backup` and is in the same namespace as the AwsNfsVolumeRestore resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
 ### Restore on the same or existing Filestore <!-- {docsify-ignore} -->
+
 1. Export the namespace as an environment variable.
 
    ```shell
