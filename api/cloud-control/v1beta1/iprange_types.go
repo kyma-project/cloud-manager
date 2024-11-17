@@ -36,6 +36,10 @@ const (
 	ReasonInvalidIpRangeReference        = "InvalidIpRangeReference"
 )
 
+const (
+	IpRangeNetworkField = ".spec.network"
+)
+
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
@@ -205,6 +209,14 @@ func (in *IpRange) Conditions() *[]metav1.Condition {
 
 func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
+}
+
+func (in *IpRange) State() string {
+	return string(in.Status.State)
+}
+
+func (in *IpRange) SetState(v string) {
+	in.Status.State = StatusState(v)
 }
 
 func (in *IpRange) CloneForPatchStatus() client.Object {

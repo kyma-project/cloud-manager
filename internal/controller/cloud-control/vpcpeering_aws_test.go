@@ -13,6 +13,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -176,7 +177,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When local KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(localKcpNetworkName)
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, scope.Spec.Scope.Aws.Network.VPC.Id, localKcpNetworkName).
 				Build()
@@ -213,7 +214,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When remote KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(remoteKcpNetworkName)
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAwsRef(remoteAccountId, remoteRegion, remoteVpcId, remoteVpcName).
 				Build()
@@ -360,6 +361,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
+	// When prevent deletion of KCP Network while used by VpcPeering is implemented, this test case
+	// is obsolete, but keeping it just in case, but with Network reconciler ignoring the created
+	// networks so they can be deleted while used by VpcPeering
 	It("Scenario: KCP AWS VpcPeering is deleted when local and remote networks are missing", func() {
 		const (
 			kymaName             = "76f1dec7-c7d3-4129-9730-478f4cba241a"
@@ -454,25 +458,49 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given local KCP Network exists", func() {
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			// must tell reconciler to ignore it, since it would prevent deletion when used by peering
+			kcpnetwork.Ignore.AddName(localKcpNetworkName)
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, scope.Spec.Scope.Aws.Network.VPC.Id, localKcpNetworkName).
 				Build()
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName)).
-				Should(Succeed())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName))).
+				To(Succeed())
+
+			localKcpNet.Status.Network = localKcpNet.Spec.Network.Reference.DeepCopy()
+			localKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			meta.SetStatusCondition(&localKcpNet.Status.Conditions, metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonReady,
+				Message: cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(composed.PatchObjStatus(infra.Ctx(), localKcpNet, infra.KCP().Client())).
+				To(Succeed())
 		})
 
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network exists", func() {
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			// must tell reconciler to ignore it, since it would prevent deletion when used by peering
+			kcpnetwork.Ignore.AddName(remoteKcpNetworkName)
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAwsRef(remoteAccountId, remoteRegion, remoteVpcId, remoteVpcName).
 				Build()
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName))).
 				Should(Succeed())
+
+			remoteKcpNet.Status.Network = remoteKcpNet.Spec.Network.Reference.DeepCopy()
+			remoteKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			meta.SetStatusCondition(&remoteKcpNet.Status.Conditions, metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonReady,
+				Message: cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(composed.PatchObjStatus(infra.Ctx(), remoteKcpNet, infra.KCP().Client())).
+				To(Succeed())
 		})
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
