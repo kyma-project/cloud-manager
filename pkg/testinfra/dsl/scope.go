@@ -6,7 +6,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
@@ -23,6 +25,26 @@ func WithScope(scopeName string) ObjAction {
 			}
 		},
 	}
+}
+
+func CreateKyma(ctx context.Context, clnt client.Client, name, namespace string) (*unstructured.Unstructured, error) {
+	kyma := util.NewKymaUnstructured()
+	kyma.SetName(name)
+	kyma.SetNamespace(namespace)
+	if err := unstructured.SetNestedField(kyma.Object, "fast", "spec", "channel"); err != nil {
+		return nil, err
+	}
+	if err := util.SetKymaModuleInSpec(kyma, "cloud-manager"); err != nil {
+		return nil, err
+	}
+	if err := util.SetKymaModuleStateToStatus(kyma, "cloud-manager", util.KymaModuleStateReady); err != nil {
+		return nil, err
+	}
+	if err := clnt.Create(ctx, kyma); err != nil {
+		return nil, err
+	}
+
+	return kyma, nil
 }
 
 func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
@@ -84,6 +106,10 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 		return err
 	}
 
+	if _, err := CreateKyma(ctx, infra.KCP().Client(), scope.Name, scope.Namespace); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -139,6 +165,10 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 		return err
 	}
 
+	if _, err := CreateKyma(ctx, infra.KCP().Client(), scope.Name, scope.Namespace); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -183,6 +213,10 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 		return err
 	}
 
+	if _, err := CreateKyma(ctx, infra.KCP().Client(), scope.Name, scope.Namespace); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -222,6 +256,10 @@ func CreateScopeCcee(ctx context.Context, infra testinfra.Infra, scope *cloudcon
 	err := infra.KCP().Client().Create(ctx, scope)
 	if err != nil {
 		return err
+	}
+
+	if _, err := CreateKyma(ctx, infra.KCP().Client(), scope.Name, scope.Namespace); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
 	}
 
 	return nil
