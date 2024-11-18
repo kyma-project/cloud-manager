@@ -22,5 +22,4 @@ jobs:
           version: v1.59
           args: --timeout=30m
           only-new-issues: true
-          skip-pkg-cache: true
-          skip-build-cache: true
+          skip-cache: true
