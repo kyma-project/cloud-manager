@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   golangci:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -21,3 +21,6 @@ jobs:
         with:
           version: v1.59
           args: --timeout=30m
+          only-new-issues: true
+          skip-pkg-cache: true
+          skip-build-cache: true
