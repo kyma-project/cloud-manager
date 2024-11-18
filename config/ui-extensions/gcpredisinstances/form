@@ -1,17 +1,10 @@
-- path: spec.tier
-  name: spec.tier
+- path: spec.redisTier
+  name: spec.redisTier
   required: true
-  disableOnEdit: true
-- path: spec.memorySizeGb
-  name: spec.memorySizeGb
-  required: true
+  disableOnEdit: false
 - path: spec.redisVersion
   name: spec.redisVersion
   required: true
-  disableOnEdit: true
-- path: spec.replicaCount
-  name: spec.replicaCount
-  required: false
   disableOnEdit: true
 - path: spec.redisConfigs
   name: spec.redisConfigs

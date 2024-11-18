@@ -22,6 +22,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// +kubebuilder:validation:Enum=S1;S2;S3;S4;S5;S6;S7;P1;P2;P3;P4;P5;P6
+type AwsRedisTier string
+
+const (
+	AwsRedisTierS1 AwsRedisTier = "S1"
+	AwsRedisTierS2 AwsRedisTier = "S2"
+	AwsRedisTierS3 AwsRedisTier = "S3"
+	AwsRedisTierS4 AwsRedisTier = "S4"
+	AwsRedisTierS5 AwsRedisTier = "S5"
+	AwsRedisTierS6 AwsRedisTier = "S6"
+	AwsRedisTierS7 AwsRedisTier = "S7"
+	AwsRedisTierS8 AwsRedisTier = "S8"
+
+	AwsRedisTierP1 AwsRedisTier = "P1"
+	AwsRedisTierP2 AwsRedisTier = "P2"
+	AwsRedisTierP3 AwsRedisTier = "P3"
+	AwsRedisTierP4 AwsRedisTier = "P4"
+	AwsRedisTierP5 AwsRedisTier = "P5"
+	AwsRedisTierP6 AwsRedisTier = "P6"
+)
+
 // AwsRedisInstanceSpec defines the desired state of AwsRedisInstance
 type AwsRedisInstanceSpec struct {
 	// +optional
@@ -31,8 +52,10 @@ type AwsRedisInstanceSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
 
+	// Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
 	// +kubebuilder:validation:Required
-	CacheNodeType string `json:"cacheNodeType"`
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="Service tier cannot be changed within redisTier. Only capacity tier can be changed."
+	RedisTier AwsRedisTier `json:"redisTier"`
 
 	// +optional
 	// +kubebuilder:default="7.0"
@@ -59,13 +82,6 @@ type AwsRedisInstanceSpec struct {
 
 	// +optional
 	Parameters map[string]string `json:"parameters,omitempty"`
-
-	// +optional
-	// +kubebuilder:default=0
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=1
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReadReplicas is immutable."
-	ReadReplicas int32 `json:"readReplicas"`
 }
 
 // AwsRedisInstanceStatus defines the observed state of AwsRedisInstance

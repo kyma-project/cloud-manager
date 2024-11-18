@@ -1,6 +1,5 @@
 # AwsVpcPeering Custom Resource
 
-
 The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between
 Kyma and the remote AWS Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
 of the same cloud provider.
@@ -8,14 +7,19 @@ of the same cloud provider.
 Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in 
 the Kyma cluster underlying cloud provider account and accepts VPC peering connection in the remote cloud provider account.
 
-### Authorization
+## Authorization
 
 Cloud Manager must be authorized in the remote cloud provider account to accept VPC peering connection. For cross-account access,
 Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
 
-1.  Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal `arn:aws:iam::{194230256199}:user/cloud-manager-peering-ENV` to assume the role.
+Use the following table to identify Cloud Manager principal based on your Kyma landscape:
 
-    **ENV** corresponds to **dev**, **stage**, or **prod**.
+| BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager principal                                    |
+|------------------------------------|----------------------------------------|------------------------------------------------------------|
+| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage` |
+| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`  |
+
+1. Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal to assume the role:
 
     ```json
     {
@@ -24,7 +28,7 @@ Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/
             {
                 "Effect": "Allow",
                 "Principal": {
-                    "AWS": "arn:aws:iam::194230256199:user/cloud-manager-peering-ENV"
+                    "AWS": "{CLOUD_MANAGER_PRINCIPAL}"
                 },
                 "Action": "sts:AssumeRole"
             }
@@ -33,7 +37,8 @@ Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/
 
     ```
 
-2.  Create a new managed policy **CloudManagerPeeringAccess** with the following permissions:
+2. Create a new managed policy **CloudManagerPeeringAccess** with the following permissions:
+
     ```json
     {
         "Version": "2012-10-17",
@@ -55,9 +60,9 @@ Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/
     }
     ```
 
-3.  Attach the **CloudManagerPeeringAccess** policy to the **CloudManagerPeeringRole**.
+3. Attach the **CloudManagerPeeringAccess** policy to the **CloudManagerPeeringRole**:
 
-### Deleting `AwsVpcPeering`
+## Deleting `AwsVpcPeering`
 
 Kyma's underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
 peering connection is left hanging, and must be deleted manually.

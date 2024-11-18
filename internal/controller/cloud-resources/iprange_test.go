@@ -1184,7 +1184,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAzureRedisInstance,
 					WithName(azureRedisName),
 					WithIpRange(skrIpRange.Name),
-					WithAzureRedisInstanceDefautSpecs(),
+					WithAzureRedisInstanceDefaultSpecs(),
 				).
 				Should(Succeed(), "failed creating AzureRedisInstance")
 

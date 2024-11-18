@@ -1,7 +1,3 @@
-- path: spec.cacheNodeType
-  name: spec.cacheNodeType
-  required: true
-
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
@@ -30,10 +26,9 @@
   name: spec.preferredMaintenanceWindow
   required: false
 
-- path: spec.readReplicas
-  name: spec.readReplicas
-  required: false
-  disabled: true
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
 
 - path: spec.ipRange
   name: spec.ipRange

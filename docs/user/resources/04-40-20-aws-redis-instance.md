@@ -1,4 +1,5 @@
 # AwsRedisInstance Custom Resource
+
 The `awsredisinstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the AWS ElastiCache Redis instance.
 After the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
@@ -11,14 +12,47 @@ If the IpRange is not specified in the AwsRedisInstance, the default IpRange is 
 If a default IpRange does not exist, it is automatically created.
 Manually create a non-default IpRange with specified CIDR and use it only in advanced cases of network topology when you want to be in control of the network segments to avoid range conflicts with other networks.
 
-When creating AwsRedisInstance, there is only one mandatory field: `cacheNodeType`.
-It specifies the underlying machine that will be used for the cache.
-
-As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
+When creating AwsRedisInstance, only the `redisTier` field is mandatory.
+It specifies the service tier (**Standard** or **Premium**), and the capacity tier.
+Read on for more details.
 
 Optionally, you can specify the `engineVersion`, `authEnabled`, `parameters`, and `preferredMaintenanceWindow` fields.
 
-# Specification
+As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
+
+## Redis Tiers
+
+### Standard Tier
+
+In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
+The table below showcases which AWS machines are used for each tier.
+
+| RedisTier | Capacity (GiB) | Network (up to Gbps) | Machine            |
+| --------- | -------------- | -------------------- | ------------------ |
+| S1        | 1.37           | 5                    | cache.t4g.small    |
+| S2        | 3.09           | 5                    | cache.t4g.medium   |
+| S3        | 6.38           | 12.5                 | cache.m7g.large    |
+| S4        | 12.93          | 12.5                 | cache.m7g.xlarge   |
+| S5        | 26.04          | 15                   | cache.m7g.2xlarge  |
+| S6        | 52.26          | 15                   | cache.m7g.4xlarge  |
+| S7        | 103.68         | 15                   | cache.m7g.8xlarge  |
+| S8        | 209.55         | 30                   | cache.m7g.16xlarge |
+
+### Premium Tier
+
+In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
+The table below showcases which AWS machines are used for each tier.
+
+| RedisTier | Capacity (GiB) | Network (up to Gbps) | Machine            |
+| --------- | -------------- | -------------------- | ------------------ |
+| P1        | 6.38           | 12.5                 | cache.m7g.large    |
+| P2        | 12.93          | 12.5                 | cache.m7g.xlarge   |
+| P3        | 26.04          | 15                   | cache.m7g.2xlarge  |
+| P4        | 52.26          | 15                   | cache.m7g.4xlarge  |
+| P5        | 103.68         | 15                   | cache.m7g.8xlarge  |
+| P6        | 209.55         | 30                   | cache.m7g.16xlarge |
+
+## Specification
 
 This table lists the parameters of AwsRedisInstance, together with their descriptions:
 
@@ -26,7 +60,7 @@ This table lists the parameters of AwsRedisInstance, together with their descrip
 | --------------------------------------------------| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ipRange**                                       | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                            |
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                              |
-| **cacheNodeType**                                 | string | Required. A node is the smallest building block of an Amazon ElastiCache deployment. It is a fixed-size chunk of secure, network-attached RAM. For supported node tyes, check [Amazon's Supported node types page](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) |
+| **redisTier**                                     | string | Required. The Redis tier of the instance. Supported values are `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `S7`, `S8` for the **Standard** offering, and `P1`, `P2`, `P3`, `P4`, `P5`, `P6` for the **Premium** offering. |
 | **engineVersion**                                 | string | Optional. The version number of the cache engine to be used for the clusters in this replication group. To see all supported versions, check [Amazon's Supported ElastiCache (Redis OSS) versions page](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/supported-engine-versions.html). Defaults to `"7.0"`. |
 | **authEnabled**                                   | bool   | Optional. Enables using an AuthToken (password) when issuing Redis OSS commands. Defaults to `false`.                                                                                                       |
 | **readReplicas**                                  | number | Optional. Number of read replicas. If greater than zero, automatic failover is enabled to ensure the high availability of the instance. Supported values are `0` and `1`. Defaults to `0`.                       |
@@ -37,7 +71,7 @@ This table lists the parameters of AwsRedisInstance, together with their descrip
 | **authSecret.labels**                             | object | Optional. Auth Secret labels. Keys and values must be a string.                                                                                                                                             |
 | **authSecret.annotations**                        | object | Optional. Auth Secret annotations. Keys and values must be a string.                                                                                                                                        |
 
-# Auth Secret Details
+## Auth Secret Details
 
 The following table list the meaningful parameters of the auth Secret:
 
@@ -51,8 +85,7 @@ The following table list the meaningful parameters of the auth Secret:
 | **.data.primaryEndpoint**   | string | Primary connection endpoint. Provided in <host>:<port> format.                                              |
 | **.data.authString**        | string | Auth string. Provided if authEnabled is set to true.                                                        |
 
-
-# Custom Resource Sample
+## Sample Custom Resource
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -60,7 +93,7 @@ kind: AwsRedisInstance
 metadata:
   name: awsredisinstance-sample
 spec:
-  cacheNodeType: cache.t2.micro
+  redisVersion: P1
   engineVersion: "7.0"
   autoMinorVersionUpgrade: true
   authEnabled: true

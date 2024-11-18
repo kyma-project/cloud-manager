@@ -6,17 +6,11 @@ data:
         widget: Panel
         source: spec
         children:
-          - name: spec.memorySizeGb
-            source: memorySizeGb
-            widget: Labels
           - name: spec.redisVersion
             source: redisVersion
             widget: Labels
-          - name: spec.replicaCount
-            source: replicaCount
-            widget: Labels
-          - name: spec.tier
-            source: tier
+          - name: spec.redisTier
+            source: redisTier
             widget: Labels
           - name: spec.authEnabled
             source: authEnabled
@@ -73,20 +67,13 @@ data:
             source: state
             name: status.state
   form: |+
-    - path: spec.tier
-      name: spec.tier
+    - path: spec.redisTier
+      name: spec.redisTier
       required: true
-      disableOnEdit: true
-    - path: spec.memorySizeGb
-      name: spec.memorySizeGb
-      required: true
+      disableOnEdit: false
     - path: spec.redisVersion
       name: spec.redisVersion
       required: true
-      disableOnEdit: true
-    - path: spec.replicaCount
-      name: spec.replicaCount
-      required: false
       disableOnEdit: true
     - path: spec.redisConfigs
       name: spec.redisConfigs
@@ -182,9 +169,8 @@ data:
       configuration: Configuration
       status: Status
       status.state: State
-      spec.memorySizeGb: Memory Size (Gb)
       spec.redisVersion: Redis Version
-      spec.tier: Tier
+      spec.redisTier: Redis Tier
       spec.authEnabled: Auth Enabled
       spec.ipRange: Ip Range
       spec.ipRange.name: Name
@@ -198,11 +184,10 @@ data:
       spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
       spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
       spec.redisConfigs: Redis Configuration
-      spec.replicaCount: Replica Count
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.6
+    cloud-resources.kyma-project.io/version: v0.0.8
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

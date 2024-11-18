@@ -2,6 +2,7 @@ package gcpredisinstance
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -136,4 +137,44 @@ func areByteMapsEqual(first, second map[string][]byte) bool {
 	}
 
 	return true
+}
+
+type gcpRedisTierValue struct {
+	Tier         string
+	MemorySizeGb int32
+}
+
+var gcpRedisTierToGcpRedisTierValueMap = map[cloudresourcesv1beta1.GcpRedisTier]gcpRedisTierValue{
+	cloudresourcesv1beta1.GcpRedisTierS1: {"BASIC", 1},
+	cloudresourcesv1beta1.GcpRedisTierS2: {"BASIC", 3},
+	cloudresourcesv1beta1.GcpRedisTierS3: {"BASIC", 6},
+	cloudresourcesv1beta1.GcpRedisTierS4: {"BASIC", 12},
+	cloudresourcesv1beta1.GcpRedisTierS5: {"BASIC", 24},
+	cloudresourcesv1beta1.GcpRedisTierS6: {"BASIC", 48},
+	cloudresourcesv1beta1.GcpRedisTierS7: {"BASIC", 101},
+	cloudresourcesv1beta1.GcpRedisTierS8: {"BASIC", 200},
+
+	cloudresourcesv1beta1.GcpRedisTierP1: {"STANDARD_HA", 5},
+	cloudresourcesv1beta1.GcpRedisTierP2: {"STANDARD_HA", 12},
+	cloudresourcesv1beta1.GcpRedisTierP3: {"STANDARD_HA", 24},
+	cloudresourcesv1beta1.GcpRedisTierP4: {"STANDARD_HA", 48},
+	cloudresourcesv1beta1.GcpRedisTierP5: {"STANDARD_HA", 101},
+	cloudresourcesv1beta1.GcpRedisTierP6: {"STANDARD_HA", 200},
+}
+
+func redisTierToTierAndMemorySizeConverter(redisTier cloudresourcesv1beta1.GcpRedisTier) (string, int32, error) {
+	gcpRedisTierValue, exists := gcpRedisTierToGcpRedisTierValueMap[redisTier]
+
+	if !exists {
+		return "", 0, errors.New("unknown redis tier")
+	}
+
+	return gcpRedisTierValue.Tier, gcpRedisTierValue.MemorySizeGb, nil
+}
+
+func redisTierToReplicaCount(awsRedisTier cloudresourcesv1beta1.GcpRedisTier) int32 {
+	if strings.HasPrefix(string(awsRedisTier), "P") {
+		return 1
+	}
+	return 0
 }

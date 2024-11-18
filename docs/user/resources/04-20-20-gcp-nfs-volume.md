@@ -19,7 +19,6 @@ when you want to be in control of the network segments in order to avoid range c
 You must specify the GcpNfsVolume capacity. Scalability and minimum/maximum capacity depend on the chosen GCP Filestore tier.
 To learn more, read [GCP Filestore service tiers](https://cloud.google.com/filestore/docs/service-tiers).
 
-
 You can optionally specify the `Tier` GCP Filestore configuration options. Its default value is `BASIC_HDD`, 
 and can be one of `BASIC_HDD`, `BASIC_SSD`, `ZONAL` or `REGIONAL`. Legacy tiers are not supported.
 
@@ -28,6 +27,7 @@ specify their names, labels and annotations if needed. If PV or PVC already exis
 being created, the provisioned GCP Filestore remains and the GcpNfsVolume is put into the `Error` state.
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -40,7 +40,7 @@ This table lists the parameters of the given resource together with their descri
 | **location**                | string              | The zone (for zonal tiers) or the region (for regional tiers) option where GCP Filestore will reside. Defaults to the cluster region or one of its zones depending on the tier.                                                                                                                                                                                                                             |
 | **tier**                    | string              | The GCP Filestore tier configuration option. Defaults to `BASIC_HDD`.                                                                                                                                                                                                                                                                                                                                       |
 | **fileShareName**           | string              | The name of the file share option. Defaults to `vol1`. A file share is the directory on a Filestore instance where all shared files are stored.                                                                                                                                                                                                                                                             |
-| **sourceBackup**            | object              | Optional source backup for restoring an existing backup while creating a new Filestore instance. The capacity of this filestore should be equal to or greater than the source Filestore of the backup. Tier limitations also apply. To learn more, read [GcpNfsVolumeRestore](./04-90-10-gcp-nfs-volume-restore.md).                                                                                               |
+| **sourceBackup**            | object              | Optional source backup for restoring an existing backup while creating a new Filestore instance. The capacity of this filestore should be equal to or greater than the source Filestore of the backup. Tier limitations also apply. To learn more, read [GcpNfsVolumeRestore](./04-20-23-gcp-nfs-volume-restore.md).                                                                                               |
 | **sourceBackup.name**       | object              | Name of the source GcpNfsVolumeBackup.                                                                                                                                                                                                                                                                                                                                                                      |
 | **sourceBackup.namespace**  | object              | Namespace of the source GcpNfsVolumeBackup.                                                                                                                                                                                                                                                                                                                                                                 |
 | **volume**                  | object              | The PersistentVolume options. Optional.                                                                                                                                                                                                                                                                                                                                                                     |
@@ -64,7 +64,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

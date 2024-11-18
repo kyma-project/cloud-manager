@@ -9,6 +9,7 @@ While the EFS file system restore operation is running in the underlying cloud p
 source backup and its destination file system to be available. When the restore operation is finished, the restored file system is available on a recovery directory, named `aws-backup-restore_{datetime}`, off of the root directory.
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -31,7 +32,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 
