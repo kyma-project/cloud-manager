@@ -5,6 +5,7 @@ The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describ
 It enables you to consume services available in the remote VPC from the Kyma cluster.
 
 ## Required Permissions in the Remote Project <!-- {docsify-ignore} -->
+
 To create VPC peering, the following permissions must be granted to the Kyma service account in your GCP project:
 
 | Permission                           | Description                                                                 |
@@ -16,6 +17,7 @@ To create VPC peering, the following permissions must be granted to the Kyma ser
 For more information on how to manage access to service accounts, see the [Google Cloud documentation](https://cloud.google.com/iam/docs/manage-access-service-accounts).
 
 ### Service Account
+
 For security reasons, each Kyma landscape has its own service account.
 Use the following table to identify the correct Cloud Manager service account for your Kyma landscape:
 
@@ -25,6 +27,7 @@ Use the following table to identify the correct Cloud Manager service account fo
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -47,7 +50,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.      |
 | **conditions.status** (required)  | string     | Represents the status of the condition.                  |
 | **conditions.type**               | string     | Provides a short description of the condition.           |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

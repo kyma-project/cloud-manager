@@ -1,13 +1,14 @@
 # AwsNfsBackupSchedule Custom Resource
 
-The `awsnfsbackupschedule.cloud-resources.kyma-project.io` custom resource (CR) represents the user-defined schedule for creating a backup
-of the `AwsNfsVolume` instances at regular intervals. The CR performs the following actions:
+The `awsnfsbackupschedule.cloud-resources.kyma-project.io` custom resource (CR) represents the user-defined schedule for creating a backup of the `AwsNfsVolume` instances at regular intervals. The CR performs the following actions:
+
 - Creates the backups by creating the `awsnfsvolumebackup.cloud-resources.kyma-project.io` resources at the specified interval.
-- Enables you to specify days and times in the form of CRON expressions to automatically create the backups. 
-- Automatically deletes the backups when the backup reaches the configured maximum retention days value. 
-- Enables you to temporarily suspend or resume the backup creation/deletion. 
+- Enables you to specify days and times in the form of CRON expressions to automatically create the backups.
+- Automatically deletes the backups when the backup reaches the configured maximum retention days value.
+- Enables you to temporarily suspend or resume the backup creation/deletion.
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
