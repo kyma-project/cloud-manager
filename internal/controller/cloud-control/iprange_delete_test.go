@@ -39,9 +39,8 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			// Tell Scope reconciler to ignore this kymaName
 			scopePkg.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
-				Should(Succeed())
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
 		})
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
@@ -66,9 +65,8 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
 				Build()
 
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
-				Should(Succeed())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma)).
+				To(Succeed())
 
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
@@ -79,14 +77,13 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 		iprange := &cloudcontrolv1beta1.IpRange{}
 
 		By("And Given KCP IpRange is created", func() {
-			Eventually(CreateKcpIpRange).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
-					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
-					WithScope(kymaName),
-					WithKcpIpRangeSpecCidr(iprangeCidr),
-				).
-				Should(Succeed())
+			Expect(CreateKcpIpRange(infra.Ctx(), infra.KCP().Client(), iprange,
+				WithName(iprangeName),
+				WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
+				WithScope(kymaName),
+				WithKcpIpRangeSpecCidr(iprangeCidr),
+			)).
+				To(Succeed())
 		})
 
 		By("And Given KCP IpRange has Ready condition", func() {
@@ -187,9 +184,8 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			// Tell Scope reconciler to ignore this kymaName
 			scopePkg.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
-				Should(Succeed())
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
 		})
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
@@ -214,9 +210,8 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
 				Build()
 
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
-				Should(Succeed())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma)).
+				To(Succeed())
 
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
@@ -227,14 +222,13 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 		iprange := &cloudcontrolv1beta1.IpRange{}
 
 		By("And Given KCP IpRange is created", func() {
-			Eventually(CreateKcpIpRange).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
-					WithName(iprangeName),
-					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
-					WithScope(kymaName),
-					WithKcpIpRangeSpecCidr(iprangeCidr),
-				).
-				Should(Succeed())
+			Expect(CreateKcpIpRange(infra.Ctx(), infra.KCP().Client(), iprange,
+				WithName(iprangeName),
+				WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
+				WithScope(kymaName),
+				WithKcpIpRangeSpecCidr(iprangeCidr),
+			)).
+				To(Succeed())
 		})
 
 		By("And Given KCP IpRange has Ready condition", func() {

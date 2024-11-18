@@ -87,6 +87,7 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 
 	kyma := util.NewKymaUnstructured()
 	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
 		WithKymaModuleListedInSpec(),
 		WithKymaStatusModuleState(util.KymaModuleStateReady),
 		WithKymaSpecChannel("fast"),
@@ -151,6 +152,7 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 
 	kyma := util.NewKymaUnstructured()
 	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
 		WithKymaModuleListedInSpec(),
 		WithKymaStatusModuleState(util.KymaModuleStateReady),
 		WithKymaSpecChannel("fast"),
@@ -204,6 +206,7 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 
 	kyma := util.NewKymaUnstructured()
 	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
 		WithKymaModuleListedInSpec(),
 		WithKymaStatusModuleState(util.KymaModuleStateReady),
 		WithKymaSpecChannel("fast"),
@@ -254,6 +257,7 @@ func CreateScopeCcee(ctx context.Context, infra testinfra.Infra, scope *cloudcon
 
 	kyma := util.NewKymaUnstructured()
 	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
 		WithKymaModuleListedInSpec(),
 		WithKymaStatusModuleState(util.KymaModuleStateReady),
 		WithKymaSpecChannel("fast"),
