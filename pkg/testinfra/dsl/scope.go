@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -84,6 +85,16 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 		return err
 	}
 
+	kyma := util.NewKymaUnstructured()
+	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
+		WithKymaModuleListedInSpec(),
+		WithKymaStatusModuleState(util.KymaModuleStateReady),
+		WithKymaSpecChannel("fast"),
+	); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -139,6 +150,16 @@ func CreateScopeAzure(ctx context.Context, infra testinfra.Infra, scope *cloudco
 		return err
 	}
 
+	kyma := util.NewKymaUnstructured()
+	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
+		WithKymaModuleListedInSpec(),
+		WithKymaStatusModuleState(util.KymaModuleStateReady),
+		WithKymaSpecChannel("fast"),
+	); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -183,6 +204,16 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 		return err
 	}
 
+	kyma := util.NewKymaUnstructured()
+	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
+		WithKymaModuleListedInSpec(),
+		WithKymaStatusModuleState(util.KymaModuleStateReady),
+		WithKymaSpecChannel("fast"),
+	); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
 	return nil
 }
 
@@ -222,6 +253,16 @@ func CreateScopeCcee(ctx context.Context, infra testinfra.Infra, scope *cloudcon
 	err := infra.KCP().Client().Create(ctx, scope)
 	if err != nil {
 		return err
+	}
+
+	kyma := util.NewKymaUnstructured()
+	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
+		WithKymaModuleListedInSpec(),
+		WithKymaStatusModuleState(util.KymaModuleStateReady),
+		WithKymaSpecChannel("fast"),
+	); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
 	}
 
 	return nil

@@ -89,6 +89,14 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					kymaPeeringCreate,
 					kymaPeeringWait,
 				),
+				// prevent delete if used before switching to provider specific flow
+				// so cloud resources in the provider are not tried to be deleted
+				// before dependant objects are first deleted gracefully
+				composed.If(
+					composed.MarkedForDeletionPredicate,
+					preventDeleteOnNfsInstanceUsage,
+					preventDeleteOnRedisInstanceUsage,
+				),
 				// and now branch to provider specific flow
 				composed.If(
 					// call providers only if network is not deleted yet, they have a strong

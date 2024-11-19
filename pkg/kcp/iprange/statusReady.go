@@ -11,6 +11,10 @@ import (
 func statusReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	if composed.IsMarkedForDeletion(state.ObjAsIpRange()) {
+		return nil, ctx
+	}
+
 	changed := false
 
 	if state.ObjAsIpRange().Status.State != cloudcontrolv1beta1.ReadyState {

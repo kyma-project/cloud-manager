@@ -18,6 +18,8 @@ package cloudcontrol
 
 import (
 	"context"
+	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
@@ -36,6 +38,7 @@ import (
 )
 
 func SetupNetworkReconciler(
+	ctx context.Context,
 	kcpManager manager.Manager,
 	azureProvider provider.ClientProvider[networkclient.Client],
 ) error {
@@ -47,7 +50,7 @@ func SetupNetworkReconciler(
 			azurenetwork.NewStateFactory(azureProvider),
 			gcpnetwork.NewStateFactory(),
 		),
-	).SetupWithManager(kcpManager)
+	).SetupWithManager(ctx, kcpManager)
 }
 
 func NewNetworkReconciler(reconciler reconcile.Reconciler) *NetworkReconciler {
@@ -72,14 +75,53 @@ func (r *NetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *NetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// index networks by scope name
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+func (r *NetworkReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	if err := mgr.GetFieldIndexer().IndexField(ctx, &cloudcontrolv1beta1.Network{}, cloudcontrolv1beta1.NetworkFieldScope, func(obj client.Object) []string {
-		net := obj.(*cloudcontrolv1beta1.Network)
-		return []string{net.Spec.Scope.Name}
-	}); err != nil {
+
+	// index IpRanges by network
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.IpRange{},
+		cloudcontrolv1beta1.IpRangeNetworkField,
+		func(obj client.Object) []string {
+			ipRange := obj.(*cloudcontrolv1beta1.IpRange)
+			if ipRange.Spec.Network == nil {
+				// implied that it belongs to the Network of the type "kyma" in its Scope
+				return []string{fmt.Sprintf("%s/%s", ipRange.Namespace, common.KcpNetworkKymaCommonName(ipRange.ScopeRef().Name))}
+			}
+			return []string{fmt.Sprintf("%s/%s", ipRange.Namespace, ipRange.Spec.Network.Name)}
+		}); err != nil {
+		return err
+	}
+
+	// index VpcPeerings by local network
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.VpcPeering{},
+		cloudcontrolv1beta1.VpcPeeringLocalNetworkField,
+		func(obj client.Object) []string {
+			vpcPeering := obj.(*cloudcontrolv1beta1.VpcPeering)
+			if vpcPeering.Spec.Details == nil {
+				return []string{}
+			}
+			return []string{fmt.Sprintf("%s/%s", vpcPeering.Namespace, vpcPeering.Spec.Details.LocalNetwork.Name)}
+		}); err != nil {
+		return err
+	}
+
+	// index VpcPeerings by remote network
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.VpcPeering{},
+		cloudcontrolv1beta1.VpcPeeringRemoteNetworkField,
+		func(obj client.Object) []string {
+			vpcPeering := obj.(*cloudcontrolv1beta1.VpcPeering)
+			if vpcPeering.Spec.Details == nil {
+				return []string{}
+			}
+			return []string{fmt.Sprintf("%s/%s", vpcPeering.Namespace, vpcPeering.Spec.Details.RemoteNetwork.Name)}
+		}); err != nil {
 		return err
 	}
 

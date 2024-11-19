@@ -2,7 +2,7 @@
 * @kyma-project/Phoenix
 
 # All files and subdirectories in /docs
-/docs/ @kyma-project/technical-writers
+/docs/user/ @kyma-project/technical-writers
 
 # All .md files
 *.md @kyma-project/technical-writers

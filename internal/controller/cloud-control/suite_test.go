@@ -76,6 +76,7 @@ var _ = BeforeSuite(func() {
 	// Setup controllers
 	// Scope
 	Expect(SetupScopeReconciler(
+		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AwsMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
@@ -83,6 +84,7 @@ var _ = BeforeSuite(func() {
 	)).NotTo(HaveOccurred())
 	// IpRange
 	Expect(SetupIpRangeReconciler(
+		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.AzureMock().IpRangeProvider(),
@@ -116,6 +118,7 @@ var _ = BeforeSuite(func() {
 	)).NotTo(HaveOccurred())
 	// Network
 	Expect(SetupNetworkReconciler(
+		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AzureMock().NetworkProvider(),
 	)).NotTo(HaveOccurred())

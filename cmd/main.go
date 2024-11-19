@@ -167,6 +167,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := ctrl.SetupSignalHandler()
+
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
 	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
 
@@ -257,7 +259,7 @@ func main() {
 	}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.SetupScopeReconciler(mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
@@ -282,6 +284,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupIpRangeReconciler(
+		ctx,
 		mgr,
 		awsiprangeclient.NewClientProvider(),
 		azureiprangeclient.NewClientProvider(),
@@ -303,6 +306,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupNetworkReconciler(
+		ctx,
 		mgr,
 		azurenetworkclient.NewClientProvider(),
 	); err != nil {
@@ -331,7 +335,6 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	ctx := ctrl.SetupSignalHandler()
 
 	if err := feature.Initialize(ctx, rootLogger.WithName("ff")); err != nil {
 		setupLog.Error(err, "problem initializing feature flags")

@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -33,10 +34,13 @@ import (
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"time"
 )
 
 func SetupIpRangeReconciler(
+	ctx context.Context,
 	kcpManager manager.Manager,
 	awsProvider awsclient.SkrClientProvider[awsiprangeclient.Client],
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
@@ -55,7 +59,7 @@ func SetupIpRangeReconciler(
 			azureiprange.NewStateFactory(azureProvider),
 			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
 		),
-	).SetupWithManager(kcpManager)
+	).SetupWithManager(ctx, kcpManager)
 }
 
 func NewIpRangeReconciler(
@@ -84,7 +88,32 @@ func (r *IpRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *IpRangeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *IpRangeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.NfsInstance{},
+		cloudcontrolv1beta1.IpRangeField,
+		func(obj client.Object) []string {
+			nfsInstance := obj.(*cloudcontrolv1beta1.NfsInstance)
+			return []string{fmt.Sprintf("%s/%s", nfsInstance.Namespace, nfsInstance.Spec.IpRange.Name)}
+		}); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.RedisInstance{},
+		cloudcontrolv1beta1.IpRangeField,
+		func(obj client.Object) []string {
+			redisInstance := obj.(*cloudcontrolv1beta1.RedisInstance)
+			return []string{fmt.Sprintf("%s/%s", redisInstance.Namespace, redisInstance.Spec.IpRange.Name)}
+		}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.IpRange{}).
 		Complete(r)
