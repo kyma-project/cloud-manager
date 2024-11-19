@@ -36,6 +36,7 @@ type RedisInstanceSpec struct {
 	RemoteRef RemoteRef `json:"remoteRef"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(size(self.name) > 0), message="IpRange name must not be empty."
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
