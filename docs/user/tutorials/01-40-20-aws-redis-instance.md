@@ -1,11 +1,10 @@
-# Create Redis Instances in Amazon Web Services
+# Create Amazon Web Services Redis Instances
 
-Learn how to create a Redis instance in Amazon Web Service (AWS) and connect to it.
+Learn how to create an Amazon Web Services Redis instance in Kubernetes using the Kyma CRD and connect to it.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
 
-- You have the Cloud Manager module added.
-- Install [Redis CLI](https://redis.io/docs/latest/develop/tools/cli/).
+You have the Cloud Manager module added.
 
 ## Steps
 
@@ -76,7 +75,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
 
 ## Advanced Setup
 
-To specify advanced features, such as Redis version, configuration, and maintenance policy, and set up auth and TLS, use the following setup:
+To specify advanced features, such as Redis version, configuration, and maintenance policy, and set up auth, use the following setup:
 
 1. Instantiate Redis.
 

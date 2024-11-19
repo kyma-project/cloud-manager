@@ -1,6 +1,6 @@
 # Create Virtual Private Cloud Peering in Amazon Web Services
 
-This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and Kyma in Amazon Web Services (AWS). Learn how to create a new VPC network, and a virtual machine (VM), and assign required permissions to the provided Kyma account and role in your AWS account. If you want to use the existing resources instead of creating new ones, adjust variable names accordingly and skip the steps that create those resources.
+This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and Kyma in Amazon Web Services (AWS). Learn how to create a new VPC network, and a virtual machine (VM), and assign required permissions to the provided Kyma account and role in your AWS account.
 
 ## Prerequisites <!-- {docsify-ignore} -->
 

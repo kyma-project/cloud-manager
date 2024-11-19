@@ -1,11 +1,10 @@
-# Create Redis Instances in Google Cloud
+# Create Google Cloud Redis Instances
 
-Learn how to create a Redis instance in Google Cloud and connect to it.
+Learn how to create a Google Cloud Redis instance in Kubernetes using the Kyma CRD and connect to it.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
 
-- You have the Cloud Manager module added.
-- Install [Redis CLI](https://redis.io/docs/latest/develop/tools/cli/).
+You have the Cloud Manager module added.
 
 ## Steps
 
