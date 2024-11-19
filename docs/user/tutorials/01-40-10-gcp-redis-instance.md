@@ -1,6 +1,6 @@
-# Create Google Cloud Redis Instances
+# Using GcpRedisInstance Custom Resources
 
-Learn how to create a Google Cloud Redis instance in Kubernetes using the Kyma CRD and connect to it.
+The Cloud Manager module offers a GcpRedisInstance Custom Resource Definition (CRD). When you apply a GcpRedisInstance custom resource (CR), it creates a Memorystore for Redis instance that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
 

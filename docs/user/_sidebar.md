@@ -29,7 +29,7 @@
   * [Create Virtual Private Cloud Peering in Microsoft Azure](/cloud-manager/user/tutorials/01-30-10-azure-vpc-peering.md)
   * [Create Virtual Private Cloud Peering in Amazon Web Services](/cloud-manager/user/tutorials/01-30-20-aws-vpc-peering.md)
   * [Create Virtual Private Cloud Peering in Google Cloud](/cloud-manager/user/tutorials/01-30-30-gcp-vpc-peering.md)
-  * [Create Redis Instances in Google Cloud](/cloud-manager/user/tutorials/01-40-10-gcp-redis-instance.md)
-  * [Create Redis Instances in Amazon Web Services](/cloud-manager/user/tutorials/01-40-20-aws-redis-instance.md)
+  * [Using GcpRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-10-gcp-redis-instance.md)
+  * [Using AwsRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-20-aws-redis-instance.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
 <!-- markdown-link-check-enable -->

@@ -16,5 +16,5 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Create Virtual Private Cloud Peering in Amazon Web Services](./01-30-20-aws-vpc-peering.md)
   * [Create Virtual Private Cloud Peering in Google Cloud](./01-30-30-gcp-vpc-peering.md)
 * Redis
-  * [Create Redis Instances in Google Cloud](./01-40-10-gcp-redis-instance.md)
-  * [Create Redis Instances in Amazon Web Services](./01-40-20-aws-redis-instance.md)
+  * [Using GcpRedisInstance Custom Resources](./01-40-10-gcp-redis-instance.md)
+  * [Using AwsRedisInstance Custom Resources](./01-40-20-aws-redis-instance.md)

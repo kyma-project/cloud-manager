@@ -1,6 +1,6 @@
-# Create Amazon Web Services Redis Instances
+# Using AwsRedisInstance Custom Resources
 
-Learn how to create an Amazon Web Services Redis instance in Kubernetes using the Kyma CRD and connect to it.
+The Cloud Manager module offers an AwsRedisInstance Custom Resource Definition (CRD). When you apply an AwsRedisInstance custom resource (CR), it creates an ElastiCache for Redis OSS instance that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
 
