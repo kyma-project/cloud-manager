@@ -36,6 +36,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"time"
 )
 
 func SetupIpRangeReconciler(
@@ -88,6 +89,9 @@ func (r *IpRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *IpRangeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	if err := mgr.GetFieldIndexer().IndexField(
 		ctx,
 		&cloudcontrolv1beta1.NfsInstance{},
