@@ -154,7 +154,7 @@ var _ = Describe("Feature: KCP RedisInstance .status patch", Ordered, func() {
 
 })
 
-var _ = Describe("Feature: KCP RedisInstance", Ordered, func() {
+var _ = Describe("Feature: KCP RedisInstance", func() {
 
 	// GCP ===============================================
 
