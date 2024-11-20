@@ -65,4 +65,4 @@ To clean up, remove the created schedule and the backups:
 
    ```shell
    kubectl delete -n $NAMESPACE gcpnfsbackupschedule my-backup-schedule
-   ``
+   ```
