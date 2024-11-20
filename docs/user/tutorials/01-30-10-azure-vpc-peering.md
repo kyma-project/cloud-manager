@@ -1,20 +1,23 @@
-# Create VPC Peering in Azure
+# Create Virtual Private Cloud Peering in Microsoft Azure
 
-This tutorial explains how to create a VPC peering connection between a remote VPC network and Kyma in Azure. The tutorial 
-assumes that the Cloud Manager module is enabled in your Kyma cluster. Follow the steps from this tutorial to create a new resource group, VPC 
-network and VM, and assign required roles to the provided Kyma service principal in your Azure subscription. If you want to
-use the existing resources instead of creating new ones, adjust variable names accordingly and skip
-the steps that create those resources.
+This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and Kyma in Microsoft Azure (Azure). Learn how to create a new resource group, VPC network and a virtual machine (VM), and assign required roles to the provided Kyma service principal in your Azure subscription.
+
+## Prerequisites <!-- {docsify-ignore} -->
+
+* You have the Cloud Manager module added.
 
 ## Steps <!-- {docsify-ignore} -->
 
-1.  Log in to Azure and set the active subscription:
+1. Log in to Azure and set the active subscription:
+
     ```shell
     export SUBSCRIPTION={SUBSCRIPTION}
     az login
     az account set --subscription $SUBSCRIPTION
     ```
-2.  Assign the required roles to the Cloud Manager peering service principal:
+
+2. Assign the required roles to the Cloud Manager peering service principal:
+
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
     export PRINCIPAL_NAME=kyma-cloud-manager-peering-dev
@@ -28,18 +31,23 @@ the steps that create those resources.
     --role "Classic Network Contributor" \
     --scope "/subscriptions/$SUBSCRIPTION_ID"
     ```
-   
-3.  Set the region that is closest to your Kyma cluster. Use `az account list-locations` to list available locations. 
+
+3. Set the region that is closest to your Kyma cluster. Use `az account list-locations` to list available locations. 
+
     ```shell
     export REGION={REGION}
     ```
-4.  Create a resource group that will be a container for related resources:
+
+4. Create a resource group that will be a container for related resources:
+
     ```shell
     export RANDOM_ID="$(openssl rand -hex 3)"
     export RESOURCE_GROUP_NAME="myResourceGroup$RANDOM_ID"
     az group create --name $RESOURCE_GROUP_NAME --location $REGION
     ```
-5.  Create a network:
+
+5. Create a network:
+
     ```shell
     export VNET_NAME="myVnet$RANDOM_ID"
     export ADDRESS_PREFIX=172.0.0.0/16
@@ -48,7 +56,9 @@ the steps that create those resources.
 
     az network vnet create -g $RESOURCE_GROUP_NAME -n $VNET_NAME --address-prefix $ADDRESS_PREFIX --subnet-name $SUBNET_NAME --subnet-prefixes $SUBNET_PREFIX
     ```
-6.  Create a virtual machine:
+
+6. Create a virtual machine:
+
     ```shell
     export VM_NAME="myVM$RANDOM_ID"
     export VM_IMAGE="Canonical:0001-com-ubuntu-minimal-jammy:minimal-22_04-lts-gen2:latest"
@@ -64,15 +74,17 @@ the steps that create those resources.
     
     export IP_ADDRESS=$(az vm show --show-details --resource-group $RESOURCE_GROUP_NAME --name $VM_NAME --query privateIps --output tsv)
     ```
-   
-7.  Tag the VPC network with the Kyma shoot name:
+
+7. Tag the VPC network with the Kyma shoot name:
+
     ```shell
     export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
     export VNET_ID=$(az network vnet show --name $VNET_NAME --resource-group $RESOURCE_GROUP_NAME --query id --output tsv)
     az tag update --resource-id $VNET_ID --operation Merge --tags $SHOOT_NAME
     ```
-    
-8.  Create an AzureVpcPeering resource:
+
+8. Create an AzureVpcPeering resource:
+
     ```shell
     kubectl apply -f - <<EOF
     apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -84,24 +96,28 @@ the steps that create those resources.
       remoteVnet: $VNET_ID
     EOF
     ```
-    
-9.  Wait for the AzureVpcPeering to be in the `Ready` state.
+
+9. Wait for the AzureVpcPeering to be in the `Ready` state.
+
     ```shell
     kubectl wait --for=condition=Ready azurevpcpeering/peering-to-my-vnet --timeout=300s
     ```
 
     Once the newly created AzureVpcPeering is provisioned, you should see the following message:
-    ```
+
+    ```console
     azurevpcpeering.cloud-resources.kyma-project.io/peering-to-my-vnet condition met
     ```
 
 10. Create a namespace and export its value as an environment variable:
+
     ```shell
     export NAMESPACE={NAMESPACE_NAME}
     kubectl create ns $NAMESPACE
     ```
 
 11. Create a workload that pings the VM in the remote network.
+
     ```shell
     kubectl apply -n $NAMESPACE -f - <<EOF
     apiVersion: apps/v1
@@ -145,7 +161,8 @@ the steps that create those resources.
     ```
 
     The command prints an output similar to the following:
-    ```
+
+    ```console
     ...
     PING 172.0.0.4 (172.0.0.4) 56(84) bytes of data.
     64 bytes from 172.0.0.4: icmp_seq=1 ttl=63 time=8.10 ms
@@ -174,25 +191,31 @@ the steps that create those resources.
     rtt min/avg/max/mdev = 1.800/3.060/8.096/1.847 ms
     ...
     ```
-13. Clean up Kubernetes resources:
 
-    * Remove the created workloads:
-      ```shell
-      kubectl delete -n $NAMESPACE deployment azurevpcpeering-demo
-      ```
+## Next Steps
 
-    * Remove the created `azurevpcpeering`:
-      ```shell
-      kubectl delete -n $NAMESPACE azurevpcpeering peering-to-my-vnet
-      ```
+To clean up Kubernetes resources and your subscription resources, follow these steps:
 
-    * Remove the created namespace:
-      ```shell
-      kubectl delete namespace $NAMESPACE
-      ```
-   
-14. Clean up resources in your subscription:
-    * Remove the created Azure resource group:
-      ```shell
-      az group delete --name $RESOURCE_GROUP_NAME --yes
-      ```
+1. Remove the created workloads:
+
+   ```shell
+   kubectl delete -n $NAMESPACE deployment azurevpcpeering-demo
+   ```
+
+2. Remove the created `azurevpcpeering`:
+
+    ```shell
+    kubectl delete -n $NAMESPACE azurevpcpeering peering-to-my-vnet
+    ```
+
+3. Remove the created namespace:
+
+    ```shell
+    kubectl delete namespace $NAMESPACE
+    ```
+
+4. In Azure, remove the created Azure resource group:
+
+    ```shell
+    az group delete --name $RESOURCE_GROUP_NAME --yes
+    ```
