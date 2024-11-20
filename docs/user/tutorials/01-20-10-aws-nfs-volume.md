@@ -164,34 +164,34 @@ To clean up, follow these steps:
 
 1. Remove the created workloads:
 
-  ```shell
-  kubectl delete -n $NAMESPACE deployment awsnfsvolume-demo
-  ```
+   ```shell
+   kubectl delete -n $NAMESPACE deployment awsnfsvolume-demo
+   ```
 
 2. Remove the created ConfigMap:
 
-  ```shell
-  kubectl delete -n $NAMESPACE configmap my-script
-  ```
+   ```shell
+   kubectl delete -n $NAMESPACE configmap my-script
+   ```
 
 3. Remove the created AwsNfsVolume:
 
-  ```shell
-  kubectl delete -n $NAMESPACE awsnfsvolume my-vol
-  ```
+   ```shell
+   kubectl delete -n $NAMESPACE awsnfsvolume my-vol
+   ```
 
 4. Remove the created default IpRange:
 
-  > [!NOTE]
-  > If you have other cloud resources using the default IpRange,
-  > skip this step, and do not delete the default IpRange.
+   > [!NOTE]
+   > If you have other cloud resources using the default IpRange,
+   > skip this step, and do not delete the default IpRange.
 
-  ```shell
+   ```shell
    kubectl delete -n kyma-system iprange default
-  ```
+   ```
 
-  5. Remove the created namespace:
+5. Remove the created namespace:
 
-  ```shell
-  kubectl delete namespace $NAMESPACE
-  ```
+   ```shell
+   kubectl delete namespace $NAMESPACE
+   ```
