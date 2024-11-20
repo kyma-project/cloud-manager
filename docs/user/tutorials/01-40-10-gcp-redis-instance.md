@@ -12,10 +12,7 @@ You have the Cloud Manager module added.
 
 This example showcases how to instantiate Redis using only the required fields, connect a Pod to it, and send a PING command.
 
-1. Create a Redis instance.
-
-   > [!NOTE]
-   > The operation may take more than 10 minutes.
+1. Create a Redis instance. The operation may take more than 10 minutes.
 
    ```yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -59,13 +56,13 @@ This example showcases how to instantiate Redis using only the required fields, 
          secretName: gcpredisinstance-simple-example
    ```
 
-3. Exec into the Pod:
+3. Execute into the Pod.
 
    ```bash
    kubectl exec -i -t gcpredisinstance-simple-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
-4. Run a PING command:
+4. Run a PING command.
 
    ```bash
    redis-cli -h $HOST -p $PORT --tls --cacert /mnt/CaCert.pem PING
@@ -77,10 +74,7 @@ This example showcases how to instantiate Redis using only the required fields, 
 
 This example showcases how to instantiate Redis by using most of the spec fields, connect a Pod to it, and send a PING command.
 
-1. Instantiate Redis
-
-   > [!NOTE]
-   > The operation may take more than 10 minutes.
+1. Instantiate Redis. The operation may take more than 10 minutes.
 
    ```yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -140,13 +134,13 @@ This example showcases how to instantiate Redis by using most of the spec fields
          secretName: gcpredisinstance-complex-example
    ```
 
-3. Exec into the Pod:
+3. Execute into the Pod.
 
    ```bash
    kubectl exec -i -t gcpredisinstance-complex-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
    ```
 
-4. Run a PING command:
+4. Run a PING command.
 
    ```bash
    redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls --cacert /mnt/CaCert.pem PING

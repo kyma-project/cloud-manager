@@ -13,15 +13,15 @@ This tutorial explains how to initiate a restore operation for the ReadWriteMany
 
 ## Steps <!-- {docsify-ignore} -->
 
-### Restore on the same or existing Filestore <!-- {docsify-ignore} -->
+### Restore on the Same or Existing Filestore <!-- {docsify-ignore} -->
 
 1. Export the namespace as an environment variable.
 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Create an AwsNfsVolumeRestore resource. 
+
+2. Create an AwsNfsVolumeRestore resource.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -35,7 +35,7 @@ This tutorial explains how to initiate a restore operation for the ReadWriteMany
          name: my-backup
    EOF
    ```
-   
+
 3. Wait for the AwsNfsVolumeRestore to be in the `Done` state and have the `Ready` condition.
 
    ```shell
@@ -44,13 +44,14 @@ This tutorial explains how to initiate a restore operation for the ReadWriteMany
 
    Once the AwsNfsVolumeRestore is completed, you should see the following message:
 
-   ```
+   ```console
    awsnfsvolumerestore.cloud-resources.kyma-project.io/my-restore condition met
    ```
 
-4. Clean up:
+## Next Steps
 
-   Remove the created awsnfsvolumeRestore:
+To clean up, remove the created AwsNfsVolumeRestore:
+
    ```shell
    kubectl delete -n $NAMESPACE awsnfsvolumerestore my-restore
    ```

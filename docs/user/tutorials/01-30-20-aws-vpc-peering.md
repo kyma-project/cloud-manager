@@ -233,19 +233,19 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 
 To clean up the Kubernetes resources and your AWS account resources, follow these steps:
 
-1. Remove the created workloads:
+1. Remove the created workloads.
 
    ```shell
    kubectl delete -n $NAMESPACE deployment awsvpcpeering-demo
    ```
 
-2. Remove the created AwsVpcPeering:
+2. Remove the created AwsVpcPeering.
 
    ```shell
    kubectl delete -n $NAMESPACE awsvpcpeering peering-to-my-vpc
    ```
 
-3. Remove the created namespace:
+3. Remove the created namespace.
 
    ```shell
    kubectl delete namespace $NAMESPACE

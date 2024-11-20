@@ -30,7 +30,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 4. Create a tag key with the Kyma shoot name in the remote project.
 
    > [!NOTE]  
-Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
+   > Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
 
    ```shell
    gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$REMOTE_PROJECT_ID
@@ -57,27 +57,27 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
 7. Export any valid tag value. For example, `None`.
 
-   ```shell
-   export TAG_VALUE=None
-   ```
+    ```shell
+    export TAG_VALUE=None
+    ```
 
 8. Create the tag value in the remote project.
 
-   ```shell
-   gcloud resource-manager tags values create $TAG_VALUE --tag-key=$TAG_KEY
-   ```
+    ```shell
+    gcloud resource-manager tags values create $TAG_VALUE --tag-key=$TAG_KEY
+    ```
 
 9. Fetch the tag with the value created in the previous step.
 
-   ```shell
-   gcloud resource-manager tags values list --parent=$TAG_KEY
-   ```
+    ```shell
+    gcloud resource-manager tags values list --parent=$TAG_KEY
+    ```
 
 10. Replace the `tagValues/1234567890123456789` placeholder with the fetched tag value. Export it as an environment variable.
 
-   ```shell
-   export TAG_VALUE="tagValues/1234567890123456789"
-   ```
+    ```shell
+    export TAG_VALUE="tagValues/1234567890123456789"
+    ```
 
 11. Replace the placeholder with your VPC network name and export it as an environment variable.
 
@@ -112,41 +112,41 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
 14. Add the tag to the VPC network.
 
-   ```shell
-   gcloud resource-manager tags bindings create --tag-value=$TAG_VALUE --parent=$RESOURCE_ID
-   ```
+    ```shell
+    gcloud resource-manager tags bindings create --tag-value=$TAG_VALUE --parent=$RESOURCE_ID
+    ```
 
 15. Create a GCP VPC Peering manifest file.
 
-   ```shell
-   cat <<EOF > vpc-peering.yaml
-   apiVersion: cloud-resources.kyma-project.io/v1beta1
-   kind: GcpVpcPeering
-   metadata:
-       name: "vpcpeering-dev"
-   spec:
-       remotePeeringName: "my-project-to-kyma-dev"
-       remoteProject: "remote-project-id"
-       remoteVpc: "remote-vpc-network"
-       importCustomRoutes: false
-   EOF
-   ```
+    ```shell
+    cat <<EOF > vpc-peering.yaml
+    apiVersion: cloud-resources.kyma-project.io/v1beta1
+    kind: GcpVpcPeering
+    metadata:
+        name: "vpcpeering-dev"
+    spec:
+        remotePeeringName: "my-project-to-kyma-dev"
+        remoteProject: "remote-project-id"
+        remoteVpc: "remote-vpc-network"
+        importCustomRoutes: false
+    EOF
+    ```
 
-16. Apply the GCP VPC Peering manifest file.
+16. Apply the Google Cloud VPC peering manifest file.
 
-   ```shell
-   kubectl apply -f vpc-peering.yaml
-   ```
+    ```shell
+    kubectl apply -f vpc-peering.yaml
+    ```
 
-   This operation usually takes less than 2 minutes. To check the status of the VPC Peering, run:
+    This operation usually takes less than 2 minutes. To check the status of the VPC peering, run:
 
-   ```shell
+    ```shell
     kubectl get gcpvpcpeering vpcpeering-dev -o yaml
-   ```
+    ```
 
-   The command returns an output similar to this one:
+    The command returns an output similar to this one:
 
-   ```console
+    ```yaml
     apiVersion: cloud-resources.kyma-project.io/v1beta1
     kind: GcpVpcPeering
       finalizers:
@@ -166,6 +166,6 @@ Due to security reasons, the VPC network in the remote project, which receives t
           reason: Ready
           status: "True"
           type: Ready
-   ```
+    ```
 
-The **status.conditions** field contains information about the VPC Peering status.
+    The **status.conditions** field contains information about the VPC Peering status.

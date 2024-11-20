@@ -52,7 +52,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
              name: awsredisinstance-minimal-example
    ```
 
-3. Exec into the Pod:
+3. Execute into the Pod:
 
    ```bash
    kubectl exec -i -t awsredisinstance-minimal-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
@@ -99,7 +99,7 @@ To specify advanced features, such as Redis version, configuration, and maintena
      autoMinorVersionUpgrade: true
    ```
 
-2. Instantiate the redis-cli Pod:
+2. Instantiate the redis-cli Pod.
 
    ```yaml
    apiVersion: v1
@@ -130,7 +130,7 @@ To specify advanced features, such as Redis version, configuration, and maintena
              name: awsredisinstance-advanced-example
    ```
 
-3. Exec into the Pod:
+3. Execute into the Pod.
 
    ```bash
    kubectl exec -i -t awsredisinstance-advanced-example-probe -c redis-cli -- sh -c "clear; (bash || ash || sh)"
@@ -144,7 +144,7 @@ To specify advanced features, such as Redis version, configuration, and maintena
      update-ca-certificate
    ```
 
-5. Run a PING command:
+5. Run a PING command.
 
    ```bash
    redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls PING

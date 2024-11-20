@@ -7,8 +7,8 @@ This tutorial explains how to create backups for Network File System (NFS) volum
 * You have the Cloud Manager module added.
 * You have created a GcpNfsVolume. See [Use Network File System in Google Cloud](./01-20-20-gcp-nfs-volume.md).
 
-[!NOTE]
-All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsVolumeBackup resource.
+> [!NOTE]
+> All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsVolumeBackup resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
