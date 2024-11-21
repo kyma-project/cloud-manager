@@ -216,7 +216,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 						NewObjActions(),
-						HaveNextRunTimes(expectedTimes),
+						HaveLastCreateRun(expectedTimes[0]),
 					).
 					Should(Succeed())
 			})
