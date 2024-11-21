@@ -16,11 +16,11 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.31.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.39
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.37
-	github.com/aws/aws-sdk-go-v2/service/backup v1.36.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.172.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4
+	github.com/aws/aws-sdk-go-v2/service/backup v1.38.3
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.179.2
+	github.com/aws/aws-sdk-go-v2/service/efs v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.41.3
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/sts v1.31.3
 	github.com/aws/smithy-go v1.21.0
 	github.com/elliotchance/pie/v2 v2.8.1
