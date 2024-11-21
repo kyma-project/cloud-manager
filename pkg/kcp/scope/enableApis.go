@@ -12,7 +12,7 @@ func enableApis(ctx context.Context, st composed.State) (error, context.Context)
 	switch scope.Spec.Provider {
 	case cloudcontrolv1beta1.ProviderGCP:
 		scope := state.ObjAsScope()
-		if scope.Status.GcpOperations == nil || len(scope.Status.GcpOperations) == 0 {
+		if len(scope.Status.GcpOperations) == 0 {
 			return enableApisGcp(ctx, state)
 		} else {
 			return checkGcpOperations(ctx, state)
