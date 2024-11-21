@@ -26,6 +26,9 @@ jobs:
     if: github.ref_type != 'tag'
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
+      tags: |
+        ${{ github.ref_name }}
+        latest
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
