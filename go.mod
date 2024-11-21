@@ -3,8 +3,8 @@ module github.com/kyma-project/cloud-manager
 go 1.23.3
 
 require (
-	cloud.google.com/go/compute v1.28.3
-	cloud.google.com/go/redis v1.17.1
+	cloud.google.com/go/compute v1.29.0
+	cloud.google.com/go/redis v1.17.2
 	cloud.google.com/go/resourcemanager v1.10.1
 	github.com/3th1nk/cidr v0.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
