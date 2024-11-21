@@ -37,6 +37,11 @@ const (
 	VirtualNetworkPeeringStateDeleting     = "Deleting"
 )
 
+const (
+	VpcPeeringLocalNetworkField  = ".spec.details.localNetwork"
+	VpcPeeringRemoteNetworkField = ".spec.details.remoteNetwork"
+)
+
 // VpcPeeringSpec defines the desired state of VpcPeering
 // +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {

@@ -14,6 +14,7 @@ it will be a full backup.
 To learn more, read [Filestore Backup Creation](https://cloud.google.com/filestore/docs/backups#backup-creation).
 
 ## Specification <!-- {docsify-ignore} -->
+
 This table lists the parameters of the given resource together with their descriptions:
 
 **Spec:**
@@ -38,7 +39,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                  |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                           |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                       |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

@@ -13,6 +13,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -299,7 +300,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	})
 
-	It("Scenario: KCP Azure VpcPeering is deleted when remote network is missing", func() {
+	// When prevent deletion of KCP Network while used by VpcPeering is implemented, this case
+	// is obsolete, but keeping it just in case, with Network reconciler ignoring the created
+	// networks so they can be deleted while used by VpcPeering
+	It("Scenario: KCP Azure VpcPeering is deleted when local and remote networks are missing", func() {
 		const (
 			kymaName            = "b64eab45-35b0-4015-b0f0-c819b351a6cd"
 			kcpPeeringName      = "b9a927d6-08ff-467a-b2ec-047eeceb4a26"
@@ -341,26 +345,50 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var localKcpNet *cloudcontrolv1beta1.Network
 
-		By("And Goven local KCP Network exists", func() {
+		By("And Given local KCP Network exists", func() {
+			// must tell reconciler to ignore it, since it would prevent deletion when used by peering
+			kcpnetwork.Ignore.AddName(localKcpNetworkName)
 			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName)).
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName))).
 				Should(Succeed())
+
+			localKcpNet.Status.Network = localKcpNet.Spec.Network.Reference.DeepCopy()
+			localKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			meta.SetStatusCondition(&localKcpNet.Status.Conditions, metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonReady,
+				Message: cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(composed.PatchObjStatus(infra.Ctx(), localKcpNet, infra.KCP().Client())).
+				To(Succeed())
 		})
 
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
-		By("And Givne remote KCP Network exists", func() {
+		By("And Given remote KCP Network exists", func() {
+			// must tell reconciler to ignore it, since it would prevent deletion when used by peering
+			kcpnetwork.Ignore.AddName(remoteKcpNetworkName)
 			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName))).
 				Should(Succeed())
+
+			remoteKcpNet.Status.Network = remoteKcpNet.Spec.Network.Reference.DeepCopy()
+			remoteKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			meta.SetStatusCondition(&remoteKcpNet.Status.Conditions, metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeReady,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonReady,
+				Message: cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(composed.PatchObjStatus(infra.Ctx(), remoteKcpNet, infra.KCP().Client())).
+				To(Succeed())
 		})
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
@@ -418,6 +446,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(kcpPeering.Status.State).To(Equal(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected))
 		})
 
+		// Delete KCP local Network to check whether reconciler will be able to delete VpcPeering
+		By("When KCP local Network is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet).
+				Should(Succeed(), "failed deleting local KCP Network")
+		})
+
+		By("Then KCP local Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet).
+				Should(Succeed(), "expected KCP local Network not to exist (be deleted), but it still exists")
+		})
+
 		// Delete KCP remote Network to check whether reconciler will be able to delete VpcPeering
 		By("When KCP remote Network is deleted", func() {
 			Eventually(Delete).
@@ -456,12 +497,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			peering, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
 			Expect(peering).NotTo(BeNil())
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		By("// cleanup: Local KCP Network", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet).
-				Should(Succeed())
 		})
 
 		By("// cleanup: Scope", func() {

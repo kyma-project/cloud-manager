@@ -4,3 +4,7 @@ type IpRangeRef struct {
 	// +optional
 	Name string `json:"name"`
 }
+
+const (
+	IpRangeField = ".spec.ipRange"
+)

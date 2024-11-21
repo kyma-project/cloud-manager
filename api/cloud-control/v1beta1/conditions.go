@@ -1,8 +1,9 @@
 package v1beta1
 
 const (
-	ConditionTypeError = "Error"
-	ConditionTypeReady = "Ready"
+	ConditionTypeError   = "Error"
+	ConditionTypeReady   = "Ready"
+	ConditionTypeWarning = "Warning"
 
 	ConditionTypeUpdating = "Updating"
 
@@ -14,4 +15,5 @@ const (
 	ReasonValidationFailed  = "ValidationFailed"
 	ReasonMissingDependency = "MissingDependency"
 	ReasonWaitingDependency = "WaitingDependency"
+	ReasonDeleteWhileUsed   = "DeleteWhileUsed"
 )

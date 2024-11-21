@@ -65,6 +65,12 @@ func (r *networkReconciler) newAction() composed.Action {
 				"networkCommon",
 				// common Network actions here
 				actions.PatchAddFinalizer,
+				composed.If(
+					composed.MarkedForDeletionPredicate,
+					preventDeleteWhenUsedByIpRange,
+					preventDeleteWhenUsedByPeeringLocalNetwork,
+					preventDeleteWhenUsedByPeeringRemoteNetwork,
+				),
 				// reconcile network reference and stop
 				handleNetworkReference,
 				// ensure no network reference pass further, allow only managed networks

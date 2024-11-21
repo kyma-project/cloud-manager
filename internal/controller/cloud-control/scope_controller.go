@@ -17,9 +17,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"time"
 )
 
 func SetupScopeReconciler(
+	ctx context.Context,
 	kcpManager manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
@@ -32,7 +34,7 @@ func SetupScopeReconciler(
 			activeSkrCollection,
 			gcpServiceUsageClientProvider,
 		),
-	).SetupWithManager(kcpManager)
+	).SetupWithManager(ctx, kcpManager)
 }
 
 func NewScopeReconciler(
@@ -59,7 +61,22 @@ func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return r.Reconciler.Reconcile(ctx, req)
 }
 
-func (r *ScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ScopeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	// index networks by scope name
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.Network{},
+		cloudcontrolv1beta1.NetworkFieldScope,
+		func(obj client.Object) []string {
+			net := obj.(*cloudcontrolv1beta1.Network)
+			return []string{net.Spec.Scope.Name}
+		}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.Scope{}).
 		Watches(

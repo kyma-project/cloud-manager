@@ -1,4 +1,5 @@
 # GcpRedisInstance Custom Resource
+
 The `gcpredisinstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the Google Memorystore Redis instance.
 Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
@@ -7,7 +8,7 @@ By default, the created auth Secret has the same name as the GcpRedisInstance, u
 The current implementation supports *Basic* and *Standard(without replicas)* tiers, which are explained in detail on the [Google's Memorystore for Redis overview page](https://cloud.google.com/memorystore/docs/redis/memorystore-for-redis-overview).
 
 Redis requires a `/28` ip range.
-To learn more, read [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-instances#configure_a_reserved_ip_address_range).
+For more information, see [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-instances#configure_a_reserved_ip_address_range).
 Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md).
 If an IpRange CR is not specified in the GcpRedisInstance, then the default IpRange is used.
 If the default IpRange does not exist, it is automatically created.
@@ -21,10 +22,9 @@ Optionally, you can specify the `redisVersion`, `authEnabled`, `redisConfigs`, a
 
 As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
 
+## Redis Tiers
 
-# Redis Tiers
-
-## Standard Tier
+### Standard Tier
 
 In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
 
@@ -39,7 +39,8 @@ In the **Standard** service tier, the instance does not have a replica. Thus, it
 | S7        | 101            | 16                     |
 | S8        | 200            | 16                     |
 
-## Premium tier
+### Premium Tier
+
 In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
 
 | RedisTier | Capacity (GiB) | Network (minimum Gbps) |
@@ -51,7 +52,7 @@ In the **Premium** service tier, the instance comes with a read replica and auto
 | P5        | 101            | 16                     |
 | P6        | 200            | 16                     |
 
-# Specification
+## Specification
 
 This table lists the parameters of GcpRedisInstance, together with their descriptions:
 
@@ -74,7 +75,7 @@ This table lists the parameters of GcpRedisInstance, together with their descrip
 | **authSecret.labels**                             | object | Optional. Auth Secret labels. Keys and values must be a string.                                                                                                                                             |
 | **authSecret.annotations**                        | object | Optional. Auth Secret annotations. Keys and values must be a string.                                                                                                                                        |
 
-# Auth Secret Details
+## Auth Secret Details
 
 The following table list the meaningful parameters of the auth Secret:
 
@@ -89,8 +90,7 @@ The following table list the meaningful parameters of the auth Secret:
 | **.data.authString**        | string | Auth string. Provided if authEnabled is set to true.                                                        |
 | **.data.CaCert.pem**        | string | CA Certificate that must be used for TLS. Provided if transit encryption is set to server authentication.   |
 
-
-# Custom Resource Sample
+## Sample Custom Resource
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1

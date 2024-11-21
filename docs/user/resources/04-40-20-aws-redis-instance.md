@@ -1,4 +1,5 @@
 # AwsRedisInstance Custom Resource
+
 The `awsredisinstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the AWS ElastiCache Redis instance.
 After the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
@@ -19,10 +20,9 @@ Optionally, you can specify the `engineVersion`, `authEnabled`, `parameters`, an
 
 As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
 
+## Redis Tiers
 
-# Redis Tiers
-
-## Standard Tier
+### Standard Tier
 
 In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
 The table below showcases which AWS machines are used for each tier.
@@ -38,7 +38,7 @@ The table below showcases which AWS machines are used for each tier.
 | S7        | 103.68         | 15                   | cache.m7g.8xlarge  |
 | S8        | 209.55         | 30                   | cache.m7g.16xlarge |
 
-## Premium Tier
+### Premium Tier
 
 In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
 The table below showcases which AWS machines are used for each tier.
@@ -52,7 +52,7 @@ The table below showcases which AWS machines are used for each tier.
 | P5        | 103.68         | 15                   | cache.m7g.8xlarge  |
 | P6        | 209.55         | 30                   | cache.m7g.16xlarge |
 
-# Specification
+## Specification
 
 This table lists the parameters of AwsRedisInstance, together with their descriptions:
 
@@ -71,7 +71,7 @@ This table lists the parameters of AwsRedisInstance, together with their descrip
 | **authSecret.labels**                             | object | Optional. Auth Secret labels. Keys and values must be a string.                                                                                                                                             |
 | **authSecret.annotations**                        | object | Optional. Auth Secret annotations. Keys and values must be a string.                                                                                                                                        |
 
-# Auth Secret Details
+## Auth Secret Details
 
 The following table list the meaningful parameters of the auth Secret:
 
@@ -85,8 +85,7 @@ The following table list the meaningful parameters of the auth Secret:
 | **.data.primaryEndpoint**   | string | Primary connection endpoint. Provided in <host>:<port> format.                                              |
 | **.data.authString**        | string | Auth string. Provided if authEnabled is set to true.                                                        |
 
-
-# Custom Resource Sample
+## Sample Custom Resource
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -94,7 +93,7 @@ kind: AwsRedisInstance
 metadata:
   name: awsredisinstance-sample
 spec:
-  redisVersion: P1
+  redisTier: P1
   engineVersion: "7.0"
   autoMinorVersionUpgrade: true
   authEnabled: true

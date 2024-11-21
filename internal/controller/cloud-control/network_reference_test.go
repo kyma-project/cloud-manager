@@ -2,13 +2,16 @@ package cloudcontrol
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"time"
 )
 
 var _ = Describe("Feature: KCP Network reference", func() {
@@ -27,16 +30,14 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Given Scope exists", func() {
 			scopePkg.Ignore.AddName(kymaName)
-			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
-				Should(Succeed())
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
 		})
 
 		By("When Network reference is created", func() {
 			net = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef(awsAccount, awsRegion, netId, netName).Build()
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName)).
-				Should(Succeed())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName))).
+				To(Succeed())
 		})
 
 		By("Then Network state is Ready", func() {
@@ -58,6 +59,323 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Then Network has finalizer", func() {
 			Expect(controllerutil.ContainsFinalizer(net, cloudcontrolv1beta1.FinalizerName)).To(BeTrue())
+		})
+
+		By("When Network is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), net)).
+				To(Succeed())
+		})
+
+		By("Then Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: Network reference can not be deleted when used by IpRange", func() {
+		kymaName := "19cf354a-aa43-4e53-aad7-23b2428e2eb4"
+		scope := &cloudcontrolv1beta1.Scope{}
+		netObjName := "47619a11-7259-43fe-ba26-94c5e6260f02"
+		var net *cloudcontrolv1beta1.Network
+		ipRangeName := "f86295fc-b2af-4e14-adb5-597fbe03ae04"
+
+		By("Given Scope exists", func() {
+			scopePkg.Ignore.AddName(kymaName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given Network reference is created", func() {
+			net = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef("acc-876", "us-east-1", "net-987", "my-net").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				Should(Succeed())
+		})
+
+		ipRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given IpRange using Network is created", func() {
+			kcpiprange.Ignore.AddName(ipRangeName)
+			Expect(CreateKcpIpRange(infra.Ctx(), infra.KCP().Client(), ipRange,
+				WithName(ipRangeName),
+				WithScope(kymaName),
+				WithRemoteRef("foo"),
+				WithKcpIpRangeNetwork(netObjName),
+				WithKcpIpRangeSpecCidr("10.181.0.0/16"),
+			)).To(Succeed())
+			// give it time to be watched and indexed
+			time.Sleep(500 * time.Millisecond)
+		})
+
+		By("When Network is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), net)).
+				To(Succeed())
+		})
+
+		By("Then Network has Warning state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net,
+					NewObjActions(),
+					HavingState(string(cloudcontrolv1beta1.WarningState)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then Network has DeleteWhileUsed Warning condition", func() {
+			cond := meta.FindStatusCondition(net.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			Expect(cond).ToNot(BeNil())
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleteWhileUsed))
+		})
+
+		By("When IpRange is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), ipRange)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
+				Should(Succeed())
+		})
+
+		By("Then Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: Network reference can not be deleted when used by VpcPeering local network", func() {
+		kymaName := "a4797ac1-25b2-4853-97ae-72dbc8e10828"
+		scope := &cloudcontrolv1beta1.Scope{}
+		localNetworkName := "ef40f1bf-c8b4-47bb-ba83-ddba69abdefc"
+		remoteNetworkName := "c9a49d3c-c64e-4b83-8e0d-72916538c6f6"
+		var localNet *cloudcontrolv1beta1.Network
+		var remoteNet *cloudcontrolv1beta1.Network
+		vpcPeeringName := "6f0747be-058d-4957-89e7-6a67a219f089"
+
+		By("Given Scope exists", func() {
+			scopePkg.Ignore.AddName(kymaName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given local Network reference is created", func() {
+			localNet = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef("acc-876", "us-east-1", "net-987", "my-net").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), localNet, WithName(localNetworkName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given local Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				Should(Succeed())
+		})
+
+		By("And Given remote Network reference is created", func() {
+			remoteNet = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef("acc-543", "us-east-1", "net-876", "his-net").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), remoteNet, WithName(remoteNetworkName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given remote Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				Should(Succeed())
+		})
+
+		var vpcPeering *cloudcontrolv1beta1.VpcPeering
+
+		By("And Given VpcPeering using local and remote Network is created", func() {
+			kcpvpcpeering.Ignore.AddName(vpcPeeringName)
+			vpcPeering = cloudcontrolv1beta1.NewVpcPeeringBuilder().
+				WithName(vpcPeeringName).
+				WithScope(kymaName).
+				WithRemoteRef(DefaultSkrNamespace, "foo").
+				WithDetails(localNet.Name, localNet.Namespace, remoteNet.Name, remoteNet.Namespace, "peeringName", false, false).
+				Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), vpcPeering)).
+				To(Succeed())
+			// give it time to be watched and indexed
+			time.Sleep(500 * time.Millisecond)
+		})
+
+		By("When local Network is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), localNet)).
+				To(Succeed())
+		})
+
+		By("Then local Network has Warning state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet,
+					NewObjActions(),
+					HavingState(string(cloudcontrolv1beta1.WarningState)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then local Network has DeleteWhileUsed Warning condition", func() {
+			cond := meta.FindStatusCondition(localNet.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			Expect(cond).ToNot(BeNil())
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleteWhileUsed))
+		})
+
+		By("When VpcPeering is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), vpcPeering)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering).
+				Should(Succeed())
+		})
+
+		By("Then local Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete remote Network", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), remoteNet)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: Network reference can not be deleted when used by VpcPeering remote network", func() {
+		kymaName := "0d79b58f-16e8-401c-b363-10f4d81d36e9"
+		scope := &cloudcontrolv1beta1.Scope{}
+		localNetworkName := "2c9ae7bc-73f6-494e-ae8b-f9a8e3e733ec"
+		remoteNetworkName := "647dda6d-504f-4812-ae9e-d072fccb1ea4"
+		var localNet *cloudcontrolv1beta1.Network
+		var remoteNet *cloudcontrolv1beta1.Network
+		vpcPeeringName := "8b4190ce-e401-4bb3-8a0e-608b6cf7da59"
+
+		By("Given Scope exists", func() {
+			scopePkg.Ignore.AddName(kymaName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given local Network reference is created", func() {
+			localNet = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef("acc-876", "us-east-1", "net-987", "my-net").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), localNet, WithName(localNetworkName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given local Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				Should(Succeed())
+		})
+
+		By("And Given remote Network reference is created", func() {
+			remoteNet = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef("acc-543", "us-east-1", "net-876", "his-net").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), remoteNet, WithName(remoteNetworkName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given remote Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				Should(Succeed())
+		})
+
+		var vpcPeering *cloudcontrolv1beta1.VpcPeering
+
+		By("And Given VpcPeering using local and remote Network is created", func() {
+			kcpvpcpeering.Ignore.AddName(vpcPeeringName)
+			vpcPeering = cloudcontrolv1beta1.NewVpcPeeringBuilder().
+				WithName(vpcPeeringName).
+				WithScope(kymaName).
+				WithRemoteRef(DefaultSkrNamespace, "foo").
+				WithDetails(localNet.Name, localNet.Namespace, remoteNet.Name, remoteNet.Namespace, "peeringName", false, false).
+				Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), vpcPeering)).
+				To(Succeed())
+			// give it time to be watched and indexed
+			time.Sleep(500 * time.Millisecond)
+		})
+
+		By("When remote Network is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), remoteNet)).
+				To(Succeed())
+		})
+
+		By("Then remote Network has Warning state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet,
+					NewObjActions(),
+					HavingState(string(cloudcontrolv1beta1.WarningState)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then remote Network has DeleteWhileUsed Warning condition", func() {
+			cond := meta.FindStatusCondition(remoteNet.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			Expect(cond).ToNot(BeNil())
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleteWhileUsed))
+		})
+
+		By("When VpcPeering is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), vpcPeering)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcPeering).
+				Should(Succeed())
+		})
+
+		By("Then remote Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete local Network", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), localNet)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 	})
 

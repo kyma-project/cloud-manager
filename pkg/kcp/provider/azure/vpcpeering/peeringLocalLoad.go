@@ -11,6 +11,11 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// local peering can't be loaded if local network is missing
+	if state.localNetwork == nil {
+		return nil, nil
+	}
+
 	// params must be the same as in peeringLocalCreate()
 	peering, err := state.localClient.GetPeering(
 		ctx,

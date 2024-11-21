@@ -1,4 +1,3 @@
-
 - path: spec.shardCount
   name: spec.shardCount
   required: false

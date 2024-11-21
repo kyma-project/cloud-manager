@@ -3,8 +3,12 @@ package dsl
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,5 +64,15 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 		return err
 	}
 
-	return errors.New("object is not deleted")
+	state := ""
+	if x, ok := obj.(composed.ObjWithConditionsAndState); ok {
+		state = x.State()
+	}
+	conditions := []string{}
+	if x, ok := obj.(composed.ObjWithConditions); ok {
+		conditions = pie.Map(*x.Conditions(), func(c metav1.Condition) string {
+			return fmt.Sprintf("%s/%s/{%s}", c.Type, c.Reason, c.Message)
+		})
+	}
+	return fmt.Errorf("object is not deleted, found in state %s with conditions %v", state, conditions)
 }

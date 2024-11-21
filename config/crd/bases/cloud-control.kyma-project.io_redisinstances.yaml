@@ -235,6 +235,9 @@ spec:
                   name:
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: IpRange name must not be empty.
+                  rule: (size(self.name) > 0)
               remoteRef:
                 properties:
                   name:

@@ -164,6 +164,17 @@ Instead of manually copying over the ConfigMap into the specified directory, use
 
 Like the `Makefile`, any new UI component should be added to `sync.sh`.
 
+# Auto-updating ConfigMaps
+
+The following annotation must be added to every ConfigMap:
+
+```yaml
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+```
+
+Increment the version number every time a change is made to the ConfigMap. SKR Looper compares the desired version with the existing version. If there is a difference, it updates the ConfigMap.
 
 # Testing your UI changes without using the pipeline
 

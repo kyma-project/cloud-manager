@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,6 +44,7 @@ func (r *nukeReconciler) newAction() composed.Action {
 		composed.If(
 			// if Nuke not marked for deletion
 			composed.Not(composed.MarkedForDeletionPredicate),
+			shortCircuitCompleted,
 			loadResources,
 			resourceStatusDiscovered,
 			deleteResources,

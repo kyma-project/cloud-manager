@@ -68,7 +68,10 @@ func HavingState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(composed.ObjWithConditionsAndState); ok {
 			if x.State() != state {
-				return fmt.Errorf("expected state %s but got %s", state, x.State())
+				conditions := pie.Map(*x.Conditions(), func(c metav1.Condition) string {
+					return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+				})
+				return fmt.Errorf("expected state %s but got %s with conditions: %v", state, x.State(), conditions)
 			}
 			return nil
 		}
@@ -145,7 +148,7 @@ func HaveFinalizer(finalizer string) ObjAssertion {
 	return func(obj client.Object) error {
 		if len(obj.GetFinalizers()) == 0 {
 			return fmt.Errorf(
-				"expected object %T %s/%s to have status condition %s true, but following conditions found: %v",
+				"expected object %T %s/%s to have finalizer %s, but following finalizers found: %v",
 				obj,
 				obj.GetNamespace(),
 				obj.GetName(),

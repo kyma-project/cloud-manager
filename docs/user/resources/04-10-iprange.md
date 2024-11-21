@@ -1,7 +1,7 @@
 # IpRange Custom Resource
 
 The `iprange.cloud-resources.kyma-project.io` custom resource (CR) specifies the VPC network
-IP range that is used for IP address allocation for cloud resources that require an IP address. 
+IP range that is used for IP address allocation for cloud resources that require an IP address.
 
 You are allowed to have one IpRange CR. If there are multiple IpRange resources in the cluster, the
 oldest one is reconciled and the other is ignored and put into the `Error` state.
@@ -13,8 +13,8 @@ cloud resource is assigned the local VPC network IP address it becomes functiona
 cluster network and from the cluster workloads.
 
 You don't have to create an IpRange resource. Once needed, it is automatically created
-and Classless Inter-Domain Routing (CIDR) range automatically chosen adjacent to and with the same size as the cluster nodes IP range. 
-For most use cases this automatic allocation is sufficient. 
+and Classless Inter-Domain Routing (CIDR) range automatically chosen adjacent to and with the same size as the cluster nodes IP range.
+For most use cases this automatic allocation is sufficient.
 
 You might be interested in manually creating an IpRange resource with specific CIDR in advanced cases of
 VPC network topology when cluster and cloud resources are not the only resources in the network, so you
@@ -23,7 +23,6 @@ can avoid IP range collisions.
 IpRange can be deleted and deprovisioned only if there are no cloud resources using it. In other words,
 an IpRange and its underlying VPC network address range can be purged only if there are no cloud resources
 using an IP from that range.
-
 
 ## Specification <!-- {docsify-ignore} -->
 
@@ -46,7 +45,6 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
 | **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
-
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

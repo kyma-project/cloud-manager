@@ -1,27 +1,27 @@
-# Restore RWX Volume Backups in AWS
+# Restore Network File System Volume Backups in Amazon Web Services
 
-This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Amazon Web Services (AWS). 
+This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Amazon Web Services (AWS).
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-* You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-volume.md) to learn more.
-
-* You have created an AwsNfsVolumeBackup. See [Backup RWX Volumes in AWS](./01-110-aws-nfs-volume-backup.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created an AwsNfsVolume. See [Use Network File System in Amazon Web Services](./01-20-10-aws-nfs-volume.md).
+* You have created an AwsNfsVolumeBackup. See [Back Up Network File System Volumes in Amazon Web Services](./01-20-11-aws-nfs-volume-backup.md).
 
 >[!NOTE]
->The following examples assume that the AwsNfsVolumeBackup is named `my-backup` 
-and is in the same namespace as the AwsNfsVolumeRestore resource.
+>The following examples assume that the AwsNfsVolumeBackup is named `my-backup` and is in the same namespace as the AwsNfsVolumeRestore resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
-### Restore on the same or existing Filestore <!-- {docsify-ignore} -->
+### Restore on the Same or Existing Filestore <!-- {docsify-ignore} -->
+
 1. Export the namespace as an environment variable.
 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Create an AwsNfsVolumeRestore resource. 
+
+2. Create an AwsNfsVolumeRestore resource.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -35,7 +35,7 @@ and is in the same namespace as the AwsNfsVolumeRestore resource.
          name: my-backup
    EOF
    ```
-   
+
 3. Wait for the AwsNfsVolumeRestore to be in the `Done` state and have the `Ready` condition.
 
    ```shell
@@ -44,13 +44,14 @@ and is in the same namespace as the AwsNfsVolumeRestore resource.
 
    Once the AwsNfsVolumeRestore is completed, you should see the following message:
 
-   ```
+   ```console
    awsnfsvolumerestore.cloud-resources.kyma-project.io/my-restore condition met
    ```
 
-4. Clean up:
+## Next Steps
 
-   Remove the created awsnfsvolumeRestore:
+To clean up, remove the created AwsNfsVolumeRestore:
+
    ```shell
    kubectl delete -n $NAMESPACE awsnfsvolumerestore my-restore
    ```
