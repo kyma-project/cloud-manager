@@ -3,9 +3,11 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,6 +30,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if state.azureRedisInstance != nil {
 		redisInstance.Status.AuthString = pie.First(keys)
+	}
+
+	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
+	if hasReadyCondition && redisInstance.Status.State != cloudcontrolv1beta1.ReadyState {
+		composed.LoggerFromCtx(ctx).Info("Ready condition already present, StopAndForget-ing")
+		return composed.StopAndForget, nil
 	}
 
 	redisInstance.Status.State = cloudcontrolv1beta1.ReadyState
