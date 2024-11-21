@@ -1,27 +1,28 @@
-# Restore RWX Volume Backups in GCP
+# Restore Network File System Volume Backups in Google Cloud
 
-This tutorial explains how to initiate a restore operation for the ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP). 
+This tutorial explains how to initiate a restore operation for the Network File System (NFS) volumes in Google Cloud. You can do it either using an existiong filestore or a new one.
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-* You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
-
-* You have created a GcpNfsVolumeBackup. Follow [Backup RWX Volumes in GCP](./01-70-gcp-nfs-volume-backup.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created a GcpNfsVolume. See [Use Network File System in Google Cloud](./01-20-20-gcp-nfs-volume.md).
+* You have created a GcpNfsVolumeBackup. See [Back Up Network File System Volumes in Google Cloud](./01-20-21-gcp-nfs-volume-backup.md).
 
 >[!NOTE]
 >All the examples below assume that the GcpNfsVolume is named `my-vol`, the GcpNfsVolumeBackup is named `my-backup` 
 and both are in the same namespace as the GcpNfsVolumeRestore resource.
 
-## Steps <!-- {docsify-ignore} -->
+## Use an Existing Filestore <!-- {docsify-ignore} -->
 
-### Restore on the same or existing Filestore <!-- {docsify-ignore} -->
+### Steps <!-- {docsify-ignore} -->
+
 1. Export the namespace as an environment variable.
 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Create an GcpNfsVolumeRestore resource. 
+
+2. Create an GcpNfsVolumeRestore resource.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -40,7 +41,7 @@ and both are in the same namespace as the GcpNfsVolumeRestore resource.
          namespace: $NAMESPACE
    EOF
    ```
-   
+
 3. Wait for the GcpNfsVolumeRestore to be in the `Done` state and have the `Ready` condition.
 
    ```shell
@@ -49,17 +50,22 @@ and both are in the same namespace as the GcpNfsVolumeRestore resource.
 
    Once the GcpNfsVolumeRestore is completed, you should see the following message:
 
-   ```
+   ```console
    gcpnfsvolumerestore.cloud-resources.kyma-project.io/my-restore condition met
    ```
 
-4. Clean up:
+### Next Steps
 
-   Remove the created gcpnfsvolumeRestore:
+To clean up, remove the created GcpNfsVolumeRestore:
+
    ```shell
    kubectl delete -n $NAMESPACE gcpnfsvolumerestore my-restore
    ```
-### Restore with creating a new Filestore <!-- {docsify-ignore} -->
+
+## Create a New Filestore <!-- {docsify-ignore} -->
+
+### Steps
+
 1. Export the namespace as an environment variable. Run:
 
    ```shell
@@ -91,13 +97,14 @@ and both are in the same namespace as the GcpNfsVolumeRestore resource.
 
    Once the GcpNfsVolume is created, you should see the following message:
 
-   ```
+   ```console
    gcpnfsvolume.cloud-resources.kyma-project.io/my-vol2 condition met
    ```
-4. Clean up:
-   Remove the created gcpnfsvolume:
+
+### Next Steps
+
+To clean up, remove the created GcpNfsVolume:
+
    ```shell
    kubectl delete -n $NAMESPACE gcpnfsvolume my-vol2
    ```
->[!TIP]
->Optionally follow steps 4-8 from [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) using my-vol2 as GcpNfsVolume name to verify the created volume before clean up.
