@@ -141,18 +141,19 @@ func HaveNextRunTimes(expectedTimes []time.Time) ObjAssertion {
 	}
 }
 
-func WithNextRunTime(runTime time.Time) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(backupschedule.BackupSchedule); ok {
-				nextRunTimes := x.GetNextRunTimes()
-				t := runTime.UTC().Format(time.RFC3339)
-				if len(nextRunTimes) == 0 {
-					x.SetNextRunTimes([]string{t})
-				} else {
-					nextRunTimes[0] = t
-				}
+func HaveLastCreateRun(expected time.Time) ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(backupschedule.BackupSchedule); ok {
+			actual := x.GetLastCreateRun()
+
+			if actual.IsZero() || actual.Time.UTC() != expected.UTC() {
+				return fmt.Errorf(
+					"expected object %T %s/%s to have lastCreateRun: %s, but found %s",
+					obj, obj.GetNamespace(), obj.GetName(), expected, actual,
+				)
 			}
-		},
+
+		}
+		return nil
 	}
 }
