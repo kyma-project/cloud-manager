@@ -14,6 +14,9 @@ func PatchRemoveFinalizer(ctx context.Context, state composed.State) (error, con
 		return nil, nil
 	}
 
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("PatchRemoveFinalizer")
+
 	_, err := state.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName)
 
 	if err != nil {
@@ -34,6 +37,9 @@ func RemoveFinalizer(ctx context.Context, state composed.State) (error, context.
 	if !controllerutil.ContainsFinalizer(state.Obj(), cloudcontrolv1beta1.FinalizerName) {
 		return nil, nil
 	}
+
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("RemoveFinalizer")
 
 	//Remove finalizer
 	controllerutil.RemoveFinalizer(state.Obj(), cloudcontrolv1beta1.FinalizerName)
