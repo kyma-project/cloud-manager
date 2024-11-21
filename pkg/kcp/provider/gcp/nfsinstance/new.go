@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,9 +15,13 @@ import (
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		logger := composed.LoggerFromCtx(ctx)
+
+		logger.Info("Creating state")
 
 		state, err := stateFactory.NewState(ctx, st.(types.State))
 		if err != nil {
+			logger.Error(err, "Error creating state")
 			nfsInstance := st.Obj().(*v1beta1.NfsInstance)
 			return composed.UpdateStatus(nfsInstance).
 				SetExclusiveConditions(metav1.Condition{
