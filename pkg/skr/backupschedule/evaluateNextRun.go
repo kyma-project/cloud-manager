@@ -64,6 +64,11 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	state.createRunCompleted = schedule.GetLastCreateRun() != nil && nextRunTime.Equal(schedule.GetLastCreateRun().Time)
 	state.deleteRunCompleted = schedule.GetLastDeleteRun() != nil && nextRunTime.Equal(schedule.GetLastDeleteRun().Time)
 
+	//Mark createRunCompleted to true always after first run for one-time schedules.
+	if schedule.GetSchedule() == "" && schedule.GetLastCreateRun() != nil && !schedule.GetLastCreateRun().IsZero() {
+		state.createRunCompleted = true
+	}
+
 	//If create and delete tasks already completed for currentRun, reset the next run times
 	if state.createRunCompleted && state.deleteRunCompleted {
 

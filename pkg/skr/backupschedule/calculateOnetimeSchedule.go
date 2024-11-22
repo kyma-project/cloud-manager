@@ -34,8 +34,22 @@ func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, co
 
 	logger.WithValues("BackupSchedule", schedule.GetName()).Info("BackupSchedule is empty and scheduling it to run.")
 
-	//Set the next run time to the start time if it is set
 	var nextRunTime time.Time
+	lastCreateRun := schedule.GetLastCreateRun()
+
+	//If an adhoc backup is already created,
+	//Run the schedule once a day to check for backup retention.
+	if schedule.GetBackupCount() > 0 && !lastCreateRun.IsZero() {
+		nextRunTime = time.Date(now.Year(), now.Month(), now.Day()+1,
+			lastCreateRun.Hour()+1, 0, 0, 0, time.UTC)
+		schedule.SetNextRunTimes([]string{nextRunTime.UTC().Format(time.RFC3339)})
+
+		return composed.PatchStatus(schedule).
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
+	}
+
+	//Set the next run time to the start time if it is set
 	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() {
 		nextRunTime = schedule.GetStartTime().Time
 	} else {
