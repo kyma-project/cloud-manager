@@ -147,6 +147,46 @@ func (suite *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
 	suite.GreaterOrEqual(time.Second*1, time.Since(runTime))
 }
 
+func (suite *calculateOnetimeScheduleSuite) TestScheduleWithLastCreateRun() {
+
+	obj := gcpNfsBackupSchedule.DeepCopy()
+	factory, err := newTestStateFactoryWithObj(obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsBackupSchedule
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	//Set the schedule
+	lastCreateRun := &metav1.Time{Time: time.Now()}
+	obj.Status.LastCreateRun = lastCreateRun
+	obj.Status.BackupCount = 1
+	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
+	suite.Nil(err)
+
+	//Invoke API under test
+	err, _ = calculateOnetimeSchedule(ctx, state)
+
+	//validate expected return values
+	suite.Equal(composed.StopWithRequeue, err)
+
+	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
+	err = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
+			Namespace: gcpNfsBackupSchedule.Namespace},
+		fromK8s)
+	suite.Nil(err)
+	suite.Equal(1, len(fromK8s.Status.NextRunTimes))
+	expectedNextRun := time.Date(lastCreateRun.Year(), lastCreateRun.Month(), lastCreateRun.Day()+1,
+		lastCreateRun.Hour()+1, 0, 0, 0, time.UTC)
+	runTime, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[0])
+	suite.Nil(err)
+	suite.Equal(expectedNextRun, runTime)
+}
+
 func TestCalculateOnetimeScheduleSuite(t *testing.T) {
 	suite.Run(t, new(calculateOnetimeScheduleSuite))
 }

@@ -1,13 +1,14 @@
-# Backup RWX Volumes in GCP
+# Back Up Network File System Volumes in Google Cloud
 
-This tutorial explains how to create backups for ReadWriteMany (RWX) volumes in Google Cloud Platform (GCP). 
+This tutorial explains how to create backups for Network File System (NFS) volumes in Google Cloud.
 
-## Preparation <!-- {docsify-ignore} -->
+## Prerequisites <!-- {docsify-ignore} -->
 
-You have created a GcpNfsVolume. Follow [Use RWX Volumes in GCP](./01-20-gcp-nfs-volume.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created a GcpNfsVolume. See [Use Network File System in Google Cloud](./01-20-20-gcp-nfs-volume.md).
 
-[!NOTE]
-All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsVolumeBackup resource.
+> [!NOTE]
+> All the examples below assume that the GcpNfsVolume is named `my-vol` and is in the same namespace as the GcpNfsVolumeBackup resource.
 
 ## Steps <!-- {docsify-ignore} -->
 
@@ -16,8 +17,8 @@ All the examples below assume that the GcpNfsVolume is named `my-vol` and is in 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Create an GcpNfsVolumeBackup resource. 
+
+2. Create an GcpNfsVolumeBackup resource.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -31,7 +32,7 @@ All the examples below assume that the GcpNfsVolume is named `my-vol` and is in 
          name: my-vol
    EOF
    ```
-   
+
 3. Wait for the GcpNfsVolumeBackup to be in the `Ready` state.
 
    ```shell
@@ -40,18 +41,20 @@ All the examples below assume that the GcpNfsVolume is named `my-vol` and is in 
 
    Once the GcpNfsVolumeBackup is created, you should see the following message:
 
-   ```
+   ```console
    gcpnfsvolumebackup.cloud-resources.kyma-project.io/my-backup condition met
    ```
+
 4. Observe the location of the created backup.
 
    ```shell
    kubectl -n $NAMESPACE get gcpnfsvolumebackup my-backup -o jsonpath='{.status.location}{"\n"}' 
    ```
 
-5. Clean up:
+## Next Steps
 
-   * Remove the created gcpnfsvolumebackup:
-     ```shell
-     kubectl delete -n $NAMESPACE gcpnfsvolumebackup my-backup
-     ```
+To clean up, remove the created GcpNfsVolumeBackup:
+
+   ```shell
+   kubectl delete -n $NAMESPACE gcpnfsvolumebackup my-backup
+   ```

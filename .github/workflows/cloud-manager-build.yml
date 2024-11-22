@@ -14,18 +14,10 @@ permissions:
   contents: read # This is required for actions/checkout
 
 jobs:
-  build-image-with-tag:
-    if: github.ref_type == 'tag'
+  build-image:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       tags: ${{ github.ref_name }}
-      name: cloud-manager
-      dockerfile: Dockerfile
-      export-tags: true
-  build-image-no-tag:
-    if: github.ref_type != 'tag'
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-    with:
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true

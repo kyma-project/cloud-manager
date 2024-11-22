@@ -1,10 +1,11 @@
-# Backup RWX Volumes in AWS
+# Back Up Network File System Volumes in Amazon Web Services
 
-This tutorial explains how to create backups for ReadWriteMany (RWX) volumes in AWS. 
+This tutorial explains how to create backups for Network File System (NFS) volumes in Amazon Web Services (AWS).
 
-## Preparation <!-- {docsify-ignore} -->
+## Prerequisites <!-- {docsify-ignore} -->
 
-You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-volume.md) to learn more.
+* You have the Cloud Manager module added.
+* You have created an AwsNfsVolume resource. See [Use Network File System in Amazon Web Services](./01-20-10-aws-nfs-volume.md).
 
 > [!NOTE]
 > All the examples below assume that the AwsNfsVolume is named `my-vol` and is in the same namespace as the AwsNfsVolumeBackup resource.
@@ -16,8 +17,8 @@ You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-v
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Create an AwsNfsVolumeBackup resource. 
+
+2. Create an AwsNfsVolumeBackup resource.
 
    ```shell
    cat <<EOF | kubectl -n $NAMESPACE apply -f -
@@ -31,7 +32,7 @@ You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-v
          name: my-vol
    EOF
    ```
-   
+
 3. Wait for the AwsNfsVolumeBackup to be in the `Ready` state.
 
    ```shell
@@ -40,25 +41,28 @@ You have created an AwsNfsVolume. See [Use RWX Volumes in AWS](./01-10-aws-nfs-v
 
    Once the AwsNfsVolumeBackup is created, you should see the following message:
 
-   ```
+   ```console
    awsnfsvolumebackup.cloud-resources.kyma-project.io/my-backup condition met
    ```
+
 4. Observe the location of the created backup.
 
    ```shell
    kubectl -n $NAMESPACE get awsnfsvolumebackup my-backup -o jsonpath='{.status.location}{"\n"}' 
    ```
 
-## Clean Up <!-- {docsify-ignore} -->
+## Next Steps <!-- {docsify-ignore} -->
+
+To clean up, follow these steps:
+
 1. Export the namespace as an environment variable. Run:
 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
    ```
-   
-2. Clean up:
 
-   * Remove the created AwsNfsVolumeBackup:
-     ```shell
-     kubectl delete -n $NAMESPACE awsnfsvolumebackup my-backup
-     ```
+2. Remove the created AwsNfsVolumeBackup:
+
+   ```shell
+   kubectl delete -n $NAMESPACE awsnfsvolumebackup my-backup
+   ```
