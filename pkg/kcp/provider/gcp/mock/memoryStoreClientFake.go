@@ -35,6 +35,10 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteMemorStoreRedisByName(
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string, options memoryStoreClient.CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
@@ -57,6 +61,10 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
@@ -73,6 +81,10 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx cont
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
@@ -86,6 +98,10 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx cont
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) GetRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
+	if isContextCanceled(ctx) {
+		return nil, nil, context.Canceled
+	}
+
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
