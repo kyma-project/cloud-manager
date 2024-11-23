@@ -260,7 +260,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
+					HavingState(cloudcontrolv1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest),
 				).
 				Should(Succeed())
 		})
@@ -540,7 +540,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
+					HavingState(cloudcontrolv1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest),
 				).
 				Should(Succeed())
 		})

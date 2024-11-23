@@ -20,8 +20,8 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 
 		changed := false
 
-		if state.ObjAsVpcPeering().Status.State != string(ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest) {
-			state.ObjAsVpcPeering().Status.State = string(ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)
+		if state.ObjAsVpcPeering().Status.State != cloudcontrolv1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest {
+			state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest
 			changed = true
 		}
 

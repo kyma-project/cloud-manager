@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -20,7 +21,24 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	obj.Status.State = string(state.vpcPeering.Status.Code)
+	codes := map[ec2types.VpcPeeringConnectionStateReasonCode]string{
+		ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest: cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
+		ec2types.VpcPeeringConnectionStateReasonCodePendingAcceptance: cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodePendingAcceptance,
+		ec2types.VpcPeeringConnectionStateReasonCodeActive:            cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeActive,
+		ec2types.VpcPeeringConnectionStateReasonCodeDeleted:           cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeDeleted,
+		ec2types.VpcPeeringConnectionStateReasonCodeRejected:          cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeRejected,
+		ec2types.VpcPeeringConnectionStateReasonCodeFailed:            cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeFailed,
+		ec2types.VpcPeeringConnectionStateReasonCodeExpired:           cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeExpired,
+		ec2types.VpcPeeringConnectionStateReasonCodeProvisioning:      cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeProvisioning,
+		ec2types.VpcPeeringConnectionStateReasonCodeDeleting:          cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeDeleting,
+	}
+
+	statusState, ok := codes[state.vpcPeering.Status.Code]
+	if !ok {
+		statusState = "Unknown"
+	}
+
+	obj.Status.State = statusState
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).
 		SetExclusiveConditions(metav1.Condition{

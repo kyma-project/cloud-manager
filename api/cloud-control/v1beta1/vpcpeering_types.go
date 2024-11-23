@@ -23,11 +23,10 @@ import (
 )
 
 const (
-	ReasonFailedCreatingVpcPeeringConnection      = "FailedCreatingVpcPeeringConnection"
-	ReasonFailedAcceptingVpcPeeringConnection     = "FailedAcceptingVpcPeeringConnection"
-	ReasonFailedLoadingRemoteVpcNetwork           = "FailedLoadingRemoteVpcNetwork"
-	ReasonFailedLoadingRemoteVpcPeeringConnection = "FailedLoadingRemoteVpcPeeringConnection"
-	ReasonFailedCreatingRoutes                    = "FailedCreatingRoutes"
+	ReasonFailedCreatingVpcPeeringConnection  = "FailedCreatingVpcPeeringConnection"
+	ReasonFailedAcceptingVpcPeeringConnection = "FailedAcceptingVpcPeeringConnection"
+	ReasonFailedLoadingRemoteVpcNetwork       = "FailedLoadingRemoteVpcNetwork"
+	ReasonFailedCreatingRoutes                = "FailedCreatingRoutes"
 )
 
 const (
@@ -37,6 +36,17 @@ const (
 	VirtualNetworkPeeringStateDeleting     = "Deleting"
 )
 
+const (
+	VpcPeeringConnectionStateReasonCodeInitiatingRequest = "Initiating-Request"
+	VpcPeeringConnectionStateReasonCodePendingAcceptance = "Pending-Acceptance"
+	VpcPeeringConnectionStateReasonCodeActive            = "Active"
+	VpcPeeringConnectionStateReasonCodeDeleted           = "Deleted"
+	VpcPeeringConnectionStateReasonCodeRejected          = "Rejected"
+	VpcPeeringConnectionStateReasonCodeFailed            = "Failed"
+	VpcPeeringConnectionStateReasonCodeExpired           = "Expired"
+	VpcPeeringConnectionStateReasonCodeProvisioning      = "Provisioning"
+	VpcPeeringConnectionStateReasonCodeDeleting          = "Deleting"
+)
 const (
 	VpcPeeringLocalNetworkField  = ".spec.details.localNetwork"
 	VpcPeeringRemoteNetworkField = ".spec.details.remoteNetwork"
