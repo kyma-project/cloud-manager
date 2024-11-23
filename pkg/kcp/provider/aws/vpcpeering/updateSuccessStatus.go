@@ -14,13 +14,6 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 
 	obj := state.ObjAsVpcPeering()
 
-	if len(obj.Status.Id) > 0 &&
-		len(obj.Status.RemoteId) > 0 &&
-		meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrol1beta1.ConditionTypeReady) {
-		// all already set and saved
-		return nil, nil
-	}
-
 	codes := map[ec2types.VpcPeeringConnectionStateReasonCode]string{
 		ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest: cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
 		ec2types.VpcPeeringConnectionStateReasonCodePendingAcceptance: cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodePendingAcceptance,
@@ -36,6 +29,14 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 	statusState, ok := codes[state.vpcPeering.Status.Code]
 	if !ok {
 		statusState = "Unknown"
+	}
+
+	if len(obj.Status.Id) > 0 &&
+		len(obj.Status.RemoteId) > 0 &&
+		meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrol1beta1.ConditionTypeReady) &&
+		obj.Status.State == statusState {
+		// all already set and saved
+		return nil, nil
 	}
 
 	obj.Status.State = statusState
