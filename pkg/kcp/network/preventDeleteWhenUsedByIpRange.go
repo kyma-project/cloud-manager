@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -25,8 +26,8 @@ func preventDeleteWhenUsedByIpRange(ctx context.Context, st composed.State) (err
 					Reason:  cloudcontrolv1beta1.ReasonDeleteWhileUsed,
 					Message: fmt.Sprintf("Can not be deleted while used by IpRanges: %v", usedByNames),
 				}).
-				ErrorLogMessage("Error patching KCP IpRange status with DeleteWhileUsed by IpRange Warning").
-				SuccessLogMsg("Delaying KCP IpRange deleting while used by IpRange").
+				ErrorLogMessage("Error patching KCP Network status with DeleteWhileUsed by IpRange Warning").
+				SuccessLogMsg("Delaying KCP Network deleting while used by IpRange").
 				SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 				Run(ctx, state)
 		},
