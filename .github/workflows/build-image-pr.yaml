@@ -1,11 +1,6 @@
-name: Cloud-Manager Build
+name: Cloud-Manager Build Image PR
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "*"
   pull_request_target:
     types: [opened, edited, synchronize, reopened, ready_for_review]
 
@@ -17,7 +12,6 @@ jobs:
   build-image:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      tags: ${{ github.ref_name }}
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
