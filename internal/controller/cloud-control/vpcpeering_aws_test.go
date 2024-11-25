@@ -658,5 +658,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(awsMockRemote.GetRouteCount(infra.Ctx(), remoteVpcId, kcpPeering.Status.RemoteId, localVpcCidr)).
 				To(Equal(2))
 		})
+
+		// Dummy
 	})
 })
