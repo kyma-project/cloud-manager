@@ -119,7 +119,6 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					kymaPeeringDelete,
 					kymaPeeringDeleteWait,
 					kcpNetworkDelete,
-					kcpNetworkDeleteWait,
 					actions.PatchRemoveFinalizer,
 				),
 				statusReady,
