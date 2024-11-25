@@ -111,6 +111,10 @@ func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(grou
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -124,6 +128,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheSubnetGroup(ctx context.
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -137,6 +145,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheSubnetGroup(ctx context.Co
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -146,6 +158,10 @@ func (client *elastiCacheClientFake) DeleteElastiCacheSubnetGroup(ctx context.Co
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheParameterGroup, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -159,6 +175,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheParameterGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -175,6 +195,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -184,6 +208,10 @@ func (client *elastiCacheClientFake) DeleteElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticacheTypes.Parameter, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -191,6 +219,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheParameters(ctx context.C
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticacheTypes.ParameterNameValue) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -202,10 +234,18 @@ func (client *elastiCacheClientFake) ModifyElastiCacheParameterGroup(ctx context
 }
 
 func (client *elastiCacheClientFake) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticacheTypes.Parameter, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	return pie.Values(getDefaultParams()), nil
 }
 
 func (client *elastiCacheClientFake) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -213,6 +253,10 @@ func (client *elastiCacheClientFake) GetAuthTokenSecretValue(ctx context.Context
 }
 
 func (client *elastiCacheClientFake) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagerTypes.Tag) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -225,6 +269,10 @@ func (client *elastiCacheClientFake) CreateAuthTokenSecret(ctx context.Context, 
 }
 
 func (client *elastiCacheClientFake) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -234,6 +282,10 @@ func (client *elastiCacheClientFake) DeleteAuthTokenSecret(ctx context.Context, 
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticacheTypes.ReplicationGroup, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -247,6 +299,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheReplicationGroup(ctx con
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options awsclient.CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -288,6 +344,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options awsclient.ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -318,6 +378,10 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -329,6 +393,10 @@ func (client *elastiCacheClientFake) DeleteElastiCacheReplicationGroup(ctx conte
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -342,6 +410,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Cont
 }
 
 func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -351,6 +423,10 @@ func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id s
 }
 
 func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -365,6 +441,10 @@ func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id str
 }
 
 func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -376,6 +456,10 @@ func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id str
 }
 
 func (client *elastiCacheClientFake) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -398,6 +482,10 @@ func (client *elastiCacheClientFake) DescribeElastiCacheSecurityGroups(ctx conte
 }
 
 func (client *elastiCacheClientFake) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId string, name string, tags []ec2Types.Tag) (string, error) {
+	if isContextCanceled(ctx) {
+		return "", context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -417,6 +505,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheSecurityGroup(ctx context.
 }
 
 func (client *elastiCacheClientFake) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -435,6 +527,10 @@ func (client *elastiCacheClientFake) AuthorizeElastiCacheSecurityGroupIngress(ct
 }
 
 func (client *elastiCacheClientFake) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
