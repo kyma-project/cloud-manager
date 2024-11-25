@@ -15,9 +15,19 @@ permissions:
 
 jobs:
   build-image:
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-    with:
-      tags: ${{ github.ref_name }}
-      name: cloud-manager
-      dockerfile: Dockerfile
-      export-tags: true
+    steps:
+      - name: Build image main or tag
+        if: github.event_name == 'push'
+        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+        with:
+          tags: ${{ github.ref_name }}
+          name: cloud-manager
+          dockerfile: Dockerfile
+          export-tags: true
+      - name: Build image on PR
+        if: github.event_name == 'pull_request_target'
+        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+        with:
+          name: cloud-manager
+          dockerfile: Dockerfile
+          export-tags: true
