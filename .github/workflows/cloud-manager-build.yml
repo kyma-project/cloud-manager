@@ -1,4 +1,4 @@
-name: Cloud-Manager Build
+name: Cloud-Manager Build Image
 
 on:
   push:
@@ -6,8 +6,6 @@ on:
       - main
     tags:
       - "*"
-  pull_request_target:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 permissions:
   id-token: write # This is required for requesting the JWT token
@@ -15,19 +13,9 @@ permissions:
 
 jobs:
   build-image:
-    steps:
-      - name: Build image main or tag
-        if: github.event_name == 'push'
-        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-        with:
-          tags: ${{ github.ref_name }}
-          name: cloud-manager
-          dockerfile: Dockerfile
-          export-tags: true
-      - name: Build image on PR
-        if: github.event_name == 'pull_request_target'
-        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-        with:
-          name: cloud-manager
-          dockerfile: Dockerfile
-          export-tags: true
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      tags: ${{ github.ref_name }}
+      name: cloud-manager
+      dockerfile: Dockerfile
+      export-tags: true
