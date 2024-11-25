@@ -17,7 +17,7 @@ jobs:
   build-image:
     steps:
       - name: Build image main or tag
-        if: github.event_name != 'pull_request_target'
+        if: github.event_name == 'push'
         uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
         with:
           tags: ${{ github.ref_name }}
@@ -25,7 +25,7 @@ jobs:
           dockerfile: Dockerfile
           export-tags: true
       - name: Build image on PR
-        if: github.event_name != 'pull_request_target'
+        if: github.event_name == 'pull_request_target'
         uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
         with:
           name: cloud-manager
