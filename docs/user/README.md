@@ -13,7 +13,7 @@ The Cloud Manager module provides the following feature:
 
 * Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
 * Virtual Private Cloud (VPC) peering between your project and the Kyma cluster.
-* Google Cloud and Amazon Web Services Redis offering.
+* Google Cloud, Amazon Web Services, and Azure Redis offering.
 
 ## Architecture
 
@@ -46,33 +46,9 @@ Both sets of reconcilers must also maintain the status of the resources they rec
 
 ## API / Custom Resources Definitions
 
-The cloud-resources.kyma-project.io Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager uses to configure resources.
+The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources.
 
-See the documentation related to the [Cloud Manager custom resources](./resources/README.md) (CRs):
-
-* IP Range
-  * [IpRange](./resources/04-10-iprange.md)
-* NFS
-  * [AwsNfsVolume](./resources/04-20-10-aws-nfs-volume.md)
-  * [AwsNfsVolumeBackup](./resources/04-20-11-aws-nfs-volume-backup.md)
-  * [AwsNfsBackupSchedule](./resources/04-20-12-aws-nfs-backup-schedule.md)
-  * [AwsNfsVolumeRestore](./resources/04-20-13-aws-nfs-volume-restore.md)
-  * [GcpNfsVolume](./resources/04-20-20-gcp-nfs-volume.md)
-  * [GcpNfsVolumeBackup](./resources/04-20-21-gcp-nfs-volume-backup.md)
-  * [GcpNfsBackupSchedule](./resources/04-20-22-gcp-nfs-backup-schedule.md)
-  * [GcpNfsVolumeRestore](./resources/04-20-23-gcp-nfs-volume-restore.md)
-* VPC peering
-  * [AzureVpcPeering](./resources/04-30-10-azure-vpc-peering.md)
-  * [AwsVpcPeering](./resources/04-30-20-aws-vpc-peering.md)
-  * [GcpVpcPeering](./resources/04-30-30-gcp-vpc-peering.md)
-* Redis
-  * [GcpRedisInstance](./resources/04-40-10-gcp-redis-instance.md)
-  * [AwsRedisInstance](./resources/04-40-20-aws-redis-instance.md)
-  * [AzureRedisInstance](./resources/04-40-30-azure-redis-instance.md)
-
-## Resource Consumption
-
-To learn more about the resources used by the Cloud Manager module, see [Kyma Modules' Sizing](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-modules-sizing?version=Cloud).
+See the documentation related to the [Cloud Manager custom resources](./resources/README.md) (CRs).
 
 ## Related Information
 
