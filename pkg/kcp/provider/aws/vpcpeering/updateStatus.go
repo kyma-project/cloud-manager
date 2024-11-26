@@ -29,9 +29,9 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			ec2types.VpcPeeringConnectionStateReasonCodeDeleting:          cloudcontrol1beta1.VpcPeeringConnectionStateReasonCodeDeleting,
 		}
 
-		val, ok := codes[state.vpcPeering.Status.Code]
-		if ok {
-			statusState = val
+		ok := false
+		if statusState, ok = codes[state.vpcPeering.Status.Code]; !ok {
+			statusState = "Unknown"
 		}
 	}
 
