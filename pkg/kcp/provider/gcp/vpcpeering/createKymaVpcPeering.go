@@ -32,11 +32,16 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 	}
 
 	//First we need to check if the remote VPC is tagged with the shoot name.
-	isVpcTagged, err := state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, peeringconfig.VpcPeeringConfig.NetworkTag)
+	var isVpcTagged bool
+	var err error
 
-	if err != nil {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
-		return err, ctx
+	if peeringconfig.VpcPeeringConfig.NetworkTag != "" {
+		isVpcTagged, err = state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, peeringconfig.VpcPeeringConfig.NetworkTag)
+
+		if err != nil {
+			logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking any remote network tags")
+			return err, ctx
+		}
 	}
 
 	if !isVpcTagged {
