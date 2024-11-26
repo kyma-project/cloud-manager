@@ -8,7 +8,6 @@ import (
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -51,7 +50,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	if !meta.IsStatusConditionTrue(*net.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+	if net.Status.Network == nil {
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
