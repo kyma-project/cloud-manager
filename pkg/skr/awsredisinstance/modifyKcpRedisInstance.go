@@ -29,7 +29,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisInstance.Spec.RedisTier)
 
 	if err != nil {
-		errMsg := "failed to map redisTier to tier and memorySizeGb"
+		errMsg := "failed to map redisTier to cacheNodeType"
 		logger.Error(err, errMsg, "redisTier", awsRedisInstance.Spec.RedisTier)
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(awsRedisInstance).
