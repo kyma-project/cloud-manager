@@ -71,6 +71,10 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 						SuccessError(composed.StopAndForget).
 						Run(ctx, state)
 				}
+
+				if err != nil {
+					break
+				}
 			}
 		}
 	}
