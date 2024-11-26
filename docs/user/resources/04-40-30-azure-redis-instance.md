@@ -1,6 +1,6 @@
 # AzureRedisInstance Custom Resource
 
-The `AzureRedisInstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
+The `azureRedisInstance.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the Azure Cache for Redis instance.
 Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
 By default, the created auth Secret has the same name as AzureRedisInstance.

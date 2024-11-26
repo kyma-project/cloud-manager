@@ -46,9 +46,7 @@ Both sets of reconcilers must also maintain the status of the resources they rec
 
 ## API / Custom Resources Definitions
 
-The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources.
-
-See the documentation related to the [Cloud Manager custom resources](./resources/README.md) (CRs).
+The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
 
 ## Related Information
 
