@@ -51,7 +51,7 @@ func New(stateFactory StateFactory) composed.Action {
 					waitVpcPeeringActive,
 					createRoutes,
 					createRemoteRoutes,
-					updateSuccessStatus,
+					updateStatus,
 					composed.StopAndForgetAction,
 				),
 			),
