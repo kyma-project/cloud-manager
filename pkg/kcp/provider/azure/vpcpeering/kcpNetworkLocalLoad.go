@@ -73,7 +73,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	state.localNetwork = net
 
-	logger.Info("KCP VpcPeeing local network loaded")
+	logger.Info("KCP VpcPeering local network loaded")
 
 	return nil, ctx
 }

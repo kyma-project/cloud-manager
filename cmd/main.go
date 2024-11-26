@@ -34,6 +34,7 @@ import (
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -380,6 +381,7 @@ func loadConfig() config.Config {
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)
 	gcpclient.InitConfig(cfg)
+	vpcpeeringconfig.InitConfig(cfg)
 
 	cfg.Read()
 

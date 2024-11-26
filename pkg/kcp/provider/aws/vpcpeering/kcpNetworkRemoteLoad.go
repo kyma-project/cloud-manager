@@ -69,7 +69,7 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	state.remoteNetwork = net
 
-	logger.Info("KCP VpcPeeing remote network loaded")
+	logger.Info("KCP VpcPeering remote network loaded")
 
 	return nil, ctx
 }
