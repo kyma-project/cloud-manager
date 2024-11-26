@@ -72,6 +72,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		SourceFileShare:    state.GcpNfsVolume.Spec.FileShareName,
 		SourceInstance:     client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Status.Location, nfsInstanceName),
 		SourceInstanceTier: string(state.GcpNfsVolume.Spec.Tier),
+		Labels:             map[string]string{gcpclient.ManagedByKey: gcpclient.ManagedByValue, gcpclient.ScopeNameKey: state.Scope.Name},
 	}
 	op, err := state.fileBackupClient.CreateFileBackup(ctx, project, backup.Status.Location, name, fileBackup)
 

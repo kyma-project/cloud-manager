@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"regexp"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -16,10 +17,13 @@ const PsaPeeringName = "servicenetworking-googleapis-com"
 const filestoreInstancePattern = "projects/%s/locations/%s/instances/%s"
 const filestoreParentPattern = "projects/%s/locations/%s"
 const fileBackupPattern = "projects/%s/locations/%s/backups/%s"
+const fileBackupRegex = `projects/(?P<Project>[^/]+)/locations/(?P<Location>[^/]+)/backups/(?P<BackupName>[^/]+)`
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
 const GcpApiTimeout = time.Second * 8
+
+const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
 
 type GcpConfigStruct struct {
 	GcpRetryWaitTime     time.Duration
@@ -77,6 +81,10 @@ func GetVPCPath(projectId, vpcId string) string {
 
 func GetNetworkFilter(projectId, vpcId string) string {
 	return fmt.Sprintf(networkFilter, projectId, vpcId)
+}
+
+func GetSkrBackupsFilter(scopeName string) string {
+	return fmt.Sprintf(skrBackupsFilter, ManagedByValue, scopeName)
 }
 
 func GetFilestoreInstancePath(projectId, location, instanceId string) string {
@@ -144,6 +152,19 @@ const (
 	MemoryStoreForRedisService  GcpServiceName = "redis.googleapis.com"
 )
 
+// Used for Hyperscaler labels mainly backups which need to be nuked without KCP mirror object
+const (
+	ManagedByKey   = "managed-by"
+	ManagedByValue = "cloud-manager"
+	ScopeNameKey   = "scope-name"
+)
+
 func GetCompleteServiceName(projectId string, serviceName GcpServiceName) string {
 	return fmt.Sprintf("projects/%s/services/%s", projectId, serviceName)
+}
+
+func GetProjectLocationNameFromFileBackupPath(fullPath string) (string, string, string) {
+	re := regexp.MustCompile(fileBackupRegex)
+	matches := re.FindStringSubmatch(fullPath)
+	return matches[re.SubexpIndex("Project")], matches[re.SubexpIndex("Location")], matches[re.SubexpIndex("BackupName")]
 }

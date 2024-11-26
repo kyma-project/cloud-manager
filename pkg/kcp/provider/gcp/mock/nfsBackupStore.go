@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/googleapi"
+	"regexp"
 )
 
 type nfsBackupStore struct {
@@ -34,6 +36,46 @@ func (s *nfsBackupStore) GetFileBackup(ctx context.Context, projectId, location,
 		Message: "Not able to find the backup",
 	}
 }
+
+func (s *nfsBackupStore) ListFilesBackups(ctx context.Context, project, filter string) ([]*file.Backup, error) {
+	regex := `.+labels.scope-name="(?P<Scope>.+)"`
+	re := regexp.MustCompile(regex)
+	matches := re.FindStringSubmatch(filter)
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	result := make([]*file.Backup, 0)
+	for _, backup := range s.backups {
+		projectId, _, _ := client.GetProjectLocationNameFromFileBackupPath(backup.Name)
+		scopeName := matches[re.SubexpIndex("Scope")]
+		if projectId == project && backup.Labels != nil && backup.Labels["scope-name"] == scopeName {
+			result = append(result, backup)
+		}
+	}
+	return result, nil
+}
+
+func (s *nfsBackupStore) PatchFileBackup(ctx context.Context, projectId, location, name, _ string, backup *file.Backup) (*file.Operation, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
+	logger := composed.LoggerFromCtx(ctx)
+
+	completeId := fmt.Sprintf("projects/%s/locations/%s/backups/%s", projectId, location, name)
+	for i, instance := range s.backups {
+		if completeId == instance.Name {
+			s.backups[i] = backup
+			logger.WithName("PatchFileBackup - mock").Info(fmt.Sprintf("Length :: %d", len(s.backups)))
+			return newOperation("", false), nil
+		}
+	}
+	return nil, &googleapi.Error{
+		Code:    404,
+		Message: "Resource not found",
+	}
+}
+
 func (s *nfsBackupStore) CreateFileBackup(ctx context.Context, projectId, location, name string, backup *file.Backup) (*file.Operation, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

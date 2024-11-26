@@ -2,7 +2,6 @@ package nuke
 
 import (
 	"context"
-
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
