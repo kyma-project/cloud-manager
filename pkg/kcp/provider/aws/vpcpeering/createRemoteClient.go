@@ -19,8 +19,8 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
-	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
+	remoteAccountId := state.remoteNetwork.Status.Network.Aws.AwsAccountId
+	remoteRegion := state.remoteNetwork.Status.Network.Aws.Region
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
