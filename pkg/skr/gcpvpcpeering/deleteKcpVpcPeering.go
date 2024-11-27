@@ -11,25 +11,21 @@ func deleteKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if !composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
-	}
-
 	if state.KcpVpcPeering == nil {
-		// VpcPeering on SKR is marked for deletion, but not found in KCP, so probably it is already deleted
 		return nil, nil
 	}
 
 	if composed.IsMarkedForDeletion(state.KcpVpcPeering) {
-		return nil, nil
+		logger.Info("[SKR GCP VPCPeering deleteKcpVpcPeering] KCP VpcPeering is marked for deletion, re-queueing until it is deleted.")
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
 
-	logger.Info("Deleting KCP VpcPeering")
+	logger.Info("[SKR GCP VPCPeering deleteKcpVpcPeering] Deleting KCP VpcPeering")
 
 	err := state.KcpCluster.K8sClient().Delete(ctx, state.KcpVpcPeering)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting KCP VpcPeering", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering deleteKcpVpcPeering] Error deleting KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
 	state.ObjAsGcpVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDeleting

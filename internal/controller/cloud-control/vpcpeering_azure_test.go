@@ -415,6 +415,20 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				).Should(Succeed())
 		})
 
+		// Waits for the reconcilers to create Azure peerings
+		By("And Then remote Azure VPC Peering is created", func() {
+			Eventually(func() error {
+				p, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
+				if err != nil {
+					return err
+				}
+				if p == nil {
+					return errors.New("nil peering received")
+				}
+				return nil
+			}).Should(Succeed())
+		})
+
 		// Ready ==========================================================
 
 		By("When Azure VPC Peering is Connected", func() {
