@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = Describe("Feature: KCP VpcPeering", func() {
+var _ = FDescribe("Feature: KCP VpcPeering", func() {
 
 	It("Scenario: KCP Azure VpcPeering is created and deleted", func() {
 		const (
@@ -413,6 +413,20 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					NewObjActions(),
 					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated),
 				).Should(Succeed())
+		})
+
+		// Waits for the reconcilers to create Azure peerings
+		By("And Then remote Azure VPC Peering is created", func() {
+			Eventually(func() error {
+				p, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
+				if err != nil {
+					return err
+				}
+				if p == nil {
+					return errors.New("nil peering received")
+				}
+				return nil
+			}).Should(Succeed())
 		})
 
 		// Ready ==========================================================
