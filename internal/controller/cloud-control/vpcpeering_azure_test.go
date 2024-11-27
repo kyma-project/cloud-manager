@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = FDescribe("Feature: KCP VpcPeering", func() {
+var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	It("Scenario: KCP Azure VpcPeering is created and deleted", func() {
 		const (
