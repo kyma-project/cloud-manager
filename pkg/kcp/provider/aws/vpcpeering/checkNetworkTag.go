@@ -5,6 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -26,7 +27,10 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 
 	// If VpcNetwork is found but tags don't match user can recover by adding tag to remote VPC network so, we are
 	// adding stop with requeue delay of one minute.
-	hasShootTag := awsutil.HasEc2Tag(state.remoteVpc.Tags, state.Scope().Spec.ShootName)
+	hasShootTag := awsutil.HasEc2Tag(state.remoteVpc.Tags, peeringconfig.VpcPeeringConfig.NetworkTag)
+	if !hasShootTag {
+		hasShootTag = awsutil.HasEc2Tag(state.remoteVpc.Tags, state.Scope().Spec.ShootName)
+	}
 
 	if !hasShootTag {
 
