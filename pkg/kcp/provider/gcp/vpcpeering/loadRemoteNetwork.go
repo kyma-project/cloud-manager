@@ -31,6 +31,11 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if apierrors.IsNotFound(err) {
+		if composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
+			logger.Error(err, "[KCP GCP VPCPeering loadRemoteNetwork] GCP KCP VpcPeering Remote Network not found, proceeding with deletion")
+			return nil, nil
+		}
+
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{

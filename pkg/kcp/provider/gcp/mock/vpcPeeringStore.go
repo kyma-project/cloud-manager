@@ -12,13 +12,15 @@ type vpcPeeringEntry struct {
 	peering *pb.NetworkPeering
 }
 type vpcPeeringStore struct {
-	m     sync.Mutex
-	items map[string]*vpcPeeringEntry
+	m        sync.Mutex
+	items    map[string]*vpcPeeringEntry
+	errorMap map[string]error
 }
 
 type VpcPeeringMockClientUtils interface {
 	GetMockVpcPeering(project string, vpc string) *pb.NetworkPeering
 	SetMockVpcPeeringLifeCycleState(project string, vpc string, state pb.NetworkPeering_State)
+	SetMockVpcPeeringError(project string, vpc string, err error)
 }
 
 func getFullNetworkUrl(project, vpc string) string {
@@ -102,11 +104,19 @@ func (s *vpcPeeringStore) GetVpcPeering(ctx context.Context, remotePeeringName s
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	network := getFullNetworkUrl(project, vpc)
+
+	if s.errorMap == nil {
+		s.errorMap = make(map[string]error)
+	}
+
+	if err, errorExists := s.errorMap[network]; errorExists {
+		return nil, err
+	}
+
 	if s.items == nil {
 		s.items = make(map[string]*vpcPeeringEntry)
 	}
-
-	network := getFullNetworkUrl(project, vpc)
 
 	_, peeringExists := s.items[network]
 	if !peeringExists {
@@ -143,4 +153,11 @@ func (s *vpcPeeringStore) GetMockVpcPeering(project string, vpc string) *pb.Netw
 		return nil
 	}
 	return s.items[getFullNetworkUrl(project, vpc)].peering
+}
+
+func (s *vpcPeeringStore) SetMockVpcPeeringError(project string, vpc string, err error) {
+	if s.errorMap == nil {
+		s.errorMap = make(map[string]error)
+	}
+	s.errorMap[getFullNetworkUrl(project, vpc)] = err
 }
