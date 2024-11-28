@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -22,7 +23,7 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 
 	//Using cm- prefix to make it clear it's a cloud manager resource
 	//Using obj name suffix as the peering name since it is unique within the kcp namespace
-	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Spec.Network.Reference.Gcp.GcpProject, state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
+	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Status.Network.Gcp.GcpProject, state.localNetwork.Status.Network.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Kyma Vpc Peering")
 		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected

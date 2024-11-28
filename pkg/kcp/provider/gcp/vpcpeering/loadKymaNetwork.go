@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -50,7 +51,9 @@ func loadKymaNetwork(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	if !meta.IsStatusConditionTrue(ptr.Deref(network.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady) {
+	isNetworkReady := meta.IsStatusConditionTrue(ptr.Deref(network.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady)
+	isNetworkDefined := network.Status.Network != nil
+	if !isNetworkDefined || !isNetworkReady && !composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{

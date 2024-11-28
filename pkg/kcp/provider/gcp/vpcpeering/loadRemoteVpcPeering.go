@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -20,7 +21,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Loading Remote VPC Peering")
 
-	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName)
+	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName)
 	if err != nil {
 		if composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
 			logger.Info("[KCP GCP VPCPeering loadRemoteVPCPeering] GCP KCP VpcPeering Error fetching Remote Network, proceeding with deletion")

@@ -2,6 +2,8 @@ package dsl
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -9,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func SkrReadyCondition() metav1.Condition {
@@ -27,6 +28,15 @@ func KcpReadyCondition() metav1.Condition {
 		Status:  metav1.ConditionTrue,
 		Reason:  cloudcontrolv1beta1.ConditionTypeReady,
 		Message: "Ready",
+	}
+}
+
+func KcpWarningCondition() metav1.Condition {
+	return metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeWarning,
+		Status:  metav1.ConditionTrue,
+		Reason:  cloudcontrolv1beta1.ConditionTypeWarning,
+		Message: "Warning",
 	}
 }
 
