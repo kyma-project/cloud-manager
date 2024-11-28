@@ -2,13 +2,16 @@ package vpcpeering
 
 import (
 	"context"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.Context) {
@@ -50,7 +53,9 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 			Run(ctx, state)
 	}
 
-	if remoteNetwork.Status.State != string(cloudcontrolv1beta1.ReadyState) {
+	isNetworkReady := meta.IsStatusConditionTrue(ptr.Deref(remoteNetwork.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady)
+	isNetworkDefined := remoteNetwork.Status.Network != nil
+	if !isNetworkDefined || !isNetworkReady && !composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
 		if !remoteNetwork.ObjectMeta.CreationTimestamp.After(state.ObjAsVpcPeering().ObjectMeta.CreationTimestamp.Time.Add(10 * time.Minute)) {
 			return composed.LogErrorAndReturn(err, "[KCP GCP VPCPeering loadRemoteNetwork] KCP Remote Network is not ready yet, requeuing", composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil)
 		}
