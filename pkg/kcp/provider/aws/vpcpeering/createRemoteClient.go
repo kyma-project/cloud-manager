@@ -59,12 +59,12 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 		}
 
 		if !changed {
-			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			ErrorLogMessage("Error patching KCP VpcPeering with error state after remote client creation failed").
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())). // try again in 5mins
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())). // try again in 1 min
 			Run(ctx, state)
 	}
 

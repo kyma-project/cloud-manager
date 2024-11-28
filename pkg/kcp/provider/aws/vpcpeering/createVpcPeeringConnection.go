@@ -45,7 +45,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		},
 	}
 
-	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
+	remoteRegion := state.remoteNetwork.Status.Network.Aws.Region
 
 	vpcPeering, err := state.client.CreateVpcPeeringConnection(
 		ctx,
@@ -82,13 +82,13 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		}
 
 		if !changed {
-			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			ErrorLogMessage("Error updating VpcPeering status due to failed creating vpc peering connection").
 			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 

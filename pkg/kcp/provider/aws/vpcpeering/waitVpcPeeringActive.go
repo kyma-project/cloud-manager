@@ -20,8 +20,8 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 
 		changed := false
 
-		if state.ObjAsVpcPeering().Status.State != string(ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest) {
-			state.ObjAsVpcPeering().Status.State = string(ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)
+		if state.ObjAsVpcPeering().Status.State != string(state.vpcPeering.Status.Code) {
+			state.ObjAsVpcPeering().Status.State = string(state.vpcPeering.Status.Code)
 			changed = true
 		}
 
@@ -34,7 +34,7 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 
 		if changed {
 			return composed.PatchStatus(state.ObjAsVpcPeering()).
-				ErrorLogMessage("Error patching KCP VpcPeering status when state initiating-request on wait peering active").
+				ErrorLogMessage("Error patching KCP VpcPeering status on waiting peering active").
 				SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
 				Run(ctx, state)
 		}
