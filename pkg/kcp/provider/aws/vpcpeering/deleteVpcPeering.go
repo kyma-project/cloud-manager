@@ -18,7 +18,7 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	if !awsutil.CanDeletePeering(state.vpcPeering) {
+	if awsutil.IsTerminated(state.vpcPeering) {
 		logger.Info("VpcPeering can't be deleted at this stage",
 			"peeringStatusCode", string(state.vpcPeering.Status.Code),
 			"peeringStatusMessage", ptr.Deref(state.vpcPeering.Status.Message, ""))

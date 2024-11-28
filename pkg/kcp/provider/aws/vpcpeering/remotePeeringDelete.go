@@ -22,7 +22,7 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
-	if !awsutil.CanDeletePeering(state.remoteVpcPeering) {
+	if awsutil.IsTerminated(state.remoteVpcPeering) {
 		logger.Info("Remote VpcPeering can't be deleted at this stage",
 			"peeringStatusCode", string(state.remoteVpcPeering.Status.Code),
 			"peeringStatusMessage", ptr.Deref(state.remoteVpcPeering.Status.Message, ""))
