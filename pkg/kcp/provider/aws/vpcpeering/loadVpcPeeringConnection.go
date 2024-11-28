@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
 )
 
@@ -17,6 +18,11 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	peering, err := state.client.DescribeVpcPeeringConnection(ctx, obj.Status.Id)
+
+	if awsmeta.IsNotFound(err) {
+		logger.Info("Local AWS Peering not found for KCP VpcPeering")
+		return nil, nil
+	}
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing AWS peering connections", composed.StopWithRequeue, ctx)
