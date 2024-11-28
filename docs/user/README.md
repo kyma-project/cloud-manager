@@ -1,48 +1,24 @@
 
 # Cloud Manager Module
 
-Use the Cloud Manager module to manage infrastructure providers' resources from a Kyma cluster.
+Use the Cloud Manager module to manage cloud providers' resources from a Kyma cluster.
 
 ## What is Cloud Manager?
 
-Cloud Manager manages access to infrastructure providers' resources and products in SAP BTP, Kyma runtime. Once you add the Cloud Manager module to your Kyma cluster, it brings the resources in a secure way.
+Cloud Manager is strictly coupled with the cloud provider where your Kyma cluster is deployed. The module manages access to the chosen resources and products of that particular cloud provider. Once you add Cloud Manager to your Kyma cluster, the module brings the offered resources in a secure way.
 
 ## Features
 
-The Cloud Manager module provides the following feature:
+Cloud Manager supports Google Cloud, Amazon Web Services (AWS), and Microsoft Azure (Azure) as cloud providers for SAP BTP, Kyma runtime. The Cloud Manager module provides the following features tailored for each of the cloud providers.
 
-* Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
-* Virtual Private Cloud (VPC) peering between your project and the Kyma cluster.
-* Google Cloud, Amazon Web Services, and Azure Redis offering.
+* [NFS](./00-20-nfs.md): Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
+* [VPC peering](./00-30-vpc-peering.md): Virtual Private Cloud (VPC) peering between your Kyma and remote cloud provider's project, account, or subscription.
+* [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
+
+> [!NOTE]
+> The NFS feature is offered for Google Cloud and AWS only.
 
 ## Architecture
-
-Kyma Cloud Manager Operator runs in Kyma Control Plane (KCP) and does remote reconciliation on Kyma clusters that have the Cloud Manager module added. It brings various Custom Resource Definitions (CRDs) each representing a specific cloud resource from the underlying infrastructure provider subscription.
-
-Cloud Manager defines two API groups:
-
-* `cloud-resources.kyma-project.io`: user-facing API available in SAP BTP, Kyma runtime
-* `cloud-control.kyma-project.io`: low-level API in KCP projected from the user-facing API in SAP BTP, Kyma runtime
-
-![API and Reconcilers](../contributor/architecture/assets/api-and-reconcilers.drawio.svg "API and Reconcilers")
-
-Cloud Manager has one central active component running in KCP that runs two sets of reconciliation loops - one for each API group.
-
-Cloud Resources reconcilers remotely reconcile the `cloud-resources.kyma-project.io` API group from SAP BTP, Kyma runtime into the low-level cloud-control.kyma-project.io API group in KCP.
-
-Cloud Control reconcilers locally reconcile the `cloud-control.kyma-project.io` API group into the resources of an infrastructure provider.
-
-Both sets of reconcilers must also maintain the status of the resources they reconcile. This means that Cloud Control reconcilers observe the status of the Cloud Resources resource group and project it into the status of the Cloud Control resources in KCP. At the same time, Cloud Resources reconcilers observe the status of the Cloud Control resources and project it into the status of the Cloud Control resource group in SKR.
-
-### Cloud Manager Operator
-
-### Cloud Control Reconcilers
-
-### Cloud Resources Reconcilers
-
-### Controller Runtime Manager
-
-### Custom Manager
 
 ## API / Custom Resources Definitions
 

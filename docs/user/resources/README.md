@@ -15,12 +15,12 @@ The API of the Cloud Manager module is based on Kubernetes Custom Resource Defin
   * [GcpNfsBackupSchedule CR](#gcpnfsbackupschedule-cr)
   * [GcpNfsVolumeRestore CR](#gcpnfsvolumerestore-cr)
 * VPC Peering
-  * [AzureVpcPeering CR](#azurevpcpeering-cr)
   * [AwsVpcPeering CR](#awsvpcpeering-cr)
   * [GcpVpcPeering CR](#gcpvpcpeering-cr)
+  * [AzureVpcPeering CR](#azurevpcpeering-cr)
 * Redis  
-  * [GcpRedisInstance CR](#gcpredisinstance-cr)
   * [AwsRedisInstance CR](#awsredisinstance-cr)
+  * [GcpRedisInstance CR](#gcpredisinstance-cr)
   * [AzureRedisInstance CR](#azureredisinstance-cr)
 
 ## IpRange CR
@@ -59,25 +59,25 @@ The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the bac
 
 The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the Google Cloud Filestore restore operation. For more information, see [GcpNfsVolumeRestore Custom Resource](./04-20-23-gcp-nfs-volume-restore.md).
 
-## AzureVpcPeering CR
-
-The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection between Kyma and the remote Azure Virtual Network. For more information, see [AzureVpcPeering Custom Resource](./04-30-10-azure-vpc-peering.md).
-
 ## AwsVpcPeering CR
 
-The `awsvpcpeering.cloud-resources.kyma-project.io` CRD describes the AWS peering connection between Kyma and the remote AWS Virtual Network. For more information, see [AwsVpcPeering Custom Resource](./04-30-20-aws-vpc-peering.md).
+The `awsvpcpeering.cloud-resources.kyma-project.io` CRD describes the AWS peering connection between Kyma and the remote AWS Virtual Network. For more information, see [AwsVpcPeering Custom Resource](./04-30-10-aws-vpc-peering.md).
 
 ## GcpVpcPeering CR
 
-The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC peering that you can use to peer your Kyma cluster with your Google Cloud project VPC. For more information, see [GcpVpcPeering Custom Resource](./04-30-30-gcp-vpc-peering.md).
+The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC peering that you can use to peer your Kyma cluster with your Google Cloud project VPC. For more information, see [GcpVpcPeering Custom Resource](./04-30-20-gcp-vpc-peering.md).
 
-## GcpRedisInstance CR
+## AzureVpcPeering CR
 
-The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Google Cloud Memorystore for Redis instance. For more information, see [GcpRedisInstance Custom Resource](./04-40-10-gcp-redis-instance.md).
+The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection between Kyma and the remote Azure Virtual Network. For more information, see [AzureVpcPeering Custom Resource](./04-30-30-azure-vpc-peering.md).
 
 ## AwsRedisInstance CR
 
-The `awsredisinstance.cloud-resources.kyma-project.io` CRD describes the Amazon ElastiCache Redis instance. For more information, see [AwsRedisInstance Custom Resource](./04-40-20-aws-redis-instance.md).
+The `awsredisinstance.cloud-resources.kyma-project.io` CRD describes the Amazon ElastiCache Redis instance. For more information, see [AwsRedisInstance Custom Resource](./04-40-10-aws-redis-instance.md).
+
+## GcpRedisInstance CR
+
+The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Google Cloud Memorystore for Redis instance. For more information, see [GcpRedisInstance Custom Resource](./04-40-20-gcp-redis-instance.md).
 
 ## AzureRedisInstance CR
 
