@@ -18,7 +18,7 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	logger.Info("Loading Kyma VPC Peering")
+	logger.Info("[KCP GCP VpcPeering loadKymaVpcPeering] Loading Kyma VPC Peering")
 
 	//Using cm- prefix to make it clear it's a cloud manager resource
 	//Using obj name suffix as the peering name since it is unique within the kcp namespace
@@ -43,6 +43,7 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
+	logger.Info("[KCP GCP VpcPeering loadKymaVpcPeering] Kyma VPC Peering loaded")
 	state.kymaVpcPeering = kymaVpcPeering
 	return nil, nil
 }

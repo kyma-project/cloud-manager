@@ -18,7 +18,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	logger.Info("Loading Remote VPC Peering")
+	logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Loading Remote VPC Peering")
 
 	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName)
 	if err != nil {
@@ -28,7 +28,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		}
 
 		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
-		logger.Error(err, "Error loading Remote VpcPeering")
+		logger.Error(err, "[KCP GCP VpcPeering loadRemoteVpcPeering] Error loading Remote VpcPeering")
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
@@ -46,6 +46,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
+	logger.Info("[KCP GCP VpcPeering createRemoteVpcPeering] Remote VPC Peering loaded")
 	state.remoteVpcPeering = remoteVpcPeering
 	return nil, nil
 }
