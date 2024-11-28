@@ -44,7 +44,7 @@ func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context
 		}
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
-	logger.Info("Azure Private EndPoint instance loaded", "provisioning state", privateEndPointInstance.Properties.ProvisioningState)
+	logger.Info("Azure Private EndPoint instance loaded", "provisioningState", privateEndPointInstance.Properties.ProvisioningState)
 	state.privateEndPoint = privateEndPointInstance
 	return nil, nil
 }
