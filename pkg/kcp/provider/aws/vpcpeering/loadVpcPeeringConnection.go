@@ -25,7 +25,7 @@ func loadVpcPeeringConnection(ctx context.Context, st composed.State) (error, co
 	}
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing AWS peering connections", composed.StopWithRequeue, ctx)
+		return awsmeta.LogErrorAndReturn(err, "Error listing AWS peering connections", ctx)
 	}
 
 	state.vpcPeering = peering
