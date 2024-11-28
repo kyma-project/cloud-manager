@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
+	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	networkPkg "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -179,6 +180,153 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// DELETE
 		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
+				Should(Succeed(), "Error deleting VPC Peering")
+		})
+
+		By("Then VpcPeering does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
+				Should(Succeed(), "VPC Peering was not deleted")
+		})
+	})
+
+	It("Scenario: KCP GCP VpcPeering can be deleted due to issues on the remote network", func() {
+		const (
+			kymaName           = "ec697362-8f63-4423-b34f-8a99c0460d46"
+			kymaNetworkName    = kymaName + "--kyma"
+			kymaProject        = "kyma-project"
+			kymaVpc            = "shoot-12345-abc"
+			remoteNetworkName  = "0ab0eca3-3094-4842-9834-7492aaa0639d"
+			remotePeeringName  = "peering-with-permission-error"
+			remoteVpc          = "remote-vpc"
+			remoteProject      = "remote-project"
+			remoteRefNamespace = "kcp-system"
+			remoteRefName      = "skr-gcp-vpcpeering"
+			importCustomRoutes = false
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			scopePkg.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		// and Given the Kyma network object exists in KCP
+		kymaNetwork := &cloudcontrolv1beta1.Network{
+			Spec: cloudcontrolv1beta1.NetworkSpec{
+				Network: cloudcontrolv1beta1.NetworkInfo{
+					Reference: &cloudcontrolv1beta1.NetworkReference{
+						Gcp: &cloudcontrolv1beta1.GcpNetworkReference{
+							GcpProject:  kymaProject,
+							NetworkName: kymaVpc,
+						},
+					},
+				},
+				Type: cloudcontrolv1beta1.NetworkTypeKyma,
+			},
+		}
+
+		By("And Given Kyma Network exists in KCP", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			networkPkg.Ignore.AddName(kymaNetworkName)
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, WithName(kymaNetworkName), WithScope(scope.Name)).
+				Should(Succeed())
+		})
+
+		// and Given the remote network object exists in KCP
+		remoteNetwork := &cloudcontrolv1beta1.Network{
+			Spec: cloudcontrolv1beta1.NetworkSpec{
+				Network: cloudcontrolv1beta1.NetworkInfo{
+					Reference: &cloudcontrolv1beta1.NetworkReference{
+						Gcp: &cloudcontrolv1beta1.GcpNetworkReference{
+							GcpProject:  remoteProject,
+							NetworkName: remoteVpc,
+						},
+					},
+				},
+				Type: cloudcontrolv1beta1.NetworkTypeExternal,
+			},
+		}
+
+		By("And Given Remote Network exists in KCP", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			networkPkg.Ignore.AddName(remoteNetworkName)
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).
+				Should(Succeed())
+		})
+
+		By("And Given KCP KymaNetwork is Ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(),
+					infra.KCP().Client(),
+					kymaNetwork,
+					WithState("Ready"),
+					WithConditions(KcpReadyCondition())).
+				Should(Succeed())
+		})
+
+		By("And Given KCP RemoteNetwork is Ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(),
+					infra.KCP().Client(),
+					remoteNetwork,
+					WithState("Ready"),
+					WithConditions(KcpReadyCondition())).
+				Should(Succeed())
+		})
+
+		vpcpeering := &cloudcontrolv1beta1.VpcPeering{
+			Spec: cloudcontrolv1beta1.VpcPeeringSpec{
+				Details: &cloudcontrolv1beta1.VpcPeeringDetails{
+					LocalNetwork: klog.ObjectRef{
+						Name:      kymaNetwork.Name,
+						Namespace: kymaNetwork.Namespace,
+					},
+					RemoteNetwork: klog.ObjectRef{
+						Name:      remoteNetwork.Name,
+						Namespace: remoteNetwork.Namespace,
+					},
+					PeeringName:        remotePeeringName,
+					LocalPeeringName:   "cm-" + remoteNetworkName,
+					ImportCustomRoutes: importCustomRoutes,
+				},
+			},
+		}
+
+		By("And Given there is no permission to read remote network tags", func() {
+			infra.GcpMock().SetMockVpcPeeringError(remoteProject, remoteVpc, errors.New("permission denied"))
+		})
+
+		By("And Given KCP VpcPeering is created", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
+					WithName(remoteNetworkName),
+					WithRemoteRef(remoteRefName),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP VpcPeering has Error condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError),
+				).
+				Should(Succeed())
+		})
+
+		By("When KCP VpcPeering in error state is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
 				Should(Succeed(), "Error deleting VPC Peering")

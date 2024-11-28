@@ -22,6 +22,11 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName)
 	if err != nil {
+		if composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
+			logger.Info("[KCP GCP VPCPeering loadRemoteVPCPeering] GCP KCP VpcPeering Error fetching Remote Network, proceeding with deletion")
+			return nil, nil
+		}
+
 		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
 		logger.Error(err, "Error loading Remote VpcPeering")
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
