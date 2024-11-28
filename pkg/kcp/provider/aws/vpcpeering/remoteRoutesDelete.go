@@ -37,7 +37,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 
 				if err != nil {
 					lll.Error(err, "Error deleting remote route")
-					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 				}
 
 				lll.Info("Remote route deleted")
