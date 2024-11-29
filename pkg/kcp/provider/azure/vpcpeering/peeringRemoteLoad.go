@@ -26,9 +26,15 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		state.remoteNetworkId.NetworkName(),
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 	)
+
 	if azuremeta.IsNotFound(err) {
 		return nil, nil
 	}
+
+	if azuremeta.IsUnauthorized(err) {
+		return nil, nil
+	}
+
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
 			"Azure vpc peering too many requests on peering remote load",

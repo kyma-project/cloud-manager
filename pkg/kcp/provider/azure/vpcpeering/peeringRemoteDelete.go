@@ -34,6 +34,10 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 
 	logger.Info("Deleting remote VpcPeering")
 
+	if azuremeta.IsUnauthorized(err) {
+		return nil, nil
+	}
+
 	if err != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
 	}
