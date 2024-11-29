@@ -16,7 +16,7 @@ Cloud Manager supports Amazon Web Services (AWS), Google Cloud, and Microsoft Az
 The Cloud Manager module provides the following features tailored for each of the cloud providers.
 
 * [NFS](./00-20-nfs.md): Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
-* [VPC peering](./00-30-vpc-peering.md): Virtual Private Cloud (VPC) peering between your Kyma and remote cloud provider's project, account, or subscription.
+* [VPC peering](./00-30-vpc-peering.md): Virtual Private Cloud (VPC) peering between your Kyma runtime and remote cloud provider's project, account, or subscription.
 * [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
 
 > [!NOTE]
