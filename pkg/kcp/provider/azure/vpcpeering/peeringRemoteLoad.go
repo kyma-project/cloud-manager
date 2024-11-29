@@ -27,23 +27,23 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 	)
 
-	if azuremeta.IsNotFound(err) {
-		return nil, nil
-	}
-
-	if azuremeta.IsUnauthorized(err) {
-		return nil, nil
-	}
-
-	if azuremeta.IsTooManyRequests(err) {
-		return composed.LogErrorAndReturn(err,
-			"Azure vpc peering too many requests on peering remote load",
-			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
-			ctx,
-		)
-	}
-
 	if err != nil {
+		if composed.MarkedForDeletionPredicate(ctx, state) {
+			return composed.LogErrorAndReturn(err, "Ignoring as marked for deletion", nil, ctx)
+		}
+
+		if azuremeta.IsNotFound(err) {
+			return nil, nil
+		}
+
+		if azuremeta.IsTooManyRequests(err) {
+			return composed.LogErrorAndReturn(err,
+				"Azure vpc peering too many requests on peering remote load",
+				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+				ctx,
+			)
+		}
+
 		logger.Error(err, "Error loading remote VPC Peering")
 
 		message, isWarning := azuremeta.GetErrorMessage(err)
