@@ -1,29 +1,33 @@
 
 # Cloud Manager Module
 
+Use the Cloud Manager module to manage cloud providers' resources from a Kyma cluster.
+
 ## What is Cloud Manager?
 
-Cloud Manager is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. Its responsibility is to bring hyperscaler products/resources into the Kyma cluster in a secure way. Once Cloud Manager as a module is added to the Kyma cluster, Cloud Manager's features give you access to the respective products and resources of the infrastructure providers.
+Cloud Manager is strictly coupled with the cloud provider where your Kyma cluster is deployed. The module manages access to the chosen resources and products of that particular cloud provider. Once you add Cloud Manager to your Kyma cluster, the module brings the offered resources in a secure way.
+
+## Scope
+
+Cloud Manager supports Amazon Web Services (AWS), Google Cloud, and Microsoft Azure (Azure) as cloud providers for SAP BTP, Kyma runtime.
 
 ## Features
 
-Cloud Manager can provision the following cloud resources in the underlying cloud provider subscription:
+The Cloud Manager module provides the following features tailored for each of the cloud providers.
 
-* Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster
-* Virtual Private Cloud (VPC) Peering between your project and the Kyma cluster
+* [NFS](./00-20-nfs.md): Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
+* [VPC peering](./00-30-vpc-peering.md): Virtual Private Cloud (VPC) peering between your Kyma runtime and remote cloud provider's project, account, or subscription.
+* [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
+
+> [!NOTE]
+> The NFS feature is offered for Google Cloud and AWS only.
 
 ## Architecture
 
-Kyma Cloud Manager Operator runs in Kyma Control Plane and does remote reconciliation on Kyma clusters that
-have the Cloud Manager module added. It brings various Custom Resource Definitions (CRDs) each representing
-a specific cloud resource from the underlying cloud provider subscription.
-
 ## API / Custom Resources Definitions
 
-For more information on Cloud Manager's API and custom resources (CRs), see the [`/resources`](./resources/README.md) directory.
+The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
 
 ## Related Information
 
-To learn more about the Cloud Manager module, read the following:
-
-* [Tutorials](./tutorials/README.md) that provide step-by-step instructions on creating, using and disposing cloud resources
+* [Cloud Manager module tutorials](./tutorials/README.md) provide step-by-step instructions on creating, using and disposing cloud resources.
