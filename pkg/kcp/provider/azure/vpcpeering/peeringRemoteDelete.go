@@ -3,7 +3,6 @@ package vpcpeering
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 )
 
 func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context.Context) {
@@ -34,12 +33,8 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 
 	logger.Info("Deleting remote VpcPeering")
 
-	if azuremeta.IsUnauthorized(err) {
-		return nil, nil
-	}
-
 	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Error deleting vpc peering", ctx)
+		return composed.LogErrorAndReturn(err, "Error deleting vpc peering", nil, ctx)
 	}
 
 	logger.Info("Remote VpcPeering deleted")
