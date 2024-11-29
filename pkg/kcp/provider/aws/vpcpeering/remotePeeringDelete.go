@@ -16,7 +16,6 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		return nil, nil
 	}
-
 	if state.remoteVpcPeering == nil {
 		logger.Info("VpcPeering deleted before AWS peering is created")
 		return nil, nil
@@ -33,8 +32,17 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 
 	err := state.remoteClient.DeleteVpcPeeringConnection(ctx, state.remoteVpcPeering.VpcPeeringConnectionId)
 
-	if awsmeta.IsErrorRetryable(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	if err != nil {
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			return composed.LogErrorAndReturn(err,
+				"Error deleting AWS VPC peering connection but skipping as marked for deletion",
+				nil,
+				ctx)
+		}
+
+		if awsmeta.IsErrorRetryable(err) {
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
 	}
 
 	logger.Info("Remote VpcPeering deleted")

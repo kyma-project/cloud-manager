@@ -14,9 +14,19 @@ func loadRemoteRouteTables(ctx context.Context, st composed.State) (error, conte
 		return nil, nil
 	}
 
+	if state.remoteVpc == nil {
+		return nil, nil
+	}
+
 	routeTables, err := state.remoteClient.DescribeRouteTables(ctx, *state.remoteVpc.VpcId)
 
 	if err != nil {
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			return composed.LogErrorAndReturn(err,
+				"Error loading AWS remote route tables but skipping as marked for deletion",
+				nil,
+				ctx)
+		}
 		return awsmeta.LogErrorAndReturn(err, "Error loading AWS remote route tables", ctx)
 	}
 
