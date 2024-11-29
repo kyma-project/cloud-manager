@@ -24,10 +24,18 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	vpc, err := state.remoteClient.DescribeVpc(ctx, remoteVpcId)
 
-	if awsmeta.IsErrorRetryable(err) {
-		return awsmeta.LogErrorAndReturn(err, "Error loading remote AWS VPC Network", ctx)
-	}
 	if err != nil {
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			return composed.LogErrorAndReturn(err,
+				"Error loading remote AWS VPC Network but skipping as marked for deletion",
+				nil,
+				ctx)
+		}
+
+		if awsmeta.IsErrorRetryable(err) {
+			return awsmeta.LogErrorAndReturn(err, "Error loading remote AWS VPC Network", ctx)
+		}
+
 		logger.Error(err, "Error loading remote AWS VPC Networks")
 
 		condition := metav1.Condition{
