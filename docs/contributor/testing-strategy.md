@@ -54,6 +54,33 @@ The project clearly distinguishes between `Functional Testing` and `Non-Function
 
 A test plan is a document outlining the objectives, resources, and procedures for a specific testing session for a software or hardware product. This testing strategy defines the general approach, which is then detailed in specific test plan documents. Each test plan outlines the testing approach for a particular aspect of testing. Due to the Agile nature of the SDLC, all testing activities occur automatically for each CI/CD cycle. This means that the test plans define the automated strategy for verifying specific aspects in a repetitive manner.
 
+## CI/CD Jobs Running on Pull Requests
+
+| Name | Description                                                                                                                                                                              |
+|------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [image-build-pr](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/build-image-pr.yaml)| Building the image. For configuration check [image-builder.yml](https://raw.githubusercontent.com/kyma-project/test-infra/refs/heads/main/.github/workflows/image-builder.yml).  
+|[pr-checks](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-checks.yml)| Executing following steps as defined in [Makefile](../../Makefile): `go fmt`, `go vet`, unit tests, api tests and integration tests of Kubernetes controllers, with in-memory Kubernetes environments|
+|[pr-docu-check](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-docu-check.yaml)| Checking if there are broken links in document files. For configuration check [.mlc.config.json](https://raw.githubusercontent.com/kyma-project/md-check-link/main/.mlc.config.json) file |
+|[pr-feature-toggles](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-feature-toggles.yaml)| Checking feature toggles configuration file against [flag-schema.json](https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/v1.31.2/.schema/flag-schema.json) schema         |
+|[pr-golang-lint](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-golang-lint.yml)| Linting and static code analysis based on [golangci-lint](https://github.com/golangci/golangci-lint)                                                                                     |
+
+## CI/CD Jobs Running on the Main Branch
+
+| Name                                                                                                                    | Description                                                                                                                                                                                           |
+|-------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [image-build-main](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/image-build-main.yaml)| Building the image. For configuration check [image-builder.yml](https://raw.githubusercontent.com/kyma-project/test-infra/refs/heads/main/.github/workflows/image-builder.yml).                                                                         |
+| [pr-checks](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-checks.yml)                    | Executing following steps as defined in [Makefile](../../Makefile): `go fmt`, `go vet`, unit tests, api tests and integration tests of Kubernetes controllers, with in-memory Kubernetes environments |
+| [pr-docu-check](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-docu-check.yaml)           | Checking if there are broken links in document files. For configuration check [.mlc.config.json](https://raw.githubusercontent.com/kyma-project/md-check-link/main/.mlc.config.json) file             |
+| [pr-feature-toggles](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-feature-toggles.yaml) | Checking feature toggles configuration file against [flag-schema.json](https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/v1.31.2/.schema/flag-schema.json) schema                      |
+| [pr-golang-lint](https://github.com/kyma-project/cloud-manager/blob/main/.github/workflows/pr-golang-lint.yml)          | Linting and static code analysis based on [golangci-lint](https://github.com/golangci/golangci-lint)                                                                                                  |
+
+## CI/CD Running on a Schedule
+
+| Name                                                             | Description                              |
+|------------------------------------------------------------------|------------------------------------------|
+| [e2e-tests](https://github.com/kyma-project/cloud-manager-tests) | End to end BDD test using Gherkin syntax |
+
+
 ### Appendix A. Quality Evidence Registry
 
 | Artefact Links                 | Aspect                                                               | Test Plan Document        |

@@ -47,7 +47,7 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	if net.Status.State != string(cloudcontrolv1beta1.ReadyState) {
+	if net.Status.Network == nil {
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
@@ -69,7 +69,7 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	state.remoteNetwork = net
 
-	logger.Info("KCP VpcPeeing remote network loaded")
+	logger.Info("KCP VpcPeering remote network loaded")
 
 	return nil, ctx
 }

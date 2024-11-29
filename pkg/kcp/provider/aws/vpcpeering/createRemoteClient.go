@@ -19,8 +19,8 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	remoteAccountId := state.remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId
-	remoteRegion := state.remoteNetwork.Spec.Network.Reference.Aws.Region
+	remoteAccountId := state.remoteNetwork.Status.Network.Aws.AwsAccountId
+	remoteRegion := state.remoteNetwork.Status.Network.Aws.Region
 
 	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
 
@@ -59,12 +59,12 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 		}
 
 		if !changed {
-			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			ErrorLogMessage("Error patching KCP VpcPeering with error state after remote client creation failed").
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())). // try again in 5mins
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())). // try again in 1 min
 			Run(ctx, state)
 	}
 

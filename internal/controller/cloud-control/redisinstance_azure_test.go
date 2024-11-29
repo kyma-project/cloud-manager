@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"k8s.io/utils/ptr"
 	"time"
 
@@ -194,9 +195,10 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		By("Then Private Private End Point is deleted", func() {
-			dnsZoneGroup, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, redisInstance.Name)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(dnsZoneGroup).To(BeNil())
+			privateEndPoint, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, redisInstance.Name)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(privateEndPoint).To(BeNil())
 		})
 	})
 

@@ -47,6 +47,7 @@ func New(stateFactory StateFactory) composed.Action {
 					actions.PatchAddFinalizer,
 					checkNetworkTag,
 					createVpcPeeringConnection,
+					waitPendingAcceptance,
 					acceptVpcPeeringConnection,
 					waitVpcPeeringActive,
 					createRoutes,

@@ -18,7 +18,7 @@ import (
 func createPrivateEndPoint(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	if state.privateEndPoint != nil {
+	if state.privateEndPoint != nil && ptr.Deref(state.privateEndPoint.Properties.ProvisioningState, "") != armnetwork.ProvisioningStateFailed {
 		return nil, nil
 	}
 	logger.Info("Creating Azure Private EndPoint")

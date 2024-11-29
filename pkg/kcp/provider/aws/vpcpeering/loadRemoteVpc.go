@@ -20,7 +20,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	remoteVpcId := state.remoteNetwork.Spec.Network.Reference.Aws.VpcId
+	remoteVpcId := state.remoteNetwork.Status.Network.Aws.VpcId
 
 	vpc, err := state.remoteClient.DescribeVpc(ctx, remoteVpcId)
 

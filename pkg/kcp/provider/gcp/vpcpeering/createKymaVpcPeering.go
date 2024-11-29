@@ -18,6 +18,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,14 +32,29 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 	}
 
 	//First we need to check if the remote VPC is tagged with the shoot name.
-	isVpcTagged, err := state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.Scope().Spec.ShootName)
-	if err != nil {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
-		return err, ctx
+	var isVpcTagged bool
+	var err error
+
+	if peeringconfig.VpcPeeringConfig.NetworkTag != "" {
+		isVpcTagged, err = state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject, peeringconfig.VpcPeeringConfig.NetworkTag)
+
+		if err != nil {
+			logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking any remote network tags")
+			return err, ctx
+		}
 	}
 
 	if !isVpcTagged {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
+		isVpcTagged, err = state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject, state.Scope().Spec.ShootName)
+
+		if err != nil {
+			logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
+			return err, ctx
+		}
+	}
+
+	if !isVpcTagged {
+		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Status.Network.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
@@ -56,11 +72,11 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 	err = state.client.CreateKymaVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
-		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.remoteNetwork.Status.Network.Gcp.NetworkName,
+		state.remoteNetwork.Status.Network.Gcp.GcpProject,
 		state.importCustomRoutes,
-		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
-		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
+		state.localNetwork.Status.Network.Gcp.GcpProject,
+		state.localNetwork.Status.Network.Gcp.NetworkName)
 
 	if err != nil {
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
