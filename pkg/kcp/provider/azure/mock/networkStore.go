@@ -35,6 +35,8 @@ type networkStore struct {
 
 	// items are map resouceGroup => networkName => networkEntry
 	items map[string]map[string]*networkEntry
+
+	errorMap map[string]error
 }
 
 // Config ===================================================
@@ -60,6 +62,21 @@ func (s *networkStore) SetPeeringStateConnected(ctx context.Context, resourceGro
 	}
 
 	return nil
+}
+
+func (s *networkStore) SetPeeringError(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string, err error) {
+	if isContextCanceled(ctx) {
+		return
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if s.errorMap == nil {
+		s.errorMap = make(map[string]error)
+	}
+
+	resourceId := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+	s.errorMap[resourceId.String()] = err
 }
 
 // NetworkClient ===================================================
@@ -332,6 +349,12 @@ func (s *networkStore) GetPeering(ctx context.Context, resourceGroup, virtualNet
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	err := s.getError(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+
+	if err != nil {
+		return nil, err
+	}
+
 	peering, err := s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
 	if err != nil {
 		return nil, err
@@ -365,7 +388,13 @@ func (s *networkStore) DeletePeering(ctx context.Context, resourceGroup, virtual
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	_, err := s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+	err := s.getError(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
 	if err != nil {
 		// errors like network or peering not found
 		return err
@@ -378,6 +407,16 @@ func (s *networkStore) DeletePeering(ctx context.Context, resourceGroup, virtual
 	entry.network.Properties.VirtualNetworkPeerings = pie.Filter(entry.network.Properties.VirtualNetworkPeerings, func(item *armnetwork.VirtualNetworkPeering) bool {
 		return ptr.Deref(item.Name, "") != virtualNetworkPeeringName
 	})
+
+	return nil
+}
+
+func (s *networkStore) getError(resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error {
+	resourceId := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+
+	if err, errorExists := s.errorMap[resourceId.String()]; errorExists {
+		return err
+	}
 
 	return nil
 }

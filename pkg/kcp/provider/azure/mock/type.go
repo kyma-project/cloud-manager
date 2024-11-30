@@ -72,6 +72,7 @@ type Providers interface {
 
 type NetworkConfig interface {
 	SetPeeringStateConnected(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error
+	SetPeeringError(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string, err error)
 }
 
 type RedisConfig interface {
