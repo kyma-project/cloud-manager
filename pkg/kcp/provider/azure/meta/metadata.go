@@ -37,6 +37,13 @@ func NewAzureNotFoundError() error {
 	}
 }
 
+func NewAzureAuthorizationFailedError() error {
+	return &azcore.ResponseError{
+		ErrorCode:  AuthorizationFailed,
+		StatusCode: http.StatusUnauthorized,
+	}
+}
+
 func IgnoreNotFoundError(err error) error {
 	if IsNotFound(err) {
 		return nil

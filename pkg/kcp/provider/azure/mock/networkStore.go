@@ -274,9 +274,15 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	err := s.getError(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+
+	if err != nil {
+		return err
+	}
+
 	id := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName).String()
 
-	_, err := s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+	_, err = s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		// errors like network not found
 		return err

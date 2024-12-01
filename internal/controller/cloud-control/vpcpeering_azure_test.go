@@ -302,7 +302,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	// When prevent deletion of KCP Network while used by VpcPeering is implemented, this case
 	// is obsolete, but keeping it just in case, with Network reconciler ignoring the created
-	// networks so they can be deleted while used by VpcPeering
+	// networks, so they can be deleted while used by VpcPeering
 	It("Scenario: KCP Azure VpcPeering is deleted when local and remote networks are missing", func() {
 		const (
 			kymaName            = "b64eab45-35b0-4015-b0f0-c819b351a6cd"
@@ -586,7 +586,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		azureMockRemote.SetPeeringError(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName, errors.New("unknown error"))
+		azureMockRemote.SetPeeringError(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName, azuremeta.NewAzureAuthorizationFailedError())
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
 
@@ -611,7 +611,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError),
+					HavingCondition(cloudcontrolv1beta1.ConditionTypeError,
+						metav1.ConditionTrue,
+						cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+						"Not authorized to perform action."),
 				).
 				Should(Succeed())
 		})
