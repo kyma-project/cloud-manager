@@ -521,7 +521,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	})
 
-	It("Scenario: KCP Azure VpcPeering can be deleted when unauthorized", Focus, func() {
+	It("Scenario: KCP Azure VpcPeering can be deleted when unauthorized", func() {
 		const (
 			kymaName            = "c86d383c-be2d-47c7-893e-ac93659760be"
 			kcpPeeringName      = "187c9650-07b7-4996-9cb7-c96d195d9545"
@@ -565,7 +565,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("When local KCP Network is created", func() {
-			// kcpnetwork.Ignore.AddName(localKcpNetworkName)
 			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
@@ -578,7 +577,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("When remote KCP Network is created", func() {
-			// kcpnetwork.Ignore.AddName(remoteKcpNetworkName)
 			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
@@ -587,6 +585,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
 				Should(Succeed())
 		})
+
+		azureMockRemote.SetPeeringError(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName, errors.New("unknown error"))
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
 
@@ -605,35 +605,18 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		// Peering Created ===============================================================
-
-		By("Then local Azure VPC peering is active", func() {
-			Eventually(func() error {
-				return azureMockLocal.SetPeeringStateConnected(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
-			}).Should(Succeed())
-		})
-
-		By("And Then remote Azure VPC peering is Connected", func() {
-			Eventually(func() error {
-				return azureMockRemote.SetPeeringStateConnected(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			}).Should(Succeed())
-		})
-
 		// Ready ==========================================================
 
-		By("Then KCP VpcPeering has Ready condition", func() {
+		By("Then KCP VpcPeering has Error condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError),
 				).
 				Should(Succeed())
 		})
 
 		// DELETE
-
-		azureMockRemote.SetPeeringError(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName, errors.New("mock error"))
 
 		By("When KCP VpcPeering is deleted", func() {
 			Eventually(Delete).
