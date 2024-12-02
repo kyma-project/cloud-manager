@@ -564,7 +564,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var localKcpNet *cloudcontrolv1beta1.Network
 
-		By("When local KCP Network is created", func() {
+		By("And Given local KCP Network is created", func() {
 			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
@@ -576,7 +576,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
-		By("When remote KCP Network is created", func() {
+		By("And Given remote KCP Network is created", func() {
 			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
@@ -590,7 +590,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
 
-		By("When KCP VpcPeering is created", func() {
+		By("And Given KCP VpcPeering is created", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-azure-vpcpeering").
@@ -607,7 +607,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// Ready ==========================================================
 
-		By("Then KCP VpcPeering has Error condition", func() {
+		By("And Given KCP VpcPeering has Error condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),

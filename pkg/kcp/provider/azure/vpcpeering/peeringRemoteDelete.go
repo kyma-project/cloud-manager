@@ -16,7 +16,7 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 	}
 
 	if state.remotePeering == nil {
-		logger.Info("Skipping remote peering deletion")
+		logger.Info("Azure remote peering not loaded, continuing")
 		return nil, nil
 	}
 

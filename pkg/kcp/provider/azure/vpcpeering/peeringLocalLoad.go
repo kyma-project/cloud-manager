@@ -32,6 +32,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if !ok {
+		logger.Info("Local Azure Peering not loaded")
 		return nil, nil
 	}
 
