@@ -6,8 +6,8 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	util2 "github.com/kyma-project/cloud-manager/pkg/util"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,7 +50,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 		// User can recover by setting permissions
 		if awsmeta.IsUnauthorized(err) {
-			successError = composed.StopWithRequeueDelay(util2.Timing.T60000ms())
+			successError = composed.StopWithRequeueDelay(util.Timing.T60000ms())
 		}
 
 		if !composed.AnyConditionChanged(obj, condition) {
@@ -93,7 +93,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 	ctx = composed.LoggerIntoCtx(ctx, logger.WithValues(
 		"remoteVpcId", remoteVpcId,
-		"remoteVpcName", util.GetEc2TagValue(vpc.Tags, "Name"),
+		"remoteVpcName", awsutil.GetEc2TagValue(vpc.Tags, "Name"),
 	))
 
 	return nil, ctx
