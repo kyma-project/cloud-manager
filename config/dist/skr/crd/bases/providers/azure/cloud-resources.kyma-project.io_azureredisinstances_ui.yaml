@@ -6,9 +6,6 @@ data:
         widget: Panel
         source: spec
         children:
-          - name: spec.shardCount
-            source: shardCount
-            widget: Labels
           - name: spec.redisVersion
             source: redisVersion
             widget: Labels
@@ -70,10 +67,6 @@ data:
             source: state
             widget: Labels
   form: |
-    - path: spec.shardCount
-      name: spec.shardCount
-      required: false
-      disableOnEdit: true
     - path: spec.redisVersion
       name: spec.redisVersion
       required: false
@@ -152,7 +145,6 @@ data:
       status: Status
       status.state: State
       spec.enableNonSslPort: Enable Non SSL Port
-      spec.shardCount: Shard Count
       spec.redisVersion: Redis Version
       spec.redisTier: Redis Tier
       spec.sku.capacity: Capacity
@@ -173,7 +165,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
