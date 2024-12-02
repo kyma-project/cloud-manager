@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -11,18 +12,38 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// local peering can't be loaded if local network is missing
-	if state.localNetwork == nil {
+	var resourceGroup, networkName string
+	ok := false
+
+	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
+		resourceID, err := util.ParseResourceID(state.ObjAsVpcPeering().Status.Id)
+		if err == nil {
+			resourceGroup = resourceID.ResourceGroup
+			networkName = resourceID.ResourceName
+			ok = true
+		}
+
+	}
+
+	if !ok && state.localNetworkId != nil {
+		resourceGroup = state.localNetworkId.ResourceGroup
+		networkName = state.localNetworkId.NetworkName()
+		ok = true
+	}
+
+	if !ok {
+		logger.Info("Local Azure Peering not loaded")
 		return nil, nil
 	}
 
 	// params must be the same as in peeringLocalCreate()
 	peering, err := state.localClient.GetPeering(
 		ctx,
-		state.localNetworkId.ResourceGroup,
-		state.localNetworkId.NetworkName(),
+		resourceGroup,
+		networkName,
 		state.ObjAsVpcPeering().GetLocalPeeringName(),
 	)
+
 	if azuremeta.IsNotFound(err) {
 		logger.Info("Local Azure Peering not found for KCP VpcPeering")
 		return nil, nil
