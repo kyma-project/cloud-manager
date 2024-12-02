@@ -78,10 +78,16 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		}
 
+		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcPeeringConnection
+
+		if azuremeta.IsUnauthorized(err) {
+			reason = cloudcontrolv1beta1.ReasonUnauthorized
+		}
+
 		condition := metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+			Reason:  reason,
 			Message: message,
 		}
 

@@ -64,6 +64,15 @@ func IsNotFound(err error) bool {
 	return false
 }
 
+func IsUnauthorized(err error) bool {
+	var respErr *azcore.ResponseError
+
+	if ok := errors.As(err, &respErr); ok {
+		return respErr.ErrorCode == "AuthorizationFailed"
+	}
+
+	return false
+}
 func ErrorToRequeueResponse(err error) error {
 	if IsTooManyRequests(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms())

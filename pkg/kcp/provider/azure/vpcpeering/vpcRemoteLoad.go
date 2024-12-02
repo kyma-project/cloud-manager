@@ -40,13 +40,25 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
 		}
 
+		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork
+
+		if azuremeta.IsUnauthorized(err) {
+			reason = cloudcontrolv1beta1.ReasonUnauthorized
+		}
+
+		condition := metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  reason,
+			Message: message,
+		}
+
+		if !composed.AnyConditionChanged(state.ObjAsVpcPeering(), condition) {
+			return successError, nil
+		}
+
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetCondition(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: message,
-			}).
+			SetCondition(condition).
 			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote vpc network").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(successError).
