@@ -53,9 +53,21 @@ func AsApiError(err error) smithy.APIError {
 func GetErrorMessage(err error) string {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
+		switch apiError.ErrorCode() {
+		case "UnauthorizedOperation":
+			return "You are not authorized to perform this operation."
+		}
 		return apiError.ErrorMessage()
 	}
 	return err.Error()
+}
+
+func IsUnauthorized(err error) bool {
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorCode() == "UnauthorizedOperation"
+	}
+	return false
 }
 
 var notFoundErrorCodes = map[string]struct{}{
