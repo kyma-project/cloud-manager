@@ -12,8 +12,9 @@ import (
 )
 
 type VpcPeeringConfig interface {
-	SetVpcPeeringConnectionActive(ctx context.Context, vpcId, remoteVpcId *string)
-	InitiateVpcPeeringConnection(ctx context.Context, connectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string)
+	SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId *string, code ec2types.VpcPeeringConnectionStateReasonCode)
+	InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId *string)
+	SetVpcPeeringConnectionError(connectionId string, err error)
 }
 
 type vpcPeeringEntry struct {
@@ -22,10 +23,14 @@ type vpcPeeringEntry struct {
 type vpcPeeringStore struct {
 	m     sync.Mutex
 	items []*vpcPeeringEntry
+
+	errorMap map[string]error
 }
 
 func newVpcPeeringStore() *vpcPeeringStore {
-	return &vpcPeeringStore{}
+	return &vpcPeeringStore{
+		errorMap: make(map[string]error),
+	}
 }
 
 func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tags []ec2types.Tag) (*ec2types.VpcPeeringConnection, error) {
@@ -59,6 +64,10 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcP
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	if err, ok := s.errorMap[vpcPeeringConnectionId]; ok && err != nil {
+		return nil, err
+	}
+
 	for _, x := range s.items {
 		if ptr.Equal(x.peering.VpcPeeringConnectionId, ptr.To(vpcPeeringConnectionId)) {
 			return &x.peering, nil
@@ -81,6 +90,10 @@ func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connec
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	if err, ok := s.errorMap[*connectionId]; ok {
+		return nil, err
+	}
+
 	for _, x := range s.items {
 		if ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId) {
 			return &x.peering, nil
@@ -92,6 +105,10 @@ func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connec
 func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
+
+	if err, ok := s.errorMap[*connectionId]; ok && err != nil {
+		return err
+	}
 
 	deleted := false
 	s.items = pie.Filter(s.items, func(x *vpcPeeringEntry) bool {
@@ -106,20 +123,20 @@ func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connec
 	return nil
 }
 
-func (s *vpcPeeringStore) SetVpcPeeringConnectionActive(ctx context.Context, vpcId, remoteVpcId *string) {
+func (s *vpcPeeringStore) SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId *string, code ec2types.VpcPeeringConnectionStateReasonCode) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	for _, x := range s.items {
-		if ptr.Equal(x.peering.AccepterVpcInfo.VpcId, remoteVpcId) &&
-			ptr.Equal(x.peering.RequesterVpcInfo.VpcId, vpcId) {
-			x.peering.Status.Code = ec2types.VpcPeeringConnectionStateReasonCodeActive
+		if ptr.Equal(x.peering.AccepterVpcInfo.VpcId, accepterVpcId) &&
+			ptr.Equal(x.peering.RequesterVpcInfo.VpcId, requesterVpcId) {
+			x.peering.Status.Code = code
 			break
 		}
 	}
 }
 
-func (s *vpcPeeringStore) InitiateVpcPeeringConnection(ctx context.Context, connectionId, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string) {
+func (s *vpcPeeringStore) InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId *string) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -127,12 +144,10 @@ func (s *vpcPeeringStore) InitiateVpcPeeringConnection(ctx context.Context, conn
 		peering: ec2types.VpcPeeringConnection{
 			VpcPeeringConnectionId: connectionId,
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId: vpcId,
+				VpcId: requesterVpcId,
 			},
 			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId:   remoteVpcId,
-				Region:  remoteRegion,
-				OwnerId: remoteAccountId,
+				VpcId: accepterVpcId,
 			},
 			Status: &ec2types.VpcPeeringConnectionStateReason{
 				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
@@ -142,4 +157,8 @@ func (s *vpcPeeringStore) InitiateVpcPeeringConnection(ctx context.Context, conn
 	}
 
 	s.items = append(s.items, item)
+}
+
+func (s *vpcPeeringStore) SetVpcPeeringConnectionError(connectionId string, err error) {
+	s.errorMap[connectionId] = err
 }

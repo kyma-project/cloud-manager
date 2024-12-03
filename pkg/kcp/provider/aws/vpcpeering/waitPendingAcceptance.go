@@ -15,17 +15,25 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 
 	code := state.vpcPeering.Status.Code
 
-	if code == ec2Types.VpcPeeringConnectionStateReasonCodeActive ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeProvisioning ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance {
-		return nil, nil
-	}
-
 	changed := false
 
 	if state.ObjAsVpcPeering().Status.State != string(code) {
 		state.ObjAsVpcPeering().Status.State = string(code)
 		changed = true
+	}
+
+	if code == ec2Types.VpcPeeringConnectionStateReasonCodeActive ||
+		code == ec2Types.VpcPeeringConnectionStateReasonCodeProvisioning ||
+		code == ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance {
+
+		if changed {
+			return composed.PatchStatus(state.ObjAsVpcPeering()).
+				ErrorLogMessage("Error setting KCP VpcPeering status state while waiting acceptance").
+				SuccessErrorNil().
+				Run(ctx, state)
+		}
+
+		return nil, nil
 	}
 
 	if code == ec2Types.VpcPeeringConnectionStateReasonCodeFailed ||
