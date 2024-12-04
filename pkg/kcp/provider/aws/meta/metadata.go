@@ -50,22 +50,35 @@ func AsApiError(err error) smithy.APIError {
 	return nil
 }
 
+const UnauthorizedOperation = "UnauthorizedOperation"
+const AccessDenied = "AccessDenied"
+
 func GetErrorMessage(err error) string {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
 		switch apiError.ErrorCode() {
-		case "UnauthorizedOperation":
-			return "You are not authorized to perform this operation."
+		case UnauthorizedOperation:
+			return "Not authorized to perform this operation."
+		case AccessDenied:
+			return "Not authorized to assume role."
 		}
 		return apiError.ErrorMessage()
 	}
 	return err.Error()
 }
 
+func IsAccessDenied(err error) bool {
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorCode() == AccessDenied
+	}
+	return false
+}
+
 func IsUnauthorized(err error) bool {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
-		return apiError.ErrorCode() == "UnauthorizedOperation"
+		return apiError.ErrorCode() == UnauthorizedOperation
 	}
 	return false
 }
