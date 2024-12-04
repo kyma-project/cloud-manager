@@ -4,6 +4,7 @@ import (
 	"context"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -15,32 +16,23 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 
 	code := state.vpcPeering.Status.Code
 
-	changed := false
-
-	if state.ObjAsVpcPeering().Status.State != string(code) {
-		state.ObjAsVpcPeering().Status.State = string(code)
-		changed = true
+	if code == ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest {
+		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 	}
 
-	if code == ec2Types.VpcPeeringConnectionStateReasonCodeActive ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeProvisioning ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance {
-
-		if changed {
-			return composed.PatchStatus(state.ObjAsVpcPeering()).
-				ErrorLogMessage("Error setting KCP VpcPeering status state while waiting acceptance").
-				SuccessErrorNil().
-				Run(ctx, state)
-		}
-
-		return nil, nil
-	}
-
+	// can't continue if VPC peering connection is in one of these statuses
 	if code == ec2Types.VpcPeeringConnectionStateReasonCodeFailed ||
 		code == ec2Types.VpcPeeringConnectionStateReasonCodeExpired ||
 		code == ec2Types.VpcPeeringConnectionStateReasonCodeRejected ||
 		code == ec2Types.VpcPeeringConnectionStateReasonCodeDeleted ||
 		code == ec2Types.VpcPeeringConnectionStateReasonCodeDeleting {
+
+		changed := false
+
+		if state.ObjAsVpcPeering().Status.State != string(code) {
+			state.ObjAsVpcPeering().Status.State = string(code)
+			changed = true
+		}
 
 		condition := metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -61,13 +53,5 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 		return composed.StopAndForget, nil
 	}
 
-	// code initiating-request
-	if changed {
-		return composed.PatchStatus(state.ObjAsVpcPeering()).
-			ErrorLogMessage("Error setting KCP VpcPeering status state").
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
-	}
-
-	return composed.StopWithRequeue, nil
+	return nil, nil
 }
