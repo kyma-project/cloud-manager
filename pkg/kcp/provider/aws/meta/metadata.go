@@ -16,6 +16,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
+const (
+	UnauthorizedOperation = "UnauthorizedOperation"
+	AccessDenied          = "AccessDenied"
+)
+
 type awsAccountKeyType struct{}
 
 var awsAccountKey = awsAccountKeyType{}
@@ -49,9 +54,6 @@ func AsApiError(err error) smithy.APIError {
 	}
 	return nil
 }
-
-const UnauthorizedOperation = "UnauthorizedOperation"
-const AccessDenied = "AccessDenied"
 
 func GetErrorMessage(err error) string {
 	var apiError smithy.APIError
