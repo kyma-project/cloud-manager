@@ -15,10 +15,8 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,45 +29,7 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	//First we need to check if the remote VPC is tagged with the shoot name.
-	var isVpcTagged bool
-	var err error
-
-	if peeringconfig.VpcPeeringConfig.NetworkTag != "" {
-		isVpcTagged, err = state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject, peeringconfig.VpcPeeringConfig.NetworkTag)
-
-		if err != nil {
-			logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking any remote network tags")
-			return err, ctx
-		}
-	}
-
-	if !isVpcTagged {
-		isVpcTagged, err = state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject, state.Scope().Spec.ShootName)
-
-		if err != nil {
-			logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
-			return err, ctx
-		}
-	}
-
-	if !isVpcTagged {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Status.Network.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
-		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Error creating VpcPeering, remote VPC does not have a tag with the key: %s", state.Scope().Spec.ShootName),
-			}).
-			ErrorLogMessage("Error creating Remote VpcPeering").
-			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(5*util.Timing.T60000ms())).
-			Run(ctx, state)
-	}
-
-	err = state.client.CreateKymaVpcPeering(
+	err := state.client.CreateKymaVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
 		state.remoteNetwork.Status.Network.Gcp.NetworkName,
