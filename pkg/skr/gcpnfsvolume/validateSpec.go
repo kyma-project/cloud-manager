@@ -12,12 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type capacityRange struct {
-	min        int
-	max        int
-	increments int
-}
-
 func validateIpRange(ctx context.Context, st composed.State) (error, context.Context) {
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
