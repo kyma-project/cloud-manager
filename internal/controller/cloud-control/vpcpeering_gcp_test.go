@@ -128,7 +128,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			},
 		}
 
-		By("And When KCP VpcPeering is created and the remote network is tagged", func() {
+		By("And When the remote network is tagged", func() {
+			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaVpc})
+		})
+
+		By("And When the KCP VpcPeering is created", func() {
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
 					WithName(remoteNetworkName),
@@ -193,6 +197,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering).
 				Should(Succeed(), "VPC Peering was not deleted")
 		})
+
+		// Check if the peering is deleted on the kyma side
 	})
 
 	It("Scenario: KCP GCP VpcPeering can be deleted due to issues on the remote network", func() {
@@ -412,7 +418,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("And Given Remote Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			networkPkg.Ignore.AddName(remoteNetworkName)
-
+			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaVpc})
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).
 				Should(Succeed())
