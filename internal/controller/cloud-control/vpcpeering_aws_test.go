@@ -255,16 +255,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			awsMockRemote.InitiateVpcPeeringConnection(ptr.To(kcpPeering.Status.Id), ptr.To(localVpcId), ptr.To(remoteVpcId))
 		})
 
-		//By("Then KCP VpcPeering is initiating-request", func() {
-		//	Eventually(LoadAndCheck).
-		//		WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-		//			NewObjActions(),
-		//			HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-		//			HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
-		//		).
-		//		Should(Succeed())
-		//})
-
 		By("When AWS VPC Peering state is active", func() {
 			awsMockLocal.SetVpcPeeringConnectionStatusCode(ptr.To(localVpcId), ptr.To(remoteVpcId),
 				ec2Types.VpcPeeringConnectionStateReasonCodeActive)
