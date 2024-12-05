@@ -29,7 +29,7 @@ type CreateRedisInstanceOptions struct {
 }
 
 type MemorystoreClient interface {
-	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error)
+	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) error
 	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
 	UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
@@ -74,10 +74,10 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 	return nil
 }
 
-func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) error {
 	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer redisClient.Close()
 
@@ -108,15 +108,15 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 		},
 	}
 
-	operation, err := redisClient.CreateInstance(ctx, req)
+	_, err = redisClient.CreateInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "CreateRedisInstance", "projectId", projectId, "locationId", locationId, "instanceId", instanceId)
-		return nil, err
+		return err
 	}
 
-	return operation, nil
+	return nil
 }
 
 func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {

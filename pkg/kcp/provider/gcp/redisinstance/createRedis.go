@@ -47,7 +47,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		Labels:             labels,
 	}
 
-	_, err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
+	err := state.memorystoreClient.CreateRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstanceOptions)
 
 	if err != nil {
 		logger.Error(err, "Error creating GCP Redis")
