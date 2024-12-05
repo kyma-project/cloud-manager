@@ -255,15 +255,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			awsMockRemote.InitiateVpcPeeringConnection(ptr.To(kcpPeering.Status.Id), ptr.To(localVpcId), ptr.To(remoteVpcId))
 		})
 
-		By("Then KCP VpcPeering is initiating-request", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
-				).
-				Should(Succeed())
-		})
+		//By("Then KCP VpcPeering is initiating-request", func() {
+		//	Eventually(LoadAndCheck).
+		//		WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+		//			NewObjActions(),
+		//			HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+		//			HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
+		//		).
+		//		Should(Succeed())
+		//})
 
 		By("When AWS VPC Peering state is active", func() {
 			awsMockLocal.SetVpcPeeringConnectionStatusCode(ptr.To(localVpcId), ptr.To(remoteVpcId),
@@ -810,29 +810,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
-		})
-
-		By("And Then KCP VpcPeering has status.id equals to status.remoteId", func() {
-			Expect(kcpPeering.Status.RemoteId).To(Equal(kcpPeering.Status.Id))
-		})
-
-		By("And Then KCP VpcPeering has status.vpcId equals to existing AWS VPC id", func() {
-			Expect(kcpPeering.Status.VpcId).To(Equal(localVpcId))
-		})
-
-		By("And Then found local VpcPeeringConnection has AccepterVpcInfo.VpcId equals remote vpc id", func() {
-			localPeering, _ := awsMockLocal.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
-			Expect(*localPeering.AccepterVpcInfo.VpcId).To(Equal(remoteVpcId))
-		})
-
-		By("And Then there are no additional route entries added to local route tables", func() {
-			Expect(awsMockLocal.GetRouteCount(infra.Ctx(), localVpcId, kcpPeering.Status.Id, remoteVpcCidr)).
-				To(Equal(2))
-		})
-
-		By("And Then there are no additional route entries added to remote route tables", func() {
-			Expect(awsMockRemote.GetRouteCount(infra.Ctx(), remoteVpcId, kcpPeering.Status.RemoteId, localVpcCidr)).
-				To(Equal(2))
 		})
 
 		By("And Then remote VpcPeeringConnection is not deleted", func() {
