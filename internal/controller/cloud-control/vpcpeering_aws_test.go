@@ -840,7 +840,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(remotePeering).NotTo(BeNil())
 		})
 
-		By("When remote permissions are removed", func() {
+		By("And Given remote permissions are removed", func() {
 			awsMockRemote.SetVpcPeeringConnectionError(kcpPeering.Status.Id, errors.New("peering error"))
 			awsMockRemote.SetVpcError(remoteVpcId, errors.New("vpc error"))
 		})
