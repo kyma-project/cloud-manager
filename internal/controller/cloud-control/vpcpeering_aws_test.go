@@ -651,7 +651,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
-	It("Scenario: KCP AWS VpcPeering can be deleted when unauthorized", func() {
+	It("Scenario: KCP AWS VpcPeering can be deleted when remote VPC Network authorization is revoked", func() {
 		const (
 			kymaName             = "50de99f8-0b35-4ac2-900e-793091f1a853"
 			kcpPeeringName       = "b6689354-72cc-41ba-ae48-572fa7815a6c"
