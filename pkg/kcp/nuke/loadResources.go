@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +18,7 @@ func loadResources(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	state.Resources = []*ResourceKindState{
+	state.Resources = []*nuketypes.ResourceKindState{
 		{
 			Kind: "VpcPeering",
 			List: &cloudcontrolv1beta1.VpcPeeringList{},
@@ -70,7 +71,7 @@ func loadResources(ctx context.Context, st composed.State) (error, context.Conte
 	return nil, ctx
 }
 
-func _listResources(ctx context.Context, scopeName, namespace string, rks *ResourceKindState, clnt client.Client) error {
+func _listResources(ctx context.Context, scopeName, namespace string, rks *nuketypes.ResourceKindState, clnt client.Client) error {
 	list := rks.List.DeepCopyObject().(client.ObjectList)
 	err := clnt.List(ctx, list, client.InNamespace(namespace))
 	if meta.IsNoMatchError(err) {

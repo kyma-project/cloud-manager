@@ -2,11 +2,13 @@ package nuke
 
 import (
 	"context"
-
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -15,19 +17,23 @@ type NukeReconciler interface {
 }
 
 func New(
-	mgr manager.Manager,
+	baseStateFactory composed.StateFactory,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpStateFactory gcpnuke.StateFactory,
 ) NukeReconciler {
 	return &nukeReconciler{
 		stateFactory: NewStateFactory(
-			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
+			baseStateFactory,
+			focal.NewStateFactory(),
 			activeSkrCollection,
 		),
+		gcpStateFactory: gcpStateFactory,
 	}
 }
 
 type nukeReconciler struct {
-	stateFactory StateFactory
+	stateFactory    StateFactory
+	gcpStateFactory gcpnuke.StateFactory
 }
 
 func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -40,7 +46,8 @@ func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 func (r *nukeReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"nukeMain",
-		composed.LoadObj,
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.Nuke{}),
+		focal.New(),
 		composed.If(
 			// if Nuke not marked for deletion
 			composed.Not(composed.MarkedForDeletionPredicate),
@@ -50,6 +57,10 @@ func (r *nukeReconciler) newAction() composed.Action {
 			deleteResources,
 			resourceStatusDeleting,
 			resourceStatusDeleted,
+			composed.If(
+				focal.GcpProviderPredicate,
+				gcpnuke.New(r.gcpStateFactory),
+			),
 			checkIfAllDeleted,
 			scopeDelete,
 			statusCompleted,

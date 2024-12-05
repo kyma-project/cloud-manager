@@ -12,7 +12,7 @@ func resourceStatusDeleting(ctx context.Context, st composed.State) (error, cont
 	changed := false
 
 	for _, rks := range state.Resources {
-		kindStatus, created := state.ObjAsNuke().Status.GetKind(rks.Kind)
+		kindStatus, created := state.ObjAsNuke().Status.GetKind(rks.Kind, cloudcontrolv1beta1.KcpManagedResource)
 		if created {
 			changed = true
 		}

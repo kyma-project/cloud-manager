@@ -314,7 +314,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.SetupNukeReconciler(mgr, skrLoop); err != nil {
+	if err = cloudcontrolcontroller.SetupNukeReconciler(
+		mgr,
+		skrLoop,
+		gcpnfsbackupclient.NewFileBackupClientProvider(),
+		env,
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
 		os.Exit(1)
 	}
