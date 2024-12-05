@@ -18,7 +18,9 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"google.golang.org/api/iterator"
 	"strings"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -67,7 +69,7 @@ type VpcPeeringClient interface {
 	GetVpcPeering(ctx context.Context, remotePeeringName string, project string, vpc string) (*pb.NetworkPeering, error)
 	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
 	CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
-	CheckRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string, desiredTag string) (bool, error)
+	GetRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string) ([]string, error)
 }
 
 func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string) error {
@@ -164,46 +166,36 @@ func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
 
-func (c *networkClient) CheckRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string, desiredTag string) (bool, error) {
-
+func (c *networkClient) GetRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string) ([]string, error) {
+	var tagsArray []string
 	gcpNetworkClient, err := createGcpNetworksClient(context)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer closeNetworkClient(context, gcpNetworkClient)
 
 	//NetworkPeering will only be created if the remote vpc has a tag with the kyma shoot name
 	remoteNetwork, err := gcpNetworkClient.Get(context, &pb.GetNetworkRequest{Network: remoteVpc, Project: remoteProject})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	//Unfortunately get networks doesn't return the tags, so we need to use the resource manager tag bindings client
 	tbc, err := resourcemanager.NewTagBindingsClient(context, option.WithCredentialsFile(abstractions.NewOSEnvironment().Get(GcpVpcPeeringPath)))
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	//ListEffectiveTags requires the networkId instead of name therefore we need to convert the selfLinkId to the format that the tag bindings client expects
-	//more info here: https://cloud.google.com/iam/docs/full-resource-names
+
 	tagIterator := tbc.ListEffectiveTags(context, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
-	defer func(tbc *resourcemanager.TagBindingsClient) {
-		err := tbc.Close()
-		if err != nil {
-			composed.LoggerFromCtx(context).Error(err, "Error closing GCP TagBindingsClient")
-		}
-	}(tbc)
 	for {
 		tag, err := tagIterator.Next()
 		if err != nil {
-			if err.Error() == "no more items in iterator" {
-				return false, nil
+			if errors.Is(err, iterator.Done) {
+				break
 			}
-			return false, err
+			return nil, err
 		}
-		//since we are not sure where the user is going to put the tag under, let's check if the tag key contains the desired tag
-		//i.e.: project/kyma-shoot-1234
-		if strings.Contains(tag.NamespacedTagKey, desiredTag) {
-			return true, nil
-		}
+		tagsArray = append(tagsArray, tag.NamespacedTagKey)
 	}
+	return tagsArray, nil
 }

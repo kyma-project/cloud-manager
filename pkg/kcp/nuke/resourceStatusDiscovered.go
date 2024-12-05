@@ -25,7 +25,7 @@ func resourceStatusDiscovered(ctx context.Context, st composed.State) (error, co
 	}
 
 	for _, rks := range state.Resources {
-		kindStatus, created := state.ObjAsNuke().Status.GetKind(rks.Kind)
+		kindStatus, created := state.ObjAsNuke().Status.GetKind(rks.Kind, cloudcontrolv1beta1.KcpManagedResource)
 		if created {
 			changed = true
 		}

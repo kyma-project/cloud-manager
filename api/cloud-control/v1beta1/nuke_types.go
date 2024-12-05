@@ -61,22 +61,33 @@ func (s *NukeStatus) GetKindNoCreate(kind string) *NukeStatusKind {
 	return nil
 }
 
-func (s *NukeStatus) GetKind(kind string) (*NukeStatusKind, bool) {
+func (s *NukeStatus) GetKind(kind string, resourceType ResourceType) (*NukeStatusKind, bool) {
 	result := s.GetKindNoCreate(kind)
 	if result != nil {
 		return result, false
 	}
 	result = &NukeStatusKind{
-		Kind:    kind,
-		Objects: map[string]NukeResourceStatus{},
+		Kind:         kind,
+		ResourceType: resourceType,
+		Objects:      map[string]NukeResourceStatus{},
 	}
 	s.Resources = append(s.Resources, result)
 	return result, true
 }
 
+type ResourceType string
+
+const (
+	KcpManagedResource ResourceType = "KCP"
+	ProviderResource   ResourceType = "Provider"
+)
+
 type NukeStatusKind struct {
 	Kind    string                        `json:"kind"`
 	Objects map[string]NukeResourceStatus `json:"objects"`
+	// +optional
+	// +kubebuilder:default=KCP
+	ResourceType ResourceType `json:"resourceType"`
 }
 
 // +kubebuilder:object:root=true
@@ -148,4 +159,14 @@ type NukeList struct {
 
 func init() {
 	SchemeBuilder.Register(&Nuke{}, &NukeList{})
+}
+
+func (nsk *NukeStatusKind) GetResourceType() ResourceType {
+
+	switch nsk.ResourceType {
+	case ProviderResource:
+		return ProviderResource
+	default:
+		return KcpManagedResource
+	}
 }
