@@ -744,6 +744,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
+		By("And remote KCP Network is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).Should(Succeed())
+		})
+
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network exists", func() {
@@ -754,6 +763,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
 				Should(Succeed())
+		})
+
+		By("And remote KCP Network is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).Should(Succeed())
 		})
 
 		var kcpPeering *cloudcontrolv1beta1.VpcPeering
