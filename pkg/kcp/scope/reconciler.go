@@ -86,6 +86,8 @@ func (r *scopeReconciler) newAction() composed.Action {
 			predicateShouldDisable(),
 			removeKymaFinalizer,
 			skrDeactivate,
+			kymaNetworkReferenceDelete,
+			scopeDelete,
 			composed.StopAndForgetAction,
 		),
 
@@ -104,10 +106,10 @@ func (r *scopeReconciler) newAction() composed.Action {
 				findShootName,
 				loadShoot,
 				loadGardenerCredentials,
-				createScope,
+				scopeCreate,
 				ensureScopeCommonFields,
 				saveScope,
-				createKymaNetworkReference,
+				kymaNetworkReferenceCreate,
 			),
 
 			enableApis,
