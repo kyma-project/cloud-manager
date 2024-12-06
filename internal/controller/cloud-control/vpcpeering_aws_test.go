@@ -256,8 +256,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("When AWS VPC Peering state is active", func() {
-			awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
-			awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -523,8 +528,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("When AWS VPC Peering state is active", func() {
-			awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
-			awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -801,14 +811,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			awsMockRemote.InitiateVpcPeeringConnection(kcpPeering.Status.Id, localVpcId, remoteVpcId)
 
 			// change local vpc peering status to pending-acceptance (not necessary but leaving it for the clarity)
-			err := awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance)
-			Expect(err).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+			).NotTo(HaveOccurred())
 
 			// sets vpc peering connections active
-			err = awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
-			Expect(err).NotTo(HaveOccurred())
-			err = awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
 		})
 
 		By("And Given VpcPeering is Ready", func() {
