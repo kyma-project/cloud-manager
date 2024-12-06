@@ -108,7 +108,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 				loadGardenerCredentials,
 				scopeCreate,
 				ensureScopeCommonFields,
-				saveScope,
+				scopeSave,
 				kymaNetworkReferenceCreate,
 			),
 
