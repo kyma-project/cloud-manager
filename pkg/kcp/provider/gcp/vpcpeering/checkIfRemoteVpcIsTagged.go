@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +18,21 @@ func checkIfRemoteVpcIsTagged(ctx context.Context, st composed.State) (error, co
 
 	tags, err := state.client.GetRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject)
 	if err != nil {
-		// This can be caused by multiple things, like missing permissions, network not found, etc.
+		if gcpmeta.IsNotAuthorized(err) {
+			logger.Error(err, "[KCP GCP VPCPeering checkIfRemoteNetworkIsTagged] Error fetching GCP remote network tags, due to insufficient permissions")
+			return composed.UpdateStatus(state.ObjAsVpcPeering()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  "True",
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+					Message: fmt.Sprintf("Error fetching GCP remote network tags for network %s/%s, due to insufficient permissions", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+				}).
+				ErrorLogMessage("Error updating VPC Peering while fetching remote network tags due to insufficient permissions").
+				FailedError(composed.StopWithRequeue).
+				SuccessError(composed.StopWithRequeueDelay(5*util.Timing.T60000ms())).
+				Run(ctx, state)
+		}
+
 		logger.Error(err, "[KCP GCP VPCPeering checkIfRemoteNetworkIsTagged] Error fetching GCP remote network tags")
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{

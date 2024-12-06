@@ -14,7 +14,6 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -45,9 +44,9 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Error creating Remote VpcPeering %s", err),
+				Message: "Error creating local network VpcPeering",
 			}).
-			ErrorLogMessage("Error creating Remote VpcPeering").
+			ErrorLogMessage("Error creating local network VpcPeering").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
