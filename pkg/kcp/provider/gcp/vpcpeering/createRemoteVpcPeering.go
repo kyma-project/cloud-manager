@@ -15,9 +15,9 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,15 +42,29 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		state.localNetwork.Status.Network.Gcp.NetworkName)
 
 	if err != nil {
-		message := fmt.Sprintf("Error creating Remote VpcPeering %s", err)
 		logger.Error(err, "[KCP GCP VpcPeering createRemoteVpcPeering] Error creating Remote VpcPeering")
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
+
+		if gcpmeta.IsNotAuthorized(err) {
+			return composed.UpdateStatus(state.ObjAsVpcPeering()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  "True",
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+					Message: fmt.Sprintf("Error creating Remote VpcPeering for network %s/%s due to insufficient permissions", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+				}).
+				ErrorLogMessage("Error creating Remote VpcPeering due to insufficient permissions").
+				FailedError(composed.StopWithRequeue).
+				SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+				Run(ctx, state)
+		}
+
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: message,
+				Message: "Error creating Remote VpcPeering",
 			}).
 			ErrorLogMessage("Error creating Remote VpcPeering").
 			FailedError(composed.StopWithRequeue).

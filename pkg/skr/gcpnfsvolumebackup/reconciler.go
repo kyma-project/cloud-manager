@@ -54,6 +54,7 @@ func (r *Reconciler) newAction() composed.Action {
 		validateLocation,
 		loadNfsBackup,
 		loadGcpNfsVolume,
+		addLabelsToNfsBackup,
 		createNfsBackup,
 		deleteNfsBackup,
 		checkBackupOperation,

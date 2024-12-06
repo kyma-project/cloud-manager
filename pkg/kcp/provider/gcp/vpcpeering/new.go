@@ -31,6 +31,7 @@ func New(stateFactory StateFactory) composed.Action {
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"gcpVpcPeering-create",
+					checkIfRemoteVpcIsTagged,
 					createRemoteVpcPeering,
 					waitRemoteVpcPeeringAvailable,
 					createKymaVpcPeering,

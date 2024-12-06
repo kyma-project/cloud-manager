@@ -4,9 +4,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type StateFactory interface {
@@ -15,46 +15,42 @@ type StateFactory interface {
 
 func NewStateFactory(
 	baseStateFactory composed.StateFactory,
+	focalStateFactory focal.StateFactory,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 ) StateFactory {
 	return &stateFactory{
 		baseStateFactory:    baseStateFactory,
+		focalStateFactory:   focalStateFactory,
 		activeSkrCollection: activeSkrCollection,
 	}
 }
 
 type stateFactory struct {
 	baseStateFactory    composed.StateFactory
+	focalStateFactory   focal.StateFactory
 	activeSkrCollection skrruntime.ActiveSkrCollection
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
 	baseState := f.baseStateFactory.NewState(req.NamespacedName, &cloudcontrolv1beta1.Nuke{})
-
-	return newState(baseState, f.activeSkrCollection)
+	focalState := f.focalStateFactory.NewState(baseState)
+	return newState(focalState, f.activeSkrCollection)
 }
 
 func newState(
-	baseState composed.State,
+	focalState focal.State,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 ) *State {
 	return &State{
-		State:               baseState,
-		activeSkrCollection: activeSkrCollection,
+		State:               focalState,
+		ActiveSkrCollection: activeSkrCollection,
 	}
 }
 
-type ResourceKindState struct {
-	Kind    string
-	List    client.ObjectList
-	Objects []focal.CommonObject
-}
-
 type State struct {
-	composed.State
-	activeSkrCollection skrruntime.ActiveSkrCollection
-
-	Resources []*ResourceKindState
+	focal.State
+	ActiveSkrCollection skrruntime.ActiveSkrCollection
+	Resources           []*nuketypes.ResourceKindState
 }
 
 func (s *State) ObjAsNuke() *cloudcontrolv1beta1.Nuke {

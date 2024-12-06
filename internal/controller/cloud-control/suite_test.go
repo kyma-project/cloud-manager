@@ -126,6 +126,8 @@ var _ = BeforeSuite(func() {
 	Expect(SetupNukeReconciler(
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
+		infra.GcpMock().FileBackupClientProvider(),
+		env,
 	)).To(Succeed())
 
 	// Start controllers

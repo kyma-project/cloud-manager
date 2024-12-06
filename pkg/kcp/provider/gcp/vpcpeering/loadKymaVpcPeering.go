@@ -2,8 +2,6 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -21,8 +19,6 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 
 	logger.Info("[KCP GCP VpcPeering loadKymaVpcPeering] Loading Kyma VPC Peering")
 
-	//Using cm- prefix to make it clear it's a cloud manager resource
-	//Using obj name suffix as the peering name since it is unique within the kcp namespace
 	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Status.Network.Gcp.GcpProject, state.localNetwork.Status.Network.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Kyma Vpc Peering")
@@ -31,13 +27,13 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  v1beta1.ReasonFailedCreatingVpcPeeringConnection,
-			Message: fmt.Sprintf("Error loading Kyma Vpc Peering: %s", err),
+			Message: "Error loading Kyma Vpc Peering",
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error updating status since it was not possible to load the Kyma Vpc Peering",
-				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
+				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,
 			)
 		}

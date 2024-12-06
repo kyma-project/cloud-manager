@@ -2,7 +2,12 @@ package cloudcontrol
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/nuke"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpfilebackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -13,11 +18,15 @@ import (
 func SetupNukeReconciler(
 	kcpManager manager.Manager,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	gcpFileBackupClientProvider gcpclient.ClientProvider[gcpfilebackupclient.FileBackupClient],
+	env abstractions.Environment,
 ) error {
+	baseStateFactory := composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager))
 	return NewNukeReconciler(
 		kcpnuke.New(
-			kcpManager,
+			baseStateFactory,
 			activeSkrCollection,
+			gcpnuke.NewStateFactory(gcpFileBackupClientProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }

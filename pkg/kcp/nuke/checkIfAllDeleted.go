@@ -10,7 +10,7 @@ func checkIfAllDeleted(ctx context.Context, st composed.State) (error, context.C
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// check if some resources have be loaded to state, if none is loaded then they are all deleted
+	// check if some resources have been loaded to state, if none is loaded then they are all deleted
 	allDeleted := true
 	for _, rks := range state.Resources {
 		if len(rks.Objects) > 0 {
