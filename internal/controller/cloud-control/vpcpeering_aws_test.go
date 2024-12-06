@@ -750,7 +750,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("And remote KCP Network is Ready", func() {
+		By("And Given remote KCP Network is Ready", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet,
 					NewObjActions(),
