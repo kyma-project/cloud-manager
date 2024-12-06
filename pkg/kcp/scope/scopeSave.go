@@ -5,7 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func saveScope(ctx context.Context, st composed.State) (error, context.Context) {
+func scopeSave(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if state.Obj().GetResourceVersion() != "" {

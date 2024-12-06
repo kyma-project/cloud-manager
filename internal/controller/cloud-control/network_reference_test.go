@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
@@ -379,4 +380,32 @@ var _ = Describe("Feature: KCP Network reference", func() {
 		})
 	})
 
+	It("Scenario: kyma Network reference will delete itself if its Scope does not exist", func() {
+		// doesn't exist
+		kymaName := "eb3aac05-dac0-4e99-924c-dbb717935b6d"
+		netObjName := common.KcpNetworkKymaCommonName(kymaName)
+		var net *cloudcontrolv1beta1.Network
+
+		awsAccount := "acc-123123"
+		awsRegion := "us-east-1"
+		netId := "net-345123"
+		netName := "my-net"
+
+		By("Given Scope does not exist", func() {})
+
+		By("When kyma Network reference is created", func() {
+			net = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				WithAwsRef(awsAccount, awsRegion, netId, netName).
+				Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("Then kyma Network reference does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net).
+				Should(Succeed())
+		})
+	})
 })

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func createScope(ctx context.Context, st composed.State) (error, context.Context) {
+func scopeCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	switch state.provider {

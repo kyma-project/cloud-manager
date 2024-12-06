@@ -6,8 +6,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	networktypes "github.com/kyma-project/cloud-manager/pkg/kcp/network/types"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func handleNetworkReference(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,6 +21,18 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 
 	// prevent delete if used must come before this action!!!
 
+	// Handle a special case for a case when Scope is deleted and related kyma Network is left behind
+	// This should clean up orphan networks that were not deleted.
+	// For the future, the Scope reconciler is also modified to delete the kyma Network it creates
+	// at the moment it delete itself, so this should not happen for those new cases
+	if state.Scope() == nil && state.ObjAsNetwork().Spec.Type == cloudcontrolv1beta1.NetworkTypeKyma && !composed.MarkedForDeletionPredicate(ctx, state) {
+		err := state.Cluster().K8sClient().Delete(ctx, state.ObjAsNetwork())
+		if client.IgnoreNotFound(err) != nil {
+			return composed.LogErrorAndReturn(err, "Error deleting KCP kyma Network", composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx)
+		}
+		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
+	}
+
 	if composed.MarkedForDeletionPredicate(ctx, state) {
 		return composed.ComposeActions(
 			"networkReferenceDelete",
@@ -29,7 +43,7 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 
 	changed := false
 
-	if state.ObjAsNetwork().Status.Network == nil || state.ObjAsNetwork().Spec.Network.Reference.Equals(state.ObjAsNetwork().Status.Network) {
+	if state.ObjAsNetwork().Status.Network == nil || !state.ObjAsNetwork().Spec.Network.Reference.Equals(state.ObjAsNetwork().Status.Network) {
 		state.ObjAsNetwork().Status.Network = state.ObjAsNetwork().Spec.Network.Reference.DeepCopy()
 		changed = true
 	}

@@ -13,7 +13,7 @@ func loadKyma(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.Scope() == nil || len(state.Scope().Name) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	kyma := util.NewKymaUnstructured()
