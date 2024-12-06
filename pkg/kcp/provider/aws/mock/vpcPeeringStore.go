@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	"k8s.io/utils/ptr"
@@ -12,8 +13,8 @@ import (
 )
 
 type VpcPeeringConfig interface {
-	SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId *string, code ec2types.VpcPeeringConnectionStateReasonCode)
-	InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId *string)
+	SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId string, code ec2types.VpcPeeringConnectionStateReasonCode) error
+	InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId string)
 	SetVpcPeeringConnectionError(connectionId string, err error)
 }
 
@@ -36,6 +37,10 @@ func newVpcPeeringStore() *vpcPeeringStore {
 func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId, remoteVpcId, remoteRegion, remoteAccountId *string, tags []ec2types.Tag) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
+
+	if item, err := s.findVpcPeeringConnection(vpcId, remoteVpcId); err == nil {
+		return item, err
+	}
 
 	item := &vpcPeeringEntry{
 		peering: ec2types.VpcPeeringConnection{
@@ -60,6 +65,20 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 	return &item.peering, nil
 }
 
+func (s *vpcPeeringStore) findVpcPeeringConnection(vpcId, remoteVpcId *string) (*ec2types.VpcPeeringConnection, error) {
+	for _, x := range s.items {
+		if ptr.Equal(x.peering.RequesterVpcInfo.VpcId, vpcId) ||
+			ptr.Equal(x.peering.AccepterVpcInfo.VpcId, remoteVpcId) {
+			return &x.peering, nil
+		}
+	}
+
+	return nil, &smithy.GenericAPIError{
+		Code:    "404",
+		Message: fmt.Sprintf("vpc peering connection between %s and %s does not exist", ptr.Deref(vpcId, ""), ptr.Deref(remoteVpcId, "")),
+	}
+}
+
 func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcPeeringConnectionId string) (*ec2types.VpcPeeringConnection, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -68,13 +87,20 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcP
 		return nil, err
 	}
 
+	return s.getVpcPeeringConnection(vpcPeeringConnectionId)
+}
+
+func (s *vpcPeeringStore) getVpcPeeringConnection(vpcPeeringConnectionId string) (*ec2types.VpcPeeringConnection, error) {
 	for _, x := range s.items {
 		if ptr.Equal(x.peering.VpcPeeringConnectionId, ptr.To(vpcPeeringConnectionId)) {
 			return &x.peering, nil
 		}
 	}
 
-	return nil, nil
+	return nil, &smithy.GenericAPIError{
+		Code:    "404",
+		Message: fmt.Sprintf("vpc peering connection %s does not exist", vpcPeeringConnectionId),
+	}
 }
 
 func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]ec2types.VpcPeeringConnection, error) {
@@ -123,31 +149,33 @@ func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connec
 	return nil
 }
 
-func (s *vpcPeeringStore) SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId *string, code ec2types.VpcPeeringConnectionStateReasonCode) {
+func (s *vpcPeeringStore) SetVpcPeeringConnectionStatusCode(requesterVpcId, accepterVpcId string, code ec2types.VpcPeeringConnectionStateReasonCode) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	for _, x := range s.items {
-		if ptr.Equal(x.peering.AccepterVpcInfo.VpcId, accepterVpcId) &&
-			ptr.Equal(x.peering.RequesterVpcInfo.VpcId, requesterVpcId) {
-			x.peering.Status.Code = code
-			break
-		}
+	item, err := s.findVpcPeeringConnection(ptr.To(requesterVpcId), ptr.To(accepterVpcId))
+
+	if err != nil {
+		return err
 	}
+
+	item.Status.Code = code
+
+	return nil
 }
 
-func (s *vpcPeeringStore) InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId *string) {
+func (s *vpcPeeringStore) InitiateVpcPeeringConnection(connectionId, requesterVpcId, accepterVpcId string) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	item := &vpcPeeringEntry{
 		peering: ec2types.VpcPeeringConnection{
-			VpcPeeringConnectionId: connectionId,
+			VpcPeeringConnectionId: ptr.To(connectionId),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId: requesterVpcId,
+				VpcId: ptr.To(requesterVpcId),
 			},
 			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId: accepterVpcId,
+				VpcId: ptr.To(accepterVpcId),
 			},
 			Status: &ec2types.VpcPeeringConnectionStateReason{
 				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
