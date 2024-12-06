@@ -834,7 +834,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("And Then remote VpcPeeringConnection is not deleted", func() {
+		By("And Given remote VpcPeeringConnection exists", func() {
 			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
 			Expect(remotePeering).NotTo(BeNil())
 		})
