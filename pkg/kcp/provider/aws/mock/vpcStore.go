@@ -47,6 +47,7 @@ type VpcSubnet struct {
 
 type VpcConfig interface {
 	AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) *ec2Types.Vpc
+	SetVpcError(id string, err error)
 }
 
 type vpcEntry struct {
@@ -57,10 +58,14 @@ type vpcEntry struct {
 type vpcStore struct {
 	m     sync.Mutex
 	items []*vpcEntry
+
+	errorMap map[string]error
 }
 
 func newVpcStore() *vpcStore {
-	return &vpcStore{}
+	return &vpcStore{
+		errorMap: make(map[string]error),
+	}
 }
 
 func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
@@ -108,6 +113,10 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 	return &item.vpc
 }
 
+func (s *vpcStore) SetVpcError(id string, err error) {
+	s.errorMap[id] = err
+}
+
 // Client implementation ========================================
 
 func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc, error) {
@@ -116,6 +125,10 @@ func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
+
+	if err, ok := s.errorMap[vpcId]; ok && err != nil {
+		return nil, err
+	}
 
 	for _, item := range s.items {
 		if ptr.Deref(item.vpc.VpcId, "") == vpcId {

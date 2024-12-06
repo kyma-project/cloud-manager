@@ -101,6 +101,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	state.vpcPeering = vpcPeering
 
 	state.ObjAsVpcPeering().Status.Id = ptr.Deref(vpcPeering.VpcPeeringConnectionId, "")
+	state.ObjAsVpcPeering().Status.VpcId = ptr.Deref(state.vpc.VpcId, "")
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).
 		ErrorLogMessage("Error updating VPC Peering status with connection id").

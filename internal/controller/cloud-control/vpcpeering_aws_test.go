@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"errors"
 	"fmt"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -251,22 +252,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("When remote VpcPeeringConnection is initiated", func() {
-			awsMockRemote.InitiateVpcPeeringConnection(infra.Ctx(), ptr.To(kcpPeering.Status.Id), ptr.To(remoteVpcId), ptr.To(localVpcId), ptr.To(scope.Spec.Region), ptr.To(scope.Spec.Scope.Aws.AccountId))
-		})
-
-		By("Then KCP VpcPeering is initiating-request", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
-				).
-				Should(Succeed())
+			awsMockRemote.InitiateVpcPeeringConnection(kcpPeering.Status.Id, localVpcId, remoteVpcId)
 		})
 
 		By("When AWS VPC Peering state is active", func() {
-			awsMockLocal.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(localVpcId), ptr.To(remoteVpcId))
-			awsMockRemote.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(remoteVpcId), ptr.To(localVpcId))
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -362,7 +358,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	// When prevent deletion of KCP Network while used by VpcPeering is implemented, this test case
 	// is obsolete, but keeping it just in case, but with Network reconciler ignoring the created
-	// networks so they can be deleted while used by VpcPeering
+	// networks, so they can be deleted while used by VpcPeering
 	It("Scenario: KCP AWS VpcPeering is deleted when local and remote networks are missing", func() {
 		const (
 			kymaName             = "76f1dec7-c7d3-4129-9730-478f4cba241a"
@@ -528,24 +524,17 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("When remote VpcPeeringConnection is initiated", func() {
-			awsMockRemote.InitiateVpcPeeringConnection(infra.Ctx(), ptr.To(kcpPeering.Status.Id), ptr.To(remoteVpcId), ptr.To(localVpcId), ptr.To(scope.Spec.Region), ptr.To(scope.Spec.Scope.Aws.AccountId))
-			//TODO move step "When AWS VPC Peering state is active" here
-			//TODO remove step "Then KCP VpcPeering is initiating-request"
-		})
-
-		By("Then KCP VpcPeering is initiating-request", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
-					HavingState(string(ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest)),
-				).
-				Should(Succeed())
+			awsMockRemote.InitiateVpcPeeringConnection(kcpPeering.Status.Id, localVpcId, remoteVpcId)
 		})
 
 		By("When AWS VPC Peering state is active", func() {
-			awsMockLocal.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(localVpcId), ptr.To(remoteVpcId))
-			awsMockRemote.SetVpcPeeringConnectionActive(infra.Ctx(), ptr.To(remoteVpcId), ptr.To(localVpcId))
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -647,6 +636,236 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		// VpcPeeringConnection and Routes are not deleted since KCP remote Network is deleted previously
+		By("And Then remote VpcPeeringConnection is not deleted", func() {
+			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(remotePeering).NotTo(BeNil())
+		})
+
+		By("And Then all remote route tables has routes with destination CIDR matching local VPC CIDR", func() {
+			Expect(awsMockRemote.GetRouteCount(infra.Ctx(), remoteVpcId, kcpPeering.Status.RemoteId, localVpcCidr)).
+				To(Equal(2))
+		})
+	})
+
+	It("Scenario: KCP AWS VpcPeering can be deleted when remote VPC Network authorization is revoked", func() {
+		const (
+			kymaName             = "50de99f8-0b35-4ac2-900e-793091f1a853"
+			kcpPeeringName       = "b6689354-72cc-41ba-ae48-572fa7815a6c"
+			localVpcId           = "vpc-1fe57eb9ec4b4d389"
+			localVpcCidr         = "10.180.0.0/16"
+			remoteVpcId          = "vpc-5a11d50637164d01a"
+			remoteVpcCidr        = "10.200.0.0/16"
+			remoteAccountId      = "777755556666"
+			remoteRegion         = "eu-west1"
+			localMainRouteTable  = "rtb-bb6743e182614c539"
+			localRouteTable      = "rtb-d6d5d9e2492449b38"
+			remoteMainRouteTable = "rtb-713e94a6caa54b27a"
+			remoteRouteTable     = "rtb-14ff90610fc54a4cb"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			scopePkg.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		vpcName := scope.Spec.Scope.Aws.VpcNetwork
+		remoteVpcName := "Remote Network Name"
+
+		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+
+		By("And Given AWS VPC exists", func() {
+			awsMockLocal.AddVpc(
+				localVpcId,
+				localVpcCidr,
+				awsutil.Ec2Tags("Name", vpcName),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		By("And Given AWS route table exists", func() {
+			awsMockLocal.AddRouteTable(
+				ptr.To(localMainRouteTable),
+				ptr.To(localVpcId),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
+				[]ec2Types.RouteTableAssociation{
+					{
+						Main: ptr.To(true),
+					},
+				})
+
+			awsMockLocal.AddRouteTable(
+				ptr.To(localRouteTable),
+				ptr.To(localVpcId),
+				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
+				[]ec2Types.RouteTableAssociation{})
+		})
+
+		By("And Given AWS remote VPC exists", func() {
+			awsMockRemote.AddVpc(
+				remoteVpcId,
+				remoteVpcCidr,
+				awsutil.Ec2Tags("Name", remoteVpcName, kymaName, kymaName),
+				nil,
+			)
+		})
+
+		By("And Given AWS remote route table exists", func() {
+
+			awsMockRemote.AddRouteTable(
+				ptr.To(remoteMainRouteTable),
+				ptr.To(remoteVpcId),
+				awsutil.Ec2Tags(),
+				[]ec2Types.RouteTableAssociation{
+					{
+						Main: ptr.To(true),
+					},
+				})
+
+			awsMockRemote.AddRouteTable(
+				ptr.To(remoteRouteTable),
+				ptr.To(remoteVpcId),
+				awsutil.Ec2Tags(),
+				[]ec2Types.RouteTableAssociation{})
+		})
+
+		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
+		remoteKcpNetworkName := scope.Name + "--remote"
+
+		var localKcpNet *cloudcontrolv1beta1.Network
+
+		By("And Given local KCP Network exists", func() {
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(scope.Name).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, scope.Spec.Scope.Aws.Network.VPC.Id, localKcpNetworkName).
+				Build()
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName)).
+				Should(Succeed())
+		})
+
+		By("And Given remote KCP Network is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).Should(Succeed())
+		})
+
+		var remoteKcpNet *cloudcontrolv1beta1.Network
+
+		By("And Given remote KCP Network exists", func() {
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(scope.Name).
+				WithAwsRef(remoteAccountId, remoteRegion, remoteVpcId, remoteVpcName).
+				Build()
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
+				Should(Succeed())
+		})
+
+		By("And Given remote KCP Network is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).Should(Succeed())
+		})
+
+		var kcpPeering *cloudcontrolv1beta1.VpcPeering
+
+		By("And Given KCP VpcPeering is created", func() {
+			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
+				WithScope(kymaName).
+				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, true).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+					WithName(kcpPeeringName),
+				).Should(Succeed())
+
+		})
+
+		By("And Given KCP VpcPeering have status.id set", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+					NewObjActions(),
+					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HavingKcpVpcPeeringStatusIdNotEmpty(),
+				).Should(Succeed())
+		})
+
+		By("And Given AWS VpcPeeringConnections are active", func() {
+
+			// initiate remote vpc peering connection
+			awsMockRemote.InitiateVpcPeeringConnection(kcpPeering.Status.Id, localVpcId, remoteVpcId)
+
+			// change local vpc peering status to pending-acceptance (not necessary but leaving it for the clarity)
+
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+			).NotTo(HaveOccurred())
+
+			// sets vpc peering connections active
+			Expect(
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+
+			Expect(
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+			).NotTo(HaveOccurred())
+		})
+
+		By("And Given VpcPeering is Ready", func() {
+			Eventually(LoadAndCheck, "2s").
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("And Given remote VpcPeeringConnection exists", func() {
+			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(remotePeering).NotTo(BeNil())
+		})
+
+		By("And Given remote permissions are removed", func() {
+			awsMockRemote.SetVpcPeeringConnectionError(kcpPeering.Status.Id, errors.New("peering error"))
+			awsMockRemote.SetVpcError(remoteVpcId, errors.New("vpc error"))
+		})
+
+		// DELETE
+
+		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
+				Should(Succeed(), "failed deleting VpcPeering")
+		})
+
+		By("Then VpcPeering does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
+				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
+		})
+
+		By("And Then local VpcPeeringConnection is deleted", func() {
+			localPeering, _ := awsMockLocal.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(localPeering).To(BeNil())
+		})
+
+		// remove peering connection error from mock so that we could verify it
+		awsMockRemote.SetVpcPeeringConnectionError(kcpPeering.Status.Id, nil)
+
 		By("And Then remote VpcPeeringConnection is not deleted", func() {
 			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
 			Expect(remotePeering).NotTo(BeNil())
