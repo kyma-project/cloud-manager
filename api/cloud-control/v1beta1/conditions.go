@@ -12,6 +12,7 @@ const (
 	ReasonUnknown           = "Unknown"
 	ReasonReady             = "Ready"
 	ReasonGcpError          = "GCPError"
+	ReasonAwsError          = "AwsError"
 	ReasonValidationFailed  = "ValidationFailed"
 	ReasonMissingDependency = "MissingDependency"
 	ReasonWaitingDependency = "WaitingDependency"
