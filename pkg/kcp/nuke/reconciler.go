@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	awsnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke"
 	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -20,6 +21,7 @@ func New(
 	baseStateFactory composed.StateFactory,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpStateFactory gcpnuke.StateFactory,
+	awsStateFactory awsnuke.StateFactory,
 ) NukeReconciler {
 	return &nukeReconciler{
 		stateFactory: NewStateFactory(
@@ -28,12 +30,14 @@ func New(
 			activeSkrCollection,
 		),
 		gcpStateFactory: gcpStateFactory,
+		awsStateFactory: awsStateFactory,
 	}
 }
 
 type nukeReconciler struct {
 	stateFactory    StateFactory
 	gcpStateFactory gcpnuke.StateFactory
+	awsStateFactory awsnuke.StateFactory
 }
 
 func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -63,6 +67,10 @@ func (r *nukeReconciler) newAction() composed.Action {
 					focal.GcpProviderPredicate,
 				),
 				gcpnuke.New(r.gcpStateFactory),
+			),
+			composed.If(
+				focal.AwsProviderPredicate,
+				awsnuke.New(r.awsStateFactory),
 			),
 			checkIfAllDeleted,
 			scopeDelete,
