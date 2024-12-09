@@ -132,12 +132,32 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
 				Should(Succeed(), "expected Kyma Network to be created")
 		})
+
+		By("// cleanup: Delete Scope and KCP Kyma Network", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateNotPresent)).
+				Should(Succeed(), "failed updating KymaCR module state to NotPresent")
+
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork).
+				Should(Succeed())
+
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kymaCR)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: KCP AWS Scope is deleted when module is deactivated in Kyma CR", func() {
 		const (
 			kymaName = "d55ac1aa-288c-4af4-a0b7-96ce5b81046b"
 		)
+		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 
 		shoot := &gardenerTypes.Shoot{}
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -165,6 +185,13 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				Should(Succeed(), "expected Scope to be created and have Ready condition")
 		})
 
+		kymaNetwork := &cloudcontrolv1beta1.Network{}
+		By("And Then Kyma Network is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
+				Should(Succeed(), "expected Kyma Network to be created")
+		})
+
 		By("When module is deactivated", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
@@ -189,6 +216,11 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				To(BeFalse(), "expected Kyma CR not to have finalizer, but it still has it")
 		})
 
+		By("And Then Kyma Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork).
+				Should(Succeed(), "expected Kyma Network to be deleted, but it still exists")
+		})
 	})
 
 })
