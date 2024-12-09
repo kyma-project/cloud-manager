@@ -6,5 +6,3 @@
 
 # All .md files
 *.md @kyma-project/technical-writers
-
-/config/featureToggles/featureToggles.yaml @kyma-project/phoenix-admins
