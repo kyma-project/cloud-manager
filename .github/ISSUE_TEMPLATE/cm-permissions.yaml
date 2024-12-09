@@ -1,0 +1,86 @@
+name: Cloud Manager required permissions change
+description: File a change in the Cloud Manager required permissions for one cloud provider
+title: "[PermissionsChange]: "
+labels:
+  - kind/permissions-change
+projects:
+  - kyma-project/55
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A change in implementation has/will happen that requires a different set of permissions. 
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Cloud provider
+      description: In which Cloud provider change of permissions must occur?
+      options:
+        - AWS
+        - Azure
+        - GCP
+        - CCEE
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: CloudManager version
+      description: CloudManager version that includes this change that will be deployed to stage and prod
+      placeholder: 1.2.3
+    validations:
+      required: true
+
+  - type: input
+    id: issue
+    attributes:
+      label: CloudManager Issue
+      description: Link to issue describing the feature that intoduced the change in permissions
+      placeholder: url or #NUM
+    validations:
+      required: true
+
+  - type: input
+    id: pull_request
+    attributes:
+      label: CloudManager Pull request
+      description: Link to Pull Request with new implementation requiring changed permissions
+      placeholder: url or #NUM
+    validations:
+      required: false
+
+  - type: input
+    id: sre_issue
+    attributes:
+      label: SRE Issue
+      description: Link to Issue filed to SKE to implement the change
+      placeholder: url or #NUM
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout tracking
+      description: The content below is used for rollout tracking and should not be modified when issue is created.
+      value: |
+        Rollout tracking
+
+        * **DEV**
+          * [ ] Change in permissions is made on DEV
+          * [ ] CloudManager version using new permissions is deployed to DEV
+          * [ ] CloudManager functionality verified on DEV and it works
+
+        * **STAGE**
+          * [ ] Change in permissions is made on STAGE
+          * [ ] CloudManager version using new permissions is deployed to STAGE
+          * [ ] CloudManager functionality verified on STAGE and it works
+
+        * **PROD**
+          * [ ] Change in permissions is made on STAGE
+          * [ ] CloudManager version using new permissions is deployed to STAGE
+          * [ ] CloudManager functionality verified on STAGE and it works
+
+  
