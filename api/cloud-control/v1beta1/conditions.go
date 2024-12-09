@@ -9,11 +9,12 @@ const (
 
 	ReasonScopeNotFound = "ScopeNoFound"
 
-	ReasonUnknown           = "Unknown"
-	ReasonReady             = "Ready"
-	ReasonGcpError          = "GCPError"
-	ReasonValidationFailed  = "ValidationFailed"
-	ReasonMissingDependency = "MissingDependency"
-	ReasonWaitingDependency = "WaitingDependency"
-	ReasonDeleteWhileUsed   = "DeleteWhileUsed"
+	ReasonUnknown            = "Unknown"
+	ReasonReady              = "Ready"
+	ReasonGcpError           = "GCPError"
+	ReasonValidationFailed   = "ValidationFailed"
+	ReasonMissingDependency  = "MissingDependency"
+	ReasonWaitingDependency  = "WaitingDependency"
+	ReasonDeleteWhileUsed    = "DeleteWhileUsed"
+	ReasonRemoteClientFailed = "RemoteClientFailed"
 )
