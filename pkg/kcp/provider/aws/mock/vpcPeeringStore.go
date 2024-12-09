@@ -8,6 +8,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
 )
@@ -38,12 +39,13 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	if item, err := s.findVpcPeeringConnection(vpcId, remoteVpcId); err == nil {
-		return item, err
-	}
+	var peering *ec2types.VpcPeeringConnection
+	var err error
 
-	item := &vpcPeeringEntry{
-		peering: ec2types.VpcPeeringConnection{
+	peering, err = s.findVpcPeeringConnection(vpcId, remoteVpcId)
+
+	if err != nil {
+		peering = &ec2types.VpcPeeringConnection{
 			VpcPeeringConnectionId: ptr.To("pcx-" + uuid.NewString()[:8]),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
 				VpcId: vpcId,
@@ -57,12 +59,23 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
 				Message: nil,
 			},
-		},
+		}
+
+		item := &vpcPeeringEntry{
+			peering: *peering,
+		}
+
+		s.items = append(s.items, item)
+
 	}
 
-	s.items = append(s.items, item)
+	peeringCopy, err := util.JsonClone(peering)
 
-	return &item.peering, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return peeringCopy, nil
 }
 
 func (s *vpcPeeringStore) findVpcPeeringConnection(vpcId, remoteVpcId *string) (*ec2types.VpcPeeringConnection, error) {
@@ -87,7 +100,19 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcP
 		return nil, err
 	}
 
-	return s.getVpcPeeringConnection(vpcPeeringConnectionId)
+	peering, err := s.getVpcPeeringConnection(vpcPeeringConnectionId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	peeringCopy, err := util.JsonClone(peering)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return peeringCopy, nil
 }
 
 func (s *vpcPeeringStore) getVpcPeeringConnection(vpcPeeringConnectionId string) (*ec2types.VpcPeeringConnection, error) {
@@ -107,9 +132,17 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnections(ctx context.Context) ([]
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return pie.Map(s.items, func(e *vpcPeeringEntry) ec2types.VpcPeeringConnection {
+	peerings := pie.Map(s.items, func(e *vpcPeeringEntry) ec2types.VpcPeeringConnection {
 		return e.peering
-	}), nil
+	})
+
+	peeringsCopy, err := util.JsonClone(peerings)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return peeringsCopy, nil
 }
 
 func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connectionId *string) (*ec2types.VpcPeeringConnection, error) {
@@ -120,12 +153,19 @@ func (s *vpcPeeringStore) AcceptVpcPeeringConnection(ctx context.Context, connec
 		return nil, err
 	}
 
-	for _, x := range s.items {
-		if ptr.Equal(x.peering.VpcPeeringConnectionId, connectionId) {
-			return &x.peering, nil
-		}
+	peering, err := s.getVpcPeeringConnection(*connectionId)
+
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("an error occurred (InvalidVpcPeeringConnectionID.NotFound) when calling the AcceptVpcPeeringConnection operation: The vpcPeeringConnection ID %s' does not exist", *connectionId)
+
+	peeringCopy, err := util.JsonClone(peering)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return peeringCopy, nil
 }
 
 func (s *vpcPeeringStore) DeleteVpcPeeringConnection(ctx context.Context, connectionId *string) error {
