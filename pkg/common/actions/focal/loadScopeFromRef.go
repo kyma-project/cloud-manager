@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,6 +36,10 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 	if apierrors.IsNotFound(err) {
 		logger.Info("Scope not found")
 
+		if state.isScopeOptional() {
+			return nil, ctx
+		}
+
 		return composed.UpdateStatus(state.ObjAsCommonObj()).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -42,7 +47,7 @@ func loadScopeFromRef(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudcontrolv1beta1.ReasonScopeNotFound,
 				Message: fmt.Sprintf("Scope %s does not exist", state.ObjAsCommonObj().ScopeRef().Name),
 			}).
-			SuccessError(composed.StopAndForget).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
