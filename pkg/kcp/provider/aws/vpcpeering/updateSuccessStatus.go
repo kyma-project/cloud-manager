@@ -20,6 +20,8 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
+	meta.RemoveStatusCondition(obj.Conditions(), cloudcontrol1beta1.ConditionTypeError)
+
 	obj.Status.State = string(state.vpcPeering.Status.Code)
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).

@@ -1,7 +1,3 @@
-- path: spec.shardCount
-  name: spec.shardCount
-  required: false
-  disableOnEdit: true
 - path: spec.redisVersion
   name: spec.redisVersion
   required: false

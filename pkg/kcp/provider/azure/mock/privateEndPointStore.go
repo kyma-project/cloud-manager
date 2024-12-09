@@ -36,12 +36,12 @@ func (s *privateEndPointsStore) GetPrivateEndPoint(ctx context.Context, resource
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	privateDnsZone, err := s.getPrivateEndPointNonLocking(resourceGroupName, privateEndPointName)
+	privateEndPoint, err := s.getPrivateEndPointNonLocking(resourceGroupName, privateEndPointName)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := util.JsonClone(privateDnsZone)
+	res, err := util.JsonClone(privateEndPoint)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (s *privateEndPointsStore) DeletePrivateEndPoint(ctx context.Context, resou
 		return err
 	}
 
-	s.items[resourceGroupName][privateEndPointName] = nil
+	delete(s.items[resourceGroupName], privateEndPointName)
 
 	return nil
 }

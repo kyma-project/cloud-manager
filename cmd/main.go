@@ -34,6 +34,7 @@ import (
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -313,7 +314,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Network")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.SetupNukeReconciler(mgr, skrLoop); err != nil {
+	if err = cloudcontrolcontroller.SetupNukeReconciler(
+		mgr,
+		skrLoop,
+		gcpnfsbackupclient.NewFileBackupClientProvider(),
+		env,
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
 		os.Exit(1)
 	}
@@ -380,6 +386,7 @@ func loadConfig() config.Config {
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)
 	gcpclient.InitConfig(cfg)
+	vpcpeeringconfig.InitConfig(cfg)
 
 	cfg.Read()
 

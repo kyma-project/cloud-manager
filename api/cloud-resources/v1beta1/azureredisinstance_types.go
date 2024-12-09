@@ -64,10 +64,6 @@ type AzureRedisInstanceSpec struct {
 	// +kubebuilder:default="6.0"
 	RedisVersion string `json:"redisVersion,omitempty"`
 
-	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
-	ShardCount int `json:"shardCount,omitempty"`
-
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
 
 	// +optional

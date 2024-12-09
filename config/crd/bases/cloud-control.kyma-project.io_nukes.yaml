@@ -147,6 +147,9 @@ spec:
                       additionalProperties:
                         type: string
                       type: object
+                    resourceType:
+                      default: KCP
+                      type: string
                   required:
                   - kind
                   - objects

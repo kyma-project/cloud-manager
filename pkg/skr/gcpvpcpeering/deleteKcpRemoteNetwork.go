@@ -10,21 +10,13 @@ func deleteKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if !composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
-	}
-
 	if state.KcpRemoteNetwork == nil {
 		return nil, nil
 	}
 
 	if composed.IsMarkedForDeletion(state.KcpRemoteNetwork) {
+		logger.Info("[SKR GCP VPCPeering deleteKcpRemoteNetwork] KCP Remote Network is marked for deletion, will continue.")
 		return nil, nil
-	}
-
-	if state.KcpVpcPeering != nil {
-		logger.Info("[SKR GCP VPCPeering deleteKcpRemoteNetwork] Waiting for KCP VpcPeering deletion")
-		return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), nil
 	}
 
 	logger.Info("[SKR GCP VPCPeering deleteKcpRemoteNetwork] Deleting GCP KCP Remote Network")

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.53
+    cloud-resources.kyma-project.io/version: v0.0.54
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -84,11 +84,6 @@ spec:
                   type: string
                   x-kubernetes-validations:
                     - message: RedisVersion is immutable.
-                      rule: (self == oldSelf)
-                shardCount:
-                  type: integer
-                  x-kubernetes-validations:
-                    - message: ShardCount is immutable.
                       rule: (self == oldSelf)
                 volume:
                   properties:

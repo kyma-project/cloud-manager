@@ -12,13 +12,17 @@ type vpcPeeringEntry struct {
 	peering *pb.NetworkPeering
 }
 type vpcPeeringStore struct {
-	m     sync.Mutex
-	items map[string]*vpcPeeringEntry
+	m        sync.Mutex
+	items    map[string]*vpcPeeringEntry
+	errorMap map[string]error
+	tags     map[string][]string
 }
 
 type VpcPeeringMockClientUtils interface {
 	GetMockVpcPeering(project string, vpc string) *pb.NetworkPeering
 	SetMockVpcPeeringLifeCycleState(project string, vpc string, state pb.NetworkPeering_State)
+	SetMockVpcPeeringError(project string, vpc string, err error)
+	SetMockVpcPeeringTags(project string, vpc string, tags []string)
 }
 
 func getFullNetworkUrl(project, vpc string) string {
@@ -91,22 +95,34 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 	return nil
 }
 
-func (s *vpcPeeringStore) CheckRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string, desiredTag string) (bool, error) {
+func (s *vpcPeeringStore) GetRemoteNetworkTags(context context.Context, vpc string, project string) ([]string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return true, nil
+	return s.tags[getFullNetworkUrl(project, vpc)], nil
 }
 
 func (s *vpcPeeringStore) GetVpcPeering(ctx context.Context, remotePeeringName string, project string, vpc string) (*pb.NetworkPeering, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	network := getFullNetworkUrl(project, vpc)
+
+	if s.errorMap == nil {
+		s.errorMap = make(map[string]error)
+	}
+
+	if err, errorExists := s.errorMap[network]; errorExists {
+		return nil, err
+	}
+
 	if s.items == nil {
 		s.items = make(map[string]*vpcPeeringEntry)
 	}
 
-	network := getFullNetworkUrl(project, vpc)
+	if s.tags == nil {
+		s.tags = make(map[string][]string)
+	}
 
 	_, peeringExists := s.items[network]
 	if !peeringExists {
@@ -143,4 +159,18 @@ func (s *vpcPeeringStore) GetMockVpcPeering(project string, vpc string) *pb.Netw
 		return nil
 	}
 	return s.items[getFullNetworkUrl(project, vpc)].peering
+}
+
+func (s *vpcPeeringStore) SetMockVpcPeeringError(project string, vpc string, err error) {
+	if s.errorMap == nil {
+		s.errorMap = make(map[string]error)
+	}
+	s.errorMap[getFullNetworkUrl(project, vpc)] = err
+}
+
+func (s *vpcPeeringStore) SetMockVpcPeeringTags(project string, vpc string, tags []string) {
+	if s.tags == nil {
+		s.tags = make(map[string][]string)
+	}
+	s.tags[getFullNetworkUrl(project, vpc)] = tags
 }

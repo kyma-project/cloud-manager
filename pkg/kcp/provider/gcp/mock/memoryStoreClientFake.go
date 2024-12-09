@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	redis "cloud.google.com/go/redis/apiv1"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 )
@@ -34,9 +33,9 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteMemorStoreRedisByName(
 	delete(memoryStoreClientFake.redisInstances, name)
 }
 
-func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string, options memoryStoreClient.CreateRedisInstanceOptions) (*redis.CreateInstanceOperation, error) {
+func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string, options memoryStoreClient.CreateRedisInstanceOptions) error {
 	if isContextCanceled(ctx) {
-		return nil, context.Canceled
+		return context.Canceled
 	}
 
 	memoryStoreClientFake.mutex.Lock()
@@ -57,7 +56,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 
-	return &redis.CreateInstanceOperation{}, nil // redis.CreateInstanceOperation is not used in actual code, so empty object is returned
+	return nil
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error {

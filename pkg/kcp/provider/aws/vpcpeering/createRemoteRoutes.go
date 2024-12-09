@@ -57,13 +57,13 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 
 				// Do not update status if nothing is changed
 				if !changed {
-					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), nil
+					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 				}
 
 				// User can recover by modifying routes
 				return composed.PatchStatus(obj).
 					ErrorLogMessage("Error updating VpcPeering status when creating routes").
-					SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
+					SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 					Run(ctx, state)
 			}
 		}

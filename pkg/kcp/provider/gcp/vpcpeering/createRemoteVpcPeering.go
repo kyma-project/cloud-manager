@@ -17,14 +17,16 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"regexp"
 )
 
 func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
+
+	logger.Info("[KCP GCP VpcPeering createRemoteVpcPeering] Creating Remote VPC Peering")
 
 	if state.remoteVpcPeering != nil {
 		return nil, nil
@@ -33,37 +35,42 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	err := state.client.CreateRemoteVpcPeering(
 		ctx,
 		state.remotePeeringName,
-		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
-		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.remoteNetwork.Status.Network.Gcp.NetworkName,
+		state.remoteNetwork.Status.Network.Gcp.GcpProject,
 		state.importCustomRoutes,
-		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
-		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
+		state.localNetwork.Status.Network.Gcp.GcpProject,
+		state.localNetwork.Status.Network.Gcp.NetworkName)
 
 	if err != nil {
-		message := fmt.Sprintf("Error creating Remote VpcPeering %s", err)
-		// If we already have a peering with the same network and project, we need to let the user know that the peering already exists
-		// and he might need to either delete the existing peering or use the same name for the new peering. This is required since we don't
-		// delete any objects on the user project.
-		matchesExistingPeering, regexError := regexp.Match("There is already a peering (.*) with the same network. Select another network.", []byte(err.Error()))
-		if regexError != nil {
-			return err, nil
-		}
-		if matchesExistingPeering {
-			message = fmt.Sprintf("Error creating Remote VpcPeering: %s Please check the VPC peerings on your project.", err)
-		}
+		logger.Error(err, "[KCP GCP VpcPeering createRemoteVpcPeering] Error creating Remote VpcPeering")
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
+
+		if gcpmeta.IsNotAuthorized(err) {
+			return composed.UpdateStatus(state.ObjAsVpcPeering()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  "True",
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+					Message: fmt.Sprintf("Error creating Remote VpcPeering for network %s/%s due to insufficient permissions", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+				}).
+				ErrorLogMessage("Error creating Remote VpcPeering due to insufficient permissions").
+				FailedError(composed.StopWithRequeue).
+				SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+				Run(ctx, state)
+		}
+
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: message,
+				Message: "Error creating Remote VpcPeering",
 			}).
 			ErrorLogMessage("Error creating Remote VpcPeering").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
-	logger.Info("Remote VPC Peering Connection created")
+	logger.Info("[KCP GCP VpcPeering createRemoteVpcPeering] Remote VPC Peering Connection created")
 	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), nil
 }

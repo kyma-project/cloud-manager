@@ -2,6 +2,7 @@ package azureredisinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -63,7 +64,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
 					SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: redisSKUCapacity},
 					RedisVersion: azureRedisInstance.Spec.RedisVersion,
-					ShardCount:   azureRedisInstance.Spec.ShardCount,
+					ShardCount:   0,
 					RedisConfiguration: cloudcontrolv1beta1.RedisInstanceAzureConfigs{
 						MaxClients:                     azureRedisInstance.Spec.RedisConfiguration.MaxClients,
 						MaxFragmentationMemoryReserved: azureRedisInstance.Spec.RedisConfiguration.MaxFragmentationMemoryReserved,

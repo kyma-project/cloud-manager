@@ -25,6 +25,12 @@ func loadRemoteVpcPeeringConnection(ctx context.Context, st composed.State) (err
 	peering, err := state.remoteClient.DescribeVpcPeeringConnection(ctx, obj.Status.RemoteId)
 
 	if err != nil {
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			return composed.LogErrorAndReturn(err,
+				"Error listing AWS peering connections but skipping as marked for deletion",
+				nil,
+				ctx)
+		}
 		return awsmeta.LogErrorAndReturn(err, "Error listing AWS peering connections", ctx)
 	}
 

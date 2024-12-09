@@ -59,7 +59,7 @@ func (r *networkReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.Network{}),
-		focal.New(),
+		focal.NewWithOptionalScope(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"networkCommon",

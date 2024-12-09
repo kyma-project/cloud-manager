@@ -12,13 +12,15 @@ func resourceStatusDeleted(ctx context.Context, st composed.State) (error, conte
 	changed := false
 
 	for _, sk := range state.ObjAsNuke().Status.Resources {
-		for objName, objStatus := range sk.Objects {
-			if objStatus == cloudcontrolv1beta1.NukeResourceStatusDeleted {
-				continue
-			}
-			if !state.ObjectExists(sk.Kind, objName) {
-				changed = true
-				sk.Objects[objName] = cloudcontrolv1beta1.NukeResourceStatusDeleted
+		if sk.GetResourceType() == cloudcontrolv1beta1.KcpManagedResource {
+			for objName, objStatus := range sk.Objects {
+				if objStatus == cloudcontrolv1beta1.NukeResourceStatusDeleted {
+					continue
+				}
+				if !state.ObjectExists(sk.Kind, objName) {
+					changed = true
+					sk.Objects[objName] = cloudcontrolv1beta1.NukeResourceStatusDeleted
+				}
 			}
 		}
 	}

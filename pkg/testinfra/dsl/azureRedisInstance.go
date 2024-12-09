@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -165,7 +166,6 @@ func WithAzureRedisInstanceDefaultSpecs() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
-				azureRedisInstance.Spec.ShardCount = 1
 				azureRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.AzureRedisTierP5
 				azureRedisInstance.Spec.RedisVersion = "7"
 				return

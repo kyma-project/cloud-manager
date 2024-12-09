@@ -14,8 +14,6 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -30,37 +28,14 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	//First we need to check if the remote VPC is tagged with the shoot name.
-	isVpcTagged, err := state.client.CheckRemoteNetworkTags(ctx, state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName, state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject, state.Scope().Spec.ShootName)
-	if err != nil {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Error creating GCP Kyma VPC Peering while checking remote network tags")
-		return err, ctx
-	}
-
-	if !isVpcTagged {
-		logger.Error(err, "[KCP GCP VPCPeering createKymaVpcPeering] Remote network "+state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName+" is not tagged with the kyma shoot name "+state.Scope().Spec.ShootName)
-		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
-		return composed.UpdateStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Error creating VpcPeering, remote VPC does not have a tag with the key: %s", state.Scope().Spec.ShootName),
-			}).
-			ErrorLogMessage("Error creating Remote VpcPeering").
-			FailedError(composed.StopWithRequeue).
-			SuccessError(composed.StopWithRequeueDelay(5*util.Timing.T60000ms())).
-			Run(ctx, state)
-	}
-
-	err = state.client.CreateKymaVpcPeering(
+	err := state.client.CreateKymaVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.remoteNetwork.Spec.Network.Reference.Gcp.NetworkName,
-		state.remoteNetwork.Spec.Network.Reference.Gcp.GcpProject,
+		state.remoteNetwork.Status.Network.Gcp.NetworkName,
+		state.remoteNetwork.Status.Network.Gcp.GcpProject,
 		state.importCustomRoutes,
-		state.localNetwork.Spec.Network.Reference.Gcp.GcpProject,
-		state.localNetwork.Spec.Network.Reference.Gcp.NetworkName)
+		state.localNetwork.Status.Network.Gcp.GcpProject,
+		state.localNetwork.Status.Network.Gcp.NetworkName)
 
 	if err != nil {
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
@@ -69,9 +44,9 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Error creating Remote VpcPeering %s", err),
+				Message: "Error creating local network VpcPeering",
 			}).
-			ErrorLogMessage("Error creating Remote VpcPeering").
+			ErrorLogMessage("Error creating local network VpcPeering").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)

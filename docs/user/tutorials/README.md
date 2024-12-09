@@ -12,9 +12,9 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Create Scheduled Automatic Network File System Volume Backups in Google Cloud](./01-20-22-gcp-scheduled-nfs-backup.md)
   * [Restore Network File System Volume Backups in Google Cloud](./01-20-23-gcp-nfs-volume-restore.md)
 * VPC Peering
-  * [Create Virtual Private Cloud Peering in Microsoft Azure](./01-30-10-azure-vpc-peering.md)
-  * [Create Virtual Private Cloud Peering in Amazon Web Services](./01-30-20-aws-vpc-peering.md)
-  * [Create Virtual Private Cloud Peering in Google Cloud](./01-30-30-gcp-vpc-peering.md)
+  * [Create Virtual Private Cloud Peering in Amazon Web Services](./01-30-10-aws-vpc-peering.md)
+  * [Create Virtual Private Cloud Peering in Google Cloud](./01-30-20-gcp-vpc-peering.md)
+  * [Create Virtual Private Cloud Peering in Microsoft Azure](./01-30-30-azure-vpc-peering.md)
 * Redis
-  * [Using GcpRedisInstance Custom Resources](./01-40-10-gcp-redis-instance.md)
-  * [Using AwsRedisInstance Custom Resources](./01-40-20-aws-redis-instance.md)
+  * [Using AwsRedisInstance Custom Resources](./01-40-10-aws-redis-instance.md)
+  * [Using GcpRedisInstance Custom Resources](./01-40-20-gcp-redis-instance.md)

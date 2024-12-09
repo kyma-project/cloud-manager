@@ -1,5 +1,6 @@
 package v1beta1
 
+// Used for K8s labels
 const (
 	LabelKymaName        = "cloud-manager.kyma-project.io/kymaName"
 	LabelRemoteName      = "cloud-manager.kyma-project.io/remoteName"
