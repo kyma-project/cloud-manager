@@ -4,7 +4,8 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -16,7 +17,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	ok := false
 
 	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
-		resourceID, err := util.ParseResourceID(state.ObjAsVpcPeering().Status.Id)
+		resourceID, err := azureutil.ParseResourceID(state.ObjAsVpcPeering().Status.Id)
 		if err == nil {
 			resourceGroup = resourceID.ResourceGroup
 			networkName = resourceID.ResourceName
@@ -44,11 +45,20 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 		state.ObjAsVpcPeering().GetLocalPeeringName(),
 	)
 
-	if azuremeta.IsNotFound(err) {
-		logger.Info("Local Azure Peering not found for KCP VpcPeering")
-		return nil, nil
-	}
 	if err != nil {
+		if azuremeta.IsTooManyRequests(err) {
+			return composed.LogErrorAndReturn(err,
+				"Azure vpc peering too many requests on peering local load",
+				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+				ctx,
+			)
+		}
+
+		if azuremeta.IsNotFound(err) {
+			logger.Info("Local Azure Peering not found for KCP VpcPeering")
+			return nil, nil
+		}
+
 		return azuremeta.LogErrorAndReturn(err, "Error loading VPC Peering", ctx)
 	}
 

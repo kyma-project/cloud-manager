@@ -17,13 +17,14 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 	// remote client not created
 	if state.remoteClient == nil {
+		logger.Info("Azure remote client not initialized. Skipping loading of remote peering")
 		return nil, nil
 	}
 
 	var resourceGroup, networkName string
 	ok := false
 
-	if len(state.ObjAsVpcPeering().Status.Id) > 0 {
+	if len(state.ObjAsVpcPeering().Status.RemoteId) > 0 {
 		resourceID, err := azureutil.ParseResourceID(state.ObjAsVpcPeering().Status.RemoteId)
 		if err == nil {
 			resourceGroup = resourceID.ResourceGroup
@@ -33,7 +34,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 	}
 
-	if !ok && state.localNetworkId != nil {
+	if !ok && state.remoteNetworkId != nil {
 		resourceGroup = state.remoteNetworkId.ResourceGroup
 		networkName = state.remoteNetworkId.NetworkName()
 		ok = true
