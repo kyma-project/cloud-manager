@@ -24,6 +24,7 @@ jobs:
             # state: pass, fail, pending, skipping, cancel
             gh pr checks $PR_NUMBER --json name,bucket,completedAt,description,event,link,startedAt,state,workflow > all.json
             
+            echo "Raw json for gh pr checks $PR_NUMBER:"
             cat all.json
             
             FAILED=`jq -r 'map(select(.bucket=="fail" and .name!="merge-gate").name) | .[]' all.json`
@@ -36,10 +37,10 @@ jobs:
             
             echo "Failed count: $FAILED_COUNT"
             echo "$FAILED"
-            echo "Pending count: CANCELED_COUNT"
-            echo "CANCELED"
-            echo "Pending count: PENDING_COUNT"
-            echo "PENDING"
+            echo "Pending count: $CANCELED_COUNT"
+            echo "$CANCELED"
+            echo "Pending count: $PENDING_COUNT"
+            echo "$PENDING"
           
             if [ "$FAILED_COUNT" != "0" ]; then
               echo "There are failed jobs"
