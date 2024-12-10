@@ -120,7 +120,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 }
 
 func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
-	logger := composed.LoggerFromCtx(ctx)
+	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "locationId", locationId, "instanceId", instanceId)
 	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
 	if err != nil {
 		return nil, nil, err
@@ -135,7 +135,8 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 	instanceResponse, err := redisClient.GetInstance(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
-			return nil, nil, nil
+			logger.Info("target Redis instance not found")
+			return nil, nil, err
 		}
 		logger.Error(err, "Failed to get Redis instance")
 		return nil, nil, err
@@ -169,12 +170,7 @@ func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Cont
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
-		if gcpmeta.IsNotFound(err) {
-			logger.Error(err, "target redis instance for delete not found, continuing")
-			return nil
-		}
-		logger.Error(err, "Failed to delete Redis instance")
-
+		logger.Error(err, "DeleteRedisInstance", "projectId", projectId, "locationId", locationId, "instanceId", instanceId)
 		return err
 	}
 

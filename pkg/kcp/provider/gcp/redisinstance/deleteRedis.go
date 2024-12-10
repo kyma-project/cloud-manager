@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,11 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	err := state.memorystoreClient.DeleteRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
 	if err != nil {
+		if gcpmeta.IsNotFound(err) {
+			logger.Info("target redis instance for delete not found, continuing to next loop")
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
+
 		logger.Error(err, "Error deleting GCP Redis")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
