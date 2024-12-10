@@ -2,98 +2,15 @@ package gcpnfsvolume
 
 import (
 	"context"
-	"fmt"
+	"time"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-	"time"
 )
-
-func validateCapacity(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*State)
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-	// Capacity hasn't changed. No need to validate
-	if state.ObjAsGcpNfsVolume().Spec.CapacityGb == state.ObjAsGcpNfsVolume().Status.CapacityGb {
-		return nil, nil
-	}
-	tier := state.ObjAsGcpNfsVolume().Spec.Tier
-	capacity := state.ObjAsGcpNfsVolume().Spec.CapacityGb
-	switch tier {
-	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.PREMIUM:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{2560, 65400, 1})
-	case cloudresourcesv1beta1.HIGH_SCALE_SSD:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{10240, 102400, 1})
-	case cloudresourcesv1beta1.ZONAL:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 9984, 256}, capacityRange{10240, 102400, 2560})
-	case cloudresourcesv1beta1.ENTERPRISE:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 10240, 256})
-	case cloudresourcesv1beta1.REGIONAL:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 9984, 256}, capacityRange{10240, 102400, 2560})
-	case cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
-		return validateCapacityForTier(ctx, st, capacity, capacityRange{1024, 65400, 1})
-	default:
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionReasonTierInvalid,
-				Message: "Tier is not valid",
-			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
-			Run(ctx, state)
-	}
-}
-
-type capacityRange struct {
-	min        int
-	max        int
-	increments int
-}
-
-func validateCapacityForTier(ctx context.Context, st composed.State, capacity int, validRanges ...capacityRange) (error, context.Context) {
-	state := st.(*State)
-	valid := false
-	var rangesString []string
-	for _, validRange := range validRanges {
-		if capacity >= validRange.min && capacity <= validRange.max && (capacity-validRange.min)%validRange.increments == 0 {
-			valid = true
-		}
-		if validRange.increments == 1 {
-			rangesString = append(rangesString, fmt.Sprintf("%d to %d", validRange.min, validRange.max))
-		} else {
-			rangesString = append(rangesString, fmt.Sprintf("%d to %d scaling in increments of %d", validRange.min, validRange.max, validRange.increments))
-		}
-	}
-	if valid {
-		// Capacity is the only mutable field. If it succeeds, we should remove the error condition if the reason was invalid capacity
-		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-			RemoveConditionIfReasonMatched(cloudresourcesv1beta1.ConditionTypeError, cloudresourcesv1beta1.ConditionReasonCapacityInvalid).
-			ErrorLogMessage("Error removing conditionType Error").
-			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {
-				return nil, nil
-			}).
-			Run(ctx, state)
-
-	} else {
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionReasonCapacityInvalid,
-				Message: fmt.Sprintf("CapacityGb for this tier must be between %s", strings.Join(rangesString, " or ")),
-			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with invalid capacity").
-			Run(ctx, state)
-	}
-}
 
 func validateIpRange(ctx context.Context, st composed.State) (error, context.Context) {
 	if composed.MarkedForDeletionPredicate(ctx, st) {
@@ -156,49 +73,6 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			return nil, nil
 		}).
 		Run(ctx, state)
-}
-
-func validateFileShareName(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*State)
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-	tier := state.ObjAsGcpNfsVolume().Spec.Tier
-	fileShareName := state.ObjAsGcpNfsVolume().Spec.FileShareName
-	switch tier {
-	case cloudresourcesv1beta1.BASIC_SSD, cloudresourcesv1beta1.PREMIUM, cloudresourcesv1beta1.BASIC_HDD, cloudresourcesv1beta1.STANDARD:
-		if len(fileShareName) > 16 {
-			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-			return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudresourcesv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
-					Message: "FileShareName for this tier must be 16 characters or less",
-				}).
-				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
-				Run(ctx, state)
-		} else {
-			// if validation succeeds, we don't need to update the status
-			return nil, nil
-		}
-	default:
-		if len(fileShareName) > 64 {
-			state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-			return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudresourcesv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudresourcesv1beta1.ConditionReasonFileShareNameInvalid,
-					Message: "FileShareName for this tier must be 64 characters or less",
-				}).
-				ErrorLogMessage("Error updating GcpNfsVolume status with invalid fileShareName").
-				Run(ctx, state)
-		} else {
-			// if validation succeeds, we don't need to update the status
-			return nil, nil
-		}
-	}
 }
 
 func validateLocation(ctx context.Context, st composed.State) (error, context.Context) {
