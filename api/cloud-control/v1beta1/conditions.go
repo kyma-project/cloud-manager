@@ -16,5 +16,5 @@ const (
 	ReasonMissingDependency  = "MissingDependency"
 	ReasonWaitingDependency  = "WaitingDependency"
 	ReasonDeleteWhileUsed    = "DeleteWhileUsed"
-	ReasonRemoteClientFailed = "RemoteClientFailed"
+	ReasonCloudProviderError = "CloudProviderError"
 )
