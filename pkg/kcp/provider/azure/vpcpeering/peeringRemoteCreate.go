@@ -28,11 +28,11 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	)
 
 	if err != nil {
-		logger.Error(err, "Error creating remote VPC Peering")
+		logger.Error(err, "Error creating remote VPC peering")
 
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering remote create",
+				"Too many requests on creating remote VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 				ctx,
 			)
@@ -53,13 +53,13 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
 				Message: message,
 			}).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote vpc peering").
+			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
-	logger.Info("Azure remote VPC Peering created")
+	logger.Info("Remote VPC peering created")
 
 	return nil, nil
 }

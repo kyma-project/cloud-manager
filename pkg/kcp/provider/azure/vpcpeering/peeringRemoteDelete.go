@@ -16,7 +16,7 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 	}
 
 	if state.remotePeering == nil {
-		logger.Info("Azure remote peering not loaded, continuing")
+		logger.Info("Remote VPC peering not loaded, continuing")
 		return nil, nil
 	}
 
@@ -39,13 +39,13 @@ func peeringRemoteDelete(ctx context.Context, st composed.State) (error, context
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 	)
 
-	logger.Info("Deleting remote VpcPeering")
+	logger.Info("Deleting remote VPC peering")
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting vpc peering", nil, ctx)
+		return composed.LogErrorAndReturn(err, "Error deleting VPC peering", nil, ctx)
 	}
 
-	logger.Info("Remote VpcPeering deleted")
+	logger.Info("Remote VPC peering deleted")
 
 	return nil, nil
 }

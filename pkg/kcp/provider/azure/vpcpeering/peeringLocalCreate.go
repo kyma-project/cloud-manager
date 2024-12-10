@@ -31,7 +31,7 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering local create",
+				"Too many requests on creating local VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 				ctx,
 			)
@@ -70,12 +70,12 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(condition).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of local vpc peering").
+			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of local VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
-	logger.Info("Azure local Peering is created")
+	logger.Info("Local VPC peering created")
 	return nil, nil
 }

@@ -14,17 +14,17 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	obj := state.ObjAsVpcPeering()
 
 	if state.localPeering == nil {
-		logger.Info("VpcPeering deleted before Azure peering is created")
+		logger.Info("VpcPeering deleted before local VPC peering is created")
 		return nil, nil
 	}
 
 	resourceId, err := util.ParseResourceID(ptr.Deref(state.localPeering.ID, ""))
 
 	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Failed parsing localPeering.ID while deleting local peering", ctx)
+		return azuremeta.LogErrorAndReturn(err, "Failed parsing localPeering.ID while deleting local VPC peering", ctx)
 	}
 
-	logger.Info("Deleting VpcPeering")
+	logger.Info("Deleting local VPC peering")
 
 	err = state.localClient.DeletePeering(
 		ctx,
@@ -34,10 +34,10 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	)
 
 	if err != nil {
-		return azuremeta.LogErrorAndReturn(err, "Error deleting local vpc peering", ctx)
+		return azuremeta.LogErrorAndReturn(err, "Error deleting local VPC peering", ctx)
 	}
 
-	logger.Info("Local VpcPeering deleted")
+	logger.Info("Local VPC peering deleted")
 
 	return nil, nil
 }
