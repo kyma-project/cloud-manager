@@ -58,7 +58,10 @@ func (r *nukeReconciler) newAction() composed.Action {
 			resourceStatusDeleting,
 			resourceStatusDeleted,
 			composed.If(
-				focal.GcpProviderPredicate,
+				composed.All(
+					feature.FFNukeBackupsGcp.Predicate(),
+					focal.GcpProviderPredicate,
+				),
 				gcpnuke.New(r.gcpStateFactory),
 			),
 			checkIfAllDeleted,

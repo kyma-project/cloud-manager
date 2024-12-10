@@ -20,6 +20,7 @@ apiDisabled:
       variation: disabled
   defaultRule:
     variation: enabled
+
 gcpNfsVolumeAutomaticLocationAllocation:
   variations:
     enabled: true
@@ -30,3 +31,10 @@ gcpNfsVolumeAutomaticLocationAllocation:
       variation: enabled
   defaultRule:
     variation: disabled
+
+nukeBackupsGcp:
+  variations:
+    yes: true
+    no: false
+  defaultRule:
+    variation: no
