@@ -160,6 +160,9 @@ type NetworkStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".spec.type"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // Network is the Schema for the networks API
 type Network struct {
