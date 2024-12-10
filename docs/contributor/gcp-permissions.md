@@ -15,6 +15,8 @@
   "file.backups.create",
   "file.backups.delete",
   "file.backups.get",
+  "file.backups.list",
+  "file.backups.update",
   "file.instances.create",
   "file.instances.delete",
   "file.instances.get",

@@ -2,6 +2,9 @@ package vpcpeering
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -26,7 +29,18 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	)
 
 	if err != nil {
-		return err, nil
+		logger.Error(err, "Error deleting GCP VPC Peering")
+		return composed.UpdateStatus(state.ObjAsVpcPeering()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  "True",
+				Reason:  cloudcontrolv1beta1.ConditionTypeError,
+				Message: "Error deleting local network VpcPeering",
+			}).
+			ErrorLogMessage("Error deleting local network VpcPeering").
+			FailedError(composed.StopWithRequeue).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+			Run(ctx, state)
 	}
 
 	return nil, nil

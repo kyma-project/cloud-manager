@@ -29,3 +29,25 @@ func IsNotFound(err error) bool {
 
 	return false
 }
+
+func IsNotAuthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var googleapierror *googleapi.Error
+	if ok := errors.As(err, &googleapierror); ok {
+		if googleapierror.Code == 403 {
+			return true
+		}
+	}
+
+	var apierror *apierror.APIError
+	if ok := errors.As(err, &apierror); ok {
+		if apierror.GRPCStatus().Code() == codes.PermissionDenied {
+			return true
+		}
+	}
+
+	return false
+}

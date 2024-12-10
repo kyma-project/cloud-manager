@@ -13,6 +13,9 @@ type State interface {
 	Kyma() *unstructured.Unstructured
 	SetKyma(u *unstructured.Unstructured)
 	ObjAsCommonObj() CommonObject
+
+	setScopeOptional()
+	isScopeOptional() bool
 }
 
 type StateFactory interface {
@@ -38,6 +41,8 @@ type state struct {
 
 	scope *cloudcontrolv1beta1.Scope
 	kyma  *unstructured.Unstructured
+
+	_optionalScope bool
 }
 
 func (s *state) Scope() *cloudcontrolv1beta1.Scope {
@@ -58,4 +63,12 @@ func (s *state) SetKyma(u *unstructured.Unstructured) {
 
 func (s *state) ObjAsCommonObj() CommonObject {
 	return s.Obj().(CommonObject)
+}
+
+func (s *state) isScopeOptional() bool {
+	return s._optionalScope
+}
+
+func (s *state) setScopeOptional() {
+	s._optionalScope = true
 }

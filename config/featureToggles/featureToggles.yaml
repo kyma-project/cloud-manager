@@ -20,12 +20,6 @@ apiDisabled:
       variation: disabled
   defaultRule:
     variation: enabled
-ipRangeAutomaticCidrAllocation:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
 gcpNfsVolumeAutomaticLocationAllocation:
   variations:
     enabled: true
