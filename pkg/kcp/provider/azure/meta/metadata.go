@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"net/http"
+	"regexp"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage = "Cannot create or update peering. Virtual networks cannot be peered because address space of the first virtual network overlaps with address space of third virtual network already peered with the second virtual network."
 	InvalidResourceName                                  = "InvalidResourceName"
 	InvalidResourceNameMessage                           = "Resource name is invalid. The name can be up to 80 characters long. It must begin with a word character, and it must end with a word character. The name may contain word characters or '.', '-'."
+	VnetAddressSpacesOverlap                             = "VnetAddressSpacesOverlap"
+	VnetAddressSpacesOverlapMessage                      = "Cannot create or update peering. Virtual networks cannot be peered because their address spaces overlap. "
 )
 
 func IsTooManyRequests(err error) bool {
@@ -100,6 +103,9 @@ func GetErrorMessage(err error) (string, bool) {
 			return VnetAddressSpaceOverlapsWithAlreadyPeeredVnetMessage, true
 		case InvalidResourceName:
 			return InvalidResourceNameMessage, true
+		case VnetAddressSpacesOverlap:
+			r := regexp.MustCompile(`Overlapping address prefixes:[^\"]*`)
+			return VnetAddressSpacesOverlapMessage + r.FindString(respErr.Error()), true
 		}
 	}
 
