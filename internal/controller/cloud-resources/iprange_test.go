@@ -1105,9 +1105,9 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
-			Eventually(SucceedIgnoreNotFound).
+			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
