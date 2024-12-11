@@ -56,6 +56,7 @@ jobs:
             fi
             if [ "$PENDING_COUNT" == "0" ]; then
               echo "There are no pending jobs. All done!"
+              echo "# All jobs done" >> $GITHUB_STEP_SUMMARY
               exit 0
             fi
           
