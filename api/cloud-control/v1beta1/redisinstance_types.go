@@ -287,6 +287,14 @@ func (in *RedisInstance) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *RedisInstance) State() string {
+	return string(in.Status.State)
+}
+
+func (in *RedisInstance) SetState(v string) {
+	in.Status.State = StatusState(v)
+}
+
 func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }

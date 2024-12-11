@@ -7,6 +7,7 @@ const (
 	ErrorState      StatusState = "Error"
 	ProcessingState StatusState = "Processing"
 	WarningState    StatusState = "Warning"
+	DeletingState   StatusState = "Deleting"
 )
 
 const (

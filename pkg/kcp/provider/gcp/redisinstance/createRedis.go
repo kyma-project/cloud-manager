@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -57,6 +58,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  v1beta1.ReasonGcpError,
 			Message: fmt.Sprintf("Failed creating GcpRedis: %s", err),
 		})
+		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
+
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
