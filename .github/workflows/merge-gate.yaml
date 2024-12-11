@@ -19,6 +19,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: |
+          sleep 30
           while :
           do
             # state: pass, fail, pending, skipping, cancel
