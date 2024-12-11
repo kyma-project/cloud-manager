@@ -1,0 +1,65 @@
+name: Merge Gate
+on:
+  pull_request:
+
+permissions:
+  checks: read
+  contents: read
+
+jobs:
+  merge-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          sleep 30
+          while :
+          do
+            # state: pass, fail, pending, skipping, cancel
+            gh pr checks $PR_NUMBER --json name,bucket,completedAt,description,event,link,startedAt,state,workflow > all.json
+            
+            echo "Raw json for gh pr checks $PR_NUMBER:"
+            cat all.json
+            
+            FAILED=`jq -r 'map(select(.bucket=="fail" and .name!="merge-gate").name) | .[]' all.json`
+            CANCELED=`jq -r 'map(select(.bucket=="cancel" and .name!="merge-gate").name) | .[]' all.json`
+            PENDING=`jq -r 'map(select(.bucket=="pending" and .name!="merge-gate").name) | .[]' all.json`
+
+            FAILED_COUNT=`jq 'map(select(.bucket=="fail" and .name!="merge-gate")) | length' all.json`
+            CANCELED_COUNT=`jq 'map(select(.bucket=="cancel" and .name!="merge-gate")) | length' all.json`
+            PENDING_COUNT=`jq 'map(select(.bucket=="pending" and .name!="merge-gate")) | length' all.json`
+            
+            echo "Failed count: $FAILED_COUNT"
+            echo "$FAILED" | awk '{ print "  * " $0 }'
+            echo "Pending count: $CANCELED_COUNT"
+            echo "$CANCELED" | awk '{ print "  * " $0 }'
+            echo "Pending count: $PENDING_COUNT"
+            echo "$PENDING" | awk '{ print "  * " $0 }'
+          
+            if [ "$FAILED_COUNT" != "0" ]; then
+              echo "Error: There are failed jobs"
+              echo "# Failed jobs" >> $GITHUB_STEP_SUMMARY
+              echo "$FAILED" | awk '{ print "  * " $0 }' >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            if [ "$CANCELED_COUNT" != "0" ]; then
+              echo "Error: There are canceled jobs"
+              echo "# Canceled jobs" >> $GITHUB_STEP_SUMMARY
+              echo "$CANCELED" | awk '{ print "  * " $0 }' >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+            if [ "$PENDING_COUNT" == "0" ]; then
+              echo "There are no pending jobs. All done!"
+              echo "# All jobs done" >> $GITHUB_STEP_SUMMARY
+              exit 0
+            fi
+          
+            sleep 5
+          done

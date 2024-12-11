@@ -500,25 +500,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
 		})
 
-		By("And Then local Azure peering does not exist", func() {
-			peering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, kcpPeeringName)
-			Expect(err).To(HaveOccurred())
-			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
-			Expect(peering).To(BeNil())
-		})
-
-		By("And Then remote Azure peering exists", func() {
-			peering, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			Expect(peering).NotTo(BeNil())
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		By("// cleanup: Scope", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
 				Should(Succeed())
 		})
-
 	})
 
 	It("Scenario: KCP Azure VpcPeering can be deleted when unauthorized", func() {

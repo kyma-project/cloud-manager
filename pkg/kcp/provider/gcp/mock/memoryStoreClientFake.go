@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/redis/apiv1/redispb"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	"google.golang.org/api/googleapi"
 )
 
 type MemoryStoreClientFakeUtils interface {
@@ -91,9 +92,13 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx cont
 
 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
 		instance.State = redispb.Instance_DELETING
+		return nil
 	}
 
-	return nil
+	return &googleapi.Error{
+		Code:    404,
+		Message: "Not Found",
+	}
 }
 
 func (memoryStoreClientFake *memoryStoreClientFake) GetRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
@@ -106,7 +111,13 @@ func (memoryStoreClientFake *memoryStoreClientFake) GetRedisInstance(ctx context
 
 	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 
-	instance := memoryStoreClientFake.redisInstances[name]
+	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
+		return instance, &redispb.InstanceAuthString{AuthString: "0df0aea4-2cd6-4b9a-900f-a650661e1740"}, nil
+	}
 
-	return instance, &redispb.InstanceAuthString{AuthString: "0df0aea4-2cd6-4b9a-900f-a650661e1740"}, nil
+	return nil, nil, &googleapi.Error{
+		Code:    404,
+		Message: "Not Found",
+	}
+
 }
