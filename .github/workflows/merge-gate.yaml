@@ -36,18 +36,22 @@ jobs:
             PENDING_COUNT=`jq 'map(select(.bucket=="pending" and .name!="merge-gate")) | length' all.json`
             
             echo "Failed count: $FAILED_COUNT"
-            echo "$FAILED"
+            echo "$FAILED" | awk '{ print "  * " $0 }'
             echo "Pending count: $CANCELED_COUNT"
-            echo "$CANCELED"
+            echo "$CANCELED" | awk '{ print "  * " $0 }'
             echo "Pending count: $PENDING_COUNT"
-            echo "$PENDING"
+            echo "$PENDING" | awk '{ print "  * " $0 }'
           
             if [ "$FAILED_COUNT" != "0" ]; then
-              echo "There are failed jobs"
+              echo "Error: There are failed jobs"
+              echo "# Failed jobs" >> $GITHUB_STEP_SUMMARY
+              echo "$FAILED" | awk '{ print "  * " $0 }' >> $GITHUB_STEP_SUMMARY
               exit 1
             fi
             if [ "$CANCELED_COUNT" != "0" ]; then
-              echo "There are canceled jobs"
+              echo "Error: There are canceled jobs"
+              echo "# Canceled jobs" >> $GITHUB_STEP_SUMMARY
+              echo "$CANCELED" | awk '{ print "  * " $0 }' >> $GITHUB_STEP_SUMMARY
               exit 1
             fi
             if [ "$PENDING_COUNT" == "0" ]; then
