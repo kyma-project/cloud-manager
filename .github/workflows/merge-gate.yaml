@@ -29,7 +29,7 @@ jobs:
             
             FAILED=`jq -r 'map(select(.bucket=="fail" and .name!="merge-gate").name) | .[]' all.json`
             CANCELED=`jq -r 'map(select(.bucket=="cancel" and .name!="merge-gate").name) | .[]' all.json`
-            PENDING=`jq -r 'map(select(.bucket!="pending" and .name!="merge-gate").name) | .[]' all.json`
+            PENDING=`jq -r 'map(select(.bucket=="pending" and .name!="merge-gate").name) | .[]' all.json`
 
             FAILED_COUNT=`jq 'map(select(.bucket=="fail" and .name!="merge-gate")) | length' all.json`
             CANCELED_COUNT=`jq 'map(select(.bucket=="cancel" and .name!="merge-gate")) | length' all.json`
