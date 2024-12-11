@@ -40,7 +40,7 @@ func Start() (Infra, error) {
 	}
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
-		envtestK8sVersion = "1.29.4"
+		envtestK8sVersion = "1.31.0"
 	}
 
 	ginkgo.By("Preparing CRDs")
