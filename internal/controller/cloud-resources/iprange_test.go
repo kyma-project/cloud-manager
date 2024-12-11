@@ -152,7 +152,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 				Eventually(Delete).
 					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-					Should(Succeed(), "failed deleting SKR IpRange to clean up")
+					Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 			})
 		})
 	}
@@ -323,7 +323,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 	})
 
@@ -366,7 +366,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 	})
 
@@ -437,7 +437,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 	})
 
@@ -508,7 +508,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 	})
 
@@ -612,13 +612,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR AwsNfsVolume %s", skrAwsNfsVolume.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
-				Should(Succeed(), "failed deleting SKR AwsNfsVolume to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR AwsNfsVolume to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
@@ -722,13 +722,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR GcpNfsVolume %s", skrGcpNfsVolume.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume).
-				Should(Succeed(), "failed deleting SKR GcpNfsVolume to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR GcpNfsVolume to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
@@ -784,13 +784,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
-				Should(Succeed())
+				Should(SucceedIgnoreNotFound())
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange2.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
-				Should(Succeed())
+				Should(SucceedIgnoreNotFound())
 		})
 	})
 
@@ -842,13 +842,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange1.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange1).
-				Should(Succeed())
+				Should(SucceedIgnoreNotFound())
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", iprange2.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), iprange2).
-				Should(Succeed())
+				Should(SucceedIgnoreNotFound())
 		})
 	})
 
@@ -990,13 +990,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR AwsRedisInstance %s", skrAwsRedisInstance.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsRedisInstance).
-				Should(Succeed(), "failed deleting SKR AwsRedisInstance to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR AwsRedisInstance to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
@@ -1101,11 +1101,11 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR GcpRedisInstance %s", skrGcpRedisInstance.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpRedisInstance).
-				Should(Succeed(), "failed deleting SKR GcpRedisInstance to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR GcpRedisInstance to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
-			Eventually(Delete).
+			Eventually(SucceedIgnoreNotFound).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed(), "failed deleting SKR IpRange to clean up")
 		})
@@ -1212,13 +1212,13 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		By(fmt.Sprintf("// cleanup: delete SKR AzureRedisInstance %s", skrAzureRedisInstance.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAzureRedisInstance).
-				Should(Succeed(), "failed deleting SKR AzureRedisInstance to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR AzureRedisInstance to clean up")
 		})
 
 		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRange.Name), func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed(), "failed deleting SKR IpRange to clean up")
+				Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
 		})
 
 	})
