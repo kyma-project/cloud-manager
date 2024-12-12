@@ -69,7 +69,10 @@ func (r *nukeReconciler) newAction() composed.Action {
 				gcpnuke.New(r.gcpStateFactory),
 			),
 			composed.If(
-				focal.AwsProviderPredicate,
+				composed.All(
+					feature.FFNukeBackupsAws.Predicate(),
+					focal.AwsProviderPredicate,
+				),
 				awsnuke.New(r.awsStateFactory),
 			),
 			checkIfAllDeleted,

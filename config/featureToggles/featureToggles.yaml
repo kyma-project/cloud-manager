@@ -38,3 +38,10 @@ nukeBackupsGcp:
     no: false
   defaultRule:
     variation: no
+
+nukeBackupsAws:
+  variations:
+    yes: true
+    no: false
+  defaultRule:
+    variation: no
