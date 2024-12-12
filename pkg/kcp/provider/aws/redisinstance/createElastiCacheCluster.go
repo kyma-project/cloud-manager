@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -69,8 +68,8 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ConditionTypeError,
-			Message: fmt.Sprintf("Failed creating AWS Elasticache: %s", err),
+			Reason:  v1beta1.ReasonCloudProviderError,
+			Message: "Failed to create RedisInstance",
 		})
 		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
 		err = state.UpdateObjStatus(ctx)

@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -43,8 +42,8 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudcontrolv1beta1.ReasonGcpError,
-			Message: fmt.Sprintf("Failed updating GcpRedis: %s", err),
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+			Message: "Failed to update RedisInstance",
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
