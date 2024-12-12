@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"fmt"
 
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -43,8 +42,8 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonGcpError,
-			Message: fmt.Sprintf("Failed deleting GcpRedis: %s", err),
+			Reason:  v1beta1.ReasonCloudProviderError,
+			Message: "Failed to delete RedisInstance",
 		})
 		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
 
