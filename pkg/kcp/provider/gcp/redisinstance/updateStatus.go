@@ -13,15 +13,14 @@ import (
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
-	}
-
 	redisInstance := state.ObjAsRedisInstance()
+
+	hasChanged := false
 
 	primaryEndpoint := fmt.Sprintf("%s:%d", state.gcpRedisInstance.Host, state.gcpRedisInstance.Port)
 	if redisInstance.Status.PrimaryEndpoint != primaryEndpoint {
 		redisInstance.Status.PrimaryEndpoint = primaryEndpoint
+		hasChanged = true
 	}
 
 	readEndpoint := fmt.Sprintf("%s:%d", state.gcpRedisInstance.ReadEndpoint, state.gcpRedisInstance.ReadEndpointPort)
@@ -30,7 +29,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 	if redisInstance.Status.ReadEndpoint != readEndpoint {
 		redisInstance.Status.ReadEndpoint = readEndpoint
-
+		hasChanged = true
 	}
 
 	authString := ""
@@ -39,18 +38,23 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 	if redisInstance.Status.AuthString != authString {
 		redisInstance.Status.AuthString = authString
+		hasChanged = true
 	}
 
 	if len(state.gcpRedisInstance.ServerCaCerts) > 0 && redisInstance.Status.CaCert != state.gcpRedisInstance.ServerCaCerts[0].Cert {
 		redisInstance.Status.CaCert = state.gcpRedisInstance.ServerCaCerts[0].Cert
+		hasChanged = true
 	}
 
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
-	if hasReadyCondition {
-		composed.LoggerFromCtx(ctx).Info("Ready condition already present, StopAndForget-ing")
+	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.ReadyState
+
+	if !hasChanged && hasReadyCondition && hasReadyStatusState {
+		composed.LoggerFromCtx(ctx).Info("RedisInstance status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 
+	redisInstance.Status.State = cloudcontrolv1beta1.ReadyState
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,
