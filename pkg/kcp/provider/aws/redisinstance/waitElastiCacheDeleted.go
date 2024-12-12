@@ -28,7 +28,7 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 		errorMsg := fmt.Sprintf("Error: unexpected aws elasticache cluster state: %s", cacheState)
 		logger.Error(errors.New(errorMsg), errorMsg)
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
-		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,

@@ -2,6 +2,10 @@ package v2
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -9,10 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type compareStatesSuite struct {
@@ -415,7 +416,7 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 	assert.Nil(suite.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ReadyState, state.curState)
+	assert.Equal(suite.T(), cloudcontrolv1beta1.StateReady, state.curState)
 	assert.Equal(suite.T(), client.NONE, state.connectionOp)
 	assert.Equal(suite.T(), client.NONE, state.addressOp)
 	assert.True(suite.T(), state.inSync)

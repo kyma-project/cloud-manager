@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+
 	"github.com/3th1nk/cidr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -28,7 +29,7 @@ func rangeCheckOverlap(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		if util.CidrOverlap(rangeCidr.CIDR(), cdr.CIDR()) {
-			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,

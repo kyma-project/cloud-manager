@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -66,7 +67,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status conditions after invalid mount targets found", composed.StopWithRequeue, ctx)
 	}
 
-	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 	err = state.UpdateObj(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status state after invalid mount targets found", composed.StopWithRequeue, ctx)

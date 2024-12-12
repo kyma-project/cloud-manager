@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -140,7 +141,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		})
 
 		By("When KCP CM Network has Ready condition", func() {
-			kcpNetworkCm.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			kcpNetworkCm.Status.State = string(cloudcontrolv1beta1.StateReady)
 			meta.SetStatusCondition(&kcpNetworkCm.Status.Conditions, metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
@@ -181,7 +182,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		})
 
 		By("When KCP VpcPeering has Ready condition", func() {
-			kcpVpcPeering.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			kcpVpcPeering.Status.State = string(cloudcontrolv1beta1.StateReady)
 			meta.SetStatusCondition(&kcpVpcPeering.Status.Conditions, metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

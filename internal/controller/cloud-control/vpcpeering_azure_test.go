@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"errors"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -356,7 +357,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 
 			localKcpNet.Status.Network = localKcpNet.Spec.Network.Reference.DeepCopy()
-			localKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			localKcpNet.Status.State = string(cloudcontrolv1beta1.StateReady)
 			meta.SetStatusCondition(&localKcpNet.Status.Conditions, metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
@@ -380,7 +381,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 
 			remoteKcpNet.Status.Network = remoteKcpNet.Spec.Network.Reference.DeepCopy()
-			remoteKcpNet.Status.State = string(cloudcontrolv1beta1.ReadyState)
+			remoteKcpNet.Status.State = string(cloudcontrolv1beta1.StateReady)
 			meta.SetStatusCondition(&remoteKcpNet.Status.Conditions, metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,

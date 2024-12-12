@@ -2,8 +2,9 @@ package cloudcontrol
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -105,7 +106,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Ready condition")
 			})
 			By("And KCP NfsVolume has Ready state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 			})
 		})
 
@@ -139,7 +140,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.ReadyState
+					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.StateReady
 					return exists, nil
 				}, timeout, interval)
 			})
@@ -533,7 +534,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Ready condition")
 			})
 			By("And KCP NfsVolume has Ready state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 			})
 		})
 
@@ -567,7 +568,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.ReadyState
+					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.StateReady
 					return exists, nil
 				}, timeout, interval)
 			})

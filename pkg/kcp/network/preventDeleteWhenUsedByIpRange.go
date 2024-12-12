@@ -18,7 +18,7 @@ func preventDeleteWhenUsedByIpRange(ctx context.Context, st composed.State) (err
 		cloudcontrolv1beta1.IpRangeNetworkField,
 		func(ctx context.Context, st composed.State, _ client.ObjectList, usedByNames []string) (error, context.Context) {
 			state := st.(*state)
-			state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.WarningState)
+			state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.StateWarning)
 			return composed.PatchStatus(state.ObjAsNetwork()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeWarning,

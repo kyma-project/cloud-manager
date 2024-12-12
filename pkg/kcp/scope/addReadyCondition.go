@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -13,8 +14,8 @@ func addReadyCondition(ctx context.Context, st composed.State) (error, context.C
 
 	changed := false
 
-	if state.ObjAsScope().Status.State != cloudcontrolv1beta1.ReadyState {
-		state.ObjAsScope().Status.State = cloudcontrolv1beta1.ReadyState
+	if state.ObjAsScope().Status.State != cloudcontrolv1beta1.StateReady {
+		state.ObjAsScope().Status.State = cloudcontrolv1beta1.StateReady
 		changed = true
 	}
 

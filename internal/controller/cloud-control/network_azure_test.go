@@ -44,7 +44,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 
 		By("Then KCP Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
