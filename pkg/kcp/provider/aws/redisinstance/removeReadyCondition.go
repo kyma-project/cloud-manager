@@ -22,6 +22,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 	logger.Info("Removing Ready condition")
 
 	meta.RemoveStatusCondition(redisInstance.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
+	redisInstance.Status.State = cloudcontrolv1beta1.DeletingState
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating RedisInstance status after removing Ready condition", composed.StopWithRequeue, ctx)
