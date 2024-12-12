@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -25,6 +26,7 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 	if cacheState != awsmeta.ElastiCache_DELETING {
 		errorMsg := fmt.Sprintf("Error: unexpected aws elasticache cluster state: %s", cacheState)
 		redisInstance := st.Obj().(*v1beta1.RedisInstance)
+		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,

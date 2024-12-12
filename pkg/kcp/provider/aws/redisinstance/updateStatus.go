@@ -15,18 +15,27 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 
 	redisInstance := state.ObjAsRedisInstance()
+	hasChanged := false
 
 	primaryEndpoint := fmt.Sprintf("%s:%d",
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].PrimaryEndpoint.Address, ""),
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].PrimaryEndpoint.Port, 0),
 	)
-	redisInstance.Status.PrimaryEndpoint = primaryEndpoint
+
+	if redisInstance.Status.PrimaryEndpoint != primaryEndpoint {
+		redisInstance.Status.PrimaryEndpoint = primaryEndpoint
+		hasChanged = true
+	}
 
 	readEndpoint := fmt.Sprintf("%s:%d",
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].ReaderEndpoint.Address, ""),
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].ReaderEndpoint.Port, 0),
 	)
-	redisInstance.Status.ReadEndpoint = readEndpoint
+
+	if redisInstance.Status.ReadEndpoint != readEndpoint {
+		redisInstance.Status.ReadEndpoint = readEndpoint
+		hasChanged = true
+	}
 
 	authString := ""
 	if state.authTokenValue != nil {
@@ -34,14 +43,17 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 	if redisInstance.Status.AuthString != authString {
 		redisInstance.Status.AuthString = authString
+		hasChanged = true
 	}
 
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
-	if hasReadyCondition {
-		composed.LoggerFromCtx(ctx).Info("Ready condition already present, StopAndForget-ing")
+	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.ReadyState
+	if !hasChanged && hasReadyCondition && hasReadyStatusState {
+		composed.LoggerFromCtx(ctx).Info("RedisInstance status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 
+	redisInstance.Status.State = cloudcontrolv1beta1.ReadyState
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,
