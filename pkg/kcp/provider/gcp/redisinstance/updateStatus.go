@@ -47,14 +47,14 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
-	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.ReadyState
+	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
 
 	if !hasChanged && hasReadyCondition && hasReadyStatusState {
 		composed.LoggerFromCtx(ctx).Info("RedisInstance status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 
-	redisInstance.Status.State = cloudcontrolv1beta1.ReadyState
+	redisInstance.Status.State = cloudcontrolv1beta1.StateReady
 	return composed.UpdateStatus(redisInstance).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,

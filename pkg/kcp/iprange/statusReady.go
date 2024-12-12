@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -17,8 +18,8 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 
 	changed := false
 
-	if state.ObjAsIpRange().Status.State != cloudcontrolv1beta1.ReadyState {
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ReadyState
+	if state.ObjAsIpRange().Status.State != cloudcontrolv1beta1.StateReady {
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateReady
 		changed = true
 	}
 

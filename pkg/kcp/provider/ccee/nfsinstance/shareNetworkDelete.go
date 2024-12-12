@@ -3,6 +3,8 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
@@ -10,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
 )
 
 func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.Context) {
@@ -42,7 +43,7 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 	err = state.cceeClient.DeleteShareNetwork(ctx, state.shareNetwork.ID)
 
 	if err != nil && !gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

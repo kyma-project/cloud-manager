@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -22,7 +23,7 @@ func accessGrant(ctx context.Context, st composed.State) (error, context.Context
 	ar, err := state.cceeClient.GrantShareAccess(ctx, state.share.ID, state.Scope().Spec.Scope.OpenStack.Network.Nodes)
 	if err != nil {
 		logger.Error(err, "Error granting CCEE share access")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

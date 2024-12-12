@@ -71,7 +71,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Reason:  v1beta1.ReasonCloudProviderError,
 			Message: "Failed to create RedisInstance",
 		})
-		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,

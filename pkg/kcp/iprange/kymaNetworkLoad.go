@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -27,7 +28,7 @@ func kymaNetworkLoad(ctx context.Context, st composed.State) (error, context.Con
 
 	if apierrors.IsNotFound(err) {
 		logger.Info("Kyma network does not exist")
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

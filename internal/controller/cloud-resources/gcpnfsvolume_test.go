@@ -3,8 +3,9 @@ package cloudresources
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -195,7 +196,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).
@@ -382,7 +383,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).
@@ -464,7 +465,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(updatedCapacityGb),
 					).
@@ -598,7 +599,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).
@@ -795,7 +796,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).
@@ -1001,7 +1002,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).
@@ -1082,7 +1083,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(updatedCapacityGb),
 					).
@@ -1236,7 +1237,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
 						WithConditions(KcpReadyCondition()),
-						WithKcpNfsStatusState(cloudcontrolv1beta1.ReadyState),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
 						WithKcpNfsStatusHost(nfsIpAddress),
 						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
 					).

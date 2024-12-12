@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -60,8 +61,8 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 					changed = true
 				}
 
-				if obj.Status.State != string(cloudcontrolv1beta1.ErrorState) {
-					obj.Status.State = string(cloudcontrolv1beta1.ErrorState)
+				if obj.Status.State != string(cloudcontrolv1beta1.StateError) {
+					obj.Status.State = string(cloudcontrolv1beta1.StateError)
 					changed = true
 				}
 

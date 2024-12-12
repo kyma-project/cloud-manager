@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -77,8 +78,8 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			changed = true
 		}
 
-		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.WarningState) {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateWarning) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
 		}
 
 		if !changed {

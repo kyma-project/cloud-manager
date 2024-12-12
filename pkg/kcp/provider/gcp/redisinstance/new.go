@@ -20,7 +20,7 @@ func New(stateFactory StateFactory) composed.Action {
 		if err != nil {
 			composed.LoggerFromCtx(ctx).Error(err, "Failed to bootstrap GCP RedisInstance state")
 			redisInstance := st.Obj().(*v1beta1.RedisInstance)
-			redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
+			redisInstance.Status.State = cloudcontrolv1beta1.StateError
 			return composed.UpdateStatus(redisInstance).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,

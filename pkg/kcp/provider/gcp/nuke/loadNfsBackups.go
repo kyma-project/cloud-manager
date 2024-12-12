@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
@@ -18,7 +19,7 @@ func loadNfsBackups(ctx context.Context, st composed.State) (error, context.Cont
 	if err != nil {
 		logger.Error(err, "Error listing Gcp Filestore Backups")
 
-		state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.StateError)
 
 		return composed.PatchStatus(state.ObjAsNuke()).
 			SetExclusiveConditions(metav1.Condition{

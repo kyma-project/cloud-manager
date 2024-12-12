@@ -2,6 +2,10 @@ package nfsinstance
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,10 +15,7 @@ import (
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type checkNUpdateStateSuite struct {
@@ -214,13 +215,13 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Equal(suite.T(), v1beta1.ReadyState, testState.State.curState)
-	assert.Equal(suite.T(), v1beta1.ReadyState, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), v1beta1.StateReady, testState.State.curState)
+	assert.Equal(suite.T(), v1beta1.StateReady, testState.State.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), v1beta1.ReadyState, updatedObject.Status.State)
+	assert.Equal(suite.T(), v1beta1.StateReady, updatedObject.Status.State)
 	// validate status conditions
 	assert.Equal(suite.T(), v1beta1.ConditionTypeReady, updatedObject.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
@@ -252,13 +253,13 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
-	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.curState)
-	assert.Equal(suite.T(), v1beta1.ErrorState, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), v1beta1.StateError, testState.State.curState)
+	assert.Equal(suite.T(), v1beta1.StateError, testState.State.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), v1beta1.ErrorState, updatedObject.Status.State)
+	assert.Equal(suite.T(), v1beta1.StateError, updatedObject.Status.State)
 	// validate status conditions
 	assert.Equal(suite.T(), v1beta1.ConditionTypeError, updatedObject.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)

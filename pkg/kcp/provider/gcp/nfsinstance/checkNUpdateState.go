@@ -37,13 +37,13 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			state.operation = client.ADD
 			state.curState = client.Creating
 		} else if state.fsInstance.State == string(client.ERROR) {
-			state.curState = v1beta1.ErrorState
+			state.curState = v1beta1.StateError
 		} else if !state.doesFilestoreMatch() {
 			//If the filestore exists, but does not match, update it.
 			state.operation = client.MODIFY
 			state.curState = client.Updating
 		} else if state.fsInstance.State == string(client.READY) {
-			state.curState = v1beta1.ReadyState
+			state.curState = v1beta1.StateReady
 		} else {
 			//If the filestore exists but is not READY or in ERROR, it is in a transient state.
 			return composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), ctx
@@ -55,7 +55,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	nfsInstance.Status.State = state.curState
 	logger.Info("State Info", "curState", state.curState, "Operation", state.operation)
 
-	if state.curState == v1beta1.ReadyState {
+	if state.curState == v1beta1.StateReady {
 		nfsInstance.Status.Hosts = state.fsInstance.Networks[0].IpAddresses
 		nfsInstance.Status.Host = pie.First(state.fsInstance.Networks[0].IpAddresses)
 		nfsInstance.Status.Path = state.ObjAsNfsInstance().Spec.Instance.Gcp.FileShareName
@@ -70,7 +70,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	} else if prevState != state.curState {
-		if state.curState == v1beta1.ErrorState {
+		if state.curState == v1beta1.StateError {
 			return composed.UpdateStatus(nfsInstance).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,

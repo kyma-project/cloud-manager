@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -23,7 +24,7 @@ func kymaNetworkWait(ctx context.Context, st composed.State) (error, context.Con
 
 	if meta.IsStatusConditionTrue(state.kymaNetwork.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError) {
 		logger.Info("KCP IpRange kyma network has error condition")
-		state.kymaNetwork.Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.kymaNetwork.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.kymaNetwork).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -17,7 +18,7 @@ func preventDeleteOnRedisInstanceUsage(ctx context.Context, st composed.State) (
 		cloudcontrolv1beta1.IpRangeField,
 		func(ctx context.Context, st composed.State, _ client.ObjectList, usedByNames []string) (error, context.Context) {
 			state := st.(*State)
-			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.WarningState
+			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateWarning
 			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeWarning,
