@@ -22,7 +22,7 @@ func SetupNukeReconciler(
 	kcpManager manager.Manager,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpFileBackupClientProvider gcpclient.ClientProvider[gcpfilebackupclient.FileBackupClient],
-	awsNukeNfsClientProvider awsclient.SkrClientProvider[awsnukenfsclient.Client],
+	awsNukeNfsClientProvider awsclient.SkrClientProvider[awsnukenfsclient.NukeNfsBackupClient],
 	env abstractions.Environment,
 ) error {
 	baseStateFactory := composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager))

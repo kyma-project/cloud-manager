@@ -17,7 +17,7 @@ func loadNfsBackups(ctx context.Context, st composed.State) (error, context.Cont
 	if err != nil {
 		logger.Error(err, "Error listing Aws Recovery Points")
 
-		state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.StateError)
 
 		return composed.PatchStatus(state.ObjAsNuke()).
 			SetExclusiveConditions(metav1.Condition{

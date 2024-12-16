@@ -18,7 +18,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.Client],
+	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
 	env abstractions.Environment) StateFactory {
 	return stateFactory{
 		awsClientProvider: awsClientProvider,
@@ -27,7 +27,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.Client]
+	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
 	env               abstractions.Environment
 }
 
@@ -43,9 +43,9 @@ type State struct {
 	nuketypes.State
 	ProviderResources []*nuketypes.ProviderResourceKindState
 
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.Client]
+	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
 	env               abstractions.Environment
-	awsClient         awsnukeclient.Client
+	awsClient         awsnukeclient.NukeNfsBackupClient
 }
 
 type AwsBackup struct {

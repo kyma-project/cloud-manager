@@ -128,7 +128,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().FileBackupClientProvider(),
-		awsnukeclient.NewMock("aws-test-scope"),
+		awsnukeclient.Mock(),
 		env,
 	)).To(Succeed())
 
