@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
@@ -23,7 +24,7 @@ func NewAllocateIpRangeAction(_ StateFactory) composed.Action {
 		if len(state.Scope().Spec.Scope.Azure.Network.Nodes) == 0 {
 			logger := composed.LoggerFromCtx(ctx)
 			logger.Error(errors.New("network nodes empty"), "Azure scope has no nodes specified, unable to allocate IpRange cidr")
-			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,

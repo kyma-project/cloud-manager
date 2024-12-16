@@ -8,7 +8,12 @@ jobs:
   build:
     strategy:
       matrix:
-        gcpNfsVolumeAutomaticLocationAllocation: [ "false", "true" ]
+        gcpNfsVolumeAutomaticLocationAllocation:
+          - "false"
+          - "true"
+        nukeBackupsGcp:
+          - "false"
+          - "true"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,6 +27,7 @@ jobs:
       - name: Build and test
         env:
           FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION: ${{ matrix.gcpNfsVolumeAutomaticLocationAllocation }}
+          FF_NUKE_BAKCUPS_GCP: ${{ matrix.nukeBackupsGcp }}
         run: |
           ./config/sync.sh
           go mod tidy

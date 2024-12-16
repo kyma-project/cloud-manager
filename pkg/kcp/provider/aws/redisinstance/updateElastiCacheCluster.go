@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 
@@ -45,9 +44,10 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  cloudcontrolv1beta1.ConditionTypeError,
-			Message: fmt.Sprintf("Failed updating GwsRedis: %s", err),
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+			Message: "Failed to update RedisInstance",
 		})
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,

@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	types2 "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -42,7 +43,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 			Reason:  cloudcontrolv1beta1.ReasonInvalidIpRangeReference,
 			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), state.ObjAsNfsInstance().Spec.IpRange.Name),
 		})
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after referred IpRange not found", composed.StopWithRequeue, ctx)

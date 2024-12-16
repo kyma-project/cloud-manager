@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -14,7 +15,7 @@ func updateState(ctx context.Context, st composed.State) (error, context.Context
 	prevState := ipRange.Status.State
 	ipRange.Status.State = state.curState
 
-	if state.curState == v1beta1.ReadyState {
+	if state.curState == v1beta1.StateReady {
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,

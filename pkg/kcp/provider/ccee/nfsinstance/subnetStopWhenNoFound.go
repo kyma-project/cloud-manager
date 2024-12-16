@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,7 +26,7 @@ func subnetStopWhenNoFound(ctx context.Context, st composed.State) (error, conte
 		).
 		Info("CCEE subnet not found")
 
-	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 
 	return composed.PatchStatus(state.ObjAsNfsInstance()).
 		SetCondition(metav1.Condition{

@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -22,7 +23,7 @@ func shareNetworkCreate(ctx context.Context, st composed.State) (error, context.
 	shareNetwork, err := state.cceeClient.CreateShareNetwork(ctx, state.network.ID, state.subnet.ID, state.ShareNetworkName())
 	if err != nil {
 		logger.Error(err, "Error creating CCEE shareNetwork")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

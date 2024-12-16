@@ -102,6 +102,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
 				).
 				Should(Succeed(), "expected RedisInstance to has Ready state, but it didn't")
 		})

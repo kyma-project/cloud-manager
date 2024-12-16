@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -71,7 +72,7 @@ func compareStates(ctx context.Context, st composed.State) (error, context.Conte
 		} else if state.connectionOp != client.NONE {
 			state.curState = client.SyncPsaConnection
 		} else {
-			state.curState = v1beta1.ReadyState
+			state.curState = v1beta1.StateReady
 		}
 	}
 	state.inSync = state.addressOp == client.NONE && state.connectionOp == client.NONE

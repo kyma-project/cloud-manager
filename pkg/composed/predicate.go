@@ -12,6 +12,8 @@ func Not(p Predicate) Predicate {
 	}
 }
 
+// All returns a Predicate composed of many given predicates that
+// returns true only if all given predicates return true
 func All(predicates ...Predicate) Predicate {
 	return func(ctx context.Context, state State) bool {
 		for _, p := range predicates {
@@ -23,6 +25,8 @@ func All(predicates ...Predicate) Predicate {
 	}
 }
 
+// Any returns a Predicate composed of many given predicates
+// that returns true if any of the given predicates returns true
 func Any(predicates ...Predicate) Predicate {
 	return func(ctx context.Context, state State) bool {
 		for _, p := range predicates {

@@ -43,12 +43,6 @@ const (
 	GcpRedisTierP6 GcpRedisTier = "P6"
 )
 
-type AuthSecretSpec struct {
-	Name        string            `json:"name,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
 type TimeOfDay struct {
 	// Hours of day in 24 hour format. Should be from 0 to 23.
 	// +kubebuilder:validation:Required

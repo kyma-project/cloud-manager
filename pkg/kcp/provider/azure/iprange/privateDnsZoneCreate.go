@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -40,7 +41,7 @@ func privateDnsZoneCreate(ctx context.Context, st composed.State) (error, contex
 	if err != nil {
 		logger.Error(err, "Error creating Azure KCP IpRange privateDnsZone")
 
-		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{

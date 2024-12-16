@@ -1,11 +1,13 @@
 package cloudcontrol
 
 import (
+	"context"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	kcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
@@ -20,6 +22,10 @@ import (
 var _ = Describe("Feature: Cleanup orphan resources", func() {
 
 	It("Scenario: KCP Nuke deletes GCP provider resources in the Scope", func() {
+		if !feature.FFNukeBackupsGcp.Value(context.Background()) {
+			Skip("Nuke Backups GCP is disabled")
+		}
+
 		const kymaName = "c2467bcb-ee77-46ab-8f68-f4176ed7eb27"
 
 		scope := &cloudcontrolv1beta1.Scope{}

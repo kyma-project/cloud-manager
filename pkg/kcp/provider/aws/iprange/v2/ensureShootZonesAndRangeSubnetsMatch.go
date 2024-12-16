@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ func ensureShootZonesAndRangeSubnetsMatch(ctx context.Context, st composed.State
 		)
 		ctx = composed.LoggerIntoCtx(ctx, logger)
 
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

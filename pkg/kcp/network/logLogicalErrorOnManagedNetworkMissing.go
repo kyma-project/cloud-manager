@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -19,7 +20,7 @@ func logLogicalErrorOnManagedNetworkMissing(ctx context.Context, st composed.Sta
 	if state.Scope() == nil || state.Scope().Name == "" {
 		err := errors.New("scope not found")
 		logger.Error(err, "Logical error")
-		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsNetwork()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

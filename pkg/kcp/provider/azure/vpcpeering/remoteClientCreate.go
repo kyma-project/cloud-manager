@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -39,7 +40,7 @@ func remoteClientCreate(ctx context.Context, st composed.State) (error, context.
 			).
 			Error(err, "Error creating remote Azure client for KCP VpcPeering")
 
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{

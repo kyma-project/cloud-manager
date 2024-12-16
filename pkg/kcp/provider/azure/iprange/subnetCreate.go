@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -38,7 +39,7 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		logger.Error(err, "Error creating Azure Subnet for KCP IpRange")
 
-		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{

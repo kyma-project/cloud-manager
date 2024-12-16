@@ -20,7 +20,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-    export PRINCIPAL_NAME=kyma-cloud-manager-peering-dev
+    export PRINCIPAL_NAME=kyma-cloud-manager-peering-stage
     export OBJECT_ID=$(az ad sp list --display-name $PRINCIPAL_NAME --query "[].id" -o tsv)
     
     az role assignment create --assignee $OBJECT_ID \

@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -48,8 +49,8 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 		changed = true
 	}
 
-	if state.ObjAsNetwork().Status.State != string(cloudcontrolv1beta1.ReadyState) {
-		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.ReadyState)
+	if state.ObjAsNetwork().Status.State != string(cloudcontrolv1beta1.StateReady) {
+		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.StateReady)
 		changed = true
 	}
 

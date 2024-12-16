@@ -3,6 +3,7 @@ package nuke
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -52,7 +53,7 @@ func loadResources(ctx context.Context, st composed.State) (error, context.Conte
 		if err != nil {
 			logger.Error(err, "Error listing resources")
 
-			state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.ErrorState)
+			state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.StateError)
 
 			return composed.PatchStatus(state.ObjAsNuke()).
 				SetExclusiveConditions(metav1.Condition{

@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -42,13 +43,13 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 		changed := false
 
 		if isWarning {
-			if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.WarningState) {
-				state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+			if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateWarning) {
+				state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
 				changed = true
 			}
 		} else {
-			if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.ErrorState) {
-				state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+			if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateError) {
+				state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 				changed = true
 			}
 		}

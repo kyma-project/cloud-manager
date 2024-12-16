@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -25,7 +26,7 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 	if state.isKymaNetwork {
 		logger.Error(errors.New("network not found"), "Error loading Kyma KCP Network that should exist!!!")
 
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
@@ -42,7 +43,7 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 	if !state.isCloudManagerNetwork {
 		logger.Error(errors.New("network not found"), "Error loading non-CM KCP Network")
 
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
@@ -81,7 +82,7 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 	}
 	if err != nil {
 		logger.Error(err, "Error creating CM KCP Network")
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

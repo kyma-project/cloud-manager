@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -27,7 +28,7 @@ func acceptVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 	if err != nil {
 		logger.Error(err, "Error accepting VPC Peering")
 
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
