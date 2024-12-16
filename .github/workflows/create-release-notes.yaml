@@ -24,4 +24,4 @@ jobs:
         env:
           GREN_GITHUB_TOKEN: ${{ secrets.GREN_GITHUB_TOKEN }}
         run: |
-          gren release -o
+          gren release --data-source=milestones --milestone-match="Release {{tag_name}}" --changelog-filename="CHANGELOG.md" --override
