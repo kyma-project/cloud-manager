@@ -2,12 +2,13 @@ package nfsinstance
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type validationsSuite struct {
@@ -21,13 +22,9 @@ func (suite *validationsSuite) SetupTest() {
 
 func (suite *validationsSuite) TestIsValidCapacity() {
 	testMinMax(suite, v1beta1.BASIC_HDD, 1023, 66000, 1024, 65000)
-	testMinMax(suite, v1beta1.STANDARD, 1023, 66000, 1024, 65000)
 	testMinMax(suite, v1beta1.BASIC_SSD, 2559, 66000, 2560, 65000)
-	testMinMax(suite, v1beta1.PREMIUM, 2559, 66000, 2560, 65000)
 	testMinMax(suite, v1beta1.ZONAL, 1023, 10241, 1024, 10240)
-	testMinMax(suite, v1beta1.ENTERPRISE, 1023, 10241, 1024, 10240)
 	testMinMax(suite, v1beta1.REGIONAL, 1023, 10241, 1024, 10240)
-	testMinMax(suite, v1beta1.HIGH_SCALE_SSD, 10239, 102401, 10240, 102400)
 }
 
 func testMinMax(suite *validationsSuite, tier v1beta1.GcpFileTier, minErr, maxErr, minOk, maxOk int) {
@@ -47,13 +44,9 @@ func testMinMax(suite *validationsSuite, tier v1beta1.GcpFileTier, minErr, maxEr
 
 func (suite *validationsSuite) TestCanScaleDown() {
 	assert.False(suite.T(), CanScaleDown(v1beta1.BASIC_HDD))
-	assert.False(suite.T(), CanScaleDown(v1beta1.STANDARD))
 	assert.False(suite.T(), CanScaleDown(v1beta1.BASIC_SSD))
-	assert.False(suite.T(), CanScaleDown(v1beta1.PREMIUM))
 	assert.True(suite.T(), CanScaleDown(v1beta1.ZONAL))
-	assert.True(suite.T(), CanScaleDown(v1beta1.ENTERPRISE))
 	assert.True(suite.T(), CanScaleDown(v1beta1.REGIONAL))
-	assert.True(suite.T(), CanScaleDown(v1beta1.HIGH_SCALE_SSD))
 }
 func TestValidations(t *testing.T) {
 	suite.Run(t, new(validationsSuite))

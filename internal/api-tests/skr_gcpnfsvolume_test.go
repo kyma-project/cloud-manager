@@ -117,41 +117,11 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 		"BASIC_HDD tier fileShareName length must be 16 or less characters",
 	)
 
-	for _, validCapacity := range []int{1024, 1280, 9984, 10240} {
-		canCreateSkr(
-			fmt.Sprintf("GcpNfsVolume ENTERPRISE tier instance can be created with valid capacity: %d", validCapacity),
-			newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.ENTERPRISE).WithCapacityGb(validCapacity).WithValidFileShareName(),
-		)
-	}
-	for _, invalidCapacity := range []int{0, 1, 1023, 1025, 10239, 10241} {
+	for _, removedTier := range []string{"STANDARD", "PREMIUM", "HIGH_SCALE_SSD", "ENTERPRISE"} {
 		canNotCreateSkr(
-			fmt.Sprintf("GcpNfsVolume ENTERPRISE tier instance can not be created with invalid capacity: %d", invalidCapacity),
-			newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.ENTERPRISE).WithCapacityGb(invalidCapacity).WithValidFileShareName(),
-			"ENTERPRISE tier capacityGb must be between 1024 and 10240",
+			fmt.Sprintf("GcpNfsVolume cannot be created with removed tier: %s", removedTier),
+			newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.GcpFileTier(removedTier)).WithCapacityGb(1024).WithValidFileShareName(),
+			fmt.Sprintf("spec.tier: Unsupported value: \"%s\"", removedTier),
 		)
 	}
-	canNotCreateSkr(
-		"GcpNfsVolume ENTERPRISE tier instance can not be created with invalid fileShareName length",
-		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.ENTERPRISE).WithCapacityGb(1024).WithFileShareName(fileShareName65char),
-		"ENTERPRISE tier fileShareName length must be 64 or less characters",
-	)
-
-	for _, validCapacity := range []int{10240, 10241, 102399, 102400} {
-		canCreateSkr(
-			fmt.Sprintf("GcpNfsVolume HIGH_SCALE_SSD tier instance can be created with valid capacity: %d", validCapacity),
-			newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.HIGH_SCALE_SSD).WithCapacityGb(validCapacity).WithValidFileShareName(),
-		)
-	}
-	for _, invalidCapacity := range []int{0, 1, 10239, 102401} {
-		canNotCreateSkr(
-			fmt.Sprintf("GcpNfsVolume HIGH_SCALE_SSD tier instance can not be created with invalid capacity: %d", invalidCapacity),
-			newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.HIGH_SCALE_SSD).WithCapacityGb(invalidCapacity).WithValidFileShareName(),
-			"HIGH_SCALE_SSD tier capacityGb must be between 10240 and 102400",
-		)
-	}
-	canNotCreateSkr(
-		"GcpNfsVolume HIGH_SCALE_SSD tier instance can not be created with invalid fileShareName length",
-		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.HIGH_SCALE_SSD).WithCapacityGb(1024).WithFileShareName(fileShareName65char),
-		"HIGH_SCALE_SSD tier fileShareName length must be 64 or less characters",
-	)
 })

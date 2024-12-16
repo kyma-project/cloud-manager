@@ -25,18 +25,14 @@ type NfsOptionsGcp struct {
 	ConnectMode GcpConnectMode `json:"connectMode"`
 }
 
-// +kubebuilder:validation:Enum=BASIC_HDD;BASIC_SSD;HIGH_SCALE_SSD;ENTERPRISE;ZONAL;REGIONAL
+// +kubebuilder:validation:Enum=BASIC_HDD;BASIC_SSD;ZONAL;REGIONAL
 type GcpFileTier string
 
 const (
-	STANDARD       = GcpFileTier("STANDARD")
-	PREMIUM        = GcpFileTier("PREMIUM")
-	BASIC_HDD      = GcpFileTier("BASIC_HDD")
-	BASIC_SSD      = GcpFileTier("BASIC_SSD")
-	HIGH_SCALE_SSD = GcpFileTier("HIGH_SCALE_SSD")
-	ENTERPRISE     = GcpFileTier("ENTERPRISE")
-	ZONAL          = GcpFileTier("ZONAL")
-	REGIONAL       = GcpFileTier("REGIONAL")
+	BASIC_HDD = GcpFileTier("BASIC_HDD")
+	BASIC_SSD = GcpFileTier("BASIC_SSD")
+	ZONAL     = GcpFileTier("ZONAL")
+	REGIONAL  = GcpFileTier("REGIONAL")
 )
 
 // +kubebuilder:validation:Enum=DIRECT_PEERING;PRIVATE_SERVICE_ACCESS
