@@ -8,9 +8,6 @@ jobs:
   build:
     strategy:
       matrix:
-        gcpNfsVolumeAutomaticLocationAllocation:
-          - "false"
-          - "true"
         nukeBackupsGcp:
           - "false"
           - "true"
@@ -26,7 +23,6 @@ jobs:
         run: go version
       - name: Build and test
         env:
-          FF_GCP_NFS_VOLUME_AUTOMATIC_LOCATION_ALLOCATION: ${{ matrix.gcpNfsVolumeAutomaticLocationAllocation }}
           FF_NUKE_BAKCUPS_GCP: ${{ matrix.nukeBackupsGcp }}
         run: |
           ./config/sync.sh

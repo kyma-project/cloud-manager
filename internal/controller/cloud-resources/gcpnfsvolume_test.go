@@ -1,12 +1,7 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
-	"time"
-
-	"github.com/kyma-project/cloud-manager/pkg/feature"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -17,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolume", func() {
@@ -32,13 +28,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 	skrIpRange := &cloudresourcesv1beta1.IpRange{}
 	kcpIpRangeName := "513f20b4-7b73-4246-9397-f8dd55344479"
 	kcpIpRange := &cloudcontrolv1beta1.IpRange{}
-
-	shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled := func() (bool, string) {
-		if feature.GcpNfsVolumeAutomaticLocationAllocation.Value(context.Background()) {
-			return false, ""
-		}
-		return true, "gcpNfsVolumeAutomaticLocationAllocation is disabled"
-	}
 
 	BeforeEach(func() {
 		By("And Given SKR namespace exists", func() {
@@ -709,10 +698,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 		BeforeEach(func() {
-			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
-			if shouldSkip {
-				Skip(msg)
-			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
@@ -947,10 +932,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		}
 
 		BeforeEach(func() {
-			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
-			if shouldSkip {
-				Skip(msg)
-			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
@@ -1181,10 +1162,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		nfsIpAddress := "10.11.12.16"
 
 		BeforeEach(func() {
-			shouldSkip, msg := shouldSkipIfGcpNfsVolumeAutomaticLocationAllocationDisabled()
-			if shouldSkip {
-				Skip(msg)
-			}
 			By("Given KCP Scope exists", func() {
 
 				// Given Scope exists
