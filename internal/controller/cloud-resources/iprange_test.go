@@ -888,6 +888,12 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Should(Succeed(), "expected KCP IpRange to exists, but none found")
 		})
 
+		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRangeName), func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(SucceedIgnoreNotFound())
+		})
+
 	})
 
 	It("Scenario: SKR IpRange can not be deleted if used by AwsRedisInstance", func() {
