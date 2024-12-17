@@ -31,7 +31,7 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 		// stop and forget.
 		if azuremeta.IsNotFound(err) {
 			successError = composed.StopAndForget
-			message = "Remote VPC Network not found"
+			message = "Remote VPC network not found"
 			logger.Info(message)
 		}
 
@@ -60,7 +60,7 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetCondition(condition).
-			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote vpc network").
+			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote VPC network").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(successError).
 			Run(ctx, state)

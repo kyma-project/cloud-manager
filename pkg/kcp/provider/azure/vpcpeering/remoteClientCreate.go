@@ -47,7 +47,7 @@ func remoteClientCreate(ctx context.Context, st composed.State) (error, context.
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-				Message: fmt.Sprintf("Faile creating Azure client for tenant %s subscription %s", state.remoteNetworkId.Subscription, tenantId),
+				Message: fmt.Sprintf("Failed creating Azure client for tenant %s subscription %s", state.remoteNetworkId.Subscription, tenantId),
 			}).
 			ErrorLogMessage("Error patching KCP VpcPeering with error state after remote client creation failed").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())). // try again in 5mins

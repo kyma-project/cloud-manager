@@ -33,7 +33,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if !ok {
-		logger.Info("Local Azure Peering not loaded")
+		logger.Info("Local VPC peering not loaded")
 		return nil, nil
 	}
 
@@ -48,18 +48,18 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering local load",
+				"Too many requests on loading local VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 				ctx,
 			)
 		}
 
 		if azuremeta.IsNotFound(err) {
-			logger.Info("Local Azure Peering not found for KCP VpcPeering")
+			logger.Info("Local VPC peering not found")
 			return nil, nil
 		}
 
-		return azuremeta.LogErrorAndReturn(err, "Error loading VPC Peering", ctx)
+		return azuremeta.LogErrorAndReturn(err, "Error loading local VPC peering", ctx)
 	}
 
 	logger = logger.WithValues("localPeeringId", ptr.Deref(peering.ID, ""))
@@ -67,7 +67,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 
 	state.localPeering = peering
 
-	logger.Info("Azure local Peering loaded for KCP VpcPeering")
+	logger.Info("Local VPC peering loaded")
 
 	return nil, ctx
 }

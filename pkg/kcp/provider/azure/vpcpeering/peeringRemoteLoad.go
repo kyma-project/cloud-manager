@@ -64,13 +64,13 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering remote load",
+				"Too many requests on loading remote VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 				ctx,
 			)
 		}
 
-		logger.Error(err, "Error loading remote VPC Peering")
+		logger.Error(err, "Error loading Azure remote VPC peering")
 
 		message, isWarning := azuremeta.GetErrorMessage(err)
 
@@ -99,7 +99,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(condition).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote vpc peering").
+			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 			SuccessErrorNil().
 			Run(ctx, state)
@@ -110,7 +110,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 	state.remotePeering = peering
 
-	logger.Info("Azure remote VPC peering loaded")
+	logger.Info("Remote VPC peering loaded")
 
 	return nil, ctx
 }
