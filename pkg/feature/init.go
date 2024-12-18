@@ -2,7 +2,12 @@ package feature
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
+	"os"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
@@ -10,9 +15,6 @@ import (
 	"github.com/thomaspoignant/go-feature-flag/retriever"
 	"github.com/thomaspoignant/go-feature-flag/retriever/fileretriever"
 	"github.com/thomaspoignant/go-feature-flag/retriever/httpretriever"
-	"log/slog"
-	"os"
-	"time"
 )
 
 var provider types.Provider
@@ -52,7 +54,7 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 			o.filename = os.Getenv("FEATURE_FLAG_CONFIG_FILE")
 		}
 		if len(o.filename) == 0 {
-			o.url = "https://raw.githubusercontent.com/kyma-project/cloud-manager/main/config/featureToggles/featureToggles.yaml"
+			panic(errors.New("unable to locate feature flag config file. Use env vars FEATURE_FLAG_CONFIG_URL or FEATURE_FLAG_CONFIG_FILE to specify its url/path"))
 		}
 	}
 	var rtvr retriever.Retriever
