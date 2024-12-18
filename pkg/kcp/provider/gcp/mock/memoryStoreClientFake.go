@@ -54,6 +54,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 		RedisConfigs:      options.RedisConfigs,
 		MaintenancePolicy: memoryStoreClient.ToMaintenancePolicy(options.MaintenancePolicy),
 		AuthEnabled:       options.AuthEnabled,
+		RedisVersion:      options.RedisVersion,
 	}
 	memoryStoreClientFake.redisInstances[name] = redisInstance
 
@@ -75,6 +76,24 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpdateRedisInstance(ctx cont
 		instance.RedisConfigs = redisInstance.RedisConfigs
 		instance.MaintenancePolicy = redisInstance.MaintenancePolicy
 		instance.AuthEnabled = redisInstance.AuthEnabled
+	}
+
+	return nil
+}
+
+func (memoryStoreClientFake *memoryStoreClientFake) UpgradeRedisInstance(ctx context.Context, projectId, locationId, instanceId, redisVersion string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	memoryStoreClientFake.mutex.Lock()
+	defer memoryStoreClientFake.mutex.Unlock()
+
+	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
+		instance.State = redispb.Instance_UPDATING
+
+		instance.RedisVersion = redisVersion
 	}
 
 	return nil

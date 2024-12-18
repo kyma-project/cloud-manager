@@ -50,6 +50,7 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyMaintenancePolicy,
 					modifyAuthEnabled,
 					updateRedis,
+					upgradeRedis,
 					updateStatus,
 				),
 				composed.ComposeActions(
