@@ -54,7 +54,7 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 			o.filename = os.Getenv("FEATURE_FLAG_CONFIG_FILE")
 		}
 		if len(o.filename) == 0 {
-			panic(errors.New("unable to locate feature flag config file. Use env vars FEATURE_FLAG_CONFIG_URL or FEATURE_FLAG_CONFIG_FILE to specify its url/path"))
+			return errors.New("unable to locate feature flag config file. Use env vars FEATURE_FLAG_CONFIG_URL or FEATURE_FLAG_CONFIG_FILE to specify its url/path")
 		}
 	}
 	var rtvr retriever.Retriever
