@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.6
+    cloud-resources.kyma-project.io/version: v0.0.7
   name: gcpnfsvolumes.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -100,8 +100,6 @@ spec:
                   enum:
                     - BASIC_HDD
                     - BASIC_SSD
-                    - HIGH_SCALE_SSD
-                    - ENTERPRISE
                     - ZONAL
                     - REGIONAL
                   type: string
@@ -159,14 +157,6 @@ spec:
                   rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= 1024 && self.capacityGb <= 65400)
                 - message: BASIC_HDD tier fileShareName length must be 16 or less characters
                   rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && size(self.fileShareName) <= 16)
-                - message: HIGH_SCALE_SSD tier capacityGb must be between 10240 and 102400
-                  rule: (self.tier != "HIGH_SCALE_SSD" || self.tier == "HIGH_SCALE_SSD" && self.capacityGb >= 10240 && self.capacityGb <= 102400)
-                - message: HIGH_SCALE_SSD tier fileShareName length must be 64 or less characters
-                  rule: (self.tier != "HIGH_SCALE_SSD" || self.tier == "HIGH_SCALE_SSD" && size(self.fileShareName) <= 64)
-                - message: ENTERPRISE tier capacityGb must be between 1024 and 10240, and it must be divisble by 256
-                  rule: (self.tier != "ENTERPRISE" || self.tier == "ENTERPRISE" && (self.capacityGb >= 1024 && self.capacityGb <= 10240 && (self.capacityGb - 1024) % 256 == 0))
-                - message: ENTERPRISE tier fileShareName length must be 64 or less characters
-                  rule: (self.tier != "ENTERPRISE" || self.tier == "ENTERPRISE" && size(self.fileShareName) <= 64)
             status:
               description: GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
               properties:
