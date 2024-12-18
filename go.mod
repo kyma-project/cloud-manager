@@ -3,7 +3,7 @@ module github.com/kyma-project/cloud-manager
 go 1.22.7
 
 require (
-	cloud.google.com/go/compute v1.29.0
+	cloud.google.com/go/compute v1.31.0
 	cloud.google.com/go/redis v1.17.2
 	cloud.google.com/go/resourcemanager v1.10.2
 	github.com/3th1nk/cidr v0.2.0
@@ -60,11 +60,11 @@ require (
 
 require (
 	cloud.google.com/go v0.117.0 // indirect
-	cloud.google.com/go/auth v0.12.1 // indirect
+	cloud.google.com/go/auth v0.13.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
-	cloud.google.com/go/iam v1.2.2 // indirect
-	cloud.google.com/go/longrunning v0.6.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
+	cloud.google.com/go/iam v1.3.0 // indirect
+	cloud.google.com/go/longrunning v0.6.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
