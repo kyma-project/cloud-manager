@@ -66,6 +66,10 @@ func (s *State) ShouldUpdateRedisInstance() bool {
 	return len(s.updateMask) > 0
 }
 
+func (s *State) ShouldUpgradeRedisInstance() bool {
+	return s.gcpRedisInstance.RedisVersion != s.ObjAsRedisInstance().Spec.Instance.Gcp.RedisVersion
+}
+
 func (s *State) UpdateRedisConfigs(redisConfigs map[string]string) {
 	s.updateMask = append(s.updateMask, "redis_configs") // it is 'redis_configs', GCP API says 'redisConfig', but it is wrongly documented
 	s.gcpRedisInstance.RedisConfigs = redisConfigs

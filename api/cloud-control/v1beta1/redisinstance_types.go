@@ -157,7 +157,6 @@ type RedisInstanceGcp struct {
 	// The version of Redis software.
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
 	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
 	RedisVersion string `json:"redisVersion"`
 

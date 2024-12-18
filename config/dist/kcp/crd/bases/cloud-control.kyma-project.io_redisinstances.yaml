@@ -199,9 +199,6 @@ spec:
                         - REDIS_7_0
                         - REDIS_6_X
                         type: string
-                        x-kubernetes-validations:
-                        - message: RedisVersion is immutable.
-                          rule: (self == oldSelf)
                       replicaCount:
                         default: 0
                         format: int32

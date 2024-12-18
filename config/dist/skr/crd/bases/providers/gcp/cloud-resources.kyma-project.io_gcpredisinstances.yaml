@@ -3,8 +3,13 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
+<<<<<<< HEAD
     controller-gen.kubebuilder.io/version: v0.16.5
     cloud-resources.kyma-project.io/version: v0.0.18
+=======
+    controller-gen.kubebuilder.io/version: v0.15.0
+    cloud-resources.kyma-project.io/version: v0.0.19
+>>>>>>> 7c8cbb35 (feat(GcpRedisInstance): make redis upgradable)
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -153,9 +158,6 @@ spec:
                     - REDIS_7_0
                     - REDIS_6_X
                   type: string
-                  x-kubernetes-validations:
-                    - message: RedisVersion is immutable.
-                      rule: (self == oldSelf)
               required:
                 - redisTier
               type: object
