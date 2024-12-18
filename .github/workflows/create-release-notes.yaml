@@ -21,6 +21,6 @@ jobs:
 
       - name: Generate release notes
         env:
-          GREN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GREN_GITHUB_TOKEN: ${{ github.token }}
         run: |
           gren release --data-source=milestones --milestone-match="Release {{tag_name}}" --changelog-filename="CHANGELOG.md" --override
