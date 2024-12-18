@@ -29,6 +29,7 @@ type Client interface {
 	StartBackupJob(ctx context.Context, params *StartBackupJobInput) (*backup.StartBackupJobOutput, error)
 	DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error)
 
+	ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error)
 	DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error)
 	DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error)
 }
@@ -49,7 +50,7 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 		if err != nil {
 			return nil, err
 		}
-		return newClient(backup.NewFromConfig(cfg)), nil
+		return NewClient(backup.NewFromConfig(cfg)), nil
 	}
 }
 
@@ -59,7 +60,7 @@ func newLocalClient() *localClient {
 	}
 }
 
-func newClient(svc *backup.Client) Client {
+func NewClient(svc *backup.Client) Client {
 	return &client{
 		localClient: *newLocalClient(),
 		svc:         svc,
@@ -190,6 +191,18 @@ func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*ba
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *client) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
+	in := &backup.ListRecoveryPointsByBackupVaultInput{
+		BackupVaultName:      ptr.To(backupVaultName),
+		BackupVaultAccountId: ptr.To(accountId),
+	}
+	out, err := c.svc.ListRecoveryPointsByBackupVault(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out.RecoveryPoints, nil
 }
 
 func (c *client) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {

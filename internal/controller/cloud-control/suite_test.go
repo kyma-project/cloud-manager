@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"os"
 	"testing"
@@ -127,6 +128,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().FileBackupClientProvider(),
+		awsnukeclient.Mock(),
 		env,
 	)).To(Succeed())
 
