@@ -44,4 +44,4 @@ nukeBackupsAws:
     yes: true
     no: false
   defaultRule:
-    variation: no
+    variation: "no"
