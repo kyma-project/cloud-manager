@@ -3,6 +3,11 @@ package testinfra
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	goruntime "runtime"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -24,13 +29,9 @@ import (
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
-	"os"
-	"path/filepath"
-	goruntime "runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	"time"
 )
 
 func Start() (Infra, error) {
@@ -40,7 +41,7 @@ func Start() (Infra, error) {
 	}
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
-		envtestK8sVersion = "1.31.0"
+		panic(errors.New("unable to resolve envtest version. Use env var ENVTEST_K8S_VERSION to specify it"))
 	}
 
 	ginkgo.By("Preparing CRDs")
