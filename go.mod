@@ -40,7 +40,7 @@ require (
 	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/thomaspoignant/go-feature-flag v1.31.2
+	github.com/thomaspoignant/go-feature-flag v1.33.0
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
