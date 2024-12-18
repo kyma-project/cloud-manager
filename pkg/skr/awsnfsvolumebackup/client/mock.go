@@ -155,6 +155,28 @@ func (s *mockClient) DescribeBackupJob(ctx context.Context, backupJobId string) 
 		Message: ptr.To("BackupJob not found"),
 	}
 }
+
+func (s *mockClient) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
+	var result []backuptypes.RecoveryPointByBackupVault
+	for _, rp := range s.recoveryPoints {
+		if ptr.Deref(rp.BackupVaultName, "") == backupVaultName {
+			result = append(result, backuptypes.RecoveryPointByBackupVault{
+				BackupSizeInBytes: rp.BackupSizeInBytes,
+				BackupVaultArn:    rp.BackupVaultArn,
+				BackupVaultName:   rp.BackupVaultName,
+				IamRoleArn:        rp.IamRoleArn,
+				RecoveryPointArn:  rp.RecoveryPointArn,
+				ResourceArn:       rp.ResourceArn,
+				ResourceName:      rp.ResourceName,
+				ResourceType:      rp.ResourceType,
+				Status:            rp.Status,
+				StatusMessage:     rp.StatusMessage,
+			})
+		}
+	}
+	return result, nil
+}
+
 func (s *mockClient) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	logger.WithName("DescribeRecoveryPoint - mock").Info(
