@@ -8,9 +8,11 @@ jobs:
   build:
     strategy:
       matrix:
-        nukeBackups:
-          - "false"
-          - "true"
+        include:
+          - nukeBackupsGcp: "false"
+            nukeBackupsAws: "false"
+          - nukeBackupsGcp: "true"
+            nukeBackupsAws: "true"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,8 +25,8 @@ jobs:
         run: go version
       - name: Build and test
         env:
-          FF_NUKE_BACKUPS_GCP: ${{ matrix.nukeBackups }}
-          FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackups }}
+          FF_NUKE_BACKUPS_GCP: ${{ matrix.nukeBackupsGcp }}
+          FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackupsAws }}
         run: |
           ./config/sync.sh
           go mod tidy
