@@ -122,7 +122,7 @@ func (n *node) printInternal(level int, paddingRight int, totalDuration time.Dur
 	if n.root {
 		fmt.Println(color.BlueString("Feature flags:"))
 		ctx := context.Background()
-		fmt.Printf("    gcpNfsVolumeAutomaticLocationAllocation: %v\n", feature.GcpNfsVolumeAutomaticLocationAllocation.Value(ctx))
+		fmt.Printf("    nukeBackupsGcp: %v\n", feature.FFNukeBackupsGcp.Value(ctx))
 
 		for _, child := range n.items {
 			child.printInternal(0, paddingRight, n.duration)
