@@ -320,11 +320,11 @@ func (in *RedisInstance) CloneForPatchStatus() client.Object {
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {
-	in.Status.State = ReadyState
+	in.Status.State = StateReady
 }
 
 func (in *RedisInstance) SetStatusStateToError() {
-	in.Status.State = ErrorState
+	in.Status.State = StateError
 }
 
 //+kubebuilder:object:root=true

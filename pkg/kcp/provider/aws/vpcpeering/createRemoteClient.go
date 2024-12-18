@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -53,8 +54,8 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 			changed = true
 		}
 
-		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.ErrorState) {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateError) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 			changed = true
 		}
 

@@ -70,10 +70,6 @@ const (
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && size(self.fileShareName) <= 16), message="BASIC_SSD tier fileShareName length must be 16 or less characters"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= 1024 && self.capacityGb <= 65400), message="BASIC_HDD tier capacityGb must be between 1024 and 65400"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && size(self.fileShareName) <= 16), message="BASIC_HDD tier fileShareName length must be 16 or less characters"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "HIGH_SCALE_SSD" || self.tier == "HIGH_SCALE_SSD" && self.capacityGb >= 10240 && self.capacityGb <= 102400), message="HIGH_SCALE_SSD tier capacityGb must be between 10240 and 102400"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "HIGH_SCALE_SSD" || self.tier == "HIGH_SCALE_SSD" && size(self.fileShareName) <= 64), message="HIGH_SCALE_SSD tier fileShareName length must be 64 or less characters"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "ENTERPRISE" || self.tier == "ENTERPRISE" && (self.capacityGb >= 1024 && self.capacityGb <= 10240 && (self.capacityGb - 1024) % 256 == 0)), message="ENTERPRISE tier capacityGb must be between 1024 and 10240, and it must be divisble by 256"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "ENTERPRISE" || self.tier == "ENTERPRISE" && size(self.fileShareName) <= 64), message="ENTERPRISE tier fileShareName length must be 64 or less characters"
 type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
@@ -210,18 +206,14 @@ func init() {
 	SchemeBuilder.Register(&GcpNfsVolume{}, &GcpNfsVolumeList{})
 }
 
-// +kubebuilder:validation:Enum=BASIC_HDD;BASIC_SSD;HIGH_SCALE_SSD;ENTERPRISE;ZONAL;REGIONAL
+// +kubebuilder:validation:Enum=BASIC_HDD;BASIC_SSD;ZONAL;REGIONAL
 type GcpFileTier string
 
 const (
-	STANDARD       = GcpFileTier("STANDARD")
-	PREMIUM        = GcpFileTier("PREMIUM")
-	BASIC_HDD      = GcpFileTier("BASIC_HDD")
-	BASIC_SSD      = GcpFileTier("BASIC_SSD")
-	HIGH_SCALE_SSD = GcpFileTier("HIGH_SCALE_SSD")
-	ENTERPRISE     = GcpFileTier("ENTERPRISE")
-	ZONAL          = GcpFileTier("ZONAL")
-	REGIONAL       = GcpFileTier("REGIONAL")
+	BASIC_HDD = GcpFileTier("BASIC_HDD")
+	BASIC_SSD = GcpFileTier("BASIC_SSD")
+	ZONAL     = GcpFileTier("ZONAL")
+	REGIONAL  = GcpFileTier("REGIONAL")
 )
 
 func (in *GcpNfsVolume) CloneForPatchStatus() client.Object {

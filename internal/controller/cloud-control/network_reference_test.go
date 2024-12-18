@@ -1,6 +1,8 @@
 package cloudcontrol
 
 import (
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -12,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"time"
 )
 
 var _ = Describe("Feature: KCP Network reference", func() {
@@ -43,7 +44,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Then Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -103,7 +104,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Given Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -131,7 +132,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), net,
 					NewObjActions(),
-					HavingState(string(cloudcontrolv1beta1.WarningState)),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
 				).
 				Should(Succeed())
 		})
@@ -189,7 +190,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Given local Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -201,7 +202,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Given remote Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -230,7 +231,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet,
 					NewObjActions(),
-					HavingState(string(cloudcontrolv1beta1.WarningState)),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
 				).
 				Should(Succeed())
 		})
@@ -296,7 +297,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Given local Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -308,7 +309,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("And Given remote Network state is Ready", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.ReadyState))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
 				Should(Succeed())
 		})
 
@@ -337,7 +338,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNet,
 					NewObjActions(),
-					HavingState(string(cloudcontrolv1beta1.WarningState)),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
 				).
 				Should(Succeed())
 		})

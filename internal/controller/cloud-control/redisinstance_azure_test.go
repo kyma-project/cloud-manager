@@ -2,11 +2,12 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"k8s.io/utils/ptr"
-	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -124,7 +125,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 
 		By("And Then KCP RedisInstance has status state Ready", func() {
-			Expect(redisInstance.Status.State).To(Equal(cloudcontrolv1beta1.ReadyState))
+			Expect(redisInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 		})
 
 		By("And Then KCP RedisInstance has .status.primaryEndpoint set", func() {

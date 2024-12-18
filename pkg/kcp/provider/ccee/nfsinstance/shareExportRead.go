@@ -3,12 +3,13 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func shareExportRead(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,7 +19,7 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 	list, err := state.cceeClient.ListShareExportLocations(ctx, state.share.ID)
 	if err != nil {
 		logger.Error(err, "error listing CCEE share export locations")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -33,7 +34,7 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 
 	if len(list) == 0 {
 		logger.Info("CCEE share with no export locations")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -64,7 +65,7 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 	h, p, err := parseExportUrl(el.Path)
 	if err != nil {
 		logger.Error(err, "error parsing CCEE share export path")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

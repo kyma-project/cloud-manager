@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -26,7 +27,7 @@ func shareWaitAvailable(ctx context.Context, st composed.State) (error, context.
 	// share is in error state
 	logger.Error(errors.New("ccee share in error state"), "CCEE share error")
 
-	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+	state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 
 	return composed.PatchStatus(state.ObjAsNfsInstance()).
 		SetExclusiveConditions(metav1.Condition{

@@ -37,7 +37,7 @@ func loadKymaNetwork(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if apierrors.IsNotFound(err) {
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -54,7 +54,7 @@ func loadKymaNetwork(ctx context.Context, st composed.State) (error, context.Con
 	isNetworkReady := meta.IsStatusConditionTrue(ptr.Deref(network.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady)
 	isNetworkDefined := network.Status.Network != nil
 	if !isNetworkDefined || !isNetworkReady && !composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

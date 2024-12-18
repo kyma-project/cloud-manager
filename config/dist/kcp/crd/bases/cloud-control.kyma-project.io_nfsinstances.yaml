@@ -103,8 +103,6 @@ spec:
                         enum:
                         - BASIC_HDD
                         - BASIC_SSD
-                        - HIGH_SCALE_SSD
-                        - ENTERPRISE
                         - ZONAL
                         - REGIONAL
                         type: string

@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -28,11 +29,11 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	)
 
 	if err != nil {
-		logger.Error(err, "Error creating remote VPC Peering")
+		logger.Error(err, "Error creating remote VPC peering")
 
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering remote create",
+				"Too many requests on creating remote VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 				ctx,
 			)
@@ -41,9 +42,9 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		message, isWarning := azuremeta.GetErrorMessage(err)
 
 		if isWarning {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
 		} else {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
@@ -53,13 +54,13 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
 				Message: message,
 			}).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote vpc peering").
+			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
-	logger.Info("Azure remote VPC Peering created")
+	logger.Info("Remote VPC peering created")
 
 	return nil, nil
 }

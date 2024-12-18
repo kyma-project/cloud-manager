@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -50,8 +51,8 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 					changed = true
 				}
 
-				if obj.Status.State != string(cloudcontrolv1beta1.WarningState) {
-					obj.Status.State = string(cloudcontrolv1beta1.WarningState)
+				if obj.Status.State != string(cloudcontrolv1beta1.StateWarning) {
+					obj.Status.State = string(cloudcontrolv1beta1.StateWarning)
 					changed = true
 				}
 

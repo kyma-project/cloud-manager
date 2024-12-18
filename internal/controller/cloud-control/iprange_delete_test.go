@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -118,7 +119,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					NewObjActions(),
-					HavingState(string(cloudcontrolv1beta1.WarningState)),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
 				).
 				Should(Succeed())
 		})
@@ -263,7 +264,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
 					NewObjActions(),
-					HavingState(string(cloudcontrolv1beta1.WarningState)),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
 				).
 				Should(Succeed())
 		})

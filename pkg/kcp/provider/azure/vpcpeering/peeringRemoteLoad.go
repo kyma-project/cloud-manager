@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -63,20 +64,20 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 		if azuremeta.IsTooManyRequests(err) {
 			return composed.LogErrorAndReturn(err,
-				"Azure vpc peering too many requests on peering remote load",
+				"Too many requests on loading remote VPC peering",
 				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 				ctx,
 			)
 		}
 
-		logger.Error(err, "Error loading remote VPC Peering")
+		logger.Error(err, "Error loading Azure remote VPC peering")
 
 		message, isWarning := azuremeta.GetErrorMessage(err)
 
 		if isWarning {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
 		} else {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		}
 
 		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcPeeringConnection
@@ -98,7 +99,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(condition).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote vpc peering").
+			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 			SuccessErrorNil().
 			Run(ctx, state)
@@ -109,7 +110,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 	state.remotePeering = peering
 
-	logger.Info("Azure remote VPC peering loaded")
+	logger.Info("Remote VPC peering loaded")
 
 	return nil, ctx
 }

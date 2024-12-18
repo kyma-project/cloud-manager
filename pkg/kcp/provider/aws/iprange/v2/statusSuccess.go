@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -16,8 +17,8 @@ func statusSuccess(ctx context.Context, st composed.State) (error, context.Conte
 
 	changed := false
 
-	if state.ObjAsIpRange().Status.State != cloudcontrolv1beta1.ReadyState {
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ReadyState
+	if state.ObjAsIpRange().Status.State != cloudcontrolv1beta1.StateReady {
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateReady
 		changed = true
 	}
 

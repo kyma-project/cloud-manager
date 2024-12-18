@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
@@ -28,7 +29,7 @@ func namesDetermine(ctx context.Context, st composed.State) (error, context.Cont
 			Error(errors.New("invalid network type"), "Azure IpRange can be created on CM network only")
 		ctx = composed.LoggerIntoCtx(ctx, logger)
 
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{

@@ -110,7 +110,7 @@ func getLocation(state *State, logger logr.Logger) (string, error) {
 		return "", fmt.Errorf("source GcpNfsVolume location is empty")
 	}
 	switch state.GcpNfsVolume.Spec.Tier {
-	case cloudresourcesv1beta1.ENTERPRISE, cloudresourcesv1beta1.REGIONAL:
+	case cloudresourcesv1beta1.REGIONAL:
 		return state.GcpNfsVolume.Status.Location, nil
 	default:
 		return getRegion(state.GcpNfsVolume.Status.Location), nil

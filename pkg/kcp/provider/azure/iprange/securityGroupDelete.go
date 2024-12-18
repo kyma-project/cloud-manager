@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -30,7 +31,7 @@ func securityGroupDelete(ctx context.Context, st composed.State) (error, context
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange security group")
 
-		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{

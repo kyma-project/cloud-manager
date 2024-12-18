@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
+
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -11,7 +13,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"math/rand"
 )
 
 func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, context.Context) {
@@ -136,7 +137,7 @@ func getLocation(state *State, logger logr.Logger) (string, error) {
 		return location, nil
 	}
 	switch state.ObjAsGcpNfsVolume().Spec.Tier {
-	case cloudresourcesv1beta1.ENTERPRISE, cloudresourcesv1beta1.REGIONAL:
+	case cloudresourcesv1beta1.REGIONAL:
 		return state.Scope.Spec.Region, nil
 	default:
 		if len(state.Scope.Spec.Scope.Gcp.Workers) == 0 {

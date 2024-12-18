@@ -47,7 +47,7 @@ func updateElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to update RedisInstance",
 		})
-		redisInstance.Status.State = cloudcontrolv1beta1.ErrorState
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,

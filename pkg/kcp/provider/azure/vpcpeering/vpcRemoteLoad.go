@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -30,14 +31,14 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 		// stop and forget.
 		if azuremeta.IsNotFound(err) {
 			successError = composed.StopAndForget
-			message = "Remote VPC Network not found"
+			message = "Remote VPC network not found"
 			logger.Info(message)
 		}
 
 		if isWarning {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.WarningState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
 		} else {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.ErrorState)
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		}
 
 		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork
@@ -59,7 +60,7 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 
 		return composed.UpdateStatus(state.ObjAsVpcPeering()).
 			SetCondition(condition).
-			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote vpc network").
+			ErrorLogMessage("Error updating VpcPeering status due to failed loading of remote VPC network").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(successError).
 			Run(ctx, state)

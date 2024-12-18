@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -25,8 +26,8 @@ func preventCreationOfNonCmManagedNetwork(ctx context.Context, st composed.State
 
 	changed := false
 
-	if state.ObjAsNetwork().Status.State != string(cloudcontrolv1beta1.ErrorState) {
-		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.ErrorState)
+	if state.ObjAsNetwork().Status.State != string(cloudcontrolv1beta1.StateError) {
+		state.ObjAsNetwork().Status.State = string(cloudcontrolv1beta1.StateError)
 		changed = true
 	}
 

@@ -34,16 +34,16 @@ func waitNetworkTag(ctx context.Context, st composed.State) (error, context.Cont
 			kv = append(kv, k, v)
 		}
 
-		logger.Info("Loaded remote VPC Network have no matching tags", kv...)
+		logger.Info("Loaded remote VPC network have no matching tags", kv...)
 
 		return composed.UpdateStatus(obj).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
-				Message: "Loaded remote Vpc network has no matching tags",
+				Message: "Loaded remote VPC network has no matching tags",
 			}).
-			ErrorLogMessage("Error updating VpcPeering status due to remote vpc network tag mismatch").
+			ErrorLogMessage("Error updating VpcPeering status due to remote VPC network tag mismatch").
 			FailedError(composed.StopWithRequeue).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)

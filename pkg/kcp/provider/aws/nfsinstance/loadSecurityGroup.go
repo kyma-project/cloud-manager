@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,7 +27,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 			Reason:  cloudcontrolv1beta1.ReasonUnknown,
 			Message: "Unable to load security group",
 		})
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing security group id", composed.StopWithRequeue, ctx)
@@ -55,7 +56,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 			Reason:  cloudcontrolv1beta1.ReasonUnknown,
 			Message: "Unable to load security group",
 		})
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.ErrorState
+		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		err := state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing created security group", composed.StopWithRequeue, ctx)
