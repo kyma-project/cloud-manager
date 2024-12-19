@@ -14,19 +14,19 @@ import (
 
 var PVEventHandler handler.Funcs = handler.Funcs{
 
-	CreateFunc: func(ctx context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	CreateFunc: func(ctx context.Context, e event.TypedCreateEvent[client.Object], w workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		if match, key := isMatchingPV(e.Object); match {
-			q.Add(reconcile.Request{NamespacedName: *key})
+			w.Add(reconcile.Request{NamespacedName: *key})
 		}
 	},
-	UpdateFunc: func(ctx context.Context, e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	UpdateFunc: func(ctx context.Context, e event.TypedUpdateEvent[client.Object], w workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		if match, key := isMatchingPV(e.ObjectNew); match {
-			q.Add(reconcile.Request{NamespacedName: *key})
+			w.Add(reconcile.Request{NamespacedName: *key})
 		}
 	},
-	DeleteFunc: func(ctx context.Context, e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	DeleteFunc: func(ctx context.Context, e event.TypedDeleteEvent[client.Object], w workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		if match, key := isMatchingPV(e.Object); match {
-			q.Add(reconcile.Request{NamespacedName: *key})
+			w.Add(reconcile.Request{NamespacedName: *key})
 		}
 	},
 }
