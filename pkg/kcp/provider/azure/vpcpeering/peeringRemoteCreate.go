@@ -39,7 +39,7 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 			)
 		}
 
-		message, isWarning := azuremeta.GetErrorMessage(err)
+		message, isWarning := azuremeta.GetErrorMessage(err, "Error creating remote VPC peering")
 
 		if isWarning {
 			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)

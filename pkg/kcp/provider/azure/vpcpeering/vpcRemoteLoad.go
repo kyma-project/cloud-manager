@@ -23,7 +23,7 @@ func vpcRemoteLoad(ctx context.Context, st composed.State) (error, context.Conte
 	if err != nil {
 		logger.Error(err, "Error loading remote network")
 
-		message, isWarning := azuremeta.GetErrorMessage(err)
+		message, isWarning := azuremeta.GetErrorMessage(err, "Error loading remote network")
 
 		successError := composed.StopWithRequeueDelay(util.Timing.T60000ms())
 

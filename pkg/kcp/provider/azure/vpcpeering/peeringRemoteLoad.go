@@ -72,7 +72,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 		logger.Error(err, "Error loading Azure remote VPC peering")
 
-		message, isWarning := azuremeta.GetErrorMessage(err)
+		message, isWarning := azuremeta.GetErrorMessage(err, "Error loading remote VPC peering")
 
 		if isWarning {
 			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
@@ -94,14 +94,14 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		if !composed.AnyConditionChanged(state.ObjAsVpcPeering(), condition) {
-			return nil, nil
+			return composed.StopAndForget, nil
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessErrorNil().
+			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
