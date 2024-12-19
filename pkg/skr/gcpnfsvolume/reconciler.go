@@ -43,7 +43,7 @@ func (r *Reconciler) newAction() composed.Action {
 		composed.IfElse(EmptyLocationPredicate(), loadScope, nil),
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
-			validateIpRange, validatePV, validatePVC, validateLocation),
+			validateIpRange, validatePV, validatePVC),
 		setProcessing,
 		defaultiprange.New(),
 		addFinalizer,

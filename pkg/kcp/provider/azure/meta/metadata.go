@@ -3,7 +3,6 @@ package meta
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -24,6 +23,8 @@ const (
 	InvalidResourceNameMessage                           = "Resource name is invalid. The name can be up to 80 characters long. It must begin with a word character, and it must end with a word character. The name may contain word characters or '.', '-'."
 	VnetAddressSpacesOverlap                             = "VnetAddressSpacesOverlap"
 	VnetAddressSpacesOverlapMessage                      = "Cannot create or update peering. Virtual networks cannot be peered because their address spaces overlap. "
+	InvalidAuthenticationTokenTenant                     = "InvalidAuthenticationTokenTenant"
+	InvalidAuthenticationTokenTenantMessage              = "Authentication failed"
 )
 
 func IsTooManyRequests(err error) bool {
@@ -88,7 +89,7 @@ func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, conte
 	return composed.LogErrorAndReturn(err, msg, result, ctx)
 }
 
-func GetErrorMessage(err error) (string, bool) {
+func GetErrorMessage(err error, def string) (string, bool) {
 	var respErr *azcore.ResponseError
 
 	if errors.As(err, &respErr) {
@@ -106,8 +107,10 @@ func GetErrorMessage(err error) (string, bool) {
 		case VnetAddressSpacesOverlap:
 			r := regexp.MustCompile(`Overlapping address prefixes:[^\"]*`)
 			return VnetAddressSpacesOverlapMessage + r.FindString(respErr.Error()), true
+		case InvalidAuthenticationTokenTenant:
+			return InvalidAuthenticationTokenTenantMessage, true
 		}
 	}
 
-	return fmt.Sprintf("Failed creating VpcPeerings %s", err), false
+	return def, false
 }

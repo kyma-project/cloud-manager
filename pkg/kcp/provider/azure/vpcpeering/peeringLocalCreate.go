@@ -38,7 +38,7 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 			)
 		}
 
-		message, isWarning := azuremeta.GetErrorMessage(err)
+		message, isWarning := azuremeta.GetErrorMessage(err, "Error creating VPC peering")
 
 		changed := false
 

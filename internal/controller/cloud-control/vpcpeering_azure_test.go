@@ -600,7 +600,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					NewObjActions(),
 					HavingCondition(cloudcontrolv1beta1.ConditionTypeError,
 						metav1.ConditionTrue,
-						cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+						cloudcontrolv1beta1.ReasonUnauthorized,
 						"Not authorized to perform action."),
 				).
 				Should(Succeed())
