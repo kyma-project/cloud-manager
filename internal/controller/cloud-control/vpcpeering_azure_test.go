@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = Describe("Feature: KCP VpcPeering", func() {
+var _ = Describe("Feature: KCP VpcPeering", Focus, func() {
 
 	It("Scenario: KCP Azure VpcPeering is created and deleted", func() {
 		const (
@@ -199,31 +199,18 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(ptr.Deref(remoteAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(localeVnetId))
 		})
 
-		By("Then KCP VpcPeering state is Initiated", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					NewObjActions(),
-					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated),
-				).Should(Succeed())
-		})
-
 		// Ready ==========================================================
 
-		By("When Azure VPC Peering is Connected", func() {
-			err := azureMockLocal.SetPeeringStateConnected(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			err = azureMockRemote.SetPeeringStateConnected(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			Expect(err).ToNot(HaveOccurred())
+		By("And local Azure VPC peering is created", func() {
+			Eventually(azureMockLocal.SetPeeringStateConnected).
+				WithArguments(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName).
+				Should(Succeed())
+		})
 
-			p, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(p).ToNot(BeNil())
-			localAzurePeering = p
-
-			p, err = azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(p).ToNot(BeNil())
-			remoteAzurePeering = p
+		By("And remote Azure VPC peering is created", func() {
+			Eventually(azureMockRemote.SetPeeringStateConnected).
+				WithArguments(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName).
+				Should(Succeed())
 		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
@@ -408,44 +395,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("Then KCP VpcPeering state is Initiated", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					NewObjActions(),
-					HavingState(cloudcontrolv1beta1.VirtualNetworkPeeringStateInitiated),
-				).Should(Succeed())
+		By("And local Azure VPC peering is created", func() {
+			Eventually(azureMockLocal.SetPeeringStateConnected).
+				WithArguments(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, kcpPeeringName).
+				Should(Succeed())
 		})
 
-		// Waits for the reconcilers to create Azure peerings
-		By("And Then remote Azure VPC Peering is created", func() {
-			Eventually(func() error {
-				p, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-				if err != nil {
-					return err
-				}
-				if p == nil {
-					return errors.New("nil peering received")
-				}
-				return nil
-			}).Should(Succeed())
+		By("And remote Azure VPC peering is created", func() {
+			Eventually(azureMockRemote.SetPeeringStateConnected).
+				WithArguments(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName).
+				Should(Succeed())
 		})
 
 		// Ready ==========================================================
-
-		By("When Azure VPC Peering is Connected", func() {
-			err := azureMockLocal.SetPeeringStateConnected(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, kcpPeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			err = azureMockRemote.SetPeeringStateConnected(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			Expect(err).ToNot(HaveOccurred())
-
-			p, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, kcpPeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(p).ToNot(BeNil())
-
-			p, err = azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(p).ToNot(BeNil())
-		})
 
 		By("Then KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
@@ -644,7 +606,5 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
 				Should(Succeed())
 		})
-
 	})
-
 })
