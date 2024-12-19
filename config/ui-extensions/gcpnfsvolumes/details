@@ -65,3 +65,7 @@ body:
         - widget: Labels
           source: state
           name: status.state
+        - widget: Labels
+          source: capacityGb
+          name: status.capacityGb
+
