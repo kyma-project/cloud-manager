@@ -1,0 +1,50 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "go"
+      - "area/dependency"
+    commit-message:
+      prefix: "chore(dependabot)"
+    groups:
+      k8s:
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
+      google:
+        patterns:
+          - "cloud.google.com/*"
+          - "google.golang.org/*"
+          - "github.com/google/*"
+      azure:
+        patterns:
+          - "github.com/Azure/*"
+      aws:
+        patterns:
+          - "github.com/aws/*"
+      gardener:
+        patterns:
+          - "github.com/gardener/*"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "docker"
+      - "area/dependency"
+    commit-message:
+      prefix: "chore(dependabot)"
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "github"
+      - "area/dependency"
+    commit-message:
+      prefix: "chore(dependabot)"
