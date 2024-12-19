@@ -1,14 +1,14 @@
 # Dependency Graph
 
-Sometimes it is necessary to investigate dependency graph and find out dependency paths to certain package.
+Sometimes, it is necessary to investigate dependency graphs and find the paths to a certain package.
 This is especially helpful when resolving security CVE issues. This document documents a way to find necessary
 information easily.
 
-## Deptree
+## deptree
 
-Install [deptree](https://github.com/vc60er/deptree) in the GOBIN dir on the path.
+Install [deptree](https://github.com/vc60er/deptree) in the `GOBIN` dir on the path.
 
-Since it takes a lot of time, it will save time to record module list once, so deptree can be run quickly
+Since it takes a lot of time, record the module list once so that deptree can be run quickly,
 passing it as an argument.
 
 ```shell
