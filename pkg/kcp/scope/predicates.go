@@ -71,7 +71,7 @@ func predicateScopeCreateOrUpdateNeeded() composed.Predicate {
 			// check provider specific shapes
 			switch state.ObjAsScope().Spec.Provider {
 			case cloudcontrolv1beta1.ProviderGCP:
-				return state.ObjAsScope().Spec.Scope.Gcp.Workers == nil || len(state.ObjAsScope().Spec.Scope.Gcp.Workers) == 0
+				return len(state.ObjAsScope().Spec.Scope.Gcp.Workers) == 0
 			case cloudcontrolv1beta1.ProviderAzure:
 				return state.ObjAsScope().Spec.Scope.Azure.Network.Nodes == ""
 			default:
