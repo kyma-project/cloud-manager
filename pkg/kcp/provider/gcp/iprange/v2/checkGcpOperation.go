@@ -106,7 +106,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		if op != nil && op.Error != nil {
 			msg := op.StatusMessage
 			if msg == "" {
-				if op.Error.Errors != nil && len(op.Error.Errors) > 0 {
+				if len(op.Error.Errors) > 0 {
 					msg = op.Error.Errors[0].Message
 				} else {
 					msg = "Operation failed with no error message."

@@ -1,3 +1,5 @@
+run:
+  timeout: 15m
 issues:
   exclude-rules: []
 linters:
