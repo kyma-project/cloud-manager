@@ -30,3 +30,6 @@ Dockerfile.cross
 
 config/featureToggles/featureToggles.local.yaml
 /tmp
+
+upgradefile.txt
+tree.txt
