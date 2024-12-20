@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -119,12 +120,13 @@ func (m *skrManager) GetLogger() logr.Logger {
 }
 
 func (m *skrManager) GetControllerOptions() config.Controller {
-	resulut := config.Controller{
+	result := config.Controller{
 		GroupKindConcurrency:    nil,
 		MaxConcurrentReconciles: 1,
 		CacheSyncTimeout:        0,
 		RecoverPanic:            nil,
 		NeedLeaderElection:      nil,
+		SkipNameValidation:      ptr.To(true),
 	}
-	return resulut
+	return result
 }
