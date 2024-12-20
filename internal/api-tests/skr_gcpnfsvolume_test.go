@@ -77,6 +77,20 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 			newTestGcpNfsVolumeBuilder().WithTier(tier).WithCapacityGb(1024).WithFileShareName(fileShareName65char),
 			fmt.Sprintf("%s tier fileShareName length must be 64 or less characters", tier),
 		)
+		canChangeSkr(
+			fmt.Sprintf("GcpNfsVolume %s tier instance capacity can be increased", tier),
+			newTestGcpNfsVolumeBuilder().WithTier(tier).WithCapacityGb(1024).WithValidFileShareName(),
+			func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+				b.(*testGcpNfsVolumeBuilder).WithCapacityGb(1280)
+			},
+		)
+		canChangeSkr(
+			fmt.Sprintf("GcpNfsVolume %s tier instance capacity can be reduced", tier),
+			newTestGcpNfsVolumeBuilder().WithTier(tier).WithCapacityGb(1280).WithValidFileShareName(),
+			func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+				b.(*testGcpNfsVolumeBuilder).WithCapacityGb(1024)
+			},
+		)
 	}
 
 	for _, validCapacity := range []int{2560, 2561, 65399, 65400} {
@@ -97,6 +111,21 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_SSD).WithCapacityGb(1024).WithFileShareName(fileShareName17char),
 		"BASIC_SSD tier fileShareName length must be 16 or less characters",
 	)
+	canChangeSkr(
+		"GcpNfsVolume BASIC_SSD tier instance capacity can be increased",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_SSD).WithCapacityGb(2560).WithValidFileShareName(),
+		func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+			b.(*testGcpNfsVolumeBuilder).WithCapacityGb(2561)
+		},
+	)
+	canNotChangeSkr(
+		"GcpNfsVolume BASIC_SSD tier instance capacity can not be reduced",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_SSD).WithCapacityGb(2561).WithValidFileShareName(),
+		func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+			b.(*testGcpNfsVolumeBuilder).WithCapacityGb(2560)
+		},
+		"BASIC_SSD tier capacityGb cannot be reduced",
+	)
 
 	for _, validCapacity := range []int{1024, 1025, 65399, 65400} {
 		canCreateSkr(
@@ -115,6 +144,21 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 		"GcpNfsVolume BASIC_HDD tier instance can not be created with invalid fileShareName length",
 		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_HDD).WithCapacityGb(1024).WithFileShareName(fileShareName17char),
 		"BASIC_HDD tier fileShareName length must be 16 or less characters",
+	)
+	canChangeSkr(
+		"GcpNfsVolume BASIC_HDD tier instance capacity can be increased",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_HDD).WithCapacityGb(1024).WithValidFileShareName(),
+		func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+			b.(*testGcpNfsVolumeBuilder).WithCapacityGb(1025)
+		},
+	)
+	canNotChangeSkr(
+		"GcpNfsVolume BASIC_HDD tier instance capacity can not be reduced",
+		newTestGcpNfsVolumeBuilder().WithTier(cloudresourcesv1beta1.BASIC_HDD).WithCapacityGb(1025).WithValidFileShareName(),
+		func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+			b.(*testGcpNfsVolumeBuilder).WithCapacityGb(1024)
+		},
+		"BASIC_HDD tier capacityGb cannot be reduced",
 	)
 
 	for _, removedTier := range []string{"STANDARD", "PREMIUM", "HIGH_SCALE_SSD", "ENTERPRISE"} {

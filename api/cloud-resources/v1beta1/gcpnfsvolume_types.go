@@ -68,8 +68,10 @@ const (
 // +kubebuilder:validation:XValidation:rule=(self.tier != "ZONAL" || self.tier == "ZONAL" && size(self.fileShareName) <= 64), message="ZONAL tier fileShareName length must be 64 or less characters"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= 2560 && self.capacityGb <= 65400), message="BASIC_SSD tier capacityGb must be between 2560 and 65400"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && size(self.fileShareName) <= 16), message="BASIC_SSD tier fileShareName length must be 16 or less characters"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= oldSelf.capacityGb), message="BASIC_SSD tier capacityGb cannot be reduced"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= 1024 && self.capacityGb <= 65400), message="BASIC_HDD tier capacityGb must be between 1024 and 65400"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && size(self.fileShareName) <= 16), message="BASIC_HDD tier fileShareName length must be 16 or less characters"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= oldSelf.capacityGb), message="BASIC_HDD tier capacityGb cannot be reduced"
 type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
