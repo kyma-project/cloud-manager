@@ -15,15 +15,15 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
-	github.com/aws/aws-sdk-go-v2 v1.32.6
-	github.com/aws/aws-sdk-go-v2/config v1.28.6
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.47
-	github.com/aws/aws-sdk-go-v2/service/backup v1.36.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.172.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.4
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2
+	github.com/aws/aws-sdk-go-v2 v1.32.7
+	github.com/aws/aws-sdk-go-v2/config v1.28.7
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.48
+	github.com/aws/aws-sdk-go-v2/service/backup v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.1
+	github.com/aws/aws-sdk-go-v2/service/efs v1.34.2
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.8
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.3
 	github.com/aws/smithy-go v1.22.1
 	github.com/elliotchance/pie/v2 v2.8.1
 	github.com/fatih/color v1.18.0
@@ -71,14 +71,14 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.25 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.25 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.22 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.26 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.24.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.24.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
