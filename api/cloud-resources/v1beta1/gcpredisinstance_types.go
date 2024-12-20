@@ -86,8 +86,11 @@ type GcpRedisInstanceSpec struct {
 
 	// The version of Redis software.
 	// +optional
-	// +kubebuilder:default=REDIS_7_0
+	// +kubebuilder:default="REDIS_7_0"
 	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_7_0" || oldSelf == "REDIS_7_0" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_7_2" || oldSelf == "REDIS_7_2" || oldSelf == "REDIS_7_0" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_6_X" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
