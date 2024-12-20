@@ -51,6 +51,11 @@ func (b *testGcpRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1be
 	return b
 }
 
+func (b *testGcpRedisInstanceBuilder) WithRedisVersion(redisVersion string) *testGcpRedisInstanceBuilder {
+	b.instance.Spec.RedisVersion = redisVersion
+	return b
+}
+
 var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 
 	It("Given SKR default namespace exists", func() {
@@ -120,4 +125,39 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 		newTestGcpRedisInstanceBuilder().WithRedisTier("unknown"),
 		"",
 	)
+
+	allowedVersionUpgrades := [][]string{
+		{"REDIS_6_X", "REDIS_7_0"},
+		{"REDIS_6_X", "REDIS_7_2"},
+		{"REDIS_7_0", "REDIS_7_2"},
+	}
+	for _, upgradePair := range allowedVersionUpgrades {
+		fromVersion := upgradePair[0]
+		toVersion := upgradePair[1]
+		canChangeSkr(
+			fmt.Sprintf("GcpRedisInstance redisVersion can be upgraded (%s to %s)", fromVersion, toVersion),
+			newTestGcpRedisInstanceBuilder().WithRedisVersion(fromVersion),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithRedisVersion(toVersion)
+			},
+		)
+	}
+
+	disallowedVersionUpgrades := [][]string{
+		{"REDIS_7_2", "REDIS_7_0"},
+		{"REDIS_7_2", "REDIS_6_X"},
+		{"REDIS_7_0", "REDIS_6_X"},
+	}
+	for _, upgradePair := range disallowedVersionUpgrades {
+		fromVersion := upgradePair[0]
+		toVersion := upgradePair[1]
+		canNotChangeSkr(
+			fmt.Sprintf("GcpRedisInstance redisVersion can not be downgraded (%s to %s)", fromVersion, toVersion),
+			newTestGcpRedisInstanceBuilder().WithRedisVersion(fromVersion),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithRedisVersion(toVersion)
+			},
+			"redisVersion cannot be downgraded",
+		)
+	}
 })
