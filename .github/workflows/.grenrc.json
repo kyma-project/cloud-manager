@@ -1,0 +1,10 @@
+{
+  "dataSource": "milestones",
+  "prefix": "",
+  "groupBy": {
+    ":fire: Enhancements:": ["kind/feature"],
+    ":bug: Bug fixes:": ["kind/bug"]
+  },
+  "milestoneMatch": "{{tag_name}}",
+  "changelogFilename": "CHANGELOG.md"
+}
