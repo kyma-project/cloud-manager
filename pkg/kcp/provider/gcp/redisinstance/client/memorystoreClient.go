@@ -32,6 +32,7 @@ type MemorystoreClient interface {
 	CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) error
 	GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error)
 	UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error
+	UpgradeRedisInstance(ctx context.Context, projectId, locationId, instanceId, redisVersion string) error
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
@@ -153,6 +154,30 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 	}
 
 	return instanceResponse, authResponse, nil
+}
+
+func (memorystoreClient *memorystoreClient) UpgradeRedisInstance(ctx context.Context, projectId, locationId, instanceId, redisVersion string) error {
+	redisClient, redisClientErr := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if redisClientErr != nil {
+		return redisClientErr
+	}
+	defer redisClient.Close()
+
+	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	req := &redispb.UpgradeInstanceRequest{
+		Name:         name,
+		RedisVersion: redisVersion,
+	}
+
+	_, err := redisClient.UpgradeInstance(ctx, req)
+
+	if err != nil {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Error(err, "UpgradeRedisInstance", "projectId", projectId, "locationId", locationId, "instanceId", instanceId)
+		return err
+	}
+
+	return nil
 }
 
 func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) error {

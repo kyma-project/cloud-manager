@@ -74,11 +74,13 @@ func (s *State) ShouldModifyKcp() bool {
 
 	areMemorySizesGbDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.MemorySizeGb != memorySizeGb
 	areAuthEnablesDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.AuthEnabled != gcpRedisInstance.Spec.AuthEnabled
+	areRedisVersionsDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.RedisVersion != gcpRedisInstance.Spec.RedisVersion
 
 	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, gcpRedisInstance.Spec.RedisConfigs) ||
 		areMemorySizesGbDifferent ||
 		areMaintenancePoliciesDifferent(gcpRedisInstance.Spec.MaintenancePolicy, s.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy) ||
-		areAuthEnablesDifferent
+		areAuthEnablesDifferent ||
+		areRedisVersionsDifferent
 }
 
 func areMaintenancePoliciesDifferent(skrPolicy *cloudresourcesv1beta1.MaintenancePolicy, kcpPolicy *cloudcontrolv1beta1.MaintenancePolicyGcp) bool {

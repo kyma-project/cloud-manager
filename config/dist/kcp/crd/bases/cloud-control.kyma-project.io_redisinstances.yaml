@@ -200,8 +200,14 @@ spec:
                         - REDIS_6_X
                         type: string
                         x-kubernetes-validations:
-                        - message: RedisVersion is immutable.
-                          rule: (self == oldSelf)
+                        - message: redisVersion cannot be downgraded.
+                          rule: (self != "REDIS_7_0" || oldSelf == "REDIS_7_0" ||
+                            oldSelf == "REDIS_6_X")
+                        - message: redisVersion cannot be downgraded.
+                          rule: (self != "REDIS_7_2" || oldSelf == "REDIS_7_2" ||
+                            oldSelf == "REDIS_7_0" || oldSelf == "REDIS_6_X")
+                        - message: redisVersion cannot be downgraded.
+                          rule: (self != "REDIS_6_X" || oldSelf == "REDIS_6_X")
                       replicaCount:
                         default: 0
                         format: int32
