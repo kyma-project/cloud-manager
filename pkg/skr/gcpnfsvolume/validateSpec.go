@@ -6,7 +6,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,30 +72,4 @@ func validateIpRange(ctx context.Context, st composed.State) (error, context.Con
 			return nil, nil
 		}).
 		Run(ctx, state)
-}
-
-func validateLocation(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*State)
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-	location := state.ObjAsGcpNfsVolume().Spec.Location
-	if location == "" {
-		if feature.GcpNfsVolumeAutomaticLocationAllocation.Value(ctx) {
-			return nil, nil
-		}
-		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
-		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionReasonLocationInvalid,
-				Message: "Location is required",
-			}).
-			ErrorLogMessage("Error updating GcpNfsVolume status with invalid location").
-			Run(ctx, state)
-	} else {
-		// if validation succeeds, we don't need to update the status
-		return nil, nil
-	}
 }

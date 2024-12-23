@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
-    cloud-resources.kyma-project.io/version: v0.0.7
+    controller-gen.kubebuilder.io/version: v0.16.5
+    cloud-resources.kyma-project.io/version: v0.0.8
   name: gcpnfsvolumes.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -153,10 +153,14 @@ spec:
                   rule: (self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= 2560 && self.capacityGb <= 65400)
                 - message: BASIC_SSD tier fileShareName length must be 16 or less characters
                   rule: (self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && size(self.fileShareName) <= 16)
+                - message: BASIC_SSD tier capacityGb cannot be reduced
+                  rule: (self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= oldSelf.capacityGb)
                 - message: BASIC_HDD tier capacityGb must be between 1024 and 65400
                   rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= 1024 && self.capacityGb <= 65400)
                 - message: BASIC_HDD tier fileShareName length must be 16 or less characters
                   rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && size(self.fileShareName) <= 16)
+                - message: BASIC_HDD tier capacityGb cannot be reduced
+                  rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= oldSelf.capacityGb)
             status:
               description: GcpNfsVolumeStatus defines the observed state of GcpNfsVolume
               properties:
@@ -166,7 +170,7 @@ spec:
                 conditions:
                   description: List of status conditions
                   items:
-                    description: "Condition contains details for one aspect of the current state of this API Resource.\n---\nThis struct is intended for direct use as an array at the field path .status.conditions.  For example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the observations of a foo's current state.\n\t    // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    // +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t    // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t    // other fields\n\t}"
+                    description: Condition contains details for one aspect of the current state of this API Resource.
                     properties:
                       lastTransitionTime:
                         description: |-
@@ -207,12 +211,7 @@ spec:
                           - Unknown
                         type: string
                       type:
-                        description: |-
-                          type of condition in CamelCase or in foo.example.com/CamelCase.
-                          ---
-                          Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                          useful (see .node.status.conditions), the ability to deconflict is important.
-                          The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
                         maxLength: 316
                         pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                         type: string

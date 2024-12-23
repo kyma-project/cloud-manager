@@ -65,7 +65,8 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerTypes.ShootSpec{
-			Region: "eu-west-1",
+			CloudProfileName: ptr.To("aws"),
+			Region:           "eu-west-1",
 			Networking: &gardenerTypes.Networking{
 				IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
 				Nodes:      ptr.To("10.180.0.0/16"),
@@ -229,8 +230,9 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerTypes.ShootSpec{
-			Region:     "eu-west-1",
-			Networking: &gardenerTypes.Networking{},
+			CloudProfileName: ptr.To("gcp"),
+			Region:           "eu-west-1",
+			Networking:       &gardenerTypes.Networking{},
 			Provider: gardenerTypes.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderGCP),
 				Workers: []gardenerTypes.Worker{
@@ -324,7 +326,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerTypes.ShootSpec{
-			Region: "westeurope",
+			CloudProfileName: ptr.To("azure"),
+			Region:           "westeurope",
 			Networking: &gardenerTypes.Networking{
 				IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
 				Nodes:      ptr.To("10.250.0.0/22"),
