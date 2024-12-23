@@ -3,6 +3,7 @@ package feature
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -73,7 +74,7 @@ func ContextFromCtx(ctx context.Context) ffcontext.Context {
 func MustContextFromCtx(ctx context.Context) ffcontext.Context {
 	ffCtx := ContextFromCtx(ctx)
 	if ffCtx == nil {
-		ffCtx = ffcontext.NewEvaluationContext("")
+		ffCtx = ffcontext.NewEvaluationContext(uuid.NewString())
 	}
 	return ffCtx
 }
@@ -87,7 +88,7 @@ func ContextBuilderFromCtx(ctx context.Context) ContextBuilder {
 			b = b.AddCustom(k, v)
 		}
 	} else {
-		b = ffcontext.NewEvaluationContextBuilder("")
+		b = ffcontext.NewEvaluationContextBuilder(uuid.NewString())
 	}
 	return &contextBuilderImpl{builder: b}
 }
