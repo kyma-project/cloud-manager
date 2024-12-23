@@ -5,6 +5,6 @@
     ":fire: Enhancements:": ["kind/feature"],
     ":bug: Bug fixes:": ["kind/bug"]
   },
-  "milestoneMatch": "v{{tag_name}}",
+  "milestoneMatch": "{{tag_name}}",
   "changelogFilename": "CHANGELOG.md"
 }
