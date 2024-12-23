@@ -28,7 +28,7 @@ require (
 	github.com/elliotchance/pie/v2 v2.8.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/gardener/gardener v1.110.0
+	github.com/gardener/gardener v1.110.1
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.0
