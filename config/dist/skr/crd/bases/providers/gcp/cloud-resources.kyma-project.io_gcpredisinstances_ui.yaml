@@ -74,7 +74,7 @@ data:
     - path: spec.redisVersion
       name: spec.redisVersion
       required: true
-      disableOnEdit: true
+      disableOnEdit: false
     - path: spec.redisConfigs
       name: spec.redisConfigs
       required: false
@@ -187,7 +187,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
