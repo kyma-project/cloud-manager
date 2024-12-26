@@ -93,7 +93,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 8. Find an availability zone that supports the instance type compatible with the specified image.
 
     ```shell
-    export IMAGE_ID=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" "Name=architecture,Values=arm64" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text  )
+    export IMAGE_ID=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble*" "Name=architecture,Values=arm64" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
     export INSTANCE_TYPE=$(aws ec2 describe-instance-types --filter "Name=instance-type,Values=*.micro" "Name=processor-info.supported-architecture,Values=arm64" --query 'InstanceTypes[0].InstanceType' | tr -d '"')
     export AVAILABILITY_ZONE=$(aws ec2 describe-instance-type-offerings --location-type availability-zone --filters "Name=instance-type,Values=$INSTANCE_TYPE" --query 'InstanceTypeOfferings[0].Location' --output text)
     ```
