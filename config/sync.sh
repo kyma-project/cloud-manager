@@ -60,6 +60,9 @@ cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_az
 cp $SCRIPT_DIR/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
+# CCEE UI
+# TODO: copy over $SCRIPT_DIR/ui-extensions/cceenfsvolumes/cloud-resources.kyma-project.io_cceenfsvolumes_ui.yaml
+
 
 
 

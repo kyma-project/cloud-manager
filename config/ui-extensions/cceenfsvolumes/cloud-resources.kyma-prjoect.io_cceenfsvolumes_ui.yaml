@@ -1,0 +1,31 @@
+apiVersion: v1
+data:
+  details: ""
+  form: ""
+  general: |
+    resource:
+        kind: CceeNfsVolume
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: cceenfsvolumes
+    name: CCEE Nfs Volumes
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        Description here
+  list: ""
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: cceenfsvolumes-ui.operator.kyma-project.io
+  namespace: kyma-system
