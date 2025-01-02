@@ -1,3 +1,15 @@
 en:
   configuration: Configuration
   status: Status
+  status.state: State
+  spec.capacityGb: Capacity (Gb)
+  spec.ipRange: IP Range
+  spec.ipRange.name: Name
+  spec.volume: Volume
+  spec.volume.name: Name
+  spec.volume.labels: Labels
+  spec.volume.annotations: Annotations
+  spec.volumeClaim: Volume Claim
+  spec.volumeClaim.name: Name
+  spec.volumeClaim.labels: Labels
+  spec.volumeClaim.annotations: Annotations

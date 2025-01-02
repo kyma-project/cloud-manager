@@ -3,9 +3,9 @@ resource:
     group: cloud-resources.kyma-project.io
     version: v1beta1
 urlPath: cceenfsvolumes
-name: CCEE Nfs Volumes
-scope: cluster
-category: Discovery and Network
-icon: tnt/network
+name: CCEE NFS Volumes
+scope: namespace
+category: Storage
+icon: shelf
 description: >-
     Description here

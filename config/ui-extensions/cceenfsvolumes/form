@@ -1,0 +1,52 @@
+- path: spec.capacityGb
+  name: spec.capacityGb
+  required: true
+
+
+- path: spec.ipRange
+  name: spec.ipRange
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.ipRange.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+      description: Immutable once set.
+- path: spec.volume
+  name: spec.volume
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.volume.name
+      widget: Text
+      required: true
+    - path: labels
+      name: spec.volume.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volume.annotations
+      required: false
+      widget: KeyValuePair
+- path: spec.volumeClaim
+  name: spec.volumeClaim
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.volumeClaim.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: labels
+      name: spec.volumeClaim.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volumeClaim.annotations
+      required: false
+      widget: KeyValuePair

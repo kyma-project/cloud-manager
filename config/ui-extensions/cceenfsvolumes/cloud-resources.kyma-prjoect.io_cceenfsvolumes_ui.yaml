@@ -1,24 +1,135 @@
 apiVersion: v1
 data:
-  details: ""
-  form: ""
+  details: |-
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.capacityGb
+            source: capacityGb
+            widget: Labels
+
+      - name: spec.ipRange
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.ipRange.name
+            source: ipRange.name
+            widget: Labels
+
+      - name: spec.volume
+        widget: Panel
+        source: spec
+        children:
+          - source: volume.name
+            name: spec.volume.name
+            widget: Labels
+          - source: volume.labels
+            name: spec.volume.labels
+            widget: Labels
+          - source: volume.annotations
+            name: spec.volume.annotations
+            widget: Labels
+
+      - name: spec.volumeClaim
+        widget: Panel
+        source: spec
+        children:
+          - source: volumeClaim.name
+            name: spec.volumeClaim.name
+            widget: Labels
+          - source: volumeClaim.labels
+            name: spec.volumeClaim.labels
+            widget: Labels
+          - source: volumeClaim.annotations
+            name: spec.volumeClaim.annotations
+            widget: Labels
+  form: |-
+    - path: spec.capacityGb
+      name: spec.capacityGb
+      required: true
+
+
+    - path: spec.ipRange
+      name: spec.ipRange
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.ipRange.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: Immutable once set.
+    - path: spec.volume
+      name: spec.volume
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volume.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.volume.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volume.annotations
+          required: false
+          widget: KeyValuePair
+    - path: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volumeClaim.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: labels
+          name: spec.volumeClaim.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volumeClaim.annotations
+          required: false
+          widget: KeyValuePair
   general: |
     resource:
         kind: CceeNfsVolume
         group: cloud-resources.kyma-project.io
         version: v1beta1
     urlPath: cceenfsvolumes
-    name: CCEE Nfs Volumes
-    scope: cluster
-    category: Discovery and Network
-    icon: tnt/network
+    name: CCEE NFS Volumes
+    scope: namespace
+    category: Storage
+    icon: shelf
     description: >-
         Description here
-  list: ""
+  list: |-
+    - source: status.state
+      name: status.state
+      sort: true
   translations: |-
     en:
       configuration: Configuration
       status: Status
+      status.state: State
+      spec.capacityGb: Capacity (Gb)
+      spec.ipRange: IP Range
+      spec.ipRange.name: Name
+      spec.volume: Volume
+      spec.volume.name: Name
+      spec.volume.labels: Labels
+      spec.volume.annotations: Annotations
+      spec.volumeClaim: Volume Claim
+      spec.volumeClaim.name: Name
+      spec.volumeClaim.labels: Labels
+      spec.volumeClaim.annotations: Annotations
 kind: ConfigMap
 metadata:
   annotations:

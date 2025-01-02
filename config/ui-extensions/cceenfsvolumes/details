@@ -1,0 +1,44 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.capacityGb
+        source: capacityGb
+        widget: Labels
+
+  - name: spec.ipRange
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.ipRange.name
+        source: ipRange.name
+        widget: Labels
+
+  - name: spec.volume
+    widget: Panel
+    source: spec
+    children:
+      - source: volume.name
+        name: spec.volume.name
+        widget: Labels
+      - source: volume.labels
+        name: spec.volume.labels
+        widget: Labels
+      - source: volume.annotations
+        name: spec.volume.annotations
+        widget: Labels
+
+  - name: spec.volumeClaim
+    widget: Panel
+    source: spec
+    children:
+      - source: volumeClaim.name
+        name: spec.volumeClaim.name
+        widget: Labels
+      - source: volumeClaim.labels
+        name: spec.volumeClaim.labels
+        widget: Labels
+      - source: volumeClaim.annotations
+        name: spec.volumeClaim.annotations
+        widget: Labels
