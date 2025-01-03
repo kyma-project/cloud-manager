@@ -60,6 +60,16 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 }
 
 func AreByteMapsEqual(first, second map[string][]byte) bool {
+	if first == nil && second == nil {
+		return true
+	}
+	if first == nil && second != nil {
+		return false
+	}
+	if first != nil && second == nil {
+		return false
+	}
+
 	if len(first) != len(second) {
 		return false
 	}
@@ -79,6 +89,16 @@ func AreByteMapsEqual(first, second map[string][]byte) bool {
 }
 
 func AreStringMapsEqual(first, second map[string]string) bool {
+	if first == nil && second == nil {
+		return true
+	}
+	if first == nil && second != nil {
+		return false
+	}
+	if first != nil && second == nil {
+		return false
+	}
+
 	if len(first) != len(second) {
 		return false
 	}
