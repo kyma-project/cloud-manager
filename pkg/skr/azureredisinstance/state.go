@@ -5,6 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 
@@ -61,4 +62,16 @@ func (s *State) GetSkrIpRange() *cloudresourcesv1beta1.IpRange {
 
 func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 	s.SkrIpRange = skrIpRange
+}
+
+func (s *State) GetAuthSecretData() map[string][]byte {
+	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisInstance)
+	redisInstance := s.ObjAsAzureRedisInstance()
+	if redisInstance.Spec.AuthSecret == nil {
+		return authSecretBaseData
+	}
+
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(redisInstance.Spec.AuthSecret.ExtraData, authSecretBaseData)
+
+	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
 }
