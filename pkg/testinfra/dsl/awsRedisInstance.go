@@ -119,7 +119,7 @@ func WithAwsRedisInstanceAuthSecretName(name string) ObjAction {
 		f: func(obj client.Object) {
 			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
 				if awsRedisInstance.Spec.AuthSecret == nil {
-					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				awsRedisInstance.Spec.AuthSecret.Name = name
 				return
@@ -134,7 +134,7 @@ func WithAwsRedisInstanceAuthSecretLabels(labels map[string]string) ObjAction {
 		f: func(obj client.Object) {
 			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
 				if awsRedisInstance.Spec.AuthSecret == nil {
-					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				if awsRedisInstance.Spec.AuthSecret.Labels == nil {
 					awsRedisInstance.Spec.AuthSecret.Labels = map[string]string{}
@@ -154,7 +154,7 @@ func WithAwsRedisInstanceAuthSecretAnnotations(annotations map[string]string) Ob
 		f: func(obj client.Object) {
 			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
 				if awsRedisInstance.Spec.AuthSecret == nil {
-					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				if awsRedisInstance.Spec.AuthSecret.Annotations == nil {
 					awsRedisInstance.Spec.AuthSecret.Annotations = map[string]string{}

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.54
+    cloud-resources.kyma-project.io/version: v0.0.55
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -88,6 +88,10 @@ spec:
                 volume:
                   properties:
                     annotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraData:
                       additionalProperties:
                         type: string
                       type: object

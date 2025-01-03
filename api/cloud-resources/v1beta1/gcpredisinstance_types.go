@@ -105,7 +105,7 @@ type GcpRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
-	AuthSecret *AuthSecretSpec `json:"authSecret,omitempty"`
+	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
 	// The maintenance policy for the instance.
 	// If not provided, maintenance events can be performed at any time.

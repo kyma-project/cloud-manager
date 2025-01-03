@@ -44,12 +44,6 @@ type RedisInstanceAzureConfigs struct {
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
 }
 
-type RedisAuthSecretSpec struct {
-	Name        string            `json:"name,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
 // AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
 type AzureRedisInstanceSpec struct {
 	// +kubebuilder:validation:Required
