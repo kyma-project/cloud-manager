@@ -1,7 +1,6 @@
 package awsredisinstance
 
 import (
-	"bytes"
 	"errors"
 	"strings"
 
@@ -47,7 +46,7 @@ func getAuthSecretAnnotations(awsRedis *cloudresourcesv1beta1.AwsRedisInstance) 
 	return result
 }
 
-func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
+func getAuthSecretBaseData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
 	result := map[string][]byte{}
 
 	if len(kcpRedis.Status.PrimaryEndpoint) > 0 {
@@ -81,38 +80,13 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	return result
 }
 
-func areMapsDifferent(first, second map[string]string) bool {
-	if len(first) != len(second) {
-		return true
+func parseAuthSecretExtraData(extraDataTemplates map[string]string, authSecretBaseData map[string][]byte) map[string][]byte {
+	baseDataStringMap := map[string]string{}
+	for k, v := range authSecretBaseData {
+		baseDataStringMap[k] = string(v)
 	}
 
-	for key, value1 := range first {
-		value2, exists := second[key]
-		if !exists || value1 != value2 {
-			return true
-		}
-	}
-
-	return false
-}
-
-func areByteMapsEqual(first, second map[string][]byte) bool {
-	if len(first) != len(second) {
-		return false
-	}
-
-	for key, firstValue := range first {
-		secondValue, exists := second[key]
-		if !exists {
-			return false
-		}
-
-		if !bytes.Equal(firstValue, secondValue) {
-			return false
-		}
-	}
-
-	return true
+	return util.ParseTemplatesMapToBytesMap(extraDataTemplates, baseDataStringMap)
 }
 
 var awsRedisTierToCacheNodeTypeMap = map[cloudresourcesv1beta1.AwsRedisTier]string{

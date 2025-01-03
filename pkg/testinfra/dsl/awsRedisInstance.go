@@ -169,6 +169,26 @@ func WithAwsRedisInstanceAuthSecretAnnotations(annotations map[string]string) Ob
 	}
 }
 
+func WithAwsRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if awsRedisInstance, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance); ok {
+				if awsRedisInstance.Spec.AuthSecret == nil {
+					awsRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+				}
+				if awsRedisInstance.Spec.AuthSecret.ExtraData == nil {
+					awsRedisInstance.Spec.AuthSecret.ExtraData = map[string]string{}
+				}
+				for k, v := range extraData {
+					awsRedisInstance.Spec.AuthSecret.ExtraData[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsRedisInstanceAuthSecretExtraData", obj))
+		},
+	}
+}
+
 func HavingAwsRedisInstanceStatusId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance)

@@ -71,6 +71,11 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			parameterKey: parameterValue,
 		}
 
+		extraData := map[string]string{
+			"foo":    "bar",
+			"parsed": "{{.host}}:{{.port}}",
+		}
+
 		By("When AwsRedisInstance is created", func() {
 			Eventually(CreateAwsRedisInstance).
 				WithArguments(
@@ -80,6 +85,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					WithAwsRedisInstanceAuthSecretName(authSecretName),
 					WithAwsRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAwsRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+					WithAwsRedisInstanceAuthSecretExtraData(extraData),
 					WithAwsRedisInstanceRedisTier(redisTier),
 					WithAwsRedisInstanceEngineVersion(engineVersion),
 					WithAwsRedisInstanceAutoMinorVersionUpgrade(autoMinorVersionUpgrade),
@@ -206,6 +212,10 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			for k, v := range authSecretAnnotations {
 				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
 			}
+
+			By("And it has user defined custom extraData")
+			Expect(authSecret.Data).To(HaveKeyWithValue("foo", []byte("bar")), "expected auth secret data to have foo=bar")
+			Expect(authSecret.Data).To(HaveKeyWithValue("parsed", []byte(kcpRedisInstancePrimaryEndpoint)), "expected auth secret data to have parsed=host:port")
 
 			By("And it has defined cloud-manager finalizer")
 			Expect(authSecret.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	util "github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,9 +17,9 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	currentSecretData := state.AuthSecret.Data
-	desiredSecretData := getAuthSecretData(state.KcpRedisInstance)
+	desiredSecretData := state.GetAuthSecretData()
 
-	if areByteMapsEqual(currentSecretData, desiredSecretData) {
+	if util.AreByteMapsEqual(currentSecretData, desiredSecretData) {
 		return nil, nil
 	}
 
