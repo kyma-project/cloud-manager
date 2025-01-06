@@ -5,9 +5,9 @@ go 1.23.0
 toolchain go1.23.4
 
 require (
-	cloud.google.com/go/compute v1.31.0
-	cloud.google.com/go/redis v1.17.2
-	cloud.google.com/go/resourcemanager v1.10.2
+	cloud.google.com/go/compute v1.31.1
+	cloud.google.com/go/redis v1.17.3
+	cloud.google.com/go/resourcemanager v1.10.3
 	github.com/3th1nk/cidr v0.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
@@ -49,7 +49,7 @@ require (
 	google.golang.org/api v0.214.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.0
 	k8s.io/apiextensions-apiserver v0.32.0
