@@ -1,10 +1,13 @@
 package gcpredisinstance
 
 import (
+	"maps"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	util "github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 
@@ -76,11 +79,23 @@ func (s *State) ShouldModifyKcp() bool {
 	areAuthEnablesDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.AuthEnabled != gcpRedisInstance.Spec.AuthEnabled
 	areRedisVersionsDifferent := s.KcpRedisInstance.Spec.Instance.Gcp.RedisVersion != gcpRedisInstance.Spec.RedisVersion
 
-	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, gcpRedisInstance.Spec.RedisConfigs) ||
+	return !maps.Equal(s.KcpRedisInstance.Spec.Instance.Gcp.RedisConfigs, gcpRedisInstance.Spec.RedisConfigs) ||
 		areMemorySizesGbDifferent ||
 		areMaintenancePoliciesDifferent(gcpRedisInstance.Spec.MaintenancePolicy, s.KcpRedisInstance.Spec.Instance.Gcp.MaintenancePolicy) ||
 		areAuthEnablesDifferent ||
 		areRedisVersionsDifferent
+}
+
+func (s *State) GetAuthSecretData() map[string][]byte {
+	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisInstance)
+	redisInstance := s.ObjAsGcpRedisInstance()
+	if redisInstance.Spec.AuthSecret == nil {
+		return authSecretBaseData
+	}
+
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(redisInstance.Spec.AuthSecret.ExtraData, authSecretBaseData)
+
+	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
 }
 
 func areMaintenancePoliciesDifferent(skrPolicy *cloudresourcesv1beta1.MaintenancePolicy, kcpPolicy *cloudcontrolv1beta1.MaintenancePolicyGcp) bool {

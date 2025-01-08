@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	azureUtil "github.com/kyma-project/cloud-manager/pkg/skr/azureredisinstance"
@@ -37,6 +38,10 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		authSecretAnnotations := map[string]string{
 			"bar": "2",
 		}
+		extraData := map[string]string{
+			"foo":    "bar",
+			"parsed": "{{.host}}:{{.port}}",
+		}
 
 		By("Given default SKR IpRange does not exist", func() {
 			Consistently(LoadAndCheck).
@@ -56,6 +61,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					WithAzureRedisInstanceAuthSecretName(authSecretName),
 					WithAzureRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAzureRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+					WithAzureRedisInstanceAuthSecretExtraData(extraData),
 				).
 				Should(Succeed())
 		})
@@ -182,10 +188,15 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			for k, v := range authSecretLabels {
 				Expect(authSecret.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have label %s=%s", k, v))
 			}
+
 			By("And it has user defined custom annotations")
 			for k, v := range authSecretAnnotations {
 				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
 			}
+
+			By("And it has user defined custom extraData")
+			Expect(authSecret.Data).To(HaveKeyWithValue("foo", []byte("bar")), "expected auth secret data to have foo=bar")
+			Expect(authSecret.Data).To(HaveKeyWithValue("parsed", []byte(kcpRedisInstancePrimaryEndpoint)), "expected auth secret data to have parsed=host:port")
 
 			By("And it has defined cloud-manager finalizer")
 			Expect(authSecret.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))

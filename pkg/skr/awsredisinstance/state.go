@@ -1,10 +1,13 @@
 package awsredisinstance
 
 import (
+	"maps"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
@@ -65,6 +68,18 @@ func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 	return s.ObjAsAwsRedisInstance()
 }
 
+func (s *State) GetAuthSecretData() map[string][]byte {
+	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisInstance)
+	redisInstance := s.ObjAsAwsRedisInstance()
+	if redisInstance.Spec.AuthSecret == nil {
+		return authSecretBaseData
+	}
+
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(redisInstance.Spec.AuthSecret.ExtraData, authSecretBaseData)
+
+	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
+}
+
 func (s *State) ShouldModifyKcp() bool {
 	awsRedisInstance := s.ObjAsAwsRedisInstance()
 
@@ -78,7 +93,7 @@ func (s *State) ShouldModifyKcp() bool {
 	isAuthEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AuthEnabled != awsRedisInstance.Spec.AuthEnabled
 	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisInstance.Spec.PreferredMaintenanceWindow, "")
 
-	return areMapsDifferent(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
+	return !maps.Equal(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
 		areCacheNodeTypesDifferent ||
 		isAutoMinorVersionUpgradeDifferent ||
 		isAuthEnabledDifferent ||
