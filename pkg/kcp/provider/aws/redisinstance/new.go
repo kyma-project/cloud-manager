@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -35,8 +36,8 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"redisInstance-create",
 					createSubnetGroup,
-					createParameterGroup,
-					modifyParameterGroup,
+					createParameterGroup(func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup }, GetAwsElastiCacheParameterGroupName(state.Obj().GetName())),
+					modifyParameterGroup(func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup }, GetAwsElastiCacheParameterGroupName(state.Obj().GetName())),
 					createAuthTokenSecret,
 					createUserGroup,
 					createSecurityGroup,
@@ -62,7 +63,7 @@ func New(stateFactory StateFactory) composed.Action {
 					deleteUserGroup,
 					waitUserGroupDeleted,
 					deleteAuthTokenSecret,
-					deleteParameterGroup,
+					deleteParameterGroup(func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup }, GetAwsElastiCacheParameterGroupName(state.Obj().GetName())),
 					deleteSubnetGroup,
 					actions.RemoveFinalizer,
 				),
