@@ -33,6 +33,6 @@ AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level C
 
 ## Related Information
 
-* [Cloud Manager Resources: NFS](./resources/README.md#redis).
-* [Tutorials](./tutorials/README.md).
+* [Cloud Manager Resources: Redis](./resources/README.md#redis)
+* [Tutorials](./tutorials/README.md)
 * Pricing (link TBD)
