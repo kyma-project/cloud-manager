@@ -1,10 +1,11 @@
 package awsredisinstance
 
 import (
+	"bytes"
 	"context"
+	"maps"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	util "github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,7 +20,7 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	currentSecretData := state.AuthSecret.Data
 	desiredSecretData := state.GetAuthSecretData()
 
-	if util.AreByteMapsEqual(currentSecretData, desiredSecretData) {
+	if maps.EqualFunc(currentSecretData, desiredSecretData, func(l, r []byte) bool { return bytes.Equal(l, r) }) {
 		return nil, nil
 	}
 

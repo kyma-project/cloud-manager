@@ -1,6 +1,8 @@
 package awsredisinstance
 
 import (
+	"maps"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -91,7 +93,7 @@ func (s *State) ShouldModifyKcp() bool {
 	isAuthEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AuthEnabled != awsRedisInstance.Spec.AuthEnabled
 	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisInstance.Spec.PreferredMaintenanceWindow, "")
 
-	return !util.AreStringMapsEqual(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
+	return !maps.Equal(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
 		areCacheNodeTypesDifferent ||
 		isAutoMinorVersionUpgradeDifferent ||
 		isAuthEnabledDifferent ||
