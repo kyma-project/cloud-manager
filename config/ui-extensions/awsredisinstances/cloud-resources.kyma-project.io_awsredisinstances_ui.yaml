@@ -52,6 +52,9 @@ data:
           - source: authSecret.annotations
             name: spec.authSecret.annotations
             widget: Labels
+          - source: authSecret.extraData
+            name: spec.authSecret.extraData
+            widget: Labels
       - name: status
         widget: Panel
         source: status
@@ -119,6 +122,10 @@ data:
           name: spec.authSecret.annotations
           required: false
           widget: KeyValuePair
+        - path: extraData
+          name: spec.authSecret.extraData
+          required: false
+          widget: KeyValuePair
   general: |
     resource:
         kind: AwsRedisInstance
@@ -149,6 +156,7 @@ data:
       spec.authSecret.name: Name
       spec.authSecret.labels: Labels
       spec.authSecret.annotations: Annotations
+      spec.authSecret.extraData: Extra Data
       spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
       spec.engineVersion: Engine Version
       spec.parameters: Parameters
@@ -157,7 +165,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

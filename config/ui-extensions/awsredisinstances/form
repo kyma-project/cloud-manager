@@ -57,3 +57,7 @@
       name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
