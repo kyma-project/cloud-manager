@@ -42,8 +42,9 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 				Name: state.KymaRef.Name,
 			},
 			Details: &cloudcontrolv1beta1.VpcPeeringDetails{
-				PeeringName:        obj.Spec.RemotePeeringName,
-				ImportCustomRoutes: obj.Spec.ImportCustomRoutes,
+				PeeringName:         obj.Spec.RemotePeeringName,
+				ImportCustomRoutes:  obj.Spec.ImportCustomRoutes,
+				DeleteRemotePeering: obj.Spec.DeleteRemotePeering,
 				LocalNetwork: klog.ObjectRef{
 					Name:      fmt.Sprintf("%s--kyma", state.KymaRef.Name),
 					Namespace: state.KymaRef.Namespace,
