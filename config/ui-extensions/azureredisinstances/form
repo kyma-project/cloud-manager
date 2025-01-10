@@ -45,6 +45,9 @@
     - path: annotations
       name: spec.volume.annotations
       widget: KeyValuePair
+    - path: extraData
+      name: spec.volume.extraData
+      widget: KeyValuePair
 
 - path: spec.ipRange
   name: spec.ipRange
