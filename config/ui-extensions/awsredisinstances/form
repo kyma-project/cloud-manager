@@ -49,11 +49,19 @@
       name: spec.authSecret.name
       widget: Text
       required: true
+      disableOnEdit: true
     - path: labels
       name: spec.authSecret.labels
       required: false
       widget: KeyValuePair
+      disableOnEdit: true
     - path: annotations
       name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true

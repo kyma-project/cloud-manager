@@ -64,6 +64,11 @@
       required: false
       widget: KeyValuePair
       disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
 
 
 

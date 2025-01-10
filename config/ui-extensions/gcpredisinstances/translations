@@ -11,6 +11,7 @@ en:
   spec.authSecret.name: Name
   spec.authSecret.labels: Labels
   spec.authSecret.annotations: Annotations
+  spec.authSecret.extraData: Extra Data
   spec.maintenancePolicy: Maintenance Policy
   spec.maintenancePolicy.dayOfWeek.day: Day
   spec.maintenancePolicy.dayOfWeek.startTime: Start Time
