@@ -43,6 +43,7 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteVpcPeering,
 					waitKymaVpcPeeringDeletion,
+					deleteRemoteVpcPeering,
 					actions.RemoveFinalizer,
 				),
 			),

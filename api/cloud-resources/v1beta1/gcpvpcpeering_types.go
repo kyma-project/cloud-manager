@@ -28,6 +28,8 @@ type GcpVpcPeeringSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self.find('^[a-z]([-a-z0-9]*[a-z0-9])?$') != ''), message="RemoteProject must start with a lowercase letter, end with a lowercase letter or number, and only contain lowercase letters, numbers, and hyphens."
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteProject is immutable."
 	RemoteProject string `json:"remoteProject,omitempty"`
+	// +kubebuilder:default:=false
+	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 }
 
 type GcpVpcPeeringStatus struct {
