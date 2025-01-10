@@ -6,14 +6,14 @@ The Cloud Manager module allows you to provision a cloud provider-managed Redis 
 
 ### Tiers
 
-When you create a Redis instance in Kyma, you can choose between the Standard and Premium Tier.
+When you provision a Redis instance, you can choose between the Standard and Premium Tier.
 
 * Standard Tier offers one instance.
 * Premium Tier offers high availability with automatic failover by provisioning an additional read replica of your instance.
 
 ### Cloud Providers
 
-You also depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
+When you create a Redis instance in Kyma, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
 Cloud Manager module supports the Redis feature of three cloud providers:
 
