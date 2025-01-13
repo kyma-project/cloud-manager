@@ -5,9 +5,9 @@ go 1.23.0
 toolchain go1.23.4
 
 require (
-	cloud.google.com/go/compute v1.31.0
-	cloud.google.com/go/redis v1.17.2
-	cloud.google.com/go/resourcemanager v1.10.2
+	cloud.google.com/go/compute v1.31.1
+	cloud.google.com/go/redis v1.17.3
+	cloud.google.com/go/resourcemanager v1.10.3
 	github.com/3th1nk/cidr v0.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
@@ -31,7 +31,7 @@ require (
 	github.com/gardener/gardener v1.110.1
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.14.0
+	github.com/googleapis/gax-go/v2 v2.14.1
 	github.com/gophercloud/gophercloud/v2 v2.4.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/imdario/mergo v0.3.16
@@ -46,10 +46,10 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
-	google.golang.org/api v0.214.0
+	google.golang.org/api v0.216.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.0
 	k8s.io/apiextensions-apiserver v0.32.0
@@ -135,16 +135,16 @@ require (
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/oauth2 v0.24.0 // indirect
+	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/time v0.8.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250102185135-69823020774d // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
