@@ -2,7 +2,7 @@ package backupschedule
 
 import (
 	"context"
-	"github.com/gorhill/cronexpr"
+	"github.com/adhocore/gronx"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -20,7 +20,7 @@ type State struct {
 	SourceRef composed.ObjWithConditions
 	Backups   []client.Object
 
-	cronExpression     *cronexpr.Expression
+	gronx              *gronx.Gronx
 	nextRunTime        time.Time
 	createRunCompleted bool
 	deleteRunCompleted bool
@@ -60,9 +60,36 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		KcpCluster: f.kcpCluster,
 		SkrCluster: f.skrCluster,
 		env:        f.env,
+		gronx:      gronx.New(),
 	}, nil
 }
 
 func (s *State) ObjAsBackupSchedule() BackupSchedule {
 	return s.Obj().(BackupSchedule)
+}
+
+func (s *State) NextN(fromTime time.Time, n uint) ([]time.Time, error) {
+	var times []time.Time
+	if n <= 0 {
+		return times, nil
+	}
+
+	expression := s.ObjAsBackupSchedule().GetActiveSchedule()
+	if fromTime.IsZero() {
+		fromTime = time.Now().UTC()
+	}
+
+	fromTime, err := gronx.NextTickAfter(expression, fromTime, true)
+	if err != nil {
+		return times, nil
+	}
+	times = append(times, fromTime)
+	for range n - 1 {
+		fromTime, err = gronx.NextTickAfter(expression, fromTime, false)
+		if err != nil {
+			return times, err
+		}
+		times = append(times, fromTime)
+	}
+	return times, nil
 }

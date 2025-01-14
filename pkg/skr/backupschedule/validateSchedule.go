@@ -2,7 +2,7 @@ package backupschedule
 
 import (
 	"context"
-	"github.com/gorhill/cronexpr"
+	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +18,11 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
+	//If the schedule has not changed, continue
+	if schedule.GetSchedule() == schedule.GetActiveSchedule() {
+		return nil, nil
+	}
+
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Validating BackupSchedule - Cron Expression")
 
@@ -27,9 +32,9 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 	if sch == "" {
 		return nil, nil
 	}
-	expr, err := cronexpr.Parse(sch)
+	valid := state.gronx.IsValid(sch)
 
-	if err != nil {
+	if !valid {
 		logger.Info("Invalid cron expression")
 
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
@@ -38,7 +43,7 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ReasonInvalidCronExpression,
-				Message: err.Error(),
+				Message: fmt.Sprintf("Invalid cron expression: %s", sch),
 			}).
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
@@ -46,7 +51,8 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Validated Cron Expression")
 
-	state.cronExpression = expr
-
-	return nil, ctx
+	state.ObjAsBackupSchedule().SetActiveSchedule(sch)
+	return composed.PatchStatus(schedule).
+		SuccessError(composed.StopWithRequeue).
+		Run(ctx, state)
 }

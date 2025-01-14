@@ -2,7 +2,6 @@ package backupschedule
 
 import (
 	"context"
-	"github.com/gorhill/cronexpr"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,11 +82,6 @@ func (suite *calculateRecurringScheduleSuite) TestAlreadySetSchedule() {
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
 	suite.Nil(err)
 
-	//Set cron expression in state
-	expr, err := cronexpr.Parse(obj.Spec.Schedule)
-	suite.Nil(err)
-	state.cronExpression = expr
-
 	//Invoke API under test
 	err, _ctx := calculateRecurringSchedule(ctx, state)
 
@@ -120,11 +114,6 @@ func (suite *calculateRecurringScheduleSuite) testSchedule(schedule string, star
 	obj.Status.Schedule = obj.Spec.Schedule
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
 	suite.Nil(err)
-
-	//Set cron expression in state
-	expr, err := cronexpr.Parse(obj.Spec.Schedule)
-	suite.Nil(err)
-	state.cronExpression = expr
 
 	//Invoke API under test
 	err, _ = calculateRecurringSchedule(ctx, state)

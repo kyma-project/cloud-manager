@@ -9,6 +9,7 @@ require (
 	cloud.google.com/go/redis v1.17.2
 	cloud.google.com/go/resourcemanager v1.10.2
 	github.com/3th1nk/cidr v0.2.0
+	github.com/adhocore/gronx v1.19.5
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5 v5.2.0
@@ -33,7 +34,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.0
 	github.com/gophercloud/gophercloud/v2 v2.4.0
-	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.22.0

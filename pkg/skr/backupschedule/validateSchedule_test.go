@@ -41,6 +41,28 @@ func (suite *validateScheduleSuite) TestWhenNfsScheduleIsDeleting() {
 	suite.Nil(_ctx)
 }
 
+func (suite *validateScheduleSuite) TestWhenScheduleHasNotChanged() {
+	obj := gcpNfsBackupSchedule.DeepCopy()
+	obj.Spec.Schedule = "* * * * *"
+	obj.Status.Schedule = "* * * * *"
+	factory, err := newTestStateFactoryWithObj(obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsBackupSchedule
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	//Invoke API under test
+	err, _ctx := validateSchedule(ctx, state)
+
+	//validate expected return values
+	suite.Nil(err)
+	suite.Nil(_ctx)
+}
+
 func (suite *validateScheduleSuite) TestEmptyCronExpression() {
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
@@ -104,7 +126,16 @@ func (suite *validateScheduleSuite) TestValidCronExpression() {
 	err, _ = validateSchedule(ctx, state)
 
 	//validate expected return values
+	suite.Equal(composed.StopWithRequeue, err)
+
+	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
+	err = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
+			Namespace: gcpNfsBackupSchedule.Namespace},
+		fromK8s)
 	suite.Nil(err)
+	suite.Equal(obj.Spec.Schedule, fromK8s.Status.Schedule)
+
 	suite.Equal("* * * * *", state.ObjAsBackupSchedule().GetSchedule())
 }
 

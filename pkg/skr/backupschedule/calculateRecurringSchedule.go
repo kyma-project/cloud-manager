@@ -3,6 +3,7 @@ package backupschedule
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -39,13 +40,29 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 
 	//Evaluate next run times.
 	var nextRunTimes []time.Time
+	var err error
 	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().Time.After(now) {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info("StartTime is in future, using it.")
-		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time.UTC(), MaxSchedules)
+		nextRunTimes, err = state.NextN(schedule.GetStartTime().Time.UTC(), MaxSchedules)
 	} else {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
-		nextRunTimes = state.cronExpression.NextN(now.UTC(), MaxSchedules)
+		nextRunTimes, err = state.NextN(now.UTC(), MaxSchedules)
 	}
+	if err != nil {
+		logger.Info("Not able to calculate next runtime(s).")
+
+		schedule.SetState(cloudresourcesv1beta1.JobStateError)
+		return composed.PatchStatus(schedule).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ReasonInvalidCronExpression,
+				Message: err.Error(),
+			}).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
 	logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
 
 	//Update the status of the schedule with the next run times
