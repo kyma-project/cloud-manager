@@ -1,3 +1,5 @@
+- path: spec.deleteRemotePeering
+  name: spec.deleteRemotePeering
 - path: spec.importCustomRoutes
   name: spec.importCustomRoutes
   disableOnEdit: true

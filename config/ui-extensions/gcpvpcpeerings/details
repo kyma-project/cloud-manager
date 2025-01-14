@@ -4,6 +4,9 @@ body:
       source: spec
       children:
         - widget: Labels
+          source: deleteRemotePeering
+          name: spec.deleteRemotePeering
+        - widget: Labels
           source: importCustomRoutes
           name: spec.importCustomRoutes
         - widget: Labels

@@ -7,6 +7,9 @@ data:
           source: spec
           children:
             - widget: Labels
+              source: deleteRemotePeering
+              name: spec.deleteRemotePeering
+            - widget: Labels
               source: importCustomRoutes
               name: spec.importCustomRoutes
             - widget: Labels
@@ -26,6 +29,8 @@ data:
               source: state
               name: status.state
   form: |
+    - path: spec.deleteRemotePeering
+      name: spec.deleteRemotePeering
     - path: spec.importCustomRoutes
       name: spec.importCustomRoutes
       disableOnEdit: true
@@ -91,12 +96,13 @@ data:
       spec.remotePeeringName: Remote Peering Name
       spec.remoteProject: Remote Project
       spec.remoteVpc: Remote VPC
+      spec.deleteRemotePeering: Delete Remote Peering
       status.id: ID
       status.state: State
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
