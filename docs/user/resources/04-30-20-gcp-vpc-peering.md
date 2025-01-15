@@ -27,10 +27,10 @@ Use the following table to identify the correct Cloud Manager service account fo
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 
 
-## Required Actions in the Remote Project:
+## Required Actions in the Remote Project
 
 Before creating the VPC peering, please tag your GCP project's VPC with the Kyma shoot name tag.  
-For more information, please check the [tutorial](../tutorials/01-30-20-gcp-vpc-peering.md).
+For more information, check the [Create Virtual Private Cloud Peering in Google Cloud](../tutorials/01-30-20-gcp-vpc-peering.md) tutorial.
 
 
 ## Specification <!-- {docsify-ignore} -->
