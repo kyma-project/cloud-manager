@@ -205,7 +205,6 @@ type RedisInstanceAws struct {
 
 	// +optional
 	// +kubebuilder:default="7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EngineVersion is immutable."
 	EngineVersion string `json:"engineVersion"`
 
 	// +optional

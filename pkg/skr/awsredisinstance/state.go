@@ -92,10 +92,12 @@ func (s *State) ShouldModifyKcp() bool {
 	isAutoMinorVersionUpgradeDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade != awsRedisInstance.Spec.AutoMinorVersionUpgrade
 	isAuthEnabledDifferent := s.KcpRedisInstance.Spec.Instance.Aws.AuthEnabled != awsRedisInstance.Spec.AuthEnabled
 	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisInstance.Spec.PreferredMaintenanceWindow, "")
+	isEngineVersionDifferent := s.KcpRedisInstance.Spec.Instance.Aws.EngineVersion != awsRedisInstance.Spec.EngineVersion
 
 	return !maps.Equal(s.KcpRedisInstance.Spec.Instance.Aws.Parameters, awsRedisInstance.Spec.Parameters) ||
 		areCacheNodeTypesDifferent ||
 		isAutoMinorVersionUpgradeDifferent ||
 		isAuthEnabledDifferent ||
-		arePreferredMaintenanceWindowDifferent
+		arePreferredMaintenanceWindowDifferent ||
+		isEngineVersionDifferent
 }
