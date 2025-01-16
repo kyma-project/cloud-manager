@@ -53,8 +53,8 @@ func shouldUpgradeRedisPredicate() composed.Predicate {
 	return func(ctx context.Context, st composed.State) bool {
 		state := st.(*State)
 
-		return state.elastiCacheReplicationGroup != nil && state.parameterGroup != nil && state.tempParameterGroup != nil &&
-			state.AreTempParamGroupParamsUpToDate() && !state.IsRedisVersionUpToDate()
+		return state.elastiCacheReplicationGroup != nil && state.parameterGroup != nil && !state.IsRedisVersionUpToDate() &&
+			(state.tempParameterGroup != nil && state.AreTempParamGroupParamsUpToDate() || state.IsMainParamGroupFamilyUpToDate())
 	}
 }
 

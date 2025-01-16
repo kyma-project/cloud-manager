@@ -126,7 +126,6 @@ func (s *State) UpdateAuthEnabled(authEnabled bool) {
 }
 
 func (s *State) AreMainParamGroupParamsUpToDate() bool {
-	// handle undefined?
 	currentParametersMap := MapParameters(s.parameterGroupCurrentParams)
 	defaultParametersMap := MapParameters(s.parameterGroupDefaultParams)
 
