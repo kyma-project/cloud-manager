@@ -1,8 +1,13 @@
 module-name: cloud-manager
+kind: kyma
 protecode:
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
 whitesource:
   language: golang-mod
-  subprojects: false
   exclude:
     - "**/*_test.go"
+checkmarx-one:
+  preset: go-default
+  exclude:
+    - '**/*_test.go'
+    - 'pkg/testinfra/**'
