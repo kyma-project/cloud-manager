@@ -206,3 +206,13 @@ func (s *State) IsTempParamGroupUsed() bool {
 
 	return false
 }
+
+func (s *State) GetUpgradeParamGroupName() string {
+	paramGroupName := ptr.Deref(s.parameterGroup.CacheParameterGroupName, "")
+
+	if !s.IsMainParamGroupFamilyUpToDate() && s.tempParameterGroup != nil {
+		paramGroupName = ptr.Deref(s.tempParameterGroup.CacheParameterGroupName, "")
+	}
+
+	return paramGroupName
+}
