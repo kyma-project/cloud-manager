@@ -9,7 +9,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func loadParameterGroupDefaultParams(
+func loadParameterGroupFamilyDefaultParams(
 	getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup,
 	setDefaultParams func(*State, []elasticacheTypes.Parameter),
 ) composed.Action {
@@ -31,15 +31,15 @@ func loadParameterGroupDefaultParams(
 	}
 }
 
-func loadMainParameterGroupDefaultParams() composed.Action {
-	return loadParameterGroupDefaultParams(
+func loadMainParameterGroupFamilyDefaultParams() composed.Action {
+	return loadParameterGroupFamilyDefaultParams(
 		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
 		func(s *State, parameters []elasticacheTypes.Parameter) { s.parameterGroupDefaultParams = parameters },
 	)
 }
 
-func loadTempParameterGroupDefaultParams() composed.Action {
-	return loadParameterGroupDefaultParams(
+func loadTempParameterGroupFamilyDefaultParams() composed.Action {
+	return loadParameterGroupFamilyDefaultParams(
 		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
 		func(s *State, parameters []elasticacheTypes.Parameter) {
 			s.tempParameterGroupDefaultParams = parameters
