@@ -66,6 +66,7 @@ data:
     - path: spec.engineVersion
       name: spec.engineVersion
       required: false
+      description: Engine Version cannot be downgraded.
 
     - path: spec.autoMinorVersionUpgrade
       name: spec.autoMinorVersionUpgrade
@@ -169,7 +170,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.9
+    cloud-resources.kyma-project.io/version: v0.0.10
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

@@ -1,6 +1,7 @@
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
+  description: Engine Version cannot be downgraded.
 
 - path: spec.autoMinorVersionUpgrade
   name: spec.autoMinorVersionUpgrade
