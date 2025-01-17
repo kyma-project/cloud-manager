@@ -20,13 +20,13 @@ type State struct {
 	types.State
 	awsClient client.ElastiCacheClient
 
-	subnetGroup                     *elasticacheTypes.CacheSubnetGroup
-	parameterGroup                  *elasticacheTypes.CacheParameterGroup
-	parameterGroupCurrentParams     []elasticacheTypes.Parameter
-	parameterGroupDefaultParams     []elasticacheTypes.Parameter
-	tempParameterGroup              *elasticacheTypes.CacheParameterGroup
-	tempParameterGroupDefaultParams []elasticacheTypes.Parameter
-	tempParameterGroupCurrentParams []elasticacheTypes.Parameter
+	subnetGroup                           *elasticacheTypes.CacheSubnetGroup
+	parameterGroup                        *elasticacheTypes.CacheParameterGroup
+	parameterGroupCurrentParams           []elasticacheTypes.Parameter
+	parameterGroupFamilyDefaultParams     []elasticacheTypes.Parameter
+	tempParameterGroup                    *elasticacheTypes.CacheParameterGroup
+	tempParameterGroupFamilyDefaultParams []elasticacheTypes.Parameter
+	tempParameterGroupCurrentParams       []elasticacheTypes.Parameter
 
 	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
 	memberClusters              []elasticacheTypes.CacheCluster
@@ -127,7 +127,7 @@ func (s *State) UpdateAuthEnabled(authEnabled bool) {
 
 func (s *State) AreMainParamGroupParamsUpToDate() bool {
 	currentParametersMap := MapParameters(s.parameterGroupCurrentParams)
-	defaultParametersMap := MapParameters(s.parameterGroupDefaultParams)
+	defaultParametersMap := MapParameters(s.parameterGroupFamilyDefaultParams)
 
 	desiredParametersMap := GetDesiredParameters(defaultParametersMap, s.ObjAsRedisInstance().Spec.Instance.Aws.Parameters)
 	forUpdateParameters := GetMissmatchedParameters(currentParametersMap, desiredParametersMap)
@@ -144,7 +144,7 @@ func (s *State) IsMainParamGroupFamilyUpToDate() bool {
 
 func (s *State) AreTempParamGroupParamsUpToDate() bool {
 	currentParametersMap := MapParameters(s.tempParameterGroupCurrentParams)
-	defaultParametersMap := MapParameters(s.tempParameterGroupDefaultParams)
+	defaultParametersMap := MapParameters(s.tempParameterGroupFamilyDefaultParams)
 
 	desiredParametersMap := GetDesiredParameters(defaultParametersMap, s.ObjAsRedisInstance().Spec.Instance.Aws.Parameters)
 	forUpdateParameters := GetMissmatchedParameters(currentParametersMap, desiredParametersMap)

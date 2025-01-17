@@ -53,7 +53,7 @@ func modifyMainParameterGroup(state *State) composed.Action {
 	return modifyParameterGroup(
 		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
 		func(s *State) []elasticacheTypes.Parameter { return s.parameterGroupCurrentParams },
-		func(s *State) []elasticacheTypes.Parameter { return s.parameterGroupDefaultParams },
+		func(s *State) []elasticacheTypes.Parameter { return s.parameterGroupFamilyDefaultParams },
 		GetAwsElastiCacheParameterGroupName(state.Obj().GetName()),
 	)
 }
@@ -62,7 +62,7 @@ func modifyTempParameterGroup(state *State) composed.Action {
 	return modifyParameterGroup(
 		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
 		func(s *State) []elasticacheTypes.Parameter { return s.tempParameterGroupCurrentParams },
-		func(s *State) []elasticacheTypes.Parameter { return s.tempParameterGroupDefaultParams },
+		func(s *State) []elasticacheTypes.Parameter { return s.tempParameterGroupFamilyDefaultParams },
 		GetAwsElastiCacheTempParameterGroupName(state.Obj().GetName()),
 	)
 }
