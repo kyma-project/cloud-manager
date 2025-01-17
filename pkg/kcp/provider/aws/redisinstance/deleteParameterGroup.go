@@ -10,7 +10,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func deleteParameterGroup(getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup, name string) composed.Action {
+func deleteParameterGroup(getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 
 		state := st.(*State)
@@ -32,4 +32,16 @@ func deleteParameterGroup(getParamGroup func(*State) *elasticacheTypes.CachePara
 
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
+}
+
+func deleteMainParameterGroup() composed.Action {
+	return deleteParameterGroup(
+		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
+	)
+}
+
+func deleteTempParameterGroup() composed.Action {
+	return deleteParameterGroup(
+		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
+	)
 }

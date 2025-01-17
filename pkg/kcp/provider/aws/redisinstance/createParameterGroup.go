@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"k8s.io/utils/ptr"
 )
@@ -50,6 +51,20 @@ func createParameterGroup(getParamGroup func(*State) *elasticacheTypes.CachePara
 		logger = logger.WithValues("parameterGroupName", out.CacheParameterGroup.CacheParameterGroupName)
 		logger.Info("Parameter group created")
 
-		return composed.StopWithRequeue, nil
+		return composed.StopWithRequeueDelay(5 * util.Timing.T1000ms()), nil
 	}
+}
+
+func createMainParameterGroup(state *State) composed.Action {
+	return createParameterGroup(
+		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
+		GetAwsElastiCacheParameterGroupName(state.Obj().GetName()),
+	)
+}
+
+func createTempParameterGroup(state *State) composed.Action {
+	return createParameterGroup(
+		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
+		GetAwsElastiCacheTempParameterGroupName(state.Obj().GetName()),
+	)
 }
