@@ -24,6 +24,7 @@ resources:
 - bases/cloud-resources.kyma-project.io_awsnfsbackupschedules.yaml
 - bases/cloud-control.kyma-project.io_nukes.yaml
 - bases/cloud-resources.kyma-project.io_awsnfsvolumerestores.yaml
+- bases/cloud-control.kyma-project.io_skrstatuses.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
