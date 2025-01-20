@@ -20,36 +20,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type SkrResourceUpgrade struct {
-	Date        metav1.Time `json:"date"`
-	Name        string      `json:"name"`
-	FromVersion string      `json:"fromVersion"`
-	ToVersion   string      `json:"toVersion"`
-}
-
-type SkrStatusToggles struct {
-	ResourceUpgrades    []SkrResourceUpgrade `json:"resourceUpgrades"`
-	EnabledControllers  []string             `json:"enabledControllers,omitempty"`
-	DisabledControllers []string             `json:"disabledControllers,omitempty"`
-	EnabledIndexers     []string             `json:"enabledIndexers,omitempty"`
-	DisabledIndexers    []string             `json:"disabledIndexers,omitempty"`
-}
-
-type SkrConnectInfo struct {
-	Date   metav1.Time `json:"date"`
-	Status string      `json:"status"`
-}
-
-type SkrConnections struct {
-	History                []SkrConnectInfo `json:"history,omitempty"`
-	AverageIntervalSeconds int              `json:"averageIntervalSeconds,omitempty"`
+type SkrStatusCondition struct {
+	Title           string   `json:"title"`
+	ObjKindGroup    string   `json:"objKindGroup"`
+	CrdKindGroup    string   `json:"crdKindGroup"`
+	BusolaKindGroup string   `json:"busolaKindGroup"`
+	Feature         string   `json:"feature"`
+	ObjName         string   `json:"objName"`
+	ObjNamespace    string   `json:"objNamespace"`
+	Filename        string   `json:"filename"`
+	Ok              bool     `json:"ok"`
+	Outcomes        []string `json:"outcomes"`
 }
 
 // SkrStatusSpec defines the desired state of SkrStatus.
 type SkrStatusSpec struct {
-	Toggles     SkrStatusToggles `json:"toggles,omitempty"`
-	Connections SkrConnections   `json:"connections,omitempty"`
-	Provider    string           `json:"provider,omitempty"`
+	Kyma          string `json:"kyma"`
+	Provider      string `json:"provider"`
+	BrokerPlan    string `json:"brokerPlan"`
+	GlobalAccount string `json:"globalAccount"`
+	SubAccount    string `json:"subAccount"`
+	Region        string `json:"region"`
+	Shoot         string `json:"shoot"`
+
+	PastConnections        []metav1.Time `json:"pastConnections,omitempty"`
+	AverageIntervalSeconds int           `json:"averageIntervalSeconds,omitempty"`
+
+	Conditions []SkrStatusCondition `json:"conditions"`
 }
 
 // SkrStatusStatus defines the observed state of SkrStatus.
@@ -70,8 +67,16 @@ type SkrStatus struct {
 	Status SkrStatusStatus `json:"status,omitempty"`
 }
 
-func (in *SkrStatus) NotReady() {
-
+func (in *SkrStatus) CloneForPatch() *SkrStatus {
+	result := &SkrStatus{
+		TypeMeta: in.TypeMeta,
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: in.Namespace,
+			Name:      in.Name,
+		},
+		Spec: in.Spec,
+	}
+	return result
 }
 
 // +kubebuilder:object:root=true

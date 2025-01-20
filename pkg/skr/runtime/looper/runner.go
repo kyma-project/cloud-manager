@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -51,19 +52,21 @@ type SkrRunner interface {
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
 
-func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster) SkrRunner {
+func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster, skrStatusSaver SkrStatusSaver) SkrRunner {
 	return &skrRunner{
-		kcpCluster: kcpCluster,
-		registry:   reg,
+		kcpCluster:     kcpCluster,
+		registry:       reg,
+		skrStatusSaver: skrStatusSaver,
 	}
 }
 
 type skrRunner struct {
-	kcpCluster cluster.Cluster
-	registry   registry.SkrRegistry
-	runOnce    sync.Once
-	started    bool
-	stopped    bool
+	kcpCluster     cluster.Cluster
+	registry       registry.SkrRegistry
+	runOnce        sync.Once
+	started        bool
+	stopped        bool
+	skrStatusSaver SkrStatusSaver
 }
 
 func (r *skrRunner) isObjectActiveForProvider(scheme *runtime.Scheme, provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
@@ -79,28 +82,35 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 	}
 	logger := skrManager.GetLogger()
 	logger = feature.DecorateLogger(ctx, logger)
-	logger.Info("SKR Runner running")
+	//logger.Info("SKR Runner running")
 	options := &RunOptions{}
 	for _, o := range opts {
 		o(options)
 	}
+
 	r.runOnce.Do(func() {
 		r.started = true
+
+		skrStatus := NewSkrStatus(ctx)
+
 		defer func() {
 			r.stopped = true
+			r.saveSkrStatus(ctx, skrStatus, logger)
 		}()
 
 		if options.checkSkrReadiness {
 			chkr := &checker{logger: logger}
 			if !chkr.IsReady(ctx, skrManager) {
 				logger.Info("SKR cluster is not ready")
+				skrStatus.NotReady()
 				return
 			}
 		}
 
 		if options.provider != nil {
-			logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", ptr.Deref(options.provider, "")))
+			//logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", ptr.Deref(options.provider, "")))
 			instlr := &installer{
+				skrStatus:        skrStatus,
 				skrProvidersPath: config.SkrRuntimeConfig.ProvidersDir,
 				scheme:           skrManager.GetScheme(),
 				logger:           logger,
@@ -128,30 +138,36 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				KindsFromObject(indexer.Obj(), skrManager.GetScheme()).
 				FeatureFromObject(indexer.Obj(), skrManager.GetScheme()).
 				Build(ctx)
-			logger := feature.DecorateLogger(ctx, logger)
+			//logger := feature.DecorateLogger(ctx, logger)
+
+			handle := skrStatus.Handle(ctx, "Indexer")
+			handle.WithObj(indexer.Obj())
 
 			if r.isObjectActiveForProvider(skrManager.GetScheme(), options.provider, indexer.Obj()) &&
 				!feature.ApiDisabled.Value(ctx) {
+				handle.Starting()
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
+					handle.Error(err)
 					err = fmt.Errorf("index filed error for %T: %w", indexer.Obj(), err)
 					return
 				}
-				logger.
-					WithValues(
-						"object", fmt.Sprintf("%T", indexer.Obj()),
-						"field", indexer.Field(),
-						"optionsProvider", ptr.Deref(options.provider, ""),
-					).
-					Info("Starting indexer")
+				//logger.
+				//	WithValues(
+				//		"object", fmt.Sprintf("%T", indexer.Obj()),
+				//		"field", indexer.Field(),
+				//		"optionsProvider", ptr.Deref(options.provider, ""),
+				//	).
+				//	Info("Starting indexer")
 			} else {
-				logger.
-					WithValues(
-						"object", fmt.Sprintf("%T", indexer.Obj()),
-						"field", indexer.Field(),
-						"optionsProvider", ptr.Deref(options.provider, ""),
-					).
-					Info("Not creating indexer due to disabled API")
+				handle.ApiDisabled()
+				//logger.
+				//	WithValues(
+				//		"object", fmt.Sprintf("%T", indexer.Obj()),
+				//		"field", indexer.Field(),
+				//		"optionsProvider", ptr.Deref(options.provider, ""),
+				//	).
+				//	Info("Not creating indexer due to disabled API")
 			}
 		}
 
@@ -161,30 +177,43 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				KindsFromObject(b.GetForObj(), skrManager.GetScheme()).
 				FeatureFromObject(b.GetForObj(), skrManager.GetScheme()).
 				Build(ctx)
-			logger := feature.DecorateLogger(ctx, logger)
+			//logger := feature.DecorateLogger(ctx, logger)
+
+			handle := skrStatus.Handle(ctx, "Controller")
 
 			if r.isObjectActiveForProvider(skrManager.GetScheme(), options.provider, b.GetForObj()) &&
 				!feature.ApiDisabled.Value(ctx) {
+				handle.Starting()
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
+					handle.Error(err)
 					err = fmt.Errorf("setup with manager error for %T: %w", b.GetForObj(), err)
 					return
 				}
-				logger.
-					WithValues(
-						"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
-						"optionsProvider", ptr.Deref(options.provider, ""),
-					).
-					Info("Starting controller")
+				//logger.
+				//	WithValues(
+				//		"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
+				//		"optionsProvider", ptr.Deref(options.provider, ""),
+				//	).
+				//	Info("Starting controller")
 			} else {
-				logger.
-					WithValues(
-						"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
-						"optionsProvider", ptr.Deref(options.provider, ""),
-					).
-					Info("Not starting controller due to disabled API")
+				handle.ApiDisabled()
+				//logger.
+				//	WithValues(
+				//		"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
+				//		"optionsProvider", ptr.Deref(options.provider, ""),
+				//	).
+				//	Info("Not starting controller due to disabled API")
 			}
 		}
+
+		skrStatus.Connected()
+
+		// this is a happy path saving, all other places are covered with the called form defer
+		// we want to save skrStatus here before manager is started and waited to timeout
+		// since it tracks its save status with IsSaved, after this call to save when defer is
+		// executed it will not save it again
+		r.saveSkrStatus(ctx, skrStatus, logger)
 
 		if options.timeout == 0 {
 			options.timeout = time.Minute
@@ -202,4 +231,17 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 	})
 	return
+}
+
+func (r *skrRunner) saveSkrStatus(ctx context.Context, skrStatus *SkrStatus, logger logr.Logger) {
+	// save it only once
+	if skrStatus.IsSaved {
+		return
+	}
+
+	err := r.skrStatusSaver.Save(ctx, skrStatus)
+	if err != nil {
+		logger.Error(err, "error saving SKR status")
+	}
+	skrStatus.IsSaved = true
 }

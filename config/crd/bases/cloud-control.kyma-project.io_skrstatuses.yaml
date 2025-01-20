@@ -1,0 +1,118 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: skrstatuses.cloud-control.kyma-project.io
+spec:
+  group: cloud-control.kyma-project.io
+  names:
+    kind: SkrStatus
+    listKind: SkrStatusList
+    plural: skrstatuses
+    singular: skrstatus
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: SkrStatus is the Schema for the skrstatuses API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SkrStatusSpec defines the desired state of SkrStatus.
+            properties:
+              averageIntervalSeconds:
+                type: integer
+              brokerPlan:
+                type: string
+              conditions:
+                items:
+                  properties:
+                    busolaKindGroup:
+                      type: string
+                    crdKindGroup:
+                      type: string
+                    feature:
+                      type: string
+                    filename:
+                      type: string
+                    objKindGroup:
+                      type: string
+                    objName:
+                      type: string
+                    objNamespace:
+                      type: string
+                    ok:
+                      type: boolean
+                    outcomes:
+                      items:
+                        type: string
+                      type: array
+                    title:
+                      type: string
+                  required:
+                  - busolaKindGroup
+                  - crdKindGroup
+                  - feature
+                  - filename
+                  - objKindGroup
+                  - objName
+                  - objNamespace
+                  - ok
+                  - outcomes
+                  - title
+                  type: object
+                type: array
+              globalAccount:
+                type: string
+              kyma:
+                type: string
+              pastConnections:
+                items:
+                  format: date-time
+                  type: string
+                type: array
+              provider:
+                type: string
+              region:
+                type: string
+              shoot:
+                type: string
+              subAccount:
+                type: string
+            required:
+            - brokerPlan
+            - conditions
+            - globalAccount
+            - kyma
+            - provider
+            - region
+            - shoot
+            - subAccount
+            type: object
+          status:
+            description: SkrStatusStatus defines the observed state of SkrStatus.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
