@@ -52,6 +52,10 @@ type SkrRunner interface {
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
 
+func NewSkrRunnerWithNoopStatusSaver(reg registry.SkrRegistry, kcpCluster cluster.Cluster) SkrRunner {
+	return NewSkrRunner(reg, kcpCluster, NewNoopStatusSaver())
+}
+
 func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster, skrStatusSaver SkrStatusSaver) SkrRunner {
 	return &skrRunner{
 		kcpCluster:     kcpCluster,

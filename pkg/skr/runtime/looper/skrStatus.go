@@ -54,6 +54,10 @@ func (r *skrStatusRepo) Save(ctx context.Context, skrStatus *cloudcontrol1beta1.
 
 // SkrStatusSaver ==========================================================================
 
+func NewNoopStatusSaver() SkrStatusSaver {
+	return &noopSkrStatusSaver{}
+}
+
 func NewSkrStatusSaver(repo SkrStatusRepo, namespace string) SkrStatusSaver {
 	return &skrStatusSaver{
 		repo:      repo,
@@ -63,6 +67,12 @@ func NewSkrStatusSaver(repo SkrStatusRepo, namespace string) SkrStatusSaver {
 
 type SkrStatusSaver interface {
 	Save(ctx context.Context, skrStatus *SkrStatus) error
+}
+
+type noopSkrStatusSaver struct{}
+
+func (s *noopSkrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
+	return nil
 }
 
 type skrStatusSaver struct {
