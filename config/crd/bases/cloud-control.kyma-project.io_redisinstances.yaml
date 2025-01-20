@@ -62,7 +62,19 @@ spec:
                         type: string
                       engineVersion:
                         default: "7.0"
+                        enum:
+                        - "7.1"
+                        - "7.0"
+                        - 6.x
                         type: string
+                        x-kubernetes-validations:
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x")
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0"
+                            || oldSelf == "6.x")
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "6.x" || oldSelf == "6.x")
                       parameters:
                         additionalProperties:
                           type: string
