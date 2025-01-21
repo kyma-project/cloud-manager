@@ -99,7 +99,7 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 		panic(fmt.Errorf("error creating SKR manager: %w", err))
 	}
 
-	ie.runner = skrruntime.NewRunner(ie.registry, newKcpClusterWrap(ie.kcpManager))
+	ie.runner = skrruntime.NewSkrRunnerWithNoopStatusSaver(ie.registry, newKcpClusterWrap(ie.kcpManager))
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
 	go func() {
 		defer ginkgo.GinkgoRecover()

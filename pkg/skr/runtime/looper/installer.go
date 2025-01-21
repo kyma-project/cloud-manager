@@ -28,6 +28,7 @@ type Installer interface {
 var _ Installer = &installer{}
 
 type installer struct {
+	skrStatus        *SkrStatus
 	skrProvidersPath string
 	scheme           *runtime.Scheme
 	logger           logr.Logger
@@ -40,7 +41,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 	dir := path.Join(i.skrProvidersPath, provider)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		return nil
+		return fmt.Errorf("installer directory %s does not exist: %w", dir, err)
 	}
 	if err != nil {
 		return fmt.Errorf("error checking provider dir %s: %w", dir, err)
@@ -114,15 +115,20 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			FeatureFromObject(desired, skrCluster.GetScheme()).
 			Build(ctx)
 
+		handle := i.skrStatus.Handle(objCtx, "InstallerManfest")
+		handle.WithObj(desired)
+		handle.WithFilename(filepath.Base(fn))
+
 		logger := feature.DecorateLogger(objCtx, i.logger).
 			WithValues(
-				"manifestName", desired.GetName(),
-				"manifestNamespace", desired.GetNamespace(),
+				"objName", desired.GetName(),
+				"objNamespace", desired.GetNamespace(),
 				"manifestFile", filepath.Base(fn),
 			)
 
 		if !common.ObjSupportsProvider(desired, i.scheme, provider) {
-			logger.Info("Object Kind does not support this provider")
+			handle.NotSupportedByProvider()
+			//logger.Info("Object Kind does not support this provider")
 			continue
 		}
 
@@ -140,29 +146,38 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			desiredVersion := i.getVersion(desired)
 			existingVersion := i.getVersion(existing)
 			if desiredVersion == existingVersion {
+				handle.AlreadyExistsWithSameVersion(desiredVersion)
 				continue
 			}
 
 			err = i.copyForUpdate(desired, existing)
 			if err != nil {
+				handle.SpecCopyError(err)
+				// leave this log since it indicates a developer logical error that happens rarely and only if copy spec code is invalid
 				logger.Error(err, fmt.Sprintf("Error copying spec for %s/%s/%s before update", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 				continue
 			}
-			logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
+			handle.Updating(existingVersion, desiredVersion)
+			//logger.Info(fmt.Sprintf("Updating %s/%s/%s from version %s to %s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), existingVersion, desiredVersion))
 			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
 			err = nil // clear the not found error, so we only return Create error if any, and not this not found
 			if feature.ApiDisabled.Value(objCtx) {
-				logger.Info(fmt.Sprintf("Skipping installation of disabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+				handle.ApiDisabled()
+				//logger.Info(fmt.Sprintf("Skipping installation of disabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 			} else {
-				logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+				handle.Creating()
+				//logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 				err = skrCluster.GetClient().Create(ctx, desired)
 			}
 		}
 
 		if err != nil {
+			handle.Error(err)
 			return docCount - 1, fmt.Errorf("error applying %s/%s/%s: %w", desired.GetAPIVersion(), desired.GetKind(), desired.GetName(), err)
 		}
+
+		handle.Success()
 	}
 
 	return docCount, nil
