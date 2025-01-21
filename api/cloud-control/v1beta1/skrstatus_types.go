@@ -76,6 +76,12 @@ func (in *SkrStatus) CloneForPatch() *SkrStatus {
 		},
 		Spec: in.Spec,
 	}
+	if len(in.Labels) > 0 {
+		result.Labels = in.Labels
+	}
+	if len(in.Annotations) > 0 {
+		result.Annotations = in.Annotations
+	}
 	return result
 }
 
