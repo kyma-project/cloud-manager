@@ -134,7 +134,7 @@ en:
 They are key-value pairs.
 
 
-[Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/translations-section.md)
+[Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/150-translations.md)
 
 
 # Generating the ConfigMap
