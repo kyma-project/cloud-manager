@@ -105,13 +105,13 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 		api.Labels[cloudcontrol1beta1.LabelScopeBrokerPlanName] = skrStatus.brokerPlan
 	}
 
-	api.Spec.Kyma = skrStatus.kyma
+	api.Spec.KymaName = skrStatus.kyma
 	api.Spec.Provider = skrStatus.provider
 	api.Spec.BrokerPlan = skrStatus.brokerPlan
 	api.Spec.GlobalAccount = skrStatus.globalAccount
 	api.Spec.SubAccount = skrStatus.subAccount
 	api.Spec.Region = skrStatus.region
-	api.Spec.Shoot = skrStatus.shoot
+	api.Spec.ShootName = skrStatus.shoot
 
 	api.Spec.PastConnections = append(api.Spec.PastConnections, metav1.Now())
 	if len(api.Spec.PastConnections) > 10 {

@@ -35,13 +35,13 @@ type SkrStatusCondition struct {
 
 // SkrStatusSpec defines the desired state of SkrStatus.
 type SkrStatusSpec struct {
-	Kyma          string `json:"kyma"`
+	KymaName      string `json:"kymaName"`
 	Provider      string `json:"provider"`
 	BrokerPlan    string `json:"brokerPlan"`
 	GlobalAccount string `json:"globalAccount"`
 	SubAccount    string `json:"subAccount"`
 	Region        string `json:"region"`
-	Shoot         string `json:"shoot"`
+	ShootName     string `json:"shootName"`
 
 	PastConnections        []metav1.Time `json:"pastConnections,omitempty"`
 	AverageIntervalSeconds int           `json:"averageIntervalSeconds,omitempty"`
