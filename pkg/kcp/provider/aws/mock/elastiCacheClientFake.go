@@ -20,7 +20,9 @@ import (
 
 type AwsElastiCacheMockUtils interface {
 	GetAwsElastiCacheByName(name string) *elasticacheTypes.ReplicationGroup
+	GetAWsElastiCacheNodeByName(name string) *elasticacheTypes.CacheCluster
 	SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState)
+	SetAwsElastiCacheEngineVersion(name, engineVersion string)
 	SetAwsElastiCacheUserGroupLifeCycleState(name string, state awsmeta.ElastiCacheUserGroupState)
 	DeleteAwsElastiCacheByName(name string)
 	DeleteAwsElastiCacheUserGroupByName(name string)
@@ -74,9 +76,20 @@ func (client *elastiCacheClientFake) GetAwsElastiCacheByName(name string) *elast
 	return client.replicationGroups[name]
 }
 
+func (client *elastiCacheClientFake) GetAWsElastiCacheNodeByName(name string) *elasticacheTypes.CacheCluster {
+	return client.cacheClusters[name]
+}
+
 func (client *elastiCacheClientFake) SetAwsElastiCacheLifeCycleState(name string, state awsmeta.ElastiCacheState) {
 	if instance, ok := client.replicationGroups[name]; ok {
 		instance.Status = ptr.To(state)
+	}
+}
+
+func (client *elastiCacheClientFake) SetAwsElastiCacheEngineVersion(name, engineVersion string) {
+	if instance, ok := client.cacheClusters[name]; ok {
+		instance.EngineVersion = ptr.To(engineVersion)
+		instance.PendingModifiedValues = nil
 	}
 }
 
@@ -309,6 +322,11 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 	client.cacheClusters[options.Name] = &elasticacheTypes.CacheCluster{
 		CacheClusterId:             ptr.To(options.Name),
 		PreferredMaintenanceWindow: options.PreferredMaintenanceWindow,
+		CacheParameterGroup: &elasticacheTypes.CacheParameterGroupStatus{
+			CacheParameterGroupName: &options.ParameterGroupName,
+		},
+		EngineVersion: &options.EngineVersion,
+		Engine:        ptr.To("redis"),
 	}
 
 	authTokenEnabled := false
@@ -325,6 +343,7 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		AuthTokenEnabled:         ptr.To(authTokenEnabled),
 		MemberClusters:           []string{options.Name},
 		UserGroupIds:             []string{},
+		Engine:                   ptr.To("redis"),
 		AtRestEncryptionEnabled:  ptr.To(true),
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
@@ -371,6 +390,20 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 
 		if options.AuthTokenSecretString != nil {
 			instance.AuthTokenEnabled = ptr.To(true)
+		}
+	}
+
+	if instance, ok := client.cacheClusters[id]; ok {
+		if options.ParameterGroupName != nil {
+			instance.CacheParameterGroup = &elasticacheTypes.CacheParameterGroupStatus{
+				CacheParameterGroupName: options.ParameterGroupName,
+			}
+		}
+
+		if options.EngineVersion != nil {
+			instance.PendingModifiedValues = &elasticacheTypes.PendingModifiedValues{
+				EngineVersion: options.EngineVersion,
+			}
 		}
 	}
 

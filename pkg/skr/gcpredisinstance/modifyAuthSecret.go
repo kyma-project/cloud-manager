@@ -1,7 +1,9 @@
 package gcpredisinstance
 
 import (
+	"bytes"
 	"context"
+	"maps"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -16,9 +18,9 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	currentSecretData := state.AuthSecret.Data
-	desiredSecretData := getAuthSecretData(state.KcpRedisInstance)
+	desiredSecretData := state.GetAuthSecretData()
 
-	if areByteMapsEqual(currentSecretData, desiredSecretData) {
+	if maps.EqualFunc(currentSecretData, desiredSecretData, func(l, r []byte) bool { return bytes.Equal(l, r) }) {
 		return nil, nil
 	}
 

@@ -106,7 +106,7 @@ func WithGcpRedisInstanceAuthSecretName(name string) ObjAction {
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
 				if gcpRedisInstance.Spec.AuthSecret == nil {
-					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				gcpRedisInstance.Spec.AuthSecret.Name = name
 				return
@@ -121,7 +121,7 @@ func WithGcpRedisInstanceAuthSecretLabels(labels map[string]string) ObjAction {
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
 				if gcpRedisInstance.Spec.AuthSecret == nil {
-					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				if gcpRedisInstance.Spec.AuthSecret.Labels == nil {
 					gcpRedisInstance.Spec.AuthSecret.Labels = map[string]string{}
@@ -141,7 +141,7 @@ func WithGcpRedisInstanceAuthSecretAnnotations(annotations map[string]string) Ob
 		f: func(obj client.Object) {
 			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
 				if gcpRedisInstance.Spec.AuthSecret == nil {
-					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.AuthSecretSpec{}
+					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
 				}
 				if gcpRedisInstance.Spec.AuthSecret.Annotations == nil {
 					gcpRedisInstance.Spec.AuthSecret.Annotations = map[string]string{}
@@ -152,6 +152,26 @@ func WithGcpRedisInstanceAuthSecretAnnotations(annotations map[string]string) Ob
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceAuthSecretAnnotations", obj))
+		},
+	}
+}
+
+func WithGcpRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance); ok {
+				if gcpRedisInstance.Spec.AuthSecret == nil {
+					gcpRedisInstance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+				}
+				if gcpRedisInstance.Spec.AuthSecret.ExtraData == nil {
+					gcpRedisInstance.Spec.AuthSecret.ExtraData = map[string]string{}
+				}
+				for k, v := range extraData {
+					gcpRedisInstance.Spec.AuthSecret.ExtraData[k] = v
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpRedisInstanceAuthSecretExtraData", obj))
 		},
 	}
 }

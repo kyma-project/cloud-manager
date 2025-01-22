@@ -11,6 +11,7 @@ en:
   spec.authSecret.name: Name
   spec.authSecret.labels: Labels
   spec.authSecret.annotations: Annotations
+  spec.authSecret.extraData: Extra Data
   spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
   spec.engineVersion: Engine Version
   spec.parameters: Parameters

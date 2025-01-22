@@ -25,7 +25,12 @@ func New(stateFactory StateFactory) composed.Action {
 			"awsRedisInstance",
 			actions.AddFinalizer,
 			loadSubnetGroup,
-			loadParameterGroup,
+			loadMainParameterGroup(state),
+			loadTempParameterGroup(state),
+			loadMainParameterGroupCurrentParams(),
+			loadTempParameterGroupCurrentParams(),
+			loadMainParameterGroupFamilyDefaultParams(),
+			loadTempParameterGroupFamilyDefaultParams(),
 			loadAuthTokenSecret,
 			loadUserGroup,
 			findSecurityGroup,
@@ -34,9 +39,32 @@ func New(stateFactory StateFactory) composed.Action {
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"redisInstance-create",
+					loadMemberClusters,
 					createSubnetGroup,
-					createParameterGroup,
-					modifyParameterGroup,
+					composed.If(
+						shouldDeleteObsoleteMainParamGroupPredicate(),
+						deleteMainParameterGroup(),
+					),
+					composed.If(
+						shouldDeleteRedundantTempParamGroupPredicate(),
+						deleteTempParameterGroup(),
+					),
+					composed.If(
+						shouldCreateMainParamGroupPredicate(),
+						createMainParameterGroup(state),
+					),
+					composed.If(
+						shouldCreateTempParamGroupPredicate(),
+						createTempParameterGroup(state),
+					),
+					composed.If(
+						shouldModifyMainParamGroupPredicate(),
+						modifyMainParameterGroup(state),
+					),
+					composed.If(
+						shouldModifyTempParamGroupPredicate(),
+						modifyTempParameterGroup(state),
+					),
 					createAuthTokenSecret,
 					createUserGroup,
 					createSecurityGroup,
@@ -50,7 +78,18 @@ func New(stateFactory StateFactory) composed.Action {
 					modifyAutoMinorVersionUpgrade,
 					modifyPreferredMaintenanceWindow,
 					modifyAuthEnabled,
-					updateElastiCacheCluster,
+					composed.If(
+						shouldUpdateRedisPredicate(),
+						updateElastiCacheCluster(),
+					),
+					composed.If(
+						shouldUpgradeRedisPredicate(),
+						upgradeElastiCacheCluster(),
+					),
+					composed.If(
+						shouldSwitchToMainParamGroupPredicate(),
+						switchToMainParamGroup(),
+					),
 					updateStatus,
 				),
 				composed.ComposeActions(
@@ -62,7 +101,8 @@ func New(stateFactory StateFactory) composed.Action {
 					deleteUserGroup,
 					waitUserGroupDeleted,
 					deleteAuthTokenSecret,
-					deleteParameterGroup,
+					deleteMainParameterGroup(),
+					deleteTempParameterGroup(),
 					deleteSubnetGroup,
 					actions.RemoveFinalizer,
 				),

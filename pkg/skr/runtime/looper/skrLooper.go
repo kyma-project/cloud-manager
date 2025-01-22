@@ -129,6 +129,7 @@ func New(kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.Skr
 		activeSkrCollection: NewActiveSkrCollection(logger).(*activeSkrCollection),
 		kcpCluster:          kcpCluster,
 		managerFactory:      skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system", skrScheme),
+		skrStatusSaver:      NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
 		registry:            reg,
 		concurrency:         config.SkrRuntimeConfig.Concurrency,
 	}
@@ -141,6 +142,7 @@ type skrLooper struct {
 	managerFactory skrmanager.Factory
 	registry       registry.SkrRegistry
 	concurrency    int
+	skrStatusSaver SkrStatusSaver
 
 	// wg the WorkGroup for workers
 	wg      sync.WaitGroup
@@ -177,7 +179,7 @@ func (l *skrLooper) worker(id int) {
 	logger.Info("SKR Looper worker started")
 	for {
 		shouldStop := func() bool {
-			logger.Info("SKR Looper worker about to read SKR ID")
+			//logger.Info("SKR Looper worker about to read SKR ID")
 			item, shuttingDown := l.queue.Get()
 			defer l.queue.Done(item)
 			if shuttingDown {
@@ -228,8 +230,8 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 
 	logger = feature.DecorateLogger(ctx, logger)
 
-	logger.Info("Starting SKR Runner")
-	runner := NewSkrRunner(l.registry, l.kcpCluster)
+	//logger.Info("Starting SKR Runner")
+	runner := NewSkrRunner(l.registry, l.kcpCluster, l.skrStatusSaver)
 	to := 10 * time.Second
 	if debugged.Debugged {
 		to = 15 * time.Minute
@@ -239,5 +241,5 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	if err != nil {
 		logger.Error(err, "Error running SKR Runner")
 	}
-	logger.Info("SKR Runner stopped")
+	//logger.Info("SKR Runner stopped")
 }

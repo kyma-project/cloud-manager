@@ -18,6 +18,7 @@ type ReconcilerFactory = reconcile.ReconcilerFactory
 type ReconcilerArguments = reconcile.ReconcilerArguments
 
 var NewRunner = looper.NewSkrRunner
+var NewSkrRunnerWithNoopStatusSaver = looper.NewSkrRunnerWithNoopStatusSaver
 
 type SkrRegistry = registry.SkrRegistry
 

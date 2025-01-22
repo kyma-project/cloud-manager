@@ -84,6 +84,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 		// if module not present in status, remove kymaName from looper, delete scope, and stop and forget
 		composed.If(
 			predicateShouldDisable(),
+			logScope,
 			removeKymaFinalizer,
 			skrDeactivate,
 			kymaNetworkReferenceDelete,
@@ -97,6 +98,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 		//   * exists but waiting for api to be activated
 		composed.If(
 			predicateShouldEnable(),
+			logScope,
 			addKymaFinalizer,
 
 			// scope does not exist or needs to be updated

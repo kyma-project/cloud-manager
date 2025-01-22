@@ -27,7 +27,7 @@ func createAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 				v1beta1.Finalizer,
 			},
 		},
-		Data: getAuthSecretData(state.KcpRedisInstance),
+		Data: state.GetAuthSecretData(),
 	}
 	err := state.Cluster().K8sClient().Create(ctx, secret)
 	if err != nil {
