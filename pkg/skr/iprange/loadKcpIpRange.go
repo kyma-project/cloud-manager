@@ -12,8 +12,6 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.Info("Loading KCP IpRange")
-
 	kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.KymaRef.Namespace,
@@ -27,7 +25,6 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("KCP IpRange is loaded")
 	state.KcpIpRange = kcpIpRange
 	return nil, nil
 }
