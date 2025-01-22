@@ -3,10 +3,8 @@ package composed
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func findActionName(a Action) string {
@@ -18,23 +16,17 @@ type Action func(ctx context.Context, state State) (error, context.Context)
 
 // ===========================
 
-func ComposeActions(name string, actions ...Action) Action {
+func ComposeActions(_ string, actions ...Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
-		logger := log.FromContext(ctx).WithValues("action", name)
-		var actionName string
 		var lastError error
 		currentCtx := ctx
 	loop:
 		for _, a := range actions {
-			actionName = findActionName(a)
 			select {
 			case <-currentCtx.Done():
 				lastError = currentCtx.Err()
 				break loop
 			default:
-				//logger.
-				//	WithValues("targetAction", actionName).
-				//	Info("Running action")
 				err, nextCtx := a(currentCtx, state)
 				lastError = err
 				if nextCtx != nil {
@@ -46,26 +38,16 @@ func ComposeActions(name string, actions ...Action) Action {
 			}
 		}
 
-		l := logger.
-			WithValues(
-				"lastAction", actionName,
-			)
-
+		var fce FlowControlError
 		if lastError == nil {
-			//l.Info("Reconciliation finished")
 			return nil, currentCtx
-		} else if fce, ok := lastError.(FlowControlError); ok {
-			l.Info(fmt.Sprintf("Reconciliation finished with flow control: %s", fce))
+		} else if errors.As(lastError, &fce) {
 			if !fce.ShouldReturnError() {
 				lastError = nil
 			}
 			return lastError, currentCtx
-		} else if errors.Is(lastError, context.DeadlineExceeded) {
-			l.Info("Reconciliation finished with DeadlineExceeded")
-			return nil, currentCtx
 		}
 
-		l.Error(lastError, "Reconciliation finished with error")
 		return lastError, currentCtx
 	}
 }
