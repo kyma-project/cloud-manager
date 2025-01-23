@@ -127,6 +127,7 @@ func main() {
 	}
 
 	rootLogger := zap.New(zap.UseFlagOptions(&opts))
+	rootLogger = rootLogger.WithSink(util.NewLogFilterSink(rootLogger.GetSink()))
 	ctrl.SetLogger(rootLogger)
 
 	setupLog.WithValues(
