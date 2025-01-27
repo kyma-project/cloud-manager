@@ -43,6 +43,15 @@ const (
 	VpcPeeringRemoteNetworkField = ".spec.details.remoteNetwork"
 )
 
+type AwsRouteTableUpdateStrategy string
+
+const (
+	AwsRouteTableUpdateStrategyAuto      = "AUTO"
+	AwsRouteTableUpdateStrategyNone      = "NONE"
+	AwsRouteTableUpdateStrategyMatched   = "MATCHED"
+	AwsRouteTableUpdateStrategyUnmatched = "UNMATCHED"
+)
+
 // VpcPeeringSpec defines the desired state of VpcPeering
 // +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {
@@ -59,7 +68,6 @@ type VpcPeeringSpec struct {
 	Details *VpcPeeringDetails `json:"details,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
 type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."
@@ -69,13 +77,20 @@ type VpcPeeringDetails struct {
 	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Remote network name is required."
 	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering name is immutable."
 	PeeringName string `json:"peeringName,omitempty"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Local peering name is immutable."
 	LocalPeeringName string `json:"localPeeringName,omitempty"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Import custom routes is immutable."
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
+
+	// +kubebuilder:default:=AUTO
+	// +kubebuilder:validation:Enum=AUTO;NONE;MATCHED;UNMATCHED
+	RemoteRouteTableUpdateStrategy AwsRouteTableUpdateStrategy `json:"remoteRouteTableUpdateStrategy,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1

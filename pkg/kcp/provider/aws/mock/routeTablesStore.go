@@ -10,8 +10,8 @@ import (
 
 type RouteTableConfig interface {
 	AddRouteTable(routeTableId, vpcId *string, tags []ec2types.Tag, associations []ec2types.RouteTableAssociation) ec2types.RouteTable
-	GetRoute(ctc context.Context, vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route
-	GetRouteCount(ctx context.Context, vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int
+	GetRoute(vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route
+	GetRouteCount(vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int
 }
 type routeTableEntry struct {
 	routeTable ec2types.RouteTable
@@ -46,7 +46,7 @@ func (s *routeTablesStore) AddRouteTable(routeTableId, vpcId *string, tags []ec2
 
 	return entry.routeTable
 }
-func (s *routeTablesStore) DescribeRouteTables(ctc context.Context, vpcId string) ([]ec2types.RouteTable, error) {
+func (s *routeTablesStore) DescribeRouteTables(ctx context.Context, vpcId string) ([]ec2types.RouteTable, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -56,7 +56,7 @@ func (s *routeTablesStore) DescribeRouteTables(ctc context.Context, vpcId string
 
 	return pie.Map(filtered, func(e *routeTableEntry) ec2types.RouteTable { return e.routeTable }), nil
 }
-func (s *routeTablesStore) GetRoute(ctc context.Context, vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route {
+func (s *routeTablesStore) GetRoute(vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -107,8 +107,8 @@ func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destin
 	return nil
 }
 
-func (s *routeTablesStore) GetRouteCount(ctx context.Context, vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
-	tables, err := s.DescribeRouteTables(ctx, vpcId)
+func (s *routeTablesStore) GetRouteCount(vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
+	tables, err := s.DescribeRouteTables(nil, vpcId)
 
 	if err != nil {
 		return -1
