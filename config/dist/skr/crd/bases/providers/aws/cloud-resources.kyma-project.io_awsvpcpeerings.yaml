@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: awsvpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -58,6 +58,14 @@ spec:
                   x-kubernetes-validations:
                     - message: RemoteRegion is immutable.
                       rule: (self == oldSelf)
+                remoteRouteTableUpdateStrategy:
+                  default: AUTO
+                  enum:
+                    - AUTO
+                    - NONE
+                    - MATCHED
+                    - UNMATCHED
+                  type: string
                 remoteVpcId:
                   type: string
                   x-kubernetes-validations:

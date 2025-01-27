@@ -113,6 +113,11 @@ func (b *VpcPeeringBuilder) WithLocalPeeringName(localPeeringName string) *VpcPe
 	return b
 }
 
+func (b *VpcPeeringBuilder) WithRemoteRouteTableUpdateStrategy(strategy AwsRouteTableUpdateStrategy) *VpcPeeringBuilder {
+	b.Obj.Spec.Details.RemoteRouteTableUpdateStrategy = strategy
+	return b
+}
+
 func (b *VpcPeeringBuilder) Build() *VpcPeering {
 	return &b.Obj
 }
