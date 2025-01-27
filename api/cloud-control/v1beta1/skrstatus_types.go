@@ -46,6 +46,7 @@ type SkrStatusSpec struct {
 	PastConnections        []metav1.Time `json:"pastConnections,omitempty"`
 	AverageIntervalSeconds int           `json:"averageIntervalSeconds,omitempty"`
 
+	// +optional
 	Conditions []SkrStatusCondition `json:"conditions"`
 }
 
