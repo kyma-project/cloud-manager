@@ -1,6 +1,8 @@
 package api_tests
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -37,6 +39,11 @@ func (b *testAwsRedisInstanceBuilder) Build() *cloudresourcesv1beta1.AwsRedisIns
 
 func (b *testAwsRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisTier) *testAwsRedisInstanceBuilder {
 	b.instance.Spec.RedisTier = redisTier
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithEngineVersion(engineVersion string) *testAwsRedisInstanceBuilder {
+	b.instance.Spec.EngineVersion = engineVersion
 	return b
 }
 
@@ -79,4 +86,45 @@ var _ = Describe("Feature: SKR AwsRedisInstance", Ordered, func() {
 		},
 		"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 	)
+
+	canNotCreateSkr(
+		"AwsRedisInstance cannot be created with unknown tier",
+		newTestAwsRedisInstanceBuilder().WithRedisTier("unknown"),
+		"",
+	)
+
+	allowedVersionUpgrades := [][]string{
+		{"6.x", "7.0"},
+		{"6.x", "7.1"},
+		{"7.0", "7.1"},
+	}
+	for _, upgradePair := range allowedVersionUpgrades {
+		fromVersion := upgradePair[0]
+		toVersion := upgradePair[1]
+		canChangeSkr(
+			fmt.Sprintf("AwsRedisInstance engineVersion can be upgraded (%s to %s)", fromVersion, toVersion),
+			newTestAwsRedisInstanceBuilder().WithEngineVersion(fromVersion),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithEngineVersion(toVersion)
+			},
+		)
+	}
+
+	disallowedVersionUpgrades := [][]string{
+		{"7.1", "7.0"},
+		{"7.1", "6.x"},
+		{"7.0", "6.x"},
+	}
+	for _, upgradePair := range disallowedVersionUpgrades {
+		fromVersion := upgradePair[0]
+		toVersion := upgradePair[1]
+		canNotChangeSkr(
+			fmt.Sprintf("AwsRedisInstance engineVersion can not be downgraded (%s to %s)", fromVersion, toVersion),
+			newTestAwsRedisInstanceBuilder().WithEngineVersion(fromVersion),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithEngineVersion(toVersion)
+			},
+			"engineVersion cannot be downgraded",
+		)
+	}
 })

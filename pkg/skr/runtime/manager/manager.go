@@ -58,7 +58,7 @@ func (m *skrManager) KymaRef() klog.ObjectRef {
 }
 
 func (m *skrManager) Start(ctx context.Context) error {
-	m.logger.Info("SkrManager starting")
+	//m.logger.Info("SkrManager starting")
 	m.controllers = append(m.controllers, m.Cluster)
 	var wg sync.WaitGroup
 	for _, r := range m.controllers {
@@ -80,7 +80,7 @@ func (m *skrManager) Start(ctx context.Context) error {
 
 	<-ctx.Done()
 	wg.Wait()
-	m.logger.Info("SkrManager stopped")
+	//m.logger.Info("SkrManager stopped")
 
 	return nil
 }

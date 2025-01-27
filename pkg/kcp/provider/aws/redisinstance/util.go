@@ -16,6 +16,10 @@ func GetAwsElastiCacheParameterGroupName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
 }
 
+func GetAwsElastiCacheTempParameterGroupName(name string) string {
+	return fmt.Sprintf("cm-%s-temp", name)
+}
+
 func GetAwsElastiCacheUserGroupName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
 }

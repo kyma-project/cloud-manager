@@ -15,12 +15,17 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 
 	redisInstance := state.ObjAsRedisInstance()
+	hasChanged := false
 
-	redisInstance.Status.PrimaryEndpoint = fmt.Sprintf(
+	primaryEndpoint := fmt.Sprintf(
 		"%s:%d",
 		*state.azureRedisInstance.Properties.HostName,
 		*state.azureRedisInstance.Properties.SSLPort,
 	)
+	if redisInstance.Status.PrimaryEndpoint != primaryEndpoint {
+		redisInstance.Status.PrimaryEndpoint = primaryEndpoint
+		hasChanged = true
+	}
 	resourceGroupName := state.resourceGroupName
 	keys, err := state.client.GetRedisInstanceAccessKeys(ctx, resourceGroupName, state.ObjAsRedisInstance().Name)
 
@@ -28,13 +33,20 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.LogErrorAndReturn(err, "Error retrieving Azure RedisInstance access keys", composed.StopWithRequeue, ctx)
 	}
 
+	authString := ""
 	if state.azureRedisInstance != nil {
-		redisInstance.Status.AuthString = pie.First(keys)
+		authString = pie.First(keys)
+	}
+	if redisInstance.Status.AuthString != authString {
+		redisInstance.Status.AuthString = authString
+		hasChanged = true
 	}
 
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
-	if hasReadyCondition && redisInstance.Status.State != cloudcontrolv1beta1.StateReady {
-		composed.LoggerFromCtx(ctx).Info("Ready condition already present, StopAndForget-ing")
+	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
+
+	if !hasChanged && hasReadyCondition && hasReadyStatusState {
+		composed.LoggerFromCtx(ctx).Info("RedisInstance status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 

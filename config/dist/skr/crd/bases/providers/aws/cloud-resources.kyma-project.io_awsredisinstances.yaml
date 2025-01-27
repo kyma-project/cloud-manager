@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.17
+    cloud-resources.kyma-project.io/version: v0.0.19
   name: awsredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -74,10 +74,18 @@ spec:
                   type: boolean
                 engineVersion:
                   default: "7.0"
+                  enum:
+                    - "7.1"
+                    - "7.0"
+                    - 6.x
                   type: string
                   x-kubernetes-validations:
-                    - message: EngineVersion is immutable.
-                      rule: (self == oldSelf)
+                    - message: engineVersion cannot be downgraded.
+                      rule: (self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x")
+                    - message: engineVersion cannot be downgraded.
+                      rule: (self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0" || oldSelf == "6.x")
+                    - message: engineVersion cannot be downgraded.
+                      rule: (self != "6.x" || oldSelf == "6.x")
                 ipRange:
                   properties:
                     name:

@@ -56,6 +56,7 @@ type ModifyElastiCacheClusterOptions struct {
 	AuthTokenSecretString      *string
 	UserGroupIdsToAdd          []string
 	UserGroupIdsToRemove       []string
+	ParameterGroupName         *string
 }
 
 type ElastiCacheClient interface {
@@ -370,6 +371,9 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	}
 	if len(options.UserGroupIdsToRemove) > 0 {
 		params.UserGroupIdsToRemove = options.UserGroupIdsToRemove
+	}
+	if options.ParameterGroupName != nil {
+		params.CacheParameterGroupName = options.ParameterGroupName
 	}
 
 	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)

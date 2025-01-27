@@ -59,7 +59,10 @@ type AwsRedisInstanceSpec struct {
 
 	// +optional
 	// +kubebuilder:default="7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EngineVersion is immutable."
+	// +kubebuilder:validation:Enum="7.1";"7.0";"6.x"
+	// +kubebuilder:validation:XValidation:rule=(self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "6.x" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
 	EngineVersion string `json:"engineVersion"`
 
 	// +optional

@@ -70,6 +70,24 @@ func CreateRedisInstance(ctx context.Context, clnt client.Client, obj *cloudcont
 	return err
 }
 
+func UpdateRedisInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.RedisInstance, opts ...ObjAction) error {
+	if obj == nil {
+		return errors.New("for updating the KCP RedisInstance, the object must be provided")
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(obj)
+
+	if obj.Name == "" {
+		return errors.New("the KCP RedisInstance must have name set")
+	}
+
+	err := clnt.Update(ctx, obj)
+	return err
+}
+
 func WithRedisInstanceGcp() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
