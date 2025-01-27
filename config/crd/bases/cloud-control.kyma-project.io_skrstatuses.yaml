@@ -100,7 +100,6 @@ spec:
                 type: string
             required:
             - brokerPlan
-            - conditions
             - globalAccount
             - kymaName
             - provider
