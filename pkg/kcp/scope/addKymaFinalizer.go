@@ -12,7 +12,12 @@ func addKymaFinalizer(ctx context.Context, st composed.State) (error, context.Co
 
 	if !state.ObjAsScope().DeletionTimestamp.IsZero() {
 		// Scope is being deleted
-		return nil, nil
+		return nil, ctx
+	}
+
+	if !state.kyma.GetDeletionTimestamp().IsZero() {
+		// kyma is being deleted - it has deletionTimestamp and finalizer can not be added in that state
+		return nil, ctx
 	}
 
 	added, err := composed.PatchObjAddFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, state.kyma, state.Cluster().K8sClient())
