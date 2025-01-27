@@ -48,7 +48,13 @@ func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	state := r.newState(req)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	// Scope reconciler is triggered very often due to KLM constant changes on watched Kyma
+	// HandleWithoutLogging should be used, so no reconciliation outcome is logged since it most cases
+	// the reconciler will do nothing since no change regarding CloudManager was done on Kyma
+	// so it will just produce an unnecessary log entry "Reconciliation finished without control error - doing stop and forget"
+	// To accommodate this non-functional requirement to keep logs tidy and prevent excessive and not so usable log entries
+	// in cases when Scope actually did something we have to accept the discomfort of not having this log entry
+	return composed.HandleWithoutLogging(action(ctx, state))
 }
 
 func (r *scopeReconciler) newState(req ctrl.Request) *State {

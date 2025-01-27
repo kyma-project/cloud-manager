@@ -3,8 +3,15 @@ package composed
 import (
 	"context"
 	"errors"
+	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
+
+func HandleWithoutLogging(err error, ctx context.Context) (ctrl.Result, error) {
+	logger := logr.Discard()
+	ctx = LoggerIntoCtx(ctx, logger)
+	return Handle(err, ctx)
+}
 
 func Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	logger := LoggerFromCtx(ctx)
