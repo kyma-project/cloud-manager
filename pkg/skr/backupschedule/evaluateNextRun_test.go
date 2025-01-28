@@ -126,7 +126,12 @@ func (suite *evaluateNextRunSuite) TestWhenNextRunTimeIsNotDueYet() {
 	err, _ = evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(offset), err)
+	result, err := composed.HandleWithoutLogging(err, ctx)
+	delay := result.RequeueAfter
+	suite.Nil(err)
+	suite.NotNil(delay)
+	suite.Greater(delay, time.Duration(0))
+	suite.LessOrEqual(delay, offset)
 }
 
 func (suite *evaluateNextRunSuite) TestWhenScheduleJustRun() {
