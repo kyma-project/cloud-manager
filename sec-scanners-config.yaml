@@ -1,7 +1,7 @@
 module-name: cloud-manager
 kind: kyma
 protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.2.4
 whitesource:
   language: golang-mod
   exclude:
