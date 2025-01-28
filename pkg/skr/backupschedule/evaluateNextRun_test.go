@@ -130,7 +130,7 @@ func (suite *evaluateNextRunSuite) TestWhenNextRunTimeIsNotDueYet() {
 	delay := result.RequeueAfter
 	suite.Nil(err)
 	suite.NotNil(delay)
-	suite.Greater(delay, time.Duration(int64(0.95 * float64(offset))))
+	suite.Greater(delay, time.Duration(int64(0.95*float64(offset))))
 	suite.LessOrEqual(delay, offset)
 }
 

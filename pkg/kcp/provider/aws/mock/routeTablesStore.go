@@ -108,12 +108,17 @@ func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destin
 }
 
 func (s *routeTablesStore) GetRouteCount(ctx context.Context, vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
-	tables, _ := s.DescribeRouteTables(ctx, vpcId)
+	tables, err := s.DescribeRouteTables(ctx, vpcId)
+
+	if err != nil {
+		return -1
+	}
+
 	cnt := 0
 	for _, t := range tables {
 		for _, r := range t.Routes {
-			if *r.VpcPeeringConnectionId == vpcPeeringConnectionId &&
-				*r.DestinationCidrBlock == destinationCidrBlock {
+			if ptr.Deref(r.VpcPeeringConnectionId, "") == vpcPeeringConnectionId &&
+				ptr.Deref(r.DestinationCidrBlock, "") == destinationCidrBlock {
 				cnt++
 			}
 		}
