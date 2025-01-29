@@ -20,7 +20,7 @@ The Cloud Manager module provides the following features tailored for each of th
 * [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
 
 > [!NOTE]
-> The NFS feature is offered for Google Cloud and AWS only.
+> The NFS feature is offered for Amazon Web Service and Google Cloud only.
 
 ## Architecture
 

@@ -1,10 +1,8 @@
 # Redis
 
-## Overview
-
 The Cloud Manager module allows you to provision a cloud provider-managed Redis instance within your cluster network.
 
-### Cloud Providers
+## Cloud Providers
 
 When you create a Redis instance in Kyma, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
@@ -44,4 +42,4 @@ AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level C
 
 * [Cloud Manager Resources: Redis](./resources/README.md#redis)
 * [Tutorials](./tutorials/README.md)
-* Pricing (link TBD)
+* [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
