@@ -16,11 +16,10 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
     export AWS_REGION={REGION}
     ```
 
-2. Create a trust policy document.
+2. Create a trust policy document. See [AwsVpcPeering Custom Resource](../resources/04-30-10-aws-vpc-peering?id=authorization) to identify Cloud Manager principal ARN:
 
     ```shell
-    export PRINCIPAL_PROFILE_AWS_ACCOUNT_ID=194230256199
-    export USER_NAME=cloud-manager-peering-dev
+    export PRINCIPAL_ARN=`arn:aws:iam::194230256199:user/cloud-manager-peering-stage`
     cat > trust_policy.json <<- EOF
     {
         "Version": "2012-10-17",
@@ -28,7 +27,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
             {
                 "Effect": "Allow",
                 "Principal": {
-                    "AWS": "arn:aws:iam::$PRINCIPAL_PROFILE_AWS_ACCOUNT_ID:user/$USER_NAME"
+                    "AWS": "$PRINCIPAL_ARN"
                 },
                 "Action": "sts:AssumeRole"
             }

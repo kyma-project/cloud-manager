@@ -14,8 +14,8 @@ Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/
 
 Use the following table to identify Cloud Manager principal based on your Kyma landscape:
 
-| BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager principal                                    |
-|------------------------------------|----------------------------------------|------------------------------------------------------------|
+| BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager principal ARN                                  |
+|------------------------------------|----------------------------------------|--------------------------------------------------------------|
 | https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage` |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`  |
 
@@ -61,6 +61,11 @@ Use the following table to identify Cloud Manager principal based on your Kyma l
     ```
 
 3. Attach the **CloudManagerPeeringAccess** policy to the **CloudManagerPeeringRole**:
+
+## Required Actions in the Remote Project
+
+Before creating the VPC peering, please tag your AWS account VPC with the Kyma shoot name tag.  
+For more information, check the [Create Virtual Private Cloud Peering in Amazon Web Services](../tutorials/01-30-10-aws-vpc-peering.md) tutorial.
 
 ## Deleting `AwsVpcPeering`
 
