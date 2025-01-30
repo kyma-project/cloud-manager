@@ -19,8 +19,8 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 2. Assign the required roles to the Cloud Manager peering service principal. See [AzureVpcPeering Custom Resource](../resources/04-30-30-azure-vpc-peering.md?id=authorization) to identify Cloud Manager service principal: 
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-    export PRINCIPAL_NAME={PRINCIPAL_NAME}
-    export OBJECT_ID=$(az ad sp list --display-name $PRINCIPAL_NAME --query "[].id" -o tsv)
+    export CLOUD_MANAGER_PRINCIPAL={CLOUD_MANAGER_PRINCIPAL}
+    export OBJECT_ID=$(az ad sp list --display-name $CLOUD_MANAGER_PRINCIPAL --query "[].id" -o tsv)
     
     az role assignment create --assignee $OBJECT_ID \
     --role "Network Contributor" \
