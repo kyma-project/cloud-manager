@@ -5,4 +5,3 @@ en:
   spec.remoteVnet: Remote Vnet
   status.id: ID
   spec.remotePeeringName: Remote Peering Name
-  spec.deleteRemotePeering: Delete Remote Peering
