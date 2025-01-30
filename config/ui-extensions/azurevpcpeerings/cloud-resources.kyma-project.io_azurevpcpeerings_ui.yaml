@@ -12,9 +12,6 @@ data:
             - widget: Labels
               source: remotePeeringName
               name: spec.remotePeeringName
-    #         - widget: Labels
-    #           source: deleteRemotePeering
-    #           name: spec.deleteRemotePeering
         - name: status
           widget: Panel
           source: status
@@ -25,7 +22,7 @@ data:
             - widget: Labels
               source: id
               name: status.id
-  form: |
+  form: |+
     - path: spec.remoteVnet
       name: spec.remoteVnet
       widget: Text
@@ -36,8 +33,8 @@ data:
       widget: Text
       disableOnEdit: true
       description: Immutable once set.
-    # - path: spec.deleteRemotePeering
-    #   name: spec.deleteRemotePeering
+
+
   general: |-
     resource:
         kind: AzureVpcPeering
@@ -51,14 +48,8 @@ data:
     description: >-
         Description here
   list: |-
-    - source: spec.remoteResourceGroup
-      name: spec.remoteResourceGroup
-      sort: true
     - source: spec.remoteVnet
       name: spec.remoteVnet
-      sort: true
-    - source: spec.deleteRemotePeering
-      name: spec.deleteRemotePeering
       sort: true
     - source: status.state
       name: status.state
@@ -71,11 +62,10 @@ data:
       spec.remoteVnet: Remote Vnet
       status.id: ID
       spec.remotePeeringName: Remote Peering Name
-      spec.deleteRemotePeering: Delete Remote Peering
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
