@@ -24,7 +24,7 @@ The Cloud Manager module provides the following features tailored for each of th
 
 ## Architecture
 
-Cloud Manager has the read and write access to your IpRange, VpcPeering, NfsVolume, and Redis custom resources in the Kyma cluster. The module also manages Kyma VPC networks, NFS Volume instances, and Redis instances in your cloud provider subsription in Kyma.
+Cloud Manager has read and write access to your IpRange, VpcPeering, NfsVolume, and Redis custom resources in the Kyma cluster. The module also manages Kyma VPC networks, NFS Volume instances, and Redis instances in your cloud provider subscription in Kyma.
 
 ![Cloud Manager Architecture](./assets/cloud-manager-architecture.drawio.svg)
 
@@ -35,4 +35,4 @@ The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes
 ## Related Information
 
 * [Cloud Manager module tutorials](./tutorials/README.md)
-* 
+* [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
