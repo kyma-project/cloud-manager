@@ -6,7 +6,7 @@ The Cloud Manager module allows you to provision a cloud provider-managed Redis 
 
 When you create a Redis instance in Kyma, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
-Cloud Manager module supports the Redis feature of three cloud providers:
+The Cloud Manager module supports the Redis feature of three cloud providers:
 
 * Amazon Web Services' [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis/)
 * Google Cloud's [Memorystore](https://cloud.google.com/memorystore?hl=en)
@@ -27,7 +27,7 @@ To instantiate Redis, an IpRange CR must exist in the Kyma cluster. IpRange defi
 
 ## Lifecycle
 
-AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level CRs. Once you create an AwsRedisInstance, GcpRedisInstance, or AzureRedisInstance resource, the following are also created automatically:
+AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level CRs. Once you create any of the Redis resources, the following are also created automatically:
 
 * IpRange CR
   * IpRange is a cluster-level CR.
@@ -37,6 +37,10 @@ AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level C
   * The Secret is a namespace-level CR.
   * The Secret's name is the same as the name of the respective Redis instance CR.
   * The Secret holds values and information used to access the Redis instance.
+
+## Pricing
+
+Using the Cloud Manager module and enabling Redis, introduces additional costs. For more information, see [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module).
 
 ## Related Information
 

@@ -24,10 +24,15 @@ The Cloud Manager module provides the following features tailored for each of th
 
 ## Architecture
 
+Cloud Manager has the read and write access to your IpRange, VpcPeering, NfsVolume, and Redis custom resources in the Kyma cluster. The module also manages Kyma VPC networks, NFS Volume instances, and Redis instances in your cloud provider subsription in Kyma.
+
+![Cloud Manager Architecture](./assets/cloud-manager-architecture.drawio.svg)
+
 ## API / Custom Resources Definitions
 
 The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
 
 ## Related Information
 
-* [Cloud Manager module tutorials](./tutorials/README.md) provide step-by-step instructions on creating, using and disposing cloud resources.
+* [Cloud Manager module tutorials](./tutorials/README.md)
+* 
