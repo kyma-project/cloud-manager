@@ -248,7 +248,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
 
 				By("And it has defined cloud-manager finalizer")
-				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 			})
 
 			By("Then PersistantVolumeClaim is created in SKR", func() {
@@ -286,7 +286,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				}
 
 				By("And it has defined cloud-manager finalizer")
-				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 			})
 		})
 	})
@@ -844,7 +844,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
 
 				By("And it has defined cloud-manager finalizer")
-				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 			})
 
 			By("Then PersistantVolumeClaim is created in SKR", func() {
@@ -882,7 +882,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				}
 
 				By("And it has defined cloud-manager finalizer")
-				Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 			})
 		})
 	})

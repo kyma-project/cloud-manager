@@ -65,7 +65,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 			return composed.ComposeActions(
 				"ipRangeCommon",
 				// common IpRange common actions here
-				actions.PatchAddFinalizer,
+				actions.PatchAddCommonFinalizer(),
 				composed.If(
 					shouldAllocateIpRange,
 					composed.BuildSwitchAction(
@@ -119,7 +119,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					kymaPeeringDelete,
 					kymaPeeringDeleteWait,
 					kcpNetworkDelete,
-					actions.PatchRemoveFinalizer,
+					actions.PatchRemoveCommonFinalizer(),
 				),
 				statusReady,
 			)(ctx, newState(st.(focal.State)))

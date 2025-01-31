@@ -136,7 +136,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			})
 
 			By("And Then SKR IpRange has finalizer", func() {
-				Expect(controllerutil.ContainsFinalizer(skrIpRange, cloudresourcesv1beta1.Finalizer))
+				Expect(controllerutil.ContainsFinalizer(skrIpRange, api.CommonFinalizerDeletionHook))
 			})
 
 			By("And Then SKR IpRange has spec.cidr copy in status", func() {
@@ -220,7 +220,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 					Should(Succeed(), "expected SKR IpRange to be created, but none found")
 
 				Eventually(Update).
-					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, AddFinalizer(api.CommonFinalizerDeletionHook)).
 					Should(Succeed(), "failed adding finalizer to KCP IpRange")
 
 				// When Kcp IpRange gets Ready condition
@@ -259,7 +259,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 
 			By("When KCP IpRange finalizer is removed and it is deleted", func() {
 				Eventually(Update).
-					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, RemoveFinalizer(api.CommonFinalizerDeletionHook)).
 					Should(Succeed(), "failed removing finalizer on KCP IpRange")
 			})
 

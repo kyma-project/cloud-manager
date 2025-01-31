@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
@@ -55,7 +56,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 		})
 
 		By("And Then KCP Network has finalizer", func() {
-			Expect(controllerutil.ContainsFinalizer(net, cloudcontrolv1beta1.FinalizerName)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(net, api.CommonFinalizerDeletionHook)).To(BeTrue())
 		})
 
 		By("And Then Network status reference is set", func() {

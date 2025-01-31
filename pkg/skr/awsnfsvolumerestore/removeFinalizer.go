@@ -2,7 +2,7 @@ package awsnfsvolumerestore
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -13,7 +13,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	controllerutil.RemoveFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
+	controllerutil.RemoveFinalizer(state.Obj(), api.CommonFinalizerDeletionHook)
 	err := state.UpdateObj(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR AwsNfsVolumeBackup after finalizer remove", composed.StopWithRequeue, ctx)

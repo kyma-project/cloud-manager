@@ -2,7 +2,7 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -20,7 +20,7 @@ func scopeDelete(ctx context.Context, st composed.State) (error, context.Context
 
 	logger.Info("Deleting Scope")
 
-	if _, err := state.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName); err != nil {
+	if _, err := state.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook); err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating Scope after finalizer removed", composed.StopWithRequeue, ctx)
 	}
 

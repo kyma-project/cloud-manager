@@ -11,5 +11,5 @@ const (
 )
 
 const (
-	FinalizerName = "cloud-control.kyma-project.io/deletion-hook"
+	DO_NOT_USE_FinalizerName = "cloud-control.kyma-project.io/deletion-hook"
 )

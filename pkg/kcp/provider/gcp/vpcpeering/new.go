@@ -22,7 +22,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"gcpVpcPeering",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			loadKymaNetwork,
 			loadRemoteNetwork,
 			loadRemoteVpcPeering,
@@ -44,7 +44,8 @@ func New(stateFactory StateFactory) composed.Action {
 					deleteVpcPeering,
 					waitKymaVpcPeeringDeletion,
 					deleteRemoteVpcPeering,
-					actions.RemoveFinalizer,
+					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,

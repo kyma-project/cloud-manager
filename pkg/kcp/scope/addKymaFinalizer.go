@@ -2,7 +2,7 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -20,7 +20,7 @@ func addKymaFinalizer(ctx context.Context, st composed.State) (error, context.Co
 		return nil, ctx
 	}
 
-	added, err := composed.PatchObjAddFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, state.kyma, state.Cluster().K8sClient())
+	added, err := composed.PatchObjAddFinalizer(ctx, api.CommonFinalizerDeletionHook, state.kyma, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating Kyma CR with added finalizer", composed.StopWithRequeue, ctx)
 	}

@@ -2,8 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			Labels:      getVolumeClaimLabels(nfsVolume),
 			Annotations: getVolumeClaimAnnotations(nfsVolume),
 			Finalizers: []string{
-				v1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{

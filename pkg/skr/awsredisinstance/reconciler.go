@@ -55,7 +55,7 @@ func (r *reconciler) newAction() composed.Action {
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"awsRedisInstance-create",
-				actions.AddFinalizer,
+				actions.AddCommonFinalizer(),
 				createKcpRedisInstance,
 				waitKcpStatusUpdate,
 				updateStatus,
@@ -71,7 +71,8 @@ func (r *reconciler) newAction() composed.Action {
 				waitAuthSecretDeleted,
 				deleteKcpRedisInstance,
 				waitKcpRedisInstanceDeleted,
-				actions.RemoveFinalizer,
+				actions.RemoveCommonFinalizer(),
+				composed.StopAndForgetAction,
 			),
 		),
 

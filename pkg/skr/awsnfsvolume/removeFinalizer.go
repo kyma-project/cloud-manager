@@ -2,7 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -15,12 +15,12 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	hasFinalizer := controllerutil.ContainsFinalizer(state.ObjAsAwsNfsVolume(), cloudresourcesv1beta1.Finalizer)
+	hasFinalizer := controllerutil.ContainsFinalizer(state.ObjAsAwsNfsVolume(), api.CommonFinalizerDeletionHook)
 	if !hasFinalizer {
 		return nil, nil
 	}
 
-	controllerutil.RemoveFinalizer(state.ObjAsAwsNfsVolume(), cloudresourcesv1beta1.Finalizer)
+	controllerutil.RemoveFinalizer(state.ObjAsAwsNfsVolume(), api.CommonFinalizerDeletionHook)
 	err := state.UpdateObj(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR AwsNfsVolume after finalizer removed", composed.StopWithRequeue, ctx)

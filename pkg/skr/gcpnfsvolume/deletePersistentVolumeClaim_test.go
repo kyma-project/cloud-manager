@@ -41,7 +41,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 					DeletionTimestamp: &v1.Time{
 						Time: time.Now(),
 					},
-					Finalizers: []string{cloudresourcesv1beta1.Finalizer},
+					Finalizers: []string{api.CommonFinalizerDeletionHook},
 				},
 			}
 

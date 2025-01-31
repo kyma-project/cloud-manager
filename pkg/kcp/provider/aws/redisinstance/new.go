@@ -23,7 +23,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"awsRedisInstance",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			loadSubnetGroup,
 			loadMainParameterGroup(state),
 			loadTempParameterGroup(state),
@@ -104,7 +104,8 @@ func New(stateFactory StateFactory) composed.Action {
 					deleteMainParameterGroup(),
 					deleteTempParameterGroup(),
 					deleteSubnetGroup,
-					actions.RemoveFinalizer,
+					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,

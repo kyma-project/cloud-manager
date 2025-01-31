@@ -225,7 +225,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 			Expect(authSecret.Data).To(HaveKeyWithValue("parsed", []byte(kcpRedisInstancePrimaryEndpoint)), "expected auth secret data to have parsed=host:port")
 
 			By("And it has defined cloud-manager finalizer")
-			Expect(authSecret.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+			Expect(authSecret.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 		})
 
 		// CleanUp
@@ -306,7 +306,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed(), "expected KCP RedisInstance to be created, but it was not")
 
 			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance, AddFinalizer(api.CommonFinalizerDeletionHook)).
 				Should(Succeed(), "failed adding finalizer on KCP RedisInstance")
 		})
 
@@ -384,7 +384,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		By("When KCP RedisInstance finalizer is removed and it is deleted", func() {
 			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance, RemoveFinalizer(api.CommonFinalizerDeletionHook)).
 				Should(Succeed(), "failed removing finalizer on KCP RedisInstance")
 		})
 
