@@ -19,6 +19,7 @@ rules:
   - networks
   - nfsinstances
   - nukes
+  - redisclusters
   - redisinstances
   - scopes
   - vpcpeerings
@@ -37,6 +38,7 @@ rules:
   - networks/finalizers
   - nfsinstances/finalizers
   - nukes/finalizers
+  - redisclusters/finalizers
   - redisinstances/finalizers
   - scopes/finalizers
   - vpcpeerings/finalizers
@@ -49,6 +51,7 @@ rules:
   - networks/status
   - nfsinstances/status
   - nukes/status
+  - redisclusters/status
   - redisinstances/status
   - scopes/status
   - vpcpeerings/status
