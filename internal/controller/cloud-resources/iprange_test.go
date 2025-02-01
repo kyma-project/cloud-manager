@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"

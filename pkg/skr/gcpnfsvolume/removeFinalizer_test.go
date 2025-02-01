@@ -3,7 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
