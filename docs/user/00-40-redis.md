@@ -8,7 +8,7 @@ When you create a Redis instance in Kyma, you depend on the cloud provider of yo
 
 The Cloud Manager module supports the Redis feature of three cloud providers:
 
-* Amazon Web Services' [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis/)
+* Amazon Web Services' [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
 * Google Cloud's [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure's [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
 
