@@ -23,4 +23,5 @@ resources:
 - cloud-control_v1beta1_nuke.yaml
 - cloud-resources_v1beta1_awsnfsvolumerestore.yaml
 - cloud-control_v1beta1_skrstatus.yaml
+- cloud-control_v1beta1_rediscluster.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

@@ -1,0 +1,23 @@
+# permissions for end users to view redisclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-control-rediscluster-viewer-role
+rules:
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - redisclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - redisclusters/status
+  verbs:
+  - get
