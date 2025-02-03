@@ -1,0 +1,9 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: RedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: rediscluster-sample
+spec:
+  # TODO(user): Add fields here

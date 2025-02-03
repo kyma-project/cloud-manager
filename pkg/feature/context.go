@@ -3,6 +3,7 @@ package feature
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -18,16 +19,88 @@ type contextKeyType struct{}
 var contextKey = contextKeyType{}
 
 var keyToBuilderMethod = map[types.Key]func(ContextBuilder, string) ContextBuilder{
-	types.KeyFeature:       ContextBuilder.Feature,
-	types.KeyPlane:         ContextBuilder.Plane,
-	types.KeyProvider:      ContextBuilder.Provider,
-	types.KeyBrokerPlan:    ContextBuilder.BrokerPlan,
-	types.KeyGlobalAccount: ContextBuilder.GlobalAccount,
-	types.KeySubAccount:    ContextBuilder.SubAccount,
-	types.KeyKyma:          ContextBuilder.Kyma,
-	types.KeyShoot:         ContextBuilder.Shoot,
-	types.KeyObjKindGroup:  ContextBuilder.ObjKindGroup,
+	types.KeyFeature:         ContextBuilder.Feature,
+	types.KeyPlane:           ContextBuilder.Plane,
+	types.KeyProvider:        ContextBuilder.Provider,
+	types.KeyBrokerPlan:      ContextBuilder.BrokerPlan,
+	types.KeyGlobalAccount:   ContextBuilder.GlobalAccount,
+	types.KeySubAccount:      ContextBuilder.SubAccount,
+	types.KeyRegion:          ContextBuilder.Region,
+	types.KeyKyma:            ContextBuilder.Kyma,
+	types.KeyShoot:           ContextBuilder.Shoot,
+	types.KeyObjKindGroup:    ContextBuilder.ObjKindGroup,
+	types.KeyCrdKindGroup:    ContextBuilder.CrdKindGroup,
+	types.KeyBusolaKindGroup: ContextBuilder.BusolaKindGroup,
 }
+
+// ContextReader ===============================================================
+
+func NewContextReaderFromFFCtx(ffCtx ffcontext.Context) *ContextReader {
+	return &ContextReader{ffCtx: ffCtx}
+}
+
+func NewContextReaderFromCtx(ctx context.Context) *ContextReader {
+	ffCtx := MustContextFromCtx(ctx)
+	return NewContextReaderFromFFCtx(ffCtx)
+}
+
+type ContextReader struct {
+	ffCtx ffcontext.Context
+}
+
+func (r *ContextReader) Landscape() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyLandscape])
+}
+
+func (r *ContextReader) Plane() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyPlane])
+}
+
+func (r *ContextReader) Feature() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyFeature])
+}
+
+func (r *ContextReader) Provider() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyProvider])
+}
+
+func (r *ContextReader) BrokerPlan() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyBrokerPlan])
+}
+
+func (r *ContextReader) GlobalAccount() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyGlobalAccount])
+}
+
+func (r *ContextReader) SubAccount() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeySubAccount])
+}
+
+func (r *ContextReader) Region() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyRegion])
+}
+
+func (r *ContextReader) Kyma() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyKyma])
+}
+
+func (r *ContextReader) Shoot() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyShoot])
+}
+
+func (r *ContextReader) ObjKindGroup() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyObjKindGroup])
+}
+
+func (r *ContextReader) CrdKindGroup() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyCrdKindGroup])
+}
+
+func (r *ContextReader) BusolaKindGroup() string {
+	return util.CastInterfaceToString(r.ffCtx.GetCustom()[types.KeyBusolaKindGroup])
+}
+
+// ContextBuilder ===============================================================
 
 type ContextBuilder interface {
 	Build(ctx context.Context) context.Context
@@ -73,7 +146,7 @@ func ContextFromCtx(ctx context.Context) ffcontext.Context {
 func MustContextFromCtx(ctx context.Context) ffcontext.Context {
 	ffCtx := ContextFromCtx(ctx)
 	if ffCtx == nil {
-		ffCtx = ffcontext.NewEvaluationContext("")
+		ffCtx = ffcontext.NewEvaluationContext(uuid.NewString())
 	}
 	return ffCtx
 }
@@ -87,7 +160,7 @@ func ContextBuilderFromCtx(ctx context.Context) ContextBuilder {
 			b = b.AddCustom(k, v)
 		}
 	} else {
-		b = ffcontext.NewEvaluationContextBuilder("")
+		b = ffcontext.NewEvaluationContextBuilder(uuid.NewString())
 	}
 	return &contextBuilderImpl{builder: b}
 }

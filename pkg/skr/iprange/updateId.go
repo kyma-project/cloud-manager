@@ -12,7 +12,6 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.ObjAsIpRange().Status.Id != "" {
-		logger.Info("SKR IpRange already has ID set")
 		return nil, nil
 	}
 

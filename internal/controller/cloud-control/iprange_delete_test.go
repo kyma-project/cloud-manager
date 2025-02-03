@@ -251,6 +251,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 				WithScope(kymaName),
 				WithIpRange(iprangeName),
 				WithRedisInstanceAws(),
+				WithKcpAwsEngineVersion("7.0"),
 			)).
 				To(Succeed())
 		})

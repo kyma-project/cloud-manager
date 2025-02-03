@@ -104,6 +104,9 @@ func (q *CyclicQueue) Get() (item interface{}, shutdown bool) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
+	if q.shuttingDown {
+		return nil, true
+	}
 	for len(q.queue) == 0 && !q.shuttingDown {
 		q.cond.Wait()
 	}

@@ -42,6 +42,9 @@ body:
       - source: authSecret.annotations
         name: spec.authSecret.annotations
         widget: Labels
+      - source: authSecret.extraData
+        name: spec.authSecret.extraData
+        widget: Labels
 
 
   - name: spec.maintenancePolicy

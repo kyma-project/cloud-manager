@@ -127,6 +127,7 @@ func main() {
 	}
 
 	rootLogger := zap.New(zap.UseFlagOptions(&opts))
+	rootLogger = rootLogger.WithSink(util.NewLogFilterSink(rootLogger.GetSink()))
 	ctrl.SetLogger(rootLogger)
 
 	setupLog.WithValues(
@@ -323,6 +324,13 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupRedisClusterReconciler(
+		mgr,
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

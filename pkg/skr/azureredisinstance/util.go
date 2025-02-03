@@ -2,10 +2,11 @@ package azureredisinstance
 
 import (
 	"errors"
+	"strings"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"strings"
 )
 
 func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) string {
@@ -45,7 +46,7 @@ func getAuthSecretAnnotations(azureRedis *cloudresourcesv1beta1.AzureRedisInstan
 	return result
 }
 
-func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
+func getAuthSecretBaseData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][]byte {
 	result := map[string][]byte{}
 
 	if len(kcpRedis.Status.PrimaryEndpoint) > 0 {
@@ -77,6 +78,15 @@ func getAuthSecretData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[string][
 	}
 
 	return result
+}
+
+func parseAuthSecretExtraData(extraDataTemplates map[string]string, authSecretBaseData map[string][]byte) map[string][]byte {
+	baseDataStringMap := map[string]string{}
+	for k, v := range authSecretBaseData {
+		baseDataStringMap[k] = string(v)
+	}
+
+	return util.ParseTemplatesMapToBytesMap(extraDataTemplates, baseDataStringMap)
 }
 
 var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisTier]int{

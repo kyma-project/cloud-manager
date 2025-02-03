@@ -157,8 +157,10 @@ type RedisInstanceGcp struct {
 	// The version of Redis software.
 	// +optional
 	// +kubebuilder:default=REDIS_7_0
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
 	// +kubebuilder:validation:Enum=REDIS_7_2;REDIS_7_0;REDIS_6_X
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_7_0" || oldSelf == "REDIS_7_0" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_7_2" || oldSelf == "REDIS_7_2" || oldSelf == "REDIS_7_0" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "REDIS_6_X" || oldSelf == "REDIS_6_X"), message="redisVersion cannot be downgraded."
 	RedisVersion string `json:"redisVersion"`
 
 	// Indicates whether OSS Redis AUTH is enabled for the instance.
@@ -203,7 +205,10 @@ type RedisInstanceAws struct {
 
 	// +optional
 	// +kubebuilder:default="7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="EngineVersion is immutable."
+	// +kubebuilder:validation:Enum="7.1";"7.0";"6.x"
+	// +kubebuilder:validation:XValidation:rule=(self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "6.x" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
 	EngineVersion string `json:"engineVersion"`
 
 	// +optional

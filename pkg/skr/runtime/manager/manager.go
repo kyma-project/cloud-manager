@@ -6,6 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -57,7 +58,7 @@ func (m *skrManager) KymaRef() klog.ObjectRef {
 }
 
 func (m *skrManager) Start(ctx context.Context) error {
-	m.logger.Info("SkrManager starting")
+	//m.logger.Info("SkrManager starting")
 	m.controllers = append(m.controllers, m.Cluster)
 	var wg sync.WaitGroup
 	for _, r := range m.controllers {
@@ -79,7 +80,7 @@ func (m *skrManager) Start(ctx context.Context) error {
 
 	<-ctx.Done()
 	wg.Wait()
-	m.logger.Info("SkrManager stopped")
+	//m.logger.Info("SkrManager stopped")
 
 	return nil
 }
@@ -119,12 +120,13 @@ func (m *skrManager) GetLogger() logr.Logger {
 }
 
 func (m *skrManager) GetControllerOptions() config.Controller {
-	resulut := config.Controller{
+	result := config.Controller{
 		GroupKindConcurrency:    nil,
 		MaxConcurrentReconciles: 1,
 		CacheSyncTimeout:        0,
 		RecoverPanic:            nil,
 		NeedLeaderElection:      nil,
+		SkipNameValidation:      ptr.To(true),
 	}
-	return resulut
+	return result
 }

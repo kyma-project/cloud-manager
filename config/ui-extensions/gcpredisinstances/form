@@ -5,7 +5,7 @@
 - path: spec.redisVersion
   name: spec.redisVersion
   required: true
-  disableOnEdit: true
+  disableOnEdit: false
 - path: spec.redisConfigs
   name: spec.redisConfigs
   required: false
@@ -61,6 +61,11 @@
       disableOnEdit: true
     - path: annotations
       name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
       required: false
       widget: KeyValuePair
       disableOnEdit: true

@@ -1,6 +1,7 @@
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
+  description: Engine Version cannot be downgraded.
 
 - path: spec.autoMinorVersionUpgrade
   name: spec.autoMinorVersionUpgrade
@@ -49,11 +50,19 @@
       name: spec.authSecret.name
       widget: Text
       required: true
+      disableOnEdit: true
     - path: labels
       name: spec.authSecret.labels
       required: false
       widget: KeyValuePair
+      disableOnEdit: true
     - path: annotations
       name: spec.authSecret.annotations
       required: false
       widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true

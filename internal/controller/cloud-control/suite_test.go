@@ -18,10 +18,11 @@ package cloudcontrol
 
 import (
 	"context"
-	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
-	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"os"
 	"testing"
+
+	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 
 	"go.uber.org/zap/zapcore"
 

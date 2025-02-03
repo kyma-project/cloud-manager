@@ -24,6 +24,13 @@ And assign the following Identity and Access Management (IAM) roles to the Cloud
 * Classic Network Contributor
 * Network Contributor
 
+## Required Actions in the Remote Project
+
+Before creating the VPC peering, please tag your Azure subscription VPC with the Kyma shoot name tag.  
+For more information, check the [Create Virtual Private Cloud Peering in Microsoft Azure](../tutorials/01-30-30-azure-vpc-peering.md) tutorial.
+
+
+
 ## Deleting `AzureVpcPeering`
 
 Kyma's underlying cloud provider VPC peering connection is deleted as a part of the AzureVpcPeering deletion. The remote VPC

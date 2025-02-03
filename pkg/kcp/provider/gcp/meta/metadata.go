@@ -51,3 +51,26 @@ func IsNotAuthorized(err error) bool {
 
 	return false
 }
+
+func IsTooManyRequests(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var googleapierror *googleapi.Error
+	if ok := errors.As(err, &googleapierror); ok {
+		if googleapierror.Code == 429 {
+			return true
+		}
+	}
+
+	var apierror *apierror.APIError
+	if ok := errors.As(err, &apierror); ok {
+		// ResourceExhausted is the gRPC code for TooManyRequests
+		if apierror.GRPCStatus().Code() == codes.ResourceExhausted {
+			return true
+		}
+	}
+
+	return false
+}

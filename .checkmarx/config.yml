@@ -1,6 +1,0 @@
-version: 1
-checkmarx:
-  scan:
-    configs:
-      sast:
-        filter: '!pkg/testinfra/**,!cmd/cli/**'

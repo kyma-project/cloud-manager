@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -19,9 +20,16 @@ type State struct {
 	types.State
 	awsClient client.ElastiCacheClient
 
-	subnetGroup                 *elasticacheTypes.CacheSubnetGroup
-	parameterGroup              *elasticacheTypes.CacheParameterGroup
+	subnetGroup                           *elasticacheTypes.CacheSubnetGroup
+	parameterGroup                        *elasticacheTypes.CacheParameterGroup
+	parameterGroupCurrentParams           []elasticacheTypes.Parameter
+	parameterGroupFamilyDefaultParams     []elasticacheTypes.Parameter
+	tempParameterGroup                    *elasticacheTypes.CacheParameterGroup
+	tempParameterGroupFamilyDefaultParams []elasticacheTypes.Parameter
+	tempParameterGroupCurrentParams       []elasticacheTypes.Parameter
+
 	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
+	memberClusters              []elasticacheTypes.CacheCluster
 	authTokenValue              *secretsmanager.GetSecretValueOutput
 	userGroup                   *elasticacheTypes.UserGroup
 	securityGroup               *ec2Types.SecurityGroup
@@ -115,4 +123,96 @@ func (s *State) UpdateAuthEnabled(authEnabled bool) {
 		}
 	}
 
+}
+
+func (s *State) AreMainParamGroupParamsUpToDate() bool {
+	currentParametersMap := MapParameters(s.parameterGroupCurrentParams)
+	defaultParametersMap := MapParameters(s.parameterGroupFamilyDefaultParams)
+
+	desiredParametersMap := GetDesiredParameters(defaultParametersMap, s.ObjAsRedisInstance().Spec.Instance.Aws.Parameters)
+	forUpdateParameters := GetMissmatchedParameters(currentParametersMap, desiredParametersMap)
+
+	return len(forUpdateParameters) == 0
+}
+
+func (s *State) IsMainParamGroupFamilyUpToDate() bool {
+	desiredParamGroupFamily := GetAwsElastiCacheParameterGroupFamily(s.ObjAsRedisInstance().Spec.Instance.Aws.EngineVersion)
+	currentParamGroupFamily := ptr.Deref(s.parameterGroup.CacheParameterGroupFamily, "")
+
+	return desiredParamGroupFamily == currentParamGroupFamily
+}
+
+func (s *State) AreTempParamGroupParamsUpToDate() bool {
+	currentParametersMap := MapParameters(s.tempParameterGroupCurrentParams)
+	defaultParametersMap := MapParameters(s.tempParameterGroupFamilyDefaultParams)
+
+	desiredParametersMap := GetDesiredParameters(defaultParametersMap, s.ObjAsRedisInstance().Spec.Instance.Aws.Parameters)
+	forUpdateParameters := GetMissmatchedParameters(currentParametersMap, desiredParametersMap)
+
+	return len(forUpdateParameters) == 0
+}
+
+func (s *State) IsRedisVersionUpToDate() bool {
+	for _, memberCluster := range s.memberClusters {
+		if memberCluster.CacheParameterGroup == nil {
+			return true
+		}
+
+		desiredVersion := s.ObjAsRedisInstance().Spec.Instance.Aws.EngineVersion
+		currentVersion := ptr.Deref(memberCluster.EngineVersion, "")
+
+		if strings.HasPrefix(currentVersion, "6") && strings.HasPrefix(strings.ToLower(desiredVersion), "6.x") {
+			return true
+		}
+
+		if !strings.Contains(currentVersion, desiredVersion) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s *State) IsMainParamGroupUsed() bool {
+	if s.parameterGroup == nil {
+		return false
+	}
+
+	for _, memberCluster := range s.memberClusters {
+		if memberCluster.CacheParameterGroup == nil {
+			continue
+		}
+		if ptr.Deref(memberCluster.CacheParameterGroup.CacheParameterGroupName, "") == ptr.Deref(s.parameterGroup.CacheParameterGroupName, "") {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *State) IsTempParamGroupUsed() bool {
+	if s.tempParameterGroup == nil {
+		return false
+	}
+
+	for _, memberCluster := range s.memberClusters {
+		if memberCluster.CacheParameterGroup == nil {
+			continue
+		}
+		if ptr.Deref(memberCluster.CacheParameterGroup.CacheParameterGroupName, "") == ptr.Deref(s.tempParameterGroup.CacheParameterGroupName, "") {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *State) GetUpgradeParamGroupName() string {
+	paramGroupName := ptr.Deref(s.parameterGroup.CacheParameterGroupName, "")
+
+	if !s.IsMainParamGroupFamilyUpToDate() && s.tempParameterGroup != nil {
+		paramGroupName = ptr.Deref(s.tempParameterGroup.CacheParameterGroupName, "")
+	}
+
+	return paramGroupName
 }
