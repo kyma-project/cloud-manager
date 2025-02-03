@@ -29,7 +29,7 @@ Before you initiate VPC peering from a Kyma cluster, you must:
 
 ## Lifecycle
 
-AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once one of the VPC peering resources is applied, the status of the VPC peering connection is reflected in that CR. The limit of the number of VPC Peering CRs per Kyma cluster depends on the quotas for each cloud provider. For more information on the quotas and limits, see (the links provided above) [TBD - I could not find the details].
+AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once one of the VPC peering resources is applied, the status of the VPC peering connection is reflected in that CR. The limit of the number of VPC Peering CRs per Kyma cluster depends on the quotas for each cloud provider individually.
 
 ## Related Information
 
