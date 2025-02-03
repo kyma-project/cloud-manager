@@ -7,54 +7,57 @@ import (
 )
 
 type Migration interface {
-	Run(ctx context.Context) error
+	Run(ctx context.Context) (alreadyExecuted bool, err error)
 }
 
 type migration struct {
 	successHandler successHandler
 	runner         runner
 	kindsProvider  kindInfoProvider
-	client         client.Client
+	reader         client.Reader
+	writer         client.Writer
 	logger         logr.Logger
 }
 
-func (m *migration) Run(ctx context.Context) error {
+func (m *migration) Run(ctx context.Context) (alreadyExecuted bool, err error) {
 	isRecorded, err := m.successHandler.IsRecorded(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if isRecorded {
-		return nil
+		return true, nil
 	}
 
-	if err := m.runner.Run(ctx, newRunnerOptions(m.client, m.logger, m.kindsProvider, newMigrator())); err != nil {
-		return err
+	if err := m.runner.Run(ctx, newRunnerOptions(m.reader, m.writer, m.logger, m.kindsProvider, newMigrator())); err != nil {
+		return false, err
 	}
 
 	err = m.successHandler.Record(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return false, nil
 }
 
-func NewMigrationForKcp(ctx context.Context, kcpClient client.Client, logger logr.Logger) Migration {
+func NewMigrationForKcp(kcpReader client.Reader, kcpWriter client.Writer, logger logr.Logger) Migration {
 	return &migration{
-		successHandler: newKcpSuccessHandler(kcpNamespace, kcpClient),
+		successHandler: newKcpSuccessHandler(kcpNamespace, kcpReader, kcpWriter),
 		runner:         newRunner(),
 		kindsProvider:  newKindsForKcp,
-		client:         kcpClient,
+		reader:         kcpReader,
+		writer:         kcpWriter,
 		logger:         logger,
 	}
 }
 
-func NewMigrationForSkr(ctx context.Context, kymaName string, kcpClient client.Client, skrClient client.Client, logger logr.Logger) Migration {
+func NewMigrationForSkr(kymaName string, kcpReader client.Reader, kcpWriter client.Writer, skrReader client.Reader, skrWriter client.Writer, logger logr.Logger) Migration {
 	return &migration{
-		successHandler: newSkrSuccessHandler(kymaName, kcpNamespace, kcpClient),
+		successHandler: newSkrSuccessHandler(kymaName, kcpNamespace, kcpReader, kcpWriter),
 		runner:         newRunner(),
 		kindsProvider:  newKindsForSkr,
-		client:         skrClient,
+		reader:         skrReader,
+		writer:         skrWriter,
 		logger:         logger,
 	}
 }

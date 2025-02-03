@@ -12,7 +12,8 @@ import (
 
 type migratorOptions struct {
 	*finalizerInfo
-	Client    client.Client
+	reader    client.Reader
+	writer    client.Writer
 	List      client.ObjectList
 	Logger    logr.Logger
 	Namespace string
@@ -37,7 +38,7 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 	if options.Namespace != "" {
 		listOptions = append(listOptions, client.InNamespace(options.Namespace))
 	}
-	err := options.Client.List(ctx, options.List, listOptions...)
+	err := options.reader.List(ctx, options.List, listOptions...)
 	if meta.IsNoMatchError(err) {
 		// kind not installed in this cluster
 		return nil
@@ -56,6 +57,10 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			options.Logger.Info(fmt.Sprintf("Skipping a non client.Client object: %T", o))
 			continue
 		}
+		if len(obj.GetFinalizers()) == 0 {
+			continue
+		}
+
 		logger := options.Logger.WithValues(
 			"namespace", obj.GetNamespace(),
 			"name", obj.GetName(),
@@ -73,8 +78,13 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			continue
 		}
 
+		if composed.IsMarkedForDeletion(obj) {
+			logger.Info("Skipping finalizer migration on object with deletionTimestamp")
+			continue
+		}
+
 		for _, finalizer := range options.AddFinalizers {
-			added, err := composed.PatchObjAddFinalizer(ctx, finalizer, obj, options.Client)
+			added, err := composed.PatchObjAddFinalizer(ctx, finalizer, obj, options.writer)
 			if err != nil {
 				return fmt.Errorf("error adding finalizer %q to %s/%s: %w", finalizer, obj.GetNamespace(), obj.GetName(), err)
 			}
@@ -83,7 +93,7 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			}
 		}
 		for _, finalizer := range options.RemoveFinalizers {
-			removed, err := composed.PatchObjRemoveFinalizer(ctx, finalizer, obj, options.Client)
+			removed, err := composed.PatchObjRemoveFinalizer(ctx, finalizer, obj, options.writer)
 			if err != nil {
 				return fmt.Errorf("error adding finalizer %q to %s/%s: %w", finalizer, obj.GetNamespace(), obj.GetName(), err)
 			}

@@ -3,8 +3,8 @@ package migrateFinalizers
 import "github.com/kyma-project/cloud-manager/api"
 
 const newFinalizer = api.CommonFinalizerDeletionHook
-const oldFinalizer1 = "cloud-control.kyma-project.io/deletion-hook"
-const oldFinalizer2 = "cloud-resources.kyma-project.io/deletion-hook"
+const oldFinalizer1 = api.DO_NOT_USE_OLD_KcpFinalizer
+const oldFinalizer2 = api.DO_NOT_USE_OLD_SkrFinalizer
 
 type finalizerInfo struct {
 	AddFinalizers    []string

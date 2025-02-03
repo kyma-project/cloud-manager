@@ -22,6 +22,7 @@ import (
 
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -366,11 +367,21 @@ func main() {
 		}
 	}()
 
+	// TODO: Remove in next release - after 1.2.5 is released, aka in the 1.2.6
+	// Finalizer migration
+	func() {
+		migLogger := setupLog.WithName("kcpFinalizerMigration")
+		mig := migrateFinalizers.NewMigrationForKcp(mgr.GetAPIReader(), mgr.GetClient(), migLogger)
+		_, err := mig.Run(ctx)
+		if err != nil {
+			migLogger.Error(err, "error running KCP finalizer migration")
+		}
+	}()
+
 	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-	// 2024-03-04T14:18
 }
 
 func loadConfig() config.Config {

@@ -19,16 +19,18 @@ type KindInfo struct {
 
 type RunnerOptions struct {
 	*finalizerInfo
-	Client        client.Client
+	reader        client.Reader
+	writer        client.Writer
 	Logger        logr.Logger
 	KindsProvider kindInfoProvider
 	Migrator      migrator
 }
 
-func newRunnerOptions(clnt client.Client, logger logr.Logger, kindsProvider kindInfoProvider, migrator migrator) *RunnerOptions {
+func newRunnerOptions(reader client.Reader, writer client.Writer, logger logr.Logger, kindsProvider kindInfoProvider, migrator migrator) *RunnerOptions {
 	return &RunnerOptions{
 		finalizerInfo: newFinalizerInfo(),
-		Client:        clnt,
+		reader:        reader,
+		writer:        writer,
 		Logger:        logger,
 		KindsProvider: kindsProvider,
 		Migrator:      migrator,
@@ -49,7 +51,8 @@ func (r *defaultRunner) Run(ctx context.Context, options *RunnerOptions) error {
 			)
 		mo := &migratorOptions{
 			finalizerInfo: options.finalizerInfo,
-			Client:        options.Client,
+			reader:        options.reader,
+			writer:        options.writer,
 			List:          kind.List,
 			Logger:        logger,
 			Namespace:     kind.Namespace,
