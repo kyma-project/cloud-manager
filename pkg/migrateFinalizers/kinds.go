@@ -6,7 +6,6 @@ import (
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -72,6 +71,5 @@ func newKindsForSkr() []KindInfo {
 		newKindInfo(&corev1.SecretList{}, ""),
 		newKindInfo(&corev1.PersistentVolumeList{}, ""),
 		newKindInfo(&corev1.PersistentVolumeClaimList{}, ""),
-		newKindInfo(&coordinationv1.LeaseList{}, ""),
 	}
 }
