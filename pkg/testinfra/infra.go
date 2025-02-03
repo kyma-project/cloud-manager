@@ -67,12 +67,11 @@ type clusterInfo struct {
 	ClusterEnv
 	ClusterDSL
 
-	crdDirs   []string
-	env       *envtest.Environment
-	cfg       *rest.Config
-	scheme    *runtime.Scheme
-	client    client.Client
-	apiReader client.Reader
+	crdDirs []string
+	env     *envtest.Environment
+	cfg     *rest.Config
+	scheme  *runtime.Scheme
+	client  client.Client
 }
 
 func (c *clusterInfo) Scheme() *runtime.Scheme {
