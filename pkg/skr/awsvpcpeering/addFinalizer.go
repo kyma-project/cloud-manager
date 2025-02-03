@@ -2,7 +2,7 @@ package awsvpcpeering
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -15,7 +15,7 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	added := controllerutil.AddFinalizer(state.Obj(), cloudresourcesv1beta1.Finalizer)
+	added := controllerutil.AddFinalizer(state.Obj(), api.CommonFinalizerDeletionHook)
 	if !added {
 		// finalizer already added
 		return nil, nil

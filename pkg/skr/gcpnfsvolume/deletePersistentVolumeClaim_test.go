@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
@@ -41,7 +42,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 					DeletionTimestamp: &v1.Time{
 						Time: time.Now(),
 					},
-					Finalizers: []string{cloudresourcesv1beta1.Finalizer},
+					Finalizers: []string{api.CommonFinalizerDeletionHook},
 				},
 			}
 

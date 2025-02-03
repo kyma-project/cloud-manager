@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -51,7 +52,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 			Labels:      getVolumeLabels(nfsVolume),
 			Annotations: getVolumeAnnotations(nfsVolume),
 			Finalizers: []string{
-				v1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: v1.PersistentVolumeSpec{

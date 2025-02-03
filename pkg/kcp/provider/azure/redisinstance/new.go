@@ -33,7 +33,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"azureRedisInstance",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			loadPrivateEndPoint,
 			loadPrivateDnsZoneGroup,
 			loadRedis,
@@ -57,7 +57,8 @@ func New(stateFactory StateFactory) composed.Action {
 					waitPrivateDnsZoneGroupDeleted,
 					deletePrivateEndPoint,
 					waitPrivateEndPointDeleted,
-					actions.RemoveFinalizer,
+					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,

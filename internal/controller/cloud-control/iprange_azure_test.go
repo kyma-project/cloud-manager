@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
@@ -112,7 +113,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkCm, NewObjActions()).
 				Should(Succeed())
-			added, err := composed.PatchObjAddFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, kcpNetworkCm, infra.KCP().Client())
+			added, err := composed.PatchObjAddFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, kcpNetworkCm, infra.KCP().Client())
 			Expect(added).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -156,7 +157,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpVpcPeering, NewObjActions()).
 				Should(Succeed())
-			added, err := composed.PatchObjAddFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, kcpVpcPeering, infra.KCP().Client())
+			added, err := composed.PatchObjAddFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, kcpVpcPeering, infra.KCP().Client())
 			Expect(added).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -288,7 +289,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		})
 
 		By("When KCP VpcPeering finalizer is removed", func() {
-			removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, kcpVpcPeering, infra.KCP().Client())
+			removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, kcpVpcPeering, infra.KCP().Client())
 			Expect(removed).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -307,7 +308,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		})
 
 		By("When KCP CM Network finalizer is removed", func() {
-			removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, kcpNetworkCm, infra.KCP().Client())
+			removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, kcpNetworkCm, infra.KCP().Client())
 			Expect(removed).To(BeTrue())
 			Expect(err).NotTo(HaveOccurred())
 		})

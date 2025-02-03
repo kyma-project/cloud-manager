@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -449,7 +450,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpNfsInstance).
 				Should(Succeed())
 			Eventually(func(ctx context.Context) error {
-				_, err := composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, gcpNfsInstance, infra.KCP().Client())
+				_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, gcpNfsInstance, infra.KCP().Client())
 				return err
 			}).
 				WithContext(infra.Ctx()).

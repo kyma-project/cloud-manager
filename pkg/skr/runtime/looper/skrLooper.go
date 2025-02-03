@@ -239,7 +239,7 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	logger = feature.DecorateLogger(ctx, logger)
 
 	//logger.Info("Starting SKR Runner")
-	runner := NewSkrRunner(l.registry, l.kcpCluster, l.skrStatusSaver)
+	runner := NewSkrRunner(l.registry, l.kcpCluster, l.skrStatusSaver, kymaName)
 	to := 10 * time.Second
 	if debugged.Debugged {
 		to = 15 * time.Minute

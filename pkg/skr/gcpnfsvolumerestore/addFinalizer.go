@@ -2,7 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -12,7 +12,7 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	modified, err := st.PatchObjAddFinalizer(ctx, cloudresourcesv1beta1.Finalizer)
+	modified, err := st.PatchObjAddFinalizer(ctx, api.CommonFinalizerDeletionHook)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, ctx)
 	}

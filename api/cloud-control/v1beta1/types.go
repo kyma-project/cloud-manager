@@ -9,7 +9,3 @@ const (
 	StateWarning    StatusState = "Warning"
 	StateDeleting   StatusState = "Deleting"
 )
-
-const (
-	FinalizerName = "cloud-control.kyma-project.io/deletion-hook"
-)

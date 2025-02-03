@@ -46,25 +46,22 @@ func New(stateFactory StateFactory) composed.Action {
 				// delete
 				composed.NewCase(
 					composed.MarkedForDeletionPredicate,
-					composed.ComposeActions(
-						"awsNfsInstance-delete",
-						removeReadyCondition,
-						loadEfs,
-						findSecurityGroup,
-						loadMountTargets,
+					removeReadyCondition,
+					loadEfs,
+					findSecurityGroup,
+					loadMountTargets,
 
-						deleteMountTargets,
-						waitMountTargetsDeleted,
+					deleteMountTargets,
+					waitMountTargetsDeleted,
 
-						deleteEfs,
-						waitEfsDeleted,
+					deleteEfs,
+					waitEfsDeleted,
 
-						deleteSecurityGroup,
+					deleteSecurityGroup,
 
-						removeFinalizer,
+					removeFinalizer,
 
-						composed.StopAndForgetAction,
-					),
+					composed.StopAndForgetAction,
 				),
 			), // switch
 			composed.StopAndForgetAction,

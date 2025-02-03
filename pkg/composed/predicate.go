@@ -79,7 +79,13 @@ type Case interface {
 	Action(ctx context.Context, state State) (error, context.Context)
 }
 
-func NewCase(p Predicate, a Action) Case {
+func NewCase(p Predicate, actions ...Action) Case {
+	var a Action
+	if len(actions) == 1 {
+		a = actions[0]
+	} else {
+		a = ComposeActions("", actions...)
+	}
 	return &CaseStruct{
 		P: p,
 		A: a,

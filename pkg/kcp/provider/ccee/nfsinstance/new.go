@@ -22,7 +22,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"cceeNfsInstance",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			conditionsInit,
 			networkLoad,
 			networkStopWhenNotFound,
@@ -39,7 +39,7 @@ func New(stateFactory StateFactory) composed.Action {
 					accessRevoke,
 					shareDelete,
 					shareNetworkDelete,
-					actions.PatchRemoveFinalizer,
+					actions.PatchRemoveCommonFinalizer(),
 					composed.StopAndForgetAction,
 				),
 				composed.ComposeActions(

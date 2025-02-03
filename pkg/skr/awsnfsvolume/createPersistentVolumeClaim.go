@@ -2,8 +2,8 @@ package awsnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +34,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 			Labels:      getVolumeClaimLabels(state.ObjAsAwsNfsVolume()),
 			Annotations: getVolumeClaimAnnotations(state.ObjAsAwsNfsVolume()),
 			Finalizers: []string{
-				v1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{

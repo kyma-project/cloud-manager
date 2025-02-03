@@ -2,6 +2,7 @@ package backupschedule
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -149,7 +150,7 @@ var deletingGcpBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
 		Name:              "test-nfs-backup-schedule",
 		Namespace:         "test",
 		DeletionTimestamp: &metav1.Time{Time: time.Now()},
-		Finalizers:        []string{cloudresourcesv1beta1.Finalizer},
+		Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsBackupScheduleSpec{
 		NfsVolumeRef: corev1.ObjectReference{

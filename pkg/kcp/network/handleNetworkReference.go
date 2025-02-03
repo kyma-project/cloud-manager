@@ -37,7 +37,7 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 	if composed.MarkedForDeletionPredicate(ctx, state) {
 		return composed.ComposeActions(
 			"networkReferenceDelete",
-			actions.PatchRemoveFinalizer,
+			actions.PatchRemoveCommonFinalizer(),
 			composed.StopAndForgetAction,
 		)(ctx, state)
 	}

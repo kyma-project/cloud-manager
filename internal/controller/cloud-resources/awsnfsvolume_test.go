@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -189,7 +190,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			}
 
 			By("And it has defined cloud-manager finalizer")
-			Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+			Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 		})
 
 		pvc := &corev1.PersistentVolumeClaim{}
@@ -227,7 +228,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			}
 
 			By("And it has defined cloud-manager finalizer")
-			Expect(pv.Finalizers).To(ContainElement(cloudresourcesv1beta1.Finalizer))
+			Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
 		})
 
 		// CleanUp
@@ -309,7 +310,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed(), "expected KCP AwsNfsInstance to be created, but it was not")
 
 			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, AddFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, AddFinalizer(api.CommonFinalizerDeletionHook)).
 				Should(Succeed(), "failed adding finalizer on KCP NfsInstance")
 		})
 
@@ -408,7 +409,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
 		By("When KCP NfsInstance finalizer is removed and it is deleted", func() {
 			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, RemoveFinalizer(cloudcontrolv1beta1.FinalizerName)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance, RemoveFinalizer(api.CommonFinalizerDeletionHook)).
 				Should(Succeed(), "failed removing finalizer on KCP NfsInstance")
 		})
 

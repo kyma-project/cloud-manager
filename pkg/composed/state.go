@@ -183,7 +183,7 @@ func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool
 	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
 }
 
-func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.Client) error {
+func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {
 	objToPatch := obj
 	if objClonable, ok := obj.(ObjWithCloneForPatchStatus); ok {
 		objToPatch = objClonable.CloneForPatchStatus()
@@ -191,7 +191,7 @@ func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.Client) 
 	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
 }
 
-func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
+func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Writer) (bool, error) {
 	added := controllerutil.AddFinalizer(obj, f)
 	if !added {
 		return false, nil
@@ -200,7 +200,7 @@ func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
-func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Client) (bool, error) {
+func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Writer) (bool, error) {
 	if obj.GetAnnotations() != nil && obj.GetAnnotations()[k] == v {
 		return false, nil
 	}
@@ -212,7 +212,7 @@ func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, 
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
-func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Client) (bool, error) {
+func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Writer) (bool, error) {
 	idx := -1
 	for i, s := range obj.GetFinalizers() {
 		if s == f {

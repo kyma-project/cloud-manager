@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -122,7 +123,7 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
 				Should(Succeed())
-			Expect(controllerutil.ContainsFinalizer(kymaCR, cloudcontrolv1beta1.FinalizerName)).
+			Expect(controllerutil.ContainsFinalizer(kymaCR, api.CommonFinalizerDeletionHook)).
 				To(BeTrue(), "expected Kyma CR to have finalizer, but it does not")
 		})
 
@@ -212,7 +213,7 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
 				Should(Succeed(), "failed reloading Kyma CR")
 
-			Expect(controllerutil.ContainsFinalizer(kymaCR, cloudcontrolv1beta1.FinalizerName)).
+			Expect(controllerutil.ContainsFinalizer(kymaCR, api.CommonFinalizerDeletionHook)).
 				To(BeFalse(), "expected Kyma CR not to have finalizer, but it still has it")
 		})
 

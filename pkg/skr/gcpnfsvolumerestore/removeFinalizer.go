@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -29,7 +30,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	modified, err := st.PatchObjRemoveFinalizer(ctx, cloudresourcesv1beta1.Finalizer)
+	modified, err := st.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR GcpNfsVolumeRestore after finalizer remove", composed.StopWithRequeue, ctx)
 	}

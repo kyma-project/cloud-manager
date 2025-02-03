@@ -3,7 +3,7 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -34,7 +34,7 @@ func (suite *addFinalizerSuite) TestAddFinalizer() {
 	suite.Nil(err)
 	err, _ = addFinalizer(ctx, state)
 	suite.Equal(composed.StopWithRequeue, err)
-	suite.Contains(state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	suite.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *addFinalizerSuite) TestAddFinalizerWhenAlreadyExists() {
@@ -50,11 +50,11 @@ func (suite *addFinalizerSuite) TestAddFinalizerWhenAlreadyExists() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
-	controllerutil.AddFinalizer(obj, cloudresourcesv1beta1.Finalizer)
+	controllerutil.AddFinalizer(obj, api.CommonFinalizerDeletionHook)
 
 	err, _ = addFinalizer(ctx, state)
 	suite.Nil(err)
-	suite.Contains(state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	suite.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
@@ -72,7 +72,7 @@ func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	//Call addFinalizer
 	err, _ = addFinalizer(ctx, state)
 	suite.Nil(err)
-	suite.NotContains(state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	suite.NotContains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestAddFinalizer(t *testing.T) {

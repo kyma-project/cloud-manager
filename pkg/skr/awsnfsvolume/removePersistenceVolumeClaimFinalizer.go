@@ -2,8 +2,8 @@ package awsnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -20,11 +20,11 @@ func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.Stat
 		return nil, nil
 	}
 
-	if !controllerutil.ContainsFinalizer(state.PVC, v1beta1.Finalizer) {
+	if !controllerutil.ContainsFinalizer(state.PVC, api.CommonFinalizerDeletionHook) {
 		return nil, nil
 	}
 
-	controllerutil.RemoveFinalizer(state.PVC, v1beta1.Finalizer)
+	controllerutil.RemoveFinalizer(state.PVC, api.CommonFinalizerDeletionHook)
 	err := state.Cluster().K8sClient().Update(ctx, state.PVC)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolumeClaim after finalizer removal", composed.StopWithRequeue, ctx)

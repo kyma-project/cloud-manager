@@ -3,7 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -33,7 +33,7 @@ func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
 
 	err, _ = removeFinalizer(ctx, state)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.NotContains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.NotContains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExists() {
@@ -45,7 +45,7 @@ func (suite *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExis
 
 	//Add the finalizer to the object
 	nfsVol := deletedGcpNfsVolume.DeepCopy()
-	controllerutil.AddFinalizer(nfsVol, cloudresourcesv1beta1.Finalizer)
+	controllerutil.AddFinalizer(nfsVol, api.CommonFinalizerDeletionHook)
 	err = factory.skrCluster.K8sClient().Update(ctx, nfsVol)
 	assert.Nil(suite.T(), err)
 
@@ -55,7 +55,7 @@ func (suite *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExis
 
 	err, _ = removeFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
@@ -72,7 +72,7 @@ func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting
 	//Call removeFinalizer
 	err, _ = removeFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestRemoveFinalizer(t *testing.T) {

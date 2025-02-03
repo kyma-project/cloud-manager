@@ -37,15 +37,18 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcsNfsInstance",
 			validateAlways,
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			checkGcpOperation,
 			loadNfsInstance,
 			validatePostCreate,
 			checkNUpdateState,
 			checkUpdateMask,
 			syncNfsInstance,
-			composed.BuildBranchingAction("RunFinalizer", StatePredicate(client.Deleted, ctx, state),
-				actions.RemoveFinalizer, nil),
+			composed.If(
+				StatePredicate(client.Deleted, ctx, state),
+				actions.RemoveCommonFinalizer(),
+				composed.StopAndForgetAction,
+			),
 		)(ctx, state)
 	}
 }

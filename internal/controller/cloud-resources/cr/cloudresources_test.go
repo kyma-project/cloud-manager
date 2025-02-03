@@ -2,6 +2,7 @@ package cr
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -54,7 +55,7 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		})
 
 		By("And Then CloudResources has finalizer", func() {
-			Expect(controllerutil.ContainsFinalizer(cr, cloudresourcesv1beta1.Finalizer)).
+			Expect(controllerutil.ContainsFinalizer(cr, api.CommonFinalizerDeletionHook)).
 				To(BeTrue(), "expected CloudResources to have finalizer, but it does not")
 		})
 

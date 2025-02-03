@@ -16,6 +16,10 @@ type Action func(ctx context.Context, state State) (error, context.Context)
 
 // ===========================
 
+func ComposeActionsNoName(actions ...Action) Action {
+	return ComposeActions("", actions...)
+}
+
 func ComposeActions(_ string, actions ...Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		var lastError error

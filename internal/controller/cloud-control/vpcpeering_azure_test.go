@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"errors"
+	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -217,14 +218,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
 		})
 
 		By("And Then KCP VpcPeering has finalizer", func() {
-			Expect(controllerutil.ContainsFinalizer(kcpPeering, cloudcontrolv1beta1.FinalizerName)).
+			Expect(controllerutil.ContainsFinalizer(kcpPeering, api.CommonFinalizerDeletionHook)).
 				To(BeTrue())
 		})
 
@@ -413,7 +414,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
