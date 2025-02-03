@@ -44,11 +44,18 @@ func newRunner() runner {
 type defaultRunner struct{}
 
 func (r *defaultRunner) Run(ctx context.Context, options *RunnerOptions) error {
+	logger := options.Logger.
+		WithValues(
+			"finalizersToAdd", options.AddFinalizers,
+			"finalizersToRemove", options.RemoveFinalizers,
+		)
 	for _, kind := range options.KindsProvider() {
-		logger := options.Logger.
+		logger = logger.
 			WithValues(
 				"kind", kind.Title,
+				"kindListType", fmt.Sprintf("%T", kind.List),
 			)
+		logger.Info("Running finalizer migration")
 		mo := &migratorOptions{
 			finalizerInfo: options.finalizerInfo,
 			reader:        options.reader,

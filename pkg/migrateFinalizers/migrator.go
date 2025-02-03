@@ -83,6 +83,12 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			continue
 		}
 
+		logger.
+			WithValues(
+				"existingFinalizers", fmt.Sprintf("%v", obj.GetFinalizers()),
+			).
+			Info("Migrating finalizers for resource")
+
 		for _, finalizer := range options.AddFinalizers {
 			added, err := composed.PatchObjAddFinalizer(ctx, finalizer, obj, options.writer)
 			if err != nil {
@@ -90,6 +96,8 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			}
 			if added {
 				logger.WithValues("finalizer", finalizer).Info("Added finalizer")
+			} else {
+				logger.WithValues("finalizer", finalizer).Info("Finalizer already present - nothing to add")
 			}
 		}
 		for _, finalizer := range options.RemoveFinalizers {
@@ -99,6 +107,8 @@ func (m *defaultMigrator) Migrate(ctx context.Context, options *migratorOptions)
 			}
 			if removed {
 				logger.WithValues("finalizer", finalizer).Info("Removed finalizer")
+			} else {
+				logger.WithValues("finalizer", finalizer).Info("Finalizer not present - nothing to remove")
 			}
 		}
 	}
