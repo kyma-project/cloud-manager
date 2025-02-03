@@ -35,14 +35,14 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"redisCluster",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"redisCluster-create",
 				),
 				composed.ComposeActions(
 					"redisCluster-delete",
-					actions.RemoveFinalizer,
+					actions.RemoveCommonFinalizer(),
 				),
 			),
 			composed.StopAndForgetAction,
