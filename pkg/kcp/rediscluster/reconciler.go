@@ -8,7 +8,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
+
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -22,17 +24,20 @@ type redisClusterReconciler struct {
 	focalStateFactory    focal.StateFactory
 
 	gcpStateFactory gcprediscluster.StateFactory
+	awsStateFactory awsrediscluster.StateFactory
 }
 
 func NewRedisClusterReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
 	gcpStateFactory gcprediscluster.StateFactory,
+	awsStateFactory awsrediscluster.StateFactory,
 ) RedisClusterReconciler {
 	return &redisClusterReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		gcpStateFactory:      gcpStateFactory,
+		awsStateFactory:      awsStateFactory,
 	}
 }
 
@@ -59,6 +64,7 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 					"providerSwitch",
 					nil,
 					composed.NewCase(focal.GcpProviderPredicate, gcprediscluster.New(r.gcpStateFactory)),
+					composed.NewCase(focal.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

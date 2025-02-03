@@ -23,6 +23,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,6 +44,7 @@ func SetupRedisClusterReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			gcprediscluster.NewStateFactory(env),
+			awsrediscluster.NewStateFactory(),
 		),
 	).SetupWithManager(kcpManager)
 }
