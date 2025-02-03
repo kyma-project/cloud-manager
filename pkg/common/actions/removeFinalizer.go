@@ -43,29 +43,38 @@ func PatchRemoveFinalizer(f string) composed.Action {
 func RemoveCommonFinalizer() composed.Action {
 	// Until the pkg/migrateFinalizers is executed there's a risk old finalizers still would be present
 	// For details check PatchRemoveCommonFinalizer()
-	return composed.ComposeActionsNoName(
-		RemoveFinalizer(api.DO_NOT_USE_OLD_KcpFinalizer),
-		RemoveFinalizer(api.DO_NOT_USE_OLD_SkrFinalizer),
-		RemoveFinalizer(api.CommonFinalizerDeletionHook),
+	return RemoveFinalizers(
+		api.DO_NOT_USE_OLD_KcpFinalizer,
+		api.DO_NOT_USE_OLD_SkrFinalizer,
+		api.CommonFinalizerDeletionHook,
 	)
 }
 
-func RemoveFinalizer(f string) composed.Action {
+// RemoveFinalizers removes specified finalizers from the resource and then updates the resource
+// Due to the nature of update to require fresh resource version, this function accepts multiple
+// finalizers so they all could be removed in one call to update api
+func RemoveFinalizers(finalizers ...string) composed.Action {
 	return func(ctx context.Context, state composed.State) (error, context.Context) {
 		if !composed.MarkedForDeletionPredicate(ctx, state) {
 			return nil, nil
 		}
 
-		removed := controllerutil.RemoveFinalizer(state.Obj(), f)
-		if !removed {
+		anyRemoved := false
+		for _, finalizer := range finalizers {
+			removed := controllerutil.RemoveFinalizer(state.Obj(), finalizer)
+			if removed {
+				anyRemoved = true
+			}
+		}
+		if !anyRemoved {
 			return nil, ctx
 		}
 
 		logger := composed.LoggerFromCtx(ctx)
-		logger.Info(fmt.Sprintf("RemoveFinalizer: %s", f))
+		logger.Info(fmt.Sprintf("RemoveFinalizers: %v", finalizers))
 
 		if err := state.UpdateObj(ctx); err != nil {
-			return composed.LogErrorAndReturn(err, fmt.Sprintf("Error removing Finalizer: %s", f), composed.StopWithRequeue, ctx)
+			return composed.LogErrorAndReturn(err, fmt.Sprintf("Error removing Finalizers: %v", finalizers), composed.StopWithRequeue, ctx)
 		}
 
 		return nil, ctx
