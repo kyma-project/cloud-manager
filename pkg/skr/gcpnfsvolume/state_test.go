@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -241,7 +242,7 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 			cloudcontrolv1beta1.LabelRemoteName:      "deleted-gcp-nfs-volume",
 			cloudcontrolv1beta1.LabelRemoteNamespace: "test",
 		},
-		Finalizers: []string{cloudcontrolv1beta1.FinalizerName},
+		Finalizers: []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{

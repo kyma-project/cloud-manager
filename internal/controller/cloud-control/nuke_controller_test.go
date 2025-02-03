@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -43,7 +44,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			kcpnetwork.Ignore.AddName(cmNetwork.Name)
 
 			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), cmNetwork,
-				AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
 			)).To(Succeed(), "failed creating cm network")
 		})
 
@@ -56,7 +57,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
 					WithName(ipRangeName),
-					AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+					AddFinalizer(api.CommonFinalizerDeletionHook),
 					WithKcpIpRangeNetwork(cmNetwork.Name),
 					WithScope(kymaName),
 					WithRemoteRef("foo"),
@@ -76,7 +77,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			kcpvpcpeering.Ignore.AddName(vpcPeering.Name)
 
 			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), vpcPeering,
-				AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
 			)).To(Succeed(), "failed creating VpcPeering")
 		})
 
@@ -88,7 +89,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 
 			Expect(CreateRedisInstance(infra.Ctx(), infra.KCP().Client(), redisInstance,
 				WithName(redisInstanceName),
-				AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
 				WithRemoteRef("remote-redis"),
 				WithIpRange(ipRange.Name),
 				WithScope(kymaName),
@@ -106,12 +107,12 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 
 			Expect(CreateNfsInstance(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 				WithName(nfsInstanceName),
-				AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
 				WithRemoteRef("foo"),
 				WithScope(kymaName),
 				WithIpRange(ipRange.Name),
 				WithNfsInstanceAws(), // never mind it doesn't match Azure, won't be reconciled anyway
-				AddFinalizer(cloudcontrolv1beta1.FinalizerName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
 			)).To(Succeed(), "failed creating NfsInstance")
 		})
 
@@ -158,7 +159,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 
 		for kind, obj := range resources {
 			By(fmt.Sprintf("When resource %s finalizer is removed", kind), func() {
-				removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), cloudcontrolv1beta1.FinalizerName, obj, infra.KCP().Client())
+				removed, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, obj, infra.KCP().Client())
 				Expect(err).To(Succeed())
 				Expect(removed).To(BeTrue())
 			})

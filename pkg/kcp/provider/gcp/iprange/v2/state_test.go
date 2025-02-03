@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	"net/http/httptest"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -156,7 +157,7 @@ var gcpIpRange = cloudcontrolv1beta1.IpRange{
 			cloudcontrolv1beta1.LabelKymaName:   kymaRef.Name,
 			cloudcontrolv1beta1.LabelRemoteName: "test-gcp-ip-range",
 		},
-		Finalizers: []string{cloudcontrolv1beta1.FinalizerName},
+		Finalizers: []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudcontrolv1beta1.IpRangeSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{

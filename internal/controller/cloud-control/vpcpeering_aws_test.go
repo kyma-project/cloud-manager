@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -247,7 +248,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingKcpVpcPeeringStatusIdNotEmpty(),
 				).Should(Succeed())
 		})
@@ -519,7 +520,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingKcpVpcPeeringStatusIdNotEmpty(),
 				).Should(Succeed())
 		})
@@ -755,7 +756,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).Should(Succeed())
 		})
@@ -776,7 +777,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).Should(Succeed())
 		})
@@ -801,7 +802,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingKcpVpcPeeringStatusIdNotEmpty(),
 				).Should(Succeed())
 		})

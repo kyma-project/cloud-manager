@@ -35,7 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"redisInstance",
-			actions.AddFinalizer,
+			actions.AddCommonFinalizer(),
 			loadRedis,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
@@ -58,7 +58,8 @@ func New(stateFactory StateFactory) composed.Action {
 					removeReadyCondition,
 					deleteRedis,
 					waitRedisDeleted,
-					actions.RemoveFinalizer,
+					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,

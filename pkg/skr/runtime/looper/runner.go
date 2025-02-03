@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -52,25 +53,28 @@ type SkrRunner interface {
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
 
-func NewSkrRunnerWithNoopStatusSaver(reg registry.SkrRegistry, kcpCluster cluster.Cluster) SkrRunner {
-	return NewSkrRunner(reg, kcpCluster, NewNoopStatusSaver())
+func NewSkrRunnerWithNoopStatusSaver(reg registry.SkrRegistry, kcpCluster cluster.Cluster, kymaName string) SkrRunner {
+	return NewSkrRunner(reg, kcpCluster, NewNoopStatusSaver(), kymaName)
 }
 
-func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster, skrStatusSaver SkrStatusSaver) SkrRunner {
+func NewSkrRunner(reg registry.SkrRegistry, kcpCluster cluster.Cluster, skrStatusSaver SkrStatusSaver, kymaName string) SkrRunner {
 	return &skrRunner{
 		kcpCluster:     kcpCluster,
 		registry:       reg,
 		skrStatusSaver: skrStatusSaver,
+		kymaName:       kymaName,
 	}
 }
 
 type skrRunner struct {
 	kcpCluster     cluster.Cluster
 	registry       registry.SkrRegistry
-	runOnce        sync.Once
-	started        bool
-	stopped        bool
 	skrStatusSaver SkrStatusSaver
+	kymaName       string
+
+	runOnce sync.Once
+	started bool
+	stopped bool
 }
 
 func (r *skrRunner) isObjectActiveForProvider(scheme *runtime.Scheme, provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
@@ -228,6 +232,17 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			cancelOnce.Do(cancelInternal)
 		}
 		defer cancel()
+
+		// TODO: Remove in next release - after 1.2.5 is released, aka in the 1.2.6
+		// Finalizer migration
+		func() {
+			migLogger := logger.WithName("skrFinalizerMigration")
+			mig := migrateFinalizers.NewMigrationForSkr(r.kymaName, r.kcpCluster.GetAPIReader(), r.kcpCluster.GetClient(), skrManager.GetAPIReader(), skrManager.GetClient(), migLogger)
+			_, err := mig.Run(timeoutCtx)
+			if err != nil {
+				migLogger.Error(err, "Migration failed")
+			}
+		}()
 
 		err = skrManager.Start(timeoutCtx)
 		if err != nil {

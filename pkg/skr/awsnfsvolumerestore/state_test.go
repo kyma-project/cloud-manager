@@ -2,6 +2,7 @@ package awsnfsvolumerestore
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -128,7 +129,7 @@ var deletingAwsNfsVolumeRestore = cloudresourcesv1beta1.AwsNfsVolumeRestore{
 		DeletionTimestamp: &v1.Time{
 			Time: time.Now(),
 		},
-		Finalizers: []string{cloudresourcesv1beta1.Finalizer},
+		Finalizers: []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeRestoreSpec{
 		Source: cloudresourcesv1beta1.AwsNfsVolumeRestoreSource{

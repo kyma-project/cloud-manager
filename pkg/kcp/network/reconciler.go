@@ -64,7 +64,7 @@ func (r *networkReconciler) newAction() composed.Action {
 			return composed.ComposeActions(
 				"networkCommon",
 				// common Network actions here
-				actions.PatchAddFinalizer,
+				actions.PatchAddCommonFinalizer(),
 				composed.If(
 					composed.MarkedForDeletionPredicate,
 					preventDeleteWhenUsedByIpRange,

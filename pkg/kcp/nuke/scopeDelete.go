@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,7 +42,7 @@ func scopeDelete(ctx context.Context, st composed.State) (error, context.Context
 
 	// Remove finalizer from Scope
 
-	_, err = composed.PatchObjRemoveFinalizer(ctx, cloudcontrolv1beta1.FinalizerName, scope, state.Cluster().K8sClient())
+	_, err = composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, scope, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error patch removing scope finalizer when Nuke has deleted all orphan resources", composed.StopWithRequeue, ctx)
 	}

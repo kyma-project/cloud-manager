@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -106,7 +107,7 @@ var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		Name:              "test-gcp-nfs-volume-restore",
 		Namespace:         "test",
 		DeletionTimestamp: &v1.Time{Time: time.Now()},
-		Finalizers:        []string{cloudresourcesv1beta1.Finalizer},
+		Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
 		Location: "us-west1",

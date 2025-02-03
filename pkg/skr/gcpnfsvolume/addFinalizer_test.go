@@ -3,7 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -31,7 +31,7 @@ func (suite *addFinalizerSuite) TestAddFinalizer() {
 
 	err, _ = addFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
@@ -48,7 +48,7 @@ func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 	//Call addFinalizer
 	err, _ = addFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
-	assert.NotContains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.NotContains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestAddFinalizer(t *testing.T) {

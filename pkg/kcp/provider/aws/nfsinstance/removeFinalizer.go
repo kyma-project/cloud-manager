@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -11,7 +11,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	isUpdated := controllerutil.RemoveFinalizer(state.ObjAsNfsInstance(), cloudcontrolv1beta1.FinalizerName)
+	isUpdated := controllerutil.RemoveFinalizer(state.ObjAsNfsInstance(), api.CommonFinalizerDeletionHook)
 	if !isUpdated {
 		return nil, nil
 	}

@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
@@ -43,7 +44,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 					DeletionTimestamp: &v1.Time{
 						Time: time.Now(),
 					},
-					Finalizers: []string{cloudresourcesv1beta1.Finalizer},
+					Finalizers: []string{api.CommonFinalizerDeletionHook},
 				},
 			}
 
@@ -54,7 +55,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 					DeletionTimestamp: &v1.Time{
 						Time: time.Now(),
 					},
-					Finalizers: []string{cloudresourcesv1beta1.Finalizer},
+					Finalizers: []string{api.CommonFinalizerDeletionHook},
 				},
 			}
 
@@ -85,7 +86,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should be called")
-			assert.False(t, controllerutil.ContainsFinalizer(state.PVC, cloudresourcesv1beta1.Finalizer), "finalizer is removed")
+			assert.False(t, controllerutil.ContainsFinalizer(state.PVC, api.CommonFinalizerDeletionHook), "finalizer is removed")
 		})
 
 		t.Run("Should: do nothing if PVC is not marked for deletion", func(t *testing.T) {
@@ -99,7 +100,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
-			assert.True(t, controllerutil.ContainsFinalizer(state.PVC, cloudresourcesv1beta1.Finalizer), "finalizer is not removed")
+			assert.True(t, controllerutil.ContainsFinalizer(state.PVC, api.CommonFinalizerDeletionHook), "finalizer is not removed")
 		})
 
 		t.Run("Should: do nothing if PVC is not defined", func(t *testing.T) {
@@ -114,7 +115,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
-			assert.True(t, controllerutil.ContainsFinalizer(pvc, cloudresourcesv1beta1.Finalizer), "finalizer is not removed")
+			assert.True(t, controllerutil.ContainsFinalizer(pvc, api.CommonFinalizerDeletionHook), "finalizer is not removed")
 		})
 
 		t.Run("Should: do nothing if PVC does not contain Finalizer", func(t *testing.T) {

@@ -62,7 +62,7 @@ func (r *reconciler) newAction() composed.Action {
 		composed.IfElse(
 			composed.Not(CompletedRestorePredicate),
 			composed.ComposeActions("AwsNfsVolumeNotCompleted",
-				actions.PatchAddFinalizer,
+				actions.PatchAddCommonFinalizer(),
 				loadSkrAwsNfsVolumeBackup,
 				stopIfBackupNotReady,
 				loadSkrAwsNfsVolume,
@@ -72,7 +72,7 @@ func (r *reconciler) newAction() composed.Action {
 				startAwsRestore,
 				checkRestoreJob),
 			nil),
-		actions.PatchRemoveFinalizer,
+		actions.PatchRemoveCommonFinalizer(),
 		composed.StopAndForgetAction,
 	)
 }

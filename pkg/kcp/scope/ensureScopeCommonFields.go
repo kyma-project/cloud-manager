@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,7 +17,7 @@ func ensureScopeCommonFields(ctx context.Context, st composed.State) (error, con
 	state.ObjAsScope().Namespace = state.kyma.GetNamespace()
 
 	// set finalizer
-	controllerutil.AddFinalizer(state.ObjAsScope(), cloudcontrolv1beta1.FinalizerName)
+	controllerutil.AddFinalizer(state.ObjAsScope(), api.CommonFinalizerDeletionHook)
 
 	// set kyma name in label
 	metav1.SetMetaDataLabel(&state.ObjAsScope().ObjectMeta, cloudcontrolv1beta1.LabelKymaName, state.Obj().GetName())

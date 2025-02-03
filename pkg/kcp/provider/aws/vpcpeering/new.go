@@ -40,11 +40,11 @@ func New(stateFactory StateFactory) composed.Action {
 					deleteVpcPeering,
 					remoteRoutesDelete,
 					remotePeeringDelete,
-					actions.PatchRemoveFinalizer,
+					actions.PatchRemoveCommonFinalizer(),
 				),
 				composed.ComposeActions(
 					"awsVpcPeering-non-delete",
-					actions.PatchAddFinalizer,
+					actions.PatchAddCommonFinalizer(),
 					checkNetworkTag,
 					createVpcPeeringConnection,
 					waitPendingAcceptance,

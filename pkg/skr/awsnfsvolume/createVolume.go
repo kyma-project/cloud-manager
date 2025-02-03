@@ -2,9 +2,9 @@ package awsnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -36,7 +36,7 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 			Labels:      getVolumeLabels(state.ObjAsAwsNfsVolume()),
 			Annotations: getVolumeAnnotations(state.ObjAsAwsNfsVolume()),
 			Finalizers: []string{
-				v1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: corev1.PersistentVolumeSpec{

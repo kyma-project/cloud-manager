@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	v1 "k8s.io/api/core/v1"
@@ -45,7 +45,7 @@ func (suite *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
 	err = state.SkrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 	assert.Nil(suite.T(), err)
 
-	assert.NotContains(suite.T(), pv.GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.NotContains(suite.T(), pv.GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func (suite *removePersistenceVolumeFinalizerSuite) TestContinueIfPVNotExists() {
@@ -76,7 +76,7 @@ func (suite *removePersistenceVolumeFinalizerSuite) TestDoNotRemoveFinalizerIfOb
 	//Call removePersistenceVolumeFinalizer
 	err, _ = removePersistenceVolumeFinalizer(ctx, state)
 	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), cloudresourcesv1beta1.Finalizer)
+	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestRemovePersistenceVolumeFinalizer(t *testing.T) {

@@ -33,11 +33,11 @@ func New(stateFactory StateFactory) composed.Action {
 					"azureVpcPeering-delete",
 					deleteVpcPeering,
 					peeringRemoteDelete,
-					actions.PatchRemoveFinalizer,
+					actions.PatchRemoveCommonFinalizer(),
 				),
 				composed.ComposeActions(
 					"azureVpcPeering-non-delete",
-					actions.PatchAddFinalizer,
+					actions.PatchAddCommonFinalizer(),
 					peeringRemoteRequireSpecifiedName,
 					composed.If(
 						predicateRequireVNetShootTag,
