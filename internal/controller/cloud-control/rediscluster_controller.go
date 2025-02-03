@@ -23,6 +23,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -34,10 +35,14 @@ func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	env abstractions.Environment,
 ) error {
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
 	return NewRedisClusterReconciler(
 		rediscluster.NewRedisClusterReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
+			gcprediscluster.NewStateFactory(env),
 		),
 	).SetupWithManager(kcpManager)
 }
