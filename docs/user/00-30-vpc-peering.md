@@ -18,7 +18,7 @@ You can configure Cloud Manager's VPC peering using a dedicated custom resource 
 
 To initiate VPC peering from a Kyma cluster, you must:
 
-* Set appropriate authorization and assign permissions to Cloud Manager in the remote cloud provider network. For more information, see the relevant documents for:
+* Authorize Cloud Manager in the remote cloud provider landscape. For more information, see the relevant documents for:
   * Amazon Web Services: See [Authorization](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-10-aws-vpc-peering.md#authorization).
   * Google Cloud: See [Required Permissions in the Remote Project](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-20-gcp-vpc-peering.md).
   * Microsoft Azure: See [Authorization](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-30-azure-vpc-peering.md).
