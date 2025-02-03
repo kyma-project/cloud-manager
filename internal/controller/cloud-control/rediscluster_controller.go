@@ -34,9 +34,6 @@ func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	env abstractions.Environment,
 ) error {
-	if env == nil {
-		env = abstractions.NewOSEnvironment()
-	}
 	return NewRedisClusterReconciler(
 		rediscluster.NewRedisClusterReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
