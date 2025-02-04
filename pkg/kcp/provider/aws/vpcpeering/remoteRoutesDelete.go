@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
@@ -13,8 +12,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if !awsutil.ShouldDeleteRoutes(state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering,
-		state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy) {
+	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		logger.Info("Skipping route deletion")
 		return nil, nil
 	}

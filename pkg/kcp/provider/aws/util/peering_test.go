@@ -29,17 +29,3 @@ func TestAwsRouteTableUpdateStrategyUnmatched(t *testing.T) {
 func TestAwsRouteTableUpdateStrategyUnmatchedHasTag(t *testing.T) {
 	assert.False(t, ShouldUpdateRouteTable(Ec2Tags(shootName), v1beta1.AwsRouteTableUpdateStrategyUnmatched, shootName))
 }
-
-func TestShouldDeleteRoutesWhenDeleteRemotePeeringTrueAndUpdateStrategyAuto(t *testing.T) {
-	assert.True(t, ShouldDeleteRoutes(true, v1beta1.AwsRouteTableUpdateStrategyAuto))
-}
-func TestShouldDeleteRoutesWhenDeleteRemotePeeringTrueAndUpdateStrategyNone(t *testing.T) {
-	assert.True(t, ShouldDeleteRoutes(true, v1beta1.AwsRouteTableUpdateStrategyNone))
-}
-
-func TestShouldDeleteRoutesWhenDeleteRemotePeeringFalseAndUpdateStrategyAuto(t *testing.T) {
-	assert.True(t, ShouldDeleteRoutes(false, v1beta1.AwsRouteTableUpdateStrategyAuto))
-}
-func TestShouldDeleteRoutesWhenDeleteRemotePeeringFalseAndUpdateStrategyNone(t *testing.T) {
-	assert.False(t, ShouldDeleteRoutes(false, v1beta1.AwsRouteTableUpdateStrategyNone))
-}

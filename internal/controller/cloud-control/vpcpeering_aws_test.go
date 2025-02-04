@@ -1025,7 +1025,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, true).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, false).
 				WithRemoteRouteTableUpdateStrategy(cloudcontrolv1beta1.AwsRouteTableUpdateStrategyMatched).
 				Build()
 
@@ -1106,6 +1106,16 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("And Then local VpcPeeringConnection is deleted", func() {
 			localPeering, _ := awsMockLocal.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
 			Expect(localPeering).To(BeNil())
+		})
+
+		By("And Then remote VpcPeeringConnection is not deleted", func() {
+			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(remotePeering).NotTo(BeNil())
+		})
+
+		By("And Then all remote route tables has one new route with destination CIDR matching VPC CIDR", func() {
+			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteRouteTableTagged, kcpPeering.Status.Id, localVpcCidr)).
+				NotTo(BeNil())
 		})
 
 	})
