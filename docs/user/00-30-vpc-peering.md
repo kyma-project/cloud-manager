@@ -20,10 +20,10 @@ Before you initiate VPC peering from a Kyma cluster, you must perform the follow
 
 * Authorize Cloud Manager in the remote cloud provider landscape. For more information, see the relevant documents for:
   * Amazon Web Services: See [Authorization](./resources/04-30-10-aws-vpc-peering.md#authorization).
-  * Google Cloud: See [Required Permissions in the Remote Project](./resources/04-30-20-gcp-vpc-peering.md).
-  * Microsoft Azure: See [Authorization](./resources/04-30-30-azure-vpc-peering.md).
+  * Google Cloud: See [Required Permissions in the Remote Project](./resources/04-30-20-gcp-vpc-peering.md#required-permissions-in-the-remote-project).
+  * Microsoft Azure: See [Authorization](./resources/04-30-30-azure-vpc-peering.md#authorization).
 * Tag the remote network with the Kyma shoot name. For more information, see the relevant tutorials for:
-  * [Create Virtual Private Cloud Peering in Amazon Web Services](./tutorials/01-30-10-aws-vpc-peering.md).
+  * [Create Virtual Private Cloud Peering in Amazon Web Services](./tutorials/01-30-10-aws-vpc-peering.md#).
   * [Create Virtual Private Cloud Peering in Google Cloud](./tutorials/01-30-20-gcp-vpc-peering.md).
   * [Create Virtual Private Cloud Peering in Microsoft Azure](./tutorials/01-30-30-azure-vpc-peering.md).
 
@@ -33,5 +33,5 @@ AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level reso
 
 ## Related Information
 
-* [Cloud Manager Resources: VPC Peering](./resources#vpc-peering)
+* [Cloud Manager Resources: VPC Peering](./resources)
 * [Tutorials](./tutorials/README.md)
