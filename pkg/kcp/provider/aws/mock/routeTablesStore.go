@@ -50,6 +50,10 @@ func (s *routeTablesStore) DescribeRouteTables(ctx context.Context, vpcId string
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	return s.describeRouteTables(vpcId)
+}
+
+func (s *routeTablesStore) describeRouteTables(vpcId string) ([]ec2types.RouteTable, error) {
 	filtered := pie.Filter(s.items, func(e *routeTableEntry) bool {
 		return *e.routeTable.VpcId == vpcId
 	})
@@ -108,7 +112,7 @@ func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destin
 }
 
 func (s *routeTablesStore) GetRouteCount(vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
-	tables, err := s.DescribeRouteTables(nil, vpcId)
+	tables, err := s.describeRouteTables(vpcId)
 
 	if err != nil {
 		return -1
