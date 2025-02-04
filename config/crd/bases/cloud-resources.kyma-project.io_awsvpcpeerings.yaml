@@ -66,6 +66,9 @@ spec:
                     - MATCHED
                     - UNMATCHED
                   type: string
+                  x-kubernetes-validations:
+                    - message: RemoteRouteTableUpdateStrategy is immutable.
+                      rule: (self == oldSelf)
                 remoteVpcId:
                   type: string
                   x-kubernetes-validations:

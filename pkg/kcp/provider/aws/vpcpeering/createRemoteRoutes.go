@@ -41,16 +41,6 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 			"remoteRouteTableId", ptr.Deref(t.RouteTableId, "xxx"),
 			"destinationCidrBlock", ptr.Deref(state.vpc.CidrBlock, "xxx"))
 
-		// Delete route if it exists but it shouldn't
-		if !shouldUpdateRouteTable && routeExists {
-			err = state.remoteClient.DeleteRoute(ctx, t.RouteTableId, state.vpc.CidrBlock)
-			if err != nil {
-				lll.Error(err, "Error deleting remote route")
-			} else {
-				lll.Info("Remote route deleted")
-			}
-		}
-
 		// Create route if it should exist but it doesn't
 		if shouldUpdateRouteTable && !routeExists {
 			err = state.remoteClient.CreateRoute(ctx, t.RouteTableId, state.vpc.CidrBlock, state.vpcPeering.VpcPeeringConnectionId)
