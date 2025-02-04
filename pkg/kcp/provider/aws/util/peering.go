@@ -28,7 +28,3 @@ func ShouldUpdateRouteTable(tags []ec2types.Tag, mode cloudcontrolv1beta1.AwsRou
 func IsRouteTableUpdateStrategyNone(mode cloudcontrolv1beta1.AwsRouteTableUpdateStrategy) bool {
 	return mode == cloudcontrolv1beta1.AwsRouteTableUpdateStrategyNone
 }
-
-func ShouldDeleteRoutes(deleteRemotePeering bool, strategy cloudcontrolv1beta1.AwsRouteTableUpdateStrategy) bool {
-	return deleteRemotePeering || !IsRouteTableUpdateStrategyNone(strategy)
-}
