@@ -30,6 +30,7 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"awsNuke",
 			createAwsClient,
+			loadVault,
 			loadNfsBackups,
 			providerResourceStatusDiscovered,
 			deleteNfsBackup,
