@@ -16,16 +16,16 @@ You can configure Cloud Manager's VPC peering using a dedicated custom resource 
 
 ## Prerequisites
 
-Before you initiate VPC peering from a Kyma cluster, you must:
+Before you initiate VPC peering from a Kyma cluster, you must perform the following actions:
 
 * Authorize Cloud Manager in the remote cloud provider landscape. For more information, see the relevant documents for:
-  * Amazon Web Services: See [Authorization](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-10-aws-vpc-peering.md#authorization).
-  * Google Cloud: See [Required Permissions in the Remote Project](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-20-gcp-vpc-peering.md).
-  * Microsoft Azure: See [Authorization](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/resources/04-30-30-azure-vpc-peering.md).
+  * Amazon Web Services: See [Authorization](./resources/04-30-10-aws-vpc-peering.md#authorization).
+  * Google Cloud: See [Required Permissions in the Remote Project](./resources/04-30-20-gcp-vpc-peering.md).
+  * Microsoft Azure: See [Authorization](./resources/04-30-30-azure-vpc-peering.md).
 * Tag the remote network with the Kyma shoot name. For more information, see the relevant tutorials for:
-  * [Create Virtual Private Cloud Peering in Amazon Web Services](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/tutorials/01-30-10-aws-vpc-peering.mdn).
-  * [Create Virtual Private Cloud Peering in Google Cloud](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/tutorials/01-30-20-gcp-vpc-peering.md).
-  * [Create Virtual Private Cloud Peering in Microsoft Azure](https://github.com/kyma-project/cloud-manager/blob/main/docs/user/tutorials/01-30-30-azure-vpc-peering.md).
+  * [Create Virtual Private Cloud Peering in Amazon Web Services](./tutorials/01-30-10-aws-vpc-peering.md).
+  * [Create Virtual Private Cloud Peering in Google Cloud](./tutorials/01-30-20-gcp-vpc-peering.md).
+  * [Create Virtual Private Cloud Peering in Microsoft Azure](./tutorials/01-30-30-azure-vpc-peering.md).
 
 ## Lifecycle
 
