@@ -7,3 +7,7 @@ The Cloud Manager module provides managed Virtual Private CLoud (VPC) peering fu
 When you configure VPC peering in Kyma, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
 The Cloud Manager module supports the VPC Peering feature of three cloud providers:
+
+* Amazon Web Services [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html)
+* Google Cloud's [VPC Network Peering](https://cloud.google.com/vpc/docs/vpc-peering)
+* Microsoft Azure's [Virtual network peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
