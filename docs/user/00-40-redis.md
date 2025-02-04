@@ -6,17 +6,17 @@ The Cloud Manager module allows you to provision a cloud provider-managed Redis 
 
 When you create a Redis instance in Kyma, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
-The Cloud Manager module supports the Redis feature of three cloud providers:
+The Cloud Manager module supports the Redis feature of the following cloud providers:
 
-* Amazon Web Services' [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
-* Google Cloud's [Memorystore](https://cloud.google.com/memorystore?hl=en)
-* Microsoft Azure's [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
+* Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
+* Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
+* Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
 
-You can configure Cloud Manager's Redis instances using a dedicated Redis instance custom resource corresponding with the cloud provider for your Kyma cluster, namely AwsRedisInstance CR, GcpRedisInstance CR, or AzureRedisInstance CR.
+You can configure Cloud Manager's Redis instances using a dedicated Redis instance custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisInstance CR, GcpRedisInstance CR, or AzureRedisInstance CR.
 
 ### Tiers
 
-When you provision a Redis instance, you can choose between the Standard or Premium Tier.
+When you provision a Redis instance, you can choose between Standard or Premium Tier.
 
 * Standard Tier offers one instance.
 * Premium Tier offers high availability with automatic failover by provisioning an additional read replica of your instance.

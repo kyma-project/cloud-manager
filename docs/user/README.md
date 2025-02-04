@@ -30,7 +30,7 @@ Cloud Manager has read and write access to your IpRange, VpcPeering, NfsVolume, 
 
 ## API / Custom Resources Definitions
 
-The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
+The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the data kind and format that Cloud Manager uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
 
 ## Related Information
 
