@@ -20,14 +20,19 @@ The Cloud Manager module provides the following features tailored for each of th
 * [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
 
 > [!NOTE]
-> The NFS feature is offered for Google Cloud and AWS only.
+> The NFS feature is offered for Amazon Web Service and Google Cloud only.
 
 ## Architecture
 
+Cloud Manager has read and write access to your IpRange, VpcPeering, NfsVolume, and Redis custom resources in the Kyma cluster. The module also manages Kyma VPC networks, NFS Volume instances, and Redis instances in your cloud provider subscription in Kyma.
+
+![Cloud Manager Architecture](./assets/cloud-manager-architecture.drawio.svg)
+
 ## API / Custom Resources Definitions
 
-The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the kind and the format of data that Cloud Manager` uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
+The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes the data kind and format that Cloud Manager uses to configure resources. For more information, see [Cloud Manager Resources](./resources/README.md) (CRs).
 
 ## Related Information
 
-* [Cloud Manager module tutorials](./tutorials/README.md) provide step-by-step instructions on creating, using and disposing cloud resources.
+* [Cloud Manager module tutorials](./tutorials/README.md)
+* [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)

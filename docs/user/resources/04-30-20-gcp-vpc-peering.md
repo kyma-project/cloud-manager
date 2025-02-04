@@ -4,7 +4,7 @@ The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describ
  that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
 It enables you to consume services available in the remote VPC from the Kyma cluster.
 
-## Required Permissions in the Remote Project <!-- {docsify-ignore} -->
+## Required Permissions in the Remote Project
 
 To create VPC peering, the following permissions must be granted to the Kyma service account in your GCP project:
 
