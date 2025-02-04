@@ -48,7 +48,6 @@ func (r *reconciler) newAction() composed.Action {
 		createKcpRemoteNetwork,
 		loadKcpAwsVpcPeering,
 		createKcpVpcPeering,
-		updateKcpVpcPeering,
 		deleteKcpVpcPeering,
 		waitKcpVpcPeeringDeleted,
 		deleteKcpRemoteNetwork,
