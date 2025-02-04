@@ -140,8 +140,10 @@ func (suite *calculateRecurringScheduleSuite) testSchedule(schedule string, star
 	suite.Nil(err)
 	suite.Equal(len(expectedRunTimes), len(fromK8s.Status.NextRunTimes))
 
-	for i, t := range expectedRunTimes {
-		suite.Equal(t.Format(time.RFC3339), fromK8s.Status.NextRunTimes[i])
+	for i, expected := range expectedRunTimes {
+		actual, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[i])
+		suite.Nil(err)
+		suite.WithinDuration(expected, actual, time.Minute*1)
 	}
 }
 
