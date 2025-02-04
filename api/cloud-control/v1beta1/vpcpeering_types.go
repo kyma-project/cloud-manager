@@ -68,6 +68,7 @@ type VpcPeeringSpec struct {
 	Details *VpcPeeringDetails `json:"details,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
 type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."

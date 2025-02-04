@@ -879,7 +879,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
-	It("Scenario: KCP AWS VpcPeering remote route table update strategy can be updated", func() {
+	It("Scenario: KCP AWS VpcPeering remote route table update strategy MATCHED", func() {
 		const (
 			kymaName               = "612573aa-58be-4670-b7b2-ca4c60fb8b99"
 			kcpPeeringName         = "0cb1ecb4-de6d-4146-93c7-df2a71e6f83e"
@@ -993,7 +993,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).Should(Succeed())
 		})
@@ -1014,7 +1014,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).Should(Succeed())
 		})
@@ -1040,7 +1040,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
-					HaveFinalizer(cloudcontrolv1beta1.FinalizerName),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
 					HavingKcpVpcPeeringStatusIdNotEmpty(),
 				).Should(Succeed())
 		})
@@ -1066,7 +1066,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			).NotTo(HaveOccurred())
 		})
 
-		By("And Given VpcPeering is Ready", func() {
+		By("When VpcPeering is Ready", func() {
 			Eventually(LoadAndCheck, "2s").
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
@@ -1074,37 +1074,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("And Given remote VpcPeeringConnection exists", func() {
+		By("Then remote VpcPeeringConnection exists", func() {
 			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
 			Expect(remotePeering).NotTo(BeNil())
 		})
 
-		By("And Given remote tagged route table has route with destination CIDR matching local VPC CIDR", func() {
-			Expect(CheckRoute(awsMockRemote, remoteVpcId, remoteRouteTableTagged, kcpPeering.Status.RemoteId, localVpcCidr)).
-				To(Succeed())
-		})
-
-		By("When KCP VpcPeering remote route table update strategy is changed to UNMATCHED", func() {
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
-					WithRemoteRouteTableUpdateStrategy(cloudcontrolv1beta1.AwsRouteTableUpdateStrategyUnmatched)).
-				Should(Succeed())
-		})
-
-		By("Then remote untagged main route table has route with destination CIDR matching local VPC CIDR", func() {
-			Eventually(CheckRoute).
-				WithArguments(awsMockRemote, remoteVpcId, remoteMainRouteTable, kcpPeering.Status.RemoteId, localVpcCidr).
-				Should(Succeed())
-		})
-
-		By("And Then remote untagged route table has route with destination CIDR matching local VPC CIDR", func() {
-			Expect(CheckRoute(awsMockRemote, remoteVpcId, remoteRouteTable, kcpPeering.Status.RemoteId, localVpcCidr)).
-				To(Succeed())
-		})
-
 		By("And Then remote tagged route table has route with destination CIDR matching local VPC CIDR", func() {
 			Expect(CheckRoute(awsMockRemote, remoteVpcId, remoteRouteTableTagged, kcpPeering.Status.RemoteId, localVpcCidr)).
-				NotTo(Succeed())
+				Should(Succeed())
+		})
+
+		By("And Then remote untagged route table does not have destination CIDR matching local VPC CIDR", func() {
+			Expect(CheckRoute(awsMockRemote, remoteVpcId, remoteRouteTable, kcpPeering.Status.RemoteId, localVpcCidr)).
+				ShouldNot(Succeed())
 		})
 
 		// DELETE

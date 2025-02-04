@@ -103,6 +103,9 @@ spec:
                 - localNetwork
                 - remoteNetwork
                 type: object
+                x-kubernetes-validations:
+                - message: Peering details are immutable.
+                  rule: (self == oldSelf)
               remoteRef:
                 properties:
                   name:
