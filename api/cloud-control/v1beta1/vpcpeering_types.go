@@ -78,13 +78,10 @@ type VpcPeeringDetails struct {
 	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Remote network name is required."
 	RemoteNetwork klog.ObjectRef `json:"remoteNetwork"`
 
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering name is immutable."
 	PeeringName string `json:"peeringName,omitempty"`
 
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Local peering name is immutable."
 	LocalPeeringName string `json:"localPeeringName,omitempty"`
 
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Import custom routes is immutable."
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`

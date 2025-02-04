@@ -49,6 +49,7 @@ type AwsVpcPeeringSpec struct {
 
 	// +kubebuilder:default:=AUTO
 	// +kubebuilder:validation:Enum=AUTO;NONE;MATCHED;UNMATCHED
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRouteTableUpdateStrategy is immutable."
 	RemoteRouteTableUpdateStrategy AwsRouteTableUpdateStrategy `json:"remoteRouteTableUpdateStrategy,omitempty"`
 }
 

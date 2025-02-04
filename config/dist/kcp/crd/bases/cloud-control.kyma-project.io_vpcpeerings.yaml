@@ -52,9 +52,6 @@ spec:
                     type: boolean
                   importCustomRoutes:
                     type: boolean
-                    x-kubernetes-validations:
-                    - message: Import custom routes is immutable.
-                      rule: (self == oldSelf)
                   localNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
@@ -70,14 +67,8 @@ spec:
                       rule: (self.name != "")
                   localPeeringName:
                     type: string
-                    x-kubernetes-validations:
-                    - message: Local peering name is immutable.
-                      rule: (self == oldSelf)
                   peeringName:
                     type: string
-                    x-kubernetes-validations:
-                    - message: Peering name is immutable.
-                      rule: (self == oldSelf)
                   remoteNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
