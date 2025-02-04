@@ -34,9 +34,7 @@ func kcpNfsInstanceCreate(ctx context.Context, st composed.State) (error, contex
 				Namespace: state.ObjAsCceeNfsVolume().Name,
 				Name:      state.ObjAsCceeNfsVolume().Namespace,
 			},
-			IpRange: cloudcontrolv1beta1.IpRangeRef{
-				Name: state.SkrIpRange.Status.Id,
-			},
+			// IpRange can not be set for CCEE
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
 			},

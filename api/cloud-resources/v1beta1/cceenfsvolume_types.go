@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,6 +29,7 @@ type CceeNfsVolumeSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
 	CapacityGb int `json:"capacityGb"`
 
 	// +optional
@@ -182,6 +184,17 @@ func (in *CceeNfsVolume) CloneForPatchStatus() client.Object {
 		result.Status.Conditions = []metav1.Condition{}
 	}
 	return result
+}
+
+func (in *CceeNfsVolume) DeriveStateFromConditions() (changed bool) {
+	oldState := in.Status.State
+	if meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady) != nil {
+		in.Status.State = StateReady
+	}
+	if meta.FindStatusCondition(in.Status.Conditions, ConditionTypeError) != nil {
+		in.Status.State = StateError
+	}
+	return in.Status.State != oldState
 }
 
 // +kubebuilder:object:root=true

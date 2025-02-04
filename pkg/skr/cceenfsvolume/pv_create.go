@@ -3,12 +3,14 @@ package cceenfsvolume
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,16 +29,23 @@ func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error parsing CceeNfsVolume capacity as resource quantity", composed.StopAndForget, ctx)
 	}
 
+	path := state.KcpNfsInstance.Status.Path
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
 	pv := &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: state.ObjAsCceeNfsVolume().GetName(),
+			Name: state.ObjAsCceeNfsVolume().GetPVName(),
 			Labels: util.NewLabelBuilder().
-				WithCustomLabels(state.ObjAsCceeNfsVolume().GetLabels()).
+				WithCustomLabels(state.ObjAsCceeNfsVolume().GetPVLabels()).
+				WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, state.ObjAsCceeNfsVolume().Name).
+				WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, state.ObjAsCceeNfsVolume().Namespace).
 				WithCloudManagerDefaults().
 				Build(),
-			Annotations: state.ObjAsCceeNfsVolume().GetAnnotations(),
+			Annotations: state.ObjAsCceeNfsVolume().GetPVAnnotations(),
 			Finalizers: []string{
-				cloudresourcesv1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: corev1.PersistentVolumeSpec{
@@ -46,7 +55,7 @@ func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
 			PersistentVolumeSource: corev1.PersistentVolumeSource{
 				NFS: &corev1.NFSVolumeSource{
 					Server:   state.KcpNfsInstance.Status.Host,
-					Path:     state.KcpNfsInstance.Status.Path,
+					Path:     path,
 					ReadOnly: false,
 				},
 			},
@@ -60,7 +69,9 @@ func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
-	logger.Info("Created PV for CceeNfsVolume")
+	logger.
+		WithValues("pvName", pv.Name).
+		Info("Created PV for CceeNfsVolume")
 
 	state.PV = pv
 

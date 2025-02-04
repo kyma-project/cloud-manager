@@ -25,7 +25,7 @@ func kcpNfsInstanceLoad(ctx context.Context, st composed.State) (error, context.
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance for CceeNfsVolume", composed.StopWithRequeue, ctx)
 	}
-	if err != nil {
+	if err == nil {
 		state.KcpNfsInstance = kcpNfsInstnace
 	}
 

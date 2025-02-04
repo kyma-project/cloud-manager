@@ -11,12 +11,16 @@ import (
 func waitKcpNfsInstanceStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if meta.FindStatusCondition(*state.ObjAsCceeNfsVolume().Conditions(), cloudcontrol1beta1.ConditionTypeReady) != nil {
+	if state.KcpNfsInstance == nil {
 		return nil, ctx
 	}
-	if meta.FindStatusCondition(*state.ObjAsCceeNfsVolume().Conditions(), cloudcontrol1beta1.ConditionTypeError) != nil {
-		return composed.StopAndForget, ctx
+
+	if meta.FindStatusCondition(*state.KcpNfsInstance.Conditions(), cloudcontrol1beta1.ConditionTypeReady) != nil {
+		return nil, ctx
+	}
+	if meta.FindStatusCondition(*state.KcpNfsInstance.Conditions(), cloudcontrol1beta1.ConditionTypeError) != nil {
+		return nil, ctx
 	}
 
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }

@@ -2,7 +2,7 @@ package cceenfsvolume
 
 import (
 	"context"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +31,7 @@ func pvcCreate(ctx context.Context, st composed.State) (error, context.Context) 
 				Build(),
 			Annotations: state.ObjAsCceeNfsVolume().GetPVCAnnotations(),
 			Finalizers: []string{
-				cloudresourcesv1beta1.Finalizer,
+				api.CommonFinalizerDeletionHook,
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
@@ -52,7 +52,9 @@ func pvcCreate(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.LogErrorAndReturn(err, "Error creating PVC for CceeNfsVolume", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("Created PVC for CceeNfsVolume")
+	logger.
+		WithValues("pvcName", pvc.Name).
+		Info("Created PVC for CceeNfsVolume")
 
 	state.PVC = pvc
 

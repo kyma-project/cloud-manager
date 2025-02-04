@@ -9,6 +9,13 @@ import (
 func updateSize(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	if composed.IsMarkedForDeletion(state.ObjAsCceeNfsVolume()) {
+		return nil, ctx
+	}
+	if state.KcpNfsInstance == nil {
+		return nil, ctx
+	}
+
 	if state.ObjAsCceeNfsVolume().Spec.CapacityGb == state.KcpNfsInstance.Spec.Instance.OpenStack.SizeGb {
 		return nil, ctx
 	}
@@ -31,7 +38,7 @@ func updateSize(ctx context.Context, st composed.State) (error, context.Context)
 			"capacityGb": state.KcpNfsInstance.Spec.Instance.OpenStack.SizeGb,
 		},
 	}
-	err := composed.PatchObj(ctx, state.ObjAsCceeNfsVolume(), p, state.KcpCluster.K8sClient())
+	err := composed.MergePatchObj(ctx, state.ObjAsCceeNfsVolume(), p, state.KcpCluster.K8sClient())
 
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error patching KCP NfsInstance for CceeNfsVolume resize", composed.StopWithRequeue, ctx)

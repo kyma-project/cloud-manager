@@ -50,5 +50,6 @@ func pvValidate(ctx context.Context, st composed.State) (error, context.Context)
 		FailedError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
 		ErrorLogMessage("Error patching CceeNfsVolume status with error condition when PV already exists with different owner").
 		SuccessError(composed.StopAndForget).
+		SuccessLogMsg(fmt.Sprintf("CceeNfsVoliume desired PV name %s already exists with different owner", desiredPvName)).
 		Run(ctx, state)
 }

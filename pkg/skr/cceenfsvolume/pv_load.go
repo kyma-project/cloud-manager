@@ -18,7 +18,9 @@ func pvLoad(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error loading PV for CceeNfsVolume", composed.StopWithRequeue, ctx)
 	}
 
-	state.PV = vol
+	if err == nil {
+		state.PV = vol
+	}
 
 	return nil, ctx
 }

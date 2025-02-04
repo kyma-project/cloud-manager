@@ -50,18 +50,19 @@ func (r *reconciler) newAction() composed.Action {
 		pvLoad,
 		pvRemoveClaimRef,
 		pvcLoad,
-		actions.PatchAddFinalizer,
+		actions.PatchAddCommonFinalizer(),
 		idGenerate,
 
 		kcpNfsInstanceLoad,
 		kcpNfsInstanceCreate,
-		statusCopy,
 		waitKcpNfsInstanceStatus,
 
 		updateSize,
 
 		pvCreate,
 		pvcCreate,
+
+		statusCopy,
 
 		stopIfNotBeingDeleted,
 
@@ -78,10 +79,8 @@ func (r *reconciler) newAction() composed.Action {
 		kcpNfsInstanceDelete,
 		kcpNfsInstanceWaitDeleted,
 
-		actions.PatchRemoveFinalizer,
+		actions.PatchRemoveCommonFinalizer(),
 
 		composed.StopAndForgetAction,
-
-		// TODO add more actions here
 	)
 }

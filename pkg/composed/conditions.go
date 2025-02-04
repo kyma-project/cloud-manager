@@ -49,11 +49,11 @@ func StatusCopyConditionsAndState(source ObjWithConditions, destination ObjWithC
 
 	if srcWStatus, srcOk := source.(ObjWithConditionsAndState); srcOk {
 		if dstWStatus, dstOk := destination.(ObjWithConditionsAndState); dstOk {
-			if srcWStatus.State() != dstWStatus.State() {
+			if srcWStatus.State() != "" && srcWStatus.State() != dstWStatus.State() {
 				changed = true
 				dstWStatus.SetState(srcWStatus.State())
-				newState = srcWStatus.State()
 			}
+			newState = srcWStatus.State()
 		}
 	}
 
