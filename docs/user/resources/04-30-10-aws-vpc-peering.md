@@ -7,61 +7,6 @@ of the same cloud provider.
 Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in 
 the Kyma cluster underlying cloud provider account and accepts VPC peering connection in the remote cloud provider account.
 
-## Authorization
-
-Cloud Manager must be authorized in the remote cloud provider account to accept VPC peering connection. For cross-account access,
-Cloud Manager uses [`AssumeRole`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
-
-Use the following table to identify Cloud Manager principal based on your Kyma landscape:
-
-| BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager principal                                      |
-|------------------------------------|----------------------------------------|--------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage` |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`  |
-
-1. Create a new role named **CloudManagerPeeringRole** with a trust policy that allows Cloud Manager principal to assume the role:
-
-    ```json
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Principal": {
-                    "AWS": "{CLOUD_MANAGER_PRINCIPAL}"
-                },
-                "Action": "sts:AssumeRole"
-            }
-        ]
-    }
-
-    ```
-
-2. Create a new managed policy **CloudManagerPeeringAccess** with the following permissions:
-
-    ```json
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "Statement1",
-                "Effect": "Allow",
-                "Action": [
-                    "ec2:AcceptVpcPeeringConnection",
-                    "ec2:DescribeVpcs",
-                    "ec2:DescribeVpcPeeringConnections",
-                    "ec2:DescribeRouteTables",
-                    "ec2:CreateRoute",
-                    "ec2:CreateTags"
-                ],
-                "Resource": "*"
-            }
-        ]
-    }
-    ```
-
-3. Attach the **CloudManagerPeeringAccess** policy to the **CloudManagerPeeringRole**:
-
 ## Required Actions in the Remote Project
 
 Before creating the VPC peering, please tag your AWS account VPC with the Kyma shoot name tag.  
