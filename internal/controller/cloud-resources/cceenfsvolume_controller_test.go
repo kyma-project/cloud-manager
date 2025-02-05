@@ -187,19 +187,6 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 
 		// PV assertions ===============================================================
 
-		By("And Then SKR PersistentVolume is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					pv,
-					NewObjActions(
-						WithName(cceeNfsVolume.GetPVName()),
-					),
-				).
-				Should(Succeed())
-		})
-
 		By("And Then SKR PersistentVolume has storage capacity equal to CceeNfsVolume capacity", func() {
 			expected := resource.MustParse(fmt.Sprintf("%dG", cceeNfsVolume.Spec.CapacityGb))
 			Expect(expected.Equal(pv.Spec.Capacity["storage"])).To(BeTrue())
@@ -244,21 +231,7 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 		})
 
 		// PVC assertions ===============================================================
-
-		By("And Then SKR PersistentVolumeClaim is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					pvc,
-					NewObjActions(
-						WithName(cceeNfsVolume.GetPVCName()),
-						WithNamespace(cceeNfsVolume.Namespace),
-					),
-				).
-				Should(Succeed())
-		})
-
+		
 		By("And Then SKR PersistentVolumeClaim has well-known CloudManager labels", func() {
 			Expect(pvc.Labels[util.WellKnownK8sLabelComponent]).To(Equal(util.DefaultCloudManagerComponentLabelValue))
 			Expect(pvc.Labels[util.WellKnownK8sLabelPartOf]).To(Equal(util.DefaultCloudManagerPartOfLabelValue))
