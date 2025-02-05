@@ -6,7 +6,7 @@ To create VPC peering in the Kyma environment, you must authorize the Cloud Mana
 
 For cross-account access in Amazon Web Services, Cloud Manager uses `AssumeRole`. `AssumeRole` requires specifying the trusted principle. For more information, see the [official Amazon Web Services documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
 
-Use the following table to identify the Cloud Manager principal based on your Kyma landscape:
+Use the following table to identify the Cloud Manager principal based on your Kyma landscape. Then perform the required actions:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Principal                                      |
 |------------------------------------|----------------------------------------|--------------------------------------------------------------|
@@ -58,7 +58,7 @@ Use the following table to identify the Cloud Manager principal based on your Ky
 
 ## Google Cloud
 
-Grant the following permissions to the Kyma service account in your GCP Project:
+Grant the following permissions to the Kyma service account in your GCP project:
 
 | Permission                           | Description                                                                 |
 |--------------------------------------|-----------------------------------------------------------------------------|
@@ -70,8 +70,7 @@ For more information on how to manage access to service accounts, see the [offic
 
 ### Service Account
 
-For security reasons, each Kyma landscape has its own service account.
-Use the following table to identify the correct Cloud Manager service account for your Kyma landscape:
+For security reasons, each Kyma landscape has its own service account. Use the following table to identify the correct Cloud Manager service account for your Kyma landscape:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Account                                          |
 |------------------------------------|----------------------------------------|------------------------------------------------------------------------|
@@ -80,7 +79,7 @@ Use the following table to identify the correct Cloud Manager service account fo
 
 ## Microsoft Azure
 
-Use the following table to identify the Cloud Manager service principal based on your Kyma landscape:
+Microsoft Azure requires specifying the service prinicapl. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
 |------------------------------------|----------------------------------------|----------------------------------|
@@ -92,4 +91,4 @@ Assign the following Identity and Access Management (IAM) roles to the Cloud Man
 * Classic Network Contributor
 * Network Contributor
 
-For more information, see the [official Microsoft Azure documentation](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal).
+For more information, see the [official Microsoft Azure documentation](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).
