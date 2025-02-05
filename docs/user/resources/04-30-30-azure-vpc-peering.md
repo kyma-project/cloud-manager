@@ -8,28 +8,10 @@ Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager contro
 the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in
 the remote cloud provider subscription.
 
-## Authorization
-
-Cloud Manager must be authorized in the remote cloud provider subscription to accept a VPC peering connection.
-
-Use the following table to identify Cloud Manager service principal based on your Kyma landscape:
-
-| BTP cockpit URL                    | Kyma dashboard URL                     | Cloud Manager service principal  |
-|------------------------------------|----------------------------------------|----------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
-
-And assign the following Identity and Access Management (IAM) roles to the Cloud Manager service principal:
-
-* Classic Network Contributor
-* Network Contributor
-
 ## Required Actions in the Remote Project
 
 Before creating the VPC peering, please tag your Azure subscription VPC with the Kyma shoot name tag.  
 For more information, check the [Create Virtual Private Cloud Peering in Microsoft Azure](../tutorials/01-30-30-azure-vpc-peering.md) tutorial.
-
-
 
 ## Deleting `AzureVpcPeering`
 

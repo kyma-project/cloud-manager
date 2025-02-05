@@ -4,34 +4,10 @@ The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describ
  that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
 It enables you to consume services available in the remote VPC from the Kyma cluster.
 
-## Required Permissions in the Remote Project
-
-To create VPC peering, the following permissions must be granted to the Kyma service account in your GCP project:
-
-| Permission                           | Description                                                                 |
-|--------------------------------------|-----------------------------------------------------------------------------|
-| `compute.networks.addPeering`        | Required to create the peering request in the remote project and VPC.       |
-| `compute.networks.get`               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
-| `compute.networks.ListEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
-
-For more information on how to manage access to service accounts, see the [Google Cloud documentation](https://cloud.google.com/iam/docs/manage-access-service-accounts).
-
-### Service Account
-
-For security reasons, each Kyma landscape has its own service account.
-Use the following table to identify the correct Cloud Manager service account for your Kyma landscape:
-
-| BTP cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager service account                                          |
-|------------------------------------|----------------------------------------|------------------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
-
-
 ## Required Actions in the Remote Project
 
 Before creating the VPC peering, please tag your GCP project's VPC with the Kyma shoot name tag.  
 For more information, check the [Create Virtual Private Cloud Peering in Google Cloud](../tutorials/01-30-20-gcp-vpc-peering.md) tutorial.
-
 
 ## Specification <!-- {docsify-ignore} -->
 
