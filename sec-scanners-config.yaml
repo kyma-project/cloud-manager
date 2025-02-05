@@ -1,8 +1,8 @@
 module-name: cloud-manager
 kind: kyma
-protecode:
+bdba:
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
-whitesource:
+mend:
   language: golang-mod
   exclude:
     - "**/*_test.go"
