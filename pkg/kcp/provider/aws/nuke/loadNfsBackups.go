@@ -13,6 +13,11 @@ func loadNfsBackups(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	if state.vault == nil {
+		logger.Info("No vault exists.")
+		return nil, ctx
+	}
+
 	backups, err := state.awsClient.ListRecoveryPointsForVault(ctx, state.GetAccountId(), state.GetVaultName())
 	if err != nil {
 		logger.Error(err, "Error listing Aws Recovery Points")

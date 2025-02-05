@@ -43,6 +43,7 @@ type State struct {
 	nuketypes.State
 	ProviderResources []*nuketypes.ProviderResourceKindState
 
+	vault             *types.BackupVaultListMember
 	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
 	env               abstractions.Environment
 	awsClient         awsnukeclient.NukeNfsBackupClient
