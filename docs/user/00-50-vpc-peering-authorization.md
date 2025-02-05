@@ -79,7 +79,7 @@ For security reasons, each Kyma landscape has its own service account. Use the f
 
 ## Microsoft Azure
 
-Microsoft Azure requires specifying the service prinicapl. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape:
+Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
 |------------------------------------|----------------------------------------|----------------------------------|
@@ -91,4 +91,4 @@ Assign the following Identity and Access Management (IAM) roles to the Cloud Man
 * Classic Network Contributor
 * Network Contributor
 
-For more information, see the [official Microsoft Azure documentation](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).
+For more information, see the official Microsoft Azure documentation on how to [Assign Azure roles using the Azure portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal) and how to [Manage service principals](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).
