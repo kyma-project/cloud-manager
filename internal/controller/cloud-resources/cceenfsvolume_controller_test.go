@@ -231,7 +231,7 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 		})
 
 		// PVC assertions ===============================================================
-		
+
 		By("And Then SKR PersistentVolumeClaim has well-known CloudManager labels", func() {
 			Expect(pvc.Labels[util.WellKnownK8sLabelComponent]).To(Equal(util.DefaultCloudManagerComponentLabelValue))
 			Expect(pvc.Labels[util.WellKnownK8sLabelPartOf]).To(Equal(util.DefaultCloudManagerPartOfLabelValue))
