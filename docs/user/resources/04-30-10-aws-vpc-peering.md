@@ -1,23 +1,10 @@
 # AwsVpcPeering Custom Resource
 
-The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between
-Kyma and the remote AWS Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks
-of the same cloud provider.
+The `awsvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between Kyma and the remote AWS Virtual Private Cloud (VPC) network. Virtual network peering is only possible within the networks of the same cloud provider.
 
-Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in 
-the Kyma cluster underlying cloud provider account and accepts VPC peering connection in the remote cloud provider account.
+Once an `AwsVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in the Kyma cluster underlying cloud provider landscape and accepts VPC peering connection in the remote cloud provider landscape.
 
-## Required Actions in the Remote Project
-
-Before creating the VPC peering, please tag your AWS account VPC with the Kyma shoot name tag.  
-For more information, check the [Create Virtual Private Cloud Peering in Amazon Web Services](../tutorials/01-30-10-aws-vpc-peering.md) tutorial.
-
-## Deleting `AwsVpcPeering`
-
-Kyma's underlying cloud provider VPC peering connection is deleted as a part of AwsVpcPeering deletion. The remote VPC 
-peering connection is left hanging, and must be deleted manually.
-
-## Specification <!-- {docsify-ignore} -->
+## Specification
 
 This table lists the parameters of the given resource together with their descriptions:
 
@@ -42,7 +29,7 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
 | **conditions.type**               | string     | Provides a short description of the condition.                                              |
 
-## Sample Custom Resource <!-- {docsify-ignore} -->
+## Sample Custom Resource
 
 See an exemplary `AwsVpcPeering` custom resource:
 
