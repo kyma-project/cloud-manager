@@ -39,11 +39,13 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 
 		logger.Error(err, "Error loading remote AWS VPC Networks")
 
+		msg, _ := awsmeta.GetErrorMessage(err, "")
+
 		condition := metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonVpcNotFound,
-			Message: awsmeta.GetErrorMessage(err),
+			Message: msg,
 		}
 
 		successError := composed.StopAndForget

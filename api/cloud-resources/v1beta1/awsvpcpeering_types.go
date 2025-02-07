@@ -21,6 +21,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type AwsRouteTableUpdateStrategy string
+
+const (
+	AwsRouteTableUpdateStrategyAuto      AwsRouteTableUpdateStrategy = "AUTO"
+	AwsRouteTableUpdateStrategyNone      AwsRouteTableUpdateStrategy = "NONE"
+	AwsRouteTableUpdateStrategyMatched   AwsRouteTableUpdateStrategy = "MATCHED"
+	AwsRouteTableUpdateStrategyUnmatched AwsRouteTableUpdateStrategy = "UNMATCHED"
+)
+
 // AwsVpcPeeringSpec defines the desired state of AwsVpcPeering
 type AwsVpcPeeringSpec struct {
 
@@ -37,6 +46,11 @@ type AwsVpcPeeringSpec struct {
 	RemoteAccountId string `json:"remoteAccountId"`
 
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
+
+	// +kubebuilder:default:=AUTO
+	// +kubebuilder:validation:Enum=AUTO;NONE;MATCHED;UNMATCHED
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRouteTableUpdateStrategy is immutable."
+	RemoteRouteTableUpdateStrategy AwsRouteTableUpdateStrategy `json:"remoteRouteTableUpdateStrategy,omitempty"`
 }
 
 // AwsVpcPeeringStatus defines the observed state of AwsVpcPeering

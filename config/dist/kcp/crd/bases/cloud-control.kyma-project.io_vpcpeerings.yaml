@@ -82,6 +82,14 @@ spec:
                     x-kubernetes-validations:
                     - message: Remote network name is required.
                       rule: (self.name != "")
+                  remoteRouteTableUpdateStrategy:
+                    default: AUTO
+                    enum:
+                    - AUTO
+                    - NONE
+                    - MATCHED
+                    - UNMATCHED
+                    type: string
                 required:
                 - localNetwork
                 - remoteNetwork

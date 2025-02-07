@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -31,4 +32,21 @@ func HavingVpcPeeringStatusRemoteId() ObjAssertion {
 		}
 		return nil
 	}
+}
+
+func WithRemoteRouteTableUpdateStrategy(strategy cloudcontrolv1beta1.AwsRouteTableUpdateStrategy) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.VpcPeering)
+			x.Spec.Details.RemoteRouteTableUpdateStrategy = strategy
+		},
+	}
+}
+
+func CheckRoute(config awsmock.RouteTableConfig, vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) error {
+	route := config.GetRoute(vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock)
+	if route == nil {
+		return errors.New("route does not exist")
+	}
+	return nil
 }
