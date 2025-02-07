@@ -1,8 +1,6 @@
 # GcpVpcPeering Custom Resource
 
-The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describes the Virtual Private Cloud (VPC) peering
- that you can create to allow communication between Kyma and a remote VPC in Google Cloud Platform (GCP).
-It enables you to consume services available in the remote VPC from the Kyma cluster.
+The `gcpvpcpeering.cloud-resources.kyma-project.io` custom resource (CR) describes the Virtual Private Cloud (VPC) peering that you can create to allow communication between Kyma and a remote VPC in Google Cloud. It enables you to consume services available in the remote VPC from the Kyma cluster.
 
 ## Specification
 
