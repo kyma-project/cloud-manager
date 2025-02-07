@@ -1,6 +1,10 @@
 <!-- markdown-link-check-disable -->
 * [Back to Kyma Home](/)
 * [Cloud Manager Module](/cloud-manager/user/README.md)
+* [NFS](/cloud-manager/user/00-20-nfs.md)
+* [VPC Peering](/cloud-manager/user/00-30-vpc-peering.md)
+* [Redis](/cloud-manager/user/00-40-redis.md)
+* [Authorizing Cloud Manager in the Remote Cloud Provider](/cloud-manager/user/00-50-vpc-peering-authorization.md)
 * [Resources](/cloud-manager/user/resources/README.md)
 * [Tutorials](/cloud-manager/user/tutorials/README.md)
   * [Use Network File System in Amazon Web Services](/cloud-manager/user/tutorials/01-20-10-aws-nfs-volume.md)
