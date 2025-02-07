@@ -9,83 +9,32 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 
 ## Steps <!-- {docsify-ignore} -->
 
-1. Fetch your Kyma ID.
+1. Fetch your Kyma ID and save it as an environment variable KYMA_SHOOT_ID.
 
     ```shell
-   kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'
+   export KYMA_SHOOT_ID=`kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'`
    ```
 
-2. Replace the placeholder with the fetched Kyma ID and export it as an environment variable.
-
-   ```shell
-    export KYMA_SHOOT_ID={YOUR_KYMA_ID}
-    ```
-
-3. Replace the placeholder with your project ID and export it as an environment variable.
+2. Save your project ID and VPC network name into environment variables, replace the placeholders with the correct values.
 
     ```shell
      export REMOTE_PROJECT_ID={YOUR_REMOTE_PROJECT_ID}
+     export REMOTE_VPC_NETWORK={REMOTE_VPC_NETWORK}
      ```
 
-4. Create a tag key with the Kyma shoot name in the remote project.
-
-   > [!NOTE]  
-   > Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
+3. Create a tag key with the Kyma shoot name in the remote project.
 
    ```shell
    gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$REMOTE_PROJECT_ID
    ```
 
-5. Fetch the tag created in the previous step.
-
-   ```shell
-   gcloud resource-manager tags keys list --parent=projects/$REMOTE_PROJECT_ID
-   ```
-
-   The command returns an output similar to this one:
-
-   ```console
-   NAME                     SHORT_NAME                DESCRIPTION
-   tagKeys/123456789012345  shoot--kyma-dev--abc1234
-   ```
-
-6. Replace the `tagKeys/123456789012345` placeholder with your tag key and export it as an environment variable. Your tag key is the value returned in the `NAME` column of the previous command's output.
+4. Create the tag value in the remote project.
 
     ```shell
-    export TAG_KEY="tagKeys/123456789012345"
+    gcloud resource-manager tags values create None --tag-key=$REMOTE_PROJECT_ID/$KYMA_SHOOT_ID
     ```
 
-7. Export any valid tag value. For example, `None`.
-
-    ```shell
-    export TAG_VALUE=None
-    ```
-
-8. Create the tag value in the remote project.
-
-    ```shell
-    gcloud resource-manager tags values create $TAG_VALUE --tag-key=$TAG_KEY
-    ```
-
-9. Fetch the tag with the value created in the previous step.
-
-    ```shell
-    gcloud resource-manager tags values list --parent=$TAG_KEY
-    ```
-
-10. Replace the `tagValues/1234567890123456789` placeholder with the fetched tag value. Export it as an environment variable.
-
-    ```shell
-    export TAG_VALUE="tagValues/1234567890123456789"
-    ```
-
-11. Replace the placeholder with your VPC network name and export it as an environment variable.
-
-    ```shell
-    export REMOTE_VPC_NETWORK={REMOTE_VPC_NETWORK}
-    ```
-
-12. Fetch the network selfLinkWithId from the remote vpc network.
+5. Fetch the network selfLinkWithId from the remote vpc network.
 
     ```shell
     gcloud compute networks describe $REMOTE_VPC_NETWORK
@@ -104,19 +53,19 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
     ...
     ```
 
-13. Export resource ID environment variable. Use the value of `selfLinkWithId` returned in the previous command's output, but replace `https://www.googleapis.com/compute/v1` with `//compute.googleapis.com`.
+6. Export resource ID environment variable. Use the value of `selfLinkWithId` returned in the previous command's output, but replace `https://www.googleapis.com/compute/v1` with `//compute.googleapis.com`.
 
     ```shell
     export RESOURCE_ID="//compute.googleapis.com/projects/remote-project-id/global/networks/1234567890123456789"
     ```
 
-14. Add the tag to the VPC network.
+7. Add the tag to the VPC network.
 
     ```shell
-    gcloud resource-manager tags bindings create --tag-value=$TAG_VALUE --parent=$RESOURCE_ID
+    gcloud resource-manager tags bindings create --tag-value=$REMOTE_PROJECT_ID/$KYMA_SHOOT_ID/None --parent=$RESOURCE_ID
     ```
 
-15. Create a GCP VPC Peering manifest file.
+8. Create a GCP VPC Peering manifest file.
 
     ```shell
     cat <<EOF > vpc-peering.yaml
@@ -126,13 +75,13 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
         name: "vpcpeering-dev"
     spec:
         remotePeeringName: "my-project-to-kyma-dev"
-        remoteProject: "remote-project-id"
-        remoteVpc: "remote-vpc-network"
+        remoteProject: "$REMOTE_PROJECT_ID"
+        remoteVpc: "$REMOTE_VPC_NETWORK"
         importCustomRoutes: false
     EOF
     ```
 
-16. Apply the Google Cloud VPC peering manifest file.
+9. Apply the Google Cloud VPC peering manifest file.
 
     ```shell
     kubectl apply -f vpc-peering.yaml
@@ -169,3 +118,18 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
     ```
 
     The **status.conditions** field contains information about the VPC Peering status.
+
+
+## Removing the VPC Peering
+
+When the VPC peering is not needed anymore, it can be removed by deleting the GcpVpcPeering resource:
+
+```shell
+kubectl delete gcpvpcpeering vpcpeering-dev
+```
+
+Once the gcpvpcpeering object is deleted, it is possible to remove the inactive vpc peering from the remote project by executing the following command:
+
+```shell
+gcloud compute networks peerings delete my-project-to-kyma-dev --network=remote-vpc-network --project=remote-project-id
+```
