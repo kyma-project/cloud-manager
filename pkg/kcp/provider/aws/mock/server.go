@@ -8,7 +8,6 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 )
@@ -55,8 +54,8 @@ func (s *server) VpcPeeringSkrProvider() awsclient.SkrClientProvider[vpcpeeringc
 	}
 }
 
-func (s *server) ElastiCacheProviderFake() awsclient.SkrClientProvider[redisinstanceclient.ElastiCacheClient] {
-	return func(ctx context.Context, account, region, key, secret, role string) (redisinstanceclient.ElastiCacheClient, error) {
+func (s *server) ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient] {
+	return func(ctx context.Context, account, region, key, secret, role string) (awsclient.ElastiCacheClient, error) {
 		return s.getAccountRegionContext(account, region), nil
 	}
 }

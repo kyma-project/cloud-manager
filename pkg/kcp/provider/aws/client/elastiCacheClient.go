@@ -14,15 +14,15 @@ import (
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/uuid"
-	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 
 	"k8s.io/utils/ptr"
 )
 
-func NewClientProvider() awsclient.SkrClientProvider[ElastiCacheClient] {
+func NewElastiCacheClientProvider() SkrClientProvider[ElastiCacheClient] {
 	return func(ctx context.Context, account, region, key, secret, role string) (ElastiCacheClient, error) {
-		cfg, err := awsclient.NewSkrConfig(ctx, region, key, secret, role)
+		cfg, err := NewSkrConfig(ctx, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}

@@ -25,7 +25,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
-	awsredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance/client"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
@@ -43,7 +42,7 @@ func SetupRedisInstanceReconciler(
 	kcpManager manager.Manager,
 	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClient],
 	azureFilestoreClientProvider azureclient.ClientProvider[azureredisinstanceclient.Client],
-	awsFilestoreClientProvider awsclient.SkrClientProvider[awsredisinstanceclient.ElastiCacheClient],
+	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
