@@ -8,20 +8,20 @@ import (
 
 func AwsProviderPredicate(_ context.Context, st composed.State) bool {
 	state := st.(State)
-	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAws
+	return state.Scope() != nil && state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAws
 }
 
 func AzureProviderPredicate(_ context.Context, st composed.State) bool {
 	state := st.(State)
-	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAzure
+	return state.Scope() != nil && state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderAzure
 }
 
 func GcpProviderPredicate(_ context.Context, st composed.State) bool {
 	state := st.(State)
-	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderGCP
+	return state.Scope() != nil && state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderGCP
 }
 
 func OpenStackProviderPredicate(_ context.Context, st composed.State) bool {
 	state := st.(State)
-	return state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderOpenStack
+	return state.Scope() != nil && state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderOpenStack
 }
