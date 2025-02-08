@@ -96,6 +96,27 @@ Set the env var `SKR_PROVIDERS` to point to
 export SKR_PROVIDERS=$PROJECT_ROOT/config/dist/skr/crd/bases/providers
 ```
 
+Install Kyma CRDs
+```shell
+KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
+  kubectl apply -f config/crd/operator/operator.kyma-project.io_kymas.yaml
+```
+
+Install Cloud Manager KCP CRDs
+```shell
+KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
+  kubectl apply -f config/dist/kcp/crd/bases    
+```
+
+Install Cloud Manager SKR CRDs
+```shell
+KUBECONFIG=tools/dev/kind/kubeconfig-skr.yaml \
+  kubectl apply -f config/dist/skr/crd/bases/providers/aws
+KUBECONFIG=tools/dev/kind/kubeconfig-skr.yaml \
+  kubectl apply -f config/dist/skr/crd/bases/providers/azure
+KUBECONFIG=tools/dev/kind/kubeconfig-skr.yaml \
+  kubectl apply -f config/dist/skr/crd/bases/providers/gcp
+```
 In the garden cluster create:
 * Shoot
 * SecretBinding
