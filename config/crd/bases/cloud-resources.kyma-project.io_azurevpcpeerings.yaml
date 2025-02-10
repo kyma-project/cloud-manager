@@ -62,6 +62,11 @@ spec:
                   x-kubernetes-validations:
                     - message: RemoteVnet is immutable.
                       rule: (self == oldSelf)
+                tenantId:
+                  type: string
+                  x-kubernetes-validations:
+                    - message: TenantId is immutable.
+                      rule: (self == oldSelf)
               required:
                 - remotePeeringName
                 - remoteVnet

@@ -24,6 +24,7 @@ func New(stateFactory StateFactory) composed.Action {
 			kcpNetworkLocalLoad,
 			kcpNetworkRemoteLoad,
 			statusInitiated,
+			localClientCreate,
 			peeringLocalLoad,
 			remoteClientCreate,
 			peeringRemoteLoad,

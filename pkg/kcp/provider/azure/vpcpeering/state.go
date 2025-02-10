@@ -2,12 +2,10 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
@@ -45,26 +43,14 @@ func NewStateFactory(skrProvider azureclient.ClientProvider[vpcpeeringclient.Cli
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
-	subscriptionId := vpcPeeringState.Scope().Spec.Scope.Azure.SubscriptionId
-	tenantId := vpcPeeringState.Scope().Spec.Scope.Azure.TenantId
-
-	c, err := f.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
-	if err != nil {
-		return nil, fmt.Errorf("error creating local azure client: %w", err)
-	}
-
-	return newState(vpcPeeringState, c, f.clientProvider), nil
+	return newState(vpcPeeringState, f.clientProvider), nil
 }
 
 func newState(state vpcpeeringtypes.State,
-	client vpcpeeringclient.Client,
 	clientProvider azureclient.ClientProvider[vpcpeeringclient.Client],
 ) *State {
 	return &State{
 		State:          state,
-		localClient:    client,
 		clientProvider: clientProvider,
 	}
 }

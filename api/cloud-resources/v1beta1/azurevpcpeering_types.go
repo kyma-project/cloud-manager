@@ -35,6 +35,9 @@ type AzureVpcPeeringSpec struct {
 	RemoteVnet string `json:"remoteVnet,omitempty"`
 
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
+
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="TenantId is immutable."
+	TenantId string `json:"tenantId,omitempty"`
 }
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering

@@ -20,25 +20,32 @@ func remoteClientCreate(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	tenantId := state.remoteNetwork.Status.Network.Azure.TenantId
-	if tenantId == "" {
-		tenantId = state.Scope().Spec.Scope.Azure.TenantId
+	var auxiliaryTenants []string
+
+	localTenantId := state.Scope().Spec.Scope.Azure.TenantId
+
+	remoteTenantId := state.remoteNetwork.Status.Network.Azure.TenantId
+
+	// if remote tenant is not specified default it to local tenant
+	if remoteTenantId == "" {
+		remoteTenantId = state.Scope().Spec.Scope.Azure.TenantId
 	}
 
-	c, err := state.clientProvider(
+	// if not on the same tenant add local tenant as auxiliary tenant
+	if remoteTenantId != localTenantId {
+		auxiliaryTenants = append(auxiliaryTenants, localTenantId)
+	}
+
+	client, err := state.clientProvider(
 		ctx,
 		azureconfig.AzureConfig.PeeringCreds.ClientId,
 		azureconfig.AzureConfig.PeeringCreds.ClientSecret,
 		state.remoteNetworkId.Subscription,
-		tenantId,
+		remoteTenantId,
+		auxiliaryTenants...,
 	)
 	if err != nil {
-		logger.
-			WithValues(
-				"azureRemoteTenant", tenantId,
-				"azureRemoteSubscription", state.remoteNetworkId.Subscription,
-			).
-			Error(err, "Error creating remote Azure client for KCP VpcPeering")
+		logger.Error(err, "Error creating remote Azure client for KCP VpcPeering")
 
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 
@@ -47,14 +54,14 @@ func remoteClientCreate(ctx context.Context, st composed.State) (error, context.
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-				Message: fmt.Sprintf("Failed creating Azure client for tenant %s subscription %s", state.remoteNetworkId.Subscription, tenantId),
+				Message: fmt.Sprintf("Failed creating Azure client for tenant %s subscription %s", state.remoteNetworkId.Subscription, remoteTenantId),
 			}).
 			ErrorLogMessage("Error patching KCP VpcPeering with error state after remote client creation failed").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())). // try again in 5mins
 			Run(ctx, state)
 	}
 
-	state.remoteClient = c
+	state.remoteClient = client
 
 	return nil, nil
 }
