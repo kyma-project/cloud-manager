@@ -54,7 +54,8 @@ var cmdGardenShootCreateAws = &cobra.Command{
 				Name:      shootName,
 			},
 			Spec: gardenerTypes.ShootSpec{
-				Region: cfg.Region,
+				Region:           cfg.Region,
+				CloudProfileName: ptr.To("aws"),
 				Networking: &gardenerTypes.Networking{
 					IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
 					Nodes:      ptr.To("10.180.0.0/16"),
