@@ -199,7 +199,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("When local KCP Network is Ready", func() {
 			kcpnetwork.Ignore.RemoveName(localKcpNetworkName)
 			// trigger the reconciliation
-			_, err := composed.PatchObjAddAnnotation(infra.Ctx(), "test", "1", localKcpNet, infra.KCP().Client())
+			_, err := composed.PatchObjMergeAnnotation(infra.Ctx(), "test", "1", localKcpNet, infra.KCP().Client())
 			Expect(err).To(Succeed())
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, NewObjActions(), HavingState("Ready")).
@@ -236,7 +236,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("When remote KCP Network is Ready", func() {
 			kcpnetwork.Ignore.RemoveName(remoteKcpNetworkName)
 			// trigger the reconciliation
-			_, err := composed.PatchObjAddAnnotation(infra.Ctx(), "test", "1", remoteKcpNet, infra.KCP().Client())
+			_, err := composed.PatchObjMergeAnnotation(infra.Ctx(), "test", "1", remoteKcpNet, infra.KCP().Client())
 			Expect(err).
 				To(Succeed())
 			Eventually(LoadAndCheck).

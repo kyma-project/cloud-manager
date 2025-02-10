@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,6 +39,65 @@ func (l *objectList) apply(clnt client.Client) {
 	}
 	for _, obj := range l.without {
 		err := clnt.Create(infra.Ctx(), obj)
+		Expect(err).ToNot(HaveOccurred())
+	}
+}
+
+func (l *objectList) delete(clnt client.Client) {
+	for _, obj := range l.withOld1 {
+		err := clnt.Delete(infra.Ctx(), obj)
+		Expect(err).ToNot(HaveOccurred())
+
+		x := obj.DeepCopy()
+		err = clnt.Get(infra.Ctx(), client.ObjectKeyFromObject(obj), x)
+		if apierrors.IsNotFound(err) {
+			continue
+		}
+		Expect(err).ToNot(HaveOccurred())
+		x.SetFinalizers(nil)
+		err = clnt.Update(infra.Ctx(), x)
+		Expect(err).ToNot(HaveOccurred())
+	}
+	for _, obj := range l.withOld2 {
+		err := clnt.Delete(infra.Ctx(), obj)
+		Expect(err).ToNot(HaveOccurred())
+
+		x := obj.DeepCopy()
+		err = clnt.Get(infra.Ctx(), client.ObjectKeyFromObject(obj), x)
+		if apierrors.IsNotFound(err) {
+			continue
+		}
+		Expect(err).ToNot(HaveOccurred())
+		x.SetFinalizers(nil)
+		err = clnt.Update(infra.Ctx(), x)
+		Expect(err).ToNot(HaveOccurred())
+	}
+	for _, obj := range l.withNew {
+		err := clnt.Delete(infra.Ctx(), obj)
+		Expect(err).ToNot(HaveOccurred())
+
+		x := obj.DeepCopy()
+		err = clnt.Get(infra.Ctx(), client.ObjectKeyFromObject(obj), x)
+		if apierrors.IsNotFound(err) {
+			continue
+		}
+		Expect(err).ToNot(HaveOccurred())
+		x.SetFinalizers(nil)
+		err = clnt.Update(infra.Ctx(), x)
+		Expect(err).ToNot(HaveOccurred())
+	}
+	for _, obj := range l.without {
+		err := clnt.Delete(infra.Ctx(), obj)
+		Expect(err).ToNot(HaveOccurred())
+
+		x := obj.DeepCopy()
+		err = clnt.Get(infra.Ctx(), client.ObjectKeyFromObject(obj), x)
+		if apierrors.IsNotFound(err) {
+			continue
+		}
+		Expect(err).ToNot(HaveOccurred())
+		x.SetFinalizers(nil)
+		err = clnt.Update(infra.Ctx(), x)
 		Expect(err).ToNot(HaveOccurred())
 	}
 }
@@ -162,22 +222,65 @@ var _ = Describe("Feature: Finalizer migration", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(alreadyExecuted).To(BeFalse())
 
-		alreadyExecuted, err = mig.Run(infra.Ctx())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(alreadyExecuted).To(BeTrue())
-
 		list.assertFinalizersAreMigrated(infra.SKR().Client())
 
 		// assert kyma is annotated due to success
 		kyma = list.loadObj(kyma, infra.KCP().Client())
 		value, hasAnnotation := kyma.GetAnnotations()[migrateFinalizers.SuccessAnnotation]
 		Expect(hasAnnotation).To(BeTrue())
-		Expect(value).To(Equal("true"))
+		Expect(value).To(Equal("1"))
+
+		list.delete(infra.SKR().Client())
+	})
+
+	It("Scenario: SKR finalizer migration skipped after few runs", func() {
+		list := getObjects("skr", "default")
+		list.apply(infra.SKR().Client())
+
+		kyma := makeKyma()
+
+		mig := migrateFinalizers.NewMigrationForSkr(kyma.GetName(), infra.KCP().Client(), infra.KCP().Client(), infra.SKR().Client(), infra.SKR().Client(), logr.Discard())
+
+		// first
+		alreadyExecuted, err := mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse(), "first run")
+
+		// second
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse(), "second run")
+
+		// third
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse(), "third run")
+
+		// fourth
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeTrue(), "fourth run")
+
+		// assert kyma is annotated due to success
+		kyma = list.loadObj(kyma, infra.KCP().Client())
+		value, hasAnnotation := kyma.GetAnnotations()[migrateFinalizers.SuccessAnnotation]
+		Expect(hasAnnotation).To(BeTrue())
+		Expect(value).To(Equal("3"))
+
+		list.delete(infra.SKR().Client())
 	})
 
 	It("Scenario: KCP finalizer migration", func() {
 		list := getObjects("kcp", "kcp-system")
 		list.apply(infra.KCP().Client())
+
+		By("Given migration was never executed", func() {
+			cm := &corev1.ConfigMap{}
+			cm.Namespace = "kcp-system"
+			cm.Name = migrateFinalizers.KcpConfigMapName
+			err := infra.KCP().Client().Delete(infra.Ctx(), cm)
+			Expect(client.IgnoreNotFound(err)).ToNot(HaveOccurred())
+		})
 
 		// Infra client is made w/out cache, so we can pass that single instance both as reader and writter
 		// ControllerRuntime on the other hand, has specially crafter Client with cache options that can not
@@ -188,15 +291,60 @@ var _ = Describe("Feature: Finalizer migration", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(alreadyExecuted).To(BeFalse())
 
-		alreadyExecuted, err = mig.Run(infra.Ctx())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(alreadyExecuted).To(BeTrue())
-
 		list.assertFinalizersAreMigrated(infra.KCP().Client())
 
 		// assert kcp ConfigMap is created due to success
 		cm := &corev1.ConfigMap{}
 		err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKey{Namespace: "kcp-system", Name: migrateFinalizers.KcpConfigMapName}, cm)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(cm.Data["runCount"]).To(Equal("1"))
+		err = infra.KCP().Client().Delete(infra.Ctx(), cm)
+		Expect(err).ToNot(HaveOccurred())
+
+		list.delete(infra.KCP().Client())
 	})
+
+	It("Scenario: KCP finalizer migration skipped after few runs", func() {
+		list := getObjects("kcp", "kcp-system")
+		list.apply(infra.KCP().Client())
+
+		By("Given migration was never executed", func() {
+			cm := &corev1.ConfigMap{}
+			cm.Namespace = "kcp-system"
+			cm.Name = migrateFinalizers.KcpConfigMapName
+			err := infra.KCP().Client().Delete(infra.Ctx(), cm)
+			Expect(client.IgnoreNotFound(err)).ToNot(HaveOccurred())
+		})
+
+		mig := migrateFinalizers.NewMigrationForKcp(infra.KCP().Client(), infra.KCP().Client(), logr.Discard())
+
+		// first
+		By("When migration is executed first time")
+		alreadyExecuted, err := mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse())
+
+		// second
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse())
+
+		// third
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeFalse())
+
+		// fourth
+		alreadyExecuted, err = mig.Run(infra.Ctx())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(alreadyExecuted).To(BeTrue())
+
+		cm := &corev1.ConfigMap{}
+		err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKey{Namespace: "kcp-system", Name: migrateFinalizers.KcpConfigMapName}, cm)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cm.Data["runCount"]).To(Equal("3"))
+
+		list.delete(infra.KCP().Client())
+	})
+
 })
