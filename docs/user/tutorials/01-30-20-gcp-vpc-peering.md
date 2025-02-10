@@ -1,17 +1,24 @@
-# Create Virtual Private Cloud Peering in Google Cloud
+# Create VPC Peering in Google Cloud
 
-This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and Kyma in Google Cloud.
+This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and SAP BTP, Kyma runtime in Google Cloud.
 
-## Prerequisites  <!-- {docsify-ignore} -->
+## Prerequisites
 
-- You have the Cloud Manager module added.
-- Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
+* You have the Cloud Manager module added. See [Add and Delete a Kyma Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/enable-and-disable-kyma-module?state=DRAFT&version=Internal#loio1b548e9ad4744b978b8b595288b0cb5c).
+* You authorized Cloud Manager in the Google Cloud remote project. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-50-vpc-peering-authorization.md#google-cloud).
+* Google Cloud CLI
 
-## Steps <!-- {docsify-ignore} -->
+> [!TIP] Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
+
+## Steps
+
+### Allow SAP BTP, Kyma Runtime to Peer with Your Network
+
+Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
 
 1. Fetch your Kyma ID.
 
-    ```shell
+   ```shell
    kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'
    ```
 
@@ -28,9 +35,6 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
      ```
 
 4. Create a tag key with the Kyma shoot name in the remote project.
-
-   > [!NOTE]  
-   > Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
 
    ```shell
    gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$REMOTE_PROJECT_ID
@@ -116,12 +120,14 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
     gcloud resource-manager tags bindings create --tag-value=$TAG_VALUE --parent=$RESOURCE_ID
     ```
 
-15. Create a GCP VPC Peering manifest file.
+### Create VPC Peering
 
-    ```shell
-    cat <<EOF > vpc-peering.yaml
-    apiVersion: cloud-resources.kyma-project.io/v1beta1
-    kind: GcpVpcPeering
+1. Create a GcpVpcPeering resource manifest file.
+
+   ```shell
+   cat <<EOF > vpc-peering.yaml
+   apiVersion: cloud-resources.kyma-project.io/v1beta1
+   ckind: GcpVpcPeering
     metadata:
         name: "vpcpeering-dev"
     spec:
@@ -132,40 +138,40 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
     EOF
     ```
 
-16. Apply the Google Cloud VPC peering manifest file.
+2. Apply the manifest file.
 
-    ```shell
-    kubectl apply -f vpc-peering.yaml
-    ```
+   ```shell
+   kubectl apply -f vpc-peering.yaml
+   ```
 
-    This operation usually takes less than 2 minutes. To check the status of the VPC peering, run:
+   This operation usually takes less than 2 minutes. To check the status of the VPC peering, run:
 
-    ```shell
-    kubectl get gcpvpcpeering vpcpeering-dev -o yaml
-    ```
+   ```shell
+   kubectl get gcpvpcpeering vpcpeering-dev -o yaml
+   ```
 
-    The command returns an output similar to this one:
+   The command returns an output similar to this one:
 
-    ```yaml
-    apiVersion: cloud-resources.kyma-project.io/v1beta1
-    kind: GcpVpcPeering
-      finalizers:
-      - cloud-control.kyma-project.io/deletion-hook
-        generation: 2
-        name: vpcpeering-dev
-        resourceVersion: "12345678"
-        uid: 8545cdaa-66d3-4fa7-b20b-7c716148552f
-        spec:
-        remotePeeringName: my-project-to-kyma-dev
-        remoteProject: remote-project-id
-        remoteVpc: remote-vpc-network
-        status:
-        conditions:
-        - lastTransitionTime: "2024-08-12T15:29:59Z"
-          message: VpcPeering: my-project-to-kyma-dev is provisioned
-          reason: Ready
-          status: "True"
-          type: Ready
-    ```
+   ```yaml
+   apiVersion: cloud-resources.kyma-project.io/v1beta1
+   kind: GcpVpcPeering
+     finalizers:
+     - cloud-control.kyma-project.io/deletion-hook
+       generation: 2
+       name: vpcpeering-dev
+       resourceVersion: "12345678"
+       uid: 8545cdaa-66d3-4fa7-b20b-7c716148552f
+       spec:
+       remotePeeringName: my-project-to-kyma-dev
+       remoteProject: remote-project-id
+       remoteVpc: remote-vpc-network
+       status:
+       conditions:
+       - lastTransitionTime: "2024-08-12T15:29:59Z"
+         message: VpcPeering: my-project-to-kyma-dev is provisioned
+         reason: Ready
+         status: "True"
+         type: Ready
+   ```
 
-    The **status.conditions** field contains information about the VPC Peering status.
+   The **status.conditions** field contains information about the VPC Peering status.
