@@ -6,7 +6,7 @@ To create VPC peering in the Kyma environment, you must authorize the Cloud Mana
 
 For cross-account access in Amazon Web Services, Cloud Manager uses `AssumeRole`. `AssumeRole` requires specifying the trusted principle. For more information, see the [official Amazon Web Services documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
 
-Use the following table to identify the Cloud Manager principal based on your Kyma landscape. Then perform the required actions.
+Use the following table to identify the Cloud Manager principal based on your Kyma landscape. Then, perform the required actions.
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Principal                                      |
 |------------------------------------|----------------------------------------|--------------------------------------------------------------|
@@ -79,7 +79,7 @@ For security reasons, each Kyma landscape has its own service account. Use the f
 
 ## Microsoft Azure
 
-To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape. Then perform the following actions:
+To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape. Then, perform the following actions:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
 |------------------------------------|----------------------------------------|----------------------------------|
