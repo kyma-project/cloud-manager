@@ -3,7 +3,7 @@ name: Generate Release Notes
 on:
   push:
     tags:
-      - "*"  # Triggers on any tag creation
+      - "*.*.0"  # Triggers on non-patch tag creation
 
 jobs:
   generate-release-notes:

@@ -19,7 +19,6 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	nfsVolume := state.ObjAsGcpNfsVolume()
-	capacity := gcpNfsVolumeCapacityToResourceQuantity(nfsVolume)
 
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
 		return nil, nil
@@ -27,12 +26,6 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 
 	if state.PVC == nil {
 		return nil, nil
-	}
-
-	capacityChanged := !capacity.Equal(state.PVC.Spec.Resources.Requests["storage"])
-	if capacityChanged {
-		state.PVC.Spec.Resources.Requests["storage"] = *capacity
-		logger.Info("Detected modified PVC capacity")
 	}
 
 	expectedLabels := getVolumeClaimLabels(nfsVolume)
@@ -49,7 +42,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		logger.Info("Detected desynced PVC annotations")
 	}
 
-	if !(capacityChanged || labelsChanged || annotationsDesynced) {
+	if !(labelsChanged || annotationsDesynced) {
 		return nil, nil
 	}
 
