@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
@@ -24,13 +25,21 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 
 	for _, t := range state.remoteRouteTables {
 
+		shouldUpdateRouteTable := awsutil.ShouldUpdateRouteTable(t.Tags,
+			state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy,
+			state.Scope().Spec.ShootName)
+
+		if !shouldUpdateRouteTable {
+			continue
+		}
+
 		for _, r := range t.Routes {
 
 			if ptr.Equal(r.VpcPeeringConnectionId, state.remoteVpcPeering.VpcPeeringConnectionId) {
 				err := state.remoteClient.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
 				lll := logger.WithValues(
-					"routeTableId", ptr.Deref(t.RouteTableId, "xxx"),
+					"remoteRouteTableId", ptr.Deref(t.RouteTableId, "xxx"),
 					"destinationCidrBlock", ptr.Deref(r.DestinationCidrBlock, "xxx"),
 				)
 
