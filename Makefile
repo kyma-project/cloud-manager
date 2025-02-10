@@ -155,6 +155,8 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
 
+	$(KUSTOMIZE) build config/ui-extensions/cceenfsvolumes > config/ui-extensions/cceenfsvolumes/cloud-resources.kyma-prjoect.io_cceenfsvolumes_ui.yaml
+
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
