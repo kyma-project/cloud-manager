@@ -200,7 +200,7 @@ func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
-func PatchObjAddAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Writer) (bool, error) {
+func PatchObjMergeAnnotation(ctx context.Context, k, v string, obj client.Object, clnt client.Writer) (bool, error) {
 	if obj.GetAnnotations() != nil && obj.GetAnnotations()[k] == v {
 		return false, nil
 	}
