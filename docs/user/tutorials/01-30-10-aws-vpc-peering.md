@@ -1,4 +1,4 @@
-# Create VPC Peering in Amazon Web Services
+# Creating VPC Peering in Amazon Web Services
 
 This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and SAP BTP, Kyma runtime in Amazon Web Services. Learn how to create a new VPC network, and a virtual machine (VM), and assign required permissions to the provided Kyma account and role in your AWS account.
 

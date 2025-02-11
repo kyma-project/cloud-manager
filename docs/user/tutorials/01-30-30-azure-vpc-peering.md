@@ -1,4 +1,4 @@
-# Create VPC Peering in Microsoft Azure
+# Creating VPC Peering in Microsoft Azure
 
 This tutorial explains how to create a Virtual Private Cloud (VPC) peering connection between a remote VPC network and SAP, BTP Kyma runtime in Microsoft Azure. Learn how to create a new resource group, VPC network and a virtual machine (VM), and assign required roles to the provided Kyma service principal in your Microsoft Azure subscription.
 
