@@ -38,6 +38,7 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 	}
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
+		logger.Error(err, "Error getting GcpNfsVolumeBackup")
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -46,7 +47,6 @@ func loadGcpNfsVolumeBackup(ctx context.Context, st composed.State) (error, cont
 				Message: "Error loading GcpNfsVolumeBackup",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg("Error getting GcpNfsVolumeBackup").
 			Run(ctx, state)
 	}
 

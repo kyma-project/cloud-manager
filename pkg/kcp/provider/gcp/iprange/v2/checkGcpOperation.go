@@ -39,7 +39,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 					ipRange.Status.OpIdentifier = ""
 				}
 			}
-
+			logger.Error(err, "Error getting Service Networking Operation from GCP")
 			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
@@ -48,7 +48,6 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 					Message: err.Error(),
 				}).
 				SuccessError(composed.StopWithRequeue).
-				SuccessLogMsg("Error getting Service Networking Operation from GCP.").
 				Run(ctx, state)
 		}
 
@@ -80,6 +79,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 		project := state.Scope().Spec.Scope.Gcp.Project
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
+			logger.Error(err, "Error getting Compute Operation from GCP.")
 			return composed.PatchStatus(ipRange).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
@@ -88,7 +88,6 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 					Message: err.Error(),
 				}).
 				SuccessError(composed.StopWithRequeue).
-				SuccessLogMsg("Error getting Compute Operation from GCP.").
 				Run(ctx, state)
 		}
 

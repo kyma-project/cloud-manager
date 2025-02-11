@@ -38,6 +38,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 			}
 		}
 
+		logger.Error(err, "Error getting File Operation from GCP.")
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -46,7 +47,6 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error getting File Operation from GCP.").
 			Run(ctx, state)
 	}
 

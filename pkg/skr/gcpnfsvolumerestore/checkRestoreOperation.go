@@ -40,6 +40,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			}
 		}
 		restore.Status.State = v1beta1.JobStateError
+		logger.Error(err, "Error getting Filestore restore Operation from GCP.")
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -48,7 +49,6 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error getting Filestore restore Operation from GCP.").
 			Run(ctx, state)
 	}
 

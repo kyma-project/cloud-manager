@@ -40,6 +40,7 @@ func findRestoreOperation(ctx context.Context, st composed.State) (error, contex
 			return nil, nil
 		}
 		restore.Status.State = v1beta1.JobStateError
+		logger.Error(err, "Error listing operations from GCP.")
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -48,7 +49,6 @@ func findRestoreOperation(ctx context.Context, st composed.State) (error, contex
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T100ms())).
-			SuccessLogMsg("Error listing operations from GCP.").
 			Run(ctx, state)
 	}
 

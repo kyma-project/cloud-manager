@@ -2,8 +2,6 @@ package v2
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,6 +39,7 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if err != nil {
+		logger.Error(err, "Error creating/deleting/patching Service Connection object in GCP")
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -49,7 +48,6 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Service Connection object in GCP :%s", err)).
 			Run(ctx, state)
 	}
 	if operation != nil {

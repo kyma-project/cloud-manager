@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -30,6 +29,7 @@ func loadPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	vpc := gcpScope.VpcNetwork
 	list, err := state.serviceNetworkingClient.ListServiceConnections(ctx, project, vpc)
 	if err != nil {
+		logger.Error(err, "Error listing Service Connections from GCP.")
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -38,7 +38,6 @@ func loadPsaConnection(ctx context.Context, st composed.State) (error, context.C
 				Message: "Error listing Service Connections from GCP",
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error listing Service Connections from GCP").
 			Run(ctx, state)
 	}
 

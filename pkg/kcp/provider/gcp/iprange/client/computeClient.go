@@ -47,7 +47,7 @@ func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) 
 	out, err := c.svcCompute.GlobalAddresses.Get(projectId, name).Do()
 	client.IncrementCallCounter("Compute", "GlobalAddresses.Get", "", err)
 	if err != nil {
-		logger.V(4).Info("GetIpRange", "err", err)
+		logger.Info("GetIpRange", "err", err)
 	}
 	return out, err
 }
@@ -56,7 +56,7 @@ func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name strin
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcCompute.GlobalAddresses.Delete(projectId, name).Do()
 	client.IncrementCallCounter("Compute", "GlobalAddresses.Delete", "", err)
-	logger.V(4).Info("DeleteIpRange", "operation", operation, "err", err)
+	logger.Info("DeleteIpRange", "operation", operation, "err", err)
 	return operation, err
 }
 
@@ -72,7 +72,7 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 		Purpose:      string(client.IpRangePurposeVPCPeering),
 	}).Do()
 	client.IncrementCallCounter("Compute", "GlobalAddresses.Insert", "", err)
-	logger.V(4).Info("CreatePscIpRange", "operation", operation, "err", err)
+	logger.Info("CreatePscIpRange", "operation", operation, "err", err)
 	return operation, err
 }
 
