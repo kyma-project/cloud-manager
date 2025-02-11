@@ -28,6 +28,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	}
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
+		logger.Error(err, "Error getting GcpNfsVolume")
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -36,7 +37,6 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Message: "Error loading GcpNfsVolume",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg("Error getting GcpNfsVolume").
 			Run(ctx, state)
 	}
 	//If deleting, we still need the gcpNfsVolume object for finding the restore operation if it exists.

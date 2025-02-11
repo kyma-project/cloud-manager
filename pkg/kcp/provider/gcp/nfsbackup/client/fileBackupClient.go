@@ -59,7 +59,8 @@ func (c *fileBackupClient) GetFileBackup(ctx context.Context, projectId, locatio
 	out, err := c.svcFile.Projects.Locations.Backups.Get(client.GetFileBackupPath(projectId, location, name)).Do()
 	client.IncrementCallCounter("File", "Backups.Get", location, err)
 	if err != nil {
-		logger.V(4).Info("GetFileBackup", "err", err)
+		logger.Info("GetFileBackup", "err", err)
+		return nil, err
 	}
 	return out, err
 }
@@ -69,7 +70,7 @@ func (c *fileBackupClient) ListFilesBackups(ctx context.Context, projectId, filt
 	out, err := c.svcFile.Projects.Locations.Backups.List(client.GetFilestoreParentPath(projectId, "-")).Filter(filter).Do()
 	client.IncrementCallCounter("File", "Backups.List", "-", err)
 	if err != nil {
-		logger.V(4).Info("ListFilesBackups", "err", err)
+		logger.Info("ListFilesBackups", "err", err)
 		return nil, err
 	}
 	return out.Backups, nil

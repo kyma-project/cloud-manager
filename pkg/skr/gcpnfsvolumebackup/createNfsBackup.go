@@ -47,6 +47,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	if backup.Status.Id == "" {
 		location, err := getLocation(state, logger)
 		if err != nil {
+			logger.Error(err, "Error in automatically populating the location for the backup.")
 			return composed.PatchStatus(backup).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeError,

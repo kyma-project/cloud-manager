@@ -34,6 +34,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	err := state.SkrCluster.K8sClient().Get(ctx, nfsVolumeKey, nfsVolume)
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
+		logger.Error(err, "Error getting GcpNfsVolume.")
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -42,7 +43,6 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Message: "Error loading GcpNfsVolume",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
-			SuccessLogMsg("Error getting GcpNfsVolume").
 			Run(ctx, state)
 	}
 

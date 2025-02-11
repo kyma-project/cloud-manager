@@ -48,7 +48,8 @@ func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, projectId, l
 	out, err := c.svcFilestore.Projects.Locations.Instances.Get(client.GetFilestoreInstancePath(projectId, location, instanceId)).Do()
 	client.IncrementCallCounter("File", "Instances.Get", location, err)
 	if err != nil {
-		logger.V(4).Info("GetFilestoreInstance", "err", err)
+		logger.Info("GetFilestoreInstance", "err", err)
+		return nil, err
 	}
 	return out, err
 }

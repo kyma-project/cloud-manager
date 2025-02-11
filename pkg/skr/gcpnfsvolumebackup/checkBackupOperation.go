@@ -39,6 +39,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			}
 		}
 		backup.Status.State = v1beta1.GcpNfsBackupError
+		logger.Error(err, "Error getting Filestore backup Operation from GCP.")
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -47,7 +48,6 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error getting Filestore backup Operation from GCP.").
 			Run(ctx, state)
 	}
 

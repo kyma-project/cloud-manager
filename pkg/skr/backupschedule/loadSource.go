@@ -26,6 +26,7 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 	sourceRef, err := getSourceRef(ctx, state)
 	if err != nil {
 		schedule.SetState(cloudresourcesv1beta1.StateError)
+		logger.Error(err, "Error getting SourceRef")
 		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -34,7 +35,6 @@ func loadSource(ctx context.Context, st composed.State) (error, context.Context)
 				Message: "Error loading SourceRef",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessLogMsg("Error getting SourceRef").
 			Run(ctx, state)
 	}
 
