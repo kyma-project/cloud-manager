@@ -1,4 +1,4 @@
-# Use Network File System in Amazon Web Services
+# Using NFS in Amazon Web Services
 
 This tutorial explains how to use Network File System (NFS) to create ReadWriteMany (RWX) volumes in Amazon Web Services (AWS). You can use the created RWX volume from multiple workloads.
 

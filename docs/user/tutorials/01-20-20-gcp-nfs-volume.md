@@ -1,4 +1,4 @@
-# Use Network File System in Google Cloud
+# Using Network File System in Google Cloud
 
 This tutorial explains how to use Network File System (NFS) to create ReadWriteMany (RWX) volumes in Google Cloud. You can use the created RWX volume from multiple workloads.
 
