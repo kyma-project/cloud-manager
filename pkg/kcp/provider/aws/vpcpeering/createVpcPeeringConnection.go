@@ -69,11 +69,12 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 			changed = true
 		}
 
+		msg, _ := awsmeta.GetErrorMessage(err, "")
 		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-			Message: fmt.Sprintf("Failed creating VpcPeerings. %s", awsmeta.GetErrorMessage(err)),
+			Message: fmt.Sprintf("Failed creating VpcPeerings. %s", msg),
 		}) {
 			changed = true
 		}
