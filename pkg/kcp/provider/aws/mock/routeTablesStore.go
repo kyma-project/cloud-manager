@@ -47,6 +47,10 @@ func (s *routeTablesStore) AddRouteTable(routeTableId, vpcId *string, tags []ec2
 	return entry.routeTable
 }
 func (s *routeTablesStore) DescribeRouteTables(ctx context.Context, vpcId string) ([]ec2types.RouteTable, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -77,6 +81,9 @@ func (s *routeTablesStore) GetRoute(vpcId, routeTableId, vpcPeeringConnectionId,
 	return nil
 }
 func (s *routeTablesStore) CreateRoute(ctx context.Context, routeTableId, destinationCidrBlock, vpcPeeringConnectionId *string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -95,6 +102,9 @@ func (s *routeTablesStore) CreateRoute(ctx context.Context, routeTableId, destin
 }
 
 func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destinationCidrBlock *string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 

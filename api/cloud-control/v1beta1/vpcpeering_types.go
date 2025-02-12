@@ -46,10 +46,10 @@ const (
 type AwsRouteTableUpdateStrategy string
 
 const (
-	AwsRouteTableUpdateStrategyAuto      = "AUTO"
-	AwsRouteTableUpdateStrategyNone      = "NONE"
-	AwsRouteTableUpdateStrategyMatched   = "MATCHED"
-	AwsRouteTableUpdateStrategyUnmatched = "UNMATCHED"
+	AwsRouteTableUpdateStrategyAuto      AwsRouteTableUpdateStrategy = "AUTO"
+	AwsRouteTableUpdateStrategyNone      AwsRouteTableUpdateStrategy = "NONE"
+	AwsRouteTableUpdateStrategyMatched   AwsRouteTableUpdateStrategy = "MATCHED"
+	AwsRouteTableUpdateStrategyUnmatched AwsRouteTableUpdateStrategy = "UNMATCHED"
 )
 
 // VpcPeeringSpec defines the desired state of VpcPeering
