@@ -16,7 +16,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 
 Due to security reasons, the VPC network in the remote project, which receives the VPC peering connection, must contain a tag with the Kyma shoot name.
 
-1. Fetch your Kyma ID export it as an environment variable.
+1. Fetch your Kyma ID and export it as an environment variable.
 
    ```shell
    export KYMA_SHOOT_ID=`kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'`
