@@ -27,9 +27,19 @@ type ObjWithConditions interface {
 	GetObjectMeta() *metav1.ObjectMeta
 }
 
+type ObjWithCloneForPatch interface {
+	ObjWithConditions
+	CloneForPatch() client.Object
+}
+
 type ObjWithCloneForPatchStatus interface {
 	ObjWithConditions
 	CloneForPatchStatus() client.Object
+}
+
+type ObjWithDeriveStateFromConditions interface {
+	ObjWithConditions
+	DeriveStateFromConditions() (changed bool)
 }
 
 func PatchStatus(obj ObjWithConditions) *UpdateStatusBuilder {

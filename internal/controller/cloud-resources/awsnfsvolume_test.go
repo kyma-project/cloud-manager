@@ -373,7 +373,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		By("When AwsNfsVolume is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolume).
-				Should(Succeed(), "failed deleting PV")
+				Should(Succeed(), "failed deleting AwsNfsVolume")
 		})
 
 		By("Then SKR AwsNfsVolume has Deleting state", func() {
