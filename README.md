@@ -6,22 +6,15 @@
 
 ![GitHub tag checks state](https://img.shields.io/github/checks-status/kyma-project/cloud-manager/main?label=cloud-manager&link=https%3A%2F%2Fgithub.com%2Fkyma-project%2Fcloud-manager%2Fcommits%2Fmain)
 
-
 ## Overview
 
-[Cloud Manager](docs/user/README.md#what-is-cloud-manager) is a central component that manages access to additional hyperscaler resources from the Kyma Runtime cluster. It brings hyperscaler products and resources into the Kyma cluster in a secure way.
+Cloud Manager is the central component for the Cloud Manager module. It brings and manages access to cloud providers' resources from [SAP BTP, Kyma runtime](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-environment?version=Cloud) in a secure way.
+
+Cloud Manager supports Amazon Web Services, Google Cloud, and Microsoft Azure as cloud providers for your Kyma runtime.
 
 ## Usage
 
 See the [user documentation](docs/user/README.md).
-
-## Installation
-
-TBD
-
-## Development
-
-TBD
 
 ## Contributing
 <!--- mandatory section - do not change this! --->
