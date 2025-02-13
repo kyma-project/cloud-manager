@@ -63,7 +63,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 		return composed.LogErrorAndReturn(err, "[SKR GCP VPC createKcpVpcPeering] Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("[SKR GCP VPC Peering createKcpVpcPeering] KCP VpcPeering created")
+	logger.Info("[SKR GCP VPC Peering createKcpVpcPeering] KCP VpcPeering created", "id", obj.Status.Id)
 
 	return nil, nil
 }
