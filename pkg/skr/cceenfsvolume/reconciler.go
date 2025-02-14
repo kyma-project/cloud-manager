@@ -3,6 +3,7 @@ package cceenfsvolume
 import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
@@ -39,10 +40,47 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"crAwsNfsVolumeMain",
+		"crCceeNfsVolumeMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.CceeNfsVolume{}),
 		composed.LoadObj,
+		pvValidate,
+		pvcValidate,
 		defaultiprange.New(),
-		// TODO add more actions here
+
+		pvLoad,
+		pvRemoveClaimRef,
+		pvcLoad,
+		actions.PatchAddCommonFinalizer(),
+		idGenerate,
+
+		kcpNfsInstanceLoad,
+		kcpNfsInstanceCreate,
+		waitKcpNfsInstanceStatus,
+
+		updateSize,
+
+		pvCreate,
+		pvcCreate,
+
+		statusCopy,
+
+		stopIfNotBeingDeleted,
+
+		// below executes only when marked for deletion
+
+		pvcRemoveFinalizer,
+		pvcDelete,
+		pvcWaitDeleted,
+
+		pvRemoveFinalizer,
+		pvDelete,
+		pvWaitDeleted,
+
+		kcpNfsInstanceDelete,
+		kcpNfsInstanceWaitDeleted,
+
+		actions.PatchRemoveCommonFinalizer(),
+
+		composed.StopAndForgetAction,
 	)
 }

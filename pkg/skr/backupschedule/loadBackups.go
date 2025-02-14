@@ -29,6 +29,7 @@ func loadBackups(ctx context.Context, st composed.State) (error, context.Context
 	)
 
 	if err != nil {
+		logger.Error(err, "Error listing backups.")
 		return composed.PatchStatus(schedule).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

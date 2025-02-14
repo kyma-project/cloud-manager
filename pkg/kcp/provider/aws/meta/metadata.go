@@ -19,6 +19,7 @@ import (
 const (
 	UnauthorizedOperation = "UnauthorizedOperation"
 	AccessDenied          = "AccessDenied"
+	RouteNotSupported     = "RouteNotSupported"
 )
 
 type awsAccountKeyType struct{}
@@ -55,18 +56,20 @@ func AsApiError(err error) smithy.APIError {
 	return nil
 }
 
-func GetErrorMessage(err error) string {
+func GetErrorMessage(err error, def string) (string, bool) {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
 		switch apiError.ErrorCode() {
 		case UnauthorizedOperation:
-			return "Not authorized to perform this operation."
+			return "Not authorized to perform this operation.", true
 		case AccessDenied:
-			return "Not authorized to assume role."
+			return "Not authorized to assume role.", true
+		case RouteNotSupported:
+			return "Route not supported.", true
 		}
-		return apiError.ErrorMessage()
 	}
-	return err.Error()
+
+	return def, false
 }
 
 func IsAccessDenied(err error) bool {
@@ -81,6 +84,14 @@ func IsUnauthorized(err error) bool {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
 		return apiError.ErrorCode() == UnauthorizedOperation
+	}
+	return false
+}
+
+func IsRouteNotSupported(err error) bool {
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorCode() == RouteNotSupported
 	}
 	return false
 }

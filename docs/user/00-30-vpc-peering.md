@@ -18,15 +18,22 @@ You can configure Cloud Manager's VPC peering using a dedicated custom resource 
 
 Before you initiate VPC peering from a Kyma cluster, you must perform the following actions:
 
-* Authorize Cloud Manager in the remote cloud provider landscape. For more information, see [Authorizing Cloud Manager in the Remote Cloud Provider](00-50-vpc-peering-authorization.md)
-* Tag the remote network with the Kyma shoot name. For more information, see the following tutorials:
-  * [Create Virtual Private Cloud Peering in Amazon Web Services](./tutorials/01-30-10-aws-vpc-peering.md).
-  * [Create Virtual Private Cloud Peering in Google Cloud](./tutorials/01-30-20-gcp-vpc-peering.md).
-  * [Create Virtual Private Cloud Peering in Microsoft Azure](./tutorials/01-30-30-azure-vpc-peering.md).
+* Authorize Cloud Manager in the remote cloud provider landscape. For more information, see [Authorizing Cloud Manager in the Remote Cloud Provider](00-50-vpc-peering-authorization.md).
+* Due to security reasons, to use the Cloud Manager's VPC peering, you must allow SAP BTP, Kyma runtime to peer with your network. To allow the peering, tag your remote VPC network with the Kyma shoot name.
+  
+  > [!TIP]
+  > For more information, see the Allow Kyma to Peer with Your Network sections in the following VPC peering tutorials:
+  > * [Create Virtual Private Cloud Peering in Amazon Web Services](./tutorials/01-30-10-aws-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network)
+  > * [Create Virtual Private Cloud Peering in Google Cloud](./tutorials/01-30-20-gcp-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network)
+  > * [Create Virtual Private Cloud Peering in Microsoft Azure](./tutorials/01-30-30-azure-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-remote-network)
 
 ## Lifecycle
 
-AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once one of the VPC peering resources is applied, the status of the VPC peering connection is reflected in that CR. The limit of the number of VPC Peering CRs per Kyma cluster depends on the quotas for each cloud provider individually.
+AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once a VPC peering resource is applied, the status of the VPC peering connection is reflected in that CR. At the same time, Cloud Manager creates a VPC peering connection in the Kyma cluster underlying cloud provider landscape and accepts the VPC peering connection in the remote cloud provider landscape.
+
+The limit on the number of VPC Peering CRs per Kyma cluster depends on the quotas for each cloud provider.
+
+When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud provider landscape is deleted automatically. However, the remote VPC peering connection is left hanging, and you must delete it manually.
 
 ## Related Information
 

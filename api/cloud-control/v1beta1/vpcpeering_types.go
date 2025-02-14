@@ -43,6 +43,15 @@ const (
 	VpcPeeringRemoteNetworkField = ".spec.details.remoteNetwork"
 )
 
+type AwsRouteTableUpdateStrategy string
+
+const (
+	AwsRouteTableUpdateStrategyAuto      AwsRouteTableUpdateStrategy = "AUTO"
+	AwsRouteTableUpdateStrategyNone      AwsRouteTableUpdateStrategy = "NONE"
+	AwsRouteTableUpdateStrategyMatched   AwsRouteTableUpdateStrategy = "MATCHED"
+	AwsRouteTableUpdateStrategyUnmatched AwsRouteTableUpdateStrategy = "UNMATCHED"
+)
+
 // VpcPeeringSpec defines the desired state of VpcPeering
 // +kubebuilder:validation:XValidation:rule=(has(self.vpcPeering) && !has(self.details) || !has(self.vpcPeering) && has(self.details)), message="Only one of details or vpcPeering can be specified."
 type VpcPeeringSpec struct {
@@ -76,6 +85,10 @@ type VpcPeeringDetails struct {
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
+
+	// +kubebuilder:default:=AUTO
+	// +kubebuilder:validation:Enum=AUTO;NONE;MATCHED;UNMATCHED
+	RemoteRouteTableUpdateStrategy AwsRouteTableUpdateStrategy `json:"remoteRouteTableUpdateStrategy,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1

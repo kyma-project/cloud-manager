@@ -60,7 +60,7 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Force(true).Do()
 	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.Patch", "", err)
-	logger.V(4).Info("PatchServiceConnection", "operation", operation, "err", err)
+	logger.Info("PatchServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
 
@@ -75,7 +75,7 @@ func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, p
 		ConsumerNetwork: network,
 	}).Do()
 	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.DeleteConnection", "", err)
-	logger.V(4).Info("DeleteServiceConnection", "operation", operation, "err", err)
+	logger.Info("DeleteServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
 
@@ -99,7 +99,7 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Do()
 	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.Create", "", err)
-	logger.V(4).Info("CreateServiceConnection", "operation", operation, "err", err)
+	logger.Info("CreateServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
 

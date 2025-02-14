@@ -5,14 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	composed "github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -26,6 +24,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 	t.Run("modifyPersistentVolumeClaim", func(t *testing.T) {
 
 		var gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
+		var actualPVC *corev1.PersistentVolumeClaim
 		var state *State
 		var k8sClient client.WithWatch
 
@@ -38,7 +37,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		setupTest := func() {
 			gcpNfsVolume = &cloudresourcesv1beta1.GcpNfsVolume{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-gcpnfsvol",
 					Namespace: "test-ns",
 				},
@@ -54,19 +53,19 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 					},
 				},
 				Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
-					Conditions: []v1.Condition{
+					Conditions: []metav1.Condition{
 						{
-							Type:    v1beta1.ConditionTypeReady,
+							Type:    cloudresourcesv1beta1.ConditionTypeReady,
 							Status:  metav1.ConditionTrue,
-							Reason:  v1beta1.ConditionReasonReady,
+							Reason:  cloudresourcesv1beta1.ConditionReasonReady,
 							Message: "Volume is ready",
 						},
 					},
 				},
 			}
 
-			actualPVC := &corev1.PersistentVolumeClaim{
-				ObjectMeta: v1.ObjectMeta{
+			actualPVC = &corev1.PersistentVolumeClaim{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:        "test-gcpnfsvol",
 					Namespace:   "test-ns",
 					Labels:      getVolumeClaimLabels(gcpNfsVolume),
@@ -96,7 +95,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 			state.PVC = actualPVC
 		}
 
-		t.Run("Should: modify PVC when actual state diverges from desired state", func(t *testing.T) {
+		t.Run("Should: modify PVC when labels change", func(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -105,12 +104,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 					"foo": "bar-modified",
 					"oof": "rab",
 				},
-				Annotations: map[string]string{
-					"baz": "qux-modified",
-					"zab": "xuq",
-				},
 			}
-			gcpNfsVolume.Spec.CapacityGb = 2000
 
 			err, res := modifyPersistentVolumeClaim(ctx, state)
 
@@ -119,12 +113,47 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should be called")
 		})
 
+		t.Run("Should: modify PVC when annotation change", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			gcpNfsVolume.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+				Annotations: map[string]string{
+					"baz": "qux-modified",
+					"zab": "xuq",
+				},
+			}
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			assert.NotNil(t, err, "should return not-nil err") // not an actual error, but StopWithRequeueDelay
+			assert.Nil(t, res, "should return nil res")
+			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should be called")
+		})
+
+		t.Run("Should: modify only PVC label when capacity changes", func(t *testing.T) {
+			setupTest()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			originalCapacity := actualPVC.Spec.Resources.Requests["storage"].DeepCopy()
+			gcpNfsVolume.Spec.CapacityGb = 2000
+
+			err, res := modifyPersistentVolumeClaim(ctx, state)
+
+			postModifyCapacity := actualPVC.Spec.Resources.Requests["storage"].DeepCopy()
+			assert.NotNil(t, err, "should return not-nil err") // not an actual error, but StopWithRequeueDelay
+			assert.Nil(t, res, "should return nil res")
+			assert.EqualValues(t, 1, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should be called")
+			assert.True(t, originalCapacity.Equal(postModifyCapacity), "capacity should not change")
+			assert.Equal(t, "2000Gi", actualPVC.Labels[cloudresourcesv1beta1.LabelStorageCapacity], "label value should be adjusted to match desired value")
+		})
+
 		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			gcpNfsVolume.ObjectMeta = v1.ObjectMeta{
-				DeletionTimestamp: &v1.Time{
+			gcpNfsVolume.ObjectMeta = metav1.ObjectMeta{
+				DeletionTimestamp: &metav1.Time{
 					Time: time.Now(),
 				},
 			}
@@ -141,7 +170,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			state.PVC = nil
-			gcpNfsVolume.Status.Conditions = []v1.Condition{}
+			gcpNfsVolume.Status.Conditions = []metav1.Condition{}
 
 			err, res := modifyPersistentVolumeClaim(ctx, state)
 

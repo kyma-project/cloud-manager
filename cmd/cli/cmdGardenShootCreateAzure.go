@@ -51,7 +51,8 @@ var cmdGardenShootCreateAzure = &cobra.Command{
 				Name:      shootName,
 			},
 			Spec: gardenerTypes.ShootSpec{
-				Region: azureRegion,
+				Region:           azureRegion,
+				CloudProfileName: ptr.To("az"),
 				Networking: &gardenerTypes.Networking{
 					IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
 					Nodes:      ptr.To("10.250.0.0/22"),

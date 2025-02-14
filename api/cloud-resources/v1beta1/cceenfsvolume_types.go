@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,6 +29,7 @@ type CceeNfsVolumeSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
 	CapacityGb int `json:"capacityGb"`
 
 	// +optional
@@ -55,7 +57,7 @@ type CceeNfsVolumeStatus struct {
 	// +optional
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions"`
 
 	// +optional
 	State string `json:"state,omitempty"`
@@ -72,6 +74,70 @@ type CceeNfsVolume struct {
 
 	Spec   CceeNfsVolumeSpec   `json:"spec,omitempty"`
 	Status CceeNfsVolumeStatus `json:"status,omitempty"`
+}
+
+func (in *CceeNfsVolume) GetPVName() string {
+	if in.Spec.PersistentVolume != nil && in.Spec.PersistentVolume.Name != "" {
+		return in.Spec.PersistentVolume.Name
+	}
+	return in.Status.Id
+}
+
+func (in *CceeNfsVolume) GetPVLabels() map[string]string {
+	result := make(map[string]string, 10)
+	if in.Spec.PersistentVolume != nil && in.Spec.PersistentVolume.Labels != nil {
+		for k, v := range in.Spec.PersistentVolume.Labels {
+			result[k] = v
+		}
+	}
+	result[LabelNfsVolName] = in.Name
+	result[LabelNfsVolNS] = in.Namespace
+	result[LabelCloudManaged] = "true"
+
+	return result
+}
+
+func (in *CceeNfsVolume) GetPVAnnotations() map[string]string {
+	if in.Spec.PersistentVolume == nil {
+		return nil
+	}
+	result := make(map[string]string, len(in.Spec.PersistentVolume.Annotations))
+	for k, v := range in.Spec.PersistentVolume.Annotations {
+		result[k] = v
+	}
+	return result
+}
+
+func (in *CceeNfsVolume) GetPVCName() string {
+	if in.Spec.PersistentVolumeClaim != nil && in.Spec.PersistentVolumeClaim.Name != "" {
+		return in.Spec.PersistentVolumeClaim.Name
+	}
+	return in.Name
+}
+
+func (in *CceeNfsVolume) GetPVCLabels() map[string]string {
+	result := make(map[string]string, 10)
+	if in.Spec.PersistentVolumeClaim != nil && in.Spec.PersistentVolumeClaim.Labels != nil {
+		for k, v := range in.Spec.PersistentVolumeClaim.Labels {
+			result[k] = v
+		}
+	}
+	result[LabelNfsVolName] = in.Name
+	result[LabelNfsVolNS] = in.Namespace
+	result[LabelCloudManaged] = "true"
+
+	return result
+}
+
+func (in *CceeNfsVolume) GetPVCAnnotations() map[string]string {
+	if in.Spec.PersistentVolumeClaim == nil {
+		return nil
+	}
+	result := make(map[string]string, len(in.Spec.PersistentVolumeClaim.Annotations))
+	for k, v := range in.Spec.PersistentVolumeClaim.Annotations {
+		result[k] = v
+	}
+	return result
 }
 
 func (in *CceeNfsVolume) Conditions() *[]metav1.Condition {
@@ -103,7 +169,7 @@ func (in *CceeNfsVolume) SetState(v string) {
 }
 
 func (in *CceeNfsVolume) CloneForPatchStatus() client.Object {
-	return &CceeNfsVolume{
+	result := &CceeNfsVolume{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "CceeNfsVolume",
 			APIVersion: GroupVersion.String(),
@@ -114,6 +180,21 @@ func (in *CceeNfsVolume) CloneForPatchStatus() client.Object {
 		},
 		Status: in.Status,
 	}
+	if result.Status.Conditions == nil {
+		result.Status.Conditions = []metav1.Condition{}
+	}
+	return result
+}
+
+func (in *CceeNfsVolume) DeriveStateFromConditions() (changed bool) {
+	oldState := in.Status.State
+	if meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady) != nil {
+		in.Status.State = StateReady
+	}
+	if meta.FindStatusCondition(in.Status.Conditions, ConditionTypeError) != nil {
+		in.Status.State = StateError
+	}
+	return in.Status.State != oldState
 }
 
 // +kubebuilder:object:root=true

@@ -6,7 +6,7 @@ To create VPC peering in the Kyma environment, you must authorize the Cloud Mana
 
 For cross-account access in Amazon Web Services, Cloud Manager uses `AssumeRole`. `AssumeRole` requires specifying the trusted principle. For more information, see the [official Amazon Web Services documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html).
 
-Use the following table to identify the Cloud Manager principal based on your Kyma landscape. Then perform the required actions:
+Use the following table to identify the Cloud Manager principal based on your Kyma landscape. Then, perform the required actions.
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Principal                                      |
 |------------------------------------|----------------------------------------|--------------------------------------------------------------|
@@ -79,16 +79,11 @@ For security reasons, each Kyma landscape has its own service account. Use the f
 
 ## Microsoft Azure
 
-Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape:
+To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape. Then, perform the following actions:
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
 |------------------------------------|----------------------------------------|----------------------------------|
 | https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
-
-Assign the following Identity and Access Management (IAM) roles to the Cloud Manager service principal:
-
-* Classic Network Contributor
-* Network Contributor
 
 For more information, see the official Microsoft Azure documentation on how to [Assign Azure roles using the Azure portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal) and how to [Manage service principals](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).

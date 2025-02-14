@@ -1,24 +1,10 @@
 # AzureVpcPeering Custom Resource
 
-The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between 
-Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within Azure
-networks whose subscriptions are sharing the same tenant determined by the Kyma underlying cloud provider subscription.
+The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within Microsoft Azure networks whose subscriptions are sharing the same tenant determined by the Kyma underlying cloud provider landscape.
 
-Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in
-the VPC network of the Kyma cluster in the underlying cloud provider subscription, and accepts a VPC peering connection in
-the remote cloud provider subscription.
+Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in the VPC network of the Kyma cluster in the underlying cloud provider landscape, and accepts a VPC peering connection in the remote cloud provider landscape.
 
-## Required Actions in the Remote Project
-
-Before creating the VPC peering, please tag your Azure subscription VPC with the Kyma shoot name tag.  
-For more information, check the [Create Virtual Private Cloud Peering in Microsoft Azure](../tutorials/01-30-30-azure-vpc-peering.md) tutorial.
-
-## Deleting `AzureVpcPeering`
-
-Kyma's underlying cloud provider VPC peering connection is deleted as a part of the AzureVpcPeering deletion. The remote VPC
-peering connection is left hanging, and you must delete it manually.
-
-## Specification <!-- {docsify-ignore} -->
+## Specification
 
 This table lists the parameters of the given resource together with their descriptions:
 
@@ -42,7 +28,7 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
 | **conditions.type**               | string     | Provides a short description of the condition.                                              |
 
-## Sample Custom Resource <!-- {docsify-ignore} -->
+## Sample Custom Resource
 
 See an exemplary AzureVpcPeering custom resource:
 

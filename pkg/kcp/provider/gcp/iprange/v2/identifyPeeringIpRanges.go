@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -40,6 +39,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 
 	list, err := state.computeClient.ListGlobalAddresses(ctx, project, vpc)
 	if err != nil {
+		logger.Error(err, "Error listing Global Addresses from GCP.")
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -48,7 +48,6 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 				Message: "Error listing Global Addresses from GCP",
 			}).
 			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("Error listing Global Addresses from GCP").
 			Run(ctx, state)
 	}
 
