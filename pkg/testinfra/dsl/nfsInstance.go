@@ -12,6 +12,7 @@ import (
 
 const (
 	DefaultNfsInstanceHost             = "nfs.instance.local"
+	DefaultNfsInstancePath             = "/path"
 	DefaultGcpNfsInstanceFileShareName = "vol1"
 	DefaultGcpNfsInstanceCapacityGb    = 1024
 	DefaultGcpNfsInstanceConnectMode   = "PRIVATE_SERVICE_ACCESS"
@@ -28,6 +29,21 @@ func WithNfsInstanceStatusHost(host string) ObjStatusAction {
 				if len(x.Status.Hosts) == 0 {
 					x.Status.Hosts = []string{host}
 					x.Status.Host = host
+				}
+			}
+		},
+	}
+}
+
+func WithNfsInstanceStatusPath(path string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if path == "" {
+				path = DefaultNfsInstancePath
+			}
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				if x.Status.Path == "" {
+					x.Status.Path = path
 				}
 			}
 		},

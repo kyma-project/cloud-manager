@@ -2,6 +2,7 @@ package composed
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -181,6 +182,14 @@ func (s *baseState) PatchObjAddFinalizer(ctx context.Context, f string) (bool, e
 // PatchObjRemoveFinalizer patches obj with JSONPatchType removing the specified finalizer name
 func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool, error) {
 	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
+}
+
+func MergePatchObj(ctx context.Context, obj client.Object, patch map[string]interface{}, clnt client.Writer) error {
+	p, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("error json patching object when marshaling given patch: %w", err)
+	}
+	return clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
 func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {

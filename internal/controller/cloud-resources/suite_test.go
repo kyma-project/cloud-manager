@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"os"
 	"testing"
 
@@ -134,6 +135,8 @@ var _ = BeforeSuite(func() {
 
 	//GCP Vpc Peering
 	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
+
+	migrateFinalizers.RunMigration = false
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())

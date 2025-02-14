@@ -6,6 +6,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var RunMigration = true
+
 type Migration interface {
 	Run(ctx context.Context) (alreadyExecuted bool, err error)
 }
@@ -20,6 +22,9 @@ type migration struct {
 }
 
 func (m *migration) Run(ctx context.Context) (alreadyExecuted bool, err error) {
+	if !RunMigration {
+		return false, nil
+	}
 	isRecorded, err := m.successHandler.IsRecorded(ctx)
 	if err != nil {
 		return false, err
