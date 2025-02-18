@@ -45,7 +45,8 @@ type CreateElastiCacheClusterOptions struct {
 	AuthTokenSecretString      *string
 	PreferredMaintenanceWindow *string
 	SecurityGroupIds           []string
-	ReplicasPerNodeGroup       int32
+	ReplicasPerNodeGroup       int32 // replicas per shard
+	ShardCount                 *int32
 }
 
 type ModifyElastiCacheClusterOptions struct {
@@ -316,14 +317,21 @@ func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, cluste
 
 func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticacheTypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
 	automaticFailoverEnabled := options.ReplicasPerNodeGroup > 0
+
+	shardCount := ptr.Deref(options.ShardCount, 1)
+	clusterMode := elasticacheTypes.ClusterModeDisabled
+	if shardCount > 1 {
+		clusterMode = elasticacheTypes.ClusterModeEnabled
+	}
+
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(options.Name),
 		ReplicationGroupDescription: aws.String("ElastiCache managed by Kyma Cloud Manager"),
 		CacheSubnetGroupName:        aws.String(options.SubnetGroupName),
 		CacheParameterGroupName:     aws.String(options.ParameterGroupName),
 		CacheNodeType:               aws.String(options.CacheNodeType),
-		NumNodeGroups:               aws.Int32(1),
-		ClusterMode:                 elasticacheTypes.ClusterModeDisabled,
+		NumNodeGroups:               aws.Int32(shardCount),
+		ClusterMode:                 clusterMode,
 		Engine:                      aws.String("redis"),
 		EngineVersion:               aws.String(options.EngineVersion),
 		AutoMinorVersionUpgrade:     aws.Bool(options.AutoMinorVersionUpgrade),

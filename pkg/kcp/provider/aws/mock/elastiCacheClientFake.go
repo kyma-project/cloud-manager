@@ -345,6 +345,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		UserGroupIds:             []string{},
 		Engine:                   ptr.To("redis"),
 		AtRestEncryptionEnabled:  ptr.To(true),
+		ConfigurationEndpoint: &elasticacheTypes.Endpoint{
+			Address: ptr.To("192.168.3.2"),
+			Port:    aws.Int32(6949),
+		},
 		NodeGroups: []elasticacheTypes.NodeGroup{
 			{
 				PrimaryEndpoint: &elasticacheTypes.Endpoint{
