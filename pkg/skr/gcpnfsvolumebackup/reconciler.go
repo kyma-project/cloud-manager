@@ -49,6 +49,8 @@ func (r *Reconciler) newAction() composed.Action {
 		"crGcpNfsVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}),
 		composed.LoadObj,
+		shortCircuitCompleted,
+		markFailed,
 		addFinalizer,
 		loadScope,
 		loadNfsBackup,

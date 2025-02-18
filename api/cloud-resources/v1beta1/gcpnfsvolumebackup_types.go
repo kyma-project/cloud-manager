@@ -41,6 +41,9 @@ const (
 
 	// GcpNfsBackupDeleted signifies backup delete operation is complete.
 	GcpNfsBackupDeleted GcpNfsBackupState = "Deleted"
+
+	// GcpNfsBackupFailed signifies backup operation failed, and it will not be retried again.
+	GcpNfsBackupFailed GcpNfsBackupState = "Failed"
 )
 
 type GcpNfsVolumeBackupSource struct {
