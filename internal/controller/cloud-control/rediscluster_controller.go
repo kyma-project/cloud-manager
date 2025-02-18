@@ -23,6 +23,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
 	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
@@ -35,6 +36,7 @@ import (
 
 func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
+	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -45,7 +47,7 @@ func SetupRedisClusterReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			gcprediscluster.NewStateFactory(env),
-			awsrediscluster.NewStateFactory(),
+			awsrediscluster.NewStateFactory(awsFilestoreClientProvider),
 			azurerediscluster.NewStateFactory(),
 		),
 	).SetupWithManager(kcpManager)

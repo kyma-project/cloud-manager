@@ -44,6 +44,65 @@ spec:
                 minProperties: 1
                 properties:
                   aws:
+                    properties:
+                      authEnabled:
+                        default: false
+                        type: boolean
+                      autoMinorVersionUpgrade:
+                        default: false
+                        type: boolean
+                      cacheNodeType:
+                        type: string
+                      engineVersion:
+                        default: "7.0"
+                        enum:
+                        - "7.1"
+                        - "7.0"
+                        - 6.x
+                        type: string
+                        x-kubernetes-validations:
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x")
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0"
+                            || oldSelf == "6.x")
+                        - message: engineVersion cannot be downgraded.
+                          rule: (self != "6.x" || oldSelf == "6.x")
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      preferredMaintenanceWindow:
+                        description: |-
+                          Specifies the weekly time range during which maintenance on the cluster is
+                          performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H
+                          Clock UTC). The minimum maintenance window is a 60 minute period.
+
+                          Valid values for ddd are: sun mon tue wed thu fri sat
+
+                          Example: sun:23:00-mon:01:30
+                        type: string
+                      replicasPerShard:
+                        default: 0
+                        format: int32
+                        maximum: 5
+                        minimum: 0
+                        type: integer
+                        x-kubernetes-validations:
+                        - message: ReplicasPerShard is immutable.
+                          rule: (self == oldSelf)
+                      shardCount:
+                        format: int32
+                        maximum: 500
+                        minimum: 1
+                        type: integer
+                        x-kubernetes-validations:
+                        - message: ShardCount is immutable.
+                          rule: (self == oldSelf)
+                    required:
+                    - cacheNodeType
+                    - replicasPerShard
+                    - shardCount
                     type: object
                   azure:
                     type: object
@@ -92,6 +151,8 @@ spec:
           status:
             description: RedisClusterStatus defines the observed state of RedisCluster
             properties:
+              authString:
+                type: string
               conditions:
                 description: List of status conditions to indicate the status of a
                   RedisInstance.
@@ -153,6 +214,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              discoveryEndpoint:
+                type: string
+              id:
+                type: string
               state:
                 type: string
             type: object

@@ -5,47 +5,110 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
 )
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-
-		state, err := stateFactory.NewState(ctx, st.(types.State))
+		logger := composed.LoggerFromCtx(ctx)
+		redisInstanceState := st.(types.State)
+		state, err := stateFactory.NewState(ctx, redisInstanceState)
 		if err != nil {
-			composed.LoggerFromCtx(ctx).Error(err, "Failed to bootstrap AWS RedisCluster state")
-			redisCluster := st.Obj().(*v1beta1.RedisCluster)
-			redisCluster.Status.State = cloudcontrolv1beta1.StateError
-			return composed.UpdateStatus(redisCluster).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    v1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  v1beta1.ReasonCloudProviderError,
-					Message: "Failed to create RedisCluster state",
-				}).
-				SuccessError(composed.StopAndForget).
-				SuccessLogMsg(fmt.Sprintf("Error creating new AWS RedisCluster state: %s", err)).
-				Run(ctx, st)
+			err = fmt.Errorf("error creating new aws rediscluster state: %w", err)
+			logger.Error(err, "Error")
+			return composed.StopAndForget, nil
 		}
 
 		return composed.ComposeActions(
-			"redisCluster",
+			"awsRedisCluster",
 			actions.AddCommonFinalizer(),
+			loadSubnetGroup,
+			loadMainParameterGroup(state),
+			loadTempParameterGroup(state),
+			loadMainParameterGroupCurrentParams(),
+			loadTempParameterGroupCurrentParams(),
+			loadMainParameterGroupFamilyDefaultParams(),
+			loadTempParameterGroupFamilyDefaultParams(),
+			loadAuthTokenSecret,
+			loadUserGroup,
+			findSecurityGroup,
+			loadSecurityGroup,
+			loadElastiCacheCluster,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
-					"redisCluster-create",
+					"redisInstance-create",
+					loadMemberClusters,
+					createSubnetGroup,
+					composed.If(
+						shouldDeleteObsoleteMainParamGroupPredicate(),
+						deleteMainParameterGroup(),
+					),
+					composed.If(
+						shouldDeleteRedundantTempParamGroupPredicate(),
+						deleteTempParameterGroup(),
+					),
+					composed.If(
+						shouldCreateMainParamGroupPredicate(),
+						createMainParameterGroup(state),
+					),
+					composed.If(
+						shouldCreateTempParamGroupPredicate(),
+						createTempParameterGroup(state),
+					),
+					composed.If(
+						shouldModifyMainParamGroupPredicate(),
+						modifyMainParameterGroup(state),
+					),
+					composed.If(
+						shouldModifyTempParamGroupPredicate(),
+						modifyTempParameterGroup(state),
+					),
+					createAuthTokenSecret,
+					createUserGroup,
+					createSecurityGroup,
+					authorizeSecurityGroupIngress,
+					createElastiCacheCluster,
+					updateStatusId,
+					addUpdatingCondition,
+					waitElastiCacheAvailable,
+					waitUserGroupActive,
+					modifyCacheNodeType,
+					modifyAutoMinorVersionUpgrade,
+					modifyPreferredMaintenanceWindow,
+					modifyAuthEnabled,
+					composed.If(
+						shouldUpdateRedisPredicate(),
+						updateElastiCacheCluster(),
+					),
+					composed.If(
+						shouldUpgradeRedisPredicate(),
+						upgradeElastiCacheCluster(),
+					),
+					composed.If(
+						shouldSwitchToMainParamGroupPredicate(),
+						switchToMainParamGroup(),
+					),
+					updateStatus,
 				),
 				composed.ComposeActions(
-					"redisCluster-delete",
+					"redisInstance-delete",
+					removeReadyCondition,
+					deleteElastiCacheCluster,
+					waitElastiCacheDeleted,
+					deleteSecurityGroup,
+					deleteUserGroup,
+					waitUserGroupDeleted,
+					deleteAuthTokenSecret,
+					deleteMainParameterGroup(),
+					deleteTempParameterGroup(),
+					deleteSubnetGroup,
 					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,
-		)(ctx, state)
+		)(awsmeta.SetAwsAccountId(ctx, redisInstanceState.Scope().Spec.Scope.Aws.AccountId), state)
 	}
 }

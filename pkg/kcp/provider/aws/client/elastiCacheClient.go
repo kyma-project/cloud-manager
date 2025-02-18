@@ -47,6 +47,7 @@ type CreateElastiCacheClusterOptions struct {
 	SecurityGroupIds           []string
 	ReplicasPerNodeGroup       int32 // replicas per shard
 	ShardCount                 *int32
+	ClusterMode                *bool
 }
 
 type ModifyElastiCacheClusterOptions struct {
@@ -320,7 +321,18 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 
 	shardCount := ptr.Deref(options.ShardCount, 1)
 	clusterMode := elasticacheTypes.ClusterModeDisabled
-	if shardCount > 1 {
+
+	if options.ClusterMode != nil {
+		clusterModeOption := ptr.Deref(options.ClusterMode, false)
+
+		if clusterModeOption == true {
+			clusterMode = elasticacheTypes.ClusterModeEnabled
+		} else {
+			clusterMode = elasticacheTypes.ClusterModeDisabled
+		}
+	}
+
+	if options.ClusterMode == nil && shardCount > 1 { // fallback
 		clusterMode = elasticacheTypes.ClusterModeEnabled
 	}
 
