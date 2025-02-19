@@ -220,6 +220,9 @@ func (suite *markFailedSuite) TestWhenBackupIsNotLatestAndInError() {
 	suite.Nil(err)
 
 	suite.Equal(v1beta1.GcpNfsBackupFailed, fromK8s.Status.State)
+	suite.Equal(v1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	suite.Equal(v1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	suite.Equal(v1beta1.ReasonBackupFailed, fromK8s.Status.Conditions[0].Reason)
 }
 
 func TestMarkFailed(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -63,8 +64,20 @@ func markFailed(ctx context.Context, st composed.State) (error, context.Context)
 	for _, item := range list.Items {
 
 		if item.CreationTimestamp.Time.After(backup.CreationTimestamp.Time) {
+			errCondition := meta.FindStatusCondition(backup.Status.Conditions, v1beta1.ConditionTypeError)
+			message := "Backup moved to Failed state as more recent backup(s) is available."
+			if errCondition != nil {
+				message = errCondition.Message + "\n" + message
+			}
+
 			backup.Status.State = v1beta1.StateFailed
 			return composed.PatchStatus(backup).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonBackupFailed,
+					Message: message,
+				}).
 				SuccessLogMsg("AwsNfsVolumeBackup status updated with Failed state. ").
 				SuccessError(composed.StopAndForget).
 				Run(ctx, state)

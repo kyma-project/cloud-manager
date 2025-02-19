@@ -70,4 +70,5 @@ const (
 	ReasonUnknownSchedule       = "UnknownSchedule"
 	ReasonInvalidStartTime      = "InvalidStartTime"
 	ReasonInvalidEndTime        = "InvalidEndTime"
+	ReasonBackupFailed          = "BackupFailed"
 )
