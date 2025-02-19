@@ -10,6 +10,7 @@ const (
 	StateDeleting          = "Deleting"
 	StateUpdating          = "Updating"
 	StateDeleted           = "Deleted"
+	StateFailed            = "Failed"
 )
 
 const (

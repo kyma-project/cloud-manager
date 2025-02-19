@@ -1,6 +1,7 @@
 package awsnfsvolumebackup
 
 import (
+	"context"
 	"github.com/kyma-project/cloud-manager/api"
 	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
@@ -202,4 +203,9 @@ func (f *testStateFactory) newStateWith(obj *cloudresourcesv1beta1.AwsNfsVolumeB
 		env:               f.env,
 	}, nil
 
+}
+
+// Fake client doesn't support type "apply" for patching so falling back on update for unit tests.
+func (s *State) PatchObjStatus(ctx context.Context) error {
+	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
 }
