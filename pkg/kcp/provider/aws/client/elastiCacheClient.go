@@ -325,7 +325,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 	if options.ClusterMode != nil {
 		clusterModeOption := ptr.Deref(options.ClusterMode, false)
 
-		if clusterModeOption == true {
+		if clusterModeOption {
 			clusterMode = elasticacheTypes.ClusterModeEnabled
 		} else {
 			clusterMode = elasticacheTypes.ClusterModeDisabled
