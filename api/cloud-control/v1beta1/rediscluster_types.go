@@ -125,6 +125,8 @@ type RedisClusterStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // RedisCluster is the Schema for the redisclusters API
 type RedisCluster struct {
