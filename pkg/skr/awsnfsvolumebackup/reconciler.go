@@ -63,6 +63,8 @@ func (r *reconciler) newAction() composed.Action {
 		"AwsNfsVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeBackup{}),
 		commonScope.New(),
+		shortCircuitCompleted,
+		markFailed,
 		addFinalizer,
 		loadSkrAwsNfsVolume,
 		stopIfVolumeNotReady,
