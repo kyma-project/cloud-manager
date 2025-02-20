@@ -28,9 +28,13 @@ Before you initiate VPC peering from a Kyma cluster, you must perform the follow
 
 AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once a VPC peering resource is applied, the status of the VPC peering connection is reflected in that CR. At the same time, Cloud Manager creates a VPC peering connection in the Kyma cluster underlying cloud provider landscape and accepts the VPC peering connection in the remote cloud provider landscape.
 
+When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud provider landscape is deleted automatically. However, the remote VPC peering connection is left hanging, and you must delete it manually.
+
+### Limitations
+
 The limit on the number of VPC peering CRs per Kyma cluster depends on the quotas for each cloud provider.
 
-When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud provider landscape is deleted automatically. However, the remote VPC peering connection is left hanging, and you must delete it manually.
+For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, the Cloud Manager module can't route traffic to it. In this case, you must delete the existing AzureVpcPeering CR and create a new one.
 
 ## Related Information
 
