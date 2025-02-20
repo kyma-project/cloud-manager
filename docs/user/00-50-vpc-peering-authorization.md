@@ -1,6 +1,6 @@
 # Authorizing Cloud Manager in the Remote Cloud Provider
 
-To create VPC peering in the Kyma environment, you must authorize the Cloud Manager module in the remote cloud provider to accept the connection.
+To create VPC peering in SAP BTP, Kyma runtime, you must authorize the Cloud Manager module in the remote cloud provider to accept the connection.
 
 ## Amazon Web Services
 
