@@ -34,7 +34,7 @@ When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud p
 
 The limit on the number of VPC peering CRs per Kyma cluster depends on the quotas for each cloud provider.
 
-For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, the Cloud Manager module can't route traffic to it. In this case, you must delete the existing AzureVpcPeering CR and create a new one.
+For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, routs are out of sync. In this case, you must delete the existing AzureVpcPeering CR and create a new one.
 
 ## Related Information
 
