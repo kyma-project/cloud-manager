@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -91,6 +92,14 @@ type AzureRwxVolumeBackup struct {
 
 	Spec   AzureRwxVolumeBackupSpec   `json:"spec,omitempty"`
 	Status AzureRwxVolumeBackupStatus `json:"status,omitempty"`
+}
+
+func (bu *AzureRwxVolumeBackup) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureNfsBackup
+}
+
+func (bu *AzureRwxVolumeBackup) SpecificToProviders() []string {
+	return []string{"azure"}
 }
 
 // +kubebuilder:object:root=true
