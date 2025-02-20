@@ -32,6 +32,8 @@ func WithRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.RedisInstance:
 				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.RedisCluster:
+				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.VpcPeering:
 				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.IpRange:

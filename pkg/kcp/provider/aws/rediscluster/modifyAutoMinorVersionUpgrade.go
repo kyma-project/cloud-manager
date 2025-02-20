@@ -1,0 +1,29 @@
+package rediscluster
+
+import (
+	"context"
+
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/utils/ptr"
+)
+
+func modifyAutoMinorVersionUpgrade(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(*State)
+
+	redisInstance := state.ObjAsRedisCluster()
+
+	if state.elastiCacheReplicationGroup == nil {
+		return composed.StopWithRequeue, nil
+	}
+
+	currentAutoMinorVersionUpgrade := ptr.Deref(state.elastiCacheReplicationGroup.AutoMinorVersionUpgrade, false)
+	desiredAutoMinorVersionUpgrade := redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade
+
+	if currentAutoMinorVersionUpgrade == desiredAutoMinorVersionUpgrade {
+		return nil, nil
+	}
+
+	state.UpdateAutoMinorVersionUpgrade(desiredAutoMinorVersionUpgrade)
+
+	return nil, nil
+}

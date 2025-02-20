@@ -28,6 +28,49 @@ type RedisClusterAzure struct {
 }
 
 type RedisClusterAws struct {
+	// +kubebuilder:validation:Required
+	CacheNodeType string `json:"cacheNodeType"`
+
+	// +optional
+	// +kubebuilder:default="7.0"
+	// +kubebuilder:validation:Enum="7.1";"7.0";"6.x"
+	// +kubebuilder:validation:XValidation:rule=(self != "7.0" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "7.1" || oldSelf == "7.1" || oldSelf == "7.0" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	// +kubebuilder:validation:XValidation:rule=(self != "6.x" || oldSelf == "6.x"), message="engineVersion cannot be downgraded."
+	EngineVersion string `json:"engineVersion"`
+
+	// +optional
+	// +kubebuilder:default=false
+	AutoMinorVersionUpgrade bool `json:"autoMinorVersionUpgrade"`
+
+	// +optional
+	// +kubebuilder:default=false
+	AuthEnabled bool `json:"authEnabled"`
+
+	// Specifies the weekly time range during which maintenance on the cluster is
+	// performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H
+	// Clock UTC). The minimum maintenance window is a 60 minute period.
+	//
+	// Valid values for ddd are: sun mon tue wed thu fri sat
+	//
+	// Example: sun:23:00-mon:01:30
+	// +optional
+	PreferredMaintenanceWindow *string `json:"preferredMaintenanceWindow,omitempty"`
+
+	// +optional
+	Parameters map[string]string `json:"parameters,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=500
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
+	ShardCount int32 `json:"shardCount"`
+
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=5
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerShard is immutable."
+	ReplicasPerShard int32 `json:"replicasPerShard"`
 }
 
 // +kubebuilder:validation:MinProperties=1
@@ -62,6 +105,15 @@ type RedisClusterSpec struct {
 
 // RedisClusterStatus defines the observed state of RedisCluster
 type RedisClusterStatus struct {
+	// +optional
+	Id string `json:"id,omitempty"`
+
+	// +optional
+	DiscoveryEndpoint string `json:"discoveryEndpoint,omitempty"`
+
+	// +optional
+	AuthString string `json:"authString,omitempty"`
+
 	State StatusState `json:"state,omitempty"`
 
 	// List of status conditions to indicate the status of a RedisInstance.
@@ -73,6 +125,8 @@ type RedisClusterStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // RedisCluster is the Schema for the redisclusters API
 type RedisCluster struct {

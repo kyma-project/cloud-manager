@@ -110,11 +110,17 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().VpcPeeringProvider(),
 		env,
 	)).NotTo(HaveOccurred())
-	//RedisInstance
+	// RedisInstance
 	Expect(SetupRedisInstanceReconciler(
 		infra.KcpManager(),
 		infra.GcpMock().MemoryStoreProviderFake(),
 		infra.AzureMock().RedisClientProvider(),
+		infra.AwsMock().ElastiCacheProviderFake(),
+		env,
+	)).NotTo(HaveOccurred())
+	// RedisCluster
+	Expect(SetupRedisClusterReconciler(
+		infra.KcpManager(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
 	)).NotTo(HaveOccurred())

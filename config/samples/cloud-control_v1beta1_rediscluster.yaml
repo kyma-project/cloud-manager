@@ -6,4 +6,22 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: rediscluster-sample
 spec:
-  # TODO(user): Add fields here
+  instance:
+    aws:
+      authEnabled: false
+      autoMinorVersionUpgrade: true
+      cacheNodeType: cache.r7g.large
+      engineVersion: 7.0
+      parameters:
+        activedefrag: 'yes'
+        maxmemory-policy: volatile-lru
+      preferredMaintenanceWindow: sun:23:00-mon:01:30
+      replicasPerShard: 1
+      shardCount: 3
+  ipRange:
+    name: 3ac2a428-c267-4c10-b814-c77c0deff977
+  remoteRef:
+    name: awsredisinstance-sample123
+    namespace: skr-aws
+  scope:
+    name: dule-aws

@@ -43,6 +43,10 @@ func getDefaultParams() map[string]elasticacheTypes.Parameter {
 			ParameterName:  ptr.To("acl-pubsub-default"),
 			ParameterValue: ptr.To("allchannels"),
 		},
+		"cluster-enabled": {
+			ParameterName:  ptr.To("cluster-enabled"),
+			ParameterValue: ptr.To("no"),
+		},
 	}
 }
 
