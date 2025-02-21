@@ -33,6 +33,8 @@ const (
 	AzureRwxBackupDeleting AzureRwxBackupState = "Deleting"
 
 	AzureRwxBackupDeleted AzureRwxBackupState = "Deleted"
+
+	AzureRwxBackupFailed AzureRwxBackupState = "Failed"
 )
 
 type PvcRef struct {
