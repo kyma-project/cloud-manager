@@ -24,7 +24,7 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
 	return &State{
-		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRedisInstance{}),
+		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
 	}
