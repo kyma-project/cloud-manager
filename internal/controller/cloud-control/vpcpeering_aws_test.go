@@ -29,8 +29,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeeringName       = "1839c399-c52e-4b43-b156-4b51027508cd"
 			localVpcId           = "vpc-c0c7d75db0832988d"
 			localVpcCidr         = "10.180.0.0/16"
+			localVpcCidr2        = "10.182.0.0/16"
 			remoteVpcId          = "vpc-2c41e43fcd5340f8f"
 			remoteVpcCidr        = "10.200.0.0/16"
+			remoteVpcCidr2       = "10.201.0.0/16"
 			remoteAccountId      = "444455556666"
 			remoteRegion         = "eu-west1"
 			localMainRouteTable  = "rtb-c6606c725da27ff10"
@@ -85,6 +87,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			)
 		})
 
+		By("And Given AWS VPC additional cidr exists", func() {
+			awsMockLocal.AssociateVpcCidrBlock(infra.Ctx(), localVpcId, localVpcCidr2)
+		})
+
 		By("And Given AWS route table exists", func() {
 
 			awsMockLocal.AddRouteTable(
@@ -123,6 +129,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags("Name", "wrong3"),
 				nil,
 			)
+		})
+
+		By("And Given AWS remote VPC additional cidr exists", func() {
+			awsMockRemote.AssociateVpcCidrBlock(infra.Ctx(), remoteVpcId, remoteVpcCidr2)
 		})
 
 		By("And Given AWS remote route table exists", func() {
