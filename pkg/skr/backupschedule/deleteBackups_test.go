@@ -5,8 +5,10 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
 )
@@ -163,12 +165,14 @@ func (suite *deleteBackupsSuite) TestWhenNoMaxRetentionSet() {
 	suite.Nil(fromK8s.Status.LastDeletedBackups)
 }
 
-func (suite *deleteBackupsSuite) testDeleteBackup(createBackup2 bool) {
+func (suite *deleteBackupsSuite) testDeleteBackup(backup1, backup2, backup client.Object, maxDays, maxReady, maxFailed int, b1Exists, b2Exists bool) {
 
 	runTime := time.Now().UTC()
 
 	obj := gcpNfsBackupSchedule.DeepCopy()
-	obj.Spec.MaxRetentionDays = 1
+	obj.Spec.MaxRetentionDays = maxDays
+	obj.Spec.MaxReadyBackups = maxReady
+	obj.Spec.MaxFailedBackups = maxFailed
 	factory, err := newTestStateFactoryWithObj(obj)
 	suite.Nil(err)
 
@@ -182,16 +186,15 @@ func (suite *deleteBackupsSuite) testDeleteBackup(createBackup2 bool) {
 	state.nextRunTime = runTime
 
 	//Create provider specific backup objects
-	err = factory.skrCluster.K8sClient().Create(ctx, gcpBackup1.DeepCopy())
+	err = factory.skrCluster.K8sClient().Create(ctx, backup1)
 	suite.Nil(err)
+	state.Backups = append(state.Backups, backup1)
 
-	if createBackup2 {
-		err = factory.skrCluster.K8sClient().Create(ctx, gcpBackup2.DeepCopy())
+	if backup2 != nil {
+		err = factory.skrCluster.K8sClient().Create(ctx, backup2)
 		suite.Nil(err)
+		state.Backups = append(state.Backups, backup2)
 	}
-
-	state.Backups = append(state.Backups, gcpBackup1)
-	state.Backups = append(state.Backups, gcpBackup2)
 
 	//Invoke API under test
 	err, _ = deleteBackups(ctx, state)
@@ -199,29 +202,70 @@ func (suite *deleteBackupsSuite) testDeleteBackup(createBackup2 bool) {
 	//validate expected return values
 	suite.Equal(composed.StopWithRequeue, err)
 
+	//Validate schedule data
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
-			Namespace: gcpNfsBackupSchedule.Namespace},
+			Namespace: obj.Namespace},
 		fromK8s)
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
 	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
 
-	backup := &v1beta1.GcpNfsVolumeBackup{}
+	//Validate backup1
 	err = factory.skrCluster.K8sClient().Get(ctx,
-		types.NamespacedName{Name: gcpBackup1.GetName(),
-			Namespace: gcpNfsBackupSchedule.Namespace},
+		types.NamespacedName{Name: backup1.GetName(),
+			Namespace: obj.Namespace},
 		backup)
-	suite.Nil(err)
+	if b1Exists {
+		suite.Nil(err)
+	} else {
+		suite.True(apierrors.IsNotFound(err))
+	}
+
+	//Validate backup2
+	if backup2 != nil {
+		err = factory.skrCluster.K8sClient().Get(ctx,
+			types.NamespacedName{Name: backup2.GetName(),
+				Namespace: obj.Namespace},
+			backup)
+		if b2Exists {
+			suite.Nil(err)
+		} else {
+			suite.True(apierrors.IsNotFound(err))
+		}
+	}
 }
 
-func (suite *deleteBackupsSuite) TestDeleteGcpBackup() {
-	suite.testDeleteBackup(true)
+func (suite *deleteBackupsSuite) TestMaxRetentionDays() {
+	backup1 := gcpBackup1.DeepCopy()
+	backup2 := gcpBackup2.DeepCopy()
+	backup := &v1beta1.GcpNfsVolumeBackup{}
+	suite.testDeleteBackup(backup1, backup2, backup, 1, 100, 5, true, false)
+}
+
+func (suite *deleteBackupsSuite) TestMaxReadyBackups() {
+	backup1 := gcpBackup1.DeepCopy()
+	backup1.Status.State = v1beta1.StateReady
+	backup2 := gcpBackup2.DeepCopy()
+	backup2.Status.State = v1beta1.StateReady
+	backup := &v1beta1.GcpNfsVolumeBackup{}
+	suite.testDeleteBackup(backup1, backup2, backup, 375, 1, 5, true, false)
+}
+
+func (suite *deleteBackupsSuite) TestMaxFailedBackups() {
+	backup1 := gcpBackup1.DeepCopy()
+	backup1.Status.State = v1beta1.StateFailed
+	backup2 := gcpBackup2.DeepCopy()
+	backup2.Status.State = v1beta1.StateFailed
+	backup := &v1beta1.GcpNfsVolumeBackup{}
+	suite.testDeleteBackup(backup1, backup2, backup, 375, 100, 1, true, false)
 }
 
 func (suite *deleteBackupsSuite) TestDeleteGcpBackupFailure() {
-	suite.testDeleteBackup(false)
+	backup1 := gcpBackup1.DeepCopy()
+	backup := &v1beta1.GcpNfsVolumeBackup{}
+	suite.testDeleteBackup(backup1, nil, backup, 1, 100, 5, true, false)
 }
 
 func TestDeleteBackupsSuite(t *testing.T) {

@@ -124,12 +124,12 @@ type GcpNfsVolumeBackup struct {
 	Status GcpNfsVolumeBackupStatus `json:"status,omitempty"`
 }
 
-func (in *GcpNfsVolumeBackup) State() GcpNfsBackupState {
-	return in.Status.State
+func (in *GcpNfsVolumeBackup) State() string {
+	return string(in.Status.State)
 }
 
-func (in *GcpNfsVolumeBackup) SetState(v GcpNfsBackupState) {
-	in.Status.State = v
+func (in *GcpNfsVolumeBackup) SetState(v string) {
+	in.Status.State = GcpNfsBackupState(v)
 }
 
 func (in *GcpNfsVolumeBackup) Conditions() *[]metav1.Condition {

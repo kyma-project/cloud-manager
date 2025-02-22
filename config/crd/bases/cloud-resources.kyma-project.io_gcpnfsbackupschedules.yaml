@@ -67,12 +67,32 @@ spec:
                 location:
                   description: Location specifies the location where the backup has to be stored.
                   type: string
-                maxRetentionDays:
+                maxActiveBackups:
+                  default: 100
                   description: |-
-                    MaxRetentionDays specifies the maximum number of days to retain the backup
-                    If not provided, backup will be retained indefinitely
+                    MaxActiveBackups specifies the maximum number of backups in "Active" state to be retained.
+                    If not provided, it will be defaulted to 100 active backups.
                     If the DeleteCascade is true for this schedule,
                     then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+                  minimum: 1
+                  type: integer
+                maxFailedBackups:
+                  default: 5
+                  description: |-
+                    MaxFailedBackups specifies the maximum number of backups in "Failed" state to be retained.
+                    If not provided, it will be defaulted to 5 failed backups.
+                    If the DeleteCascade is true for this schedule,
+                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+                  minimum: 1
+                  type: integer
+                maxRetentionDays:
+                  default: 375
+                  description: |-
+                    MaxRetentionDays specifies the maximum number of days to retain the backup
+                    If not provided, it will be defaulted to 375 days.
+                    If the DeleteCascade is true for this schedule,
+                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+                  minimum: 1
                   type: integer
                 nfsVolumeRef:
                   description: NfsVolumeRef specifies the SourceRef resource that a backup has to be made of.

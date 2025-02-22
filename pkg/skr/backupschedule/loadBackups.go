@@ -44,9 +44,9 @@ func loadBackups(ctx context.Context, st composed.State) (error, context.Context
 	//convert list to a slice
 	objects := state.backupImpl.toObjectSlice(list)
 
-	//sort the objects
+	//sort the objects in reverse chronological order.
 	sort.Slice(objects, func(i, j int) bool {
-		return objects[i].GetCreationTimestamp().Time.Before(objects[j].GetCreationTimestamp().Time)
+		return objects[i].GetCreationTimestamp().Time.After(objects[j].GetCreationTimestamp().Time)
 	})
 
 	//Store the objects in the State.
