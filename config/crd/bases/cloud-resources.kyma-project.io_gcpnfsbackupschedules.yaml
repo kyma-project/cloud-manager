@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: gcpnfsbackupschedules.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -67,20 +67,20 @@ spec:
                 location:
                   description: Location specifies the location where the backup has to be stored.
                   type: string
-                maxActiveBackups:
-                  default: 100
-                  description: |-
-                    MaxActiveBackups specifies the maximum number of backups in "Active" state to be retained.
-                    If not provided, it will be defaulted to 100 active backups.
-                    If the DeleteCascade is true for this schedule,
-                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
-                  minimum: 1
-                  type: integer
                 maxFailedBackups:
                   default: 5
                   description: |-
                     MaxFailedBackups specifies the maximum number of backups in "Failed" state to be retained.
                     If not provided, it will be defaulted to 5 failed backups.
+                    If the DeleteCascade is true for this schedule,
+                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+                  minimum: 1
+                  type: integer
+                maxReadyBackups:
+                  default: 100
+                  description: |-
+                    MaxReadyBackups specifies the maximum number of backups in "Ready" state to be retained.
+                    If not provided, it will be defaulted to 100 active backups.
                     If the DeleteCascade is true for this schedule,
                     then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
                   minimum: 1
