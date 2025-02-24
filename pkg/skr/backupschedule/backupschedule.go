@@ -29,6 +29,10 @@ type BackupScheduleSpec interface {
 	SetSuspend(suspend bool)
 	GetDeleteCascade() bool
 	SetDeleteCascade(cascade bool)
+	GetMaxReadyBackups() int
+	SetMaxReadyBackups(count int)
+	GetMaxFailedBackups() int
+	SetMaxFailedBackups(count int)
 }
 
 type BackupScheduleStatus interface {

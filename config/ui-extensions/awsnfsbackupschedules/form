@@ -31,6 +31,12 @@
 - path: spec.maxRetentionDays
   name: spec.maxRetentionDays
   required: false
+- path: spec.maxReadyBackups
+  name: spec.maxReadyBackups
+  required: false
+- path: spec.maxFailedBackups
+  name: spec.maxFailedBackups
+  required: false
 - path: spec.deleteCascade
   name: spec.deleteCascade
   required: false

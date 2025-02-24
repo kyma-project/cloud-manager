@@ -60,11 +60,31 @@ type GcpNfsBackupScheduleSpec struct {
 	EndTime *metav1.Time `json:"endTime,omitempty"`
 
 	// MaxRetentionDays specifies the maximum number of days to retain the backup
-	// If not provided, backup will be retained indefinitely
+	// If not provided, it will be defaulted to 375 days.
 	// If the DeleteCascade is true for this schedule,
 	// then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
 	// +optional
+	// +kubebuilder:default=375
+	// +kubebuilder:validation:Minimum=1
 	MaxRetentionDays int `json:"maxRetentionDays,omitempty"`
+
+	// MaxReadyBackups specifies the maximum number of backups in "Ready" state to be retained.
+	// If not provided, it will be defaulted to 100 active backups.
+	// If the DeleteCascade is true for this schedule,
+	// then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+	// +optional
+	// +kubebuilder:default=100
+	// +kubebuilder:validation:Minimum=1
+	MaxReadyBackups int `json:"maxReadyBackups,omitempty"`
+
+	// MaxFailedBackups specifies the maximum number of backups in "Failed" state to be retained.
+	// If not provided, it will be defaulted to 5 failed backups.
+	// If the DeleteCascade is true for this schedule,
+	// then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+	// +optional
+	// +kubebuilder:default=5
+	// +kubebuilder:validation:Minimum=1
+	MaxFailedBackups int `json:"maxFailedBackups,omitempty"`
 
 	// Suspend specifies whether the schedule should be suspended
 	// By default, suspend will be false
@@ -213,6 +233,20 @@ func (sc *GcpNfsBackupSchedule) GetDeleteCascade() bool {
 
 func (sc *GcpNfsBackupSchedule) SetDeleteCascade(cascade bool) {
 	sc.Spec.DeleteCascade = cascade
+}
+
+func (sc *GcpNfsBackupSchedule) GetMaxReadyBackups() int {
+	return sc.Spec.MaxReadyBackups
+}
+func (sc *GcpNfsBackupSchedule) SetMaxReadyBackups(count int) {
+	sc.Spec.MaxReadyBackups = count
+}
+
+func (sc *GcpNfsBackupSchedule) GetMaxFailedBackups() int {
+	return sc.Spec.MaxFailedBackups
+}
+func (sc *GcpNfsBackupSchedule) SetMaxFailedBackups(count int) {
+	sc.Spec.MaxFailedBackups = count
 }
 
 func (sc *GcpNfsBackupSchedule) GetNextRunTimes() []string {

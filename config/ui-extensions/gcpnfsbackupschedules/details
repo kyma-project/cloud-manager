@@ -16,6 +16,12 @@ body:
         source: maxRetentionDays
         name: spec.maxRetentionDays
       - widget: Labels
+        source: maxReadyBackups
+        name: spec.maxReadyBackups
+      - widget: Labels
+        source: maxFailedBackups
+        name: spec.maxFailedBackups
+      - widget: Labels
         source: prefix
         name: spec.prefix
       - widget: Labels

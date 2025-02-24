@@ -3,6 +3,7 @@ package backupschedule
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -48,12 +49,20 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 
 	nextDeleteTimes := map[string]string{}
 	var lastDeleted []corev1.ObjectReference
-	for _, backup := range state.Backups {
+	readyCount, failedCount := 0, 0
+	for _, bk := range state.Backups {
+		backup, okay := bk.(composed.ObjWithConditionsAndState)
+		if !okay {
+			logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("%t is not of type composed.ObjWithConditionsAndState", bk))
+			continue
+		}
 
 		//Check if the backup object should be deleted
 		toRetain := time.Duration(schedule.GetMaxRetentionDays()) * 24 * time.Hour
 		elapsed := time.Since(backup.GetCreationTimestamp().Time)
-		if elapsed > toRetain {
+		if elapsed > toRetain ||
+			(backup.State() == v1beta1.StateReady && readyCount >= schedule.GetMaxReadyBackups()) ||
+			(backup.State() == v1beta1.StateFailed && failedCount >= schedule.GetMaxFailedBackups()) {
 			logger.WithValues("Backup", backup.GetName()).Info("Deleting backup object")
 			err := state.Cluster().K8sClient().Delete(ctx, backup)
 			if err != nil {
@@ -64,6 +73,14 @@ func deleteBackups(ctx context.Context, st composed.State) (error, context.Conte
 				Name:      backup.GetName(),
 				Namespace: backup.GetNamespace(),
 			})
+		} else {
+			//Increment counters
+			switch backup.State() {
+			case v1beta1.StateReady:
+				readyCount++
+			case v1beta1.StateFailed:
+				failedCount++
+			}
 		}
 		if len(nextDeleteTimes) < MaxSchedules {
 			backupName := fmt.Sprintf("%s/%s", backup.GetNamespace(), backup.GetName())

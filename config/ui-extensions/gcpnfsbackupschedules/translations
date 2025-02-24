@@ -16,6 +16,8 @@ en:
   spec.endTime: End Time
   spec.location: Location
   spec.maxRetentionDays: Max Retention Days
+  spec.maxReadyBackups: Max Backups in Ready State
+  spec.maxFailedBackups: Max Backups in Failed State
   spec.prefix: Prefix
   spec.startTime: Start Time
   spec.suspend: Suspend
