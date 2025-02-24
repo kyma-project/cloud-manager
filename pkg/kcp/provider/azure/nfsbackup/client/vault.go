@@ -15,7 +15,7 @@ type vaultClient struct {
 	*armrecoveryservices.VaultsClient
 }
 
-func NewVaultClient(subscriptionId string, cred *azidentity.DefaultAzureCredential) (VaultClient, error) {
+func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (VaultClient, error) {
 
 	vc, err := armrecoveryservices.NewVaultsClient(subscriptionId, cred, nil)
 	if err != nil {

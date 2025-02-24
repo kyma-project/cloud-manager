@@ -15,7 +15,7 @@ type protectionPoliciesClient struct {
 	*armrecoveryservicesbackup.ProtectionPoliciesClient
 }
 
-func NewProtectionPoliciesClient(subscriptionId string, cred *azidentity.DefaultAzureCredential) (ProtectionPoliciesClient, error) {
+func NewProtectionPoliciesClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (ProtectionPoliciesClient, error) {
 
 	ppc, err := armrecoveryservicesbackup.NewProtectionPoliciesClient(subscriptionId, cred, nil)
 

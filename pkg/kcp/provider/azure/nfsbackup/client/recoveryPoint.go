@@ -15,7 +15,7 @@ type recoveryPointClient struct {
 	*armrecoveryservicesbackup.RecoveryPointsClient
 }
 
-func NewRecoveryPointClient(subscriptionId string, cred *azidentity.DefaultAzureCredential) (RecoveryPointClient, error) {
+func NewRecoveryPointClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (RecoveryPointClient, error) {
 
 	rpc, err := armrecoveryservicesbackup.NewRecoveryPointsClient(subscriptionId, cred, nil)
 	if err != nil {
