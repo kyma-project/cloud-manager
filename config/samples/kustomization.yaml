@@ -25,4 +25,5 @@ resources:
 - cloud-control_v1beta1_skrstatus.yaml
 - cloud-control_v1beta1_rediscluster.yaml
 - cloud-resources_v1beta1_azurerwxvolumebackup.yaml
+- cloud-resources_v1beta1_azurerwxvolumerestore.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
