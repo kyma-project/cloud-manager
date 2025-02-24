@@ -18,7 +18,9 @@ package cloudresources
 
 import (
 	"context"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup"
+	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrreconciler "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -27,7 +29,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type AzureRwxVolumeBackupReconcilerFactory struct{}
+type AzureRwxVolumeBackupReconcilerFactory struct {
+	clientProvider azureclient.ClientProvider[client.Client]
+}
 
 func (f *AzureRwxVolumeBackupReconcilerFactory) New(args skrreconciler.ReconcilerArguments) reconcile.Reconciler {
 	return &AzureRwxVolumeBackupReconciler{
@@ -57,9 +61,11 @@ func (r *AzureRwxVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupAzureRwxBackupReconciler(reg skrruntime.SkrRegistry) error {
+func SetupAzureRwxBackupReconciler(reg skrruntime.SkrRegistry, clientProvider azureclient.ClientProvider[client.Client]) error {
 	return reg.Register().
-		WithFactory(&AzureRwxVolumeBackupReconcilerFactory{}).
+		WithFactory(&AzureRwxVolumeBackupReconcilerFactory{
+			clientProvider: clientProvider,
+		}).
 		For(&cloudresourcesv1beta1.AzureRwxVolumeBackup{}).
 		Complete()
 }
