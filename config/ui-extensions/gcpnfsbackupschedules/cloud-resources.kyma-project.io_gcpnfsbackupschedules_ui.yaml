@@ -19,6 +19,12 @@ data:
             source: maxRetentionDays
             name: spec.maxRetentionDays
           - widget: Labels
+            source: maxReadyBackups
+            name: spec.maxReadyBackups
+          - widget: Labels
+            source: maxFailedBackups
+            name: spec.maxFailedBackups
+          - widget: Labels
             source: prefix
             name: spec.prefix
           - widget: Labels
@@ -90,6 +96,12 @@ data:
     - path: spec.maxRetentionDays
       name: spec.maxRetentionDays
       required: false
+    - path: spec.maxReadyBackups
+      name: spec.maxReadyBackups
+      required: false
+    - path: spec.maxFailedBackups
+      name: spec.maxFailedBackups
+      required: false
     - path: spec.prefix
       name: spec.prefix
       required: false
@@ -140,6 +152,8 @@ data:
       spec.endTime: End Time
       spec.location: Location
       spec.maxRetentionDays: Max Retention Days
+      spec.maxReadyBackups: Max Backups in Ready State
+      spec.maxFailedBackups: Max Backups in Failed State
       spec.prefix: Prefix
       spec.startTime: Start Time
       spec.suspend: Suspend

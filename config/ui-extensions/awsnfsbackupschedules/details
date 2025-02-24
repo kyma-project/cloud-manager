@@ -36,6 +36,12 @@ body:
         source: maxRetentionDays
         name: spec.maxRetentionDays
       - widget: Labels
+        source: maxReadyBackups
+        name: spec.maxReadyBackups
+      - widget: Labels
+        source: maxFailedBackups
+        name: spec.maxFailedBackups
+      - widget: Labels
         source: deleteCascade
         name: spec.deleteCascade
       - widget: Labels
