@@ -62,8 +62,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		redisCapacity := 2
-		redisFamily := "P"
-		redisFamilyName := "Premium"
+		redisFamily := "S"
 
 		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 		var redis *armredis.ResourceInfo
@@ -101,9 +100,12 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 		By("And Then Azure Redis has family as specified in KCP RedisInstance", func() {
 			actualFamily := string(ptr.Deref(redis.Properties.SKU.Family, ""))
-			Expect(actualFamily).To(Equal(redisFamily))
+			redisStandardFamilyTier := "C"
+			Expect(actualFamily).To(Equal(redisStandardFamilyTier))
+
+			redisStandardFamilyName := "Standard"
 			actualFamilyName := string(ptr.Deref(redis.Properties.SKU.Name, ""))
-			Expect(actualFamilyName).To(Equal(redisFamilyName))
+			Expect(actualFamilyName).To(Equal(redisStandardFamilyName))
 		})
 
 		By("And Then Azure Redis has nonSSl port disabled ", func() {

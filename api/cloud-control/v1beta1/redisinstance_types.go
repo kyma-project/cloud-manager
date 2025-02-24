@@ -111,7 +111,7 @@ type AzureRedisSKU struct {
 	Capacity int `json:"capacity"`
 
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum=C;P
+	// +kubebuilder:validation:Enum=S;P
 	// +kubebuilder:default=P
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Family is immutable."
 	Family string `json:"family,omitempty"`

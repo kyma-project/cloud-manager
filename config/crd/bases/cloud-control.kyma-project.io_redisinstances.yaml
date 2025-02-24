@@ -135,7 +135,7 @@ spec:
                           family:
                             default: P
                             enum:
-                            - C
+                            - S
                             - P
                             type: string
                             x-kubernetes-validations:

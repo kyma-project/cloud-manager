@@ -83,7 +83,7 @@ func getCreateParams(state *State) armredis.CreateParameters {
 func getSKUParams(state *State) (*armredis.SKUName, *armredis.SKUFamily) {
 	skuName := to.Ptr(armredis.SKUNamePremium)
 	skuFamily := to.Ptr(armredis.SKUFamilyP)
-	if state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Family == "C" {
+	if state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Family == "S" {
 		skuName = to.Ptr(armredis.SKUNameStandard)
 		skuFamily = to.Ptr(armredis.SKUFamilyC)
 	}
