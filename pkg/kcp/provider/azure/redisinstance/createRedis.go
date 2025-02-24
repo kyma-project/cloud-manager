@@ -55,11 +55,12 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 }
 
 func getCreateParams(state *State) armredis.CreateParameters {
+	skuName, skuFamily := getSKUParams(state)
 	createProperties := &armredis.CreateProperties{
 		SKU: &armredis.SKU{
-			Name:     to.Ptr(armredis.SKUNamePremium),
+			Name:     skuName,
 			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-			Family:   to.Ptr(armredis.SKUFamilyP),
+			Family:   skuFamily,
 		},
 		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
 		EnableNonSSLPort:   to.Ptr(false),
@@ -77,4 +78,14 @@ func getCreateParams(state *State) armredis.CreateParameters {
 		Properties: createProperties,
 	}
 	return createParameters
+}
+
+func getSKUParams(state *State) (*armredis.SKUName, *armredis.SKUFamily) {
+	skuName := to.Ptr(armredis.SKUNamePremium)
+	skuFamily := to.Ptr(armredis.SKUFamilyP)
+	if state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Family == "C" {
+		skuName = to.Ptr(armredis.SKUNameStandard)
+		skuFamily = to.Ptr(armredis.SKUFamilyC)
+	}
+	return skuName, skuFamily
 }

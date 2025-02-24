@@ -94,7 +94,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 				WithIpRange(ipRange.Name),
 				WithScope(kymaName),
 				WithRedisInstanceAzure(),
-				WithSKU(2),
+				WithSKU(2, "P"),
 				WithKcpAzureRedisVersion("6.0"),
 			)).To(Succeed(), "failed creating RedisInstance")
 		})

@@ -109,6 +109,12 @@ type AzureRedisSKU struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=1;2;3;4;5
 	Capacity int `json:"capacity"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=C;P
+	// +kubebuilder:default=P
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Family is immutable."
+	Family string `json:"family,omitempty"`
 }
 
 type TimeOfDayGcp struct {

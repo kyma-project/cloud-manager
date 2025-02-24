@@ -132,6 +132,12 @@ spec:
                             - 4
                             - 5
                             type: integer
+                          family:
+                            default: P
+                            enum:
+                            - C
+                            - P
+                            type: string
                         required:
                         - capacity
                         type: object
