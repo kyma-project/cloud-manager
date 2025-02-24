@@ -55,6 +55,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurevpcpeerings.yaml $
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azureredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/cloud-resources.kyma-project.io_azureredisinstances.yaml
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumebackups.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumerestores.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 
 # AZURE UI
 cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
