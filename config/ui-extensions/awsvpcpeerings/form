@@ -13,5 +13,9 @@
   required: false
   disableOnEdit: true
   description: Immutable once set.
-# - path: spec.deleteRemotePeering
-#   name: spec.deleteRemotePeering
+- path: spec.remoteRouteTableUpdateStrategy
+  name: spec.remoteRouteTableUpdateStrategy
+  disableOnEdit: true
+  description: Immutable once set.
+  dropdownOnly: true
+
