@@ -88,7 +88,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given AWS VPC additional cidr exists", func() {
-			awsMockLocal.AssociateVpcCidrBlock(infra.Ctx(), localVpcId, localVpcCidr2)
+			_, err := awsMockLocal.AssociateVpcCidrBlock(infra.Ctx(), localVpcId, localVpcCidr2)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given AWS route table exists", func() {
@@ -132,7 +133,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given AWS remote VPC additional cidr exists", func() {
-			awsMockRemote.AssociateVpcCidrBlock(infra.Ctx(), remoteVpcId, remoteVpcCidr2)
+			_, err := awsMockRemote.AssociateVpcCidrBlock(infra.Ctx(), remoteVpcId, remoteVpcCidr2)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given AWS remote route table exists", func() {
