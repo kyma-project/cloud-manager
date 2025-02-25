@@ -463,12 +463,12 @@ func (c *client) ModifyElastiCacheClusterShardConfiguration(ctx context.Context,
 func (c *client) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error {
 	var err error
 
-	if options.ReplicasToRemove != nil && len(options.ReplicasToRemove) > 0 {
+	if len(options.ReplicasToRemove) > 0 {
 		_, err = c.elastiCacheSvc.DecreaseReplicaCount(ctx, &elasticache.DecreaseReplicaCountInput{
 			ApplyImmediately:   ptr.To(true),
 			ReplicationGroupId: ptr.To(options.ReplicationGroupId),
 			NewReplicaCount:    ptr.To(options.DesiredReplicaCount),
-			// ReplicasToRemove:   options.ReplicasToRemove,
+			// ReplicasToRemove:   options.ReplicasToRemove, // actually not needed (inconsistent API compared to sharding implementation)
 		})
 	} else {
 		_, err = c.elastiCacheSvc.IncreaseReplicaCount(ctx, &elasticache.IncreaseReplicaCountInput{
