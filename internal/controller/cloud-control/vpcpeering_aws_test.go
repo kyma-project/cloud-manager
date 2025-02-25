@@ -310,10 +310,26 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
 			Expect(awsMockLocal.GetRoute(localVpcId, localRouteTable, kcpPeering.Status.Id, remoteVpcCidr)).
-				ToNot(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+				NotTo(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
 					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
 			Expect(awsMockLocal.GetRoute(wrong2VpcId, wrong2RouteTable, kcpPeering.Status.Id, remoteVpcCidr)).
+				To(BeNil(), fmt.Sprintf("Route table %s should not have route with target %s and destination %s",
+					wrong2RouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+
+			// Additional CIDR blocks
+			Expect(awsMockLocal.GetRouteCount(localVpcId, kcpPeering.Status.Id, remoteVpcCidr2)).
+				To(Equal(2))
+
+			Expect(awsMockLocal.GetRoute(localVpcId, localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr2)).
+				NotTo(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+					localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+
+			Expect(awsMockLocal.GetRoute(localVpcId, localRouteTable, kcpPeering.Status.Id, remoteVpcCidr2)).
+				NotTo(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+
+			Expect(awsMockLocal.GetRoute(wrong2VpcId, wrong2RouteTable, kcpPeering.Status.Id, remoteVpcCidr2)).
 				To(BeNil(), fmt.Sprintf("Route table %s should not have route with target %s and destination %s",
 					wrong2RouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
@@ -332,6 +348,21 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
 			Expect(awsMockRemote.GetRoute(wrong3VpcId, wrong3RouteTable, kcpPeering.Status.RemoteId, localVpcCidr)).
+				To(BeNil(), fmt.Sprintf("Route table %s should not be modified", wrong2RouteTable))
+
+			// Additional CIDR blocks
+			Expect(awsMockRemote.GetRouteCount(remoteVpcId, kcpPeering.Status.RemoteId, localVpcCidr2)).
+				To(Equal(2))
+
+			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteMainRouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).
+				NotTo(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+					localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+
+			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteRouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).
+				ToNot(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
+
+			Expect(awsMockRemote.GetRoute(wrong3VpcId, wrong3RouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).
 				To(BeNil(), fmt.Sprintf("Route table %s should not be modified", wrong2RouteTable))
 		})
 
