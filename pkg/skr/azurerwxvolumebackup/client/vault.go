@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -58,7 +57,7 @@ func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, 
 		return err
 	}
 	if exists {
-		return errors.New(fmt.Sprintf("Vault already exists in %s", location))
+		return fmt.Errorf("vault already exists in %s", location)
 	}
 
 	_, err = c.azureClient.BeginCreateOrUpdate(
@@ -114,9 +113,9 @@ func (c vaultClient) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vau
 		if err != nil {
 			return vaults, err
 		}
-		for _, v := range page.VaultList.Value {
-			vaults = append(vaults, v)
-		}
+
+		vaults = append(vaults, page.VaultList.Value...)
+
 	}
 	return vaults, nil
 

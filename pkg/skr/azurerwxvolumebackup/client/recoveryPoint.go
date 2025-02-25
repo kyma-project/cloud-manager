@@ -71,9 +71,8 @@ func (c recoveryPointClient) ListRecoveryPoints(ctx context.Context, vaultName s
 			return result, err
 		}
 
-		for _, v := range page.Value {
-			result = append(result, v)
-		}
+		result = append(result, page.Value...)
+
 	}
 
 	return result, nil
