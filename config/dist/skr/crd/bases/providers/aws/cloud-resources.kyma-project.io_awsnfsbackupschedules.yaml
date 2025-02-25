@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: awsnfsbackupschedules.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -64,12 +64,32 @@ spec:
                     If not provided, schedule will run indefinitely
                   format: date-time
                   type: string
+                maxFailedBackups:
+                  default: 5
+                  description: |-
+                    MaxFailedBackups specifies the maximum number of backups in "Failed" state to be retained.
+                    If not provided, it will be defaulted to 5 failed backups.
+                    If the DeleteCascade is true for this schedule,
+                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxFailedBackups configuration.
+                  minimum: 1
+                  type: integer
+                maxReadyBackups:
+                  default: 100
+                  description: |-
+                    MaxReadyBackups specifies the maximum number of backups in "Ready" state to be retained.
+                    If not provided, it will be defaulted to 100 active backups.
+                    If the DeleteCascade is true for this schedule,
+                    then all the backups will be deleted when the schedule is deleted irrespective of the MaxReadyBackups configuration.
+                  minimum: 1
+                  type: integer
                 maxRetentionDays:
+                  default: 375
                   description: |-
                     MaxRetentionDays specifies the maximum number of days to retain the backup
-                    If not provided, backup will be retained indefinitely
+                    If not provided, it will be defaulted to 375 days.
                     If the DeleteCascade is true for this schedule,
                     then all the backups will be deleted when the schedule is deleted irrespective of the MaxRetentionDay configuration.
+                  minimum: 1
                   type: integer
                 nfsVolumeRef:
                   description: NfsVolumeRef specifies the SourceRef resource that a backup has to be made of.

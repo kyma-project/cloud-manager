@@ -39,6 +39,12 @@ data:
             source: maxRetentionDays
             name: spec.maxRetentionDays
           - widget: Labels
+            source: maxReadyBackups
+            name: spec.maxReadyBackups
+          - widget: Labels
+            source: maxFailedBackups
+            name: spec.maxFailedBackups
+          - widget: Labels
             source: deleteCascade
             name: spec.deleteCascade
           - widget: Labels
@@ -88,6 +94,12 @@ data:
     - path: spec.maxRetentionDays
       name: spec.maxRetentionDays
       required: false
+    - path: spec.maxReadyBackups
+      name: spec.maxReadyBackups
+      required: false
+    - path: spec.maxFailedBackups
+      name: spec.maxFailedBackups
+      required: false
     - path: spec.deleteCascade
       name: spec.deleteCascade
       required: false
@@ -125,6 +137,8 @@ data:
       spec.endTime: End Time
       spec.prefix: Prefix
       spec.maxRetentionDays: Max Retention Days
+      spec.maxReadyBackups: Max Backups in Ready State
+      spec.maxFailedBackups: Max Backups in Failed State
       spec.deleteCascade: Delete Cascade
       spec.suspend: Suspend
       status.lastCreateRun: Last Run Time
@@ -137,7 +151,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

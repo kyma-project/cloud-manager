@@ -70,6 +70,7 @@ rules:
   - awsvpcpeerings
   - azureredisinstances
   - azurerwxvolumebackups
+  - azurerwxvolumerestores
   - azurevpcpeerings
   - cceenfsvolumes
   - cloudresources
@@ -99,6 +100,7 @@ rules:
   - awsvpcpeerings/finalizers
   - azureredisinstances/finalizers
   - azurerwxvolumebackups/finalizers
+  - azurerwxvolumerestores/finalizers
   - azurevpcpeerings/finalizers
   - cceenfsvolumes/finalizers
   - cloudresources/finalizers
@@ -122,6 +124,7 @@ rules:
   - awsvpcpeerings/status
   - azureredisinstances/status
   - azurerwxvolumebackups/status
+  - azurerwxvolumerestores/status
   - azurevpcpeerings/status
   - cceenfsvolumes/status
   - cloudresources/status

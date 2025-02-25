@@ -27,6 +27,7 @@ resources:
 - bases/cloud-control.kyma-project.io_skrstatuses.yaml
 - bases/cloud-control.kyma-project.io_redisclusters.yaml
 - bases/cloud-resources.kyma-project.io_azurerwxvolumebackups.yaml
+- bases/cloud-resources.kyma-project.io_azurerwxvolumerestores.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -81,6 +82,7 @@ patches:
 #- path: patches/cainjection_in_cloud-resources_awsnfsvolumerestores.yaml
 #- path: patches/cainjection_in_cloud-control_redisclusters.yaml
 #- path: patches/cainjection_in_cloud-resources_azurerwxvolumebackups.yaml
+#- path: patches/cainjection_in_cloud-resources_azurerwxvolumerestores.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

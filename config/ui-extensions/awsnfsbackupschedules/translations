@@ -6,6 +6,8 @@ en:
   spec.endTime: End Time
   spec.prefix: Prefix
   spec.maxRetentionDays: Max Retention Days
+  spec.maxReadyBackups: Max Backups in Ready State
+  spec.maxFailedBackups: Max Backups in Failed State
   spec.deleteCascade: Delete Cascade
   spec.suspend: Suspend
   status.lastCreateRun: Last Run Time
