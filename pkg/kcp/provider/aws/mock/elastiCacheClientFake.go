@@ -450,6 +450,14 @@ func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Cont
 	return []elasticacheTypes.CacheCluster{*cacheCluster}, nil
 }
 
+func (client *elastiCacheClientFake) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterShardOptions) error {
+	return nil
+}
+
+func (c *elastiCacheClientFake) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterReplicaOptions) error {
+	return nil
+}
+
 func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

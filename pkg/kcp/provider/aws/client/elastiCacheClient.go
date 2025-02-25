@@ -61,6 +61,18 @@ type ModifyElastiCacheClusterOptions struct {
 	ParameterGroupName         *string
 }
 
+type RescaleElastiCacheClusterShardOptions struct {
+	ReplicationGroupId string
+	DesiredShardCount  int32
+	NodeGroupsToRemove []string
+}
+
+type RescaleElastiCacheClusterReplicaOptions struct {
+	ReplicationGroupId  string
+	DesiredReplicaCount int32
+	ReplicasToRemove    []string
+}
+
 type ElastiCacheClient interface {
 	DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticacheTypes.CacheSubnetGroup, error)
 	CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticacheTypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error)
@@ -82,6 +94,8 @@ type ElastiCacheClient interface {
 	ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error
 	DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticacheTypes.CacheCluster, error)
+	ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options RescaleElastiCacheClusterShardOptions) error
+	ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error
 
 	DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error)
 	CreateUserGroup(ctx context.Context, id string, tags []elasticacheTypes.Tag) (*elasticache.CreateUserGroupOutput, error)
@@ -112,6 +126,7 @@ func (c *client) DescribeElastiCacheSubnetGroup(ctx context.Context, name string
 	out, err := c.elastiCacheSvc.DescribeCacheSubnetGroups(ctx, &elasticache.DescribeCacheSubnetGroupsInput{
 		CacheSubnetGroupName: ptr.To(name),
 	})
+
 	if err != nil {
 		if awsmeta.IsNotFound(err) {
 			return []elasticacheTypes.CacheSubnetGroup{}, nil
@@ -428,6 +443,46 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]e
 		return nil, err
 	}
 	return out.CacheClusters, nil
+}
+
+func (c *client) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options RescaleElastiCacheClusterShardOptions) error {
+	_, err := c.elastiCacheSvc.ModifyReplicationGroupShardConfiguration(ctx, &elasticache.ModifyReplicationGroupShardConfigurationInput{
+		ApplyImmediately:   ptr.To(true),
+		NodeGroupCount:     ptr.To(options.DesiredShardCount),
+		NodeGroupsToRemove: options.NodeGroupsToRemove,
+		ReplicationGroupId: ptr.To(options.ReplicationGroupId),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error {
+	var err error
+
+	if options.ReplicasToRemove != nil && len(options.ReplicasToRemove) > 0 {
+		_, err = c.elastiCacheSvc.DecreaseReplicaCount(ctx, &elasticache.DecreaseReplicaCountInput{
+			ApplyImmediately:   ptr.To(true),
+			ReplicationGroupId: ptr.To(options.ReplicationGroupId),
+			NewReplicaCount:    ptr.To(options.DesiredReplicaCount),
+			// ReplicasToRemove:   options.ReplicasToRemove,
+		})
+	} else {
+		_, err = c.elastiCacheSvc.IncreaseReplicaCount(ctx, &elasticache.IncreaseReplicaCountInput{
+			ApplyImmediately:   ptr.To(true),
+			ReplicationGroupId: ptr.To(options.ReplicationGroupId),
+			NewReplicaCount:    ptr.To(options.DesiredReplicaCount),
+		})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *client) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {
