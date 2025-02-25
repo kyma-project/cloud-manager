@@ -103,7 +103,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			redisStandardFamilyTier := "C"
 			Expect(actualFamily).To(Equal(redisStandardFamilyTier))
 
-			redisStandardFamilyName := "Standard"
+			redisStandardFamilyName := "Basic"
 			actualFamilyName := string(ptr.Deref(redis.Properties.SKU.Name, ""))
 			Expect(actualFamilyName).To(Equal(redisStandardFamilyName))
 		})
