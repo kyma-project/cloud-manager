@@ -62,6 +62,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
 		redisCapacity := 2
+		redisFamily := "S"
 
 		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 		var redis *armredis.ResourceInfo
@@ -75,7 +76,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithIpRange(kcpIpRangeName),
 					WithScope(name),
 					WithRedisInstanceAzure(),
-					WithSKU(redisCapacity),
+					WithSKU(redisCapacity, redisFamily),
 					WithKcpAzureRedisVersion("6.0"),
 				).
 				Should(Succeed(), "failed creating RedisInstance")
@@ -95,6 +96,16 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		By("And Then Azure Redis has capacity as specified in KCP RedisInstance", func() {
 			actualCapacity := ptr.Deref(redis.Properties.SKU.Capacity, int32(0))
 			Expect(actualCapacity).To(Equal(int32(redisCapacity)))
+		})
+
+		By("And Then Azure Redis has family as specified in KCP RedisInstance", func() {
+			actualFamily := string(ptr.Deref(redis.Properties.SKU.Family, ""))
+			redisStandardFamilyTier := "C"
+			Expect(actualFamily).To(Equal(redisStandardFamilyTier))
+
+			redisStandardFamilyName := "Basic"
+			actualFamilyName := string(ptr.Deref(redis.Properties.SKU.Name, ""))
+			Expect(actualFamilyName).To(Equal(redisStandardFamilyName))
 		})
 
 		By("And Then Azure Redis has nonSSl port disabled ", func() {

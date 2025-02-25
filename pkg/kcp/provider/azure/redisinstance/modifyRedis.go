@@ -77,9 +77,7 @@ func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 
 	updateProperties := &armredis.UpdateProperties{
 		SKU: &armredis.SKU{
-			Name:     to.Ptr(armredis.SKUNamePremium),
 			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
-			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
 	}
 

@@ -383,11 +383,11 @@ func WithKcpAzureRedisVersion(redisVersion string) ObjAction {
 		},
 	}
 }
-func WithSKU(capacity int) ObjAction {
+func WithSKU(capacity int, family string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if azureRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				azureRedisInstance.Spec.Instance.Azure.SKU = cloudcontrolv1beta1.AzureRedisSKU{Capacity: capacity}
+				azureRedisInstance.Spec.Instance.Azure.SKU = cloudcontrolv1beta1.AzureRedisSKU{Capacity: capacity, Family: family}
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisVersion", obj))
