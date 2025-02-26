@@ -273,6 +273,11 @@ func main() {
 	//	os.Exit(1)
 	//}
 
+	//if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
+	//	os.Exit(1)
+	//}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
