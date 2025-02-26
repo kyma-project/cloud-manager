@@ -5,7 +5,7 @@
 
 > [!WARNING]
 > Long-running or frequent schedules can create too many backups and may result in cloud provider quota issues.
-> For more information on how to avoid such issues, see [Scheduling Best Practices](./best-practices.md#scheduling-best-practices).
+> For more information on how to avoid such issues, see [Scheduling Best Practices](./00-25-scheduling-best-practices.md).
 
 This tutorial explains how to create scheduled automatic backups for Network File System (NFS) volumes in Amazon Web Services (AWS).
 
