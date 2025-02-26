@@ -12,6 +12,7 @@ type State struct {
 	composed.State
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
+	SkrCluster composed.StateCluster
 
 	AuthSecret *corev1.Secret
 }
@@ -20,6 +21,7 @@ type stateFactory struct {
 	baseStateFactory composed.StateFactory
 	kymaRef          klog.ObjectRef
 	kcpCluster       composed.StateCluster
+	skrCluster       composed.StateCluster
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -27,6 +29,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
+		SkrCluster: f.skrCluster,
 	}
 }
 
@@ -34,10 +37,12 @@ func newStateFactory(
 	baseStateFactory composed.StateFactory,
 	kymaRef klog.ObjectRef,
 	kcpCluster composed.StateCluster,
+	skrCluster composed.StateCluster,
 ) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,
 		kymaRef:          kymaRef,
 		kcpCluster:       kcpCluster,
+		skrCluster:       skrCluster,
 	}
 }
