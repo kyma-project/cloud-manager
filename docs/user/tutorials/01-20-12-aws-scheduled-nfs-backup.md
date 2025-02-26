@@ -5,7 +5,7 @@
 
 > [!WARNING]
 > Long-running or frequent schedules can create too many backups and may result in cloud provider quota issues.
-> For more information on how to avoid such issues, see [Scheduling Best pPractices](#scheduling-best-practices).
+> For more information on how to avoid such issues, see [Scheduling Best Practices](./best-practices.md#scheduling-best-practices).
 
 This tutorial explains how to create scheduled automatic backups for Network File System (NFS) volumes in Amazon Web Services (AWS).
 
@@ -83,14 +83,3 @@ To clean up, follow these steps:
    ```shell
    kubectl delete -n $NAMESPACE awsnfsbackupschedule my-backup-schedule
    ```
-## Scheduling Best Practices
-
-* Configure the `MaxRetentionDays`, `MaxReadyBackups`, and `MaxFailedBackups` attributes on the schedule to auto-delete the oldest backups when any of these thresholds are exceeded.
-* Create multiple backup schedules with different frequencies to reduce the number of backups and increase the coverage of the backup period.
-   * For example, to create a backup plan for 10 years, you can configure some or all of the following schedules:
-      * `hourly schedule with max retention period of 1 day`,
-      * `daily schedule with max retention period of 7 days`,
-      * `weekly schedule with max retention period of 35 days`,
-      * `monthly schedule with max retention period of 365 days`, and
-      * `yearly schedule with max retention period of 3650 days`
-* Contact the SRE team to increase the cloud provider quota limits.
