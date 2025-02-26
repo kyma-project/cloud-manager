@@ -5,7 +5,7 @@
 
 > [!WARNING]
 > Long-running or frequent schedules can create too many backups and may result in cloud provider quota issues.
-> Please refer to the [best practices](#scheduling-best-practices) to avoid such issues.
+> For more information on how to avoid such issues, see [Scheduling Best pPractices](#scheduling-best-practices).
 
 This tutorial explains how to create scheduled automatic backups for Network File System (NFS) volumes in Google Cloud.
 
