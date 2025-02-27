@@ -63,13 +63,11 @@ type RedisClusterAws struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=500
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
 	ShardCount int32 `json:"shardCount"`
 
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=5
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerShard is immutable."
 	ReplicasPerShard int32 `json:"replicasPerShard"`
 }
 

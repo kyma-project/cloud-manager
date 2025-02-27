@@ -95,17 +95,11 @@ spec:
                         maximum: 5
                         minimum: 0
                         type: integer
-                        x-kubernetes-validations:
-                        - message: ReplicasPerShard is immutable.
-                          rule: (self == oldSelf)
                       shardCount:
                         format: int32
                         maximum: 500
                         minimum: 1
                         type: integer
-                        x-kubernetes-validations:
-                        - message: ShardCount is immutable.
-                          rule: (self == oldSelf)
                     required:
                     - cacheNodeType
                     - replicasPerShard
