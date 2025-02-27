@@ -26,4 +26,5 @@ resources:
 - cloud-control_v1beta1_rediscluster.yaml
 - cloud-resources_v1beta1_azurerwxvolumebackup.yaml
 - cloud-resources_v1beta1_azurerwxvolumerestore.yaml
+- cloud-resources_v1beta1_azurerwxbackupschedule.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
