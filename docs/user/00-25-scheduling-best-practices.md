@@ -1,4 +1,4 @@
-## Scheduling Best Practices
+# Scheduling Best Practices
 
 > [!WARNING]
 > NFS backup scheduling is a beta feature available only per request for SAP-internal teams.
