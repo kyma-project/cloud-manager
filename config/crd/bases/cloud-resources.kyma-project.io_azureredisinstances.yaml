@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.55
+    cloud-resources.kyma-project.io/version: v0.0.56
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -78,6 +78,11 @@ spec:
                     - P3
                     - P4
                     - P5
+                    - S1
+                    - S2
+                    - S3
+                    - S4
+                    - S5
                   type: string
                 redisVersion:
                   default: "6.0"

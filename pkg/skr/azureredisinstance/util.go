@@ -89,20 +89,31 @@ func parseAuthSecretExtraData(extraDataTemplates map[string]string, authSecretBa
 	return util.ParseTemplatesMapToBytesMap(extraDataTemplates, baseDataStringMap)
 }
 
-var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisTier]int{
-	cloudresourcesv1beta1.AzureRedisTierP1: 1,
-	cloudresourcesv1beta1.AzureRedisTierP2: 2,
-	cloudresourcesv1beta1.AzureRedisTierP3: 3,
-	cloudresourcesv1beta1.AzureRedisTierP4: 4,
-	cloudresourcesv1beta1.AzureRedisTierP5: 5,
+type azureRedisTierValue struct {
+	Tier     string
+	Capacity int
 }
 
-func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisTier) (int, error) {
+var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisTier]azureRedisTierValue{
+	cloudresourcesv1beta1.AzureRedisTierP1: {"P", 1},
+	cloudresourcesv1beta1.AzureRedisTierP2: {"P", 2},
+	cloudresourcesv1beta1.AzureRedisTierP3: {"P", 3},
+	cloudresourcesv1beta1.AzureRedisTierP4: {"P", 4},
+	cloudresourcesv1beta1.AzureRedisTierP5: {"P", 5},
+
+	cloudresourcesv1beta1.AzureRedisTierS1: {"S", 1},
+	cloudresourcesv1beta1.AzureRedisTierS2: {"S", 2},
+	cloudresourcesv1beta1.AzureRedisTierS3: {"S", 3},
+	cloudresourcesv1beta1.AzureRedisTierS4: {"S", 4},
+	cloudresourcesv1beta1.AzureRedisTierS5: {"S", 5},
+}
+
+func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisTier) (string, int, error) {
 	azureRedisSKUValue, exists := azureRedisTierToAzureRedisSKUCapacityValueMap[redisTier]
 
 	if !exists {
-		return 0, errors.New("unknown azure redis tier")
+		return "", 0, errors.New("unknown azure redis tier")
 	}
 
-	return azureRedisSKUValue, nil
+	return azureRedisSKUValue.Tier, azureRedisSKUValue.Capacity, nil
 }
