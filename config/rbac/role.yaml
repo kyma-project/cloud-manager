@@ -66,6 +66,7 @@ rules:
   - awsnfsbackupschedules
   - awsnfsvolumebackups
   - awsnfsvolumes
+  - awsredisclusters
   - awsredisinstances
   - awsvpcpeerings
   - azureredisinstances
@@ -97,6 +98,7 @@ rules:
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
   - awsnfsvolumes/finalizers
+  - awsredisclusters/finalizers
   - awsredisinstances/finalizers
   - awsvpcpeerings/finalizers
   - azureredisinstances/finalizers
@@ -122,6 +124,7 @@ rules:
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status
   - awsnfsvolumes/status
+  - awsredisclusters/status
   - awsredisinstances/status
   - awsvpcpeerings/status
   - azureredisinstances/status

@@ -18,9 +18,10 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"os"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
@@ -118,6 +119,9 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred())
 	// AwsRedisInstance
 	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+	// AwsRedisCluster
+	Expect(SetupAwsRedisClusterReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// AzureRedisInstance
 	Expect(SetupAzureRedisInstanceReconciler(infra.Registry())).
