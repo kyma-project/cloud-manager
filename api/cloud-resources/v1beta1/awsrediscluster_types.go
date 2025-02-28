@@ -41,9 +41,7 @@ type AwsRedisClusterSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
-	// Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="Service tier cannot be changed within redisTier. Only capacity tier can be changed."
 	RedisTier AwsRedisClusterTier `json:"redisTier"`
 
 	// +kubebuilder:validation:Required

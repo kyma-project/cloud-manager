@@ -108,16 +108,12 @@ spec:
                     Example: sun:23:00-mon:01:30
                   type: string
                 redisTier:
-                  description: Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
                   enum:
                     - C1
                     - C2
                     - C3
                     - C4
                   type: string
-                  x-kubernetes-validations:
-                    - message: Service tier cannot be changed within redisTier. Only capacity tier can be changed.
-                      rule: (self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P'))
                 replicasPerShard:
                   default: 0
                   format: int32
