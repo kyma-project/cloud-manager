@@ -1,0 +1,11 @@
+resource:
+    kind: CceeNfsVolume
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: cceenfsvolumes
+name: CCEE NFS Volumes
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    Description here
