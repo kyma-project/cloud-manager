@@ -18,10 +18,13 @@ package cloudresources
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -29,8 +32,7 @@ import (
 
 // AzureRwxBackupScheduleReconciler reconciles a AzureRwxBackupSchedule object
 type AzureRwxBackupScheduleReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Reconciler backupschedule.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurerwxbackupschedules,verbs=get;list;watch;create;update;patch;delete
@@ -49,14 +51,23 @@ type AzureRwxBackupScheduleReconciler struct {
 func (r *AzureRwxBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Run(ctx, req)
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *AzureRwxBackupScheduleReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+type AzureRwxBackupScheduleReconcilerFactory struct {
+	env abstractions.Environment
+}
+
+func (f *AzureRwxBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+	return &AzureRwxBackupScheduleReconciler{
+		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AzureRwxBackupSchedule),
+	}
+}
+
+func SetupAzureRwxBackupScheduleReconciler(reg skrruntime.SkrRegistry, env abstractions.Environment) error {
+
+	return reg.Register().
+		WithFactory(&AzureRwxBackupScheduleReconcilerFactory{env: env}).
 		For(&cloudresourcesv1beta1.AzureRwxBackupSchedule{}).
-		Complete(r)
+		Complete()
 }
