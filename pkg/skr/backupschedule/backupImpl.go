@@ -11,6 +11,7 @@ type ScheduleType int
 const (
 	AwsNfsBackupSchedule ScheduleType = iota
 	GcpNfsBackupSchedule
+	AzureRwxBackupSchedule
 )
 
 type backupImpl interface {
@@ -27,6 +28,8 @@ func getBackupImpl(scheduleType ScheduleType) backupImpl {
 		return &backupImplAwsNfs{}
 	case GcpNfsBackupSchedule:
 		return &backupImplGcpNfs{}
+	case AzureRwxBackupSchedule:
+		return &backupImplAzureRwx{}
 	default:
 		return nil
 	}
