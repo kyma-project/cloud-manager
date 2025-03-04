@@ -48,14 +48,29 @@ func (r *reconciler) newAction() composed.Action {
 
 		defaultiprange.New(),
 
+		updateId,
+		loadKcpRedisCluster,
+		loadAuthSecret,
+
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"awsRedisCluster-create",
 				actions.AddCommonFinalizer(),
+				createKcpRedisCluster,
+				waitKcpStatusUpdate,
+				updateStatus,
+				waitSkrStatusReady,
+				modifyKcpRedisCluster,
+				createAuthSecret,
+				modifyAuthSecret,
 			),
 			composed.ComposeActions(
 				"awsRedisCluster-delete",
-
+				removeAuthSecretFinalizer,
+				deleteAuthSecret,
+				waitAuthSecretDeleted,
+				deleteKcpRedisCluster,
+				waitKcpRedisClusterDeleted,
 				actions.RemoveCommonFinalizer(),
 				composed.StopAndForgetAction,
 			),

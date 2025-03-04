@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// +kubebuilder:validation:Enum=C1;C2;C3;C4;
+// +kubebuilder:validation:Enum=C1;C2;C3;C4;C5;C6;C7;C8;
 type AwsRedisClusterTier string
 
 const (
@@ -30,6 +30,10 @@ const (
 	AwsRedisTierC2 AwsRedisClusterTier = "C2"
 	AwsRedisTierC3 AwsRedisClusterTier = "C3"
 	AwsRedisTierC4 AwsRedisClusterTier = "C4"
+	AwsRedisTierC5 AwsRedisClusterTier = "C5"
+	AwsRedisTierC6 AwsRedisClusterTier = "C6"
+	AwsRedisTierC7 AwsRedisClusterTier = "C7"
+	AwsRedisTierC8 AwsRedisClusterTier = "C8"
 )
 
 // AwsRedisClusterSpec defines the desired state of AwsRedisCluster

@@ -29,11 +29,24 @@ func WithRedisInstanceReadEndpoint(readEndpoint string) ObjStatusAction {
 	}
 }
 
+func WithRedisInstanceDiscoveryEndpoint(discoveryEndpoint string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if redisInstance, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				redisInstance.Status.DiscoveryEndpoint = discoveryEndpoint
+			}
+		},
+	}
+}
+
 func WithRedisInstanceAuthString(authString string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			if redisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
 				redisInstance.Status.AuthString = authString
+			}
+			if redisCluster, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				redisCluster.Status.AuthString = authString
 			}
 		},
 	}
