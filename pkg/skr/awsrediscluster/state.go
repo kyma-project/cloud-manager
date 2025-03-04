@@ -1,12 +1,16 @@
 package awsrediscluster
 
 import (
+	"maps"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -62,4 +66,42 @@ func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 
 func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
 	return s.ObjAsAwsRedisCluster()
+}
+
+func (s *State) GetAuthSecretData() map[string][]byte {
+	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisCluster)
+	redisCluster := s.ObjAsAwsRedisCluster()
+	if redisCluster.Spec.AuthSecret == nil {
+		return authSecretBaseData
+	}
+
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(redisCluster.Spec.AuthSecret.ExtraData, authSecretBaseData)
+
+	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
+}
+
+func (s *State) ShouldModifyKcp() bool {
+	awsRedisCluster := s.ObjAsAwsRedisCluster()
+
+	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisCluster.Spec.RedisTier)
+	if err != nil {
+		return true
+	}
+
+	areCacheNodeTypesDifferent := s.KcpRedisCluster.Spec.Instance.Aws.CacheNodeType != cacheNodeType
+	isAutoMinorVersionUpgradeDifferent := s.KcpRedisCluster.Spec.Instance.Aws.AutoMinorVersionUpgrade != awsRedisCluster.Spec.AutoMinorVersionUpgrade
+	isAuthEnabledDifferent := s.KcpRedisCluster.Spec.Instance.Aws.AuthEnabled != awsRedisCluster.Spec.AuthEnabled
+	arePreferredMaintenanceWindowDifferent := ptr.Deref(s.KcpRedisCluster.Spec.Instance.Aws.PreferredMaintenanceWindow, "") != ptr.Deref(awsRedisCluster.Spec.PreferredMaintenanceWindow, "")
+	isEngineVersionDifferent := s.KcpRedisCluster.Spec.Instance.Aws.EngineVersion != awsRedisCluster.Spec.EngineVersion
+	isShardCountDifferent := s.KcpRedisCluster.Spec.Instance.Aws.ShardCount != awsRedisCluster.Spec.ShardCount
+	isReplicaCountDifferent := s.KcpRedisCluster.Spec.Instance.Aws.ReplicasPerShard != awsRedisCluster.Spec.ReplicasPerShard
+
+	return !maps.Equal(s.KcpRedisCluster.Spec.Instance.Aws.Parameters, awsRedisCluster.Spec.Parameters) ||
+		areCacheNodeTypesDifferent ||
+		isAutoMinorVersionUpgradeDifferent ||
+		isAuthEnabledDifferent ||
+		arePreferredMaintenanceWindowDifferent ||
+		isEngineVersionDifferent ||
+		isShardCountDifferent ||
+		isReplicaCountDifferent
 }
