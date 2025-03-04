@@ -44,9 +44,4 @@ func TestUtil(t *testing.T) {
 			assert.Equal(t, "", cacheNodeType, "expected cacheNodeType to have zero value")
 		})
 	})
-
-	type replicaConverterTestCase struct {
-		InputRedisTier       cloudresourcesv1beta1.AwsRedisClusterTier
-		ExpectedReadReplicas int32
-	}
 }
