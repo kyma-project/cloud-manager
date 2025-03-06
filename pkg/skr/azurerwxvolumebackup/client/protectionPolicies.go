@@ -76,6 +76,7 @@ func (c protectionPoliciesClient) CreateBackupPolicy(ctx context.Context, vaultN
 
 }
 
+// poller doesn't return a response body
 func (c protectionPoliciesClient) DeleteBackupPolicy(ctx context.Context, vaultName string, resourceGroupName string, policyName string) error {
 
 	_, err := c.azureClient.BeginDelete(ctx, vaultName, resourceGroupName, policyName, nil)
