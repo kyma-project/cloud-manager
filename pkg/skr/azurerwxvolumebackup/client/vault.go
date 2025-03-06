@@ -2,21 +2,31 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"io"
+	"log"
 	"slices"
 )
 
 type VaultClient interface {
-	CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) error
+	CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error)
 	DeleteVault(ctx context.Context, resourceGroupName string, vaultName string) error
 	ListVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error)
 }
 
 type vaultClient struct {
 	azureClient *armrecoveryservices.VaultsClient
+}
+
+type CreateVaultResponse struct {
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (VaultClient, error) {
@@ -49,18 +59,19 @@ func (c vaultClient) vaultExists(ctx context.Context, location string) (bool, er
 	return false, nil
 }
 
-func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) error {
+// Returns operationId used to check the status
+func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
 
 	// Fail if vault exists
 	exists, err := c.vaultExists(ctx, location)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return fmt.Errorf("vault already exists in %s", location)
+		return nil, fmt.Errorf("vault already exists in %s", location)
 	}
 
-	_, err = c.azureClient.BeginCreateOrUpdate(
+	poller, err := c.azureClient.BeginCreateOrUpdate(
 		ctx,
 		resourceGroupName,
 		vaultName,
@@ -78,10 +89,39 @@ func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, 
 	)
 
 	if err != nil {
-		return err
+		log.Println("failed to create vault: " + err.Error())
+		return nil, err
 	}
 
-	return nil
+	if poller.Done() {
+		log.Println("poller is done")
+	}
+	resp, err := poller.Poll(ctx)
+	if err != nil {
+		log.Println("failed to poll the create operation: " + err.Error())
+		return nil, err
+	}
+	if resp != nil {
+		log.Println(resp.Status)
+	}
+	// Read resp body
+	if resp == nil || resp.Body == nil {
+		return nil, errors.New("response body is nil")
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("failed to read the response body: " + err.Error())
+		return nil, err
+	}
+	var data CreateVaultResponse
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		log.Println("failed to unmarshal the response body: " + err.Error())
+		return nil, err
+	}
+	log.Println("jobId" + data.Id)
+
+	return &data.Id, nil
 
 }
 
