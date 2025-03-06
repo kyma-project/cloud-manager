@@ -112,6 +112,14 @@ type AzureRwxVolumeBackup struct {
 	Status AzureRwxVolumeBackupStatus `json:"status,omitempty"`
 }
 
+func (bu *AzureRwxVolumeBackup) Conditions() *[]metav1.Condition {
+	return &bu.Status.Conditions
+}
+
+func (bu *AzureRwxVolumeBackup) GetObjectMeta() *metav1.ObjectMeta {
+	return &bu.ObjectMeta
+}
+
 func (bu *AzureRwxVolumeBackup) SpecificToFeature() featuretypes.FeatureName {
 	return featuretypes.FeatureNfsBackup
 }
