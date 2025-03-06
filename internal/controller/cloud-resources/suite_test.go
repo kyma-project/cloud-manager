@@ -140,6 +140,9 @@ var _ = BeforeSuite(func() {
 	//GCP Vpc Peering
 	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
 
+	//AzureRwxBackup Schedule
+	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+
 	migrateFinalizers.RunMigration = false
 
 	// Start controllers
