@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"net/http"
@@ -110,6 +111,11 @@ func GetErrorMessage(err error, def string) (string, bool) {
 		case InvalidAuthenticationTokenTenant:
 			return InvalidAuthenticationTokenTenantMessage, true
 		}
+	}
+
+	var auth *azidentity.AuthenticationFailedError
+	if errors.As(err, &auth) {
+		return "Authentication error", true
 	}
 
 	return def, false
