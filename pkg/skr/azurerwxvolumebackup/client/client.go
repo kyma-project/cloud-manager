@@ -22,6 +22,8 @@ type client struct {
 	RecoveryPointClient
 	JobsClient
 	RestoreClient
+	BackupProtectableItemsClient
+	ProtectedItemsClient
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -62,6 +64,17 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 		if err != nil {
 			return nil, err
 		}
+
+		bpic, err := NewBackupProtectableItemsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
+		pic, err := NewProtectedItemsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
 		c = client{
 			vc,
 			bc,
@@ -69,6 +82,8 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			rpc,
 			jc,
 			rc,
+			bpic,
+			pic,
 		}
 
 		return c, nil
