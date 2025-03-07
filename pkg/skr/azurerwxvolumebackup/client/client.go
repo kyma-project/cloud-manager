@@ -71,6 +71,9 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 		}
 
 		pic, err := NewProtectedItemsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
 
 		c = client{
 			vc,
