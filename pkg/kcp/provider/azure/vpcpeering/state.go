@@ -15,8 +15,14 @@ type State struct {
 	vpcpeeringtypes.State
 
 	clientProvider azureclient.ClientProvider[vpcpeeringclient.Client]
-	localClient    vpcpeeringclient.Client
-	remoteClient   vpcpeeringclient.Client
+	// localClient is used for API calls in local subscription that does not require auxiliary tenants and therefore is
+	// resilient to authentication errors when SPN does not exist in remote tenant.
+	localClient vpcpeeringclient.Client
+	// localPeeringClient is used for API calls in local subscription that requires auxiliary tenants. Client fails if
+	// SPN does not exist in remote tenant.
+	localPeeringClient vpcpeeringclient.Client
+	// remoteClient is used for API calls in remote subscription and may require auxiliary tenants
+	remoteClient vpcpeeringclient.Client
 
 	localNetwork    *cloudcontrolv1beta1.Network
 	localNetworkId  *azureutil.NetworkResourceId

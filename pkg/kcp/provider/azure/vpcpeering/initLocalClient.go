@@ -10,22 +10,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func localClientCreate(ctx context.Context, st composed.State) (error, context.Context) {
+func initLocalClient(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	clientId := azureconfig.AzureConfig.PeeringCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.PeeringCreds.ClientSecret
-	subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
-	tenantId := state.Scope().Spec.Scope.Azure.TenantId
-
-	var auxiliaryTenants []string
-
-	if state.remoteNetwork != nil && state.remoteNetwork.Status.Network.Azure.TenantId != "" {
-		auxiliaryTenants = append(auxiliaryTenants, state.remoteNetwork.Status.Network.Azure.TenantId)
-	}
-
-	client, err := state.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId, auxiliaryTenants...)
+	// This client does not specify auxiliary tenants at initialization time, and therefore it is resilient to errors
+	// when SPN does not exist in remote tenant.
+	client, err := state.clientProvider(ctx,
+		azureconfig.AzureConfig.PeeringCreds.ClientId,
+		azureconfig.AzureConfig.PeeringCreds.ClientSecret,
+		state.Scope().Spec.Scope.Azure.SubscriptionId,
+		state.Scope().Spec.Scope.Azure.TenantId)
 
 	if err != nil {
 		logger.Error(err, "Error creating local Azure client for KCP VpcPeering")
@@ -34,10 +29,12 @@ func localClientCreate(ctx context.Context, st composed.State) (error, context.C
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-				Message: fmt.Sprintf("Faile creating Azure client for tenant %s subscription %s", state.remoteNetworkId.Subscription, tenantId),
+				Type:   cloudcontrolv1beta1.ConditionTypeError,
+				Status: metav1.ConditionTrue,
+				Reason: cloudcontrolv1beta1.ReasonCloudProviderError,
+				Message: fmt.Sprintf("Failed creating Azure client for tenant %s subscription %s",
+					state.Scope().Spec.Scope.Azure.SubscriptionId,
+					state.Scope().Spec.Scope.Azure.TenantId),
 			}).
 			ErrorLogMessage("Error patching KCP VpcPeering with error state after local client creation failed").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())). // try again in 5mins

@@ -101,7 +101,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessError(composed.StopAndForget).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
