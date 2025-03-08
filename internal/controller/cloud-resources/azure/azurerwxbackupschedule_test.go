@@ -61,6 +61,7 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 						Driver:       "file.csi.azure.com",
 						VolumeHandle: "test-file-share-01",
 					}),
+					WithPvLabel(cloudresourcesv1beta1.LabelCloudManaged, "true"),
 				).
 				Should(Succeed())
 		})
@@ -71,6 +72,7 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 					WithPVName(skrRwxVolumeName),
 					WithPvCapacity("1Gi"),
 					WithPvAccessMode(corev1.ReadWriteMany),
+					WithPvLabel(cloudresourcesv1beta1.LabelCloudManaged, "true"),
 				).
 				Should(Succeed(), "failed creating PVC")
 		})

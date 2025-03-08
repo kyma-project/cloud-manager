@@ -123,6 +123,28 @@ func WithPVName(pvName string) ObjAction {
 	}
 }
 
+func WithPvLabel(name, value string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*corev1.PersistentVolume); ok {
+				if x.Labels == nil {
+					x.Labels = make(map[string]string)
+				}
+				x.Labels[name] = value
+				return
+			}
+			if x, ok := obj.(*corev1.PersistentVolumeClaim); ok {
+				if x.Labels == nil {
+					x.Labels = make(map[string]string)
+				}
+				x.Labels[name] = value
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvLabel", obj))
+		},
+	}
+}
+
 func HavePvcPhase(expected corev1.PersistentVolumeClaimPhase) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(*corev1.PersistentVolumeClaim); ok {
