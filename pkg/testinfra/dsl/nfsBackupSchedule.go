@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
-func CreateNfsBackupSchedule(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
+func CreateBackupSchedule(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
 	if obj == nil {
 		return errors.New("NfsBackupSchedule object cannot be nil")
 	}

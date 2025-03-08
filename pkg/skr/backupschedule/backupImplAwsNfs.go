@@ -1,7 +1,9 @@
 package backupschedule
 
 import (
+	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +17,7 @@ func (impl *backupImplAwsNfs) emptyScheduleObject() composed.ObjWithConditionsAn
 	return &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 }
 
-func (impl *backupImplAwsNfs) emptySourceObject() composed.ObjWithConditionsAndState {
+func (impl *backupImplAwsNfs) emptySourceObject() client.Object {
 	return &cloudresourcesv1beta1.AwsNfsVolume{}
 }
 
@@ -50,4 +52,12 @@ func (impl *backupImplAwsNfs) getBackupObject(state *State, objectMeta *metav1.O
 			},
 		},
 	}, nil
+}
+
+func (impl *backupImplAwsNfs) sourceToObjWithConditionAndState(obj client.Object) (composed.ObjWithConditionsAndState, error) {
+	x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume)
+	if !ok {
+		return nil, errors.New("Source Object should be of tyoe AwsNfsVolume")
+	}
+	return x, nil
 }

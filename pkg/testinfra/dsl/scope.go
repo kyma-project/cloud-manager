@@ -3,13 +3,14 @@ package dsl
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func WithScope(scopeName string) ObjAction {
@@ -285,6 +286,30 @@ func GivenScopeAwsExists(ctx context.Context, infra testinfra.Infra, scope *clou
 	}
 	if apierrors.IsNotFound(err) {
 		err := CreateScopeAws(ctx, infra, scope)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GivenScopeAzureExists(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+
+	if scope == nil {
+		scope = &cloudcontrolv1beta1.Scope{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(scope)
+
+	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(scope), scope)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	if apierrors.IsNotFound(err) {
+		err := CreateScopeAzure(ctx, infra, scope)
 		if err != nil {
 			return err
 		}

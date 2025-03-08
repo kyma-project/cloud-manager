@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -152,7 +153,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		})
 
 		It("When AwsNfsBackupSchedule Create is called", func() {
-			Eventually(CreateNfsBackupSchedule).
+			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
@@ -218,7 +219,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
 		It("When AwsNfsBackupSchedule Create is called", func() {
-			Eventually(CreateNfsBackupSchedule).
+			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
