@@ -2,6 +2,7 @@ package backupschedule
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -77,5 +78,8 @@ func getSourceRef(ctx context.Context, state *State) (composed.ObjWithConditions
 
 	source := state.backupImpl.emptySourceObject()
 	err := state.SkrCluster.K8sClient().Get(ctx, key, source)
-	return source, err
+	if err != nil {
+		return nil, err
+	}
+	return state.backupImpl.sourceToObjWithConditionAndState(source)
 }
