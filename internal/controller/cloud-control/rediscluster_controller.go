@@ -18,6 +18,8 @@ package cloudcontrol
 
 import (
 	"context"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -37,6 +39,7 @@ import (
 func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
+	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisinstanceclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -48,7 +51,7 @@ func SetupRedisClusterReconciler(
 			focal.NewStateFactory(),
 			gcprediscluster.NewStateFactory(env),
 			awsrediscluster.NewStateFactory(awsFilestoreClientProvider),
-			azurerediscluster.NewStateFactory(),
+			azurerediscluster.NewStateFactory(azureRedisCacheClientProvider),
 		),
 	).SetupWithManager(kcpManager)
 }

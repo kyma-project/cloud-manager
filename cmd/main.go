@@ -352,6 +352,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRedisClusterReconciler(
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
+		azureredisclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")

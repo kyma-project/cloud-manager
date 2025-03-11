@@ -122,6 +122,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupRedisClusterReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().ElastiCacheProviderFake(),
+		infra.AzureMock().RedisClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Network
