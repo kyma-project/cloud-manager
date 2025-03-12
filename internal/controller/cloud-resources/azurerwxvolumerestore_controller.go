@@ -18,6 +18,8 @@ package cloudresources
 
 import (
 	"context"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumerestore"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrreconciler "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -27,11 +29,13 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type AzureRwxVolumeRestoreReconcilerFactory struct{}
+type AzureRwxVolumeRestoreReconcilerFactory struct {
+	clientProvider azureclient.ClientProvider[client.Client]
+}
 
 func (f *AzureRwxVolumeRestoreReconcilerFactory) New(args skrreconciler.ReconcilerArguments) reconcile.Reconciler {
 	return &AzureRwxVolumeRestoreReconciler{
-		reconciler: azurerwxvolumerestore.NewReconcilerFactory().New(args),
+		reconciler: azurerwxvolumerestore.NewReconcilerFactory(f.clientProvider).New(args),
 	}
 }
 
