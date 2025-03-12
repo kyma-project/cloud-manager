@@ -177,22 +177,6 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Expect(pep).ToNot(BeNil())
 		})
 
-		// UPDATE
-
-		//By("When KCP RedisCluster is updated", func() {
-		//	Eventually(UpdateRedisCluster).
-		//		WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
-		//			WithName(name),
-		//			WithRemoteRef("skr-redis-example"),
-		//			WithIpRange(kcpIpRangeName),
-		//			WithScope(name),
-		//			WithRedisClusterAzure(),
-		//			WithClusterSKU(redisCapacity),
-		//			WithKcpAzureRedisClusterVersion("6.0"),
-		//		).
-		//		Should(Succeed(), "failed updating RedisCluster")
-		//})
-
 		// DELETE
 
 		By("When KCP RedisCluster is deleted", func() {

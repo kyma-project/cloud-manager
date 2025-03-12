@@ -77,10 +77,10 @@ func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 
 	updateProperties := &armredis.UpdateProperties{
 		SKU: &armredis.SKU{
-			Capacity: to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.SKU.Capacity)),
+			Capacity: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity)),
 		},
-		ShardCount:         to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount)),
-		ReplicasPerPrimary: to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary)),
+		ShardCount:         to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
+		ReplicasPerPrimary: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary)),
 	}
 
 	updateParameters.Properties = updateProperties
