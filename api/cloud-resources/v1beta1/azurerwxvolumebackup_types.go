@@ -82,6 +82,10 @@ type AzureRwxVolumeBackupStatus struct {
 	// RecoveryPointId specifies the corresponding snapshot used for restore
 	// +optional
 	RecoveryPointId string `json:"recoveryPointId,omitempty"`
+
+	// StorageAccountPath specifies the Azure Storage Account path
+	// +optional
+	StorageAccountPath string `json:"storageAccountPath,omitempty"`
 }
 
 // +kubebuilder:object:root=true
