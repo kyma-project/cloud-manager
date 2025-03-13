@@ -1,0 +1,45 @@
+- path: spec.pvcRef
+  name: spec.pvcRef
+  required: true
+  widget: FormGroup
+  children:
+    - path: apiVersion
+      name: spec.pvcRef.apiVersion
+      required: true
+    - path: kind
+      name: spec.pvcRef.kind
+      required: true
+    - path: name
+      name: spec.pvcRef.name
+      required: true
+    - path: namespace
+      name: spec.pvcRef.namespace
+      required: true
+
+- path: spec.schedule
+  name: spec.schedule
+  required: false
+- path: spec.startTime
+  name: spec.startTime
+  required: false
+- path: spec.endTime
+  name: spec.endTime
+  required: false
+- path: spec.prefix
+  name: spec.prefix
+  required: false
+- path: spec.maxRetentionDays
+  name: spec.maxRetentionDays
+  required: false
+- path: spec.maxReadyBackups
+  name: spec.maxReadyBackups
+  required: false
+- path: spec.maxFailedBackups
+  name: spec.maxFailedBackups
+  required: false
+- path: spec.deleteCascade
+  name: spec.deleteCascade
+  required: false
+- path: spec.suspend
+  name: spec.suspend
+  required: false

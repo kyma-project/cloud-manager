@@ -1,0 +1,59 @@
+body:
+  - name: spec.pvcRef
+    widget: Panel
+    source: spec.pvcRef
+    children:
+      - widget: Labels
+        source: apiVersion
+        name: spec.pvcRef.apiVersion
+      - widget: Labels
+        source: kind
+        name: spec.pvcRef.kind
+      - widget: Labels
+        source: name
+        name: spec.pvcRef.name
+      - widget: Labels
+        source: namespace
+        name: spec.pvcRef.namespace
+
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: schedule
+        name: spec.schedule
+      - widget: Labels
+        source: startTime
+        name: spec.startTime
+      - widget: Labels
+        source: endTime
+        name: spec.endTime
+      - widget: Labels
+        source: prefix
+        name: spec.prefix
+      - widget: Labels
+        source: maxRetentionDays
+        name: spec.maxRetentionDays
+      - widget: Labels
+        source: maxReadyBackups
+        name: spec.maxReadyBackups
+      - widget: Labels
+        source: maxFailedBackups
+        name: spec.maxFailedBackups
+      - widget: Labels
+        source: deleteCascade
+        name: spec.deleteCascade
+      - widget: Labels
+        source: suspend
+        name: spec.suspend
+
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels
+
