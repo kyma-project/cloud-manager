@@ -76,9 +76,9 @@ A test plan is a document outlining the objectives, resources, and procedures fo
 
 ## CI/CD Running on a Schedule
 
-| Name                                                             | Description                              |
-|------------------------------------------------------------------|------------------------------------------|
-| [e2e-tests](https://github.com/kyma-project/cloud-manager-tests) | End to end BDD test using Gherkin syntax |
+| Name                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [e2e-tests](https://github.com/kyma-project/cloud-manager-tests) | End to end BDD test using Gherkin syntax. BDD tests containig following scenarios (for details, follow the [link to the repo](https://github.com/kyma-project/cloud-manager-tests/tree/main/features) and examine `features` folder):<ul><li>CloudManager Module enable scenario</li><li>AwsNfsVolume scenario</li><li>GcpNfsVolume/Backup/Restore scenario</li><li>AwsRedisInstance scenario</li><li>AzureRedisInstance scenario</li><li>GcpRedisInstance scenario</li><li>AwsVpcPeering scenario</li><li>GcpVpcPeering scenario</li><li>AzureVpcPeering scenario</li></ul> |
 
 
 ### Appendix A. Quality Evidence Registry
