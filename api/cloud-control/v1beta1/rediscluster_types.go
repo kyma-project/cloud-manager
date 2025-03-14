@@ -25,6 +25,28 @@ type RedisClusterGcp struct {
 }
 
 type RedisClusterAzure struct {
+	// +kubebuilder:validation:Required
+	SKU AzureRedisClusterSKU `json:"sku"`
+
+	// +optional
+	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
+
+	// +optional
+	RedisVersion string `json:"redisVersion,omitempty"`
+
+	// +optional
+	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:XValidation:rule=(oldSelf != 0 || self == 0), message="replicasPerPrimary cannot be added after the cluster creation."
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
+}
+
+type AzureRedisClusterSKU struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=1;2;3;4;5
+	Capacity int `json:"capacity"`
 }
 
 type RedisClusterAws struct {

@@ -6,6 +6,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"sync"
@@ -40,6 +41,12 @@ func (s *server) VpcPeeringProvider() azureclient.ClientProvider[azurevpcpeering
 
 func (s *server) RedisClientProvider() azureclient.ClientProvider[azureredisinstanceclient.Client] {
 	return func(ctx context.Context, _, _, subscription, tenant string) (azureredisinstanceclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client] {
+	return func(ctx context.Context, _, _, subscription, tenant string) (azureredisclusterclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
