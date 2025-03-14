@@ -16,6 +16,9 @@
       name: spec.pvcRef.namespace
       required: true
 
+- path: spec.location
+  name: spec.location
+  required: false
 - path: spec.schedule
   name: spec.schedule
   required: false

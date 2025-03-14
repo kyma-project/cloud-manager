@@ -33,6 +33,10 @@ type AzureRwxBackupScheduleSpec struct {
 	// +kubebuilder:validation:Required
 	PvcRef corev1.ObjectReference `json:"pvcRef"`
 
+	// Location specifies the location where the backup has to be stored.
+	// +optional
+	Location string `json:"location"`
+
 	// Cron expression of the schedule, e.g. "0 0 * * *" for daily at midnight
 	// If not provided, backup will be taken once on the specified start time.
 	// +optional
