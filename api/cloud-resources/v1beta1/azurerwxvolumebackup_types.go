@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type AzureRwxBackupState string
@@ -46,6 +47,17 @@ type PvcRef struct {
 	// If not specified then namespace of the AzureRwxVolumeBackup is used.
 	// +optional
 	Namespace string `json:"namespace"`
+}
+
+func (v *PvcRef) ToNamespacedName(fallbackNamespace string) types.NamespacedName {
+	ns := v.Namespace
+	if len(ns) == 0 {
+		ns = fallbackNamespace
+	}
+	return types.NamespacedName{
+		Namespace: ns,
+		Name:      v.Name,
+	}
 }
 
 type PvcSource struct {

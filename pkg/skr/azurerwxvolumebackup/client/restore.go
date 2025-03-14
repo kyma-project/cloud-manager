@@ -13,18 +13,7 @@ import (
 
 type RestoreClient interface {
 	TriggerRestore(ctx context.Context,
-		subscriptionId string,
-		vaultName string,
-		resourceGroupName string,
-		fabricName string,
-		containerName string,
-		protectedItemName string,
-		recoveryPointId string,
-		location string,
-		sourceStorageAccountName string,
-		targetStorageAccountName string,
-		targetFileShareName string,
-		targetFolderName string,
+		request RestoreRequest,
 	) (*string, error)
 }
 
@@ -51,56 +40,50 @@ type TriggerResponse struct {
 	EndTime   string `json:"endTime"`
 }
 
+type RestoreRequest struct {
+	VaultName                string
+	ResourceGroupName        string
+	FabricName               string
+	ContainerName            string
+	ProtectedItemName        string
+	RecoveryPointId          string
+	SourceStorageAccountPath string
+	TargetStorageAccountPath string
+	TargetFileShareName      string
+	TargetFolderName         string
+}
+
 func (c restoreClient) TriggerRestore(ctx context.Context,
-	subscriptionId string,
-	vaultName string,
-	resourceGroupName string,
-	fabricName string,
-	containerName string,
-	protectedItemName string,
-	recoveryPointId string,
-	location string,
-	sourceStorageAccountName string,
-	targetStorageAccountName string,
-	targetFileShareName string,
-	targetFolderName string,
+	request RestoreRequest,
 ) (*string, error) {
-	sourceResourceId := GetStorageAccountPath(subscriptionId, resourceGroupName, sourceStorageAccountName)
-	targetResourceId := GetStorageAccountPath(subscriptionId, resourceGroupName, targetStorageAccountName)
+
 	parameters := armrecoveryservicesbackup.RestoreRequestResource{
-		ETag:     nil,
-		Location: to.Ptr(location),
 		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileShareRestoreRequest{
-			ObjectType:                     to.Ptr("AzureFileShareRestoreRequest"),
-			CopyOptions:                    to.Ptr(armrecoveryservicesbackup.CopyOptionsOverwrite),
-			RecoveryType:                   to.Ptr(armrecoveryservicesbackup.RecoveryTypeAlternateLocation),
-			ResourceGuardOperationRequests: nil,
+			ObjectType:   to.Ptr("AzureFileShareRestoreRequest"),
+			CopyOptions:  to.Ptr(armrecoveryservicesbackup.CopyOptionsOverwrite),
+			RecoveryType: to.Ptr(armrecoveryservicesbackup.RecoveryTypeAlternateLocation),
 			RestoreFileSpecs: []*armrecoveryservicesbackup.RestoreFileSpecs{
 				{
-					TargetFolderPath: to.Ptr(targetFolderName),
+					TargetFolderPath: to.Ptr(request.TargetFolderName),
 				},
 			},
 			RestoreRequestType: to.Ptr(armrecoveryservicesbackup.RestoreRequestTypeFullShareRestore),
-			SourceResourceID:   to.Ptr(sourceResourceId), // not sure if correct
+			SourceResourceID:   to.Ptr(request.SourceStorageAccountPath), // Source file share arm id
 			TargetDetails: to.Ptr(armrecoveryservicesbackup.TargetAFSRestoreInfo{
-				Name:             to.Ptr(targetFileShareName), // Target File share name
-				TargetResourceID: to.Ptr(targetResourceId),    // Target file share arm id; try nil for now
+				Name:             to.Ptr(request.TargetFileShareName),      // Target File share name
+				TargetResourceID: to.Ptr(request.TargetStorageAccountPath), // Target file share arm id
 			}),
 		}),
-		Tags: nil,
-		ID:   nil,
-		Name: nil,
-		Type: nil,
 	}
 
 	poller, err := c.BeginTrigger(
 		ctx,
-		vaultName,
-		resourceGroupName,
-		fabricName,
-		containerName,
-		protectedItemName,
-		recoveryPointId,
+		request.VaultName,
+		request.ResourceGroupName,
+		request.FabricName,
+		request.ContainerName,
+		request.ProtectedItemName,
+		request.RecoveryPointId,
 		parameters,
 		nil,
 	)
