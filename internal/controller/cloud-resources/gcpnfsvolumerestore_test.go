@@ -180,12 +180,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeRestore,
 					NewObjActions(),
+					HaveDeletionTimestamp(),
 				).
-				Should(Succeed())
-
-			By("Then DeletionTimestamp is set in GcpNfsVolumeRestore", func() {
-				Expect(gcpNfsVolumeRestore.DeletionTimestamp.IsZero()).NotTo(BeTrue())
-			})
+				Should(SucceedIgnoreNotFound())
 
 			By("And Then the GcpNfsVolumeRestore in SKR is deleted.", func() {
 				Eventually(IsDeleted, timeout, interval).
