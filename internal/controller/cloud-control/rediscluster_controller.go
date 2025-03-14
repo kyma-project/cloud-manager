@@ -18,16 +18,15 @@ package cloudcontrol
 
 import (
 	"context"
-	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -39,7 +38,7 @@ import (
 func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
-	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisinstanceclient.Client],
+	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisclusterclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

@@ -8,7 +8,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	redisclustertypes "github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
 )
 

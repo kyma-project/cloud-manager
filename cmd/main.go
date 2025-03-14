@@ -46,7 +46,8 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
-	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
@@ -324,7 +325,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
 		gcpmemorystoreclient.NewMemorystoreClientProvider(),
-		azureredisclient.NewClientProvider(),
+		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,
 	); err != nil {
@@ -352,7 +353,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRedisClusterReconciler(
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
-		azureredisclient.NewClientProvider(),
+		azureredisclusterclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
