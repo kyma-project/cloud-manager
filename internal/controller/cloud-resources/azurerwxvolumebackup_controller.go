@@ -35,7 +35,7 @@ type AzureRwxVolumeBackupReconcilerFactory struct {
 
 func (f *AzureRwxVolumeBackupReconcilerFactory) New(args skrreconciler.ReconcilerArguments) reconcile.Reconciler {
 	return &AzureRwxVolumeBackupReconciler{
-		reconciler: azurerwxvolumebackup.NewReconcilerFactory().New(args),
+		reconciler: azurerwxvolumebackup.NewReconciler(args, f.clientProvider),
 	}
 }
 
