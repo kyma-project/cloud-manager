@@ -1,6 +1,7 @@
 en:
   configuration: Configuration
   status: Status
+  spec.location: Location
   spec.schedule: Schedule
   spec.startTime: Start Time
   spec.endTime: End Time

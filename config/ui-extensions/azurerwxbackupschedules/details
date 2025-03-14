@@ -21,6 +21,9 @@ body:
     source: spec
     children:
       - widget: Labels
+        source: location
+        name: spec.location
+      - widget: Labels
         source: schedule
         name: spec.schedule
       - widget: Labels

@@ -24,6 +24,9 @@ data:
         source: spec
         children:
           - widget: Labels
+            source: location
+            name: spec.location
+          - widget: Labels
             source: schedule
             name: spec.schedule
           - widget: Labels
@@ -79,6 +82,9 @@ data:
           name: spec.pvcRef.namespace
           required: true
 
+    - path: spec.location
+      name: spec.location
+      required: false
     - path: spec.schedule
       name: spec.schedule
       required: false
@@ -132,6 +138,7 @@ data:
     en:
       configuration: Configuration
       status: Status
+      spec.location: Location
       spec.schedule: Schedule
       spec.startTime: Start Time
       spec.endTime: End Time
@@ -151,7 +158,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
