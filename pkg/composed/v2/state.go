@@ -74,13 +74,15 @@ func (c *stateCluster) Scheme() *runtime.Scheme {
 	return c.scheme
 }
 
+type ctxClusterKey string
+
 func ClusterToCtx(ctx context.Context, cluster StateCluster) context.Context {
-	key := fmt.Sprintf("cluster_%s", cluster.ClusterID())
+	key := ctxClusterKey(fmt.Sprintf("cluster_%s", cluster.ClusterID()))
 	return context.WithValue(ctx, key, cluster)
 }
 
 func ClusterFromCtx(ctx context.Context, clusterID string) StateCluster {
-	key := fmt.Sprintf("cluster_%s", clusterID)
+	key := ctxClusterKey(fmt.Sprintf("cluster_%s", clusterID))
 	x := ctx.Value(key)
 	return x.(StateCluster)
 }
@@ -123,13 +125,17 @@ func InitState(ctx context.Context, name types.NamespacedName, obj client.Object
 	})
 }
 
+type ctxStateKeyType string
+
+const ctxStateKey = ctxStateKeyType("state")
+
 func StateToCtx(ctx context.Context, state any) context.Context {
-	return context.WithValue(ctx, "state", state)
+	return context.WithValue(ctx, ctxStateKey, state)
 }
 
 func StateFromCtx[T State](ctx context.Context) T {
 	var none T
-	x := ctx.Value("state")
+	x := ctx.Value(ctxStateKey)
 	r, ok := x.(T)
 	if !ok {
 		return none
