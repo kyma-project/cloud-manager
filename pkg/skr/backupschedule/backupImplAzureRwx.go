@@ -41,7 +41,7 @@ func (impl *backupImplAzureRwx) toObjectSlice(list client.ObjectList) []client.O
 }
 func (impl *backupImplAzureRwx) getBackupObject(state *State, objectMeta *metav1.ObjectMeta) (client.Object, error) {
 	schedule := state.ObjAsBackupSchedule()
-	_, ok := schedule.(*cloudresourcesv1beta1.AzureRwxBackupSchedule)
+	x, ok := schedule.(*cloudresourcesv1beta1.AzureRwxBackupSchedule)
 	if !ok {
 		return nil, fmt.Errorf("provider %s not supported", state.Scope.Spec.Provider)
 	}
@@ -49,6 +49,7 @@ func (impl *backupImplAzureRwx) getBackupObject(state *State, objectMeta *metav1
 	return &cloudresourcesv1beta1.AzureRwxVolumeBackup{
 		ObjectMeta: *objectMeta,
 		Spec: cloudresourcesv1beta1.AzureRwxVolumeBackupSpec{
+			Location: x.Spec.Location,
 			Source: cloudresourcesv1beta1.PvcSource{
 				Pvc: cloudresourcesv1beta1.PvcRef{
 					Name:      schedule.GetSourceRef().Name,

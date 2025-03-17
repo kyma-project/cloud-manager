@@ -63,6 +63,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxbackupschedules
 cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
+cp $SCRIPT_DIR/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
 
 

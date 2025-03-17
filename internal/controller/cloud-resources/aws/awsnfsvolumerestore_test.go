@@ -163,12 +163,9 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsNfsVolumeRestore,
 					NewObjActions(),
+					HaveDeletionTimestamp(),
 				).
-				Should(Succeed())
-
-			By("Then DeletionTimestamp is set in AwsNfsVolumeRestore", func() {
-				Expect(awsNfsVolumeRestore.DeletionTimestamp.IsZero()).NotTo(BeTrue())
-			})
+				Should(SucceedIgnoreNotFound())
 
 			By("And Then the AwsNfsVolumeRestore in SKR is deleted.", func() {
 				Eventually(IsDeleted).

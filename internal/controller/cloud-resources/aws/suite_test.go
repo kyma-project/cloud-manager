@@ -93,7 +93,11 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := infra.Stop()
+
+	err := testinfra.PrintMetrics()
+	Expect(err).NotTo(HaveOccurred())
+
+	err = infra.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
 
