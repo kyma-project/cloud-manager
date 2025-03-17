@@ -36,6 +36,21 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 			Run(ctx, state)
 	}
 	sourceSAPath := state.azureRwxVolumeBackup.Status.StorageAccountPath
+	if sourceSAPath == "" {
+		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
+		errorMessage := "Source AzureRwxVolumeBackup has an empty storageAccountPath"
+		logger.Error(nil, errorMessage)
+		return composed.PatchStatus(restore).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidStorageAccountPath,
+				Message: errorMessage,
+			}).
+			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
 	targetSAPath := client.GetStorageAccountPath(state.scope.Spec.Scope.Azure.SubscriptionId, state.resourceGroupName, state.storageAccountName)
 	restoreRequest := client.RestoreRequest{
 		VaultName:                vault,

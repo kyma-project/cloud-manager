@@ -45,7 +45,7 @@ func (r *reconciler) newAction() composed.Action {
 				setProcessing,
 				findAzureRestoreJob,
 				startAzureRestore,
-				//checkRestoreJob
+				checkRestoreJob,
 			),
 			nil),
 		actions.PatchRemoveCommonFinalizer(),

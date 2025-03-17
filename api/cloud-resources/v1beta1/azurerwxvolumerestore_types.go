@@ -115,7 +115,7 @@ func (in *AzureRwxVolumeRestore) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *AzureRwxVolumeRestore) SpecificToProviders() []string {
-	return []string{"gcp"}
+	return []string{"azure"}
 }
 
 //+kubebuilder:object:root=true
@@ -147,13 +147,19 @@ func (in *AzureRwxVolumeRestore) CloneForPatchStatus() client.Object {
 
 // additional condition reasons
 const (
-	ConditionReasonMissingRwxVolumeBackup  = "MissingRwxVolumeBackup"
-	ConditionReasonRwxVolumeBackupNotReady = "RwxVolumeBackupNotReady"
-	ConditionReasonPvcNotFound             = "PvcNotFound"
-	ConditionReasonPvcNotBound             = "PvcNotBound"
-	ConditionReasonPvNotFound              = "PvNotFound"
-	ConditionReasonPvNotBound              = "PvNotBound"
-	ConditionReasonInvalidProvisioner      = "InvalidProvisioner"
-	ConditionReasonInvalidVolumeHandle     = "InvalidVolumeHandle"
-	ConditionReasonInvalidRecoveryPointId  = "InvalidRecoveryPointId"
+	ConditionReasonMissingRwxVolumeBackup          = "MissingRwxVolumeBackup"
+	ConditionReasonRwxVolumeBackupNotReady         = "RwxVolumeBackupNotReady"
+	ConditionReasonPvcNotFound                     = "PvcNotFound"
+	ConditionReasonPvcNotBound                     = "PvcNotBound"
+	ConditionReasonPvNotFound                      = "PvNotFound"
+	ConditionReasonPvNotBound                      = "PvNotBound"
+	ConditionReasonInvalidProvisioner              = "InvalidProvisioner"
+	ConditionReasonInvalidVolumeHandle             = "InvalidVolumeHandle"
+	ConditionReasonInvalidRecoveryPointId          = "InvalidRecoveryPointId"
+	ConditionReasonInvalidStorageAccountPath       = "InvalidStorageAccountPath"
+	ConditionReasonRestoreJobFailed                = "RestoreJobFailed"
+	ConditionReasonRestoreJobCancelled             = "RestoreJobCancelled"
+	ConditionReasonRestoreJobInvalidStatus         = "RestoreJobInvalidStatus"
+	ConditionReasonRestoreJobCompletedWithWarnings = "RestoreJobCompletedWithWarnings"
+	ConditionReasonRestoreJobNotFound              = "RestoreJobNotFound"
 )
