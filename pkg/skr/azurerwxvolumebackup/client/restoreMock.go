@@ -19,10 +19,15 @@ type restoreMockClient struct {
 	restoreClient
 }
 
-// utilizing subscriptionId as jobId
 func (c restoreMockClient) TriggerRestore(_ context.Context,
 	request RestoreRequest,
 ) (*string, error) {
-	jobsMock.AddStorageJob(request.VaultName, request.TargetFolderName, armrecoveryservicesbackup.JobStatusInProgress)
-	return nil, nil
+	// TriggerRestore utilizes vaultName as jobId and resourceGroupName as the final status after InProgress
+
+	nextJobStatus := armrecoveryservicesbackup.JobStatusCompleted
+	if request.ResourceGroupName != "" {
+		nextJobStatus = armrecoveryservicesbackup.JobStatus(request.ResourceGroupName)
+	}
+	jobsMock.AddStorageJob(request.VaultName, request.TargetFolderName, armrecoveryservicesbackup.JobStatusInProgress, nextJobStatus)
+	return &request.VaultName, nil
 }

@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
+	"net/http"
 )
 
 var (
@@ -15,6 +17,7 @@ type restoreJob struct {
 	jobId             string
 	restoreFolderPath string
 	status            string
+	finalStatus       string
 }
 
 func newJobsMockClient() *jobsClient {
@@ -33,12 +36,12 @@ func (m *jobsMockClient) FindRestoreJobId(_ context.Context, _ string, _ string,
 	}
 	for _, job := range m.restoreJobs {
 		if job.restoreFolderPath == restoreFolderPath {
-			if job.status == string(armrecoveryservicesbackup.JobStatusCompleted) {
+			if job.status != string(armrecoveryservicesbackup.JobStatusInProgress) {
 				return &job.jobId, false, nil
 			}
 			if job.status == string(armrecoveryservicesbackup.JobStatusInProgress) {
 				retry = true
-				job.status = string(armrecoveryservicesbackup.JobStatusCompleted)
+				job.status = job.finalStatus
 			}
 		}
 	}
@@ -52,18 +55,26 @@ func (m *jobsMockClient) GetStorageJob(_ context.Context, _ string,
 	_ string, jobId string) (*armrecoveryservicesbackup.AzureStorageJob, error) {
 	for _, job := range jobsMock.restoreJobs {
 		if job.jobId == jobId {
+			status := job.status
+			if job.status == string(armrecoveryservicesbackup.JobStatusInProgress) {
+				job.status = job.finalStatus
+			}
 			return to.Ptr(armrecoveryservicesbackup.AzureStorageJob{
-				Status: to.Ptr(job.status),
+				Status: to.Ptr(status),
 			}), nil
 		}
 	}
-	return nil, errors.New("job not found")
+	err := runtime.NewResponseError(&http.Response{
+		StatusCode: http.StatusNotFound,
+	})
+	return nil, err
 }
 
-func (m *jobsMockClient) AddStorageJob(jobId, restoreFolderPath string, status armrecoveryservicesbackup.JobStatus) {
+func (m *jobsMockClient) AddStorageJob(jobId, restoreFolderPath string, status, finalStatus armrecoveryservicesbackup.JobStatus) {
 	m.restoreJobs = append(m.restoreJobs, &restoreJob{
 		jobId:             jobId,
 		restoreFolderPath: restoreFolderPath,
 		status:            string(status),
+		finalStatus:       string(finalStatus),
 	})
 }

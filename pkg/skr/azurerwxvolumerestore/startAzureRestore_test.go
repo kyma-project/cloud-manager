@@ -2,6 +2,7 @@ package azurerwxvolumerestore
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
@@ -19,8 +20,8 @@ import (
 	"time"
 )
 
-func TestFindAzureRestoreJob(t *testing.T) {
-	t.Run("findAzureRestoreJob", func(t *testing.T) {
+func TestStartAzureRestore(t *testing.T) {
+	t.Run("startAzureRestore", func(t *testing.T) {
 
 		var azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore
 		var state *State
@@ -33,7 +34,20 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			}
 		}
 
-		setupTest := func(withObj bool, backupWithRecoveryPointId bool) {
+		setupTest := func(withObj bool, backupRecoveryPointId string, backupStorageAccountPath string) {
+			scope := &cloudcontrolv1beta1.Scope{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "test-scope",
+					Namespace: "test-ns",
+				},
+				Spec: cloudcontrolv1beta1.ScopeSpec{
+					Scope: cloudcontrolv1beta1.ScopeInfo{
+						Azure: &cloudcontrolv1beta1.AzureScope{
+							SubscriptionId: "test-subscription-id",
+						},
+					},
+				},
+			}
 			azureRwxVolumeBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "test-azure-restore-backup",
@@ -41,9 +55,8 @@ func TestFindAzureRestoreJob(t *testing.T) {
 				},
 				Status: cloudresourcesv1beta1.AzureRwxVolumeBackupStatus{},
 			}
-			if backupWithRecoveryPointId {
-				azureRwxVolumeBackup.Status.RecoveryPointId = "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
-			}
+			azureRwxVolumeBackup.Status.RecoveryPointId = backupRecoveryPointId
+			azureRwxVolumeBackup.Status.StorageAccountPath = backupStorageAccountPath
 			startTime, _ := time.Parse(time.RFC3339, "2025-03-01T00:43:35.6367215Z")
 			k8sStartTime := v1.Time{
 				Time: startTime,
@@ -90,10 +103,13 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
 			state.azureRwxVolumeBackup = azureRwxVolumeBackup
 			state.storageClient, _ = storageClient.NewMockClient()(nil, "", "", "", "")
+			state.scope = scope
 		}
 
-		t.Run("Should: find azure restore job", func(t *testing.T) {
-			setupTest(true, true)
+		t.Run("Should: start azure restore ", func(t *testing.T) {
+			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
+			backupStorageAccountPath := "test-storage-account-path"
+			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
@@ -101,43 +117,20 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
-			jobId := "test-job-id"
-			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
-				VaultName:                jobId,
-				ResourceGroupName:        "",
-				FabricName:               "",
-				ContainerName:            "",
-				ProtectedItemName:        "",
-				RecoveryPointId:          "",
-				SourceStorageAccountPath: "",
-				TargetStorageAccountPath: "",
-				TargetFileShareName:      "",
-				TargetFolderName:         restore.Status.RestoredDir,
-			}
-			_, _ = state.storageClient.TriggerRestore(ctx, request)
-			err, res := findAzureRestoreJob(ctx, state)
+
+			err, res := startAzureRestore(ctx, state)
 			// wants to retry
 			assert.Equal(t, ctx, res, "should return same context")
-			assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T10000ms()), err, "should stop with requeue")
+			assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T1000ms()), err, "should stop with requeue")
 			// reload the object and verify that the opIdentifider is not set yet
 			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
-			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should still be empty")
-
-			// 2nd time it should find the jobId
-			err, res = findAzureRestoreJob(ctx, state)
-			// wants to retry
-			assert.Equal(t, ctx, res, "should return same context")
-			assert.Nil(t, err, "should continue")
-			// reload the object and verify that the opIdentifider is  set
-			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
-			assert.Nil(t, err, "should get azureRwxVolumeRestore")
-			assert.Equal(t, jobId, azureRwxVolumeRestore.Status.OpIdentifier, "should have opIdentifier set")
+			assert.Equal(t, "v-test", azureRwxVolumeRestore.Status.OpIdentifier, "should have opIdentifier set")
+			assert.Equal(t, cloudresourcesv1beta1.JobStateInProgress, azureRwxVolumeRestore.Status.State, "should be in progress")
 		})
 
-		t.Run("Should: fail if recoveryPointId is missing", func(t *testing.T) {
-			setupTest(true, false)
+		t.Run("Should: fail if recoveryPointId is invalid in backup status ", func(t *testing.T) {
+			setupTest(true, "invalid-recoveryPointId", "test-storage-account-path")
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
@@ -146,33 +139,19 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
-			jobId := "test-job-id"
-			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
-				VaultName:                jobId,
-				ResourceGroupName:        "",
-				FabricName:               "",
-				ContainerName:            "",
-				ProtectedItemName:        "",
-				RecoveryPointId:          "",
-				SourceStorageAccountPath: "",
-				TargetStorageAccountPath: "",
-				TargetFileShareName:      "",
-				TargetFolderName:         restore.Status.RestoredDir,
-			}
-			_, _ = state.storageClient.TriggerRestore(ctx, request)
-			err, res := findAzureRestoreJob(ctx, state)
+			err, res := startAzureRestore(ctx, state)
 			// wants to retry
 			assert.Equal(t, ctx, res, "should return same context")
 			assert.Equal(t, composed.StopAndForget, err, "should stop and forget")
-			// reload the object and verify that restore has failed
+			// reload the object and verify that the opIdentifider is not set and state is failed
 			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
-			assert.Equal(t, cloudresourcesv1beta1.JobStateFailed, azureRwxVolumeRestore.Status.State, "should have a failed state")
+			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should still be empty")
+			assert.Equal(t, cloudresourcesv1beta1.JobStateFailed, azureRwxVolumeRestore.Status.State, "should be in failed state")
 		})
-
-		t.Run("Should: continue if job is not found", func(t *testing.T) {
-			setupTest(true, true)
+		t.Run("Should: fail if storageAccountPath is missing in backup status ", func(t *testing.T) {
+			backupRecoverPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
+			setupTest(true, backupRecoverPointId, "")
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
@@ -181,14 +160,15 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
-			err, res := findAzureRestoreJob(ctx, state)
+			err, res := startAzureRestore(ctx, state)
 			// wants to retry
 			assert.Equal(t, ctx, res, "should return same context")
-			assert.Nil(t, err, "should proceed")
-			// reload the object and verify that jobId is not set
+			assert.Equal(t, composed.StopAndForget, err, "should stop and forget")
+			// reload the object and verify that the opIdentifider is not set and state is failed
 			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
-			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
+			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should still be empty")
+			assert.Equal(t, cloudresourcesv1beta1.JobStateFailed, azureRwxVolumeRestore.Status.State, "should be in failed state")
 		})
 
 	})

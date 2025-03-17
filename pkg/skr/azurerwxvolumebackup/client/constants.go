@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"regexp"
 )
 
@@ -96,4 +97,18 @@ func ParseRecoveryPointId(recoveryPointId string) (subscription string, resource
 func IsPvcProvisionerAzureCsiDriver(annotations map[string]string) bool {
 	provisioner, ok := annotations[storageProvisionerKey]
 	return ok && provisioner == azureFileShareProvisioner
+}
+
+func PrettyPrintJobErrorDetails(details []*armrecoveryservicesbackup.AzureStorageErrorInfo) string {
+	if len(details) == 0 {
+		return ""
+	}
+	var result string
+	for _, detail := range details {
+		result += fmt.Sprintf("Code: %d, Message: %s, Recommendations: \n", *detail.ErrorCode, *detail.ErrorString)
+		for _, recommendation := range detail.Recommendations {
+			result += fmt.Sprintf("  - %s\n", *recommendation)
+		}
+	}
+	return result
 }
