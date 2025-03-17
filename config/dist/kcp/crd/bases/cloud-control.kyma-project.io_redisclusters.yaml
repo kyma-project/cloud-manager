@@ -106,6 +106,48 @@ spec:
                     - shardCount
                     type: object
                   azure:
+                    properties:
+                      redisConfiguration:
+                        properties:
+                          maxclients:
+                            type: string
+                          maxfragmentationmemory-reserved:
+                            type: string
+                          maxmemory-delta:
+                            type: string
+                          maxmemory-policy:
+                            type: string
+                          maxmemory-reserved:
+                            type: string
+                          notify-keyspace-events:
+                            type: string
+                        type: object
+                      redisVersion:
+                        type: string
+                      replicasPerPrimary:
+                        default: 0
+                        type: integer
+                        x-kubernetes-validations:
+                        - message: replicasPerPrimary cannot be added after the cluster
+                            creation.
+                          rule: (oldSelf != 0 || self == 0)
+                      shardCount:
+                        type: integer
+                      sku:
+                        properties:
+                          capacity:
+                            enum:
+                            - 1
+                            - 2
+                            - 3
+                            - 4
+                            - 5
+                            type: integer
+                        required:
+                        - capacity
+                        type: object
+                    required:
+                    - sku
                     type: object
                   gcp:
                     type: object
