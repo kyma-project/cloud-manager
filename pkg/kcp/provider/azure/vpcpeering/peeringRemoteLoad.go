@@ -81,9 +81,15 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcPeeringConnection
+		successError := composed.StopAndForget
 
 		if azuremeta.IsUnauthorized(err) {
 			reason = cloudcontrolv1beta1.ReasonUnauthorized
+			successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+		}
+
+		if azuremeta.IsUnauthenticated(err) {
+			successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
 		}
 
 		condition := metav1.Condition{
@@ -94,14 +100,14 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		if !composed.AnyConditionChanged(state.ObjAsVpcPeering(), condition) {
-			return composed.StopAndForget, nil
+			return successError, nil
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(condition).
 			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
 			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+			SuccessError(successError).
 			Run(ctx, state)
 	}
 

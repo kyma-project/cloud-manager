@@ -78,6 +78,16 @@ func IsUnauthorized(err error) bool {
 
 	return false
 }
+
+func IsUnauthenticated(err error) bool {
+	var auth *azidentity.AuthenticationFailedError
+	if ok := errors.As(err, &auth); ok {
+		return true
+	}
+
+	return false
+}
+
 func ErrorToRequeueResponse(err error) error {
 	if IsTooManyRequests(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms())
@@ -113,8 +123,7 @@ func GetErrorMessage(err error, def string) (string, bool) {
 		}
 	}
 
-	var auth *azidentity.AuthenticationFailedError
-	if errors.As(err, &auth) {
+	if IsUnauthenticated(err) {
 		return "Authentication error", true
 	}
 
