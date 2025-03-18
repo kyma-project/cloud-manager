@@ -47,6 +47,22 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Check if Fileshare is already protected. If it is, trigger backup and return
 	protectedItems, err := state.client.ListProtectedItems(ctx, vaultName, resourceGroupName)
+	if err != nil {
+		logger.Error(err, "Failed to ListProtectedItems")
+		return composed.PatchStatus(backup).
+			SetExclusiveConditions(
+				metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudresourcesv1beta1.ConditionReasonError,
+					Message: fmt.Sprintf("Failed to ListProtectedItems: %s", err),
+				},
+			).
+			SuccessError(composed.StopWithRequeue).
+			Run(ctx, state)
+
+	}
+
 	var protectedItemsMatching []protectedFileShare
 
 	for _, item := range protectedItems {
