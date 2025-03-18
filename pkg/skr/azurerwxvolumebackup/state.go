@@ -41,7 +41,7 @@ type stateFactory struct {
 	clientProvider   client2.ClientProvider[client.Client]
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) (*State, error) {
+func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 	return &State{
 		State:          f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
@@ -49,7 +49,7 @@ func (f *stateFactory) NewState(req ctrl.Request) (*State, error) {
 		KcpCluster:     f.kcpCluster,
 		SkrCluster:     f.skrCluster,
 		clientProvider: f.clientProvider,
-	}, nil
+	}
 }
 
 func newStateFactory(
