@@ -25,10 +25,12 @@ func createVault(ctx context.Context, st composed.State) (error, context.Context
 		return composed.StopWithRequeue, ctx
 	}
 
+	state.vaultName = vaultName
+
 	return composed.UpdateStatus(backup).
 		ErrorLogMessage("").
 		SuccessErrorNil().
-		FailedError(composed.StopWithRequeue).
+		FailedError(composed.StopAndForget).
 		Run(ctx, state)
 
 }
