@@ -15,8 +15,11 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	azureRwxVolumeRestore := state.ObjAsAzureRwxVolumeRestore()
+	pvcNamespacedName := azureRwxVolumeRestore.Spec.Destination.Pvc.ToNamespacedName(azureRwxVolumeRestore.Namespace)
+	logger.Info("Loading PersistentVolumeClaim", "PVC", pvcNamespacedName)
+
 	pvc := &corev1.PersistentVolumeClaim{}
-	err := state.Cluster().K8sClient().Get(ctx, azureRwxVolumeRestore.Spec.Destination.Pvc.ToNamespacedName(azureRwxVolumeRestore.Namespace), pvc)
+	err := state.Cluster().K8sClient().Get(ctx, pvcNamespacedName, pvc)
 
 	if client.IgnoreNotFound(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error in loading PersistentVolumeClaim", composed.StopWithRequeue, ctx)

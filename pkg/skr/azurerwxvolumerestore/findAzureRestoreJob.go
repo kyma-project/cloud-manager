@@ -17,8 +17,8 @@ func findAzureRestoreJob(ctx context.Context, st composed.State) (error, context
 	if restore.Status.OpIdentifier != "" {
 		return nil, ctx
 	}
-
 	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Finding restore job ID in case restore already started but opIdentifier failed to be set")
 	_, resourceGroup, vault, _, _, _, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed

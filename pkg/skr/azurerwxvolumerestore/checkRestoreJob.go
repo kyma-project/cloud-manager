@@ -19,7 +19,7 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 	if restore.Status.OpIdentifier == "" {
 		return composed.LogErrorAndReturn(nil, "Should not reach checkRestoreJob action if opIdentifier is missing.", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
 	}
-
+	logger.Info("Checking restore job status", "opIdentifier", restore.Status.OpIdentifier)
 	_, resourceGroup, vault, _, _, _, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
