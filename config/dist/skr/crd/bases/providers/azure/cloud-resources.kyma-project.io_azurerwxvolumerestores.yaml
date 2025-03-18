@@ -162,8 +162,15 @@ spec:
                   x-kubernetes-list-map-keys:
                     - type
                   x-kubernetes-list-type: map
+                opIdentifier:
+                  description: Operation Identifier to track the Hyperscaler Restore Operation
+                  type: string
                 restoredDir:
-                  description: The directory under the root of volume where the backup is restored. Only applies to in place restores.
+                  description: The directory under the root of volume where the backup is restored.
+                  type: string
+                startTime:
+                  description: The time when the restore operation is about to start.
+                  format: date-time
                   type: string
                 state:
                   enum:

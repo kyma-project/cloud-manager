@@ -338,6 +338,9 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		authTokenEnabled = true
 	}
 
+	shardCount := ptr.Deref(options.ShardCount, 1)
+
+	nodeGroups := createNodeGroups(options.Name, shardCount, options.ReplicasPerNodeGroup)
 	client.replicationGroups[options.Name] = &elasticacheTypes.ReplicationGroup{
 		ReplicationGroupId:       ptr.To(options.Name),
 		Status:                   ptr.To("creating"),
@@ -353,21 +356,37 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 			Address: ptr.To("192.168.3.2"),
 			Port:    aws.Int32(6949),
 		},
-		NodeGroups: []elasticacheTypes.NodeGroup{
-			{
-				PrimaryEndpoint: &elasticacheTypes.Endpoint{
-					Address: ptr.To("192.168.3.3"),
-					Port:    aws.Int32(6949),
-				},
-				ReaderEndpoint: &elasticacheTypes.Endpoint{
-					Address: ptr.To("192.168.3.4"),
-					Port:    aws.Int32(6949),
-				},
-			},
-		},
+		NodeGroups: nodeGroups,
 	}
 
 	return &elasticache.CreateReplicationGroupOutput{}, nil
+}
+
+func createNodeGroups(name string, shardCount, replicaCount int32) []elasticacheTypes.NodeGroup {
+	nodeGroups := []elasticacheTypes.NodeGroup{}
+
+	for i := range int(shardCount) {
+		nodeGroupMembers := []elasticacheTypes.NodeGroupMember{}
+		for j := range int(replicaCount + 1) {
+			nodeGroupMembers = append(nodeGroupMembers, elasticacheTypes.NodeGroupMember{
+				CacheClusterId: ptr.To(fmt.Sprintf("%s-%d-%d", name, i, j)),
+			})
+		}
+		nodeGroups = append(nodeGroups, elasticacheTypes.NodeGroup{
+			NodeGroupId:      ptr.To(fmt.Sprintf("%s-%d", name, i)),
+			NodeGroupMembers: nodeGroupMembers,
+			PrimaryEndpoint: &elasticacheTypes.Endpoint{
+				Address: ptr.To(fmt.Sprintf("192.168.3.%d", i)),
+				Port:    aws.Int32(6949),
+			},
+			ReaderEndpoint: &elasticacheTypes.Endpoint{
+				Address: ptr.To(fmt.Sprintf("192.168.34.%d", i)),
+				Port:    aws.Int32(6949),
+			},
+		})
+	}
+
+	return nodeGroups
 }
 
 func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options awsclient.ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
@@ -448,6 +467,22 @@ func (client *elastiCacheClientFake) DescribeElastiCacheCluster(ctx context.Cont
 	}
 
 	return []elasticacheTypes.CacheCluster{*cacheCluster}, nil
+}
+
+func (client *elastiCacheClientFake) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterShardOptions) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	return nil
+}
+
+func (c *elastiCacheClientFake) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterReplicaOptions) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	return nil
 }
 
 func (client *elastiCacheClientFake) DescribeUserGroup(ctx context.Context, id string) (*elasticacheTypes.UserGroup, error) {

@@ -71,9 +71,18 @@ type AzureRwxVolumeRestoreStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// The directory under the root of volume where the backup is restored. Only applies to in place restores.
+	// The directory under the root of volume where the backup is restored.
 	// +optional
 	RestoredDir string `json:"restoredDir,omitempty"`
+
+	// The time when the restore operation is about to start.
+	// +optional
+	StartTime *metav1.Time `json:"startTime,omitempty"`
+
+	// +optional
+	// Operation Identifier to track the Hyperscaler Restore Operation
+	// +optional
+	OpIdentifier string `json:"opIdentifier,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -106,7 +115,7 @@ func (in *AzureRwxVolumeRestore) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *AzureRwxVolumeRestore) SpecificToProviders() []string {
-	return []string{"gcp"}
+	return []string{"azure"}
 }
 
 //+kubebuilder:object:root=true
@@ -135,3 +144,22 @@ func (in *AzureRwxVolumeRestore) CloneForPatchStatus() client.Object {
 		Status: in.Status,
 	}
 }
+
+// additional condition reasons
+const (
+	ConditionReasonMissingRwxVolumeBackup          = "MissingRwxVolumeBackup"
+	ConditionReasonRwxVolumeBackupNotReady         = "RwxVolumeBackupNotReady"
+	ConditionReasonPvcNotFound                     = "PvcNotFound"
+	ConditionReasonPvcNotBound                     = "PvcNotBound"
+	ConditionReasonPvNotFound                      = "PvNotFound"
+	ConditionReasonPvNotBound                      = "PvNotBound"
+	ConditionReasonInvalidProvisioner              = "InvalidProvisioner"
+	ConditionReasonInvalidVolumeHandle             = "InvalidVolumeHandle"
+	ConditionReasonInvalidRecoveryPointId          = "InvalidRecoveryPointId"
+	ConditionReasonInvalidStorageAccountPath       = "InvalidStorageAccountPath"
+	ConditionReasonRestoreJobFailed                = "RestoreJobFailed"
+	ConditionReasonRestoreJobCancelled             = "RestoreJobCancelled"
+	ConditionReasonRestoreJobInvalidStatus         = "RestoreJobInvalidStatus"
+	ConditionReasonRestoreJobCompletedWithWarnings = "RestoreJobCompletedWithWarnings"
+	ConditionReasonRestoreJobNotFound              = "RestoreJobNotFound"
+)

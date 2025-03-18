@@ -12,11 +12,11 @@ func JsonClone[T any](a T) (T, error) {
 	return res, err
 }
 
-func JsonCloneInto[T any, R any](a T, r R) error {
-	b, err := json.Marshal(a)
+func JsonCloneInto[T any, R any](source T, destination R) error {
+	b, err := json.Marshal(source)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(b, &r)
+	err = json.Unmarshal(b, &destination)
 	return err
 }

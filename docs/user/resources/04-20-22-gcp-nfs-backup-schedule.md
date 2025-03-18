@@ -23,7 +23,9 @@ This table lists the parameters of the given resource together with their descri
 | **prefix**                  | string              | Optional. Prefix for the name of the created `GcpNfsVolumeBackup` resources. Defaults to name of this schedule.                                                                                                                                                                       |
 | **startTime**               | metav1.Time         | Optional. Start time for the schedule. Value cannot be from the past. When not specified, the schedule becomes effective immediately.                                                                                                                                                 |
 | **endTime**                 | metav1.Time         | Optional. End time for the schedule. Value cannot be from the past or before the `startTime`. When not specified, the schedule runs indefinitely.                                                                                                                                     |
-| **maxRetentionDays**        | int                 | Optional. Maximum number of days to retain the backup resources. If not specified, the backups are retained indefinitely. If `deleteCascade` is `true` for this schedule, then all the backups will be deleted when the schedule is deleted irrespective of this configuration value. |
+| **maxRetentionDays**       | int                 | Optional. Maximum number of days to retain the backup resources. If not specified, the default value is 375 days. If `deleteCascade` is `true` for this schedule, then all the backups are deleted when the schedule is deleted irrespective of this configuration value. |
+| **maxReadyBackups**        | int                 | Optional. Maximum number of backups in `Ready` state to be retained. Default value is 100.                                                                                                                                                                                |
+| **maxFailedBackups**       | int                 | Optional. Maximum number of backups in `Failed` state to be retained. Default value is 5.                                                                                                                                                                                 |
 | **suspend**                 | boolean             | Optional. Specifies whether or not to suspend the schedule temporarily. Defaults to `false`.                                                                                                                                                                                          |
 | **deleteCascade**           | boolean             | Optional. Specifies whether to cascade delete the backup resources when this schedule is deleted. Defaults to `false`.                                                                                                                                                                |
 
@@ -67,6 +69,7 @@ spec:
   startTime: 2024-09-01T00:00:00Z
   endTime: 2025-12-31T00:00:00Z
   maxRetentionDays: 365
+  maxReadyBackups: 150
   suspend: false
   deleteCascade: true
 ```

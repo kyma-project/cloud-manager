@@ -1,0 +1,11 @@
+resource:
+    kind: AzureRwxBackupSchedule
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: azurerwxbackupschedules
+name: Azure RWX Backup Schedules
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    Azure RWX Backup Schedules description here

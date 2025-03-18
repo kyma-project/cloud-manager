@@ -8,6 +8,7 @@ import (
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
@@ -214,4 +215,87 @@ func (s *State) GetUpgradeParamGroupName() string {
 	}
 
 	return paramGroupName
+}
+
+func (s *State) IsShardCountUpToDate() bool {
+	if s.elastiCacheReplicationGroup.NodeGroups == nil {
+		return false
+	}
+
+	desiredShards := s.ObjAsRedisCluster().Spec.Instance.Aws.ShardCount
+	currentShards := int32(len(s.elastiCacheReplicationGroup.NodeGroups))
+
+	return desiredShards == currentShards
+}
+
+func (s *State) GetShardsForRemoval() []string {
+	if s.elastiCacheReplicationGroup.NodeGroups == nil {
+		return nil
+	}
+
+	desiredShards := s.ObjAsRedisCluster().Spec.Instance.Aws.ShardCount
+	currentShards := int32(len(s.elastiCacheReplicationGroup.NodeGroups))
+
+	if desiredShards >= currentShards {
+		return nil
+	}
+
+	shardsToRemoveCount := int(currentShards - desiredShards)
+	nodeGroups := s.elastiCacheReplicationGroup.NodeGroups
+	nodeGroupsForRemoval := nodeGroups[len(nodeGroups)-shardsToRemoveCount:]
+
+	return pie.Map(nodeGroupsForRemoval, func(nodeGroupForRemoval elasticacheTypes.NodeGroup) string {
+		return ptr.Deref(nodeGroupForRemoval.NodeGroupId, "")
+	})
+}
+
+func (s *State) IsReplicaCountUpToDate() bool {
+	if s.elastiCacheReplicationGroup.NodeGroups == nil {
+		return false
+	}
+
+	desiredReplicas := s.ObjAsRedisCluster().Spec.Instance.Aws.ReplicasPerShard
+
+	for _, nodeGroup := range s.elastiCacheReplicationGroup.NodeGroups {
+		if nodeGroup.NodeGroupMembers == nil {
+			return false
+		}
+
+		currentReplicas := int32(len(nodeGroup.NodeGroupMembers) - 1) // substracting one for the master node
+		if currentReplicas != desiredReplicas {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s *State) GetReplicasForRemoval() []string {
+	if s.elastiCacheReplicationGroup.NodeGroups == nil {
+		return []string{}
+	}
+
+	desiredReplicas := s.ObjAsRedisCluster().Spec.Instance.Aws.ReplicasPerShard
+	replicasToRemove := []string{}
+
+	for _, nodeGroup := range s.elastiCacheReplicationGroup.NodeGroups {
+		nodeGroupMembers := nodeGroup.NodeGroupMembers
+		if nodeGroupMembers == nil {
+			continue
+		}
+
+		currentReplicas := int32(len(nodeGroupMembers) - 1) // substracting one for the master node
+		if desiredReplicas >= currentReplicas {
+			continue
+		}
+
+		replicasToRemoveCount := int(currentReplicas - desiredReplicas)
+		nodeGroupMembersToRemove := nodeGroupMembers[len(nodeGroupMembers)-replicasToRemoveCount:]
+		nodeGroupMemberCacheClusterIds := pie.Map(nodeGroupMembersToRemove, func(nodeGroupMember elasticacheTypes.NodeGroupMember) string {
+			return ptr.Deref(nodeGroupMember.CacheClusterId, "")
+		})
+		replicasToRemove = append(replicasToRemove, nodeGroupMemberCacheClusterIds...)
+	}
+
+	return replicasToRemove
 }

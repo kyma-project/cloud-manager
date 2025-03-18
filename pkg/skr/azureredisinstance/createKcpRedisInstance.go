@@ -19,7 +19,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
 
-	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+	redisSKUTier, redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 
 	if err != nil {
 		errMsg := "Failed to map redisTier to SKU Capacity"
@@ -62,7 +62,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			},
 			Instance: cloudcontrolv1beta1.RedisInstanceInfo{
 				Azure: &cloudcontrolv1beta1.RedisInstanceAzure{
-					SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: redisSKUCapacity},
+					SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: redisSKUCapacity, Family: redisSKUTier},
 					RedisVersion: azureRedisInstance.Spec.RedisVersion,
 					ShardCount:   0,
 					RedisConfiguration: cloudcontrolv1beta1.RedisInstanceAzureConfigs{

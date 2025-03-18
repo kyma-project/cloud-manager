@@ -36,6 +36,12 @@ func WithIpRange(ipRangeName string) ObjAction {
 				}
 				return
 			}
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsRedisCluster); ok {
+				if x.Spec.IpRange.Name == "" {
+					x.Spec.IpRange.Name = ipRangeName
+				}
+				return
+			}
 			if x, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
 				if x.Spec.IpRange.Name == "" {
 					x.Spec.IpRange.Name = ipRangeName

@@ -23,7 +23,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
-	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+	redisSKUFamily, redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 
 	if err != nil {
 		errMsg := "Failed to map redisTier to SKU Capacity"
@@ -50,6 +50,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 
 	state.KcpRedisInstance.Spec.Instance.Azure.SKU.Capacity = redisSKUCapacity
+	state.KcpRedisInstance.Spec.Instance.Azure.SKU.Family = redisSKUFamily
 	logger.Info("Detected modified Redis SKU capacity")
 	err = state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 

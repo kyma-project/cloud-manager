@@ -169,3 +169,17 @@ func HaveFinalizer(finalizer string) ObjAssertion {
 		return nil
 	}
 }
+
+func HaveDeletionTimestamp() ObjAssertion {
+	return func(obj client.Object) error {
+		if obj.GetDeletionTimestamp() == nil {
+			return fmt.Errorf(
+				"expected object %T %s/%s to have deletion timestamp set, but deletion timestamp is nil",
+				obj,
+				obj.GetNamespace(),
+				obj.GetName(),
+			)
+		}
+		return nil
+	}
+}

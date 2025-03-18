@@ -90,6 +90,8 @@ func New(stateFactory StateFactory) composed.Action {
 						shouldSwitchToMainParamGroupPredicate(),
 						switchToMainParamGroup(),
 					),
+					scaleElastiCacheClusterShards,
+					scaleElastiCacheClusterReplicas,
 					updateStatus,
 				),
 				composed.ComposeActions(

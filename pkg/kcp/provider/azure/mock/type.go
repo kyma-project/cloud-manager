@@ -6,6 +6,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	redisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 )
@@ -67,6 +68,7 @@ type Providers interface {
 	VpcPeeringProvider() azureclient.ClientProvider[vpcpeeringclient.Client]
 	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
 	RedisClientProvider() azureclient.ClientProvider[redisinstanceclient.Client]
+	RedisClusterClientProvider() azureclient.ClientProvider[redisclusterclient.Client]
 	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
 }
 

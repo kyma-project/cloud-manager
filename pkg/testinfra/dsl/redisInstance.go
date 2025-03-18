@@ -29,11 +29,24 @@ func WithRedisInstanceReadEndpoint(readEndpoint string) ObjStatusAction {
 	}
 }
 
+func WithRedisInstanceDiscoveryEndpoint(discoveryEndpoint string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if redisInstance, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				redisInstance.Status.DiscoveryEndpoint = discoveryEndpoint
+			}
+		},
+	}
+}
+
 func WithRedisInstanceAuthString(authString string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			if redisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
 				redisInstance.Status.AuthString = authString
+			}
+			if redisCluster, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				redisCluster.Status.AuthString = authString
 			}
 		},
 	}
@@ -372,6 +385,15 @@ func WithRedisInstanceAzure() ObjAction {
 		},
 	}
 }
+func WithRedisClusterAzure() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				x.Spec.Instance.Azure = &cloudcontrolv1beta1.RedisClusterAzure{}
+			}
+		},
+	}
+}
 func WithKcpAzureRedisVersion(redisVersion string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -383,6 +405,17 @@ func WithKcpAzureRedisVersion(redisVersion string) ObjAction {
 		},
 	}
 }
+func WithKcpAzureRedisClusterVersion(redisVersion string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisCluster, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				azureRedisCluster.Spec.Instance.Azure.RedisVersion = redisVersion
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisClusterVersion", obj))
+		},
+	}
+}
 func WithSKU(capacity int, family string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
@@ -391,6 +424,30 @@ func WithSKU(capacity int, family string) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisVersion", obj))
+		},
+	}
+}
+func WithClusterSKU(capacity int) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisCluster, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				azureRedisCluster.Spec.Instance.Azure.SKU = cloudcontrolv1beta1.AzureRedisClusterSKU{Capacity: capacity}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisClusterVersion", obj))
+		},
+	}
+}
+
+func WithClusterProperties(shardCount int, replicaCount int) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisCluster, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
+				azureRedisCluster.Spec.Instance.Azure.ShardCount = shardCount
+				azureRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary = replicaCount
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureRedisClusterProperties", obj))
 		},
 	}
 }

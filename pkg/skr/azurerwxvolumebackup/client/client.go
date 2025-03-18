@@ -11,6 +11,8 @@ type Client interface {
 	BackupClient
 	ProtectionPoliciesClient
 	RecoveryPointClient
+	JobsClient
+	RestoreClient
 }
 
 type client struct {
@@ -18,6 +20,10 @@ type client struct {
 	BackupClient
 	ProtectionPoliciesClient
 	RecoveryPointClient
+	JobsClient
+	RestoreClient
+	BackupProtectableItemsClient
+	ProtectedItemsClient
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -49,11 +55,35 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
+		jc, err := NewJobsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
+		rc, err := NewRestoreClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
+		bpic, err := NewBackupProtectableItemsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
+		pic, err := NewProtectedItemsClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
 		c = client{
 			vc,
 			bc,
 			ppc,
 			rpc,
+			jc,
+			rc,
+			bpic,
+			pic,
 		}
 
 		return c, nil

@@ -11,7 +11,7 @@ spec:
       authEnabled: false
       autoMinorVersionUpgrade: true
       cacheNodeType: cache.r7g.large
-      engineVersion: 7.0
+      engineVersion: "7.0"
       parameters:
         activedefrag: 'yes'
         maxmemory-policy: volatile-lru

@@ -46,7 +46,8 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
-	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
@@ -58,6 +59,7 @@ import (
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+
 	//azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -228,6 +230,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAwsRedisClusterReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsRedisCluster")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
 		os.Exit(1)
@@ -273,6 +280,11 @@ func main() {
 	//	os.Exit(1)
 	//}
 
+	//if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
+	//	os.Exit(1)
+	//}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
@@ -313,7 +325,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
 		gcpmemorystoreclient.NewMemorystoreClientProvider(),
-		azureredisclient.NewClientProvider(),
+		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,
 	); err != nil {
@@ -341,6 +353,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRedisClusterReconciler(
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
+		azureredisclusterclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")

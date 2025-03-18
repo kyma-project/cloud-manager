@@ -10,6 +10,9 @@ const (
 	LabelRedisInstanceStatusId  = "cloud-resources.kyma-project.io/redisInstanceStatusId"
 	LabelRedisInstanceNamespace = "cloud-resources.kyma-project.io/redisInstanceNamespace"
 
+	LabelRedisClusterStatusId  = "cloud-resources.kyma-project.io/redisClusterStatusId"
+	LabelRedisClusterNamespace = "cloud-resources.kyma-project.io/redisClusterNamespace"
+
 	LabelScheduleName      = "cloud-resources.kyma-project.io/scheduleName"
 	LabelScheduleNamespace = "cloud-resources.kyma-project.io/scheduleNamespace"
 )

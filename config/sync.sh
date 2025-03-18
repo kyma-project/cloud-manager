@@ -18,6 +18,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumes.yaml $SCR
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsvpcpeerings.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsredisclusters.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumebackups.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsbackupschedules.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumerestores.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
@@ -56,11 +57,13 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azureredisinstances.yam
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumebackups.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumerestores.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxbackupschedules.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 
 # AZURE UI
 cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
+cp $SCRIPT_DIR/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
 
 
