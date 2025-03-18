@@ -45,7 +45,7 @@ func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 			Network: cloudcontrolv1beta1.NetworkInfo{
 				Reference: &cloudcontrolv1beta1.NetworkReference{
 					Azure: &cloudcontrolv1beta1.AzureNetworkReference{
-						TenantId:       obj.Spec.TenantId,
+						TenantId:       obj.Spec.RemoteTenant,
 						SubscriptionId: resource.Subscription,
 						ResourceGroup:  resource.ResourceGroup,
 						NetworkName:    resource.ResourceName,
