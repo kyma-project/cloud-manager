@@ -3,6 +3,7 @@ package azurerwxvolumebackup
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -12,6 +13,7 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+
 	state := r.factory.NewState(request)
 
 	action := r.newAction()
@@ -34,6 +36,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 			composed.NewStateClusterFromCluster(args.SkrCluster),
+			client.NewClientProvider(),
 		),
 	}
 }
