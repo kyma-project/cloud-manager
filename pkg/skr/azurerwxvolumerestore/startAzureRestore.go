@@ -19,6 +19,7 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Starting Azure Restore")
 	_, resourceGroup, vault, container, protectedItem, _, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed

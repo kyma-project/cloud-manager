@@ -9,6 +9,8 @@ import (
 
 func createAzureStorageClient(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Creating Azure Storage Client")
 
 	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
 	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret

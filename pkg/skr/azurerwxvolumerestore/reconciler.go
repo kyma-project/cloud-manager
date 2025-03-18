@@ -42,7 +42,6 @@ func (r *reconciler) newAction() composed.Action {
 				loadPersistentVolumeClaim,
 				loadPersistentVolume,
 				createAzureStorageClient,
-				setProcessing,
 				findAzureRestoreJob,
 				startAzureRestore,
 				checkRestoreJob,

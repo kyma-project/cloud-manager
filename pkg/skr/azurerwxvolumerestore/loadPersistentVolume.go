@@ -16,8 +16,10 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	azureRwxVolumeRestore := state.ObjAsAzureRwxVolumeRestore()
 	pvName := state.pvc.Spec.VolumeName
-	pv := &v1.PersistentVolume{}
 	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Loading PersistentVolume", "PV", pvName)
+
+	pv := &v1.PersistentVolume{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, pv)
 
 	if client.IgnoreNotFound(err) != nil {
