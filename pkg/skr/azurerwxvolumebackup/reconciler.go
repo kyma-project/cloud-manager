@@ -21,10 +21,14 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return composed.Handle(action(ctx, state))
 }
 
-// TODO: fill out the rest of actions
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRwxVolumeBackup",
+		createClient,
+		createVault,
+		createBackup,
+		loadPersistentVolume,
+		loadPersistentVolumeClaim,
 	)
 }
 
