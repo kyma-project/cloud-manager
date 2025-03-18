@@ -46,7 +46,7 @@ func (s *server) RedisClientProvider() azureclient.ClientProvider[azureredisinst
 }
 
 func (s *server) RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client] {
-	return func(ctx context.Context, _, _, subscription, tenant string) (azureredisclusterclient.Client, error) {
+	return func(ctx context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azureredisclusterclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
