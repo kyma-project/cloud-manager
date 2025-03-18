@@ -35,14 +35,14 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	// TODO: figure out where we get the vaultName, policyName
-	vaultName := "vaultName"
+	vaultName := state.vaultName
 	resourceGroupName := state.resourceGroupName
 	fileShareName := state.fileShareName
-	policyName := "policyName"
 
-	// TODO: figure out subscriptionId
-	subscriptionId := "subscriptionId"
+	// PolicyName is systemically created
+	policyName := fmt.Sprintf("%v-backup-policy", fileShareName)
+
+	subscriptionId := state.scope.Spec.Scope.Azure.SubscriptionId
 	storageAccountName := state.storageAccountName
 
 	// Check if Fileshare is already protected. If it is, trigger backup and return
