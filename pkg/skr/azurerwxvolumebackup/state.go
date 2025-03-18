@@ -1,11 +1,10 @@
 package azurerwxvolumebackup
 
 import (
-	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -21,10 +20,13 @@ type State struct {
 
 	AuthSecret         *corev1.Secret
 	client             client.Client
+	clientProvider     client2.ClientProvider[client.Client]
 	resourceGroupName  string
 	storageAccountName string
 	fileShareName      string
 	pvc                *v1.PersistentVolumeClaim
+	vaultName          string
+	scope              *cloudcontrolv1beta1.Scope
 }
 
 func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolumeBackup {
@@ -40,21 +42,13 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) (*State, error) {
-	ctx := context.Background()
-	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
-	subscriptionId := "" // TODO: confirm
-	tenantId := ""       // TODO: confirm
-	c, err := f.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
-	if err != nil {
-		return nil, err
-	}
+
 	return &State{
-		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
-		KymaRef:    f.kymaRef,
-		KcpCluster: f.kcpCluster,
-		SkrCluster: f.skrCluster,
-		client:     c,
+		State:          f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
+		KymaRef:        f.kymaRef,
+		KcpCluster:     f.kcpCluster,
+		SkrCluster:     f.skrCluster,
+		clientProvider: f.clientProvider,
 	}, nil
 }
 
