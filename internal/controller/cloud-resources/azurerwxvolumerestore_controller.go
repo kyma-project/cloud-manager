@@ -61,9 +61,9 @@ func (r *AzureRwxVolumeRestoreReconciler) Reconcile(ctx context.Context, req ctr
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupAzureRwxRestoreReconciler(reg skrruntime.SkrRegistry) error {
+func SetupAzureRwxRestoreReconciler(reg skrruntime.SkrRegistry, storageClientProvider azureclient.ClientProvider[client.Client]) error {
 	return reg.Register().
-		WithFactory(&AzureRwxVolumeRestoreReconcilerFactory{}).
+		WithFactory(&AzureRwxVolumeRestoreReconcilerFactory{clientProvider: storageClientProvider}).
 		For(&cloudresourcesv1beta1.AzureRwxVolumeRestore{}).
 		Complete()
 }

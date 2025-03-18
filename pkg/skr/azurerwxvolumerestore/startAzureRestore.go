@@ -52,7 +52,7 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
-	targetSAPath := client.GetStorageAccountPath(state.scope.Spec.Scope.Azure.SubscriptionId, state.resourceGroupName, state.storageAccountName)
+	targetSAPath := client.GetStorageAccountPath(state.Scope().Spec.Scope.Azure.SubscriptionId, state.resourceGroupName, state.storageAccountName)
 	restoreRequest := client.RestoreRequest{
 		VaultName:                vault,
 		ResourceGroupName:        resourceGroup,

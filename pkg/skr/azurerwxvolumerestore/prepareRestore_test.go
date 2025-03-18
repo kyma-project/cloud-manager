@@ -2,13 +2,13 @@ package azurerwxvolumerestore
 
 import (
 	"context"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -19,14 +19,12 @@ import (
 	"testing"
 )
 
-func TestLoadPersistentVolume(t *testing.T) {
-
-	t.Run("loadPersistentVolume", func(t *testing.T) {
+func TestSetStartTime(t *testing.T) {
+	t.Run("setStartTime", func(t *testing.T) {
 
 		var azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore
 		var state *State
 		var k8sClient client.WithWatch
-		var pv *corev1.PersistentVolume
 
 		kcpScheme := runtime.NewScheme()
 		utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
@@ -51,7 +49,6 @@ func TestLoadPersistentVolume(t *testing.T) {
 			WithObjects(scope).
 			Build()
 		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
@@ -59,7 +56,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 			}
 		}
 
-		setupTest := func(withPv bool, pvStatus corev1.PersistentVolumePhase) {
+		setupTest := func(withObj bool) {
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
 				ObjectMeta: v1.ObjectMeta{
 					Name:      "test-azure-restore",
@@ -86,96 +83,64 @@ func TestLoadPersistentVolume(t *testing.T) {
 			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
 			var fakeClient client.WithWatch
-			if withPv {
-				pv = &corev1.PersistentVolume{
-					ObjectMeta: v1.ObjectMeta{
-						Name: "test-azure-restore-pv",
-					},
-					Status: corev1.PersistentVolumeStatus{
-						Phase: pvStatus,
-					},
-					Spec: corev1.PersistentVolumeSpec{
-						PersistentVolumeSource: corev1.PersistentVolumeSource{
-							CSI: &corev1.CSIPersistentVolumeSource{
-								VolumeHandle: "shoot--kyma-dev--c-6ea9b9b#f21d936aa5673444a95852a#pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca###default",
-							},
-						},
-					},
-				}
-				fakeClient = fake.NewClientBuilder().
-					WithScheme(scheme).
+			if withObj {
+				fakeClient = fake.NewClientBuilder().WithScheme(scheme).
 					WithObjects(azureRwxVolumeRestore).
 					WithStatusSubresource(azureRwxVolumeRestore).
-					WithObjects(pv).
-					WithStatusSubresource(pv).
 					Build()
 			} else {
-				fakeClient = fake.NewClientBuilder().
-					WithScheme(scheme).
-					WithObjects(azureRwxVolumeRestore).
-					WithStatusSubresource(azureRwxVolumeRestore).
-					Build()
+				fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
 			}
 			k8sClient = spy.NewClientSpy(fakeClient)
-
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
-			pvc := &corev1.PersistentVolumeClaim{
-				ObjectMeta: v1.ObjectMeta{
-					Name:      "test-azure-restore-pvc",
-					Namespace: "test-ns",
-					Annotations: map[string]string{
-						"volume.kubernetes.io/storage-provisioner": "file.csi.azure.com",
-					},
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					VolumeName: "test-azure-restore-pv",
-				},
-			}
-			state.pvc = pvc
 		}
 
-		t.Run("Should: load Bound PV", func(t *testing.T) {
-			setupTest(true, corev1.VolumeBound)
+		t.Run("Should: set start time", func(t *testing.T) {
+			setupTest(true)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
+			assert.Nil(t, err, "should get azureRwxVolumeRestore")
+			assert.Nil(t, azureRwxVolumeRestore.Status.StartTime, "should not have start time set")
+
+			err, res := prepareRestore(ctx, state)
+
+			assert.Equal(t, ctx, res, "should return same context")
+			assert.Nil(t, err, "should return nil err")
+			// reload the object and verify that the start time is set
+			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
+			assert.Nil(t, err, "should get azureRwxVolumeRestore")
+			assert.NotNil(t, azureRwxVolumeRestore.Status.StartTime, "should have start time set")
+			assert.NotEmpty(t, azureRwxVolumeRestore.Status.RestoredDir, "should have restored dir set")
+		})
+
+		t.Run("Should: retry if setting start time fails", func(t *testing.T) {
+			setupTest(false)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			err, res := loadPersistentVolume(ctx, state)
+			err, res := prepareRestore(ctx, state)
+
+			assert.Equal(t, ctx, res, "should return same context")
+			assert.Equal(t, err, composed.StopWithRequeue, "should stop and requeue")
+		})
+
+		t.Run("Should: skip if restoredDir is already set", func(t *testing.T) {
+			setupTest(true)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			state.ObjAsAzureRwxVolumeRestore().Status.RestoredDir = uuid.NewString()
+
+			err, res := prepareRestore(ctx, state)
 
 			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
-			// shoot--kyma-dev--c-6ea9b9b#f21d936aa5673444a95852a#pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca###default
-			assert.Equal(t, "shoot--kyma-dev--c-6ea9b9b", state.resourceGroupName, "resource group name should be set in state")
-			assert.Equal(t, "f21d936aa5673444a95852a", state.storageAccountName, "storage account name should be set in state")
-			assert.Equal(t, "pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca", state.fileShareName, "file share name should be set in state")
-		})
-
-		t.Run("Should: fail PV that is not Bound", func(t *testing.T) {
-			setupTest(true, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			err, res := loadPersistentVolume(ctx, state)
-
-			assert.Equal(t, ctx, res, "should return same context")
-			assert.Equal(t, err, composed.StopAndForget, "should stop and forget")
-			assert.Empty(t, state.resourceGroupName, "resource group name should remain empty in state")
-			assert.Empty(t, state.storageAccountName, "storage account name should remain empty in state")
-			assert.Empty(t, state.fileShareName, "file share name should remain empty in state")
-		})
-
-		t.Run("Should: error out if APIServer cant find requested PV", func(t *testing.T) {
-			setupTest(false, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			err, res := loadPersistentVolume(ctx, state)
-
-			assert.Equal(t, ctx, res, "should return same context")
-			assert.Equal(t, err, composed.StopAndForget, "should stop and forget")
-			assert.Empty(t, state.resourceGroupName, "resource group name should remain empty in state")
-			assert.Empty(t, state.storageAccountName, "storage account name should remain empty in state")
-			assert.Empty(t, state.fileShareName, "file share name should remain empty in state")
+			// reload the object and verify that the start time hasn't changed
+			err = k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
+			assert.Nil(t, err, "should get azureRwxVolumeRestore")
+			assert.Nil(t, azureRwxVolumeRestore.Status.StartTime, "should not have set start time")
 		})
 
 	})
+
 }

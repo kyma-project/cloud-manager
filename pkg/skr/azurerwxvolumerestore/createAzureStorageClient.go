@@ -14,8 +14,8 @@ func createAzureStorageClient(ctx context.Context, st composed.State) (error, co
 
 	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
 	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
-	subscriptionId := state.scope.Spec.Scope.Azure.SubscriptionId
-	tenantId := state.scope.Spec.Scope.Azure.TenantId
+	subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
+	tenantId := state.Scope().Spec.Scope.Azure.TenantId
 	cli, err := state.storageClientProvider(
 		ctx,
 		clientId,

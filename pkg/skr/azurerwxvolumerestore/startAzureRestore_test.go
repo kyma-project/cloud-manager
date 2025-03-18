@@ -6,6 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -27,13 +28,36 @@ func TestStartAzureRestore(t *testing.T) {
 		var state *State
 		var k8sClient client.WithWatch
 
+		kcpScheme := runtime.NewScheme()
+		utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
+		utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+
+		scope := &cloudcontrolv1beta1.Scope{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "test-scope",
+				Namespace: "test-ns",
+			},
+			Spec: cloudcontrolv1beta1.ScopeSpec{
+				Scope: cloudcontrolv1beta1.ScopeInfo{
+					Azure: &cloudcontrolv1beta1.AzureScope{
+						SubscriptionId: "test-subscription-id",
+					},
+				},
+			},
+		}
+
+		kcpClient := fake.NewClientBuilder().
+			WithScheme(kcpScheme).
+			WithObjects(scope).
+			Build()
+		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
-				State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore),
+				State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
 			}
 		}
-
 		setupTest := func(withObj bool, backupRecoveryPointId string, backupStorageAccountPath string) {
 			scope := &cloudcontrolv1beta1.Scope{
 				ObjectMeta: v1.ObjectMeta{
@@ -103,7 +127,7 @@ func TestStartAzureRestore(t *testing.T) {
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
 			state.azureRwxVolumeBackup = azureRwxVolumeBackup
 			state.storageClient, _ = storageClient.NewMockClient()(nil, "", "", "", "")
-			state.scope = scope
+			state.SetScope(scope)
 		}
 
 		t.Run("Should: start azure restore ", func(t *testing.T) {

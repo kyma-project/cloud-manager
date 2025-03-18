@@ -97,7 +97,5 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 		}
 
 		return c, nil
-
 	}
-
 }
