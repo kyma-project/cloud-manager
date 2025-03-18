@@ -22,6 +22,7 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 			restoreMock,
 			nil,
 			nil,
+			nil,
 		}, nil
 	}
 }
