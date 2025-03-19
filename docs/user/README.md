@@ -15,7 +15,8 @@ Cloud Manager module manages access to the chosen resources and products of clou
 The Cloud Manager module is available on Kyma clusters running on Amazon Web Services, Google Cloud, and Microsoft Azure.
 
 > [!WARNING]
-> Cloud Manager supports the NFS feature of Amazon Web Services and Google Cloud only.
+> Cloud Manager supports the NFS and VPC peering feature of Amazon Web Services and Google Cloud only.
+> However, SAP-internal users can also benefit from the Cloud Manager modules' support for the VPC peering feature of Microsoft Azure. <!-- VPC peering for Microsoft Azure is visible only in the Internal DRAFT version of Help Portal docs and it is not part of the Cloud Production version of Help Portal docs -->
 
 ## Features
 
