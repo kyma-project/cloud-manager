@@ -693,13 +693,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("And local Azure VPC peering is created", func() {
+		By("And Given local Azure VPC peering is created", func() {
 			Eventually(azureMockLocal.SetPeeringStateConnected).
 				WithArguments(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName).
 				Should(Succeed())
 		})
 
-		By("And remote Azure VPC peering is created", func() {
+		By("And Given remote Azure VPC peering is created", func() {
 			Eventually(azureMockRemote.SetPeeringStateConnected).
 				WithArguments(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName).
 				Should(Succeed())
@@ -707,7 +707,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// Ready ==========================================================
 
-		By("Then KCP VpcPeering has Ready condition", func() {
+		By("And Given KCP VpcPeering has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
