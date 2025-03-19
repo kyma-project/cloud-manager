@@ -10,9 +10,15 @@ The Cloud Manager module supports the VPC Peering feature of the following cloud
 
 * Amazon Web Services [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html)
 * Google Cloud [VPC Network Peering](https://cloud.google.com/vpc/docs/vpc-peering)
-* Microsoft Azure [Virtual network peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+* Microsoft Azure [Virtual network peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview) <!-- VPC peering for Microsoft Azure is not part of Help Portal docs-->
 
-You can configure Cloud Manager's VPC peering using a dedicated custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR. For more information, see [VPC Peering Resources](./resources/README.md#vpc-peering-resources).
+You can configure Cloud Manager's VPC peering using a dedicated custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely:
+
+* AwsVpcPeering CR
+* GcpVpcPeering CR
+* AzureVpcPeering CR <!-- VPC peering for Microsoft Azure is not part of Help Portal docs-->
+
+For more information, see [VPC Peering Resources](./resources/README.md#vpc-peering-resources).
 
 ## Prerequisites
 
@@ -22,11 +28,11 @@ Before you initiate VPC peering from a Kyma cluster, you must perform the follow
 * Tag the remote network with the Kyma shoot name. For more information, see the following tutorials:
   * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-10-aws-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network) in Creating Virtual Private Cloud Peering in Amazon Web Services.
   * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-20-gcp-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network) in Creating Virtual Private Cloud Peering in Google Cloud.
-  * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-30-azure-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-remote-network) in Create Virtual Private Cloud Peering in Microsoft Azure.
+  * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-30-azure-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-remote-network) in Create Virtual Private Cloud Peering in Microsoft Azure. <!-- VPC peering for Microsoft Azure is not part of Help Portal docs-->
 
 ## Lifecycle
 
-AwsVpcPeering CR, GcpVpcPeering CR, or AzureVpcPeering CR are cluster-level resources. Once a VPC peering resource is applied, the status of the VPC peering connection is reflected in that CR. At the same time, Cloud Manager creates a VPC peering connection in the Kyma cluster underlying cloud provider landscape and accepts the VPC peering connection in the remote cloud provider landscape.
+VPC peering CRs are cluster-level resources. Once a VPC peering resource is applied, the status of the VPC peering connection is reflected in that CR. At the same time, Cloud Manager creates a VPC peering connection in the Kyma cluster underlying cloud provider landscape and accepts the VPC peering connection in the remote cloud provider landscape.
 
 When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud provider landscape is deleted automatically. However, the remote VPC peering connection is left hanging, and you must delete it manually.
 
@@ -34,7 +40,7 @@ When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud p
 
 The limit on the number of VPC peering CRs per Kyma cluster depends on the quotas for each cloud provider.
 
-For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, routes are out of sync. In this case, you must delete the existing AzureVpcPeering CR and create a new one.
+For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, routes are out of sync. In this case, you must delete the existing AzureVpcPeering CR and create a new one. <!-- VPC peering for Microsoft Azure is not part of Help Portal docs-->
 
 ## Related Information
 
