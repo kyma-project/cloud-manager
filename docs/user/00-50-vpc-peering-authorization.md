@@ -64,9 +64,16 @@ Grant the following permissions to the Kyma service account in your GCP project:
 |--------------------------------------|-----------------------------------------------------------------------------|
 | `compute.networks.addPeering`        | Required to create the peering request in the remote project and VPC.       |
 | `compute.networks.get`               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
-| `compute.networks.ListEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
+| `compute.networks.listEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
 
-For more information on how to manage access to service accounts, see the [official Google Cloud documentation](https://cloud.google.com/iam/docs/manage-access-service-accounts).
+It is recommended to create an IAM custom role with the permissions listed above.
+For more information on how to create a custom role, see the [official Google Cloud documentation](https://cloud.google.com/iam/docs/creating-custom-roles#creating).
+
+See an example of creating a custom role with the required permissions:
+
+```shell
+gcloud iam roles create peeringWithKyma --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=replacing-with-your-project-id
+```
 
 ### Service Account
 
@@ -76,6 +83,15 @@ For security reasons, each Kyma landscape has its own service account. Use the f
 |------------------------------------|----------------------------------------|------------------------------------------------------------------------|
 | https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
+
+With the service account, you can authorize the Cloud Manager module in the remote project. 
+For more information, see the official Google Cloud documentation on how to [grant roles to service accounts](https://cloud.google.com/iam/docs/granting-changing-revoking-access#grant-single-role).
+
+See an example of assigning the custom role created in the previous example to the service account:
+
+```shell
+gcloud projects add-iam-policy-binding replacing-with-your-project-id --member=serviceAccount:cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com --role=projects/replacing-with-your-project-id/roles/peeringWithKyma
+```
 
 ## Microsoft Azure
 
