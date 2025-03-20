@@ -22,7 +22,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
    az account set --subscription $SUBSCRIPTION
    ```
 
-2. Assign the required `Classic Network Contributor` and `Network Contributor` Identity and Access Management (IAM) roles to the Cloud Manager service principal.
+2. Assign the required `Classic Network Contributor` and `Network Contributor` Identity and Access Management (IAM) roles to the Cloud Manager service principal. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#microsoft-azure) to identify the Cloud Manager principal.
 
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)

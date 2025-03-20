@@ -1,5 +1,7 @@
 # VPC Peering
 
+VPC Peering in the Cloud Manager module enables peering with remote VPC networks of the same cloud provider.
+
 The Cloud Manager module enables managed Virtual Private Cloud (VPC) peering functionality that allows you to peer the Kyma VPC network with a remote VPC network. Virtual network peering is possible only between networks of the same cloud providers. VPC peering in Kyma is fully automated. It means that Cloud Manager configures the peering on both Kyma's and cloud provider's side.
 
 ## Cloud Providers
@@ -24,7 +26,7 @@ For more information, see [VPC Peering Resources](./resources/README.md#vpc-peer
 
 Before you initiate VPC peering from a Kyma cluster, you must perform the following actions:
 
-* Authorize Cloud Manager in the remote cloud provider landscape. For more information, see [Authorizing Cloud Manager in the Remote Cloud Provider](00-50-vpc-peering-authorization.md).
+* Authorize Cloud Manager in the remote cloud provider landscape. For more information, see [Authorizing Cloud Manager in the Remote Cloud Provider](00-31-vpc-peering-authorization.md).
 * Tag the remote network with the Kyma shoot name. For more information, see the following tutorials:
   * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-10-aws-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network) in Creating Virtual Private Cloud Peering in Amazon Web Services.
   * [Allow SAP BTP, Kyma Runtime to Peer with Your Remote Network](./tutorials/01-30-20-gcp-vpc-peering.md#allow-sap-btp-kyma-runtime-to-peer-with-your-network) in Creating Virtual Private Cloud Peering in Google Cloud.
