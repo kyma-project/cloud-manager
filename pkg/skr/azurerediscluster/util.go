@@ -94,7 +94,7 @@ type azureRedisTierValue struct {
 	Capacity int
 }
 
-var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisTier]azureRedisTierValue{
+var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisClusterTier]azureRedisTierValue{
 	cloudresourcesv1beta1.AzureRedisTierC1: {"C", 1},
 	cloudresourcesv1beta1.AzureRedisTierC2: {"C", 2},
 	cloudresourcesv1beta1.AzureRedisTierC3: {"C", 3},
@@ -102,7 +102,7 @@ var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.Az
 	cloudresourcesv1beta1.AzureRedisTierC5: {"C", 5},
 }
 
-func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisTier) (string, int, error) {
+func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisClusterTier) (string, int, error) {
 	azureRedisSKUValue, exists := azureRedisTierToAzureRedisSKUCapacityValueMap[redisTier]
 
 	if !exists {

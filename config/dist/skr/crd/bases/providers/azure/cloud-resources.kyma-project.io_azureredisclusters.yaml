@@ -73,23 +73,24 @@ spec:
                       rule: (self == oldSelf)
                 redisTier:
                   enum:
-                    - P1
-                    - P2
-                    - P3
-                    - P4
-                    - P5
-                    - S1
-                    - S2
-                    - S3
-                    - S4
-                    - S5
+                    - C1
+                    - C2
+                    - C3
+                    - C4
+                    - C5
                   type: string
                 redisVersion:
-                  default: "6.0"
                   type: string
-                  x-kubernetes-validations:
-                    - message: RedisVersion is immutable.
-                      rule: (self == oldSelf)
+                replicasPerPrimary:
+                  format: int32
+                  maximum: 10
+                  minimum: 0
+                  type: integer
+                shardCount:
+                  format: int32
+                  maximum: 10
+                  minimum: 0
+                  type: integer
                 volume:
                   properties:
                     annotations:

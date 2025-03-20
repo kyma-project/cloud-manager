@@ -22,11 +22,11 @@ import (
 type AzureRedisClusterTier string
 
 const (
-	AzureRedisTierC1 AzureRedisTier = "C1"
-	AzureRedisTierC2 AzureRedisTier = "C2"
-	AzureRedisTierC3 AzureRedisTier = "C3"
-	AzureRedisTierC4 AzureRedisTier = "C4"
-	AzureRedisTierC5 AzureRedisTier = "C5"
+	AzureRedisTierC1 AzureRedisClusterTier = "C1"
+	AzureRedisTierC2 AzureRedisClusterTier = "C2"
+	AzureRedisTierC3 AzureRedisClusterTier = "C3"
+	AzureRedisTierC4 AzureRedisClusterTier = "C4"
+	AzureRedisTierC5 AzureRedisClusterTier = "C5"
 )
 
 type RedisClusterAzureConfigs struct {
@@ -47,15 +47,23 @@ type RedisClusterAzureConfigs struct {
 // AzureRedisClusterSpec defines the desired state of AzureRedisCluster
 type AzureRedisClusterSpec struct {
 	// +kubebuilder:validation:Required
-	RedisTier AzureRedisTier `json:"redisTier"`
+	RedisTier AzureRedisClusterTier `json:"redisTier"`
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisConfiguration is immutable."
 	RedisConfiguration RedisClusterAzureConfigs `json:"redisConfiguration"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RedisVersion is immutable."
-	// +kubebuilder:default="6.0"
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10
+	ShardCount int32 `json:"shardCount,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=10
+	ReplicasPerPrimary int32 `json:"replicasPerPrimary,omitempty"`
+
+	// +optional
 	RedisVersion string `json:"redisVersion,omitempty"`
 
 	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
