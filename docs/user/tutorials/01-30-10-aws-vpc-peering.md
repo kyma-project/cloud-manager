@@ -18,7 +18,7 @@ Set the default AWS CLI profile.
 
 ### Authorize Cloud Manager in the Remote Account
 
-1. Create a trust policy document. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-50-vpc-peering-authorization.md#amazon-web-services) to identify the Cloud Manager principal.
+1. Create a trust policy document. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#amazon-web-services) to identify the Cloud Manager principal.
 
    ```shell
    export CLOUD_MANAGER_PRINCIPAL={CLOUD_MANAGER_PRINCIPAL}

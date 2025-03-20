@@ -1,5 +1,7 @@
 # Redis
 
+Use the Cloud Manager module to provision Redis instances.
+
 The Cloud Manager module allows you to provision a cloud provider-managed Redis instance within your cluster network.
 
 > [!NOTE]

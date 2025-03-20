@@ -3,7 +3,7 @@
 * [Cloud Manager Module](/cloud-manager/user/README.md)
 * [NFS](/cloud-manager/user/00-20-nfs.md)
 * [VPC Peering](/cloud-manager/user/00-30-vpc-peering.md)
-  * [Authorizing Cloud Manager in the Remote Cloud Provider](/cloud-manager/user/00-50-vpc-peering-authorization.md)
+  * [Authorizing Cloud Manager in the Remote Cloud Provider](/cloud-manager/user/00-31-vpc-peering-authorization.md)
 * [Redis](/cloud-manager/user/00-40-redis.md)
 * [Resources](/cloud-manager/user/resources/README.md)
 * [Tutorials](/cloud-manager/user/tutorials/README.md)

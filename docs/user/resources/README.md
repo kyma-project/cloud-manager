@@ -1,5 +1,7 @@
 # Cloud Manager Resources
 
+Learn about Cloud Manager's custom resources.
+
 The API of the Cloud Manager module is based on Kubernetes Custom Resource Definitions (CRD), which extend the Kubernetes API with custom additions. To inspect the specification of the Cloud Manager module API, see the following custom resources (CRs):
 
 ## IP Range
@@ -52,7 +54,7 @@ The `awsvpcpeering.cloud-resources.kyma-project.io` CRD describes the AWS peerin
 
 The `gcpvpcpeering.cloud-resources.kyma-project.io` CRD describes the VPC peering that you can use to peer your Kyma cluster with your Google Cloud project VPC. For more information, see [GcpVpcPeering Custom Resource](./04-30-20-gcp-vpc-peering.md).
 
-### AzureVpcPeering CR
+### AzureVpcPeering CR [**SAP-internal feature**]<!-- VPC peering for Microsoft Azure is visible only in the Internal DRAFT version of Help Portal docs and it is not part of the Cloud Production version of Help Portal docs -->
 
 The `azurevpcpeering.cloud-resources.kyma-project.io` CRD describes the Azure peering connection between Kyma and the remote Azure Virtual Network. For more information, see [AzureVpcPeering Custom Resource](./04-30-30-azure-vpc-peering.md).
 
