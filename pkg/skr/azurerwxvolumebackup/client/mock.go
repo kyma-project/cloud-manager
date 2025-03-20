@@ -13,8 +13,12 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 		restoreMock = &restoreMockClient{
 			restoreClient: *newRestoreMockClient(),
 		}
+
+		// TODO: is this okay initialization?
+		vaultMock := &vaultMockClient{vaultClient: *newVaultMockClient()}
+
 		return client{
-			nil,
+			vaultMock,
 			nil,
 			nil,
 			nil,
