@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"net/http"
@@ -77,6 +78,16 @@ func IsUnauthorized(err error) bool {
 
 	return false
 }
+
+func IsUnauthenticated(err error) bool {
+	var auth *azidentity.AuthenticationFailedError
+	if ok := errors.As(err, &auth); ok {
+		return true
+	}
+
+	return false
+}
+
 func ErrorToRequeueResponse(err error) error {
 	if IsTooManyRequests(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms())
@@ -110,6 +121,10 @@ func GetErrorMessage(err error, def string) (string, bool) {
 		case InvalidAuthenticationTokenTenant:
 			return InvalidAuthenticationTokenTenantMessage, true
 		}
+	}
+
+	if IsUnauthenticated(err) {
+		return "Authentication error", true
 	}
 
 	return def, false
