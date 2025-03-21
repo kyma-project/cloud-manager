@@ -10,10 +10,11 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter               | Type   | Description                                                                                                                                   |
-|-------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| **remotePeeringName**   | string | Specifies the name of the VNet peering in the remote subscription.                                                                            |
-| **remoteVnet**          | string | Specifies the ID of the VNet in the remote subscription.                                                                                      |
+| Parameter             | Type    | Description                                                                                                                           |
+|-----------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------|
+| **remotePeeringName** | string  | Specifies the name of the VNet peering in the remote subscription.                                                                    |
+| **remoteVnet**        | string  | Specifies the ID of the VNet in the remote subscription.                                                                              |
+| **remoteTenant**      | string  | Optional. Specifies the tenant ID of the remote subscription. Defaults to Kyma cluster underlying cloud provider subscription tenant. |
 
 **Status:**
 
@@ -40,4 +41,5 @@ metadata:
 spec:
   remotePeeringName: peering-to-my-kyma
   remoteVnet: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/virtualNetworks/MyVnet
+  remoteTenant: ac3ddba3-536d-4b6f-aad7-03b942e46aca
 ```

@@ -11,6 +11,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 
 ### Authorize Cloud Manager in the Remote Subscription
 
+
 1. Log in to your Microsoft Azure account and set the active subscription:
 
    ```shell
@@ -19,12 +20,21 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
    az account set --subscription $SUBSCRIPTION
    ```
 
-2. Assign the required `Classic Network Contributor` and `Network Contributor` Identity and Access Management (IAM) roles to the Cloud Manager service principal.
+2. Verify if service principal exists in your tenant
+   ```shell
+   export APPLICATION_ID={APPLICATION_ID}
+   az ad sp show --id $APPLICATION_ID
+   ```
+3. Create service principal if previous step showed that principal does not exist
+   ```shell
+   az ad sp create --id $APPLICATION_ID
+   ```
+
+4. Assign the required `Classic Network Contributor` and `Network Contributor` Identity and Access Management (IAM) roles to the Cloud Manager service principal.
 
     ```shell
     export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-    export CLOUD_MANAGER_PRINCIPAL={CLOUD_MANAGER_PRINCIPAL}
-    export OBJECT_ID=$(az ad sp list --display-name $CLOUD_MANAGER_PRINCIPAL --query "[].id" -o tsv)
+    export OBJECT_ID=$(az ad sp show --id $APPLICATION_ID --query "id" -o tsv)
     
     az role assignment create --assignee $OBJECT_ID \
     --role "Network Contributor" \
