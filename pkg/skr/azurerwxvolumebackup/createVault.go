@@ -15,7 +15,7 @@ func createVault(ctx context.Context, st composed.State) (error, context.Context
 
 	logger.WithValues("RwxBackup", backup.Name).Info("Creating Recovery Services Vault")
 
-	resourceGroupName := "resourceGroupName"
+	resourceGroupName := state.resourceGroupName
 	location := backup.Spec.Location
 	vaultName := fmt.Sprintf("cm-vault-%s", location)
 
