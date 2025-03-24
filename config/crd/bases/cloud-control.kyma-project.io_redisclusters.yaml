@@ -150,6 +150,38 @@ spec:
                     - sku
                     type: object
                   gcp:
+                    properties:
+                      nodeType:
+                        description: The node type determines the sizing and performance
+                          of your node.
+                        enum:
+                        - REDIS_SHARED_CORE_NANO
+                        - REDIS_STANDARD_SMALL
+                        - REDIS_HIGHMEM_MEDIUM
+                        - REDIS_HIGHMEM_XLARGE
+                        type: string
+                      redisConfigs:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Redis configuration parameters, according to http://redis.io/topics/config.
+                          See docs for the list of the supported parameters
+                        type: object
+                      replicasPerShard:
+                        default: 0
+                        format: int32
+                        maximum: 2
+                        minimum: 0
+                        type: integer
+                      shardCount:
+                        format: int32
+                        maximum: 125
+                        minimum: 1
+                        type: integer
+                    required:
+                    - nodeType
+                    - replicasPerShard
+                    - shardCount
                     type: object
                 type: object
               ipRange:

@@ -123,6 +123,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		infra.AzureMock().RedisClusterClientProvider(),
+		infra.GcpMock().MemoryStoreClusterProviderFake(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Network
