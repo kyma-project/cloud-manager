@@ -7,6 +7,7 @@ import (
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	memoryStoreClusterClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
@@ -35,6 +36,7 @@ type Providers interface {
 	FileBackupClientProvider() client.ClientProvider[backupclient.FileBackupClient]
 	VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.ClientProvider[memoryStoreClient.MemorystoreClient]
+	MemoryStoreClusterProviderFake() client.ClientProvider[memoryStoreClusterClient.MemorystoreClusterClient]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
@@ -54,6 +56,7 @@ type Server interface {
 	ClientErrors
 
 	MemoryStoreClientFakeUtils
+	MemoryStoreClusterClientFakeUtils
 
 	VpcPeeringMockClientUtils
 }

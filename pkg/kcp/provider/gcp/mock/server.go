@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/redis/apiv1/redispb"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
@@ -12,6 +13,7 @@ import (
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	memoryStoreClusterClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpccpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
@@ -31,6 +33,10 @@ func New() Server {
 			mutex:          sync.Mutex{},
 			redisInstances: map[string]*redispb.Instance{},
 		},
+		memoryStoreClusterClientFake: &memoryStoreClusterClientFake{
+			mutex:         sync.Mutex{},
+			redisClusters: map[string]*clusterpb.Cluster{},
+		},
 	}
 }
 
@@ -42,6 +48,7 @@ type server struct {
 	*nfsBackupStore
 	*vpcPeeringStore
 	*memoryStoreClientFake
+	*memoryStoreClusterClientFake
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -138,6 +145,12 @@ func (s *server) VpcPeeringProvider() cloudclient.ClientProvider[gcpvpccpeering.
 
 func (s *server) MemoryStoreProviderFake() client.ClientProvider[memoryStoreClient.MemorystoreClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (memoryStoreClient.MemorystoreClient, error) {
+		return s, nil
+	}
+}
+
+func (s *server) MemoryStoreClusterProviderFake() client.ClientProvider[memoryStoreClusterClient.MemorystoreClusterClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (memoryStoreClusterClient.MemorystoreClusterClient, error) {
 		return s, nil
 	}
 }

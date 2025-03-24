@@ -54,6 +54,7 @@ import (
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpmemorystoreclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
@@ -354,6 +355,7 @@ func main() {
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
 		azureredisclusterclient.NewClientProvider(),
+		gcpmemorystoreclusterclient.NewMemorystoreClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
