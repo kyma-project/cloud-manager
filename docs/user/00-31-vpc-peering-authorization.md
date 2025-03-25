@@ -94,9 +94,30 @@ For more information, see the official Google Cloud documentation on how to [gra
 
 To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape.
 
-| BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
-|------------------------------------|----------------------------------------|----------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  |
+| BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  | Application (Client) ID              |
+|------------------------------------|----------------------------------------|----------------------------------|--------------------------------------|
+| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage | 8e08320c-7e81-42bd-9eee-e5dae04cadf0 |
+| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  | 202aa655-369d-4fe7-bbbc-d033d96a687e |
+
+1. Verify if service principal exists in your tenant
+```shell
+export APPLICATION_ID={APPLICATION_ID}
+az ad sp show --id $APPLICATION_ID
+```
+2. Create service principal if previous step showed that principal does not exist 
+```shell
+az ad sp create --id $APPLICATION_ID
+```
+3. Obtain service principal object ID associated with this application
+```shell
+OBJECT_ID=$(az ad sp show --id $APPLICATION_ID --query "id" -o tsv)
+```
+4. Assign Network Contributor role to service principal
+```shell
+az role assignment create --assignee $OBJECT_ID \
+--role "Network Contributor" \
+--scope "/subscriptions/{SUBSCRIPTION_ID}"
+```
+
 
 For more information, see the official Microsoft Azure documentation on how to [Assign Azure roles using the Azure portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal) and how to [Manage service principals](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).
