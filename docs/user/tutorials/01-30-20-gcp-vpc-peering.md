@@ -7,7 +7,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 * You have the Cloud Manager module added. See [Add and Delete a Kyma Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/enable-and-disable-kyma-module?state=DRAFT&version=Internal#loio1b548e9ad4744b978b8b595288b0cb5c).
 * Google Cloud CLI
 
-> [!TIP] Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
+> [!NOTE] Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
 
 ## Steps
 
