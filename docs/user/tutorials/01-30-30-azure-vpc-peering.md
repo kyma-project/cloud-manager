@@ -27,7 +27,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
    export APPLICATION_ID={APPLICATION_ID}
    az ad sp show --id $APPLICATION_ID
    ```
-3. Optional. Create service principal for Cloud Manager application
+3. **Optional:** If the service principal doesn't exist, create one for the Cloud Manager application in your tenant.
    ```shell
    az ad sp create --id $APPLICATION_ID
    ```
