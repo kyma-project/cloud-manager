@@ -22,7 +22,7 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
    az account set --subscription $SUBSCRIPTION
    ```
 
-2. Verify if Cloud Manager service principal exists in your tenant
+2. Verify if the Cloud Manager service principal exists in your tenant.
    ```shell
    export APPLICATION_ID={APPLICATION_ID}
    az ad sp show --id $APPLICATION_ID
