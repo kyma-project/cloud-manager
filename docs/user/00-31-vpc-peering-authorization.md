@@ -99,8 +99,8 @@ To authorize Cloud Manager in the remote subscription, Microsoft Azure requires 
 | https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage | 8e08320c-7e81-42bd-9eee-e5dae04cadf0  |
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  | 202aa655-369d-4fe7-bbbc-d033d96a687e  |
 
-1. Verify if Cloud Manager service principal exists in your tenant
-2. Optional. Create service principal for Cloud Manager application in your tenant
-3. Assign `Classic Network Contributor` and `Network Contributor` roles to Cloud Manager service principal
+1. Verify if the Cloud Manager service principal exists in your tenant.
+2. **Optional:** If the service principal doesn't exist, create one for the Cloud Manager application in your tenant.
+3. Assign the `Classic Network Contributor` and `Network Contributor` roles to the Cloud Manager service principal.
 
 For more information, see the official Microsoft Azure documentation on how to [Assign Azure roles using the Azure portal](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal) and how to [Manage service principals](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/service-principals).
