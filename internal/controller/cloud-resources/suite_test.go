@@ -18,9 +18,10 @@ package cloudresources
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"os"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
@@ -119,6 +120,9 @@ var _ = BeforeSuite(func() {
 	// AwsRedisInstance
 	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AwsRedisCluster
+	Expect(SetupAwsRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// AzureRedisInstance
 	Expect(SetupAzureRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
@@ -136,6 +140,9 @@ var _ = BeforeSuite(func() {
 	//GCP Vpc Peering
 	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
 
+	//AzureRwxBackup Schedule
+	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+
 	migrateFinalizers.RunMigration = false
 
 	// Start controllers
@@ -144,7 +151,11 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := infra.Stop()
+
+	err := testinfra.PrintMetrics()
+	Expect(err).NotTo(HaveOccurred())
+
+	err = infra.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
 

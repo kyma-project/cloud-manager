@@ -19,7 +19,10 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	}
 
 	// params must be the same as in peeringLocalLoad()
-	err := state.localClient.CreatePeering(
+	// CreatePeering requires that client is authorized to access local and remote subscription.
+	// If remote and local subscriptions are on different tenants CreatePeering in local subscription will fail if SPN
+	// does not exist in remote tenant.
+	err := state.localPeeringClient.CreatePeering(
 		ctx,
 		state.localNetworkId.ResourceGroup,
 		state.localNetworkId.NetworkName(),

@@ -1,7 +1,11 @@
 # Creating Scheduled Automatic NFS Volume Backups in Google Cloud
 
 > [!WARNING]
-> This is a beta feature available only per request for SAP-internal teams.
+> This is a feature available only per request for SAP-internal teams.
+
+> [!WARNING]
+> Long-running or frequent schedules can create too many backups and may result in cloud provider quota issues.
+> For more information on how to avoid such issues, see [Scheduling Best Practices](../00-25-scheduling-best-practices.md).
 
 This tutorial explains how to create scheduled automatic backups for Network File System (NFS) volumes in Google Cloud.
 
@@ -34,6 +38,8 @@ This tutorial explains how to create scheduled automatic backups for Network Fil
         name: my-vol
       schedule: "0 * * * *"
       prefix: my-hourly-backup
+      maxRetentionDays: 30
+      maxReadyBackups: 100
       deleteCascade: true
    EOF
    ```

@@ -2,42 +2,67 @@ package azurerwxvolumebackup
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-)
 
-type reconcilerFactory struct {
-}
+	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+)
 
 type reconciler struct {
 	factory *stateFactory
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+
 	state := r.factory.NewState(request)
+
 	action := r.newAction()
 
 	return composed.Handle(action(ctx, state))
 }
 
-// TODO: fill out the rest of actions
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"azureRwxVolumeBackup",
+		"azureRwxVolumeBackupMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
+		commonScope.New(),
+		composed.IfElse(
+			composed.Not(CompletedOrDeletedPredicate),
+			composed.ComposeActions("AzureRwxVolumeBackupNotCompletedOrDeleted",
+				actions.PatchAddCommonFinalizer(),
+				createClient,
+				createVault,
+				createBackup,
+				loadPersistentVolume,
+				loadPersistentVolumeClaim,
+			), nil,
+		),
+		actions.PatchRemoveCommonFinalizer(),
+		composed.StopAndForgetAction,
 	)
 }
 
-func NewReconcilerFactory() skrruntime.ReconcilerFactory {
-	return &reconcilerFactory{}
-}
+func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 
-func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
+			composed.NewStateClusterFromCluster(args.SkrCluster),
+			client.NewClientProvider(),
 		),
 	}
+}
+
+func CompletedOrDeletedPredicate(_ context.Context, state composed.State) bool {
+	isDeleted := composed.IsMarkedForDeletion(state.Obj())
+	currentState := state.Obj().(*cloudresourcesv1beta1.AzureRwxVolumeBackup).Status.State
+	return isDeleted || currentState == cloudresourcesv1beta1.JobStateDone || currentState == cloudresourcesv1beta1.JobStateFailed
+
 }

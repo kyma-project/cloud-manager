@@ -16,7 +16,8 @@ import (
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 
-		state, err := stateFactory.NewState(ctx, st.(types.State))
+		logger := composed.LoggerFromCtx(ctx)
+		state, err := stateFactory.NewState(ctx, st.(types.State), logger)
 		if err != nil {
 			composed.LoggerFromCtx(ctx).Error(err, "Failed to bootstrap Azure RedisCluster state")
 			redisCluster := st.Obj().(*v1beta1.RedisCluster)
@@ -34,15 +35,33 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 
 		return composed.ComposeActions(
-			"redisCluster",
+			"azureRedisCluster",
 			actions.AddCommonFinalizer(),
+			loadPrivateEndPoint,
+			loadPrivateDnsZoneGroup,
+			loadRedisCluster,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
-					"redisCluster-create",
+					"azure-redisCluster-create",
+					createRedisCluster,
+					updateStatusId,
+					waitRedisClusterAvailable,
+					createPrivateEndPoint,
+					waitPrivateEndPointAvailable,
+					createPrivateDnsZoneGroup,
+					modifyRedisCluster,
+					updateStatus,
 				),
 				composed.ComposeActions(
-					"redisCluster-delete",
+					"azure-redisCluster-delete",
+					deleteRedisCluster,
+					waitRedisClusterDeleted,
+					deletePrivateDnsZoneGroup,
+					waitPrivateDnsZoneGroupDeleted,
+					deletePrivateEndPoint,
+					waitPrivateEndPointDeleted,
 					actions.RemoveCommonFinalizer(),
+					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,

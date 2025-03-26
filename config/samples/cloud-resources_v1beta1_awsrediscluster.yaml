@@ -1,0 +1,20 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsRedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: awsrediscluster-sample
+spec:
+  # required fields
+  redisTier: "C1"
+  shardCount : 3
+  replicasPerShard: 1
+
+  # optional fields
+  engineVersion: "7.0"
+  autoMinorVersionUpgrade: true
+  parameters:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
+  preferredMaintenanceWindow: sun:23:00-mon:01:30

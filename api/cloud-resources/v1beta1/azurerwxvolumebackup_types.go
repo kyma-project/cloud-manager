@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type AzureRwxBackupState string
@@ -46,6 +47,17 @@ type PvcRef struct {
 	// If not specified then namespace of the AzureRwxVolumeBackup is used.
 	// +optional
 	Namespace string `json:"namespace"`
+}
+
+func (v *PvcRef) ToNamespacedName(fallbackNamespace string) types.NamespacedName {
+	ns := v.Namespace
+	if len(ns) == 0 {
+		ns = fallbackNamespace
+	}
+	return types.NamespacedName{
+		Namespace: ns,
+		Name:      v.Name,
+	}
 }
 
 type PvcSource struct {
@@ -82,6 +94,10 @@ type AzureRwxVolumeBackupStatus struct {
 	// RecoveryPointId specifies the corresponding snapshot used for restore
 	// +optional
 	RecoveryPointId string `json:"recoveryPointId,omitempty"`
+
+	// StorageAccountPath specifies the Azure Storage Account path
+	// +optional
+	StorageAccountPath string `json:"storageAccountPath,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -94,6 +110,14 @@ type AzureRwxVolumeBackup struct {
 
 	Spec   AzureRwxVolumeBackupSpec   `json:"spec,omitempty"`
 	Status AzureRwxVolumeBackupStatus `json:"status,omitempty"`
+}
+
+func (bu *AzureRwxVolumeBackup) Conditions() *[]metav1.Condition {
+	return &bu.Status.Conditions
+}
+
+func (bu *AzureRwxVolumeBackup) GetObjectMeta() *metav1.ObjectMeta {
+	return &bu.ObjectMeta
 }
 
 func (bu *AzureRwxVolumeBackup) SpecificToFeature() featuretypes.FeatureName {

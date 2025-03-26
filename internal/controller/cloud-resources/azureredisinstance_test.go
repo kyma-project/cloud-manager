@@ -127,8 +127,9 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			redisSKUFamily, redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Family).To(Equal(redisSKUFamily))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
 		})
@@ -323,8 +324,9 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			redisSKUFamily, redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
+			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Family).To(Equal(redisSKUFamily))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisInstance.Spec.RedisConfiguration.MaxClients))
 		})

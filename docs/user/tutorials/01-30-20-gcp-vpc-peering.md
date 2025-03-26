@@ -5,12 +5,36 @@ This tutorial explains how to create a Virtual Private Cloud (VPC) peering conne
 ## Prerequisites
 
 * You have the Cloud Manager module added. See [Add and Delete a Kyma Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/enable-and-disable-kyma-module?state=DRAFT&version=Internal#loio1b548e9ad4744b978b8b595288b0cb5c).
-* You authorized Cloud Manager in the Google Cloud remote project. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-50-vpc-peering-authorization.md#google-cloud).
 * Google Cloud CLI
 
-> [!TIP] Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
+> [!NOTE]
+> Use a POSIX-compliant shell or adjust the commands accordingly. For example, if you use Windows, replace the `export` commands with `set` and use `%` before and after the environment variables names.
 
 ## Steps
+
+### Authorize Cloud Manager in the Remote Project
+
+To create a VPC peering connection, certain permissions are required in the remote project.
+The recommended approach is creating a role and assigning it to the Cloud Manager service account.
+
+1. Export your remote project ID and desired role name as an environment variable.
+
+   ```shell
+   export YOUR_REMOTE_PROJECT_ID={YOUR_REMOTE_PROJECT_ID}
+   export ROLE_NAME=peeringWithKyma
+   ```
+
+2. Create a custom role with the required permissions.
+
+   ```shell
+   gcloud iam roles create $ROLE_NAME --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID
+   ```
+
+3. Check on [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment.
+
+   ```shell
+    gcloud projects add-iam-policy-binding $YOUR_REMOTE_PROJECT_ID --member=serviceAccount:cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com --role=projects/$YOUR_REMOTE_PROJECT_ID/roles/$ROLE_NAME
+   ```
 
 ### Allow SAP BTP, Kyma Runtime to Peer with Your Network
 

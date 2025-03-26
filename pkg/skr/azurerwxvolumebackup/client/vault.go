@@ -2,17 +2,31 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"io"
+	"log"
+	"slices"
 )
 
 type VaultClient interface {
-	CreateVault(ctx context.Context)
-	DeleteVault(ctx context.Context)
+	CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error)
+	DeleteVault(ctx context.Context, resourceGroupName string, vaultName string) error
+	ListVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error)
 }
 
 type vaultClient struct {
-	*armrecoveryservices.VaultsClient
+	azureClient *armrecoveryservices.VaultsClient
+}
+
+type CreateVaultResponse struct {
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (VaultClient, error) {
@@ -25,10 +39,124 @@ func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredenti
 	return vaultClient{vc}, nil
 }
 
-func (c vaultClient) CreateVault(ctx context.Context) {
-	// TODO: implementation details
+func (c vaultClient) vaultExists(ctx context.Context, location string) (bool, error) {
+	vaults, err := c.ListVaults(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	slices.ContainsFunc(vaults, func(vault *armrecoveryservices.Vault) bool {
+
+		if vault.Location == nil || vault.Tags == nil {
+			return false
+		}
+
+		_, tagExists := vault.Tags["cloud-manager"]
+
+		return *vault.Location == location && tagExists
+
+	})
+	return false, nil
 }
 
-func (c vaultClient) DeleteVault(ctx context.Context) {
-	// TODO: implementation details
+// Returns operationId used to check the status
+func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
+
+	// Fail if vault exists
+	exists, err := c.vaultExists(ctx, location)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("vault already exists in %s", location)
+	}
+
+	poller, err := c.azureClient.BeginCreateOrUpdate(
+		ctx,
+		resourceGroupName,
+		vaultName,
+		armrecoveryservices.Vault{
+			Location: to.Ptr(location),
+			Properties: to.Ptr(armrecoveryservices.VaultProperties{
+				PublicNetworkAccess: to.Ptr(armrecoveryservices.PublicNetworkAccessEnabled),
+			}),
+			SKU: to.Ptr(armrecoveryservices.SKU{
+				Name: to.Ptr(armrecoveryservices.SKUNameStandard),
+			}),
+			Tags: map[string]*string{"cloud-manager": to.Ptr("rwxVolumeBackup")},
+		},
+		nil,
+	)
+
+	if err != nil {
+		log.Println("failed to create vault: " + err.Error())
+		return nil, err
+	}
+
+	if poller.Done() {
+		log.Println("poller is done")
+	}
+	resp, err := poller.Poll(ctx)
+	if err != nil {
+		log.Println("failed to poll the create operation: " + err.Error())
+		return nil, err
+	}
+	if resp != nil {
+		log.Println(resp.Status)
+	}
+	// Read resp body
+	if resp == nil || resp.Body == nil {
+		return nil, errors.New("response body is nil")
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("failed to read the response body: " + err.Error())
+		return nil, err
+	}
+	var data CreateVaultResponse
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		log.Println("failed to unmarshal the response body: " + err.Error())
+		return nil, err
+	}
+	log.Println("jobId" + data.Id)
+
+	return &data.Id, nil
+
+}
+
+func (c vaultClient) DeleteVault(ctx context.Context, resourceGroupName string, vaultName string) error {
+
+	_, err := c.azureClient.Delete(
+		ctx,
+		resourceGroupName,
+		vaultName,
+		to.Ptr(armrecoveryservices.VaultsClientDeleteOptions{}),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c vaultClient) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error) {
+
+	pager := c.azureClient.NewListBySubscriptionIDPager(
+		&armrecoveryservices.VaultsClientListBySubscriptionIDOptions{},
+	)
+
+	var vaults []*armrecoveryservices.Vault
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return vaults, err
+		}
+
+		vaults = append(vaults, page.VaultList.Value...)
+
+	}
+	return vaults, nil
+
 }

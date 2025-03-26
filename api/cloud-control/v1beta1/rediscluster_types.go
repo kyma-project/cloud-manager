@@ -22,9 +22,50 @@ import (
 )
 
 type RedisClusterGcp struct {
+	// The node type determines the sizing and performance of your node.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=REDIS_SHARED_CORE_NANO;REDIS_STANDARD_SMALL;REDIS_HIGHMEM_MEDIUM;REDIS_HIGHMEM_XLARGE
+	NodeType string `json:"nodeType"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=125
+	ShardCount int32 `json:"shardCount"`
+
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=2
+	ReplicasPerShard int32 `json:"replicasPerShard"`
+
+	// Redis configuration parameters, according to http://redis.io/topics/config.
+	// See docs for the list of the supported parameters
+	// +optional
+	RedisConfigs map[string]string `json:"redisConfigs"`
 }
 
 type RedisClusterAzure struct {
+	// +kubebuilder:validation:Required
+	SKU AzureRedisClusterSKU `json:"sku"`
+
+	// +optional
+	RedisConfiguration RedisInstanceAzureConfigs `json:"redisConfiguration"`
+
+	// +optional
+	RedisVersion string `json:"redisVersion,omitempty"`
+
+	// +optional
+	ShardCount int `json:"shardCount,omitempty"`
+
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:XValidation:rule=(oldSelf != 0 || self == 0), message="replicasPerPrimary cannot be added after the cluster creation."
+	ReplicasPerPrimary int `json:"replicasPerPrimary,omitempty"`
+}
+
+type AzureRedisClusterSKU struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=1;2;3;4;5
+	Capacity int `json:"capacity"`
 }
 
 type RedisClusterAws struct {
@@ -63,13 +104,11 @@ type RedisClusterAws struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=500
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ShardCount is immutable."
 	ShardCount int32 `json:"shardCount"`
 
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=5
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerShard is immutable."
 	ReplicasPerShard int32 `json:"replicasPerShard"`
 }
 

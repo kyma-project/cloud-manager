@@ -2,10 +2,11 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
@@ -133,7 +134,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		})
 
 		It("When GcpNfsBackupSchedule Create is called", func() {
-			Eventually(CreateNfsBackupSchedule).
+			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),
@@ -201,7 +202,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 
 		It("When GcpNfsBackupSchedule Create is called", func() {
-			Eventually(CreateNfsBackupSchedule).
+			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
 					WithName(nfsBackupScheduleName),

@@ -1,0 +1,20 @@
+en:
+  configuration: Configuration
+  status: Status
+  spec.location: Location
+  spec.schedule: Schedule
+  spec.startTime: Start Time
+  spec.endTime: End Time
+  spec.prefix: Prefix
+  spec.maxRetentionDays: Max Retention Days
+  spec.maxReadyBackups: Max Backups in Ready State
+  spec.maxFailedBackups: Max Backups in Failed State
+  spec.deleteCascade: Delete Cascade
+  spec.suspend: Suspend
+  status.lastCreateRun: Last Run Time
+  status.state: State
+  spec.pvcRef: Persistent Volume Claim
+  spec.pvcRef.apiVersion: API Version
+  spec.pvcRef.kind: Kind
+  spec.pvcRef.name: Name
+  spec.pvcRef.namespace: Namespace
