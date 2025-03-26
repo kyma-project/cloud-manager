@@ -1,6 +1,6 @@
 # Authorizing Cloud Manager in the Remote Cloud Provider
 
-Learn about the required entitlements for the Cloud Manager module in the remote cloud provider required to use the VPC peering feature.
+Learn about the entitlements for the Cloud Manager module in the remote cloud provider required to use the VPC peering feature.
 
 > [!WARNING]
 > Cloud Manager supports the VPC peering feature of Amazon Web Services and Google Cloud only.
@@ -73,7 +73,7 @@ Grant the following permissions to the Kyma service account in your GCP project:
 | `compute.networks.get`               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
 | `compute.networks.listEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
 
-It is recommended to create an IAM custom role with the permissions listed above.
+It is recommended to create an Identity and Access Management (IAM) custom role with the permissions listed above. 
 For more information, see the official Google Cloud documentation on how to [create a custom role](https://cloud.google.com/iam/docs/creating-custom-roles#creating) or the [Authorize Cloud Manager in the Remote Project section](tutorials/01-30-20-gcp-vpc-peering.md#authorize-cloud-manager-in-the-remote-project) in the Creating VPC Peering in Google Cloud tutorial.
 
 ### Service Account
@@ -86,13 +86,13 @@ Use the following table to identify the correct Cloud Manager service account:
 | https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 <!-- The stage landscape is visible only in the Internal DRAFT version of Help Portal docs. The stage landscape is not part of the Cloud Production version of Help Portal docs -->
 
-With the service account, you can authorize the Cloud Manager module in the remote project. 
+With the service account, you can authorize the Cloud Manager module in the remote project.
 For more information, see the official Google Cloud documentation on how to [grant a single role](https://cloud.google.com/iam/docs/granting-changing-revoking-access#grant-single-role) to a service account or the [Authorize Cloud Manager in the Remote Project section](tutorials/01-30-20-gcp-vpc-peering.md#authorize-cloud-manager-in-the-remote-project) in the Creating VPC Peering in Google Cloud tutorial.
 
 ## Microsoft Azure
 <!-- VPC peering for Microsoft Azure is visible only in the Internal DRAFT version of Help Portal docs and it is not part of the Cloud Production version of Help Portal docs -->
 
-To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape. Then, perform the following actions:
+To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape.
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  |
 |------------------------------------|----------------------------------------|----------------------------------|
