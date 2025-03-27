@@ -21,6 +21,7 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 		backupProtectedItemsMock := &backupProtectedItemsMockClient{backupProtectedItemsClient: *newBackupProtectedItemsMockClient()}
 		protectionPoliciesMock := &protectionPoliciesMockClient{protectionPoliciesClient: *newProtectionPoliciesMockClient()}
 		backupProtectableItemsMock := &backupProtectableItemsMockClient{backupProtectableItemsClient: *newBackupProtectableItemsMockClient()}
+		protectedItemsMock := &protectedItemsMockClient{protectedItemsClient: *newProtectedItemsMockClient()}
 
 		return client{
 			vaultMock,
@@ -30,7 +31,7 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 			jobsMock,
 			restoreMock,
 			backupProtectableItemsMock,
-			nil,
+			protectedItemsMock,
 			backupProtectedItemsMock,
 		}, nil
 	}

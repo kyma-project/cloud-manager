@@ -16,7 +16,7 @@ type backupMockClient struct {
 func (m *backupMockClient) TriggerBackup(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName, location string) error {
 
 	// unhappy path
-	if vaultName == "exactly 1 - fail" {
+	if vaultName == "exactly 1 - fail" || vaultName == "vaultName - one pass CreateOrUpdateProtectedItem - fail TriggerBackup" {
 		return errors.New("failing test")
 	}
 
