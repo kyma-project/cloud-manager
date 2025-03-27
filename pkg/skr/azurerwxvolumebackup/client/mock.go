@@ -17,16 +17,21 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 		// TODO: is this okay initialization?
 		vaultMock := &vaultMockClient{vaultClient: *newVaultMockClient()}
 
+		backupMock := &backupMockClient{backupClient: *newBackupMockClient()}
+		backupProtectedItemsMock := &backupProtectedItemsMockClient{backupProtectedItemsClient: *newBackupProtectedItemsMockClient()}
+		protectionPoliciesMock := &protectionPoliciesMockClient{protectionPoliciesClient: *newProtectionPoliciesMockClient()}
+		backupProtectableItemsMock := &backupProtectableItemsMockClient{backupProtectableItemsClient: *newBackupProtectableItemsMockClient()}
+
 		return client{
 			vaultMock,
-			nil,
-			nil,
+			backupMock,
+			protectionPoliciesMock,
 			nil,
 			jobsMock,
 			restoreMock,
+			backupProtectableItemsMock,
 			nil,
-			nil,
-			nil,
+			backupProtectedItemsMock,
 		}, nil
 	}
 }
