@@ -9,6 +9,7 @@ import (
 	redisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	skrazureclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
 type ResourceGroupsClient interface {
@@ -70,6 +71,7 @@ type Providers interface {
 	RedisClientProvider() azureclient.ClientProvider[redisinstanceclient.Client]
 	RedisClusterClientProvider() azureclient.ClientProvider[redisclusterclient.Client]
 	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
+	StorageProvider() azureclient.ClientProvider[skrazureclient.Client]
 }
 
 type NetworkConfig interface {

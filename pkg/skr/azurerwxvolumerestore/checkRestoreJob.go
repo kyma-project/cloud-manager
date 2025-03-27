@@ -53,6 +53,10 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 	switch *job.Status {
 	case string(armrecoveryservicesbackup.JobStatusInProgress):
 		logger.Info("Restore job in progress")
+		if restore.Status.State == cloudresourcesv1beta1.JobStateProcessing {
+			restore.Status.State = cloudresourcesv1beta1.JobStateInProgress
+			return composed.PatchStatus(restore).SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).Run(ctx, state)
+		}
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	case string(armrecoveryservicesbackup.JobStatusFailed):
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed

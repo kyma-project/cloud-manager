@@ -114,6 +114,14 @@ type AzureRwxVolumeBackup struct {
 	Status AzureRwxVolumeBackupStatus `json:"status,omitempty"`
 }
 
+func (bu *AzureRwxVolumeBackup) State() string {
+	return string(bu.Status.State)
+}
+
+func (bu *AzureRwxVolumeBackup) SetState(v string) {
+	bu.Status.State = AzureRwxBackupState(v)
+}
+
 func (bu *AzureRwxVolumeBackup) Conditions() *[]metav1.Condition {
 	return &bu.Status.Conditions
 }

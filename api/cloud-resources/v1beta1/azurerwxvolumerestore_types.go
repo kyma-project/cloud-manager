@@ -62,7 +62,7 @@ type AzureRwxVolumeRestoreSpec struct {
 
 // AzureRwxVolumeRestoreStatus defines the observed state of AzureRwxVolumeRestore
 type AzureRwxVolumeRestoreStatus struct {
-	// +kubebuilder:validation:Enum=Processing;InProgress;Done;Failed;Error
+	// +kubebuilder:validation:Enum=Processing;InProgress;Done;Failed;Error;WaitingScopeReady
 	State string `json:"state,omitempty"`
 
 	// List of status conditions
@@ -100,6 +100,14 @@ type AzureRwxVolumeRestore struct {
 
 	Spec   AzureRwxVolumeRestoreSpec   `json:"spec,omitempty"`
 	Status AzureRwxVolumeRestoreStatus `json:"status,omitempty"`
+}
+
+func (in *AzureRwxVolumeRestore) State() string {
+	return string(in.Status.State)
+}
+
+func (in *AzureRwxVolumeRestore) SetState(v string) {
+	in.Status.State = v
 }
 
 func (in *AzureRwxVolumeRestore) Conditions() *[]metav1.Condition {

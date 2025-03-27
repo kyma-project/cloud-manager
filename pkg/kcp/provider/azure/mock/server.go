@@ -9,6 +9,7 @@ import (
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"sync"
 )
 
@@ -25,6 +26,12 @@ var _ Server = &server{}
 type server struct {
 	m             sync.Mutex
 	subscriptions map[string]*tenantSubscriptionStore
+}
+
+func (s *server) StorageProvider() azureclient.ClientProvider[storageClient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (storageClient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
 }
 
 func (s *server) IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client] {

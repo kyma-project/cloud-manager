@@ -145,6 +145,43 @@ func WithPvLabel(name, value string) ObjAction {
 	}
 }
 
+func WithPvClaimRef(pvcName string, pvcNamespace string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*corev1.PersistentVolume); ok {
+				x.Spec.ClaimRef = &corev1.ObjectReference{
+					Name:      pvcName,
+					Namespace: pvcNamespace,
+				}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvClaimRef", obj))
+		},
+	}
+}
+
+func WithPvAnnotation(name, value string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*corev1.PersistentVolume); ok {
+				if x.Annotations == nil {
+					x.Annotations = make(map[string]string)
+				}
+				x.Annotations[name] = value
+				return
+			}
+			if x, ok := obj.(*corev1.PersistentVolumeClaim); ok {
+				if x.Annotations == nil {
+					x.Annotations = make(map[string]string)
+				}
+				x.Annotations[name] = value
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvAnnotation", obj))
+		},
+	}
+}
+
 func HavePvcPhase(expected corev1.PersistentVolumeClaimPhase) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(*corev1.PersistentVolumeClaim); ok {
@@ -159,5 +196,34 @@ func HavePvcPhase(expected corev1.PersistentVolumeClaimPhase) ObjAssertion {
 
 		}
 		return nil
+	}
+}
+
+func HavePvPhase(expected corev1.PersistentVolumePhase) ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(*corev1.PersistentVolume); ok {
+			actual := x.Status.Phase
+
+			if len(actual) == 0 && actual != expected {
+				return fmt.Errorf(
+					"expected object %T %s/%s to have phase: %s, but found %s",
+					obj, obj.GetNamespace(), obj.GetName(), expected, actual,
+				)
+			}
+
+		}
+		return nil
+	}
+}
+
+func WithPvVolumeHandle(volumeHandle string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*corev1.PersistentVolume); ok {
+				x.Spec.CSI.VolumeHandle = volumeHandle
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPvVolumeHandle", obj))
+		},
 	}
 }

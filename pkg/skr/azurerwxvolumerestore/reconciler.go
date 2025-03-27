@@ -32,7 +32,7 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRwxVolumeRestoreMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeRestore{}),
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
 		commonScope.New(),
 		composed.IfElse(
 			composed.Not(CompletedOrDeletedRestorePredicate),
@@ -43,6 +43,7 @@ func (r *reconciler) newAction() composed.Action {
 				loadPersistentVolume,
 				createAzureStorageClient,
 				findAzureRestoreJob,
+				prepareRestore,
 				startAzureRestore,
 				checkRestoreJob,
 			),
@@ -60,8 +61,9 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
+			commonScope.NewStateFactory(
+				composed.NewStateClusterFromCluster(args.KcpCluster),
+				args.KymaRef),
 			f.storageClientProvider,
 		),
 	}
