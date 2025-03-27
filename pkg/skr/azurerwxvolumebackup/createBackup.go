@@ -19,6 +19,62 @@ type protectedFileShare struct {
 	Properties *armrecoveryservicesbackup.AzureFileshareProtectedItem
 }
 
+type protectableFileShare struct {
+	Id         *string
+	Name       *string
+	Properties *armrecoveryservicesbackup.AzureFileShareProtectableItem
+}
+
+func matchProtectedItems(protectedItems []*armrecoveryservicesbackup.ProtectedItemResource, fileShareName string) []protectedFileShare {
+
+	var matchingFileshares []protectedFileShare
+
+	for _, item := range protectedItems {
+		iProperties, ok := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
+		if !ok {
+			continue
+		}
+
+		if iProperties.FriendlyName != nil && *iProperties.FriendlyName == fileShareName {
+			matchingFileshares = append(matchingFileshares, protectedFileShare{
+				Id:         item.ID,
+				Name:       item.Name,
+				Properties: iProperties,
+			})
+		}
+
+	}
+
+	return matchingFileshares
+
+}
+
+func matchProtectableItems(protectableItems []*armrecoveryservicesbackup.WorkloadProtectableItemResource, fileShareName string) []protectableFileShare {
+
+	//var matchingItems []*armrecoveryservicesbackup.WorkloadProtectableItemResource
+	var matchingItems []protectableFileShare
+	for _, item := range protectableItems {
+
+		props, ok := item.Properties.(*armrecoveryservicesbackup.AzureFileShareProtectableItem)
+		if !ok || props == nil {
+			continue
+		}
+
+		// Skip over entries that don't have friendly name
+		// Match FriendlyName
+		if props.FriendlyName != nil && *props.FriendlyName == fileShareName {
+			matchingItems = append(matchingItems, protectableFileShare{
+				Id:         item.ID,
+				Name:       item.Name,
+				Properties: props,
+			})
+		}
+
+	}
+	return matchingItems
+
+}
+
 func createBackup(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state := st.(*State)
@@ -49,6 +105,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	protectedItems, err := state.client.ListProtectedItems(ctx, vaultName, resourceGroupName)
 	if err != nil {
 		logger.Error(err, "Failed to ListProtectedItems")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -63,26 +120,11 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	}
 
-	var protectedItemsMatching []protectedFileShare
-
-	for _, item := range protectedItems {
-		iProperties, ok := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
-		if !ok {
-			continue
-		}
-
-		if iProperties.FriendlyName != nil && *iProperties.FriendlyName == fileShareName {
-			protectedItemsMatching = append(protectedItemsMatching, protectedFileShare{
-				Id:         item.ID,
-				Name:       item.Name,
-				Properties: iProperties,
-			})
-		}
-
-	}
+	protectedItemsMatching := matchProtectedItems(protectedItems, fileShareName)
 
 	if len(protectedItemsMatching) > 1 {
 		// error, there's more than 1 protectedItemsMatching
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupFailed
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -92,7 +134,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 					Message: "More than 1 matching protectedItem",
 				},
 			).
-			SuccessError(composed.StopAndForget).
+			FailedError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
@@ -102,6 +144,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 		containerName := path.GetContainerName(resourceGroupName, storageAccountName)
 		err = state.client.TriggerBackup(ctx, vaultName, resourceGroupName, containerName, protectedItemName, backup.Spec.Location)
 		if err != nil {
+			backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 			return composed.PatchStatus(backup).
 				SetExclusiveConditions(
 					metav1.Condition{
@@ -111,9 +154,10 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 						Message: fmt.Sprintf("Failed to trigger backup: %s", err),
 					},
 				).
-				SuccessError(composed.StopWithRequeue).
+				FailedError(composed.StopWithRequeue).
 				Run(ctx, state)
 		}
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupDone // TODO: redo with Creating
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -123,7 +167,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 					Message: "Backup invoked",
 				},
 			).
-			SuccessError(composed.StopAndForget).
+			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
 
@@ -132,6 +176,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	err = state.client.CreateBackupPolicy(ctx, vaultName, resourceGroupName, policyName)
 	if err != nil {
 		logger.Error(err, "failed to create backup policy")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -139,7 +184,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: fmt.Sprintf("Could not create BackupPolicy for backup: %s", err),
 			}).
-			SuccessError(composed.StopWithRequeue).
+			FailedError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
 
@@ -148,6 +193,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		// handle error & return
 		logger.Error(err, "failed to fetch protectable items")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -161,38 +207,12 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	var matchingItems []*armrecoveryservicesbackup.WorkloadProtectableItemResource
-	for _, item := range protectableItems {
-
-		props, ok := item.Properties.(*armrecoveryservicesbackup.AzureFileShareProtectableItem)
-		if !ok || props == nil {
-			logger.Error(errors.New("failed to type cast to *armrecoveryservicesbackup.AzureFileShareProtectableItem"), "failed to type cast to *armrecoveryservicesbackup.AzureFileShareProtectableItem")
-
-			return composed.PatchStatus(backup).
-				SetExclusiveConditions(
-					metav1.Condition{
-						Type:    cloudresourcesv1beta1.ConditionTypeError,
-						Status:  metav1.ConditionTrue,
-						Reason:  cloudresourcesv1beta1.ConditionReasonError,
-						Message: "failed to type cast to *armrecoveryservicesbackup.AzureFileShareProtectableItem",
-					},
-				).
-				SuccessError(composed.StopAndForget).
-				Run(ctx, state)
-
-		}
-
-		// Skip over entries that don't have friendly name
-		// Match FriendlyName
-		if props.FriendlyName != nil && *props.FriendlyName == fileShareName {
-			matchingItems = append(matchingItems, item)
-		}
-
-	}
+	matchingItems := matchProtectableItems(protectableItems, fileShareName)
 
 	if len(matchingItems) == 0 {
 		logger.Error(errors.New("fileshare not found in ListBackupProtectableItems"), "fileshare not found in ListBackupProtectableItems")
 		logger.Info("requeue create backup")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -209,6 +229,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	if len(matchingItems) > 1 {
 		logger.Error(err, "more than 1 friendlyName found")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupFailed
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -218,7 +239,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 					Message: "more than one friendlyName found",
 				},
 			).
-			SuccessError(composed.StopAndForget).
+			FailedError(composed.StopAndForget).
 			Run(ctx, state)
 
 	}
@@ -234,7 +255,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 					Message: "matching item's Name is nil",
 				},
 			).
-			SuccessError(composed.StopAndForget).
+			FailedError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
@@ -280,5 +301,6 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	}
 
+	backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupDone // TODO: redo with Creating
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

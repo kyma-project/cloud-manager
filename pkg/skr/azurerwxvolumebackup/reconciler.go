@@ -35,11 +35,11 @@ func (r *reconciler) newAction() composed.Action {
 			composed.Not(CompletedOrDeletedPredicate),
 			composed.ComposeActions("AzureRwxVolumeBackupNotCompletedOrDeleted",
 				actions.PatchAddCommonFinalizer(),
+				loadPersistentVolumeClaim,
+				loadPersistentVolume,
 				createClient,
 				createVault,
 				createBackup,
-				loadPersistentVolume,
-				loadPersistentVolumeClaim,
 			), nil,
 		),
 		actions.PatchRemoveCommonFinalizer(),
@@ -63,6 +63,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 func CompletedOrDeletedPredicate(_ context.Context, state composed.State) bool {
 	isDeleted := composed.IsMarkedForDeletion(state.Obj())
 	currentState := state.Obj().(*cloudresourcesv1beta1.AzureRwxVolumeBackup).Status.State
-	return isDeleted || currentState == cloudresourcesv1beta1.JobStateDone || currentState == cloudresourcesv1beta1.JobStateFailed
+	//return isDeleted || currentState == cloudresourcesv1beta1.JobStateDone || currentState == cloudresourcesv1beta1.JobStateFailed
+	return isDeleted || currentState == cloudresourcesv1beta1.AzureRwxBackupDone || currentState == cloudresourcesv1beta1.AzureRwxBackupFailed
 
 }
