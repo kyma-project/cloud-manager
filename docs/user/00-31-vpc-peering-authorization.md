@@ -92,7 +92,7 @@ For more information, see the official Google Cloud documentation on how to [gra
 ## Microsoft Azure
 <!-- VPC peering for Microsoft Azure is visible only in the Internal DRAFT version of Help Portal docs and it is not part of the Cloud Production version of Help Portal docs -->
 
-To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal based on your Kyma landscape.
+To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal. Then, perform the required actions.
 
 | BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  | Cloud Manager Application (Client) ID |
 |------------------------------------|----------------------------------------|----------------------------------|---------------------------------------|
