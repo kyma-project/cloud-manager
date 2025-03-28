@@ -2,6 +2,7 @@ package rediscluster
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -53,7 +54,9 @@ func (r *redisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("rediscluster", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *redisClusterReconciler) newAction() composed.Action {

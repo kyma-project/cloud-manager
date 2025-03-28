@@ -9,6 +9,7 @@ import (
 	aws "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	gcp "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -51,7 +52,9 @@ func (r *vpcPeeringReconciler) Reconcile(ctx context.Context, request reconcile.
 	state := r.newFocalState(request.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("vpcpeering", util.RequestObjToString(request)).
+		Handle(action(ctx, state))
 }
 
 func (r *vpcPeeringReconciler) newFocalState(name types.NamespacedName) focal.State {

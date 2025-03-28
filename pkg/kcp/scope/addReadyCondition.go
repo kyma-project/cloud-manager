@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func addReadyCondition(ctx context.Context, st composed.State) (error, context.Context) {
+func conditionReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	changed := false

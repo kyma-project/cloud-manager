@@ -84,6 +84,11 @@ var _ = BeforeSuite(func() {
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
 	)).NotTo(HaveOccurred())
+	// Kyma
+	Expect(SetupKymaReconciler(
+		infra.KcpManager(),
+		infra.ActiveSkrCollection(),
+	)).NotTo(HaveOccurred())
 	// IpRange
 	Expect(SetupIpRangeReconciler(
 		infra.Ctx(),

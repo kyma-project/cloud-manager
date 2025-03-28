@@ -10,6 +10,7 @@ import (
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
 	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
 	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -52,7 +53,9 @@ func (r *networkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("network", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *networkReconciler) newAction() composed.Action {

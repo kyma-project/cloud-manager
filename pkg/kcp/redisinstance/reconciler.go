@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	awsRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
 	azureRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
@@ -52,7 +53,9 @@ func (r *redisInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("redisinstance", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *redisInstanceReconciler) newAction() composed.Action {
