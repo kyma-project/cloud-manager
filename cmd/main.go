@@ -157,8 +157,6 @@ func main() {
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
 	activeSkrCollection := skrruntime.NewActiveSkrCollection(rootLogger.WithName("skr-collection"))
 
-	baseCtx = skrruntime.ActiveSkrCollectionToCtx(baseCtx, activeSkrCollection)
-
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		BaseContext: func() context.Context {
 			return baseCtx
@@ -307,11 +305,11 @@ func main() {
 	//}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), activeSkrCollection, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}
-	if err = cloudcontrolcontroller.SetupKymaReconciler(mgr, nil, skrLoop); err != nil {
+	if err = cloudcontrolcontroller.SetupKymaReconciler(mgr, activeSkrCollection); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Kyma")
 		os.Exit(1)
 	}
@@ -367,7 +365,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupNukeReconciler(
 		mgr,
-		skrLoop,
+		activeSkrCollection,
 		gcpnfsbackupclient.NewFileBackupClientProvider(),
 		awsnukenfsclient.NewClientProvider(),
 		env,
