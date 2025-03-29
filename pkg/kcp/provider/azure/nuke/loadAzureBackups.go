@@ -14,6 +14,7 @@ func loadAzureBackups(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	logger.Info("LoadAzureProtectedItems")
 	for _, vault := range state.recoveryVaults {
 		items, err := state.azureClient.ListFileShareProtectedItems(ctx, vault)
 		if err != nil {

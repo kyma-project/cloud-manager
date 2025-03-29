@@ -22,7 +22,11 @@ type nukeRwxBackupClient struct {
 }
 
 func NewClientProvider() azureclient.ClientProvider[NukeRwxBackupClient] {
-	backupProvider := azurebackupclient.NewClientProvider()
+	return NukeProvider(azurebackupclient.NewClientProvider())
+}
+
+func NukeProvider(backupProvider azureclient.ClientProvider[azurebackupclient.Client]) azureclient.ClientProvider[NukeRwxBackupClient] {
+
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (NukeRwxBackupClient, error) {
 		client, err := backupProvider(ctx, clientId, clientSecret, subscriptionId, tenantId, auxiliaryTenants...)
 
@@ -72,8 +76,11 @@ func (c *nukeRwxBackupClient) ListFileShareProtectedItems(ctx context.Context, v
 
 	for _, item := range protectedItems {
 
-		_, okay := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
+		fileShare, okay := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
 		if !okay {
+			continue
+		}
+		if ptr.Deref(fileShare.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
 			continue
 		}
 		result = append(result, item)
