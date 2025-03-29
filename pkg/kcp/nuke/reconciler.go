@@ -2,11 +2,13 @@ package nuke
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke"
+	azurenuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke"
 	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -22,6 +24,7 @@ func New(
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpStateFactory gcpnuke.StateFactory,
 	awsStateFactory awsnuke.StateFactory,
+	azureStateFactory azurenuke.StateFactory,
 ) NukeReconciler {
 	return &nukeReconciler{
 		stateFactory: NewStateFactory(
@@ -29,15 +32,17 @@ func New(
 			focal.NewStateFactory(),
 			activeSkrCollection,
 		),
-		gcpStateFactory: gcpStateFactory,
-		awsStateFactory: awsStateFactory,
+		gcpStateFactory:   gcpStateFactory,
+		awsStateFactory:   awsStateFactory,
+		azureStateFactory: azureStateFactory,
 	}
 }
 
 type nukeReconciler struct {
-	stateFactory    StateFactory
-	gcpStateFactory gcpnuke.StateFactory
-	awsStateFactory awsnuke.StateFactory
+	stateFactory      StateFactory
+	gcpStateFactory   gcpnuke.StateFactory
+	awsStateFactory   awsnuke.StateFactory
+	azureStateFactory azurenuke.StateFactory
 }
 
 func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -74,6 +79,13 @@ func (r *nukeReconciler) newAction() composed.Action {
 					focal.AwsProviderPredicate,
 				),
 				awsnuke.New(r.awsStateFactory),
+			),
+			composed.If(
+				composed.All(
+					focal.AzureProviderPredicate,
+				),
+				//TODO: Add the nukeReconciler with feature flag.
+				//azurenuke.New(r.azureStateFactory),
 			),
 			checkIfAllDeleted,
 			scopeDelete,
