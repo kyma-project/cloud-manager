@@ -13,6 +13,7 @@ func loadAzureRecoveryVaults(ctx context.Context, st composed.State) (error, con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	logger.Info("LoadAzureRecoveryVaults")
 	vaults, err := state.azureClient.ListRwxVolumeBackupVaults(ctx)
 	if err != nil {
 		logger.Error(err, "Error listing Azure Recovery Vaults")

@@ -3,14 +3,18 @@ package mock
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/google/uuid"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	"strings"
-	"sync"
-	"time"
+	"k8s.io/utils/ptr"
 )
 
 var _ client.RestoreClient = &storageStore{}
@@ -22,11 +26,16 @@ var _ client.ProtectedItemsClient = &storageStore{}
 var _ client.ProtectionPoliciesClient = &storageStore{}
 var _ client.BackupProtectableItemsClient = &storageStore{}
 
+const vaultPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v"
+const protectedPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v/backupFabrics/Azure/protectionContainers/%v/protectedItems/AzureFileShare;%v"
+
 type storageStore struct {
 	m            sync.Mutex
 	subscription string
 
-	jobs map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse
+	jobs           map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse
+	vaults         []*armrecoveryservices.Vault
+	protectedItems map[string][]*armrecoveryservicesbackup.ProtectedItemResource
 }
 
 func (s *storageStore) FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error) {
@@ -101,8 +110,54 @@ func (s *storageStore) DeleteBackupPolicy(ctx context.Context, vaultName string,
 }
 
 func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscriptionId, location, vaultName, resourceGroupName, containerName, protectedItemName, backupPolicyName, storageAccountName string) error {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	logger := composed.LoggerFromCtx(ctx)
+
+	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	id := fmt.Sprintf(protectedPathPattern, s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+	protected := armrecoveryservicesbackup.ProtectedItemResource{
+		Location: to.Ptr(location),
+		ID:       to.Ptr(id),
+		Properties: &armrecoveryservicesbackup.AzureFileshareProtectedItem{
+			ProtectionState: to.Ptr(armrecoveryservicesbackup.ProtectionStateProtected),
+			FriendlyName:    to.Ptr(protectedItemName),
+		},
+	}
+
+	//Add to the map.
+	temp := s.protectedItems[vaultId]
+	temp = append(temp, &protected)
+	s.protectedItems[vaultId] = temp
+
+	logger.Info("mock: Create/Update Protected Item", "protected-id", id)
+
+	return nil
+}
+
+func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+	logger := composed.LoggerFromCtx(ctx)
+
+	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	id := fmt.Sprintf(protectedPathPattern, s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+
+	protectedItems, okay := s.protectedItems[vaultId]
+	if !okay {
+		return nil
+	}
+
+	temp := protectedItems[:0]
+	for _, protected := range protectedItems {
+		if ptr.Deref(protected.ID, "") != id {
+			temp = append(temp, protected)
+		}
+	}
+	s.protectedItems[vaultId] = temp
+
+	logger.Info("mock: RemoveProtection", "protected-id", id)
+	return nil
 }
 
 func (s *storageStore) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (armrecoveryservicesbackup.RecoveryPointResource, error) {
@@ -116,18 +171,49 @@ func (s *storageStore) ListRecoveryPoints(ctx context.Context, vaultName string,
 }
 
 func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	logger := composed.LoggerFromCtx(ctx)
+
+	id := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	vault := armrecoveryservices.Vault{
+		Location: to.Ptr(location),
+		ID:       to.Ptr(id),
+		Name:     to.Ptr(vaultName),
+		Tags: map[string]*string{
+			"cloud-manager": to.Ptr("rwxVolumeBackup"),
+		},
+	}
+	s.vaults = append(s.vaults, &vault)
+
+	logger.Info("mock: Create Vault", "vault-id", id)
+	return vault.ID, nil
 }
 
 func (s *storageStore) DeleteVault(ctx context.Context, resourceGroupName string, vaultName string) error {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	logger := composed.LoggerFromCtx(ctx)
+
+	temp := s.vaults[:0]
+	id := to.Ptr(fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName))
+	for _, vault := range s.vaults {
+		if ptr.Deref(vault.ID, "") != ptr.Deref(id, "") {
+			temp = append(temp, vault)
+		}
+	}
+	s.vaults = temp
+
+	logger.Info("mock: Delete Vault", "vault-id", id)
+	return nil
 }
 
 func (s *storageStore) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error) {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("mock: List Vaults", "size", len(s.vaults))
+	return s.vaults, nil
 }
 
 func (s *storageStore) TriggerBackup(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName, location string) error {
@@ -136,8 +222,15 @@ func (s *storageStore) TriggerBackup(ctx context.Context, vaultName, resourceGro
 }
 
 func (s *storageStore) ListProtectedItems(ctx context.Context, vaultName string, resourceGroupName string) ([]*armrecoveryservicesbackup.ProtectedItemResource, error) {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	items := s.protectedItems[vaultId]
+
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("mock: ListProtectedItems", "size", len(items))
+	return items, nil
 }
 
 func (s *storageStore) TriggerRestore(ctx context.Context, request client.RestoreRequest) (*string, error) {
@@ -171,7 +264,8 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 
 func newStorageStore(subscription string) *storageStore {
 	return &storageStore{
-		subscription: subscription,
-		jobs:         make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
+		subscription:   subscription,
+		jobs:           make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
+		protectedItems: make(map[string][]*armrecoveryservicesbackup.ProtectedItemResource),
 	}
 }

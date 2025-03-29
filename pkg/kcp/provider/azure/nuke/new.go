@@ -31,6 +31,7 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"azureNuke",
 			createAzureClient,
+			loadAzureRecoveryVaults,
 			loadAzureBackups,
 			providerResourceStatusDiscovered,
 			deleteAzureBackups,
