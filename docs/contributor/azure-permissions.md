@@ -11,6 +11,8 @@
     "Microsoft.Cache/redis/read",
     "Microsoft.Cache/redis/regenerateKey/action",
     "Microsoft.Cache/redis/write",
+    "Microsoft.DataProtection/backupVaults/backupInstances/backup/action",
+    "Microsoft.DataProtection/backupVaults/backupInstances/restore/action",
     "Microsoft.Network/networkSecurityGroups/delete",
     "Microsoft.Network/networkSecurityGroups/join/action",
     "Microsoft.Network/networkSecurityGroups/read",
@@ -36,21 +38,19 @@
     "Microsoft.Network/virtualNetworks/subnets/read",
     "Microsoft.Network/virtualNetworks/subnets/write",
     "Microsoft.Network/virtualNetworks/write",
-    "Microsoft.Resources/subscriptions/resourceGroups/delete",
-    "Microsoft.Resources/subscriptions/resourceGroups/read",
-    "Microsoft.Resources/subscriptions/resourceGroups/write",
-    "Microsoft.DataProtection/backupVaults/backupInstances/restore/action",
-    "Microsoft.DataProtection/backupVaults/backupInstances/backup/action",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/read",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/write",
     "Microsoft.RecoveryServices/Vaults/backupJobs/operationResults/read",
     "Microsoft.RecoveryServices/Vaults/backupJobs/read",
-    "Microsoft.RecoveryServices/Vaults/read",
-    "Microsoft.RecoveryServices/Vaults/write",
     "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
     "Microsoft.RecoveryServices/Vaults/backupPolicies/write",
     "Microsoft.RecoveryServices/Vaults/backupProtectableItems/read",
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
-    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/read",
-    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/write"
+    "Microsoft.RecoveryServices/Vaults/read",
+    "Microsoft.RecoveryServices/Vaults/write",
+    "Microsoft.Resources/subscriptions/resourceGroups/delete",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/write"
   ]
 }
 ```
