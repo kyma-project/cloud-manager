@@ -35,10 +35,10 @@ This table lists the parameters of the given resource together with their descri
 Once VPC peering is established Cloud Manager adds peering route to the route tables associated with remote network.
 
 Parameter `RemoteRouteTableUpdateStrategy` specifies how Cloud Manager handles remote route tables:
-- AUTO adds peering route to all remote route tables.
-- MATCHED adds peering route to all remote route tables having Kyma shoot name tag.
-- UNMATCHED adds peering route to all remote route tables not having Kyma shoot name tag.
-- NONE does not interact with remote route tables.
+- `AUTO` adds peering route to all remote route tables.
+- `MATCHED` adds peering route to all remote route tables having Kyma shoot name tag.
+- `UNMATCHED` adds peering route to all remote route tables not having Kyma shoot name tag.
+- `NONE` does not interact with remote route tables.
 
 ## Sample Custom Resource
 
