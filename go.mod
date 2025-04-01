@@ -1,7 +1,6 @@
 module github.com/kyma-project/cloud-manager
 
 go 1.24.1
-toolchain go1.24.1
 
 require (
 	cloud.google.com/go/compute v1.36.0
