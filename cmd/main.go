@@ -19,8 +19,9 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"os"
+
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
@@ -301,10 +302,10 @@ func main() {
 	//	os.Exit(1)
 	//}
 
-	//if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
+		os.Exit(1)
+	}
 
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), activeSkrCollection, gcpclient.NewServiceUsageClientProvider()); err != nil {

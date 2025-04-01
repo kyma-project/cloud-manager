@@ -1,10 +1,12 @@
 package azure
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -143,6 +145,11 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 		})
 
 		It("When AzureRwxBackupSchedule Create is called", func() {
+			//Disable the test case if the feature is not enabled.
+			if !feature.FFRwxBackupAzure.Value(context.Background()) {
+				Skip("Nuke Backups for Azure is disabled")
+			}
+
 			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), rwxBackupSchedule,
@@ -209,6 +216,11 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 		rwxBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{}
 
 		It("When AzureRwxBackupSchedule Create is called", func() {
+			//Disable the test case if the feature is not enabled.
+			if !feature.FFRwxBackupAzure.Value(context.Background()) {
+				Skip("Nuke Backups for Azure is disabled")
+			}
+
 			Eventually(CreateBackupSchedule).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), rwxBackupSchedule,

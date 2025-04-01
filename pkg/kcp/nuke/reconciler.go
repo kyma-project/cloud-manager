@@ -83,13 +83,13 @@ func (r *nukeReconciler) newAction() composed.Action {
 				),
 				awsnuke.New(r.awsStateFactory),
 			),
-			//TODO: Add the nukeReconciler with feature flag.
-			// composed.If(
-			// 	composed.All(
-			// 		focal.AzureProviderPredicate,
-			// 	),
-			// 	azurenuke.New(r.azureStateFactory),
-			// ),
+			composed.If(
+				composed.All(
+					feature.FFRwxBackupAzure.Predicate(),
+					focal.AzureProviderPredicate,
+				),
+				azurenuke.New(r.azureStateFactory),
+			),
 			checkIfAllDeleted,
 			scopeDelete,
 			statusCompleted,

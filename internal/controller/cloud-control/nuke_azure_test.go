@@ -1,9 +1,11 @@
 package cloudcontrol
 
 import (
+	"context"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -80,8 +82,10 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 	nukeName := "nuke-" + scopeName
 	nuke := &cloudcontrolv1beta1.Nuke{}
 	It("When Nuke for the Scope is created", func() {
-		//TODO: Remove skip when the test passes.
-		Skip("Nuke Backups for Azure is disabled")
+		//Disable the test case if the feature is not enabled.
+		if !feature.FFRwxBackupAzure.Value(context.Background()) {
+			Skip("Nuke Backups for Azure is disabled")
+		}
 
 		clientProvider := infra.AzureMock().StorageProvider()
 		subscriptionId, tenantId := scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId
