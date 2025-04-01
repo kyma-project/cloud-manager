@@ -37,7 +37,7 @@ traffic between instances in peered VPC networks, Cloud Manager adds a route to 
 remote VPC network. The route destination is the CIDR block of the Kyma VPC network and the target is the ID of the VPC 
 peering connection.
 
-Parameter `RemoteRouteTableUpdateStrategy` specifies how Cloud Manager handles remote route tables:
+The `RemoteRouteTableUpdateStrategy` parameter specifies how Cloud Manager handles remote route tables:
 - `AUTO` adds peering route to all remote route tables.
 - `MATCHED` adds peering route to all remote route tables having Kyma shoot name tag.
 - `UNMATCHED` adds peering route to all remote route tables not having Kyma shoot name tag.
