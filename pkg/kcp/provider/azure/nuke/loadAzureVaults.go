@@ -5,6 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,7 +33,18 @@ func loadAzureRecoveryVaults(ctx context.Context, st composed.State) (error, con
 			Run(ctx, state)
 	}
 
-	//Store it in state, and return
+	//Store it in state
 	state.recoveryVaults = vaults
+
+	azureVaults := make([]nuketypes.ProviderResourceObject, len(state.recoveryVaults))
+	for i, vault := range state.recoveryVaults {
+		azureVaults[i] = azureVault{vault}
+	}
+
+	state.ProviderResources = append(state.ProviderResources, &nuketypes.ProviderResourceKindState{
+		Kind:     "AzureRecoveryVault",
+		Provider: cloudcontrolv1beta1.ProviderAzure,
+		Objects:  azureVaults,
+	})
 	return nil, ctx
 }

@@ -12,7 +12,7 @@ const (
 )
 
 const vaultIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)"
-const protectedItemIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/(?<protectedItem>[^\\/]*)"
+const protectedItemIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/AzureFileShare;(?<protectedItem>[^\\/]*)"
 
 func ParseVaultId(vaultId string) (subscription string, resourceGroup string, vault string, err error) {
 	re := regexp.MustCompile(vaultIdPattern)

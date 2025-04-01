@@ -15,6 +15,8 @@ type NukeRwxBackupClient interface {
 	ListRwxVolumeBackupVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error)
 	ListFileShareProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) ([]*armrecoveryservicesbackup.ProtectedItemResource, error)
 	RemoveProtection(ctx context.Context, protected *armrecoveryservicesbackup.ProtectedItemResource) error
+	HasProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) (bool, error)
+	DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault) error
 }
 
 type nukeRwxBackupClient struct {
@@ -102,4 +104,35 @@ func (c *nukeRwxBackupClient) RemoveProtection(ctx context.Context, protected *a
 	}
 
 	return c.Client.RemoveProtection(ctx, vaultName, rgName, containerName, protectedName)
+}
+
+func (c *nukeRwxBackupClient) HasProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) (bool, error) {
+	if vault == nil {
+		return false, nil
+	}
+
+	_, rgName, vaultName, err := ParseVaultId(ptr.Deref(vault.ID, ""))
+	if err != nil {
+		return false, err
+	}
+
+	protectedItems, err := c.Client.ListProtectedItems(ctx, vaultName, rgName)
+	if err != nil {
+		return false, nil
+	}
+
+	return len(protectedItems) > 0, nil
+}
+
+func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault) error {
+	if vault == nil {
+		return nil
+	}
+
+	_, rgName, vaultName, err := ParseVaultId(ptr.Deref(vault.ID, ""))
+	if err != nil {
+		return err
+	}
+
+	return c.Client.DeleteVault(ctx, rgName, vaultName)
 }

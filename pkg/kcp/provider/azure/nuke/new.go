@@ -35,6 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 			loadAzureBackups,
 			providerResourceStatusDiscovered,
 			deleteAzureBackups,
+			deleteAzureVaults,
 			providerResourceStatusDeleting,
 			providerResourceStatusDeleted,
 			checkIfAllProviderResourcesDeleted,

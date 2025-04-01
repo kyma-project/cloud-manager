@@ -11,6 +11,7 @@ import (
 )
 
 const fileSharePattern = "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.RecoveryServices/vaults/%s/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;%s;%s/protectedItems/AzureFileShare;%s"
+const vaultPathPattern = "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.RecoveryServices/vaults/%s"
 
 var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 
@@ -57,7 +58,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 		clientProvider := infra.AzureMock().StorageProvider()
 		subscriptionId, tenantId := scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId
 		nukeClient, _ := clientProvider(infra.Ctx(), "", "", subscriptionId, tenantId, "")
-		By(" And Given azure Vault exits for the same scope", func() {
+		By(" And Given Azure Vault exits for the same scope", func() {
 
 			_, err := nukeClient.CreateVault(
 				infra.Ctx(), rgName, vaultName, location)
@@ -65,7 +66,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 				ShouldNot(HaveOccurred(), "failed creating azure Vault directly")
 		})
 
-		By(" And Given azure Backups exits for the same scope", func() {
+		By(" And Given Azure Backups exits for the same scope", func() {
 
 			for _, fileShareName := range fileShares {
 				err := nukeClient.CreateOrUpdateProtectedItem(
@@ -99,9 +100,44 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 				Should(Succeed())
 		})
 
-		kind := "AzureRwxVolumeBackup"
+		kinds := []string{"AzureRwxVolumeBackup", "AzureRecoveryVault"}
 
-		By(fmt.Sprintf("And Then provider resource %s does not exist", kind), func() {
+		By("And Then Nuke resources have state Deleted", func() {
+			Eventually(func() error {
+				if err := LoadAndCheck(infra.Ctx(), infra.KCP().Client(), nuke, NewObjActions()); err != nil {
+					return err
+				}
+
+				sk := nuke.Status.GetKindNoCreate(kinds[0])
+				if sk == nil {
+					return fmt.Errorf("kind %s not found in Nuke status", kinds[0])
+				}
+				for _, fileShareName := range fileShares {
+					id := fmt.Sprintf(fileSharePattern, subscriptionId, rgName, vaultName, rgName, saName, fileShareName)
+					actual := sk.Objects[id]
+					if actual == cloudcontrolv1beta1.NukeResourceStatusDeleted {
+						continue
+					}
+					return fmt.Errorf("expected resource %s/%s to have status Deleted, but found %s", kinds[0], id, actual)
+				}
+
+				sk = nuke.Status.GetKindNoCreate(kinds[1])
+				if sk == nil {
+					return fmt.Errorf("kind %s not found in Nuke status", kinds[1])
+				}
+
+				id := fmt.Sprintf(vaultPathPattern, subscriptionId, rgName, vaultName)
+				actual := sk.Objects[id]
+
+				if actual != cloudcontrolv1beta1.NukeResourceStatusDeleted {
+					return fmt.Errorf("expected resource %s/%s to have status Deleted, but found %s", kinds[1], id, actual)
+				}
+
+				return nil
+			}).Should(Succeed())
+		})
+
+		By("And Then provider resource - Azure Protected Items do not exist", func() {
 			Eventually(func() error {
 				backupsOnAzure, err := nukeClient.ListProtectedItems(infra.Ctx(), vaultName, rgName)
 				if err != nil {
@@ -112,23 +148,13 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 			}).Should(Succeed())
 		})
 
-		By(fmt.Sprintf("And Then Nuke status resource %s has state Deleted", kind), func() {
+		By("And Then provider resource - Azure Recovery Vaults do not exist", func() {
 			Eventually(func() error {
-				if err := LoadAndCheck(infra.Ctx(), infra.KCP().Client(), nuke, NewObjActions()); err != nil {
+				azureVaults, err := nukeClient.ListVaults(infra.Ctx())
+				if err != nil {
 					return err
 				}
-				sk := nuke.Status.GetKindNoCreate(kind)
-				if sk == nil {
-					return fmt.Errorf("kind %s not found in Nuke status", kind)
-				}
-				for _, fileShareName := range fileShares {
-					id := fmt.Sprintf(fileSharePattern, subscriptionId, rgName, vaultName, rgName, saName, fileShareName)
-					actual := sk.Objects[id]
-					if actual == cloudcontrolv1beta1.NukeResourceStatusDeleted {
-						continue
-					}
-					return fmt.Errorf("expected resource %s/%s to have status Deleted, but found %s", kind, id, actual)
-				}
+				Expect(azureVaults).To(HaveLen(0))
 				return nil
 			}).Should(Succeed())
 		})

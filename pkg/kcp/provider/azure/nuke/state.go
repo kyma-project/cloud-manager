@@ -64,6 +64,18 @@ func (b azureProtectedItem) GetObject() interface{} {
 	return b
 }
 
+type azureVault struct {
+	*armrecoveryservices.Vault
+}
+
+func (v azureVault) GetId() string {
+	return ptr.Deref(v.ID, "")
+}
+
+func (v azureVault) GetObject() interface{} {
+	return v
+}
+
 type ProviderNukeStatus struct {
 	v1beta1.NukeStatus
 }
