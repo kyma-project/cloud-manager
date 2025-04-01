@@ -28,7 +28,7 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/gardener/gardener v1.114.0
+	github.com/gardener/gardener v1.115.1
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.1
@@ -122,7 +122,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -136,7 +136,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/exp v0.0.0-20250228200357-dead58393ab7 // indirect
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
@@ -144,8 +144,8 @@ require (
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
-	golang.org/x/tools v0.30.0 // indirect
-	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
+	golang.org/x/tools v0.31.0 // indirect
+	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
