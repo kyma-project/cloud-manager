@@ -1,7 +1,6 @@
 module github.com/kyma-project/cloud-manager
 
 go 1.24.1
-
 require (
 	cloud.google.com/go/compute v1.34.1
 	cloud.google.com/go/redis v1.18.0
@@ -39,7 +38,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.2
 	github.com/peterbourgon/mergemap v0.0.1
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/client_model v0.6.1
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
