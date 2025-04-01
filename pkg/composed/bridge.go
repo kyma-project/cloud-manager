@@ -16,28 +16,6 @@ const (
 	labelDeadline     = "deadline"
 )
 
-//
-//type metricsNoteController struct{}
-//type metricsNoteName struct{}
-//
-//func MetricsNoteTheObject(ctx context.Context, controller, name string) context.Context {
-//	ctx = context.WithValue(ctx, metricsNoteController{}, controller)
-//	ctx = context.WithValue(ctx, metricsNoteName{}, name)
-//	return ctx
-//}
-//
-//func getMetricsObjectNote(ctx context.Context) (controller string, name string) {
-//	x := ctx.Value(metricsNoteController{})
-//	if x != nil {
-//		controller = fmt.Sprintf("%v", x)
-//	}
-//	x = ctx.Value(metricsNoteName{})
-//	if x != nil {
-//		name = fmt.Sprintf("%v", x)
-//	}
-//	return
-//}
-
 func Handling() *Handler {
 	return &Handler{}
 }
@@ -67,6 +45,7 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 		logger = LoggerFromCtx(ctx)
 	}
 
+	// used in defer func() to report the cloud_manager_reconcile metric
 	result := labelSuccess
 	if h.controller != "" && h.name != "" {
 		defer func() {
