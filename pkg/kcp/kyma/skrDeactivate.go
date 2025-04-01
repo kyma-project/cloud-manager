@@ -1,4 +1,4 @@
-package scope
+package kyma
 
 import (
 	"context"
@@ -9,9 +9,11 @@ func skrDeactivate(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.Info("Stopping SKR")
+	logger.
+		WithValues("skrKymaName", state.ObjAsKyma().GetName()).
+		Info("Stopping SKR")
 
-	state.activeSkrCollection.RemoveScope(state.ObjAsScope())
+	state.activeSkrCollection.RemoveKyma(state.ObjAsKyma())
 
 	return nil, ctx
 }

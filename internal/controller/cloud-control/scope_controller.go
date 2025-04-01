@@ -80,19 +80,19 @@ func (r *ScopeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.Scope{}).
 		Watches(
-			util.NewKymaUnstructured(),
-			handler.EnqueueRequestsFromMapFunc(r.mapRequestsFromKymaCR),
+			util.NewGardenerClusterUnstructured(),
+			handler.EnqueueRequestsFromMapFunc(r.mapRequestsFromGardenerClusterCR),
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
 		).
 		Complete(r)
 }
 
-func (r *ScopeReconciler) mapRequestsFromKymaCR(ctx context.Context, kymaObj client.Object) []reconcile.Request {
+func (r *ScopeReconciler) mapRequestsFromGardenerClusterCR(ctx context.Context, gcObj client.Object) []reconcile.Request {
 	return []reconcile.Request{
 		{
 			NamespacedName: types.NamespacedName{
-				Namespace: kymaObj.GetNamespace(),
-				Name:      kymaObj.GetName(),
+				Namespace: gcObj.GetNamespace(),
+				Name:      gcObj.GetName(),
 			},
 		},
 	}

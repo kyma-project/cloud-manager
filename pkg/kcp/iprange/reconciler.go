@@ -7,6 +7,7 @@ import (
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -53,7 +54,9 @@ func (r *ipRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("kcpiprange", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *ipRangeReconciler) newAction() composed.Action {

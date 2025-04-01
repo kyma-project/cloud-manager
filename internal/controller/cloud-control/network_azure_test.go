@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,6 +29,7 @@ var _ = Describe("Feature: KCP Azure managed Network", func() {
 		var net *cloudcontrolv1beta1.Network
 
 		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(kymaName)
 			Eventually(CreateScopeAzure).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
 				Should(Succeed())

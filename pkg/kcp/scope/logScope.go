@@ -9,24 +9,25 @@ func logScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	scopeFound := predicateScopeExists()(ctx, state)
+	gardenerClusterFound := state.gardenerCluster != nil
+	gardenerClusterBeingDeleted := composed.IsMarkedForDeletion(state.gardenerCluster)
+	scopeFound := composed.IsObjLoaded(ctx, state)
 	scopeResourceVersion := state.ObjAsScope().ResourceVersion
-	shouldDisable := predicateShouldDisable()(ctx, state)
-	shouldEnable := predicateShouldEnable()(ctx, state)
-	scopeCreateOrUpdateNeeded := predicateScopeCreateOrUpdateNeeded()(ctx, state)
+	scopeShouldExist := shouldScopeExist(ctx, state)
+	scopeCreateOrUpdateNeeded := isScopeCreateOrUpdateNeeded(ctx, state)
 
 	logger = logger.
 		WithValues(
+			"shootName", state.shootName,
+			"gardenerClusterFound", gardenerClusterFound,
+			"gardenerClusterBeingDeleted", gardenerClusterBeingDeleted,
 			"scopeFound", scopeFound,
 			"scopeResourceVersion", scopeResourceVersion,
-			"shouldDisable", shouldDisable,
-			"shouldEnable", shouldEnable,
+			"scopeShouldExist", scopeShouldExist,
 			"scopeCreateOrUpdateNeeded", scopeCreateOrUpdateNeeded,
 		)
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-
-	logger.Info("Scope state")
 
 	return nil, ctx
 }
