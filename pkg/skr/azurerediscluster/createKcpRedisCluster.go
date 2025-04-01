@@ -19,25 +19,25 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 
 	azureRedisCluster := state.ObjAsAzureRedisCluster()
 
-	// redisSKUTier, redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
+	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
 
-	//if err != nil {
-	//	errMsg := "Failed to map redisTier to SKU Capacity"
-	//	logger.Error(err, errMsg, "redisTier", azureRedisCluster.Spec.RedisTier)
-	//	azureRedisCluster.Status.State = cloudresourcesv1beta1.StateError
-	//	return composed.UpdateStatus(azureRedisCluster).
-	//		SetCondition(metav1.Condition{
-	//			Type:    cloudresourcesv1beta1.ConditionTypeError,
-	//			Status:  metav1.ConditionTrue,
-	//			Reason:  cloudresourcesv1beta1.ConditionReasonError,
-	//			Message: errMsg,
-	//		}).
-	//		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-	//		ErrorLogMessage("Error: updating AzureRedisCluster status with not ready condition due to KCP error").
-	//		SuccessLogMsg("Updated and forgot SKR azureRedisCluster status with Error condition").
-	//		SuccessError(composed.StopAndForget).
-	//		Run(ctx, state)
-	//}
+	if err != nil {
+		errMsg := "Failed to map redisTier to SKU Capacity"
+		logger.Error(err, errMsg, "redisTier", azureRedisCluster.Spec.RedisTier)
+		azureRedisCluster.Status.State = cloudresourcesv1beta1.StateError
+		return composed.UpdateStatus(azureRedisCluster).
+			SetCondition(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonError,
+				Message: errMsg,
+			}).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
+			ErrorLogMessage("Error: updating AzureRedisCluster status with not ready condition due to KCP error").
+			SuccessLogMsg("Updated and forgot SKR azureRedisCluster status with Error condition").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
 
 	state.KcpRedisCluster = &cloudcontrolv1beta1.RedisCluster{
 		ObjectMeta: metav1.ObjectMeta{
@@ -60,25 +60,25 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 			IpRange: cloudcontrolv1beta1.IpRangeRef{
 				Name: state.SkrIpRange.Status.Id,
 			},
-			//Cluster: cloudcontrolv1beta1.RedisClusterInfo{
-			//	Azure: &cloudcontrolv1beta1.RedisClusterAzure{
-			//		SKU:          cloudcontrolv1beta1.AzureRedisSKU{Capacity: redisSKUCapacity, Family: redisSKUTier},
-			//		RedisVersion: azureRedisCluster.Spec.RedisVersion,
-			//		ShardCount:   0,
-			//		RedisConfiguration: cloudcontrolv1beta1.RedisClusterAzureConfigs{
-			//			MaxClients:                     azureRedisCluster.Spec.RedisConfiguration.MaxClients,
-			//			MaxFragmentationMemoryReserved: azureRedisCluster.Spec.RedisConfiguration.MaxFragmentationMemoryReserved,
-			//			MaxMemoryDelta:                 azureRedisCluster.Spec.RedisConfiguration.MaxMemoryDelta,
-			//			MaxMemoryPolicy:                azureRedisCluster.Spec.RedisConfiguration.MaxMemoryPolicy,
-			//			MaxMemoryReserved:              azureRedisCluster.Spec.RedisConfiguration.MaxMemoryReserved,
-			//			NotifyKeyspaceEvents:           azureRedisCluster.Spec.RedisConfiguration.NotifyKeyspaceEvents,
-			//		},
-			//	},
-			//},
+			Instance: cloudcontrolv1beta1.RedisClusterInfo{
+				Azure: &cloudcontrolv1beta1.RedisClusterAzure{
+					SKU:          cloudcontrolv1beta1.AzureRedisClusterSKU{Capacity: redisSKUCapacity},
+					RedisVersion: azureRedisCluster.Spec.RedisVersion,
+					ShardCount:   0,
+					RedisConfiguration: cloudcontrolv1beta1.RedisInstanceAzureConfigs{
+						MaxClients:                     azureRedisCluster.Spec.RedisConfiguration.MaxClients,
+						MaxFragmentationMemoryReserved: azureRedisCluster.Spec.RedisConfiguration.MaxFragmentationMemoryReserved,
+						MaxMemoryDelta:                 azureRedisCluster.Spec.RedisConfiguration.MaxMemoryDelta,
+						MaxMemoryPolicy:                azureRedisCluster.Spec.RedisConfiguration.MaxMemoryPolicy,
+						MaxMemoryReserved:              azureRedisCluster.Spec.RedisConfiguration.MaxMemoryReserved,
+						NotifyKeyspaceEvents:           azureRedisCluster.Spec.RedisConfiguration.NotifyKeyspaceEvents,
+					},
+				},
+			},
 		},
 	}
 
-	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpRedisCluster)
+	err = state.KcpCluster.K8sClient().Create(ctx, state.KcpRedisCluster)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating KCP RedisCluster", composed.StopWithRequeue, ctx)
 	}

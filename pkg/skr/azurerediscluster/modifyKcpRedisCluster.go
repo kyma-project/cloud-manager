@@ -23,7 +23,7 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 		return nil, nil
 	}
 
-	_, redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
+	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
 
 	if err != nil {
 		errMsg := "Failed to map redisTier to SKU Capacity"
