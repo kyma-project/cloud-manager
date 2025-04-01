@@ -17,7 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"os"
 
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
@@ -131,8 +133,15 @@ func main() {
 		opts.Development = true
 	}
 
+	baseCtx := context.Background()
+	baseCtx = feature.ContextBuilderFromCtx(baseCtx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Plane(featuretypes.PlaneKcp).
+		Build(baseCtx)
+
 	rootLogger := zap.New(zap.UseFlagOptions(&opts))
 	rootLogger = rootLogger.WithSink(util.NewLogFilterSink(rootLogger.GetSink()))
+	baseCtx = composed.LoggerIntoCtx(baseCtx, rootLogger)
 	ctrl.SetLogger(rootLogger)
 
 	setupLog.WithValues(
@@ -146,7 +155,13 @@ func main() {
 	setupLog.WithValues("config", cfg.PrintJson()).
 		Info("Config dump")
 
+	skrRegistry := skrruntime.NewRegistry(skrScheme)
+	activeSkrCollection := skrruntime.NewActiveSkrCollection(rootLogger.WithName("skr-collection"))
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		BaseContext: func() context.Context {
+			return baseCtx
+		},
 		Scheme:                 kcpScheme,
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
@@ -177,8 +192,12 @@ func main() {
 
 	ctx := ctrl.SetupSignalHandler()
 
-	skrRegistry := skrruntime.NewRegistry(skrScheme)
-	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
+	ctx = feature.ContextBuilderFromCtx(ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Plane(featuretypes.PlaneKcp).
+		Build(ctx)
+
+	skrLoop := skrruntime.NewLooper(activeSkrCollection, mgr, skrScheme, skrRegistry, mgr.GetLogger())
 
 	//Get env
 	env := abstractions.NewOSEnvironment()
@@ -287,8 +306,12 @@ func main() {
 	//}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), activeSkrCollection, gcpclient.NewServiceUsageClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupKymaReconciler(mgr, activeSkrCollection); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Kyma")
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
@@ -343,7 +366,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupNukeReconciler(
 		mgr,
-		skrLoop,
+		activeSkrCollection,
 		gcpnfsbackupclient.NewFileBackupClientProvider(),
 		awsnukenfsclient.NewClientProvider(),
 		env,
@@ -383,11 +406,6 @@ func main() {
 	if err := feature.Initialize(ctx, rootLogger.WithName("ff")); err != nil {
 		setupLog.Error(err, "problem initializing feature flags")
 	}
-
-	ctx = feature.ContextBuilderFromCtx(ctx).
-		Landscape(os.Getenv("LANDSCAPE")).
-		Plane(featuretypes.PlaneKcp).
-		Build(ctx)
 
 	go func() {
 		err := cfg.Watch(ctx.Done(), func(_ fsnotify.Event) {

@@ -127,6 +127,26 @@ func initCrds(projectRoot string) (dirSkr, dirKcp, dirGarden string, err error) 
 		}
 	}
 
+	// copy KIM CRDs
+	{
+		operatorCrdsDir := filepath.Join(projectRoot, "config", "crd", "kim")
+		list, err = os.ReadDir(operatorCrdsDir)
+		if err != nil {
+			err = fmt.Errorf("error listing KIM crds: %w", err)
+			return
+		}
+		for _, f := range list {
+			err = copyFile(
+				filepath.Join(operatorCrdsDir, f.Name()),
+				filepath.Join(dirKcp, f.Name()),
+			)
+			if err != nil {
+				err = fmt.Errorf("error copying KIM crd %s: %w", f.Name(), err)
+				return
+			}
+		}
+	}
+
 	crdsInitialized = true
 	return
 }

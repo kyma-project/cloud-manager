@@ -5,7 +5,6 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"strings"
 )
 
 func scopeCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -13,13 +12,13 @@ func scopeCreate(ctx context.Context, st composed.State) (error, context.Context
 
 	switch state.provider {
 	case cloudcontrolv1beta1.ProviderGCP:
-		return createScopeGcp(ctx, state)
+		return scopeCreateGcp(ctx, state)
 	case cloudcontrolv1beta1.ProviderAzure:
-		return createScopeAzure(ctx, state)
+		return scopeCreateAzure(ctx, state)
 	case cloudcontrolv1beta1.ProviderAws:
-		return createScopeAws(ctx, state)
+		return scopeCreateAws(ctx, state)
 	case cloudcontrolv1beta1.ProviderOpenStack:
-		return createScopeOpenStack(ctx, state)
+		return scopeCreateOpenStack(ctx, state)
 	}
 
 	err := fmt.Errorf("unable to handle unknown provider '%s'", state.provider)
@@ -27,9 +26,4 @@ func scopeCreate(ctx context.Context, st composed.State) (error, context.Context
 	logger.Error(err, "Error defining scope")
 	return composed.StopAndForget, nil // no requeue
 
-}
-
-func commonVpcName(shootNamespace, shootName string) string {
-	project := strings.TrimPrefix(shootNamespace, "garden-")
-	return fmt.Sprintf("shoot--%s--%s", project, shootName)
 }

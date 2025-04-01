@@ -64,7 +64,7 @@ func enableApisGcp(ctx context.Context, st composed.State) (error, context.Conte
 
 	if len(scope.Status.GcpOperations) == 0 {
 		logger.Info("All APIs are enabled. Proceeding to next step.")
-		return nil, nil
+		return nil, ctx
 	}
 	return composed.PatchStatus(scope).
 		ErrorLogMessage("Error patching KCP Scope status with updates of pending operations").

@@ -9,6 +9,7 @@ import (
 	awsnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke"
 	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -44,7 +45,9 @@ func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	state := r.stateFactory.NewState(req)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("nuke", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *nukeReconciler) newAction() composed.Action {
