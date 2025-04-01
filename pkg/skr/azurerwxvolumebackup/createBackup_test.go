@@ -101,6 +101,7 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(ctx, state)
 
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 
 			})
 
@@ -111,6 +112,7 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(ctx, state)
 
 				assert.Equal(t, composed.StopAndForget, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
 
 			})
 
@@ -121,6 +123,7 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(ctx, state)
 
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 
 			})
 
@@ -135,6 +138,7 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(ctx, state)
 
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
 
 			})
 
@@ -157,6 +161,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - fail CreateBackupPolicy"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 
 			})
 
@@ -165,6 +170,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - fail ListBackupProtectableItems"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 			})
 
 			t.Run("ListBackupProtectableItems - zero matching protectable items", func(t *testing.T) {
@@ -172,6 +178,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - zero"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 			})
 
 			t.Run("ListBackupProtectableItems -  more than one matching protectable items", func(t *testing.T) {
@@ -179,6 +186,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - more than 1"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopAndForget, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
 			})
 
 			t.Run("ListBackupProtectableItems -  no matching protectable items", func(t *testing.T) {
@@ -186,6 +194,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - zero"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 			})
 
 			t.Run("ListBackupProtectableItems - exactly one protectable item with nil name", func(t *testing.T) {
@@ -193,6 +202,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - one nil"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopAndForget, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
 			})
 
 			t.Run("CreateOrUpdateProtectedItem - Fails", func(t *testing.T) {
@@ -200,6 +210,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - one fail CreateOrUpdateProtectedItem"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 
 			})
 
@@ -208,6 +219,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - one pass CreateOrUpdateProtectedItem - fail TriggerBackup"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
 
 			})
 
@@ -220,6 +232,7 @@ func TestCreateBackup(t *testing.T) {
 				state.vaultName = "vaultName - one pass CreateOrUpdateProtectedItem - succeed TriggerBackup"
 				err, _ := createBackup(ctx, state)
 				assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T60000ms()), err)
+				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
 
 			})
 
