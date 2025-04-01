@@ -1,6 +1,7 @@
 module github.com/kyma-project/cloud-manager
 
 go 1.24.1
+
 require (
 	cloud.google.com/go/compute v1.34.1
 	cloud.google.com/go/redis v1.18.0
