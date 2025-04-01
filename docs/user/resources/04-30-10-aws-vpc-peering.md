@@ -32,7 +32,10 @@ This table lists the parameters of the given resource together with their descri
 
 ## RemoteRouteTableUpdateStrategy
 
-Once VPC peering is established Cloud Manager adds peering route to the route tables associated with remote network.
+Once VPC peering is established Cloud Manager updates route tables for a VPC peering connection. To enable private IPv4 
+traffic between instances in peered VPC networks, Cloud Manager adds a route to the route tables associated with the 
+remote VPC network. The route destination is the CIDR block of the Kyma VPC network and the target is the ID of the VPC 
+peering connection.
 
 Parameter `RemoteRouteTableUpdateStrategy` specifies how Cloud Manager handles remote route tables:
 - `AUTO` adds peering route to all remote route tables.
