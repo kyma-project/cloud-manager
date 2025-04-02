@@ -18,7 +18,7 @@ type vaultMockClient struct {
 func (m *vaultMockClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
 
 	// unhappy path
-	if resourceGroupName == "http-error" {
+	if ctx.Value("CreateVault") == "fail" {
 		return nil, errors.New("some error")
 	}
 

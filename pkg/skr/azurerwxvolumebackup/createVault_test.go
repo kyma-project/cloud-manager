@@ -36,21 +36,21 @@ func TestCreateVault(t *testing.T) {
 			assert.Equal(t, ctx, res, "should return same context")
 			assert.Equal(t, composed.StopAndForget, err, "should expect stop and forget")
 
-			//assert.Equal(t, nil, err)
-			//assert.Equal(t, nil, res)
-
 		})
 
-		t.Run("unhappy path", func(t *testing.T) {
+		t.Run("unhappy path - vault doesn't exist and http error", func(t *testing.T) {
 
 			// Arrange
-			state.resourceGroupName = "http-error"
+			backup.Spec.Location = "useast"
+			kvp := map[string]string{"CreateVault": "fail"}
+
+			newCtx := addValuesToContext(ctx, kvp)
 
 			// Act
-			err, res := createVault(ctx, state)
+			err, res := createVault(newCtx, state)
 
 			// Assert
-			assert.Equal(t, ctx, res, "should return same context")
+			assert.Equal(t, newCtx, res, "should return same context")
 			assert.Equal(t, composed.StopWithRequeue, err, "should expect stop with requeue")
 
 		})
