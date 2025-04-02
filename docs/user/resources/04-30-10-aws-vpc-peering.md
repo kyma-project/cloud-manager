@@ -32,7 +32,7 @@ This table lists the parameters of the given resource together with their descri
 
 ## RemoteRouteTableUpdateStrategy
 
-To enable private Internet Protocol version 4 (IPv4) traffic between instances in the peered VPC networks, Cloud Manager adds a route to the route tables associated with the remote VPC network. The route destination is the Classless Inter-Domain Routing (CIDR) block of the Kyma VPC network, and the target is the ID of the VPC peering connection.
+To enable private Internet Protocol version 4 (IPv4) traffic between instances in peered VPC networks, Cloud Manager adds a peering route to the route tables associated with the remote VPC network. The route destination is the Classless Inter-Domain Routing (CIDR) block of the Kyma VPC network, and the target is the ID of the VPC peering connection.
 
 Once VPC peering is established, Cloud Manager updates the route tables for the VPC peering connection. 
 
