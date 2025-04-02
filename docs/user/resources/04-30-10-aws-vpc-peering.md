@@ -15,7 +15,7 @@ This table lists the parameters of the given resource together with their descri
 | **remoteAccountId**                | string | Required. Specifies the Amazon Web Services account ID of the owner of the accepter VPC.                                         |
 | **remoteRegion**                   | string | Required. Specifies the Region code for the accepter VPC.                                                                        |
 | **remoteVpcId**                    | string | Required. Specifies the ID of the VPC with which you are creating the VPC peering connection                                     |
-| **remoteRouteTableUpdateStrategy** | string | Optional. Specifies the remote route table update strategy. The value is one of the following: `AUTO`, `MATCHED`, `UNMATCHED`, or `NONE`. Defaults to `AUTO`. For more information, see [RemoteRouteTableUpdateStrategy](#RemoteRouteTableUpdateStrategy).  |
+| **remoteRouteTableUpdateStrategy** | string | Optional. Specifies the remote route table update strategy. The value is one of the following: `AUTO`, `MATCHED`, `UNMATCHED`, or `NONE`. Defaults to `AUTO`. For more information, see [RemoteRouteTableUpdateStrategy](#RemoteRouteTableUpdateStrategy). <!-- markdown-link-check-disable-line --> |
 
 **Status:**
 
