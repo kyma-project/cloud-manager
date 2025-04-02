@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 
 	"go.uber.org/zap/zapcore"
@@ -143,6 +144,7 @@ var _ = BeforeSuite(func() {
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().FileBackupClientProvider(),
 		awsnukeclient.Mock(),
+		azurenukeclient.NukeProvider(infra.AzureMock().StorageProvider()),
 		env,
 	)).To(Succeed())
 

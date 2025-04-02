@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
@@ -9,6 +10,7 @@ import (
 
 type ProtectedItemsClient interface {
 	CreateOrUpdateProtectedItem(ctx context.Context, subscriptionId, location, vaultName, resourceGroupName, containerName, protectedItemName, backupPolicyName, storageAccountName string) error
+	RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error
 }
 
 type protectedItemsClient struct {
@@ -53,4 +55,10 @@ func (c protectedItemsClient) CreateOrUpdateProtectedItem(ctx context.Context, s
 
 	return nil
 
+}
+
+func (c protectedItemsClient) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
+	fabricName := "Azure"
+	_, err := c.azureClient.Delete(ctx, vaultName, resourceGroupName, fabricName, containerName, protectedItemName, nil)
+	return err
 }

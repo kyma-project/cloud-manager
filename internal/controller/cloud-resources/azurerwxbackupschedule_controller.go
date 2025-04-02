@@ -18,7 +18,9 @@ package cloudresources
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -65,6 +67,11 @@ func (f *AzureRwxBackupScheduleReconcilerFactory) New(args reconcile2.Reconciler
 }
 
 func SetupAzureRwxBackupScheduleReconciler(reg skrruntime.SkrRegistry, env abstractions.Environment) error {
+
+	//If Azure RWX Backup feature is not enabled, return.
+	if !feature.FFRwxBackupAzure.Value(context.Background()) {
+		return nil
+	}
 
 	return reg.Register().
 		WithFactory(&AzureRwxBackupScheduleReconcilerFactory{env: env}).
