@@ -2,8 +2,9 @@ package client
 
 import (
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"regexp"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
 type pvVolumeHandleRegexGroupKey string
@@ -30,6 +31,8 @@ const (
 const pvVolumeHandlePattern = "(?<resourceGroupName>[^\\#]*)#(?<storageAccountName>[^\\#]*)#(?<fileShareName>[^\\#]*)#(?<placeHolder>[^\\#]*)#(?<uuid>[^\\#]*)#(?<secretNamespace>[^\\#]+)"
 
 const recoverPointIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/(?<protectedItem>[^\\/]*)\\/recoveryPoints\\/(?<recoveryPointId>[^\\/]*)"
+const vaultIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)"
+const protectedItemIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/AzureFileShare;(?<protectedItem>[^\\/]*)"
 
 const (
 	storageAccountPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.Storage/storageAccounts/%v"
@@ -37,12 +40,15 @@ const (
 	vaultPathPattern          = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v"
 	containerNamePattern      = "StorageContainer;Storage;%v;%v"
 	recoveryPointPathPattern  = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v/backupFabrics/Azure/protectionContainers/%v/protectedItems/%v/recoveryPoints/%v"
+	fileSharePathPattern      = "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.RecoveryServices/vaults/%s/backupFabrics/Azure/protectionContainers/%s/protectedItems/AzureFileShare;%s"
 )
 
 const storageProvisionerKey = "volume.kubernetes.io/storage-provisioner"
 const azureFileShareProvisioner = "file.csi.azure.com"
 
 const AzureFabricName = "Azure"
+const TagNameCloudManager = "cloud-manager"
+const TagValueRwxVolumeBackup = "rwxVolumeBackup"
 
 func GetStorageAccountPath(subscriptionId, resourceGroupName, storageAccountName string) string {
 	return fmt.Sprintf(storageAccountPathPattern, subscriptionId, resourceGroupName, storageAccountName)
@@ -64,6 +70,11 @@ func GetRecoveryPointPath(subscriptionId, resourceGroupName, vaultName, storageA
 	containerName := GetContainerName(resourceGroupName, storageAccountName)
 	return fmt.Sprintf(recoveryPointPathPattern, subscriptionId, resourceGroupName, vaultName, containerName, protectedItemName, recoveryPointName)
 }
+
+func GetFileSharePath(subscriptionId, resourceGroupName, vaultName, containerName, fileShareName string) string {
+	return fmt.Sprintf(fileSharePathPattern, subscriptionId, resourceGroupName, vaultName, containerName, fileShareName)
+}
+
 func ParsePvVolumeHandle(pvVolumeHandle string) (resourceGroupName string, storageAccountName string, fileShareName string, uuid string, secretNamespace string, err error) {
 	re := regexp.MustCompile(pvVolumeHandlePattern)
 	match := re.FindStringSubmatch(pvVolumeHandle)
@@ -111,4 +122,34 @@ func PrettyPrintJobErrorDetails(details []*armrecoveryservicesbackup.AzureStorag
 		}
 	}
 	return result
+}
+
+func ParseVaultId(vaultId string) (subscription string, resourceGroup string, vault string, err error) {
+	re := regexp.MustCompile(vaultIdPattern)
+	match := re.FindStringSubmatch(vaultId)
+	if match == nil {
+		return "", "", "", fmt.Errorf("vaultId %s does not match pattern %s", vaultId, vaultIdPattern)
+	}
+	result := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	return result["subscription"], result["resourceGroup"], result["vault"], nil
+}
+
+func ParseProtectedItemId(protectedId string) (subscription string, resourceGroup string, vault string, container string, protectedItem string, err error) {
+	re := regexp.MustCompile(protectedItemIdPattern)
+	match := re.FindStringSubmatch(protectedId)
+	if match == nil {
+		return "", "", "", "", "", fmt.Errorf("protectedItemId %s does not match pattern %s", protectedId, protectedItemIdPattern)
+	}
+	result := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	return result["subscription"], result["resourceGroup"], result["vault"], result["container"], result["protectedItem"], nil
 }

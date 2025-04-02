@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -25,9 +24,6 @@ var _ client.RecoveryPointClient = &storageStore{}
 var _ client.ProtectedItemsClient = &storageStore{}
 var _ client.ProtectionPoliciesClient = &storageStore{}
 var _ client.BackupProtectableItemsClient = &storageStore{}
-
-const vaultPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v"
-const protectedPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v/backupFabrics/Azure/protectionContainers/%v/protectedItems/AzureFileShare;%v"
 
 type storageStore struct {
 	m            sync.Mutex
@@ -114,8 +110,8 @@ func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscrip
 	defer s.m.Unlock()
 	logger := composed.LoggerFromCtx(ctx)
 
-	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
-	id := fmt.Sprintf(protectedPathPattern, s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
+	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
 	protected := armrecoveryservicesbackup.ProtectedItemResource{
 		Location: to.Ptr(location),
 		ID:       to.Ptr(id),
@@ -140,8 +136,8 @@ func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resource
 	defer s.m.Unlock()
 	logger := composed.LoggerFromCtx(ctx)
 
-	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
-	id := fmt.Sprintf(protectedPathPattern, s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
+	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
 
 	protectedItems, okay := s.protectedItems[vaultId]
 	if !okay {
@@ -175,7 +171,7 @@ func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string
 	defer s.m.Unlock()
 	logger := composed.LoggerFromCtx(ctx)
 
-	id := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	id := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	vault := armrecoveryservices.Vault{
 		Location: to.Ptr(location),
 		ID:       to.Ptr(id),
@@ -196,7 +192,7 @@ func (s *storageStore) DeleteVault(ctx context.Context, resourceGroupName string
 	logger := composed.LoggerFromCtx(ctx)
 
 	temp := s.vaults[:0]
-	id := to.Ptr(fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName))
+	id := to.Ptr(client.GetVaultPath(s.subscription, resourceGroupName, vaultName))
 	for _, vault := range s.vaults {
 		if ptr.Deref(vault.ID, "") != ptr.Deref(id, "") {
 			temp = append(temp, vault)
@@ -225,7 +221,7 @@ func (s *storageStore) ListProtectedItems(ctx context.Context, vaultName string,
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	vaultId := fmt.Sprintf(vaultPathPattern, s.subscription, resourceGroupName, vaultName)
+	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	items := s.protectedItems[vaultId]
 
 	logger := composed.LoggerFromCtx(ctx)
