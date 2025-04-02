@@ -65,7 +65,7 @@ import (
 	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 
-	//azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -297,10 +297,10 @@ func main() {
 	//	os.Exit(1)
 	//}
 
-	//if err = cloudresourcescontroller.SetupAzureRwxRestoreReconciler(skrRegistry); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxVolumeRestore")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupAzureRwxRestoreReconciler(skrRegistry, azurerwxvolumebackupclient.NewClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxVolumeRestore")
+		os.Exit(1)
+	}
 
 	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")

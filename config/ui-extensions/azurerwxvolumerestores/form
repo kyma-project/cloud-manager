@@ -1,0 +1,23 @@
+- path: spec.source.backup
+  name: spec.source.backup
+  required: true
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.source.backup.name
+      required: true
+    - path: namespace
+      name: spec.source.backup.namespace
+      required: false
+
+- path: spec.destination.pvc
+  name: spec.destination.pvc
+  required: true
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.destination.pvc.name
+      required: true
+    - path: namespace
+      name: spec.destination.pvc.namespace
+      required: false

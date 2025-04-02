@@ -24,7 +24,7 @@ spec:
         - jsonPath: .spec.source.backup.name
           name: Source
           type: string
-        - jsonPath: .spec.destination.volume.name
+        - jsonPath: .spec.destination.pvc.name
           name: Destination
           type: string
         - jsonPath: .status.state
