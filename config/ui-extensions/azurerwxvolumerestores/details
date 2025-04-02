@@ -1,0 +1,32 @@
+body:
+  - name: spec.source.backup
+    widget: Panel
+    source: spec.source.backup
+    children:
+      - widget: Labels
+        source: name
+        name: spec.source.backup.name
+      - widget: Labels
+        source: namespace
+        name: spec.source.backup.namespace
+  - name: spec.destination.pvc
+    widget: Panel
+    source: spec.destination.pvc
+    children:
+      - widget: Labels
+        source: name
+        name: spec.destination.pvc.name
+      - widget: Labels
+        source: namespace
+        name: spec.destination.pvc.namespace
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.state
+        source: state
+        widget: Labels
+      - name: status.restoredDir
+        source: restoredDir
+        widget: Labels
+

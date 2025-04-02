@@ -90,7 +90,7 @@ type AzureRwxVolumeRestoreStatus struct {
 // +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Source",type="string",JSONPath=".spec.source.backup.name"
-// +kubebuilder:printcolumn:name="Destination",type="string",JSONPath=".spec.destination.volume.name"
+// +kubebuilder:printcolumn:name="Destination",type="string",JSONPath=".spec.destination.pvc.name"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AzureRwxVolumeRestore is the Schema for the azurerwxvolumerestores API
