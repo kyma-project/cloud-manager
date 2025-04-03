@@ -272,10 +272,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	//if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
+		os.Exit(1)
+	}
 
 	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
