@@ -86,12 +86,23 @@ const (
 	GcpPurposePSC   = GcpPurpose("PRIVATE_SERVICE_CONNECT")
 )
 
+// +kubebuilder:validation:Enum=GLOBAL_ADDRESS;PRIVATE_SUBNET;
+type GcpIpRangeType string
+
+const (
+	GcpIpRangeTypeGLOBAL_ADDRESS = GcpIpRangeType("GLOBAL_ADDRESS") // PSA
+	GcpIpRangeTypePRIVATE_SUBNET = GcpIpRangeType("PRIVATE_SUBNET")
+)
+
 type IpRangeGcp struct {
 	// +kubebuilder:default=VPC_PEERING
 	Purpose GcpPurpose `json:"purpose,omitempty"`
 
 	// +kubebuilder:default=servicenetworking.googleapis.com
 	PsaService string `json:"psaService,omitempty"`
+
+	// +kubebuilder:default=GLOBAL_ADDRESS
+	Type GcpIpRangeType `json:"type,omitempty"`
 }
 
 type IpRangeAzure struct {
