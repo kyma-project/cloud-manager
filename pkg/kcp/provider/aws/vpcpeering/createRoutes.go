@@ -24,11 +24,11 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 	obj := state.ObjAsVpcPeering()
 
 	for _, t := range state.routeTables {
-		cidrBlocks := pie.Filter(state.remoteVpc.CidrBlockAssociationSet, func(association types.VpcCidrBlockAssociation) bool {
-			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(association.CidrBlock, state.vpc.CidrBlock)
+		cidrBlockAssociations := pie.Filter(state.remoteVpc.CidrBlockAssociationSet, func(cidrBlockAssociation types.VpcCidrBlockAssociation) bool {
+			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(cidrBlockAssociation.CidrBlock, state.vpc.CidrBlock)
 		})
 
-		for _, cidrBlockAssociation := range cidrBlocks {
+		for _, cidrBlockAssociation := range cidrBlockAssociations {
 
 			cidrBlock := cidrBlockAssociation.CidrBlock
 

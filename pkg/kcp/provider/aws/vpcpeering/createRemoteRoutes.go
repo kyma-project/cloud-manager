@@ -31,11 +31,11 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 			state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy,
 			state.Scope().Spec.ShootName)
 
-		cidrBlocks := pie.Filter(state.vpc.CidrBlockAssociationSet, func(association types.VpcCidrBlockAssociation) bool {
-			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(association.CidrBlock, state.vpc.CidrBlock)
+		cidrBlockAssociations := pie.Filter(state.vpc.CidrBlockAssociationSet, func(cidrBlockAssociation types.VpcCidrBlockAssociation) bool {
+			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(cidrBlockAssociation.CidrBlock, state.vpc.CidrBlock)
 		})
 
-		for _, cidrBlockAssociation := range cidrBlocks {
+		for _, cidrBlockAssociation := range cidrBlockAssociations {
 
 			cidrBlock := cidrBlockAssociation.CidrBlock
 
