@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
@@ -23,7 +24,11 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 	obj := state.ObjAsVpcPeering()
 
 	for _, t := range state.routeTables {
-		for _, cidrBlockAssociation := range state.remoteVpc.CidrBlockAssociationSet {
+		cidrBlocks := pie.Filter(state.remoteVpc.CidrBlockAssociationSet, func(association types.VpcCidrBlockAssociation) bool {
+			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(association.CidrBlock, state.vpc.CidrBlock)
+		})
+
+		for _, cidrBlockAssociation := range cidrBlocks {
 
 			cidrBlock := cidrBlockAssociation.CidrBlock
 

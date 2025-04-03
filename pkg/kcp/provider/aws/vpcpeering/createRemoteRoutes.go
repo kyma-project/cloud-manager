@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +31,11 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 			state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy,
 			state.Scope().Spec.ShootName)
 
-		for _, cidrBlockAssociation := range state.vpc.CidrBlockAssociationSet {
+		cidrBlocks := pie.Filter(state.vpc.CidrBlockAssociationSet, func(association types.VpcCidrBlockAssociation) bool {
+			return peeringconfig.VpcPeeringConfig.RouteAsociatedCidrBlocks || ptr.Equal(association.CidrBlock, state.vpc.CidrBlock)
+		})
+
+		for _, cidrBlockAssociation := range cidrBlocks {
 
 			cidrBlock := cidrBlockAssociation.CidrBlock
 
