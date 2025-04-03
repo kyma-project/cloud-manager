@@ -177,7 +177,6 @@ func TestCreateBackup(t *testing.T) {
 
 			t.Run("CreateBackupPolicy fails", func(t *testing.T) {
 				backup.Status.Id = "asdf"
-				//state.vaultName = "vaultName - fail CreateBackupPolicy"
 				kvp := map[string]string{
 					"CreateBackupPolicy": "fail",
 				}
@@ -190,7 +189,6 @@ func TestCreateBackup(t *testing.T) {
 
 			t.Run("ListBackupProtectableItems - Fail", func(t *testing.T) {
 				backup.Status.Id = "asdf"
-				//state.vaultName = "vaultName - fail ListBackupProtectableItems"
 				kvp := map[string]string{
 					"ListBackupProtectableItems": "fail",
 				}
@@ -202,7 +200,6 @@ func TestCreateBackup(t *testing.T) {
 
 			t.Run("ListBackupProtectableItems - zero matching protectable items", func(t *testing.T) {
 				backup.Status.Id = "asdf"
-				//state.vaultName = "vaultName - zero"
 				kvp := map[string]int{
 					"ListBackupProtectableItems match": 0,
 				}
@@ -221,7 +218,6 @@ func TestCreateBackup(t *testing.T) {
 				}
 				newCtx := addValuesToContext(ctx, kvp)
 
-				//state.vaultName = "vaultName - more than 1"
 				err, _ := createBackup(newCtx, state)
 				assert.Equal(t, composed.StopAndForget, err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
@@ -246,7 +242,6 @@ func TestCreateBackup(t *testing.T) {
 
 			t.Run("CreateOrUpdateProtectedItem - Fails", func(t *testing.T) {
 				backup.Status.Id = "asdf"
-				state.vaultName = "vaultName - one fail CreateOrUpdateProtectedItem"
 
 				kvp := map[string]int{
 					"ListBackupProtectableItems match": 1,
@@ -254,9 +249,13 @@ func TestCreateBackup(t *testing.T) {
 				kvp2 := map[string]bool{
 					"NilName": false,
 				}
+				kvp3 := map[string]string{
+					"CreateOrUpdateProtectedItem": "fail",
+				}
 
 				newCtx := addValuesToContext(ctx, kvp)
 				newCtx = addValuesToContext(newCtx, kvp2)
+				newCtx = addValuesToContext(newCtx, kvp3)
 				err, _ := createBackup(newCtx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
@@ -280,7 +279,6 @@ func TestCreateBackup(t *testing.T) {
 				newCtx = addValuesToContext(newCtx, kvp2)
 				newCtx = addValuesToContext(newCtx, kvp3)
 
-				//state.vaultName = "vaultName - one pass CreateOrUpdateProtectedItem - fail TriggerBackup"
 				err, _ := createBackup(newCtx, state)
 				assert.Equal(t, composed.StopWithRequeue, err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
@@ -294,7 +292,19 @@ func TestCreateBackup(t *testing.T) {
 			t.Run("CreateOrUpdateProtectedItem succeeds and TriggerBackup succeeds", func(t *testing.T) {
 				backup.Status.Id = "asdf"
 				state.vaultName = "vaultName - one pass CreateOrUpdateProtectedItem - succeed TriggerBackup"
-				err, _ := createBackup(ctx, state)
+				kvp := map[string]int{
+					"ListBackupProtectableItems match": 1,
+				}
+				kvp2 := map[string]bool{
+					"NilName": false,
+				}
+				//kvp3 := map[string]string{
+				//	"TriggerBackup": "fail",
+				//}
+				newCtx := addValuesToContext(ctx, kvp)
+				newCtx = addValuesToContext(newCtx, kvp2)
+				//newCtx = addValuesToContext(newCtx, kvp3)
+				err, _ := createBackup(newCtx, state)
 				assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T60000ms()), err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
 

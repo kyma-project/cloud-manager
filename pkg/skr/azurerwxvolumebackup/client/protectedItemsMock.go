@@ -23,7 +23,7 @@ func (m *protectedItemsMockClient) CreateOrUpdateProtectedItem(ctx context.Conte
 	backupPolicyName,
 	storageAccountName string) error {
 
-	if vaultName == "vaultName - one fail CreateOrUpdateProtectedItem" {
+	if ctx.Value("CreateOrUpdateProtectedItem") == "fail" {
 		return errors.New("failed CreateOrUpdateProtectedItem")
 	}
 
