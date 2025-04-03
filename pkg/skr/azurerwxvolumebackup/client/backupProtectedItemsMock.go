@@ -20,11 +20,11 @@ func (m *backupProtectedItemsMockClient) ListProtectedItems(ctx context.Context,
 	var friendlyName = "matchingFileShareName"
 	var protectedItemName = "ProtectedItemName"
 
-	if vaultName == "fail ListProtectedItems" {
+	if ctx.Value("ListProtectedItems") == "fail" {
 		return result, errors.New("failed ListProtectedItems")
 	}
 
-	if vaultName == "more than 1" {
+	if ctx.Value("ListProtectedItems match") == 2 {
 
 		protectedItems := []*armrecoveryservicesbackup.ProtectedItemResource{
 			{Name: &protectedItemName, Properties: &armrecoveryservicesbackup.AzureFileshareProtectedItem{FriendlyName: &friendlyName}},
@@ -35,7 +35,7 @@ func (m *backupProtectedItemsMockClient) ListProtectedItems(ctx context.Context,
 
 	}
 
-	if vaultName == "exactly 1 - fail" || vaultName == "exactly 1 - succeed" {
+	if ctx.Value("ListProtectedItems match") == 1 {
 		protectedItems := []*armrecoveryservicesbackup.ProtectedItemResource{
 			{Name: &protectedItemName, Properties: &armrecoveryservicesbackup.AzureFileshareProtectedItem{FriendlyName: &friendlyName}},
 		}

@@ -15,7 +15,7 @@ type protectionPoliciesMockClient struct {
 
 func (m *protectionPoliciesMockClient) CreateBackupPolicy(ctx context.Context, vaultName, resourceGroupName, policyName string) error {
 
-	if vaultName == "vaultName - fail CreateBackupPolicy" {
+	if ctx.Value("CreateBackupPolicy") == "fail" {
 		return errors.New("failed to create backup polic")
 	}
 

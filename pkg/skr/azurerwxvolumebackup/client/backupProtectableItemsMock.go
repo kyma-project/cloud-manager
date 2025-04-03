@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
-	"strings"
 )
 
 func newBackupProtectableItemsMockClient() *backupProtectableItemsClient {
@@ -20,11 +19,11 @@ func (m *backupProtectableItemsMockClient) ListBackupProtectableItems(ctx contex
 	var result []*armrecoveryservicesbackup.WorkloadProtectableItemResource
 	var friendlyName = "matchingFileShareName"
 
-	if vaultName == "vaultName - fail ListBackupProtectableItems" {
+	if ctx.Value("ListBackupProtectableItems") == "fail" {
 		return result, errors.New("failed ListBackupProtectableItems")
 	}
 
-	if vaultName == "vaultName - more than 1" {
+	if ctx.Value("ListBackupProtectableItems match") == 2 {
 		name := "vaultName - more than 1"
 		result = append(result, &armrecoveryservicesbackup.WorkloadProtectableItemResource{
 			Name:       &name,
@@ -38,21 +37,20 @@ func (m *backupProtectableItemsMockClient) ListBackupProtectableItems(ctx contex
 
 	}
 
-	if vaultName == "vaultName - one nil" {
-		result = append(result, &armrecoveryservicesbackup.WorkloadProtectableItemResource{
-			Name:       nil,
-			Properties: &armrecoveryservicesbackup.AzureFileShareProtectableItem{FriendlyName: &friendlyName},
-		},
-		)
+	if ctx.Value("ListBackupProtectableItems match") == 1 {
 
-		return result, nil
+		if ctx.Value("NilName") == true {
+			result = append(result, &armrecoveryservicesbackup.WorkloadProtectableItemResource{
+				Name:       nil,
+				Properties: &armrecoveryservicesbackup.AzureFileShareProtectableItem{FriendlyName: &friendlyName},
+			},
+			)
 
-	}
+			return result, nil
 
-	// Continues on to CreateOrUpdateProtectedItem and TriggerBackup
-	if strings.HasPrefix(vaultName, "vaultName - one") {
+		}
 
-		//if vaultName == "vaultName - one" || vaultName == "vaultName - one fail CreateOrUpdateProtectedItem" {
+		// Continues on to CreateOrUpdateProtectedItem and TriggerBackup
 		name := "vaultName - one"
 		result = append(result, &armrecoveryservicesbackup.WorkloadProtectableItemResource{
 			Name:       &name,
