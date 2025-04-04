@@ -19,7 +19,6 @@ func InitConfig(cfg config.Config) {
 			"networkTag",
 			config.SourceEnv("PEERING_NETWORK_TAG"),
 			config.SourceFile("PEERING_NETWORK_TAG"),
-			config.DefaultScalar(true),
 		),
 	)
 }
