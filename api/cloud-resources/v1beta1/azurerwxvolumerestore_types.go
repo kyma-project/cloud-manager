@@ -103,7 +103,7 @@ type AzureRwxVolumeRestore struct {
 }
 
 func (in *AzureRwxVolumeRestore) State() string {
-	return string(in.Status.State)
+	return in.Status.State
 }
 
 func (in *AzureRwxVolumeRestore) SetState(v string) {
@@ -169,5 +169,5 @@ const (
 	ConditionReasonRestoreJobCancelled             = "RestoreJobCancelled"
 	ConditionReasonRestoreJobInvalidStatus         = "RestoreJobInvalidStatus"
 	ConditionReasonRestoreJobCompletedWithWarnings = "RestoreJobCompletedWithWarnings"
-	ConditionReasonRestoreJobNotFound              = "RestoreJobNotFound"
+	ConditionReasonErrorStartingRestore            = "ErrorStartingRestore"
 )
