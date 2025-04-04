@@ -20,7 +20,7 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.Info("Starting Azure Restore")
-	_, resourceGroup, vault, container, protectedItem, _, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
+	_, resourceGroup, vault, container, protectedItem, recoveryPointId, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
 		errorMessage := fmt.Sprintf("Source AzureRwxVolumeBackup has an invalid recoveryPointId: '%v'", state.azureRwxVolumeBackup.Status.RecoveryPointId)
@@ -59,7 +59,7 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 		FabricName:               client.AzureFabricName,
 		ContainerName:            container,
 		ProtectedItemName:        protectedItem,
-		RecoveryPointId:          state.azureRwxVolumeBackup.Status.RecoveryPointId,
+		RecoveryPointId:          recoveryPointId,
 		SourceStorageAccountPath: sourceSAPath,
 		TargetStorageAccountPath: targetSAPath,
 		TargetFileShareName:      state.fileShareName,
@@ -68,7 +68,20 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 	jobId, err := state.storageClient.TriggerRestore(ctx, restoreRequest)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error starting Azure Restore ", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
+		logger.Error(err, "Error starting Azure Restore")
+		restore.Status.StartTime = nil
+		restore.Status.RestoredDir = ""
+		return composed.PatchStatus(restore).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonErrorStartingRestore,
+				Message: "Error starting Azure Restore",
+			}).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
+			SuccessLogMsg("Error patching AzureRwxVolumeRestore status").
+			Run(ctx, state)
 	}
 
 	//Update the status with opIdentifier and InProgress state.
