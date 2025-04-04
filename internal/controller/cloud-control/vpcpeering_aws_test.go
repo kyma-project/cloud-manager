@@ -352,14 +352,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 			// Additional CIDR blocks
 			Expect(awsMockRemote.GetRouteCount(remoteVpcId, kcpPeering.Status.RemoteId, localVpcCidr2)).
-				To(Equal(2))
+				To(Equal(0), fmt.Sprintf("There should be no remote routes targeting %s", localVpcCidr2))
 
 			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteMainRouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).
-				NotTo(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+				To(BeNil(), fmt.Sprintf("Route table %s should not have route with target %s and destination %s",
 					localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
 			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteRouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).
-				ToNot(BeNil(), fmt.Sprintf("Route table %s should have route with target %s and destination %s",
+				To(BeNil(), fmt.Sprintf("Route table %s should not have route with target %s and destination %s",
 					localRouteTable, kcpPeering.Status.Id, remoteVpcCidr))
 
 			Expect(awsMockRemote.GetRoute(wrong3VpcId, wrong3RouteTable, kcpPeering.Status.RemoteId, localVpcCidr2)).

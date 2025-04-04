@@ -18,7 +18,6 @@ func TestConfigFromEnv(t *testing.T) {
 	cfg.Read()
 
 	assert.Equal(t, "e2e", VpcPeeringConfig.NetworkTag)
-	assert.Equal(t, true, VpcPeeringConfig.RouteAsociatedCidrBlocks)
 }
 
 func TestConfigFromFile(t *testing.T) {
@@ -37,6 +36,4 @@ networkTag: e2e
 	cfg.BaseDir(dir)
 	InitConfig(cfg)
 	cfg.Read()
-
-	assert.Equal(t, true, VpcPeeringConfig.RouteAsociatedCidrBlocks)
 }
