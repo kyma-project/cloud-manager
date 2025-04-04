@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"io"
 	"log"
-	"slices"
 )
 
 type VaultClient interface {
@@ -39,37 +37,8 @@ func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredenti
 	return vaultClient{vc}, nil
 }
 
-func (c vaultClient) vaultExists(ctx context.Context, location string) (bool, error) {
-	vaults, err := c.ListVaults(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	slices.ContainsFunc(vaults, func(vault *armrecoveryservices.Vault) bool {
-
-		if vault.Location == nil || vault.Tags == nil {
-			return false
-		}
-
-		_, tagExists := vault.Tags["cloud-manager"]
-
-		return *vault.Location == location && tagExists
-
-	})
-	return false, nil
-}
-
 // Returns operationId used to check the status
 func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
-
-	// Fail if vault exists
-	exists, err := c.vaultExists(ctx, location)
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		return nil, fmt.Errorf("vault already exists in %s", location)
-	}
 
 	poller, err := c.azureClient.BeginCreateOrUpdate(
 		ctx,

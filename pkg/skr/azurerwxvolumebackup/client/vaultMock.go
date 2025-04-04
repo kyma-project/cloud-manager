@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 )
 
@@ -17,7 +18,7 @@ type vaultMockClient struct {
 func (m *vaultMockClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
 
 	// unhappy path
-	if resourceGroupName == "http-error" {
+	if ctx.Value("CreateVault") == "fail" {
 		return nil, errors.New("some error")
 	}
 
@@ -36,7 +37,23 @@ func (m *vaultMockClient) DeleteVault(ctx context.Context, resourceGroupName str
 
 func (m *vaultMockClient) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error) {
 
-	var res []*armrecoveryservices.Vault
+	location := "uswest"
+	value := "value"
+	vaultName := fmt.Sprintf("cm-vault-%s", location)
+	res := []*armrecoveryservices.Vault{
+		&armrecoveryservices.Vault{
+			Location:   &location,
+			Etag:       nil,
+			Identity:   nil,
+			Properties: nil,
+			SKU:        nil,
+			Tags:       map[string]*string{"cloud-manager": &value},
+			ID:         nil,
+			Name:       &vaultName,
+			SystemData: nil,
+			Type:       nil,
+		},
+	}
 
 	// happy path
 	return res, nil

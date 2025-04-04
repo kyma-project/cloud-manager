@@ -246,6 +246,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	if matchingItems[0].Name == nil {
 		logger.Error(errors.New("matching item's Name is nil"), "matching item's Name is nil")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupFailed
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -267,6 +268,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 		logger.Error(err, "failed to bind backup policy to fileshare")
 		logger.Info("retrying binding backup policy to fileshare")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
@@ -287,6 +289,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 		logger.Error(err, "failed to trigger backup")
 		logger.Info("retrying trigger backup")
+		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(
 				metav1.Condition{
