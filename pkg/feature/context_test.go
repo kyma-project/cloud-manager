@@ -86,9 +86,9 @@ func TestContextBuilder(t *testing.T) {
 			}{
 				{"KCP IpRange", &cloudcontrolv1beta1.IpRange{}, "iprange.cloud-control.kyma-project.io", "", ""},
 				{"SKR AwsNfsVolume", &cloudresourcesv1beta1.AwsNfsVolume{}, "awsnfsvolume.cloud-resources.kyma-project.io", "", ""},
-				{"CRD KCP NfsInstance", crdTypedWithKindGroup(t, baseCrdTyped, "NfsInstance", "cloud-control.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "nfsinstance.cloud-control.kyma-project.io", ""},
-				{"CRD SKR GcpNfsVolume", crdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolume", "cloud-resources.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "gcpnfsvolume.cloud-resources.kyma-project.io", ""},
-				{"Busola SKR IpRange", busolaCmTypedKindGroup(t, "IpRange"), "configmap", "", "iprange.cloud-resources.kyma-project.io"},
+				{"CRD KCP NfsInstance", NewCrdTypedWithKindGroup(t, baseCrdTyped, "NfsInstance", "cloud-control.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "nfsinstance.cloud-control.kyma-project.io", ""},
+				{"CRD SKR GcpNfsVolume", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolume", "cloud-resources.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "gcpnfsvolume.cloud-resources.kyma-project.io", ""},
+				{"Busola SKR IpRange", NewBusolaCmTypedKindGroup(t, "IpRange"), "configmap", "", "iprange.cloud-resources.kyma-project.io"},
 			}
 
 			for _, info := range objList {

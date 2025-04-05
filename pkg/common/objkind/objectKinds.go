@@ -1,4 +1,4 @@
-package feature
+package objkind
 
 import (
 	"gopkg.in/yaml.v3"
@@ -21,6 +21,21 @@ type ObjectKindsInfo struct {
 	BusolaGK schema.GroupKind
 }
 
+func (info *ObjectKindsInfo) RealObjGK() schema.GroupKind {
+	if info.CrdOK {
+		return info.CrdGK
+	}
+	if info.BusolaOK {
+		return info.BusolaGK
+	}
+	return info.ObjGK
+}
+
+// ObjectKinds returns info about the provided object kinds. It accepts both types and unstructured objects.
+// It can distinguish three different cases:
+// * object is a CRD defining some obj kind
+// * object is busola configmap defining some obj kind
+// * object is itself some obj kind
 func ObjectKinds(obj client.Object, scheme *runtime.Scheme) (result ObjectKindsInfo) {
 	result.ObjGK = obj.GetObjectKind().GroupVersionKind().GroupKind()
 	if result.ObjGK.Kind == "" {

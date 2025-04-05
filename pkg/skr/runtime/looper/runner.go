@@ -120,10 +120,9 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			instlr := &installer{
 				skrStatus:        skrStatus,
 				skrProvidersPath: config.SkrRuntimeConfig.ProvidersDir,
-				scheme:           skrManager.GetScheme(),
 				logger:           logger,
 			}
-			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), skrManager)
+			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), ToCluster(skrManager))
 			if err != nil {
 				err = fmt.Errorf("installer error: %w", err)
 				logger.

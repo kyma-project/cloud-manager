@@ -71,7 +71,7 @@ type SkrStatusSaver interface {
 
 type noopSkrStatusSaver struct{}
 
-func (s *noopSkrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
+func (s *noopSkrStatusSaver) Save(_ context.Context, _ *SkrStatus) error {
 	return nil
 }
 
@@ -280,4 +280,20 @@ func (h *KindHandle) SpecCopyError(err error) {
 
 func (h *KindHandle) Success() {
 	h.ok = true
+}
+
+func (h *KindHandle) String() string {
+	s := fmt.Sprintf("%s obj:%s crd:%s busola:%s feature:%s name:%s ns:%s fn:%s ok:%v %v",
+		h.title,
+		h.objKindGroup,
+		h.crdKindGroup,
+		h.busolaKindGroup,
+		h.feature,
+		h.objName,
+		h.objNamespace,
+		h.filename,
+		h.ok,
+		h.outcomes,
+	)
+	return s
 }
