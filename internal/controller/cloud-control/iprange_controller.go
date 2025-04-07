@@ -19,6 +19,8 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -33,10 +35,10 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	v3gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 )
 
 func SetupIpRangeReconciler(
@@ -46,6 +48,8 @@ func SetupIpRangeReconciler(
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
 	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	v3ComputeProvider gcpclient.ClientProvider[v3gcpiprangeclient.ComputeClient],
+	v3NetworkConnectivityClient gcpclient.ClientProvider[v3gcpiprangeclient.NetworkConnectivityClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -57,7 +61,13 @@ func SetupIpRangeReconciler(
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
-			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
+			gcpiprange.NewStateFactory(
+				gcpSvcNetProvider,
+				gcpComputeProvider,
+				v3ComputeProvider,
+				v3NetworkConnectivityClient,
+				env,
+			),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

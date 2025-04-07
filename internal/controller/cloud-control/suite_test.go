@@ -98,6 +98,8 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
+		infra.GcpMock().ComputeClientProviderV3(),
+		infra.GcpMock().NetworkConnectivityProviderV3(),
 		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
