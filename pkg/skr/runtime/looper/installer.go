@@ -21,8 +21,46 @@ import (
 	"time"
 )
 
+type Cluster interface {
+	GetScheme() *runtime.Scheme
+	GetAPIReader() client.Reader
+	GetClient() client.Client
+}
+
+var _ Cluster = cluster.Cluster(nil)
+
+func ToCluster(clstr cluster.Cluster) Cluster {
+	return NewCluster(clstr.GetScheme(), clstr.GetAPIReader(), clstr.GetClient())
+}
+
+func NewCluster(scheme *runtime.Scheme, apiReader client.Reader, clnt client.Client) Cluster {
+	return &clusterImpl{
+		scheme:    scheme,
+		apiReader: apiReader,
+		client:    clnt,
+	}
+}
+
+type clusterImpl struct {
+	scheme    *runtime.Scheme
+	apiReader client.Reader
+	client    client.Client
+}
+
+func (c *clusterImpl) GetScheme() *runtime.Scheme {
+	return c.scheme
+}
+
+func (c *clusterImpl) GetAPIReader() client.Reader {
+	return c.apiReader
+}
+
+func (c *clusterImpl) GetClient() client.Client {
+	return c.client
+}
+
 type Installer interface {
-	Handle(ctx context.Context, provider string, skrCluster cluster.Cluster) error
+	Handle(ctx context.Context, provider string, skrCluster Cluster) error
 }
 
 var _ Installer = &installer{}
@@ -30,11 +68,10 @@ var _ Installer = &installer{}
 type installer struct {
 	skrStatus        *SkrStatus
 	skrProvidersPath string
-	scheme           *runtime.Scheme
 	logger           logr.Logger
 }
 
-func (i *installer) Handle(ctx context.Context, provider string, skrCluster cluster.Cluster) error {
+func (i *installer) Handle(ctx context.Context, provider string, skrCluster Cluster) error {
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Provider(provider).
 		Build(ctx)
@@ -74,7 +111,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster clus
 	return nil
 }
 
-func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, fn string, provider string) (int, error) {
+func (i *installer) applyFile(ctx context.Context, skrCluster Cluster, fn string, provider string) (int, error) {
 	b, err := os.ReadFile(fn)
 	if err != nil {
 		return 0, fmt.Errorf("error reading SKR install manifest %s: %w", fn, err)
@@ -115,7 +152,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 			FeatureFromObject(desired, skrCluster.GetScheme()).
 			Build(ctx)
 
-		handle := i.skrStatus.Handle(objCtx, "InstallerManfest")
+		handle := i.skrStatus.Handle(objCtx, "InstallerManifest")
 		handle.WithObj(desired)
 		handle.WithFilename(filepath.Base(fn))
 
@@ -126,7 +163,7 @@ func (i *installer) applyFile(ctx context.Context, skrCluster cluster.Cluster, f
 				"manifestFile", filepath.Base(fn),
 			)
 
-		if !common.ObjSupportsProvider(desired, i.scheme, provider) {
+		if !common.ObjSupportsProvider(desired, skrCluster.GetScheme(), provider) {
 			handle.NotSupportedByProvider()
 			//logger.Info("Object Kind does not support this provider")
 			continue

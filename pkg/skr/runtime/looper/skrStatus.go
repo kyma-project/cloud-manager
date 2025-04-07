@@ -71,7 +71,7 @@ type SkrStatusSaver interface {
 
 type noopSkrStatusSaver struct{}
 
-func (s *noopSkrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
+func (s *noopSkrStatusSaver) Save(_ context.Context, _ *SkrStatus) error {
 	return nil
 }
 
@@ -186,6 +186,14 @@ type SkrStatus struct {
 	outcome string
 }
 
+type KindForm string
+
+const (
+	KindFormObj    KindForm = "obj"
+	KindFormCrd    KindForm = "crd"
+	KindFormBusola KindForm = "busola"
+)
+
 type KindHandle struct {
 	title           string
 	objKindGroup    string
@@ -280,4 +288,30 @@ func (h *KindHandle) SpecCopyError(err error) {
 
 func (h *KindHandle) Success() {
 	h.ok = true
+}
+
+func (h *KindHandle) KindForm() KindForm {
+	if h.crdKindGroup != "" {
+		return KindFormCrd
+	}
+	if h.busolaKindGroup != "" {
+		return KindFormBusola
+	}
+	return KindFormObj
+}
+
+func (h *KindHandle) String() string {
+	s := fmt.Sprintf("%s obj:%s crd:%s busola:%s feature:%s name:%s ns:%s fn:%s ok:%v %v",
+		h.title,
+		h.objKindGroup,
+		h.crdKindGroup,
+		h.busolaKindGroup,
+		h.feature,
+		h.objName,
+		h.objNamespace,
+		h.filename,
+		h.ok,
+		h.outcomes,
+	)
+	return s
 }

@@ -1,9 +1,11 @@
-package feature
+package objkind
 
 import (
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -21,6 +23,25 @@ type ObjectKindsInfo struct {
 	BusolaGK schema.GroupKind
 }
 
+func (info *ObjectKindsInfo) RealObjGK() schema.GroupKind {
+	if info.CrdOK {
+		return info.CrdGK
+	}
+	if info.BusolaOK {
+		return info.BusolaGK
+	}
+	return info.ObjGK
+}
+
+func (info *ObjectKindsInfo) AnyOK() bool {
+	return info.ObjOK || info.CrdOK || info.BusolaOK
+}
+
+// ObjectKinds returns info about the provided object kinds. It accepts both types and unstructured objects.
+// It can distinguish three different cases:
+// * object is a CRD defining some obj kind
+// * object is busola configmap defining some obj kind
+// * object is itself some obj kind
 func ObjectKinds(obj client.Object, scheme *runtime.Scheme) (result ObjectKindsInfo) {
 	result.ObjGK = obj.GetObjectKind().GroupVersionKind().GroupKind()
 	if result.ObjGK.Kind == "" {
@@ -44,6 +65,20 @@ func ObjectKinds(obj client.Object, scheme *runtime.Scheme) (result ObjectKindsI
 			}
 		}
 		if crd, ok := obj.(*apiextensions.CustomResourceDefinition); ok {
+			crdGroup := crd.Spec.Group
+			crdKind := crd.Spec.Names.Kind
+			result.CrdGK.Group = crdGroup
+			result.CrdGK.Kind = crdKind
+			result.CrdOK = true
+		}
+		if crd, ok := obj.(*apiextensionsv1.CustomResourceDefinition); ok {
+			crdGroup := crd.Spec.Group
+			crdKind := crd.Spec.Names.Kind
+			result.CrdGK.Group = crdGroup
+			result.CrdGK.Kind = crdKind
+			result.CrdOK = true
+		}
+		if crd, ok := obj.(*apiextensionsv1beta1.CustomResourceDefinition); ok {
 			crdGroup := crd.Spec.Group
 			crdKind := crd.Spec.Names.Kind
 			result.CrdGK.Group = crdGroup
