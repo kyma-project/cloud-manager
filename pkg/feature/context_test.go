@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/onsi/gomega"
@@ -76,7 +77,6 @@ func TestContextBuilder(t *testing.T) {
 		utilruntime.Must(apiextensions.AddToScheme(sch))
 
 		t.Run("All KindGroups", func(t *testing.T) {
-			baseCrdTyped := &apiextensions.CustomResourceDefinition{}
 			objList := []struct {
 				title    string
 				obj      client.Object
@@ -86,9 +86,9 @@ func TestContextBuilder(t *testing.T) {
 			}{
 				{"KCP IpRange", &cloudcontrolv1beta1.IpRange{}, "iprange.cloud-control.kyma-project.io", "", ""},
 				{"SKR AwsNfsVolume", &cloudresourcesv1beta1.AwsNfsVolume{}, "awsnfsvolume.cloud-resources.kyma-project.io", "", ""},
-				{"CRD KCP NfsInstance", NewCrdTypedWithKindGroup(t, baseCrdTyped, "NfsInstance", "cloud-control.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "nfsinstance.cloud-control.kyma-project.io", ""},
-				{"CRD SKR GcpNfsVolume", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolume", "cloud-resources.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "gcpnfsvolume.cloud-resources.kyma-project.io", ""},
-				{"Busola SKR IpRange", NewBusolaCmTypedKindGroup(t, "IpRange"), "configmap", "", "iprange.cloud-resources.kyma-project.io"},
+				{"CRD KCP NfsInstance", objkind.NewCrdTypedV1WithKindGroup(t, "NfsInstance", "cloud-control.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "nfsinstance.cloud-control.kyma-project.io", ""},
+				{"CRD SKR GcpNfsVolume", objkind.NewCrdTypedV1WithKindGroup(t, "GcpNfsVolume", "cloud-resources.kyma-project.io"), "customresourcedefinition.apiextensions.k8s.io", "gcpnfsvolume.cloud-resources.kyma-project.io", ""},
+				{"Busola SKR IpRange", objkind.NewBusolaCmTypedKindGroup(t, "IpRange"), "configmap", "", "iprange.cloud-resources.kyma-project.io"},
 			}
 
 			for _, info := range objList {
