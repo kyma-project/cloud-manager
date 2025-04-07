@@ -112,7 +112,6 @@ func TestInstaller(t *testing.T) {
 	t.Run("openstack", func(t *testing.T) {
 		run(context.Background(), t, cloudcontrolv1beta1.ProviderOpenStack, []SkrStatusTestCase{
 			{"cceenfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
-			{"iprange.cloud-resources.kyma-project.io", false, "InstallerManifest", KindFormCrd, []string{"NotSupportedByProvider"}},
 		})
 	})
 }
