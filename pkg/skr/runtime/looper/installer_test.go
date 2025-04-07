@@ -32,104 +32,87 @@ func TestInstaller(t *testing.T) {
 		return skrStatus, instlr, scheme, clstr
 	}
 
-	run := func(ctx context.Context, t *testing.T, provider cloudcontrolv1beta1.ProviderType, expectedCrds []string, expectedBusola []string) {
+	run := func(ctx context.Context, t *testing.T, provider cloudcontrolv1beta1.ProviderType, testCases []SkrStatusTestCase) {
 		skrStatus, instlr, _, clstr := prepare(ctx)
 		assert.NoError(t, instlr.Handle(ctx, string(provider), clstr))
 
 		checker := NewSkrStatusChecker(skrStatus).InstallerManifest()
-
-		for _, kind := range expectedCrds {
-			checker.Crd(kind).Check(t)
-		}
-		for _, kind := range expectedBusola {
-			checker.Busola(kind).Check(t)
-		}
+		checker.CheckAll(t, testCases)
 
 		uncheker := checker.Unchecked()
 		assert.Equal(t, 0, uncheker.Len(), "Unchecked handles:\n"+uncheker.String())
 	}
 
 	t.Run("aws", func(t *testing.T) {
-		expectedCrds := []string{
-			"awsnfsbackupschedule.cloud-resources.kyma-project.io",
-			"awsnfsvolumebackup.cloud-resources.kyma-project.io",
-			"awsnfsvolumerestore.cloud-resources.kyma-project.io",
-			"awsnfsvolume.cloud-resources.kyma-project.io",
-			"awsrediscluster.cloud-resources.kyma-project.io",
-			"awsredisinstance.cloud-resources.kyma-project.io",
-			"awsvpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
-		expectedBusola := []string{
-			"awsnfsbackupschedule.cloud-resources.kyma-project.io",
-			"awsnfsvolumebackup.cloud-resources.kyma-project.io",
-			"awsnfsvolumerestore.cloud-resources.kyma-project.io",
-			"awsnfsvolume.cloud-resources.kyma-project.io",
-			//"awsrediscluster.cloud-resources.kyma-project.io",
-			"awsredisinstance.cloud-resources.kyma-project.io",
-			"awsvpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderAws, []SkrStatusTestCase{
+			{"awsnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"awsvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 
-		run(context.Background(), t, cloudcontrolv1beta1.ProviderAws, expectedCrds, expectedBusola)
+			{"awsnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"awsnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"awsnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"awsnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			//{"XXXawsrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"awsredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"awsvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+		})
 	})
 
 	t.Run("azure", func(t *testing.T) {
-		expectedCrds := []string{
-			"azurerwxbackupschedule.cloud-resources.kyma-project.io",
-			"azurerwxvolumebackup.cloud-resources.kyma-project.io",
-			"azurerwxvolumerestore.cloud-resources.kyma-project.io",
-			//"azurerwxvolume.cloud-resources.kyma-project.io",
-			//"azurerediscluster.cloud-resources.kyma-project.io",
-			"azureredisinstance.cloud-resources.kyma-project.io",
-			"azurevpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
-		expectedBusola := []string{
-			"azurerwxbackupschedule.cloud-resources.kyma-project.io",
-			//"azurerwxvolumebackup.cloud-resources.kyma-project.io",
-			"azurerwxvolumerestore.cloud-resources.kyma-project.io",
-			//"azurerwxvolume.cloud-resources.kyma-project.io",
-			//"azurerediscluster.cloud-resources.kyma-project.io",
-			"azureredisinstance.cloud-resources.kyma-project.io",
-			"azurevpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderAzure, []SkrStatusTestCase{
+			{"azurerwxbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"azurerwxvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"azurerwxvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			//{"azurerwxvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			//{"azurerediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"azureredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"azurevpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 
-		run(context.Background(), t, cloudcontrolv1beta1.ProviderAzure, expectedCrds, expectedBusola)
+			{"azurerwxbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			//{"azurerwxvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"azurerwxvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			//{"azurerwxvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			//{"azurerediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"azureredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"azurevpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+		})
 	})
 
 	t.Run("gcp", func(t *testing.T) {
-		expectedCrds := []string{
-			"gcpnfsbackupschedule.cloud-resources.kyma-project.io",
-			"gcpnfsvolumebackup.cloud-resources.kyma-project.io",
-			"gcpnfsvolumerestore.cloud-resources.kyma-project.io",
-			"gcpnfsvolume.cloud-resources.kyma-project.io",
-			//"gcprediscluster.cloud-resources.kyma-project.io",
-			"gcpredisinstance.cloud-resources.kyma-project.io",
-			"gcpvpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
-		expectedBusola := []string{
-			"gcpnfsbackupschedule.cloud-resources.kyma-project.io",
-			"gcpnfsvolumebackup.cloud-resources.kyma-project.io",
-			"gcpnfsvolumerestore.cloud-resources.kyma-project.io",
-			"gcpnfsvolume.cloud-resources.kyma-project.io",
-			//"gcprediscluster.cloud-resources.kyma-project.io",
-			"gcpredisinstance.cloud-resources.kyma-project.io",
-			"gcpvpcpeering.cloud-resources.kyma-project.io",
-			"iprange.cloud-resources.kyma-project.io",
-		}
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderGCP, []SkrStatusTestCase{
+			{"gcpnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			//{"gcprediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 
-		run(context.Background(), t, cloudcontrolv1beta1.ProviderGCP, expectedCrds, expectedBusola)
+			{"gcpnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			//{"gcprediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+		})
 	})
 
 	t.Run("openstack", func(t *testing.T) {
-		expectedCrds := []string{
-			"cceenfsvolume.cloud-resources.kyma-project.io",
-		}
-		expectedBusola := []string{}
-
-		run(context.Background(), t, cloudcontrolv1beta1.ProviderOpenStack, expectedCrds, expectedBusola)
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderOpenStack, []SkrStatusTestCase{
+			{"cceenfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", false, "InstallerManifest", KindFormCrd, []string{"NotSupportedByProvider"}},
+		})
 	})
 }

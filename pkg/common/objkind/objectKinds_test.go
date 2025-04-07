@@ -69,8 +69,6 @@ func TestObjectGroupVersionInfo(t *testing.T) {
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
 	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
 
-	baseCrdTyped := &apiextensions.CustomResourceDefinition{}
-
 	gCrd := "apiextensions.k8s.io"
 	kCrd := "CustomResourceDefinition"
 	baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
@@ -114,17 +112,17 @@ func TestObjectGroupVersionInfo(t *testing.T) {
 		{"unstructured GcpVpcPeering", NewUnstructuredWithGVK(g, v, "GcpVpcPeering"), schema.GroupKind{Group: g, Kind: "GcpVpcPeering"}, schema.GroupKind{}, schema.GroupKind{}},
 		{"unstructured IpRange", NewUnstructuredWithGVK(g, v, "IpRange"), schema.GroupKind{Group: g, Kind: "IpRange"}, schema.GroupKind{}, schema.GroupKind{}},
 
-		{"crdTyped AwsNfsVolume", NewCrdTypedWithKindGroup(t, baseCrdTyped, "AwsNfsVolume", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolume"}, schema.GroupKind{}},
-		{"crdTyped AwsNfsVolumeBackup", NewCrdTypedWithKindGroup(t, baseCrdTyped, "AwsNfsVolumeBackup", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolumeBackup"}, schema.GroupKind{}},
-		{"crdTyped AwsVpcPeering", NewCrdTypedWithKindGroup(t, baseCrdTyped, "AwsVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsVpcPeering"}, schema.GroupKind{}},
-		{"crdTyped AzureVpcPeering", NewCrdTypedWithKindGroup(t, baseCrdTyped, "AzureVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AzureVpcPeering"}, schema.GroupKind{}},
-		{"crdTyped CloudResources", NewCrdTypedWithKindGroup(t, baseCrdTyped, "CloudResources", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "CloudResources"}, schema.GroupKind{}},
-		{"crdTyped GcpNfsVolumeBackup", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolumeBackup", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolumeBackup"}, schema.GroupKind{}},
-		{"crdTyped GcpNfsVolumeRestore", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolumeRestore", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolumeRestore"}, schema.GroupKind{}},
-		{"crdTyped GcpNfsVolume", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpNfsVolume", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolume"}, schema.GroupKind{}},
-		{"crdTyped GcpRedisInstance", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpRedisInstance", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpRedisInstance"}, schema.GroupKind{}},
-		{"crdTyped GcpVpcPeering", NewCrdTypedWithKindGroup(t, baseCrdTyped, "GcpVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpVpcPeering"}, schema.GroupKind{}},
-		{"crdTyped IpRange", NewCrdTypedWithKindGroup(t, baseCrdTyped, "IpRange", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "IpRange"}, schema.GroupKind{}},
+		{"crdTyped AwsNfsVolume", NewCrdTypedV1WithKindGroup(t, "AwsNfsVolume", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolume"}, schema.GroupKind{}},
+		{"crdTyped AwsNfsVolumeBackup", NewCrdTypedV1WithKindGroup(t, "AwsNfsVolumeBackup", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolumeBackup"}, schema.GroupKind{}},
+		{"crdTyped AwsVpcPeering", NewCrdTypedV1WithKindGroup(t, "AwsVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsVpcPeering"}, schema.GroupKind{}},
+		{"crdTyped AzureVpcPeering", NewCrdTypedV1WithKindGroup(t, "AzureVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AzureVpcPeering"}, schema.GroupKind{}},
+		{"crdTyped CloudResources", NewCrdTypedV1WithKindGroup(t, "CloudResources", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "CloudResources"}, schema.GroupKind{}},
+		{"crdTyped GcpNfsVolumeBackup", NewCrdTypedV1WithKindGroup(t, "GcpNfsVolumeBackup", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolumeBackup"}, schema.GroupKind{}},
+		{"crdTyped GcpNfsVolumeRestore", NewCrdTypedV1WithKindGroup(t, "GcpNfsVolumeRestore", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolumeRestore"}, schema.GroupKind{}},
+		{"crdTyped GcpNfsVolume", NewCrdTypedV1WithKindGroup(t, "GcpNfsVolume", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpNfsVolume"}, schema.GroupKind{}},
+		{"crdTyped GcpRedisInstance", NewCrdTypedV1WithKindGroup(t, "GcpRedisInstance", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpRedisInstance"}, schema.GroupKind{}},
+		{"crdTyped GcpVpcPeering", NewCrdTypedV1WithKindGroup(t, "GcpVpcPeering", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "GcpVpcPeering"}, schema.GroupKind{}},
+		{"crdTyped IpRange", NewCrdTypedV1WithKindGroup(t, "IpRange", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "IpRange"}, schema.GroupKind{}},
 
 		{"crdUnstructured AwsNfsVolume", NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolume", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolume"}, schema.GroupKind{}},
 		{"crdUnstructured AwsNfsVolumeBackup", NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolumeBackup", g), schema.GroupKind{Group: gCrd, Kind: kCrd}, schema.GroupKind{Group: g, Kind: "AwsNfsVolumeBackup"}, schema.GroupKind{}},

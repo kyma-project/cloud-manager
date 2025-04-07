@@ -8,6 +8,7 @@ import (
 )
 
 type SkrStatusHandleChecker interface {
+	CheckAll(t *testing.T, testCases []SkrStatusTestCase) SkrStatusHandleChecker
 	Check(t *testing.T) *KindHandleWrapper
 
 	String() string
@@ -23,6 +24,18 @@ type SkrStatusHandleChecker interface {
 	InstallerManifest() SkrStatusHandleChecker
 	Indexer() SkrStatusHandleChecker
 	Controller() SkrStatusHandleChecker
+}
+
+type SkrStatusTestCase struct {
+	Kind     string
+	Ok       bool
+	Title    string
+	Type     KindForm
+	Outcomes []string
+}
+
+func (tc SkrStatusTestCase) String() string {
+	return fmt.Sprintf("%s %v %s %s: %v", tc.Kind, tc.Ok, tc.Title, tc.Type, tc.Outcomes)
 }
 
 func NewSkrStatusChecker(status *SkrStatus) SkrStatusHandleChecker {
@@ -112,6 +125,33 @@ func (c *skrStatusHandleCheckerImpl) AllHandlesChecked(t *testing.T) {
 	assert.Fail(t, "Unchecked handles:\n"+strings.Join(arr, "\n"))
 }
 
+func (c *skrStatusHandleCheckerImpl) CheckAll(t *testing.T, testCases []SkrStatusTestCase) SkrStatusHandleChecker {
+	for _, testCase := range testCases {
+		switch testCase.Type {
+		case KindFormObj:
+			c.Obj(testCase.Kind)
+		case KindFormCrd:
+			c.Crd(testCase.Kind)
+		case KindFormBusola:
+			c.Busola(testCase.Kind)
+		default:
+			assert.Fail(t, fmt.Sprintf("Unknown kind in test case: %s", testCase.String()))
+			return c
+		}
+		c.Ok(testCase.Ok)
+		h := c.Check(t)
+		if h != nil {
+			if testCase.Title != "" {
+				assert.Equal(t, testCase.Title, h.title)
+			}
+			if len(h.outcomes) > 0 {
+				assert.Equal(t, testCase.Outcomes, h.outcomes)
+			}
+		}
+	}
+	return c
+}
+
 func (c *skrStatusHandleCheckerImpl) Check(t *testing.T) *KindHandleWrapper {
 	if c.checkedIndexes == nil {
 		c.checkedIndexes = map[int]struct{}{}
@@ -146,7 +186,7 @@ func (c *skrStatusHandleCheckerImpl) Check(t *testing.T) *KindHandleWrapper {
 	if c.nok && handle.ok {
 		assert.Fail(t, fmt.Sprintf("Expected failed handle, but it's ok: %s", handle.String()))
 	}
-	if c.nok && !handle.ok {
+	if !c.nok && !handle.ok {
 		assert.Fail(t, fmt.Sprintf("Expected ok handle, but it's failed: %s", handle.String()))
 	}
 	if _, ok := c.checkedIndexes[index]; ok {
@@ -156,6 +196,11 @@ func (c *skrStatusHandleCheckerImpl) Check(t *testing.T) *KindHandleWrapper {
 	return handle
 }
 
+func (c *skrStatusHandleCheckerImpl) Ok(val bool) SkrStatusHandleChecker {
+	c.nok = !val
+	return c
+}
+
 func (c *skrStatusHandleCheckerImpl) Name(v string) SkrStatusHandleChecker {
 	c.objName = v
 	return c
@@ -163,6 +208,8 @@ func (c *skrStatusHandleCheckerImpl) Name(v string) SkrStatusHandleChecker {
 
 func (c *skrStatusHandleCheckerImpl) Obj(v string) SkrStatusHandleChecker {
 	c.obj = v
+	c.crd = ""
+	c.busola = ""
 	return c
 }
 

@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,8 +30,9 @@ func NewCrdUnstructuredWithKindGroup(t *testing.T, baseCrd *unstructured.Unstruc
 	return crd
 }
 
-func NewCrdTypedWithKindGroup(_ *testing.T, baseCrd *apiextensions.CustomResourceDefinition, k, g string) *apiextensions.CustomResourceDefinition {
-	crd := baseCrd.DeepCopyObject().(*apiextensions.CustomResourceDefinition)
+func NewCrdTypedV1WithKindGroup(_ *testing.T, k, g string) *apiextensionsv1.CustomResourceDefinition {
+	crd := &apiextensionsv1.CustomResourceDefinition{}
+	crd.SetGroupVersionKind(apiextensionsv1.SchemeGroupVersion.WithKind("CustomResourceDefinition"))
 	crd.Spec.Names.Kind = k
 	crd.Spec.Group = g
 	return crd
