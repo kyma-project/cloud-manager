@@ -27,9 +27,9 @@ func modifyRedisCluster(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	updateParams, capacityChanged := getUpdateParams(state)
+	updateParams, configChanged := getUpdateParams(state)
 
-	if !capacityChanged {
+	if !configChanged {
 		return nil, nil
 	}
 
@@ -69,9 +69,13 @@ func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 
 	requestedAzureRedisCluster := state.ObjAsRedisCluster()
 	capacityChanged := int(*state.azureRedisCluster.Properties.SKU.Capacity) != requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity
-	updateParameters := armredis.UpdateParameters{}
+	shardCountChanged := int(*state.azureRedisCluster.Properties.ShardCount) != requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount
+	replicasChanged := int(*state.azureRedisCluster.Properties.ReplicasPerPrimary) != requestedAzureRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary
+	redisVersionChanged := *state.azureRedisCluster.Properties.RedisVersion != requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion
+	paramsChanged := capacityChanged || shardCountChanged || replicasChanged || redisVersionChanged
 
-	if !capacityChanged {
+	updateParameters := armredis.UpdateParameters{}
+	if !paramsChanged {
 		return updateParameters, false
 	}
 
@@ -81,10 +85,12 @@ func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 			Name:     to.Ptr(armredis.SKUNamePremium),
 			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
-		ShardCount: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
+		ShardCount:         to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
+		ReplicasPerPrimary: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary)),
+		RedisVersion:       to.Ptr(requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion),
 	}
 
 	updateParameters.Properties = updateProperties
 
-	return updateParameters, capacityChanged
+	return updateParameters, true
 }

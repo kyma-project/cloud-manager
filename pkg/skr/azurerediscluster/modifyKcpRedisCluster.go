@@ -44,13 +44,22 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	}
 
 	capacityChanged := state.KcpRedisCluster.Spec.Instance.Azure.SKU.Capacity != redisSKUCapacity
+	shardCountChanged := state.KcpRedisCluster.Spec.Instance.Azure.ShardCount != int(azureRedisCluster.Spec.ShardCount)
+	replicasChanged := state.KcpRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary != int(azureRedisCluster.Spec.ReplicasPerPrimary)
+	redisVersionChanged := state.KcpRedisCluster.Spec.Instance.Azure.RedisVersion != azureRedisCluster.Spec.RedisVersion
 
-	if !capacityChanged {
+	paramsChanged := capacityChanged || shardCountChanged || replicasChanged || redisVersionChanged
+
+	if !paramsChanged {
 		return nil, nil
 	}
 
 	state.KcpRedisCluster.Spec.Instance.Azure.SKU.Capacity = redisSKUCapacity
-	logger.Info("Detected modified Redis SKU capacity")
+	state.KcpRedisCluster.Spec.Instance.Azure.ShardCount = int(azureRedisCluster.Spec.ShardCount)
+	state.KcpRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary = int(azureRedisCluster.Spec.ReplicasPerPrimary)
+	state.KcpRedisCluster.Spec.Instance.Azure.RedisVersion = azureRedisCluster.Spec.RedisVersion
+
+	logger.Info("Detected modified Redis configuration, updating KCP Redis")
 	err = state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisCluster)
 
 	if err != nil {
