@@ -30,20 +30,22 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 			state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy,
 			state.Scope().Spec.ShootName)
 
+		cidrBlock := state.vpc.CidrBlock
+
 		routeExists := pie.Any(t.Routes, func(r types.Route) bool {
 			return ptr.Equal(r.VpcPeeringConnectionId, state.vpcPeering.VpcPeeringConnectionId) &&
-				ptr.Equal(r.DestinationCidrBlock, state.vpc.CidrBlock)
+				ptr.Equal(r.DestinationCidrBlock, cidrBlock)
 		})
 
 		var err error
 
 		lll := logger.WithValues(
 			"remoteRouteTableId", ptr.Deref(t.RouteTableId, "xxx"),
-			"destinationCidrBlock", ptr.Deref(state.vpc.CidrBlock, "xxx"))
+			"destinationCidrBlock", ptr.Deref(cidrBlock, "xxx"))
 
 		// Create route if it should exist but it doesn't
 		if shouldUpdateRouteTable && !routeExists {
-			err = state.remoteClient.CreateRoute(ctx, t.RouteTableId, state.vpc.CidrBlock, state.vpcPeering.VpcPeeringConnectionId)
+			err = state.remoteClient.CreateRoute(ctx, t.RouteTableId, cidrBlock, state.vpcPeering.VpcPeeringConnectionId)
 			if err != nil {
 				lll.Error(err, "Error creating remote route")
 			} else {
@@ -90,6 +92,7 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 				ErrorLogMessage("Error updating VpcPeering status when updating routes").
 				SuccessError(successError).
 				Run(ctx, state)
+
 		}
 	}
 

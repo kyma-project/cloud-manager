@@ -95,6 +95,16 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 			VpcId:     ptr.To(id),
 			CidrBlock: ptr.To(cidr),
 			Tags:      tags,
+			CidrBlockAssociationSet: []ec2Types.VpcCidrBlockAssociation{
+				{
+					AssociationId: ptr.To(uuid.NewString()),
+					CidrBlock:     ptr.To(cidr),
+					CidrBlockState: &ec2Types.VpcCidrBlockState{
+						State:         ec2Types.VpcCidrBlockStateCodeAssociated,
+						StatusMessage: ptr.To("Associated"),
+					},
+				},
+			},
 		},
 		subnets: pie.Map(subnets, func(x VpcSubnet) ec2Types.Subnet {
 			return ec2Types.Subnet{
