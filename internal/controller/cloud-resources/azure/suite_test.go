@@ -81,6 +81,10 @@ var _ = BeforeSuite(func() {
 	Expect(cloudresourcescontroller.SetupAzureRwxRestoreReconciler(
 		infra.Registry(), infra.AzureMock().StorageProvider())).NotTo(HaveOccurred())
 
+	// AzureRwxVolumeBackup
+	// TODO: confirm if .NotTo(HaveOccurred()) is necessary
+	Expect(cloudresourcescontroller.SetupAzureRwxBackupReconciler(infra.Registry(), infra.AzureMock().StorageProvider()))
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })
