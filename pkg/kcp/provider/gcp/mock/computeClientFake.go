@@ -2,10 +2,10 @@ package mock
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	v3iprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
 	v3iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	"google.golang.org/api/googleapi"
 )
@@ -22,7 +22,7 @@ func (computeClientFake *computeClientFake) CreatePrivateSubnet(ctx context.Cont
 	computeClientFake.mutex.Lock()
 	defer computeClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("%s/%s/%s", request.ProjectId, request.Region, request.Name)
+	name := v3iprange.GetPrivateSubnetFullName(request.ProjectId, request.Region, request.Name)
 
 	subnet := &computepb.Subnetwork{
 		Name:                  &name,
@@ -45,7 +45,7 @@ func (computeClientFake *computeClientFake) GetSubnet(ctx context.Context, reque
 	computeClientFake.mutex.Lock()
 	defer computeClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("%s/%s/%s", request.ProjectId, request.Region, request.Name)
+	name := v3iprange.GetPrivateSubnetFullName(request.ProjectId, request.Region, request.Name)
 
 	if instance, ok := computeClientFake.subnets[name]; ok {
 		return instance, nil
@@ -64,7 +64,7 @@ func (computeClientFake *computeClientFake) DeleteSubnet(ctx context.Context, re
 	computeClientFake.mutex.Lock()
 	defer computeClientFake.mutex.Unlock()
 
-	name := fmt.Sprintf("%s/%s/%s", request.ProjectId, request.Region, request.Name)
+	name := v3iprange.GetPrivateSubnetFullName(request.ProjectId, request.Region, request.Name)
 
 	if _, ok := computeClientFake.subnets[name]; ok {
 		delete(computeClientFake.subnets, name)

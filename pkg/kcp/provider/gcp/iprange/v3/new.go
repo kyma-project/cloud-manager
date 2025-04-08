@@ -41,6 +41,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"privateIpRange-create",
 					createSubnet,
+					copyCidrToStatus,
 					createConnectionPolicy,
 					updateStatusId,
 					updateStatus,

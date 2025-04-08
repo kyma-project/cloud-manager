@@ -26,6 +26,8 @@ type NfsClient interface {
 type Clients interface {
 	IpRangeClient
 	NfsClient
+	v3iprangeclient.ComputeClient
+	v3iprangeclient.NetworkConnectivityClient
 }
 
 type Providers interface {

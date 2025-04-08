@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
+	networkconnectivitypb "cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,10 +28,12 @@ func New() Server {
 	return &server{
 		iprangeStore: &iprangeStore{},
 		computeClientFake: &computeClientFake{
-			mutex: sync.Mutex{},
+			mutex:   sync.Mutex{},
+			subnets: map[string]*computepb.Subnetwork{},
 		},
 		networkConnectivityClientFake: &networkConnectivityClientFake{
-			mutex: sync.Mutex{},
+			mutex:              sync.Mutex{},
+			connectionPolicies: map[string]*networkconnectivitypb.ServiceConnectionPolicy{},
 		},
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
