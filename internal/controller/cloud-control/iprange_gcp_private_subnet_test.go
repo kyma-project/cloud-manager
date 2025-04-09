@@ -59,7 +59,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 					WithName(ipRangeName),
 					WithKcpIpRangeRemoteRef(ipRangeName),
 					WithKcpIpRangeSpecCidr("10.20.60.0/24"),
-					WithKcpIpRangeGcpType(cloudcontrolv1beta1.GcpIpRangeTypePRIVATE_SUBNET),
+					WithKcpIpRangeGcpType(cloudcontrolv1beta1.GcpIpRangeTypeSUBNET),
 					WithScope(kymaName),
 				).
 				Should(Succeed())
@@ -175,7 +175,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
 					WithName(ipRangeName),
 					WithKcpIpRangeRemoteRef(ipRangeName),
-					WithKcpIpRangeGcpType(cloudcontrolv1beta1.GcpIpRangeTypePRIVATE_SUBNET),
+					WithKcpIpRangeGcpType(cloudcontrolv1beta1.GcpIpRangeTypeSUBNET),
 					WithScope(kymaName),
 				).
 				Should(Succeed())

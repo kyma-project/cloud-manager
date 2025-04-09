@@ -86,12 +86,12 @@ const (
 	GcpPurposePSC   = GcpPurpose("PRIVATE_SERVICE_CONNECT")
 )
 
-// +kubebuilder:validation:Enum=GLOBAL_ADDRESS;PRIVATE_SUBNET;
+// +kubebuilder:validation:Enum=GLOBAL_ADDRESS;SUBNET;
 type GcpIpRangeType string
 
 const (
-	GcpIpRangeTypeGLOBAL_ADDRESS = GcpIpRangeType("GLOBAL_ADDRESS") // PSA
-	GcpIpRangeTypePRIVATE_SUBNET = GcpIpRangeType("PRIVATE_SUBNET")
+	GcpIpRangeTypeGLOBAL_ADDRESS = GcpIpRangeType("GLOBAL_ADDRESS")
+	GcpIpRangeTypeSUBNET         = GcpIpRangeType("SUBNET")
 )
 
 type IpRangeGcp struct {

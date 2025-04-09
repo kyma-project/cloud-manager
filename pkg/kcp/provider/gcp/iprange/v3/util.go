@@ -2,11 +2,11 @@ package v3
 
 import "fmt"
 
-func GetPrivateSubnetShortName(objName string) string {
+func GetSubnetShortName(objName string) string {
 	return fmt.Sprintf("cm-%s", objName)
 }
 
-func GetPrivateSubnetFullName(projectId, region, subnetShortName string) string {
+func GetSubnetFullName(projectId, region, subnetShortName string) string {
 	return fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", projectId, region, subnetShortName)
 }
 

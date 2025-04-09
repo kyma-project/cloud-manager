@@ -8,11 +8,11 @@ import (
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 )
 
-func TypePrivateSubnetPredicate(_ context.Context, st composed.State) bool {
+func TypeSubnetPredicate(_ context.Context, st composed.State) bool {
 	state := st.(iprangetypes.State)
 
 	gcpOptions := state.ObjAsIpRange().Spec.Options.Gcp
-	return gcpOptions != nil && gcpOptions.Type == v1beta1.GcpIpRangeTypePRIVATE_SUBNET
+	return gcpOptions != nil && gcpOptions.Type == v1beta1.GcpIpRangeTypeSUBNET
 }
 
 func TypeGlobalAddressPredicate(_ context.Context, st composed.State) bool {

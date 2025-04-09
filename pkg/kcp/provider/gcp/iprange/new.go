@@ -16,7 +16,7 @@ func New(stateFactory StateFactory) composed.Action {
 		"typeSwitch",
 		v2.New(stateFactory.(*generalStateFactory).v2StateFactory), // default
 		composed.NewCase(TypeGlobalAddressPredicate, v2.New(stateFactory.(*generalStateFactory).v2StateFactory)),
-		composed.NewCase(TypePrivateSubnetPredicate, v3.New(stateFactory.(*generalStateFactory).v3StateFactory)),
+		composed.NewCase(TypeSubnetPredicate, v3.New(stateFactory.(*generalStateFactory).v3StateFactory)),
 	)
 }
 

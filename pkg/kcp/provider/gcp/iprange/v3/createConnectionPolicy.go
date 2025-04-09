@@ -35,7 +35,7 @@ func createConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 		Region:        region,
 		Network:       gcpScope.VpcNetwork,
 		Name:          GetServiceConnectionPolicyShortName(gcpScope.VpcNetwork, region),
-		Subnets:       []string{GetPrivateSubnetFullName(gcpScope.Project, region, ptr.Deref(state.subnet.Name, ""))},
+		Subnets:       []string{GetSubnetFullName(gcpScope.Project, region, ptr.Deref(state.subnet.Name, ""))},
 		IdempotenceId: uuid.NewString(),
 	})
 

@@ -27,7 +27,7 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	subnet, err := state.computeClient.GetSubnet(ctx, v3.GetSubnetRequest{
 		ProjectId: gcpScope.Project,
 		Region:    region,
-		Name:      GetPrivateSubnetShortName(state.Obj().GetName()),
+		Name:      GetSubnetShortName(state.Obj().GetName()),
 	})
 
 	if err != nil {

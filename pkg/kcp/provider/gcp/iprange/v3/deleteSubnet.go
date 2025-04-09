@@ -30,7 +30,7 @@ func deleteSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	err := state.computeClient.DeleteSubnet(ctx, v3.DeleteSubnetRequest{
 		ProjectId:     gcpScope.Project,
 		Region:        region,
-		Name:          GetPrivateSubnetShortName(state.Obj().GetName()),
+		Name:          GetSubnetShortName(state.Obj().GetName()),
 		IdempotenceId: uuid.NewString(),
 	})
 	if err != nil {

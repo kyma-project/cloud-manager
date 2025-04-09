@@ -28,7 +28,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		ProjectId:     gcpScope.Project,
 		Region:        region,
 		Network:       gcpScope.VpcNetwork,
-		Name:          GetPrivateSubnetShortName(state.Obj().GetName()),
+		Name:          GetSubnetShortName(state.Obj().GetName()),
 		Cidr:          ipRange.Spec.Cidr,
 		IdempotenceId: uuid.NewString(),
 	})

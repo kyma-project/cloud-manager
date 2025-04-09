@@ -94,7 +94,7 @@ spec:
                         default: GLOBAL_ADDRESS
                         enum:
                         - GLOBAL_ADDRESS
-                        - PRIVATE_SUBNET
+                        - SUBNET
                         type: string
                     type: object
                 type: object

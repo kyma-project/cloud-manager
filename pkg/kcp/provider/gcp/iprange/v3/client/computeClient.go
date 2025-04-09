@@ -53,6 +53,7 @@ type computeClient struct {
 	saJsonKeyPath string
 }
 
+// Creates a Subnet with Purpose set to PRIVATE and PrivateIpGoogleAccess set to true
 func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, request CreateSubnetRequest) error {
 	subnetClient, err := compute.NewSubnetworksRESTClient(ctx, option.WithCredentialsFile(computeClient.saJsonKeyPath))
 	if err != nil {
