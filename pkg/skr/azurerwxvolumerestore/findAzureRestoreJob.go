@@ -33,7 +33,6 @@ func findAzureRestoreJob(ctx context.Context, st composed.State) (error, context
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidRecoveryPointId,
 				Message: fmt.Sprintf("Source AzureRwxVolumeBackup has an invalid recoveryPointId: '%v'", state.azureRwxVolumeBackup.Status.RecoveryPointId),
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}

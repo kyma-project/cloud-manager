@@ -36,7 +36,6 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonPvNotFound,
 				Message: "Persistent volume was not found",
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -51,7 +50,6 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonPvNotBound,
 				Message: fmt.Sprintf("PV for specified destination PVC is in invalid state %v", pv.Status.Phase),
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -65,7 +63,6 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidVolumeHandle,
 				Message: fmt.Sprintf("Persistant Volume has an unexpected volume handle: %v", pv.Spec.CSI.VolumeHandle),
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}

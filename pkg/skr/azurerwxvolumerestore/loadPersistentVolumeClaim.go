@@ -35,7 +35,6 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 				Reason:  cloudresourcesv1beta1.ConditionReasonPvcNotFound,
 				Message: "Specified destination was not found",
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -50,7 +49,6 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 				Reason:  cloudresourcesv1beta1.ConditionReasonPvcNotBound,
 				Message: fmt.Sprintf("Specified destination PVC is in invalid state %v", pvc.Status.Phase),
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -64,7 +62,6 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidProvisioner,
 				Message: "Specified destination PVC is not provisioned by Azure CSI driver (file.csi.azure.com)",
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
