@@ -4,12 +4,15 @@ import (
 	"context"
 	"sync"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
+	networkconnectivitypb "cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	v3iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -23,7 +26,15 @@ var _ Server = &server{}
 
 func New() Server {
 	return &server{
-		iprangeStore:      &iprangeStore{},
+		iprangeStore: &iprangeStore{},
+		computeClientFake: &computeClientFake{
+			mutex:   sync.Mutex{},
+			subnets: map[string]*computepb.Subnetwork{},
+		},
+		networkConnectivityClientFake: &networkConnectivityClientFake{
+			mutex:              sync.Mutex{},
+			connectionPolicies: map[string]*networkconnectivitypb.ServiceConnectionPolicy{},
+		},
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
 		nfsRestoreStore:   &nfsRestoreStore{},
@@ -42,6 +53,8 @@ func New() Server {
 
 type server struct {
 	*iprangeStore
+	*computeClientFake
+	*networkConnectivityClientFake
 	*nfsStore
 	*serviceUsageStore
 	*nfsRestoreStore
@@ -99,6 +112,17 @@ func (s *server) ComputeClientProvider() client.ClientProvider[iprangeclient.Com
 	return func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ComputeClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ComputeClientProvider mock...")
+		return s, nil
+	}
+}
+
+func (s *server) ComputeClientProviderV3() client.ClientProvider[v3iprangeclient.ComputeClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (v3iprangeclient.ComputeClient, error) {
+		return s, nil
+	}
+}
+func (s *server) NetworkConnectivityProviderV3() client.ClientProvider[v3iprangeclient.NetworkConnectivityClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (v3iprangeclient.NetworkConnectivityClient, error) {
 		return s, nil
 	}
 }

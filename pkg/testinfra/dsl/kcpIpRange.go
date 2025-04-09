@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -77,6 +78,18 @@ func WithKcpIpRangeNetwork(network string) ObjAction {
 			if x.Spec.Network.Name == "" {
 				x.Spec.Network.Name = network
 			}
+		},
+	}
+}
+
+func WithKcpIpRangeGcpType(t cloudcontrolv1beta1.GcpIpRangeType) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			if x.Spec.Options.Gcp == nil {
+				x.Spec.Options.Gcp = &cloudcontrolv1beta1.IpRangeGcp{}
+			}
+			x.Spec.Options.Gcp.Type = t
 		},
 	}
 }
