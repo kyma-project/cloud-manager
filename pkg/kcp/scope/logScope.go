@@ -25,6 +25,7 @@ func logScope(ctx context.Context, st composed.State) (error, context.Context) {
 			"scopeResourceVersion", scopeResourceVersion,
 			"scopeShouldExist", scopeShouldExist,
 			"scopeCreateOrUpdateNeeded", scopeCreateOrUpdateNeeded,
+			"provider", state.provider,
 		)
 
 	ctx = composed.LoggerIntoCtx(ctx, logger)

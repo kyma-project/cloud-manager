@@ -105,6 +105,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 				skrDeactivate,
 				networkReferenceKymaDelete,
 				scopeDelete,
+				nukeCreate,
 				composed.StopAndForgetAction,
 			),
 		),
