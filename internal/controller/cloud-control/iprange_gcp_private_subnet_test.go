@@ -79,13 +79,13 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Private Subnet is created", func() {
-			privateSubnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(privateSubnet).NotTo(BeNil())
+			Expect(subnet).NotTo(BeNil())
 		})
 
 		By("And Then GCP Connection Policy is created", func() {
@@ -112,12 +112,12 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Connection Policy does not exist", func() {
-			privateSubnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
 			})
-			Expect(privateSubnet).To(BeNil())
+			Expect(subnet).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
@@ -195,13 +195,13 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Private Subnet is created", func() {
-			privateSubnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(privateSubnet).NotTo(BeNil())
+			Expect(subnet).NotTo(BeNil())
 		})
 
 		By("And Then GCP Connection Policy is created", func() {
@@ -234,12 +234,12 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Connection Policy does not exist", func() {
-			privateSubnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
 			})
-			Expect(privateSubnet).To(BeNil())
+			Expect(subnet).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
