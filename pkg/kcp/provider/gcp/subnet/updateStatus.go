@@ -1,4 +1,4 @@
-package v3
+package subnet
 
 import (
 	"context"
@@ -12,26 +12,26 @@ import (
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	ipRange := state.ObjAsIpRange()
+	subnet := state.ObjAsGcpSubnet()
 
-	hasReadyCondition := meta.FindStatusCondition(ipRange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
-	hasReadyStatusState := ipRange.Status.State == cloudcontrolv1beta1.StateReady
+	hasReadyCondition := meta.FindStatusCondition(subnet.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
+	hasReadyStatusState := subnet.Status.State == cloudcontrolv1beta1.StateReady
 
 	if hasReadyCondition && hasReadyStatusState {
-		composed.LoggerFromCtx(ctx).Info("IpRange status fields are already up-to-date, StopAndForget-ing")
+		composed.LoggerFromCtx(ctx).Info("Subnet status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 
-	ipRange.Status.State = cloudcontrolv1beta1.StateReady
-	return composed.UpdateStatus(ipRange).
+	subnet.Status.State = cloudcontrolv1beta1.StateReady
+	return composed.UpdateStatus(subnet).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeReady,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonReady,
-			Message: "IpRange is ready",
+			Message: "Subnet is ready",
 		}).
-		ErrorLogMessage("Error updating KCP IpRange status after setting Ready condition").
-		SuccessLogMsg("KCP IpRange is ready").
+		ErrorLogMessage("Error updating KCP Subnet status after setting Ready condition").
+		SuccessLogMsg("KCP Subnet is ready").
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

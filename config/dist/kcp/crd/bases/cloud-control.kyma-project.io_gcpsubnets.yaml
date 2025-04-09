@@ -4,22 +4,19 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-  name: ipranges.cloud-control.kyma-project.io
+  name: gcpsubnets.cloud-control.kyma-project.io
 spec:
   group: cloud-control.kyma-project.io
   names:
-    kind: IpRange
-    listKind: IpRangeList
-    plural: ipranges
-    singular: iprange
+    kind: GcpSubnet
+    listKind: GcpSubnetList
+    plural: gcpsubnets
+    singular: gcpsubnet
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.scope.name
       name: Scope
-      type: string
-    - jsonPath: .spec.network.name
-      name: Network
       type: string
     - jsonPath: .status.cidr
       name: Cidr
@@ -30,7 +27,7 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: IpRange is the Schema for the ipranges API
+        description: GcpSubnet is the Schema for the gcpsubnets API
         properties:
           apiVersion:
             description: |-
@@ -50,48 +47,14 @@ spec:
           metadata:
             type: object
           spec:
-            description: IpRangeSpec defines the desired state of IpRange
+            description: GcpSubnetSpec defines the desired state of GcpSubnet
             properties:
               cidr:
                 type: string
-              network:
-                description: |-
-                  Network is a reference to the network where this IpRange belongs and where it creates subnets.
-                  If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                type: object
-              options:
-                maxProperties: 1
-                minProperties: 0
-                properties:
-                  aws:
-                    type: object
-                  azure:
-                    type: object
-                  gcp:
-                    properties:
-                      psaService:
-                        default: servicenetworking.googleapis.com
-                        type: string
-                      purpose:
-                        default: VPC_PEERING
-                        enum:
-                        - VPC_PEERING
-                        - GCE_ENDPOINT
-                        - DNS_RESOLVER
-                        - NAT_AUTO
-                        - IPSEC_INTERCONNECT
-                        - SHARED_LOADBALANCER_VIP
-                        - PRIVATE_SERVICE_CONNECT
-                        type: string
-                    type: object
-                type: object
+              purpose:
+                enum:
+                - PRIVATE
+                type: string
               remoteRef:
                 properties:
                   name:
@@ -115,14 +78,14 @@ spec:
                 - name
                 type: object
             required:
+            - cidr
+            - purpose
             - remoteRef
             - scope
             type: object
           status:
-            description: IpRangeStatus defines the observed state of IpRange
+            description: GcpSubnetStatus defines the observed state of GcpSubnet
             properties:
-              addressSpaceId:
-                type: string
               cidr:
                 type: string
               conditions:
@@ -187,33 +150,8 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               id:
-                description: Id to track the Hyperscaler IpRange identifier
                 type: string
-              opIdentifier:
-                description: Operation Identifier to track the Hyperscaler Operation
-                type: string
-              ranges:
-                items:
-                  type: string
-                type: array
               state:
-                type: string
-              subnets:
-                items:
-                  properties:
-                    id:
-                      type: string
-                    range:
-                      type: string
-                    zone:
-                      type: string
-                  required:
-                  - id
-                  - range
-                  - zone
-                  type: object
-                type: array
-              vpcId:
                 type: string
             type: object
         type: object

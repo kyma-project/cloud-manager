@@ -4,12 +4,12 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	cloudclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v3iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	memoryStoreClusterClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	subnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
 )
@@ -26,15 +26,15 @@ type NfsClient interface {
 type Clients interface {
 	IpRangeClient
 	NfsClient
-	v3iprangeclient.ComputeClient
-	v3iprangeclient.NetworkConnectivityClient
+	subnetclient.ComputeClient
+	subnetclient.NetworkConnectivityClient
 }
 
 type Providers interface {
 	ServiceNetworkingClientProvider() client.ClientProvider[iprangeclient.ServiceNetworkingClient]
 	ComputeClientProvider() client.ClientProvider[iprangeclient.ComputeClient]
-	ComputeClientProviderV3() client.ClientProvider[v3iprangeclient.ComputeClient]
-	NetworkConnectivityProviderV3() client.ClientProvider[v3iprangeclient.NetworkConnectivityClient]
+	SubnetComputeClientProvider() client.ClientProvider[subnetclient.ComputeClient]
+	SubnetNetworkConnectivityProvider() client.ClientProvider[subnetclient.NetworkConnectivityClient]
 	FilestoreClientProvider() client.ClientProvider[nfsclient.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[restoreclient.FileRestoreClient]
