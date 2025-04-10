@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -110,18 +111,12 @@ func IsPvcProvisionerAzureCsiDriver(annotations map[string]string) bool {
 	return ok && provisioner == azureFileShareProvisioner
 }
 
-func PrettyPrintJobErrorDetails(details []*armrecoveryservicesbackup.AzureStorageErrorInfo) string {
-	if len(details) == 0 {
-		return ""
+func AzureStorageErrorInfoToJson(details []*armrecoveryservicesbackup.AzureStorageErrorInfo) (string, error) {
+	jsonData, err := json.Marshal(details)
+	if err != nil {
+		return "", err
 	}
-	var result string
-	for _, detail := range details {
-		result += fmt.Sprintf("Code: %d, Message: %s, Recommendations: \n", *detail.ErrorCode, *detail.ErrorString)
-		for _, recommendation := range detail.Recommendations {
-			result += fmt.Sprintf("  - %s\n", *recommendation)
-		}
-	}
-	return result
+	return string(jsonData), nil
 }
 
 func ParseVaultId(vaultId string) (subscription string, resourceGroup string, vault string, err error) {

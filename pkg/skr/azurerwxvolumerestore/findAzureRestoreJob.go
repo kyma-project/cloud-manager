@@ -39,7 +39,7 @@ func findAzureRestoreJob(ctx context.Context, st composed.State) (error, context
 
 	jobId, retry, err := state.storageClient.FindRestoreJobId(ctx, vault, resourceGroup, state.fileShareName, restore.Status.StartTime.Format(time.RFC3339), restore.Status.RestoredDir)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error when trying to find restore job ID", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(err, "Error when trying to find restore job ID", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
 	}
 	if retry {
 		logger.Info("Restore job not found, retrying later")
