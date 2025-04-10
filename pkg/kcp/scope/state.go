@@ -8,19 +8,13 @@ import (
 	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	kubernetesClient "k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-// NukeScopesWithoutKyma defines if during the Scope reconciliation a Nuke resource will be created
-// if Kyma does not exist. For the normal behavior it should be true, so that Nuke could
-// clean up the Scope's orphaned resources. But since the majority of tests creates Scope
-// but doesn't create Kyma, this flag in test suite setup is set to `false`, to prevent deletion
-// of all the Scope resources and allow tests to function
-var NukeScopesWithoutKyma = true
 
 type StateFactory interface {
 	NewState(req ctrl.Request) *State
@@ -72,8 +66,11 @@ func newState(
 		awsStsClientProvider:          awsStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 		credentialData:                map[string]string{},
+		exposedData:                   &scopetypes.ExposedData{},
 	}
 }
+
+var _ scopetypes.State = &State{}
 
 type State struct {
 	composed.State
@@ -97,8 +94,14 @@ type State struct {
 
 	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
+
+	exposedData *scopetypes.ExposedData
 }
 
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {
 	return s.Obj().(*cloudcontrolv1beta1.Scope)
+}
+
+func (s *State) ExposedData() *scopetypes.ExposedData {
+	return s.exposedData
 }

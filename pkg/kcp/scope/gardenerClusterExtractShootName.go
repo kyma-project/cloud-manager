@@ -2,7 +2,7 @@ package scope
 
 import (
 	"context"
-	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -13,7 +13,7 @@ func gardenerClusterExtractShootName(ctx context.Context, st composed.State) (er
 		return nil, ctx
 	}
 
-	state.shootName = state.gardenerCluster.GetLabels()[cloudcontrol1beta1.LabelScopeShootName]
+	state.shootName = state.gardenerCluster.GetLabels()[cloudcontrolv1beta1.LabelScopeShootName]
 	if state.shootName == "" {
 		state.shootName = state.gardenerClusterSummary.Shoot
 	}

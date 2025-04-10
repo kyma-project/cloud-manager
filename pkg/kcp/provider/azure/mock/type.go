@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	redisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
@@ -72,6 +73,7 @@ type Providers interface {
 	RedisClusterClientProvider() azureclient.ClientProvider[redisclusterclient.Client]
 	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
 	StorageProvider() azureclient.ClientProvider[skrazureclient.Client]
+	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
 }
 
 type NetworkConfig interface {

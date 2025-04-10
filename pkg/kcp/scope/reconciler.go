@@ -3,8 +3,10 @@ package scope
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -22,7 +24,10 @@ func New(
 	mgr manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	// keep gcpServiceUsageClientProvider separate from the expose data client, since SRE will start enabling APIs soon,
+	// so gcpServiceUsageClientProvider will be removed completely
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	azureStateFactory azureexposeddata.StateFactory,
 ) ScopeReconciler {
 	return NewScopeReconciler(
 		NewStateFactory(
@@ -31,17 +36,24 @@ func New(
 			awsStsClientProvider,
 			gcpServiceUsageClientProvider,
 		),
+		azureStateFactory,
 	)
 }
 
-func NewScopeReconciler(stateFactory StateFactory) ScopeReconciler {
+func NewScopeReconciler(
+	stateFactory StateFactory,
+	azureStateFactory azureexposeddata.StateFactory,
+) ScopeReconciler {
 	return &scopeReconciler{
-		stateFactory: stateFactory,
+		stateFactory:      stateFactory,
+		azureStateFactory: azureStateFactory,
 	}
 }
 
 type scopeReconciler struct {
 	stateFactory StateFactory
+
+	azureStateFactory azureexposeddata.StateFactory
 }
 
 func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -93,6 +105,15 @@ func (r *scopeReconciler) newAction() composed.Action {
 				),
 				networkReferenceKymaCreate,
 				apiEnable,
+
+				// collect exposed data from cloud providers
+				composed.Switch(
+					nil,
+					composed.NewCase(statewithscope.AwsProviderPredicate, composed.Noop),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, composed.Noop),
+				),
+
 				conditionReady,
 			),
 

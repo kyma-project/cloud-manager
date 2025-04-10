@@ -29,7 +29,7 @@ func LoadObjNoStopIfNotFound(ctx context.Context, state State) (error, context.C
 	return nil, nil
 }
 
-func IsObjLoaded(ctx context.Context, state State) bool {
+func IsObjLoaded(_ context.Context, state State) bool {
 	if state.Obj() == nil || state.Obj().GetName() == "" || state.Obj().GetResourceVersion() == "" {
 		return false
 	}

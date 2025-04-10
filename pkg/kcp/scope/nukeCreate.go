@@ -14,7 +14,7 @@ func nukeCreate(ctx context.Context, st composed.State) (error, context.Context)
 	state := st.(*State)
 	logger := ctrl.LoggerFrom(ctx)
 
-	if !NukeScopesWithoutKyma {
+	if !cloudcontrolv1beta1.AutomaticNuke {
 		return nil, ctx
 	}
 

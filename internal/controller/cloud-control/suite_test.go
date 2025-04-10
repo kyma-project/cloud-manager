@@ -21,18 +21,16 @@ import (
 	"os"
 	"testing"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
-	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-
-	"go.uber.org/zap/zapcore"
-
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"go.uber.org/zap/zapcore"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	//+kubebuilder:scaffold:imports
@@ -74,7 +72,7 @@ var _ = BeforeSuite(func() {
 	// Setup environment variables
 	env := abstractions.NewMockedEnvironment(map[string]string{})
 
-	kcpscope.NukeScopesWithoutKyma = false
+	cloudcontrolv1beta1.AutomaticNuke = false
 
 	// Setup controllers
 	// Scope
@@ -84,6 +82,7 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
+		infra.AzureMock().ExposeDataProvider(),
 	)).NotTo(HaveOccurred())
 	// Kyma
 	Expect(SetupKymaReconciler(

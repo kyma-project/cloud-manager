@@ -129,34 +129,23 @@ func IfElse(condition Predicate, trueAction Action, falseAction Action) Action {
 	}
 }
 
-func BuildSwitchAction(name string, defaultAction Action, cases ...Case) Action {
+func Switch(defaultAction Action, cases ...Case) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
-		logger := LoggerFromCtx(ctx).WithValues("action", name)
-		for i, cs := range cases {
+		for _, cs := range cases {
 			value := cs.Predicate(ctx, state)
 			if value {
-				actionName := findActionName(cs.Action)
-				logger.
-					WithValues(
-						"targetAction", actionName,
-						"index", i,
-					).
-					Info("Running action")
 				return cs.Action(ctx, state)
 			}
 		}
 
 		if defaultAction != nil {
-			actionName := findActionName(defaultAction)
-			logger.
-				WithValues(
-					"targetAction", actionName,
-					"index", "default",
-				).
-				Info("Running action")
 			return defaultAction(ctx, state)
 		}
 
-		return nil, nil
+		return nil, ctx
 	}
+}
+
+func BuildSwitchAction(_ string, defaultAction Action, cases ...Case) Action {
+	return Switch(defaultAction, cases...)
 }

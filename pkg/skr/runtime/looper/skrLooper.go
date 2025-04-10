@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
-	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
@@ -26,8 +26,8 @@ import (
 )
 
 type ActiveSkrCollection interface {
-	AddScope(scope *cloudcontrol1beta1.Scope)
-	RemoveScope(scope *cloudcontrol1beta1.Scope)
+	AddScope(scope *cloudcontrolv1beta1.Scope)
+	RemoveScope(scope *cloudcontrolv1beta1.Scope)
 	AddKyma(kyma *unstructured.Unstructured)
 	RemoveKyma(kyma *unstructured.Unstructured)
 	Contains(kymaName string) bool
@@ -75,7 +75,7 @@ func (l *activeSkrCollection) Queue() *CyclicQueue {
 	return l.queue
 }
 
-func (l *activeSkrCollection) AddScope(scope *cloudcontrol1beta1.Scope) {
+func (l *activeSkrCollection) AddScope(scope *cloudcontrolv1beta1.Scope) {
 	l.add(scope)
 }
 
@@ -94,11 +94,11 @@ func (l *activeSkrCollection) add(obj client.Object) {
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
-	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
-	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
-	region := labels[cloudcontrol1beta1.LabelScopeRegion]
-	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
+	globalAccountId := labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrolv1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrolv1beta1.LabelScopeShootName]
+	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,
@@ -116,7 +116,7 @@ func (l *activeSkrCollection) add(obj client.Object) {
 		Add(1)
 }
 
-func (l *activeSkrCollection) RemoveScope(scope *cloudcontrol1beta1.Scope) {
+func (l *activeSkrCollection) RemoveScope(scope *cloudcontrolv1beta1.Scope) {
 	l.remove(scope)
 }
 
@@ -134,11 +134,11 @@ func (l *activeSkrCollection) remove(obj client.Object) {
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
-	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
-	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
-	region := labels[cloudcontrol1beta1.LabelScopeRegion]
-	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
+	globalAccountId := labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrolv1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrolv1beta1.LabelScopeShootName]
+	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,

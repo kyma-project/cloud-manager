@@ -2,7 +2,7 @@ package iprange
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -14,7 +14,7 @@ func shouldPeerWithKymaNetwork(ctx context.Context, st composed.State) bool {
 		return false
 	}
 
-	if focal.AzureProviderPredicate(ctx, state) && state.isCloudManagerNetwork {
+	if statewithscope.AzureProviderPredicate(ctx, state) && state.isCloudManagerNetwork {
 		return true
 	}
 

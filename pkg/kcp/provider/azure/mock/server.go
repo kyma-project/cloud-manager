@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
@@ -61,6 +62,12 @@ func (s *server) RedisClusterClientProvider() azureclient.ClientProvider[azurere
 func (s *server) NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurenetworkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client] {
+	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, _ ...string) (azureexposeddataclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscriptionId, tenantId), nil
 	}
 }
 
