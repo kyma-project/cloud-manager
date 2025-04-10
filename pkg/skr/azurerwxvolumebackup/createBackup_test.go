@@ -6,12 +6,16 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
@@ -49,9 +53,9 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 
 	cluster := setupDefaultCluster()
 
-	state := &State{
-		State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup),
-	}
+	kcpScheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
+	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
 	scope := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{
@@ -65,6 +69,21 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 				},
 			},
 		},
+	}
+
+	kymaRef := klog.ObjectRef{
+		Name:      "skr",
+		Namespace: "test",
+	}
+
+	kcpClient := fake.NewClientBuilder().
+		WithScheme(kcpScheme).
+		WithObjects(scope).
+		Build()
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+
+	state := &State{
+		State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup)),
 	}
 
 	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")
