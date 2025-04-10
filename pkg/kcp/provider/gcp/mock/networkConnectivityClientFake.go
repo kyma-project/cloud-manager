@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	networkconnectivitypb "cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
-	v3iprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
-	v3iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet"
+	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -15,14 +15,14 @@ type networkConnectivityClientFake struct {
 	connectionPolicies map[string]*networkconnectivitypb.ServiceConnectionPolicy
 }
 
-func (ncClientFake *networkConnectivityClientFake) CreateServiceConnectionPolicy(ctx context.Context, request v3iprangeclient.CreateServiceConnectionPolicyRequest) error {
+func (ncClientFake *networkConnectivityClientFake) CreateServiceConnectionPolicy(ctx context.Context, request client.CreateServiceConnectionPolicyRequest) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
 	ncClientFake.mutex.Lock()
 	defer ncClientFake.mutex.Unlock()
 
-	name := v3iprange.GetServiceConnectionPolicyFullName(request.ProjectId, request.Region, request.Network)
+	name := subnet.GetServiceConnectionPolicyFullName(request.ProjectId, request.Region, request.Network)
 	connectionPolicy := &networkconnectivitypb.ServiceConnectionPolicy{
 		Name:         name,
 		Network:      request.Network,
@@ -56,7 +56,7 @@ func (ncClientFake *networkConnectivityClientFake) GetServiceConnectionPolicy(ct
 	}
 }
 
-func (ncClientFake *networkConnectivityClientFake) DeleteServiceConnectionPolicy(ctx context.Context, request v3iprangeclient.DeleteServiceConnectionPolicyRequest) error {
+func (ncClientFake *networkConnectivityClientFake) DeleteServiceConnectionPolicy(ctx context.Context, request client.DeleteServiceConnectionPolicyRequest) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}

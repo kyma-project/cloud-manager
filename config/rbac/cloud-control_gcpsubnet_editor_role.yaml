@@ -1,0 +1,27 @@
+# permissions for end users to edit gcpsubnets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-control-gcpsubnet-editor-role
+rules:
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - gcpsubnets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - gcpsubnets/status
+  verbs:
+  - get

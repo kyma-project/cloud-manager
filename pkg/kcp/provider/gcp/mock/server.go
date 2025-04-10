@@ -12,12 +12,12 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v3iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	nfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	memoryStoreClusterClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	subnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpccpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/googleapi"
 )
@@ -116,13 +116,13 @@ func (s *server) ComputeClientProvider() client.ClientProvider[iprangeclient.Com
 	}
 }
 
-func (s *server) ComputeClientProviderV3() client.ClientProvider[v3iprangeclient.ComputeClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (v3iprangeclient.ComputeClient, error) {
+func (s *server) SubnetComputeClientProvider() client.ClientProvider[subnetclient.ComputeClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (subnetclient.ComputeClient, error) {
 		return s, nil
 	}
 }
-func (s *server) NetworkConnectivityProviderV3() client.ClientProvider[v3iprangeclient.NetworkConnectivityClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (v3iprangeclient.NetworkConnectivityClient, error) {
+func (s *server) SubnetNetworkConnectivityProvider() client.ClientProvider[subnetclient.NetworkConnectivityClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (subnetclient.NetworkConnectivityClient, error) {
 		return s, nil
 	}
 }

@@ -1,4 +1,4 @@
-package v3
+package subnet
 
 import (
 	"context"
@@ -7,14 +7,15 @@ import (
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	gcpClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 type State struct {
-	types.State
+	focal.State
 
 	computeClient              client.ComputeClient
 	networkComnnectivityClient client.NetworkConnectivityClient
@@ -24,7 +25,7 @@ type State struct {
 }
 
 type StateFactory interface {
-	NewState(ctx context.Context, ipRangeState types.State) (*State, error)
+	NewState(ctx context.Context, focalState focal.State) (*State, error)
 }
 
 type stateFactory struct {
@@ -44,7 +45,7 @@ func NewStateFactory(
 	}
 }
 
-func (statefactory *stateFactory) NewState(ctx context.Context, ipRangeState types.State) (*State, error) {
+func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
 
 	computeClient, err := statefactory.computeClientProvider(
 		ctx,
@@ -62,13 +63,17 @@ func (statefactory *stateFactory) NewState(ctx context.Context, ipRangeState typ
 		return nil, err
 	}
 
-	return newState(ipRangeState, computeClient, networkConnectivityClient), nil
+	return newState(focalState, computeClient, networkConnectivityClient), nil
 }
 
-func newState(ipRangeState types.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient) *State {
+func newState(focalState focal.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient) *State {
 	return &State{
-		State:                      ipRangeState,
+		State:                      focalState,
 		computeClient:              computeClient,
 		networkComnnectivityClient: networkConnectivityClient,
 	}
+}
+
+func (s *State) ObjAsGcpSubnet() *cloudcontrolv1beta1.GcpSubnet {
+	return s.Obj().(*cloudcontrolv1beta1.GcpSubnet)
 }

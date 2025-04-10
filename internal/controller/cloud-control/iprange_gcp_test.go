@@ -1,9 +1,6 @@
 package cloudcontrol
 
 import (
-	"strconv"
-	"strings"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -12,6 +9,8 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"strconv"
+	"strings"
 )
 
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
@@ -170,7 +169,6 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
 					WithName(ipRangeName),
 					WithKcpIpRangeRemoteRef(ipRangeName),
-					WithKcpIpRangeGcpType(cloudcontrolv1beta1.GcpIpRangeTypeGLOBAL_ADDRESS),
 					WithScope(kymaName),
 				).
 				Should(Succeed())

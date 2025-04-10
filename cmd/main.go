@@ -55,12 +55,12 @@ import (
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v3gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	gcpmemorystoreclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
@@ -351,8 +351,6 @@ func main() {
 		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
-		v3gcpiprangeclient.NewComputeClientProvider(),
-		v3gcpiprangeclient.NewNetworkConnectivityClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
@@ -395,6 +393,15 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(
+		mgr,
+		gcpsubnetclient.NewComputeClientProvider(),
+		gcpsubnetclient.NewNetworkConnectivityClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
