@@ -118,10 +118,7 @@ func (c *networkClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringN
 	//peering from kyma to remote vpc
 	//Kyma will not export custom routes to the remote vpc, but if the remote vpc is exporting them we need to import them
 	exportCustomRoutes := false
-	importCustomRoutes := false
-	if customRoutes {
-		importCustomRoutes = true
-	}
+	importCustomRoutes := customRoutes
 	return CreateVpcPeeringRequest(ctx, remotePeeringName, kymaVpc, kymaProject, importCustomRoutes, exportCustomRoutes, remoteProject, remoteVpc)
 }
 

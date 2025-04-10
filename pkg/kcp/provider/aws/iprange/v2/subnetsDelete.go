@@ -2,7 +2,7 @@ package v2
 
 import (
 	"context"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
@@ -20,7 +20,7 @@ func subnetsDelete(ctx context.Context, st composed.State) (error, context.Conte
 
 	anyDeleted := false
 	for _, subnet := range state.cloudResourceSubnets {
-		if subnet.State != ec2Types.SubnetStateAvailable {
+		if subnet.State != ec2types.SubnetStateAvailable {
 			continue
 		}
 

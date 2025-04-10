@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	composed "github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -36,10 +36,10 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 
 		setupTest := func() {
 			gcpNfsVolume = &cloudresourcesv1beta1.GcpNfsVolume{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-gcpnfsvol",
 					Namespace: "test-ns",
-					DeletionTimestamp: &v1.Time{
+					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 					Finalizers: []string{api.CommonFinalizerDeletionHook},
@@ -47,7 +47,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 			}
 
 			pvc := &corev1.PersistentVolumeClaim{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-pvc",
 					Namespace: "test-ns",
 				},
@@ -86,7 +86,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			gcpNfsVolume.ObjectMeta.DeletionTimestamp = nil
+			gcpNfsVolume.DeletionTimestamp = nil
 
 			err, res := deletePersistentVolumeClaim(ctx, state)
 
@@ -114,8 +114,8 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			pvc := &corev1.PersistentVolumeClaim{
-				ObjectMeta: v1.ObjectMeta{
-					DeletionTimestamp: &v1.Time{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},

@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -17,7 +17,7 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	sgId, err := state.awsClient.CreateSecurityGroup(ctx, state.IpRange().Status.VpcId, state.Obj().GetName(), []ec2Types.Tag{
+	sgId, err := state.awsClient.CreateSecurityGroup(ctx, state.IpRange().Status.VpcId, state.Obj().GetName(), []ec2types.Tag{
 		{
 			Key:   ptr.To("Name"),
 			Value: ptr.To(state.Obj().GetName()),

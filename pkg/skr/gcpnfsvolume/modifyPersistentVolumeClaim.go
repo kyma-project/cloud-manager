@@ -42,7 +42,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 		logger.Info("Detected desynced PVC annotations")
 	}
 
-	if !(labelsChanged || annotationsDesynced) {
+	if !labelsChanged && !annotationsDesynced {
 		return nil, nil
 	}
 

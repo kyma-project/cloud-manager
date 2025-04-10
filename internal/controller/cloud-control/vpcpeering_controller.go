@@ -34,7 +34,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	awsVpCPeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
+	awsvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azurevpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	gcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
@@ -54,7 +54,7 @@ func SetupVpcPeeringReconciler(
 		vpcpeering.NewVpcPeeringReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsVpCPeering.NewStateFactory(awsSkrProvider),
+			awsvpcpeering.NewStateFactory(awsSkrProvider),
 			azurevpcpeering.NewStateFactory(azureSkrProvider),
 			gcpvpcpeering.NewStateFactory(gcpSkrProvider, env),
 		),

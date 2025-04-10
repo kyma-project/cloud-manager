@@ -5,8 +5,8 @@ import (
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	client2 "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	v1 "k8s.io/api/core/v1"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,7 +17,7 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	backup := state.ObjAsAzureRwxVolumeBackup()
 	pvName := state.pvc.Spec.VolumeName
-	pv := &v1.PersistentVolume{}
+	pv := &corev1.PersistentVolume{}
 	logger := composed.LoggerFromCtx(ctx)
 
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, pv)
@@ -57,7 +57,7 @@ func loadPersistentVolume(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	resourceGroupName, storageAccountName, fileShareName, _, _, err := client2.ParsePvVolumeHandle(pv.Spec.CSI.VolumeHandle)
+	resourceGroupName, storageAccountName, fileShareName, _, _, err := azurerwxvolumebackupclient.ParsePvVolumeHandle(pv.Spec.CSI.VolumeHandle)
 	if err != nil {
 		logger.Error(nil, fmt.Sprintf("PersistentVolume has an unexpected volume handle: %v", pv.Spec.CSI.VolumeHandle))
 		backup.Status.State = cloudresourcesv1beta1.JobStateFailed

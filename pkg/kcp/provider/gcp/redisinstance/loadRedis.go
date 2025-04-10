@@ -3,7 +3,6 @@ package redisinstance
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -37,9 +36,9 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.Error(err, "Error loading GCP Redis")
 		redisInstance := state.ObjAsRedisInstance()
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
-			Type:    v1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCloudProviderError,
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to load RedisInstance",
 		})
 		redisInstance.Status.State = cloudcontrolv1beta1.StateError

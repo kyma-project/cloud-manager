@@ -3,16 +3,16 @@ package rediscluster
 import (
 	"context"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func modifyParameterGroup(
-	getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup,
-	getParamGroupCurrentParams func(*State) []elasticacheTypes.Parameter,
-	getParamGroupDefaultParams func(*State) []elasticacheTypes.Parameter,
+	getParamGroup func(*State) *elasticachetypes.CacheParameterGroup,
+	getParamGroupCurrentParams func(*State) []elasticachetypes.Parameter,
+	getParamGroupDefaultParams func(*State) []elasticachetypes.Parameter,
 	name string,
 ) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
@@ -51,18 +51,18 @@ func modifyParameterGroup(
 
 func modifyMainParameterGroup(state *State) composed.Action {
 	return modifyParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
-		func(s *State) []elasticacheTypes.Parameter { return s.parameterGroupCurrentParams },
-		func(s *State) []elasticacheTypes.Parameter { return s.parameterGroupFamilyDefaultParams },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.parameterGroup },
+		func(s *State) []elasticachetypes.Parameter { return s.parameterGroupCurrentParams },
+		func(s *State) []elasticachetypes.Parameter { return s.parameterGroupFamilyDefaultParams },
 		GetAwsElastiCacheParameterGroupName(state.Obj().GetName()),
 	)
 }
 
 func modifyTempParameterGroup(state *State) composed.Action {
 	return modifyParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
-		func(s *State) []elasticacheTypes.Parameter { return s.tempParameterGroupCurrentParams },
-		func(s *State) []elasticacheTypes.Parameter { return s.tempParameterGroupFamilyDefaultParams },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.tempParameterGroup },
+		func(s *State) []elasticachetypes.Parameter { return s.tempParameterGroupCurrentParams },
+		func(s *State) []elasticachetypes.Parameter { return s.tempParameterGroupFamilyDefaultParams },
 		GetAwsElastiCacheTempParameterGroupName(state.Obj().GetName()),
 	)
 }

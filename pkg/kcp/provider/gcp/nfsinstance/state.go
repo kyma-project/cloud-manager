@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	"google.golang.org/api/file/v1"
 )
@@ -14,7 +14,7 @@ import (
 type State struct {
 	types.State
 	curState        v1beta1.StatusState
-	operation       client2.OperationType
+	operation       gcpclient.OperationType
 	updateMask      []string
 	validations     []string
 	fsInstance      *file.Instance
@@ -26,11 +26,11 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	filestoreClientProvider client2.ClientProvider[client.FilestoreClient]
+	filestoreClientProvider gcpclient.ClientProvider[client.FilestoreClient]
 	env                     abstractions.Environment
 }
 
-func NewStateFactory(filestoreClientProvider client2.ClientProvider[client.FilestoreClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(filestoreClientProvider gcpclient.ClientProvider[client.FilestoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		filestoreClientProvider: filestoreClientProvider,
 		env:                     env,
@@ -94,7 +94,7 @@ func (s State) toInstance() *file.Instance {
 		},
 		Networks: []*file.NetworkConfig{
 			{
-				Network:         client2.GetVPCPath(project, vpc),
+				Network:         gcpclient.GetVPCPath(project, vpc),
 				ConnectMode:     string(gcpOptions.ConnectMode),
 				ReservedIpRange: s.IpRange().Status.Id,
 			},

@@ -3,11 +3,11 @@ package testinfra
 import (
 	"context"
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	scope2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -128,14 +128,14 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 
 	// Shoot
 	{
-		shoot := &gardenerTypes.Shoot{
+		shoot := &gardenertypes.Shoot{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: dsl.i.Garden().Namespace(),
 				Name:      name,
 			},
-			Spec: gardenerTypes.ShootSpec{
+			Spec: gardenertypes.ShootSpec{
 				Region: "us-west1",
-				Provider: gardenerTypes.Provider{
+				Provider: gardenertypes.Provider{
 					Type: "gcp",
 				},
 				SecretBindingName: ptr.To(name),
@@ -149,12 +149,12 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 
 	// SecretBinding
 	{
-		secretBinding := &gardenerTypes.SecretBinding{
+		secretBinding := &gardenertypes.SecretBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: dsl.i.Garden().Namespace(),
 				Name:      name,
 			},
-			Provider: &gardenerTypes.SecretBindingProvider{
+			Provider: &gardenertypes.SecretBindingProvider{
 				Type: "aws",
 			},
 			SecretRef: corev1.SecretReference{
@@ -189,7 +189,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 }
 
 func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
-	shootNamespace := scope2.ScopeConfig.GardenerNamespace // os.Getenv("GARDENER_NAMESPACE")
+	shootNamespace := kcpscope.ScopeConfig.GardenerNamespace // os.Getenv("GARDENER_NAMESPACE")
 	project := strings.TrimPrefix(shootNamespace, "garden-")
 	scope := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{

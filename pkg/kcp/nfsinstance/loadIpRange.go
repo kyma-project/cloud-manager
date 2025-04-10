@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	types2 "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
+	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,7 +16,7 @@ import (
 )
 
 func loadIpRange(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(types2.State)
+	state := st.(nfsinstancetypes.State)
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderOpenStack {

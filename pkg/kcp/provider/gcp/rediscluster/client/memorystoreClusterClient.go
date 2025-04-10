@@ -8,7 +8,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	cluster "cloud.google.com/go/redis/cluster/apiv1"
-	clusterpb "cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"google.golang.org/api/option"
@@ -49,7 +49,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisCluster(ctx context.Conte
 	if err != nil {
 		return err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	req := &clusterpb.UpdateClusterRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
@@ -73,7 +73,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Conte
 	if err != nil {
 		return err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
 	req := &clusterpb.CreateClusterRequest{
@@ -115,7 +115,7 @@ func (memorystoreClient *memorystoreClient) GetRedisCluster(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	name := GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
 	req := &clusterpb.GetClusterRequest{
@@ -140,7 +140,7 @@ func (memorystoreClient *memorystoreClient) DeleteRedisCluster(ctx context.Conte
 	if redisClientErr != nil {
 		return redisClientErr
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	req := &clusterpb.DeleteClusterRequest{
 		Name: GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId),

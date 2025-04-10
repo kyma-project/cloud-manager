@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	compute "cloud.google.com/go/compute/apiv1"
-	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
 	"k8s.io/utils/ptr"
@@ -59,7 +59,7 @@ func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, req
 	if err != nil {
 		return err
 	}
-	defer subnetClient.Close()
+	defer subnetClient.Close() // nolint: errcheck
 
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 
@@ -88,7 +88,7 @@ func (computeClient *computeClient) GetSubnet(ctx context.Context, request GetSu
 	if err != nil {
 		return nil, err
 	}
-	defer subnetClient.Close()
+	defer subnetClient.Close() // nolint: errcheck
 
 	subnet, err := subnetClient.Get(ctx, &computepb.GetSubnetworkRequest{
 		Project:    request.ProjectId,
@@ -108,7 +108,7 @@ func (computeClient *computeClient) DeleteSubnet(ctx context.Context, request De
 	if err != nil {
 		return err
 	}
-	defer subnetClient.Close()
+	defer subnetClient.Close() // nolint: errcheck
 
 	_, err = subnetClient.Delete(ctx, &computepb.DeleteSubnetworkRequest{
 		Project:    request.ProjectId,

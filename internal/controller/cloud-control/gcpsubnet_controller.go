@@ -26,7 +26,7 @@ import (
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -35,8 +35,8 @@ import (
 
 func SetupGcpSubnetReconciler(
 	kcpManager manager.Manager,
-	computeClientProvider gcpclient.ClientProvider[client.ComputeClient],
-	networkConnectivityClientProvider gcpclient.ClientProvider[client.NetworkConnectivityClient],
+	computeClientProvider gcpclient.ClientProvider[gcpsubnetclient.ComputeClient],
+	networkConnectivityClientProvider gcpclient.ClientProvider[gcpsubnetclient.NetworkConnectivityClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

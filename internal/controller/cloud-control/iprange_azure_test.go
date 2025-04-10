@@ -12,7 +12,7 @@ import (
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -34,7 +34,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAzure).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).

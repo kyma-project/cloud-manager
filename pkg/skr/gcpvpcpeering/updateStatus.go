@@ -58,7 +58,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if len(state.KcpVpcPeering.Status.Conditions) > 0 && len(state.ObjAsGcpVpcPeering().Status.Conditions) > 0 &&
-		state.KcpVpcPeering.Status.Conditions[0].LastTransitionTime.Time.After(state.ObjAsGcpVpcPeering().Status.Conditions[0].LastTransitionTime.Time) &&
+		state.KcpVpcPeering.Status.Conditions[0].LastTransitionTime.After(state.ObjAsGcpVpcPeering().Status.Conditions[0].LastTransitionTime.Time) &&
 		state.KcpVpcPeering.Status.Conditions[0].Message != state.ObjAsGcpVpcPeering().Status.Conditions[0].Message {
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
 			SetExclusiveConditions(state.KcpVpcPeering.Status.Conditions[0]).

@@ -5,9 +5,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
-	awsRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
-	azureRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
-	gcpRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
+	awsredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
+	azureredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
+	gcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -25,17 +25,17 @@ type redisInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	gcpStateFactory   gcpRedisinstance.StateFactory
-	azureStateFactory azureRedisinstance.StateFactory
-	awsStateFactory   awsRedisinstance.StateFactory
+	gcpStateFactory   gcpredisinstance.StateFactory
+	azureStateFactory azureredisinstance.StateFactory
+	awsStateFactory   awsredisinstance.StateFactory
 }
 
 func NewRedisInstanceReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	gcpStateFactory gcpRedisinstance.StateFactory,
-	azureStateFactory azureRedisinstance.StateFactory,
-	awsStateFactory awsRedisinstance.StateFactory,
+	gcpStateFactory gcpredisinstance.StateFactory,
+	azureStateFactory azureredisinstance.StateFactory,
+	awsStateFactory awsredisinstance.StateFactory,
 ) RedisInstanceReconciler {
 	return &redisInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -70,9 +70,9 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(statewithscope.GcpProviderPredicate, gcpRedisinstance.New(r.gcpStateFactory)),
-					composed.NewCase(statewithscope.AzureProviderPredicate, azureRedisinstance.New(r.azureStateFactory)),
-					composed.NewCase(statewithscope.AwsProviderPredicate, awsRedisinstance.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpredisinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azureredisinstance.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsredisinstance.New(r.awsStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

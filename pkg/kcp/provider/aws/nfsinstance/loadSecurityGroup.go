@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -37,7 +37,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	sg, err := state.awsClient.DescribeSecurityGroups(
 		ctx,
-		[]ec2Types.Filter{
+		[]ec2types.Filter{
 			{
 				Name:   ptr.To("vpc-id"),
 				Values: []string{state.IpRange().Status.VpcId},

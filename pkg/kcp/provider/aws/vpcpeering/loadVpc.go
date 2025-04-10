@@ -3,7 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -25,7 +25,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "Error loading AWS VPC Networks", composed.StopWithRequeue, ctx)
 	}
 
-	var vpc *ec2Types.Vpc
+	var vpc *ec2types.Vpc
 
 	for _, vv := range vpcList {
 		v := vv
@@ -37,7 +37,7 @@ func loadVpc(ctx context.Context, st composed.State) (error, context.Context) {
 
 	if vpc == nil {
 
-		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2Types.Vpc) string {
+		allLoadedVpcs := pie.StringsUsing(vpcList, func(x ec2types.Vpc) string {
 			return fmt.Sprintf(
 				"%s{%s}",
 				ptr.Deref(x.VpcId, ""),

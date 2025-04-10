@@ -3,7 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,7 +33,7 @@ var PVEventHandler handler.Funcs = handler.Funcs{
 
 func isMatchingPV(obj client.Object) (bool, *types.NamespacedName) {
 
-	if _, ok := obj.(*v1.PersistentVolume); !ok {
+	if _, ok := obj.(*corev1.PersistentVolume); !ok {
 		return false, nil
 	}
 

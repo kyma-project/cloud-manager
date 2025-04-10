@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,7 +25,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
@@ -36,7 +36,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 		// Tell IpRange reconciler to ignore this kymaName
-		iprangePkg.Ignore.AddName(kcpIpRangeName)
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
 		By("And Given KCP IPRange exists", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(
@@ -92,7 +92,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
-		var awsElastiCacheClusterInstance *elasticacheTypes.ReplicationGroup
+		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("Then AWS Redis is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
@@ -164,7 +164,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
@@ -175,7 +175,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 		// Tell IpRange reconciler to ignore this kymaName
-		iprangePkg.Ignore.AddName(kcpIpRangeName)
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
 		By("And Given KCP IPRange exists", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(
@@ -231,7 +231,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
-		var awsElastiCacheClusterInstance *elasticacheTypes.ReplicationGroup
+		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("And Given AWS Redis is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
@@ -348,7 +348,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
@@ -359,7 +359,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 		// Tell IpRange reconciler to ignore this kymaName
-		iprangePkg.Ignore.AddName(kcpIpRangeName)
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
 		By("And Given KCP IPRange exists", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(
@@ -415,7 +415,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
-		var awsElastiCacheClusterInstance *elasticacheTypes.ReplicationGroup
+		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("And Given AWS Redis is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,

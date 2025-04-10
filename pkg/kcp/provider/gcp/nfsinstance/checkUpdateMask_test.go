@@ -52,7 +52,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyIncrease() {
 	err, resCtx := checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "FileShares", testState.State.updateMask[0])
+	assert.Equal(suite.T(), "FileShares", testState.updateMask[0])
 }
 
 func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyDecrease() {
@@ -85,7 +85,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyDecrease() {
 	err, resCtx := checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "FileShares", testState.State.updateMask[0])
+	assert.Equal(suite.T(), "FileShares", testState.updateMask[0])
 }
 
 func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyNoChange() {
@@ -118,7 +118,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyNoChange() {
 	err, resCtx := checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.State.updateMask))
+	assert.Equal(suite.T(), 0, len(testState.updateMask))
 }
 
 func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
@@ -152,7 +152,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
 	err, resCtx := checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.State.updateMask))
+	assert.Equal(suite.T(), 0, len(testState.updateMask))
 
 	//ADD operation
 	testState.operation = client.ADD
@@ -161,7 +161,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
 	err, resCtx = checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.State.updateMask))
+	assert.Equal(suite.T(), 0, len(testState.updateMask))
 
 	//DELETE operation
 	testState.operation = client.DELETE
@@ -170,7 +170,7 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
 	err, resCtx = checkUpdateMask(ctx, testState.State)
 	assert.Nil(suite.T(), resCtx)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.State.updateMask))
+	assert.Equal(suite.T(), 0, len(testState.updateMask))
 }
 
 func TestCheckUpdateMask(t *testing.T) {

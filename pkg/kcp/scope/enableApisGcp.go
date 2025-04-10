@@ -85,7 +85,7 @@ func verifyAndAddOperationToStatus(ctx context.Context, scope *v1beta1.Scope, cl
 		if operation.Done {
 			if operation.Error != nil {
 				return composed.LogErrorAndReturn(
-					fmt.Errorf("Enabling service %s operation failed: %s. Retry with delay", service, operation.Error.Message),
+					fmt.Errorf("enabling service %s operation failed: %s. Retry with delay", service, operation.Error.Message),
 					"Error enabling GCP APIs",
 					composed.StopWithRequeueDelay(gcpclient.GcpRetryWaitTime),
 					ctx)

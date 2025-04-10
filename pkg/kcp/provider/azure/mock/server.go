@@ -10,7 +10,7 @@ import (
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"sync"
 )
 
@@ -29,8 +29,8 @@ type server struct {
 	subscriptions map[string]*tenantSubscriptionStore
 }
 
-func (s *server) StorageProvider() azureclient.ClientProvider[storageClient.Client] {
-	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (storageClient.Client, error) {
+func (s *server) StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxvolumebackupclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

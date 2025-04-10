@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	redispb "cloud.google.com/go/redis/apiv1/redispb"
+	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"google.golang.org/genproto/googleapis/type/dayofweek"
 	"google.golang.org/genproto/googleapis/type/timeofday"

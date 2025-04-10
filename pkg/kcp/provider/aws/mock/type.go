@@ -2,26 +2,26 @@ package mock
 
 import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
-	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
-	scope "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 )
 
 type IpRangeClient interface {
-	iprangeclient.Client
+	awsiprangeclient.Client
 }
 
 type VpcPeeringClient interface {
-	vpcpeeringclient.Client
+	awsvpcpeeringclient.Client
 }
 
 type NfsClient interface {
-	nfsinstanceclient.Client
+	awsnfsinstanceclient.Client
 }
 
 type ScopeClient interface {
-	scope.AwsStsClient
+	scopeclient.AwsStsClient
 }
 
 type Clients interface {
@@ -32,10 +32,10 @@ type Clients interface {
 }
 
 type Providers interface {
-	ScopeGardenProvider() awsclient.GardenClientProvider[scope.AwsStsClient]
-	IpRangeSkrProvider() awsclient.SkrClientProvider[iprangeclient.Client]
-	NfsInstanceSkrProvider() awsclient.SkrClientProvider[nfsinstanceclient.Client]
-	VpcPeeringSkrProvider() awsclient.SkrClientProvider[vpcpeeringclient.Client]
+	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient]
+	IpRangeSkrProvider() awsclient.SkrClientProvider[awsiprangeclient.Client]
+	NfsInstanceSkrProvider() awsclient.SkrClientProvider[awsnfsinstanceclient.Client]
+	VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeringclient.Client]
 	ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient]
 }
 

@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"time"
 )
@@ -15,7 +15,7 @@ func waitEfsAvailable(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	if state.efs.LifeCycleState == efsTypes.LifeCycleStateAvailable {
+	if state.efs.LifeCycleState == efstypes.LifeCycleStateAvailable {
 		logger.Info("EFS state is Available")
 		return nil, nil
 	}

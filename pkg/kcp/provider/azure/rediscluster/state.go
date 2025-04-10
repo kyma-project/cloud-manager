@@ -8,15 +8,15 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	azureredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	redisclustertypes "github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
 )
 
 type State struct {
 	redisclustertypes.State
 
-	client         azureredisclient.Client
-	provider       azureclient.ClientProvider[azureredisclient.Client]
+	client         azureredisclusterclient.Client
+	provider       azureclient.ClientProvider[azureredisclusterclient.Client]
 	clientId       string
 	clientSecret   string
 	subscriptionId string
@@ -33,10 +33,10 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	skrProvider azureclient.ClientProvider[azureredisclient.Client]
+	skrProvider azureclient.ClientProvider[azureredisclusterclient.Client]
 }
 
-func NewStateFactory(skrProvider azureclient.ClientProvider[azureredisclient.Client]) StateFactory {
+func NewStateFactory(skrProvider azureclient.ClientProvider[azureredisclusterclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
@@ -59,8 +59,8 @@ func (f *stateFactory) NewState(ctx context.Context, redisclusterState redisclus
 }
 
 func newState(state redisclustertypes.State,
-	client azureredisclient.Client,
-	provider azureclient.ClientProvider[azureredisclient.Client],
+	client azureredisclusterclient.Client,
+	provider azureclient.ClientProvider[azureredisclusterclient.Client],
 	clientId string,
 	clientSecret string,
 	subscriptionId string,

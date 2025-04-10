@@ -10,7 +10,7 @@ import (
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 )
 
 type reconciler struct {
@@ -30,7 +30,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRwxVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
-		commonScope.New(),
+		commonscope.New(),
 		composed.IfElse(
 			composed.Not(CompletedOrDeletedPredicate),
 			composed.ComposeActions("AzureRwxVolumeBackupNotCompletedOrDeleted",

@@ -5,7 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
 )
@@ -55,7 +54,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 	}
 
 	scope := &cloudcontrolv1beta1.Scope{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-scope",
 			Namespace: "test-ns",
 		},
@@ -68,7 +67,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 		},
 	}
 
-	state.client, _ = azureClient.NewMockClient()(ctx, "", "", "", "")
+	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")
 	state.scope = scope
 	state.fileShareName = "matchingFileShareName"
 

@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -33,7 +33,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRwxVolumeRestoreMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
-		commonScope.New(),
+		commonscope.New(),
 		composed.IfElse(
 			composed.Not(CompletedOrDeletedRestorePredicate),
 			composed.ComposeActions("AzureRwxVolumeNotCompletedOrDeleted",
@@ -61,7 +61,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			commonScope.NewStateFactory(
+			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
 				args.KymaRef),
 			f.storageClientProvider,

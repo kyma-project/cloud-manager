@@ -6,16 +6,16 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	backupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func NewReconcilerFactory(
-	awsClientProvider awsClient.SkrClientProvider[backupclient.Client],
+	awsClientProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client],
 	env abstractions.Environment,
 ) skrruntime.ReconcilerFactory {
 	return &reconcilerFactory{
@@ -25,7 +25,7 @@ func NewReconcilerFactory(
 }
 
 type reconcilerFactory struct {
-	awsClientProvider awsClient.SkrClientProvider[backupclient.Client]
+	awsClientProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client]
 	env               abstractions.Environment
 }
 
@@ -33,7 +33,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			commonScope.NewStateFactory(
+			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
 				args.KymaRef,
 			),
@@ -62,7 +62,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"AwsNfsVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeBackup{}),
-		commonScope.New(),
+		commonscope.New(),
 		shortCircuitCompleted,
 		markFailed,
 		addFinalizer,

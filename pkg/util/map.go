@@ -30,7 +30,7 @@ func MergeMaps[K comparable, V any](first, second map[K]V, onCollisionOverwrite 
 	return result
 }
 
-// Templates format map[k]="Hello {{.name}}"
+// ParseTemplatesMapToBytesMap Templates format map[k]="Hello {{.name}}"
 func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[string][]byte {
 	result := map[string][]byte{}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
@@ -43,9 +42,9 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if err != nil {
 		logger.Error(err, "Error creating GCP Redis")
 		meta.SetStatusCondition(redisCluster.Conditions(), metav1.Condition{
-			Type:    v1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCloudProviderError,
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to create RedisCluster",
 		})
 		redisCluster.Status.State = cloudcontrolv1beta1.StateError

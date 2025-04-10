@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
-	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 )
 
@@ -36,20 +36,20 @@ func (s *server) ScopeGardenProvider() awsclient.GardenClientProvider[scopeclien
 	}
 }
 
-func (s *server) IpRangeSkrProvider() awsclient.SkrClientProvider[iprangeclient.Client] {
-	return func(ctx context.Context, account, region, key, secret, role string) (iprangeclient.Client, error) {
+func (s *server) IpRangeSkrProvider() awsclient.SkrClientProvider[awsiprangeclient.Client] {
+	return func(ctx context.Context, account, region, key, secret, role string) (awsiprangeclient.Client, error) {
 		return s.getAccountRegionContext(account, region), nil
 	}
 }
 
-func (s *server) NfsInstanceSkrProvider() awsclient.SkrClientProvider[nfsinstanceclient.Client] {
-	return func(ctx context.Context, account, region, key, secret, role string) (nfsinstanceclient.Client, error) {
+func (s *server) NfsInstanceSkrProvider() awsclient.SkrClientProvider[awsnfsinstanceclient.Client] {
+	return func(ctx context.Context, account, region, key, secret, role string) (awsnfsinstanceclient.Client, error) {
 		return s.getAccountRegionContext(account, region), nil
 	}
 }
 
-func (s *server) VpcPeeringSkrProvider() awsclient.SkrClientProvider[vpcpeeringclient.Client] {
-	return func(ctx context.Context, account, region, key, secret, role string) (vpcpeeringclient.Client, error) {
+func (s *server) VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeringclient.Client] {
+	return func(ctx context.Context, account, region, key, secret, role string) (awsvpcpeeringclient.Client, error) {
 		return s.getAccountRegionContext(account, region), nil
 	}
 }

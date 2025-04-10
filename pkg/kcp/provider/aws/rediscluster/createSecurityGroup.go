@@ -3,7 +3,7 @@ package rediscluster
 import (
 	"context"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -20,7 +20,7 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 	redisInstance := state.ObjAsRedisCluster()
 
 	sgName := GetAwsElastiCacheSecurityGroupName(state.Obj().GetName())
-	sgId, err := state.awsClient.CreateElastiCacheSecurityGroup(ctx, state.IpRange().Status.VpcId, sgName, []ec2Types.Tag{
+	sgId, err := state.awsClient.CreateElastiCacheSecurityGroup(ctx, state.IpRange().Status.VpcId, sgName, []ec2types.Tag{
 		{
 			Key:   ptr.To("Name"),
 			Value: ptr.To(sgName),

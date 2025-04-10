@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,7 +46,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//Construct a PV Object
-	pv := &v1.PersistentVolume{
+	pv := &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        getVolumeName(nfsVolume),
 			Labels:      getVolumeLabels(nfsVolume),
@@ -55,14 +55,14 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 				api.CommonFinalizerDeletionHook,
 			},
 		},
-		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+		Spec: corev1.PersistentVolumeSpec{
+			Capacity: corev1.ResourceList{
 				"storage": *capacity,
 			},
-			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
 			StorageClassName: "",
-			PersistentVolumeSource: v1.PersistentVolumeSource{
-				NFS: &v1.NFSVolumeSource{
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				NFS: &corev1.NFSVolumeSource{
 					Server: nfsVolume.Status.Hosts[0],
 					Path:   fmt.Sprintf("/%s", nfsVolume.Spec.FileShareName),
 				},

@@ -58,7 +58,7 @@ func (impl *backupImplGcpNfs) getBackupObject(state *State, objectMeta *metav1.O
 func (impl *backupImplGcpNfs) sourceToObjWithConditionAndState(obj client.Object) (composed.ObjWithConditionsAndState, error) {
 	x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume)
 	if !ok {
-		return nil, errors.New("Source Object should be of tyoe AwsNfsVolume")
+		return nil, errors.New("source Object should be of type AwsNfsVolume")
 	}
 	return x, nil
 }

@@ -7,22 +7,22 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
 
 type State struct {
 	vpcpeeringtypes.State
 
-	clientProvider azureclient.ClientProvider[vpcpeeringclient.Client]
+	clientProvider azureclient.ClientProvider[azurevpcpeeringclient.Client]
 	// localClient is used for API calls in local subscription that does not require auxiliary tenants and therefore is
 	// resilient to authentication errors when SPN does not exist in remote tenant.
-	localClient vpcpeeringclient.Client
+	localClient azurevpcpeeringclient.Client
 	// localPeeringClient is used for API calls in local subscription that requires auxiliary tenants. Client fails if
 	// SPN does not exist in remote tenant.
-	localPeeringClient vpcpeeringclient.Client
+	localPeeringClient azurevpcpeeringclient.Client
 	// remoteClient is used for API calls in remote subscription and may require auxiliary tenants
-	remoteClient vpcpeeringclient.Client
+	remoteClient azurevpcpeeringclient.Client
 
 	localNetwork    *cloudcontrolv1beta1.Network
 	localNetworkId  *azureutil.NetworkResourceId
@@ -39,10 +39,10 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	clientProvider azureclient.ClientProvider[vpcpeeringclient.Client]
+	clientProvider azureclient.ClientProvider[azurevpcpeeringclient.Client]
 }
 
-func NewStateFactory(skrProvider azureclient.ClientProvider[vpcpeeringclient.Client]) StateFactory {
+func NewStateFactory(skrProvider azureclient.ClientProvider[azurevpcpeeringclient.Client]) StateFactory {
 	return &stateFactory{
 		clientProvider: skrProvider,
 	}
@@ -53,7 +53,7 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 }
 
 func newState(state vpcpeeringtypes.State,
-	clientProvider azureclient.ClientProvider[vpcpeeringclient.Client],
+	clientProvider azureclient.ClientProvider[azurevpcpeeringclient.Client],
 ) *State {
 	return &State{
 		State:          state,

@@ -20,8 +20,8 @@ import (
 	"context"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	awsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	awsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"os"
 	"testing"
@@ -75,7 +75,7 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred())
 	// AwsNfsVolumeBackup
 	Expect(cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(
-		infra.Registry(), awsbackupclient.NewMockClient(), env)).
+		infra.Registry(), awsnfsvolumebackupclient.NewMockClient(), env)).
 		NotTo(HaveOccurred())
 
 	// AwsNfsBackupSchedule
@@ -84,7 +84,7 @@ var _ = BeforeSuite(func() {
 
 	// AwsNfsVolumeRestore
 	Expect(cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(
-		infra.Registry(), awsrestoreclient.NewMockClient(), env)).
+		infra.Registry(), awsnfsvolumerestoreclient.NewMockClient(), env)).
 		NotTo(HaveOccurred())
 
 	// Start controllers

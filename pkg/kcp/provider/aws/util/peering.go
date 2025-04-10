@@ -5,7 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
-// Determinates whether VpcPeeringConnection can be deleted based on VPC peering connection lifecycle
+// IsTerminated identifies whether VpcPeeringConnection can be deleted based on VPC peering connection lifecycle
 // https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html
 func IsTerminated(peering *ec2types.VpcPeeringConnection) bool {
 	code := peering.Status.Code

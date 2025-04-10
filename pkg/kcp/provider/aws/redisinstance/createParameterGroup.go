@@ -3,7 +3,7 @@ package redisinstance
 import (
 	"context"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func createParameterGroup(getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup, name string) composed.Action {
+func createParameterGroup(getParamGroup func(*State) *elasticachetypes.CacheParameterGroup, name string) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		state := st.(*State)
 
@@ -26,7 +26,7 @@ func createParameterGroup(getParamGroup func(*State) *elasticacheTypes.CachePara
 
 		family := GetAwsElastiCacheParameterGroupFamily(redisInstance.Spec.Instance.Aws.EngineVersion)
 
-		out, err := state.awsClient.CreateElastiCacheParameterGroup(ctx, name, family, []elasticacheTypes.Tag{
+		out, err := state.awsClient.CreateElastiCacheParameterGroup(ctx, name, family, []elasticachetypes.Tag{
 			{
 				Key:   ptr.To(common.TagCloudManagerRemoteName),
 				Value: ptr.To(redisInstance.Spec.RemoteRef.String()),
@@ -57,14 +57,14 @@ func createParameterGroup(getParamGroup func(*State) *elasticacheTypes.CachePara
 
 func createMainParameterGroup(state *State) composed.Action {
 	return createParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.parameterGroup },
 		GetAwsElastiCacheParameterGroupName(state.Obj().GetName()),
 	)
 }
 
 func createTempParameterGroup(state *State) composed.Action {
 	return createParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.tempParameterGroup },
 		GetAwsElastiCacheTempParameterGroupName(state.Obj().GetName()),
 	)
 }

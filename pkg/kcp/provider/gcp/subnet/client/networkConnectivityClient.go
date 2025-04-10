@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
-	networkconnectivitypb "cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
 )
@@ -49,7 +49,7 @@ func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx con
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer client.Close() // nolint: errcheck
 
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 	parent := fmt.Sprintf("projects/%s/locations/%s", request.ProjectId, request.Region)
@@ -83,7 +83,7 @@ func (ncClient *networkConnectivityClient) GetServiceConnectionPolicy(ctx contex
 	if err != nil {
 		return nil, err
 	}
-	defer client.Close()
+	defer client.Close() // nolint: errcheck
 
 	connectionPolicy, err := client.GetServiceConnectionPolicy(ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
 		Name: name,
@@ -101,7 +101,7 @@ func (ncClient *networkConnectivityClient) DeleteServiceConnectionPolicy(ctx con
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer client.Close() // nolint: errcheck
 
 	_, err = client.DeleteServiceConnectionPolicy(ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
 		Name:      request.Name,

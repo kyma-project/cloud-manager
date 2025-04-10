@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
@@ -23,7 +23,7 @@ func (suite *pvEventHandlerSuite) SetupTest() {
 
 func (suite *pvEventHandlerSuite) TestIsMatchingPV() {
 	//Update the capacity in spec.
-	pv := v1.PersistentVolume{
+	pv := corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-pv",
 			Namespace: "test",
@@ -42,7 +42,7 @@ func (suite *pvEventHandlerSuite) TestIsMatchingPV() {
 
 func (suite *pvEventHandlerSuite) TestNotMatchingPV() {
 	//Update the capacity in spec.
-	pod := v1.Pod{
+	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-pod",
 			Namespace: "test",

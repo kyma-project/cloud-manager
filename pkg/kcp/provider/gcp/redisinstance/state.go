@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 
-	gcpClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 type State struct {
@@ -27,11 +27,11 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	memorystoreClientProvider gcpClient.ClientProvider[client.MemorystoreClient]
+	memorystoreClientProvider gcpclient.ClientProvider[client.MemorystoreClient]
 	env                       abstractions.Environment
 }
 
-func NewStateFactory(memorystoreClientProvider gcpClient.ClientProvider[client.MemorystoreClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(memorystoreClientProvider gcpclient.ClientProvider[client.MemorystoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		memorystoreClientProvider: memorystoreClientProvider,
 		env:                       env,

@@ -6,7 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"k8s.io/klog/v2"
 )
@@ -29,7 +29,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, skrCluster composed.StateCluster,
-	fileRestoreClientProvider client2.ClientProvider[client.FileRestoreClient], env abstractions.Environment) StateFactory {
+	fileRestoreClientProvider gcpclient.ClientProvider[client.FileRestoreClient], env abstractions.Environment) StateFactory {
 
 	return &stateFactory{
 		kymaRef:                   kymaRef,
@@ -44,7 +44,7 @@ type stateFactory struct {
 	kymaRef                   klog.ObjectRef
 	kcpCluster                composed.StateCluster
 	skrCluster                composed.StateCluster
-	fileRestoreClientProvider client2.ClientProvider[client.FileRestoreClient]
+	fileRestoreClientProvider gcpclient.ClientProvider[client.FileRestoreClient]
 	env                       abstractions.Environment
 }
 

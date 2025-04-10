@@ -147,7 +147,7 @@ func HaveLastCreateRun(expected time.Time) ObjAssertion {
 		if x, ok := obj.(backupschedule.BackupSchedule); ok {
 			actual := x.GetLastCreateRun()
 
-			if actual.IsZero() || actual.Time.UTC() != expected.UTC() {
+			if actual.IsZero() || actual.UTC() != expected.UTC() {
 				return fmt.Errorf(
 					"expected object %T %s/%s to have lastCreateRun: %s, but found %s",
 					obj, obj.GetNamespace(), obj.GetName(), expected, actual,

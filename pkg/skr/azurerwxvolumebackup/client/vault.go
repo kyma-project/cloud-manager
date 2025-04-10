@@ -123,7 +123,7 @@ func (c vaultClient) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vau
 			return vaults, err
 		}
 
-		vaults = append(vaults, page.VaultList.Value...)
+		vaults = append(vaults, page.Value...)
 
 	}
 	return vaults, nil

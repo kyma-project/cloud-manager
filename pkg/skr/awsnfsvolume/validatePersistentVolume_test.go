@@ -8,11 +8,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	composed "github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -39,7 +39,7 @@ func TestValidatePersistentVolume(t *testing.T) {
 
 		setupTest := func() {
 			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-awsnfsvol",
 					Namespace: "test-ns",
 				},
@@ -49,7 +49,7 @@ func TestValidatePersistentVolume(t *testing.T) {
 			}
 
 			pv = &corev1.PersistentVolume{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:   awsNfsVolume.Status.Id,
 					Labels: getVolumeLabels(awsNfsVolume),
 				},
@@ -74,7 +74,7 @@ func TestValidatePersistentVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			awsNfsVolume.ObjectMeta.DeletionTimestamp = &v1.Time{
+			awsNfsVolume.DeletionTimestamp = &metav1.Time{
 				Time: time.Now(),
 			}
 

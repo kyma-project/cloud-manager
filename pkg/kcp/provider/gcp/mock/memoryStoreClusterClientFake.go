@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	clusterpb "cloud.google.com/go/redis/cluster/apiv1/clusterpb"
-	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	"google.golang.org/api/googleapi"
 	"k8s.io/utils/ptr"
 )
@@ -35,7 +35,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) DeleteMemorSto
 	delete(memoryStoreClusterClientFake.redisClusters, name)
 }
 
-func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options memoryStoreClient.CreateRedisClusterOptions) error {
+func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options gcpredisclusterclient.CreateRedisClusterOptions) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -43,7 +43,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisClu
 	memoryStoreClusterClientFake.mutex.Lock()
 	defer memoryStoreClusterClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
+	name := gcpredisclusterclient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
 	redisCluster := &clusterpb.Cluster{
 		Name:         name,
 		State:        clusterpb.Cluster_CREATING,
@@ -103,7 +103,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) DeleteRedisClu
 	memoryStoreClusterClientFake.mutex.Lock()
 	defer memoryStoreClusterClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
+	name := gcpredisclusterclient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
 
 	if instance, ok := memoryStoreClusterClientFake.redisClusters[name]; ok {
 		instance.State = clusterpb.Cluster_DELETING
@@ -124,7 +124,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) GetRedisCluste
 	memoryStoreClusterClientFake.mutex.Lock()
 	defer memoryStoreClusterClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
+	name := gcpredisclusterclient.GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
 
 	if instance, ok := memoryStoreClusterClientFake.redisClusters[name]; ok {
 		return instance, nil

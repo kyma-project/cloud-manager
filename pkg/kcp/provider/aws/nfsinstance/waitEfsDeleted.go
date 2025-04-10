@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,12 +17,12 @@ func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Cont
 		logger.Info("The EFS not found")
 		return nil, nil
 	}
-	if state.efs.LifeCycleState == efsTypes.LifeCycleStateDeleted {
+	if state.efs.LifeCycleState == efstypes.LifeCycleStateDeleted {
 		logger.Info("The EFS is in the deleted state")
 		return nil, nil
 	}
 
-	if state.efs.LifeCycleState == efsTypes.LifeCycleStateError {
+	if state.efs.LifeCycleState == efstypes.LifeCycleStateError {
 		return composed.UpdateStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

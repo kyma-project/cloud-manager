@@ -5,18 +5,38 @@ linters:
   default: standard
   enable:
     # enabled by default
-#    - errcheck
+    - errcheck
     - govet
     - ineffassign
-#    - staticcheck
+    - staticcheck
     - unused
     # added additionally
     - predeclared
     - importas
-  disable:
-    - errcheck
-    - staticcheck
+    - gocritic
+    - revive
   settings:
+    staticcheck:
+      checks:
+        - all
+        - "-ST1008"
+        - "-ST1003"
+        - "-ST1000"
+        - "-ST1021"
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - importShadow
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: import-alias-naming
+          severity: error
+          disabled: false
+          arguments:
+            - "^[a-z][a-z0-9]{0,}$"
+        - name: redundant-import-alias
+          disabled: false
     importas:
       alias:
         - pkg: github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1
@@ -24,5 +44,86 @@ linters:
         - pkg: github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1
           alias: cloudresourcesv1beta1
 
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/common/scope
+          alias: commonscope
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/iprange
+          alias: kcpiprange
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/scope
+          alias: kcpscope
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/network
+          alias: kcpnetwork
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types
+          alias: nfsinstancetypes
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/scope/client
+          alias: scopeclient
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client
+          alias: awsclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client
+          alias: awsiprangeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client
+          alias: awsnfsinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client
+          alias: awsnukeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client
+          alias: awsvpcpeeringclient
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta
+          alias: azuremeta
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client
+          alias: azureclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client
+          alias: azureiprangeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client
+          alias: azurenetworkclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client
+          alias: azurenukeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client
+          alias: azureredisclusterclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client
+          alias: azureredisinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client
+          alias: azurevpcpeeringclient
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client
+          alias: gcpclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client
+          alias: gcpiprangeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client
+          alias: gcpiprangev3client
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client
+          alias: gcpnfsbackupclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client
+          alias: gcpnfsinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client
+          alias: gcpnfsrestoreclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client
+          alias: gcpredisclusterclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client
+          alias: gcpredisinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client
+          alias: gcpsubnetclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client
+          alias: gcpvpcpeeringclient
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/azureredisinstance
+          alias: skrazureredisinstance
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/iprange
+          alias: skriprange
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client
+          alias: azurerwxvolumebackupclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client
+          alias: awsnfsvolumebackupclient
+
         - pkg: github.com/kyma-project/cloud-manager/pkg/skr/runtime
           alias: skrruntime
+
+        - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+          alias: metav1
+        - pkg: k8s.io/api/core/v1
+          alias: corev1
+
+        - pkg: github.com/aws/aws-sdk-go-v2/service/ec2/types
+          alias: ec2types

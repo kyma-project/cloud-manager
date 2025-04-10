@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -66,9 +65,9 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	if err != nil {
 		logger.Error(err, "Error creating AWS ElastiCache")
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
-			Type:    v1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCloudProviderError,
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to create RedisInstance",
 		})
 		redisInstance.Status.State = cloudcontrolv1beta1.StateError

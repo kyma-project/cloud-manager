@@ -7,7 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -32,7 +32,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 		netName := "my-net"
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
 		})
@@ -92,7 +92,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 		ipRangeName := "f86295fc-b2af-4e14-adb5-597fbe03ae04"
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
 		})
@@ -178,7 +178,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 		vpcPeeringName := "6f0747be-058d-4957-89e7-6a67a219f089"
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
 		})
@@ -285,7 +285,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 		vpcPeeringName := "8b4190ce-e401-4bb3-8a0e-608b6cf7da59"
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
 		})

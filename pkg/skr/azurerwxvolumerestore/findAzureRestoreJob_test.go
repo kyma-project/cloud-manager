@@ -5,12 +5,12 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -33,7 +33,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 		utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-scope",
 				Namespace: "test-ns",
 			},
@@ -55,13 +55,13 @@ func TestFindAzureRestoreJob(t *testing.T) {
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
-				State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
 			}
 		}
 
 		setupTest := func(withObj bool, backupWithRecoveryPointId bool) {
 			azureRwxVolumeBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-azure-restore-backup",
 					Namespace: "test-ns",
 				},
@@ -71,11 +71,11 @@ func TestFindAzureRestoreJob(t *testing.T) {
 				azureRwxVolumeBackup.Status.RecoveryPointId = "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			}
 			startTime, _ := time.Parse(time.RFC3339, "2025-03-01T00:43:35.6367215Z")
-			k8sStartTime := v1.Time{
+			k8sStartTime := metav1.Time{
 				Time: startTime,
 			}
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-azure-restore",
 					Namespace: "test-ns-2",
 				},
@@ -115,7 +115,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			k8sClient = spy.NewClientSpy(fakeClient)
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
 			state.azureRwxVolumeBackup = azureRwxVolumeBackup
-			state.storageClient, _ = storageClient.NewMockClient()(nil, "", "", "", "")
+			state.storageClient, _ = azurerwxvolumebackupclient.NewMockClient()(nil, "", "", "", "")
 		}
 
 		t.Run("Should: find azure restore job", func(t *testing.T) {
@@ -129,7 +129,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 			restore.Status.RestoredDir = "test-restore-dir"
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        "",
 				FabricName:               "",
@@ -174,7 +174,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        "",
 				FabricName:               "",

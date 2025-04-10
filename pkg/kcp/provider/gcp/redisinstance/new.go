@@ -3,12 +3,10 @@ package redisinstance
 import (
 	"context"
 	"fmt"
-
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -19,13 +17,13 @@ func New(stateFactory StateFactory) composed.Action {
 		state, err := stateFactory.NewState(ctx, st.(types.State))
 		if err != nil {
 			composed.LoggerFromCtx(ctx).Error(err, "Failed to bootstrap GCP RedisInstance state")
-			redisInstance := st.Obj().(*v1beta1.RedisInstance)
+			redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
 			redisInstance.Status.State = cloudcontrolv1beta1.StateError
 			return composed.UpdateStatus(redisInstance).
 				SetExclusiveConditions(metav1.Condition{
-					Type:    v1beta1.ConditionTypeError,
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
-					Reason:  v1beta1.ReasonCloudProviderError,
+					Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 					Message: "Failed to create RedisInstance state",
 				}).
 				SuccessError(composed.StopAndForget).

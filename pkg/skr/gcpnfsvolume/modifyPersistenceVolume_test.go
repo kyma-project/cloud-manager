@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -64,7 +64,7 @@ func (suite *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 
 	//Get the modified PV object
 	pvName := fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name)
-	pv = &v1.PersistentVolume{}
+	pv = &corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, pv)
 
 	//validate NFS attributes of PV

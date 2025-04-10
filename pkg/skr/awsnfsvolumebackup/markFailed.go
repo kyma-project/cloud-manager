@@ -63,7 +63,7 @@ func markFailed(ctx context.Context, st composed.State) (error, context.Context)
 	//mark this backup object state as failed.
 	for _, item := range list.Items {
 
-		if item.CreationTimestamp.Time.After(backup.CreationTimestamp.Time) {
+		if item.CreationTimestamp.After(backup.CreationTimestamp.Time) {
 			errCondition := meta.FindStatusCondition(backup.Status.Conditions, v1beta1.ConditionTypeError)
 			message := "Backup moved to Failed state as more recent backup(s) is available."
 			if errCondition != nil {

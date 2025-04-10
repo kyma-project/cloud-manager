@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/cmd/cli/helper"
 	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
 	"github.com/spf13/cobra"
@@ -45,21 +45,21 @@ var cmdGardenShootCreateAzure = &cobra.Command{
 
 		c := helper.NewGardenClient()
 
-		shoot := &gardenerTypes.Shoot{
+		shoot := &gardenertypes.Shoot{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      shootName,
 			},
-			Spec: gardenerTypes.ShootSpec{
+			Spec: gardenertypes.ShootSpec{
 				Region:           azureRegion,
 				CloudProfileName: ptr.To("az"),
-				Networking: &gardenerTypes.Networking{
-					IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
+				Networking: &gardenertypes.Networking{
+					IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
 					Nodes:      ptr.To("10.250.0.0/22"),
 					Pods:       ptr.To("100.64.0.0/12"),
 					Services:   ptr.To("100.104.0.0/13"),
 				},
-				Provider: gardenerTypes.Provider{
+				Provider: gardenertypes.Provider{
 					Type: "azure",
 					InfrastructureConfig: &runtime.RawExtension{
 						Object: &azuregardener.InfrastructureConfig{
@@ -99,12 +99,12 @@ var cmdGardenShootCreateAzure = &cobra.Command{
 		}
 		fmt.Println("Created Shoot")
 
-		sb := &gardenerTypes.SecretBinding{
+		sb := &gardenertypes.SecretBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      shootName,
 			},
-			Provider: &gardenerTypes.SecretBindingProvider{
+			Provider: &gardenertypes.SecretBindingProvider{
 				Type: "azure",
 			},
 			SecretRef: corev1.SecretReference{

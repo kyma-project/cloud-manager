@@ -170,14 +170,14 @@ func copyFile(src, dest string) error {
 	if err != nil {
 		return fmt.Errorf("error opening file %s: %w", src, err)
 	}
-	defer s.Close()
+	defer s.Close() // nolint: errcheck
 
 	dest1 := dest + ".tmp"
 	d, err := os.Create(dest1)
 	if err != nil {
 		return fmt.Errorf("error creating tmp destination %s: %w", dest1, err)
 	}
-	defer d.Close()
+	defer d.Close() // nolint: errcheck
 
 	_, err = io.Copy(d, s)
 	if err != nil {

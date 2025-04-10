@@ -45,7 +45,7 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	awsnukenfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
@@ -56,15 +56,15 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
-	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
-	gcpmemorystoreclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
-	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
+	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
-	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	awsnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 
@@ -278,7 +278,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsvolumebackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
 		os.Exit(1)
 	}
@@ -288,7 +288,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(skrRegistry, awsnfsrestoreclient.NewClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(skrRegistry, awsnfsvolumerestoreclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeRestore")
 		os.Exit(1)
 	}
@@ -327,7 +327,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpFilestoreClient.NewFilestoreClientProvider(),
+		gcpnfsinstanceclient.NewFilestoreClientProvider(),
 		cceenfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
@@ -358,7 +358,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
-		gcpmemorystoreclient.NewMemorystoreClientProvider(),
+		gcpredisinstanceclient.NewMemorystoreClientProvider(),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,
@@ -378,7 +378,7 @@ func main() {
 		mgr,
 		activeSkrCollection,
 		gcpnfsbackupclient.NewFileBackupClientProvider(),
-		awsnukenfsclient.NewClientProvider(),
+		awsnukeclient.NewClientProvider(),
 		azurenukeclient.NewClientProvider(),
 		env,
 	); err != nil {
@@ -389,7 +389,7 @@ func main() {
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
 		azureredisclusterclient.NewClientProvider(),
-		gcpmemorystoreclusterclient.NewMemorystoreClientProvider(),
+		gcpredisclusterclient.NewMemorystoreClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")

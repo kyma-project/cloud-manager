@@ -3,7 +3,7 @@ package network
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureMeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -12,7 +12,7 @@ func vnetLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	net, err := state.azureClient.GetNetwork(ctx, state.resourceGroupName, state.vnetName)
-	if azureMeta.IgnoreNotFoundError(err) != nil {
+	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return composed.LogErrorAndReturn(err, "Error loading Azure vnet for KCP Network", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 	if err != nil {

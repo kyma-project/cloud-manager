@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	path "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -141,7 +141,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	if len(protectedItemsMatching) == 1 {
 		// Invoke backup and return
 		protectedItemName := *protectedItemsMatching[0].Name
-		containerName := path.GetContainerName(resourceGroupName, storageAccountName)
+		containerName := azurerwxvolumebackupclient.GetContainerName(resourceGroupName, storageAccountName)
 		err = state.client.TriggerBackup(ctx, vaultName, resourceGroupName, containerName, protectedItemName, backup.Spec.Location)
 		if err != nil {
 			backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError
@@ -262,7 +262,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Bind BackupPolicy to Fileshare
 	protectedItemName := *matchingItems[0].Name
-	containerName := path.GetContainerName(resourceGroupName, storageAccountName)
+	containerName := azurerwxvolumebackupclient.GetContainerName(resourceGroupName, storageAccountName)
 	err = state.client.CreateOrUpdateProtectedItem(ctx, subscriptionId, "location", vaultName, resourceGroupName, containerName, protectedItemName, policyName, storageAccountName)
 	if err != nil {
 
