@@ -15,6 +15,14 @@ func waitKcpNfsInstanceStatus(ctx context.Context, st composed.State) (error, co
 		return nil, ctx
 	}
 
+	// if stuck in creating, we want to be able to be deleted
+	if composed.IsMarkedForDeletion(state.ObjAsCceeNfsVolume()) {
+		return nil, ctx
+	}
+	if composed.IsMarkedForDeletion(state.KcpNfsInstance) {
+		return nil, ctx
+	}
+
 	if meta.FindStatusCondition(*state.KcpNfsInstance.Conditions(), cloudcontrol1beta1.ConditionTypeReady) != nil {
 		return nil, ctx
 	}
