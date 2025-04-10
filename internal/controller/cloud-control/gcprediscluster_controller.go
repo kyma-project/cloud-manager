@@ -23,66 +23,66 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
-	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
-	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
+
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-func SetupRedisClusterReconciler(
+func SetupGcpRedisClusterReconciler(
 	kcpManager manager.Manager,
-	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
-	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisclusterclient.Client],
+	memorystoreClusterClientProvider gcpclient.ClientProvider[client.MemorystoreClusterClient],
 	env abstractions.Environment,
 ) error {
-	return NewRedisClusterReconciler(
-		rediscluster.NewRedisClusterReconciler(
+	if env == nil {
+		env = abstractions.NewOSEnvironment()
+	}
+	return NewGcpRedisClusterReconciler(
+		rediscluster.NewGcpRedisClusterReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			awsrediscluster.NewStateFactory(awsFilestoreClientProvider),
-			azurerediscluster.NewStateFactory(azureRedisCacheClientProvider),
+			rediscluster.NewStateFactory(memorystoreClusterClientProvider, env),
 		),
 	).SetupWithManager(kcpManager)
 }
 
-func NewRedisClusterReconciler(
-	reconciler rediscluster.RedisClusterReconciler,
-) *RedisClusterReconciler {
-	return &RedisClusterReconciler{
+func NewGcpRedisClusterReconciler(
+	reconciler rediscluster.GcpRedisClusterReconciler,
+) *GcpRedisClusterReconciler {
+	return &GcpRedisClusterReconciler{
 		Reconciler: reconciler,
 	}
 }
 
-type RedisClusterReconciler struct {
-	Reconciler rediscluster.RedisClusterReconciler
+type GcpRedisClusterReconciler struct {
+	Reconciler rediscluster.GcpRedisClusterReconciler
 }
 
-// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=redisclusters,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=redisclusters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=redisclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=gcpredisclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=gcpredisclusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=gcpredisclusters/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the RedisCluster object against the actual cluster state, and then
+// the GcpRedisCluster object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
-func (r *RedisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *GcpRedisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return r.Reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RedisClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *GcpRedisClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cloudcontrolv1beta1.RedisCluster{}, builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+		For(&cloudcontrolv1beta1.GcpRedisCluster{}, builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }

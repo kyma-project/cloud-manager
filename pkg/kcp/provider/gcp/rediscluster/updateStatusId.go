@@ -13,7 +13,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, nil
 	}
 
-	redisCluster := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsGcpRedisCluster()
 
 	if redisCluster.Status.Id != "" { // already set
 		return nil, nil
@@ -24,7 +24,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	err := state.UpdateObjStatus(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating RedisCluster success .status.id", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating GcpRedisCluster success .status.id", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopWithRequeue, nil
