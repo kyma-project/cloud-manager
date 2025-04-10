@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
@@ -77,10 +78,10 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
-					composed.NewCase(focal.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

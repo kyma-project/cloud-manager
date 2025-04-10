@@ -135,7 +135,9 @@ func (c *config) Watch(stopCh <-chan struct{}, onConfigChange func(event fsnotif
 			returnErr = fmt.Errorf("error creating new watcher: %w", err)
 			return
 		}
-		defer watcher.Close()
+		defer func(watcher *fsnotify.Watcher) {
+			_ = watcher.Close()
+		}(watcher)
 
 		// we have to watch the entire directory to pick up renames/atomic saves in a cross-platform way
 

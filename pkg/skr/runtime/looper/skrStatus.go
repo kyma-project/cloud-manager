@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
-	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -24,16 +24,16 @@ func NewSkrStatusRepo(kcpClient client.Client) SkrStatusRepo {
 }
 
 type SkrStatusRepo interface {
-	Load(ctx context.Context, name, namespace string) (*cloudcontrol1beta1.SkrStatus, error)
-	Save(ctx context.Context, skrStatus *cloudcontrol1beta1.SkrStatus) error
+	Load(ctx context.Context, name, namespace string) (*cloudcontrolv1beta1.SkrStatus, error)
+	Save(ctx context.Context, skrStatus *cloudcontrolv1beta1.SkrStatus) error
 }
 
 type skrStatusRepo struct {
 	kcpClient client.Client
 }
 
-func (r *skrStatusRepo) Load(ctx context.Context, name, namespace string) (*cloudcontrol1beta1.SkrStatus, error) {
-	skrStatus := &cloudcontrol1beta1.SkrStatus{}
+func (r *skrStatusRepo) Load(ctx context.Context, name, namespace string) (*cloudcontrolv1beta1.SkrStatus, error) {
+	skrStatus := &cloudcontrolv1beta1.SkrStatus{}
 	err := r.kcpClient.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, skrStatus)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, fmt.Errorf("error loading SkrStatus %s/%s: %w", namespace, name, err)
@@ -42,13 +42,13 @@ func (r *skrStatusRepo) Load(ctx context.Context, name, namespace string) (*clou
 		skrStatus.Name = name
 		skrStatus.Namespace = namespace
 		skrStatus.TypeMeta.Kind = "SkrStatus"
-		skrStatus.TypeMeta.APIVersion = cloudcontrol1beta1.GroupVersion.String()
+		skrStatus.TypeMeta.APIVersion = cloudcontrolv1beta1.GroupVersion.String()
 		return skrStatus, nil
 	}
 	return skrStatus, nil
 }
 
-func (r *skrStatusRepo) Save(ctx context.Context, skrStatus *cloudcontrol1beta1.SkrStatus) error {
+func (r *skrStatusRepo) Save(ctx context.Context, skrStatus *cloudcontrolv1beta1.SkrStatus) error {
 	return r.kcpClient.Patch(ctx, skrStatus, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
 }
 
@@ -90,19 +90,19 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 		api.Labels = map[string]string{}
 	}
 	if len(skrStatus.globalAccount) > 0 {
-		api.Labels[cloudcontrol1beta1.LabelScopeGlobalAccountId] = skrStatus.globalAccount
+		api.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId] = skrStatus.globalAccount
 	}
 	if len(skrStatus.subAccount) > 0 {
-		api.Labels[cloudcontrol1beta1.LabelScopeSubaccountId] = skrStatus.subAccount
+		api.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId] = skrStatus.subAccount
 	}
 	if len(skrStatus.shoot) > 0 {
-		api.Labels[cloudcontrol1beta1.LabelScopeShootName] = skrStatus.shoot
+		api.Labels[cloudcontrolv1beta1.LabelScopeShootName] = skrStatus.shoot
 	}
 	if len(skrStatus.region) > 0 {
-		api.Labels[cloudcontrol1beta1.LabelScopeRegion] = skrStatus.region
+		api.Labels[cloudcontrolv1beta1.LabelScopeRegion] = skrStatus.region
 	}
 	if len(skrStatus.brokerPlan) > 0 {
-		api.Labels[cloudcontrol1beta1.LabelScopeBrokerPlanName] = skrStatus.brokerPlan
+		api.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName] = skrStatus.brokerPlan
 	}
 
 	api.Spec.KymaName = skrStatus.kyma
@@ -134,8 +134,8 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 		api.Spec.AverageIntervalSeconds = int(math.Round(sum / float64(count)))
 	}
 
-	api.Spec.Conditions = pie.Map(skrStatus.handles, func(x *KindHandle) cloudcontrol1beta1.SkrStatusCondition {
-		return cloudcontrol1beta1.SkrStatusCondition{
+	api.Spec.Conditions = pie.Map(skrStatus.handles, func(x *KindHandle) cloudcontrolv1beta1.SkrStatusCondition {
+		return cloudcontrolv1beta1.SkrStatusCondition{
 			Title:           x.title,
 			ObjKindGroup:    x.objKindGroup,
 			CrdKindGroup:    x.crdKindGroup,

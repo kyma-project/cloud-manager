@@ -5,6 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke"
@@ -72,21 +73,21 @@ func (r *nukeReconciler) newAction() composed.Action {
 			composed.If(
 				composed.All(
 					feature.FFNukeBackupsGcp.Predicate(),
-					focal.GcpProviderPredicate,
+					statewithscope.GcpProviderPredicate,
 				),
 				gcpnuke.New(r.gcpStateFactory),
 			),
 			composed.If(
 				composed.All(
 					feature.FFNukeBackupsAws.Predicate(),
-					focal.AwsProviderPredicate,
+					statewithscope.AwsProviderPredicate,
 				),
 				awsnuke.New(r.awsStateFactory),
 			),
 			composed.If(
 				composed.All(
 					feature.FFRwxBackupAzure.Predicate(),
-					focal.AzureProviderPredicate,
+					statewithscope.AzureProviderPredicate,
 				),
 				azurenuke.New(r.azureStateFactory),
 			),

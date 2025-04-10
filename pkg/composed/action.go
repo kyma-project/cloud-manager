@@ -14,6 +14,10 @@ func findActionName(a Action) string {
 
 type Action func(ctx context.Context, state State) (error, context.Context)
 
+func Noop(ctx context.Context, state State) (error, context.Context) {
+	return nil, ctx
+}
+
 // ===========================
 
 func ComposeActionsNoName(actions ...Action) Action {

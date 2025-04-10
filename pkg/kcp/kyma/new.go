@@ -42,6 +42,12 @@ func (r *kymaReconciler) newAction() composed.Action {
 		scopeLoad,
 
 		composed.If(
+			composed.Not(composed.IsObjLoaded),
+			skrDeactivate,
+			composed.StopAndForgetAction,
+		),
+
+		composed.If(
 			shouldDisable,
 			skrDeactivate,
 			composed.StopAndForgetAction,

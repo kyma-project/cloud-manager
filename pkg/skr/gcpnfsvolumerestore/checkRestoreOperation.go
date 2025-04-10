@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cloudControl "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -81,7 +81,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudControl.ReasonGcpError,
+				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: op.Error.Message,
 			}).
 			OnUpdateSuccess(func(ctx context.Context) (error, context.Context) {

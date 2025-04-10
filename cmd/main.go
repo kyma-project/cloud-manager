@@ -22,7 +22,7 @@ import (
 	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
@@ -309,7 +309,14 @@ func main() {
 	}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), activeSkrCollection, gcpclient.NewServiceUsageClientProvider()); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(
+		ctx,
+		mgr,
+		scopeclient.NewAwsStsGardenClientProvider(),
+		activeSkrCollection,
+		gcpclient.NewServiceUsageClientProvider(),
+		azureexposeddataclient.NewClientProvider(),
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
 	}

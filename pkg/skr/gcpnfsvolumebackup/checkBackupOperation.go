@@ -9,7 +9,7 @@ import (
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cloudControl "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -44,7 +44,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudControl.ReasonGcpError,
+				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
 			SuccessError(composed.StopWithRequeue).
@@ -81,7 +81,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudControl.ReasonGcpError,
+				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: op.Error.Message,
 			}).
 			SuccessError(composed.StopAndForget). //To reduce the rate. Next SKR looper with retry it.

@@ -4,6 +4,9 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
@@ -26,6 +29,7 @@ func SetupScopeReconciler(
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	azureClientProvider azureclient.ClientProvider[azureexposeddataclient.Client],
 ) error {
 	return NewScopeReconciler(
 		kcpscope.New(
@@ -33,6 +37,7 @@ func SetupScopeReconciler(
 			awsStsClientProvider,
 			activeSkrCollection,
 			gcpServiceUsageClientProvider,
+			azureexposeddata.NewStateFactory(azureClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

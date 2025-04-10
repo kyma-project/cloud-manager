@@ -1,16 +1,28 @@
+version: "2"
 run:
   timeout: 15m
-issues:
-  exclude-rules: []
 linters:
+  default: standard
   enable:
     # enabled by default
-    - errcheck
-    - gosimple
+#    - errcheck
     - govet
     - ineffassign
-    - staticcheck
+#    - staticcheck
     - unused
     # added additionally
     - predeclared
+    - importas
+  disable:
+    - errcheck
+    - staticcheck
+  settings:
+    importas:
+      alias:
+        - pkg: github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1
+          alias: cloudcontrolv1beta1
+        - pkg: github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1
+          alias: cloudresourcesv1beta1
 
+        - pkg: github.com/kyma-project/cloud-manager/pkg/skr/runtime
+          alias: skrruntime

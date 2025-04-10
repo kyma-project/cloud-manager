@@ -2,6 +2,7 @@ package rediscluster
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -70,9 +71,9 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.GcpProviderPredicate, gcprediscluster.New(r.gcpStateFactory)),
-					composed.NewCase(focal.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcprediscluster.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

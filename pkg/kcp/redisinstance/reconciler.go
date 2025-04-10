@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	awsRedisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
@@ -69,9 +70,9 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.GcpProviderPredicate, gcpRedisinstance.New(r.gcpStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azureRedisinstance.New(r.azureStateFactory)),
-					composed.NewCase(focal.AwsProviderPredicate, awsRedisinstance.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpRedisinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azureRedisinstance.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsRedisinstance.New(r.awsStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

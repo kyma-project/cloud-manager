@@ -5,6 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
@@ -87,9 +88,9 @@ func (r *networkReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

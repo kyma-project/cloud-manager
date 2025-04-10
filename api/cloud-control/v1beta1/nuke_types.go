@@ -21,6 +21,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// AutomaticNuke defines if during the Scope reconciliation a Nuke resource will be created
+// if Kyma does not exist. For the normal behavior it should be true, so that Nuke could
+// clean up the Scope's orphaned resources. But since the majority of tests creates Scope
+// but doesn't create Kyma, this flag in test suite setup is set to `false`, to prevent deletion
+// of all the Scope resources and allow tests to function
+var AutomaticNuke = true
+
 type NukeResourceStatus string
 
 const (

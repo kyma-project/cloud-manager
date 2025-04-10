@@ -1,0 +1,42 @@
+package client
+
+import (
+	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+)
+
+type Client interface {
+	azureclient.NetworkClient
+}
+
+func NewClientProvider() azureclient.ClientProvider[Client] {
+	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, _ ...string) (Client, error) {
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		return newClient(
+			azureclient.NewNetworkClient(networkClientFactory.NewVirtualNetworksClient()),
+		), nil
+	}
+}
+
+func newClient(
+	networkClient azureclient.NetworkClient,
+) *client {
+	return &client{
+		NetworkClient: networkClient,
+	}
+}
+
+type client struct {
+	azureclient.NetworkClient
+}
