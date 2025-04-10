@@ -32,7 +32,6 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidRecoveryPointId,
 				Message: errorMessage,
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -48,7 +47,6 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidStorageAccountPath,
 				Message: errorMessage,
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
@@ -80,7 +78,6 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 				Message: "Error starting Azure Restore",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
-			SuccessLogMsg("Error patching AzureRwxVolumeRestore status").
 			Run(ctx, state)
 	}
 

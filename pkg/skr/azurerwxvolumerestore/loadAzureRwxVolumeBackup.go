@@ -61,7 +61,6 @@ func loadAzureRwxVolumeBackup(ctx context.Context, st composed.State) (error, co
 				Message: "AzureRwxVolumeBackup is not ready",
 			}).
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessLogMsg("Error loading AzureRwxVolumeBackup").
 			Run(ctx, state)
 	}
 
