@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
 
@@ -33,6 +34,7 @@ func NewMockClient() azureclient.ClientProvider[Client] {
 			backupProtectableItemsMock,
 			protectedItemsMock,
 			backupProtectedItemsMock,
+			newVaultConfigMockClient(),
 		}, nil
 	}
 }

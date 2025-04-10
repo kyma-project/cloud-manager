@@ -16,7 +16,8 @@ type NukeRwxBackupClient interface {
 	ListFileShareProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) ([]*armrecoveryservicesbackup.ProtectedItemResource, error)
 	RemoveProtection(ctx context.Context, protected *armrecoveryservicesbackup.ProtectedItemResource) error
 	HasProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) (bool, error)
-	DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault) error
+	DisableSoftDelete(ctx context.Context, vault *armrecoveryservices.Vault) error
+	DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault, containers []string) error
 }
 
 type nukeRwxBackupClient struct {
@@ -124,7 +125,7 @@ func (c *nukeRwxBackupClient) HasProtectedItems(ctx context.Context, vault *armr
 	return len(protectedItems) > 0, nil
 }
 
-func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault) error {
+func (c *nukeRwxBackupClient) DisableSoftDelete(ctx context.Context, vault *armrecoveryservices.Vault) error {
 	if vault == nil {
 		return nil
 	}
@@ -132,6 +133,34 @@ func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecover
 	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return err
+	}
+
+	config, err := c.GetVaultConfig(ctx, rgName, vaultName)
+	if err != nil {
+		return err
+	}
+
+	config.Properties.SoftDeleteFeatureState = ptr.To(armrecoveryservicesbackup.SoftDeleteFeatureStateDisabled)
+
+	return c.PutVaultConfig(ctx, rgName, vaultName, config)
+}
+
+func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecoveryservices.Vault, containers []string) error {
+	if vault == nil {
+		return nil
+	}
+
+	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
+	if err != nil {
+		return err
+	}
+
+	//Unregister the containers
+	for _, containerName := range containers {
+		err = c.UnregisterContainer(ctx, rgName, vaultName, containerName)
+		if err != nil {
+			return err
+		}
 	}
 
 	return c.Client.DeleteVault(ctx, rgName, vaultName)
