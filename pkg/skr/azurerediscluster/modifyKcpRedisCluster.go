@@ -56,7 +56,6 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 
 	state.KcpRedisCluster.Spec.Instance.Azure.SKU.Capacity = redisSKUCapacity
 	state.KcpRedisCluster.Spec.Instance.Azure.ShardCount = int(azureRedisCluster.Spec.ShardCount)
-	state.KcpRedisCluster.Spec.Instance.Azure.ReplicasPerPrimary = int(azureRedisCluster.Spec.ReplicasPerPrimary)
 	state.KcpRedisCluster.Spec.Instance.Azure.RedisVersion = azureRedisCluster.Spec.RedisVersion
 
 	logger.Info("Detected modified Redis configuration, updating KCP Redis")

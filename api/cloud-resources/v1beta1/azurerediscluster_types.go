@@ -61,6 +61,7 @@ type AzureRedisClusterSpec struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=10
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ReplicasPerPrimary is immutable."
 	ReplicasPerPrimary int32 `json:"replicasPerPrimary,omitempty"`
 
 	// +optional

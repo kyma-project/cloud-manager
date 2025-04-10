@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: azureredisclusters.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -86,6 +86,9 @@ spec:
                   maximum: 10
                   minimum: 0
                   type: integer
+                  x-kubernetes-validations:
+                    - message: ReplicasPerPrimary is immutable.
+                      rule: (self == oldSelf)
                 shardCount:
                   format: int32
                   maximum: 10

@@ -49,7 +49,9 @@ func New(stateFactory StateFactory) composed.Action {
 					createPrivateEndPoint,
 					waitPrivateEndPointAvailable,
 					createPrivateDnsZoneGroup,
-					modifyRedisCluster,
+					modifyRedisCapacity,
+					modifyShardCount,
+					modifyRedisVersion,
 					updateStatus,
 				),
 				composed.ComposeActions(
