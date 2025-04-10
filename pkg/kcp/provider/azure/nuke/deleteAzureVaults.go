@@ -27,7 +27,8 @@ func deleteAzureVaults(ctx context.Context, st composed.State) (error, context.C
 					continue
 				}
 
-				err = state.azureClient.DeleteVault(ctx, item.Vault)
+				containerNames := state.getContainerNames(item.Vault)
+				err = state.azureClient.DeleteVault(ctx, item.Vault, containerNames)
 				if err != nil {
 					logger.Error(err, fmt.Sprintf("Error Deleting Azure Vault: %s", obj.GetId()))
 				}

@@ -34,6 +34,7 @@ func New(stateFactory StateFactory) composed.Action {
 			loadAzureRecoveryVaults,
 			loadAzureBackups,
 			providerResourceStatusDiscovered,
+			disableSoftDelete,
 			deleteAzureBackups,
 			deleteAzureVaults,
 			providerResourceStatusDeleting,
