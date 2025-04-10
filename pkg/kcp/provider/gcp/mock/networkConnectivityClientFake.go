@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	networkconnectivitypb "cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"google.golang.org/api/googleapi"
 )
 

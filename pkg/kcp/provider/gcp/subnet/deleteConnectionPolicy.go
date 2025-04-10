@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	subnet "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,7 +23,7 @@ func deleteConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 
 	logger.Info("Deleting GCP Connection Policy")
 
-	err := state.networkComnnectivityClient.DeleteServiceConnectionPolicy(ctx, subnet.DeleteServiceConnectionPolicyRequest{
+	err := state.networkComnnectivityClient.DeleteServiceConnectionPolicy(ctx, gcpsubnetclient.DeleteServiceConnectionPolicyRequest{
 		Name:          state.serviceConnectionPolicy.Name,
 		IdempotenceId: uuid.NewString(),
 	})
@@ -37,9 +36,9 @@ func deleteConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 		logger.Error(err, "Error deleting GCP Connection Policy")
 		subnet := state.ObjAsGcpSubnet()
 		meta.SetStatusCondition(subnet.Conditions(), metav1.Condition{
-			Type:    v1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCloudProviderError,
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to delete Subnet",
 		})
 		subnet.Status.State = cloudcontrolv1beta1.StateError

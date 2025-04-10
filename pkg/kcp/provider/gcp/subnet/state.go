@@ -8,10 +8,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	gcpClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 type State struct {
@@ -29,14 +29,14 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	computeClientProvider             gcpClient.ClientProvider[client.ComputeClient]
-	networkConnectivityClientProvider gcpClient.ClientProvider[client.NetworkConnectivityClient]
+	computeClientProvider             gcpclient.ClientProvider[client.ComputeClient]
+	networkConnectivityClientProvider gcpclient.ClientProvider[client.NetworkConnectivityClient]
 	env                               abstractions.Environment
 }
 
 func NewStateFactory(
-	computeClientProvider gcpClient.ClientProvider[client.ComputeClient],
-	networkConnectivityClientProvider gcpClient.ClientProvider[client.NetworkConnectivityClient],
+	computeClientProvider gcpclient.ClientProvider[client.ComputeClient],
+	networkConnectivityClientProvider gcpclient.ClientProvider[client.NetworkConnectivityClient],
 	env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		computeClientProvider:             computeClientProvider,

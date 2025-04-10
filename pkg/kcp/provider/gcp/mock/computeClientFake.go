@@ -6,7 +6,7 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"google.golang.org/api/googleapi"
 )
 

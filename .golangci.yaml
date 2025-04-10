@@ -103,6 +103,8 @@ linters:
           alias: gcpredisclusterclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client
           alias: gcpredisinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client
+          alias: gcpsubnetclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client
           alias: gcpvpcpeeringclient
 
