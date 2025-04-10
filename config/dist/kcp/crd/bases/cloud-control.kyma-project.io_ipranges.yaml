@@ -90,12 +90,6 @@ spec:
                         - SHARED_LOADBALANCER_VIP
                         - PRIVATE_SERVICE_CONNECT
                         type: string
-                      type:
-                        default: GLOBAL_ADDRESS
-                        enum:
-                        - GLOBAL_ADDRESS
-                        - SUBNET
-                        type: string
                     type: object
                 type: object
               remoteRef:

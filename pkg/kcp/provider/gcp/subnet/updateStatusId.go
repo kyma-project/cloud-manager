@@ -1,4 +1,4 @@
-package v3
+package subnet
 
 import (
 	"context"
@@ -13,18 +13,18 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, nil
 	}
 
-	ipRange := state.ObjAsIpRange()
+	subnet := state.ObjAsGcpSubnet()
 
-	if ipRange.Status.Id != "" { // already set
+	if subnet.Status.Id != "" { // already set
 		return nil, nil
 	}
 
-	ipRange.Status.Id = *state.subnet.Name
+	subnet.Status.Id = *state.subnet.Name
 
 	err := state.UpdateObjStatus(ctx)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating IpRange success .status.id", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating Subnet success .status.id", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopWithRequeue, nil

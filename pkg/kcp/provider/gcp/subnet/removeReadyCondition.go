@@ -1,4 +1,4 @@
-package v3
+package subnet
 
 import (
 	"context"
@@ -12,20 +12,20 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	ipRange := state.ObjAsIpRange()
+	subnet := state.ObjAsGcpSubnet()
 
-	readyCond := meta.FindStatusCondition(*ipRange.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
+	readyCond := meta.FindStatusCondition(*subnet.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond == nil {
 		return nil, nil
 	}
 
 	logger.Info("Removing Ready condition")
 
-	meta.RemoveStatusCondition(ipRange.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
-	ipRange.Status.State = cloudcontrolv1beta1.StateDeleting
+	meta.RemoveStatusCondition(subnet.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
+	subnet.Status.State = cloudcontrolv1beta1.StateDeleting
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating IpRange status after removing Ready condition", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating Subnet status after removing Ready condition", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopWithRequeue, nil

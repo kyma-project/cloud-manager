@@ -97,8 +97,6 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
-		infra.GcpMock().ComputeClientProviderV3(),
-		infra.GcpMock().NetworkConnectivityProviderV3(),
 		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
@@ -146,6 +144,13 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().FileBackupClientProvider(),
 		awsnukeclient.Mock(),
 		azurenukeclient.NukeProvider(infra.AzureMock().StorageProvider()),
+		env,
+	)).To(Succeed())
+	// GcpSubnet
+	Expect(SetupGcpSubnetReconciler(
+		infra.KcpManager(),
+		infra.GcpMock().SubnetComputeClientProvider(),
+		infra.GcpMock().SubnetNetworkConnectivityProvider(),
 		env,
 	)).To(Succeed())
 

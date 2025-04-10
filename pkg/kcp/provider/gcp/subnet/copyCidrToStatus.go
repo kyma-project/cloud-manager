@@ -1,4 +1,4 @@
-package v3
+package subnet
 
 import (
 	"context"
@@ -14,21 +14,21 @@ func copyCidrToStatus(ctx context.Context, st composed.State) (error, context.Co
 		return nil, nil
 	}
 
-	ipRange := state.ObjAsIpRange()
+	subnet := state.ObjAsGcpSubnet()
 
 	actualCidr := ptr.Deref(state.subnet.IpCidrRange, "")
 
-	if ipRange.Status.Cidr == actualCidr ||
-		ipRange.Spec.Cidr == "" && len(ipRange.Status.Cidr) > 0 {
+	if subnet.Status.Cidr == actualCidr ||
+		subnet.Spec.Cidr == "" && len(subnet.Status.Cidr) > 0 {
 		return nil, nil
 	}
 
-	ipRange.Status.Cidr = actualCidr
+	subnet.Status.Cidr = actualCidr
 
-	return composed.UpdateStatus(ipRange).
+	return composed.UpdateStatus(subnet).
 		SuccessErrorNil().
 		SuccessError(composed.StopWithRequeue).
-		SuccessLogMsg("IpRange status updated with provisioned CIDR").
-		ErrorLogMessage("Failed to update IpRange status to set provisioned CIDR").
+		SuccessLogMsg("Subnet status updated with provisioned CIDR").
+		ErrorLogMessage("Failed to update Subnet status to set provisioned CIDR").
 		Run(ctx, state)
 }
