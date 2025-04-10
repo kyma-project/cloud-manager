@@ -121,7 +121,7 @@ func (suite *deleteBackupsSuite) TestWhenNoBackupsExist() {
 		fromK8s)
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
-	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
+	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Unix())
 	suite.Nil(fromK8s.Status.NextRunTimes)
 	suite.Nil(fromK8s.Status.LastDeletedBackups)
 }
@@ -160,7 +160,7 @@ func (suite *deleteBackupsSuite) TestWhenNoMaxRetentionSet() {
 		fromK8s)
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
-	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
+	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Unix())
 	suite.Nil(fromK8s.Status.NextRunTimes)
 	suite.Nil(fromK8s.Status.LastDeletedBackups)
 }
@@ -210,7 +210,7 @@ func (suite *deleteBackupsSuite) testDeleteBackup(backup1, backup2, backup clien
 		fromK8s)
 	suite.Nil(err)
 	suite.NotNil(fromK8s.Status.LastDeleteRun)
-	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Time.Unix())
+	suite.Equal(runTime.Unix(), fromK8s.Status.LastDeleteRun.Unix())
 
 	//Validate backup1
 	err = factory.skrCluster.K8sClient().Get(ctx,

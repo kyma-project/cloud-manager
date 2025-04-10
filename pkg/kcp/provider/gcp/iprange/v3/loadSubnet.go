@@ -5,7 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -24,7 +24,7 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	region := state.Scope().Spec.Region
 
 	logger.Info("loading GCP Private Subnet")
-	subnet, err := state.computeClient.GetSubnet(ctx, v3.GetSubnetRequest{
+	subnet, err := state.computeClient.GetSubnet(ctx, gcpiprangev3client.GetSubnetRequest{
 		ProjectId: gcpScope.Project,
 		Region:    region,
 		Name:      GetSubnetShortName(state.Obj().GetName()),

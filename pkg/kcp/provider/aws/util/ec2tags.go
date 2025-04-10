@@ -2,7 +2,7 @@ package util
 
 import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"k8s.io/utils/ptr"
 	"strings"
 )
@@ -25,7 +25,7 @@ func Ec2Tags(args ...string) (result []ec2types.Tag) {
 	return
 }
 
-func GetEfsTagValue(tags []efsTypes.Tag, key string) string {
+func GetEfsTagValue(tags []efstypes.Tag, key string) string {
 	for _, t := range tags {
 		if ptr.Deref(t.Key, "") == key {
 			return ptr.Deref(t.Value, "")

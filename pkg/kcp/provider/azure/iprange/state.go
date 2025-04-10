@@ -8,13 +8,13 @@ import (
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 )
 
 type State struct {
 	iprangetypes.State
 
-	azureClient azureiprange.Client
+	azureClient azureiprangeclient.Client
 
 	resourceGroupName  string
 	virtualNetworkName string
@@ -32,7 +32,7 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	azureProvider azureclient.ClientProvider[azureiprange.Client]
+	azureProvider azureclient.ClientProvider[azureiprangeclient.Client]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState iprangetypes.State) (*State, error) {
@@ -48,13 +48,13 @@ func (f *stateFactory) NewState(ctx context.Context, baseState iprangetypes.Stat
 	return NewState(c, baseState), nil
 }
 
-func NewStateFactory(azureProvider azureclient.ClientProvider[azureiprange.Client]) StateFactory {
+func NewStateFactory(azureProvider azureclient.ClientProvider[azureiprangeclient.Client]) StateFactory {
 	return &stateFactory{
 		azureProvider: azureProvider,
 	}
 }
 
-func NewState(azureClient azureiprange.Client, baseState iprangetypes.State) *State {
+func NewState(azureClient azureiprangeclient.Client, baseState iprangetypes.State) *State {
 	return &State{
 		State:       baseState,
 		azureClient: azureClient,

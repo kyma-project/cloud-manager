@@ -6,7 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
@@ -165,7 +165,7 @@ func (suite *markFailedSuite) TestWhenBackupIsNotLatestAndInError() {
 	}
 
 	obj := awsNfsVolumeBackup.DeepCopy()
-	obj.CreationTimestamp = v1.Time{Time: time.Now().Add(-1 * time.Minute)}
+	obj.CreationTimestamp = metav1.Time{Time: time.Now().Add(-1 * time.Minute)}
 	obj.Labels = labels
 	factory, err := newStateFactoryWithObj(obj)
 	suite.Nil(err)
@@ -185,7 +185,7 @@ func (suite *markFailedSuite) TestWhenBackupIsNotLatestAndInError() {
 	obj2 := awsNfsVolumeBackup.DeepCopy()
 	obj2.Name = "test-backup-02"
 	obj2.Namespace = "test"
-	obj2.CreationTimestamp = v1.Time{Time: time.Now()}
+	obj2.CreationTimestamp = metav1.Time{Time: time.Now()}
 	obj2.Labels = labels
 	obj2.Status.State = v1beta1.StateReady
 	err = factory.skrCluster.K8sClient().Create(ctx, obj2)
@@ -206,7 +206,7 @@ func (suite *markFailedSuite) TestWhenBackupIsNotLatestAndInError() {
 
 	suite.Equal(v1beta1.StateFailed, fromK8s.Status.State)
 	suite.Equal(v1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
-	suite.Equal(v1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
 	suite.Equal(v1beta1.ReasonBackupFailed, fromK8s.Status.Conditions[0].Reason)
 }
 

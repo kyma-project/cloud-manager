@@ -6,8 +6,8 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,7 +27,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
-			scopePkg.Ignore.AddName(scopeName)
+			kcpscope.Ignore.AddName(scopeName)
 			// Given Scope exists
 			Eventually(GivenScopeAwsExists).
 				WithArguments(
@@ -70,7 +70,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 			for i := range recoveryPointArns {
 				out, err := nukeClient.StartBackupJob(
 					infra.Ctx(),
-					&awsnfsbackupclient.StartBackupJobInput{
+					&awsnfsvolumebackupclient.StartBackupJobInput{
 						BackupVaultName: vaultName,
 					})
 				Expect(err).ShouldNot(HaveOccurred(), "failed creating Aws Recovery Point directly")

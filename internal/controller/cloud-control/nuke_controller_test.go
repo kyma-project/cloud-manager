@@ -11,7 +11,7 @@ import (
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	kcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	kcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -27,7 +27,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Expect(CreateScopeAzure(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed(), "failed creating scope")

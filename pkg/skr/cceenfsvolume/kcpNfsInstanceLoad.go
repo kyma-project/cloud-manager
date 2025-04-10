@@ -13,7 +13,7 @@ func kcpNfsInstanceLoad(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 
 	if state.ObjAsCceeNfsVolume().Status.Id == "" {
-		return composed.LogErrorAndReturn(errors.New("Missing CceeNfsVolume status.id"), "Logical error", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(errors.New("missing CceeNfsVolume status.id"), "Logical error", composed.StopAndForget, ctx)
 	}
 
 	kcpNfsInstnace := &cloudcontrolv1beta1.NfsInstance{}

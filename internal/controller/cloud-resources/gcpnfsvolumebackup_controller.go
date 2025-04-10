@@ -22,7 +22,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	backupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 
@@ -58,7 +58,7 @@ func (r *GcpNfsVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl.R
 }
 
 type GcpNfsVolumeBackupReconcilerFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[backupclient.FileBackupClient]
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
 	env                      abstractions.Environment
 }
 
@@ -68,7 +68,7 @@ func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArgu
 	}
 }
 
-func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.ClientProvider[backupclient.FileBackupClient],
+func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
 	env abstractions.Environment, logger logr.Logger) error {
 
 	return reg.Register().

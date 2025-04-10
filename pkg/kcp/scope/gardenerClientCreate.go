@@ -2,11 +2,11 @@ package scope
 
 import (
 	"context"
-	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
+	gardenerclient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	kubernetesClient "k8s.io/client-go/kubernetes"
+	kubernetesclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
@@ -64,14 +64,14 @@ func gardenerClientCreate(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error creating gardener rest config", composed.StopAndForget, ctx)
 	}
 
-	gClient, err := gardenerClient.NewForConfig(restConfig)
+	gClient, err := gardenerclient.NewForConfig(restConfig)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating gardener client", composed.StopAndForget, ctx)
 	}
 
 	state.gardenerClient = gClient
 
-	k8sClient, err := kubernetesClient.NewForConfig(restConfig)
+	k8sClient, err := kubernetesclient.NewForConfig(restConfig)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating garden k8s client", composed.StopAndForget, ctx)
 	}

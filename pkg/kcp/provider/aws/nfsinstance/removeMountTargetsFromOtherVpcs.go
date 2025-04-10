@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -24,7 +24,7 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 	logger.
 		WithValues(
 			"mountTargets",
-			fmt.Sprintf("%v", pie.Map(state.mountTargets, func(mt efsTypes.MountTargetDescription) string {
+			fmt.Sprintf("%v", pie.Map(state.mountTargets, func(mt efstypes.MountTargetDescription) string {
 				mtID := ptr.Deref(mt.MountTargetId, "")
 				return fmt.Sprintf(
 					"{id:%s, az:%s, ip: %s, sg: %v}",

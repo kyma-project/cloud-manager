@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"k8s.io/utils/ptr"
 )
 
@@ -62,7 +62,7 @@ func GetAwsAuthTokenSecretName(name string) string {
 	return fmt.Sprintf("cm-%s/authToken", name)
 }
 
-func MapParameters(parameters []elasticacheTypes.Parameter) map[string]string {
+func MapParameters(parameters []elasticachetypes.Parameter) map[string]string {
 	result := map[string]string{}
 
 	for _, parameters := range parameters {
@@ -100,11 +100,11 @@ func GetMissmatchedParameters(currentParameters, desiredParameters map[string]st
 	return result
 }
 
-func ToParametersSlice(parametersMap map[string]string) []elasticacheTypes.ParameterNameValue {
-	result := []elasticacheTypes.ParameterNameValue{}
+func ToParametersSlice(parametersMap map[string]string) []elasticachetypes.ParameterNameValue {
+	result := []elasticachetypes.ParameterNameValue{}
 
 	for key, value := range parametersMap {
-		result = append(result, elasticacheTypes.ParameterNameValue{
+		result = append(result, elasticachetypes.ParameterNameValue{
 			ParameterName:  ptr.To(key),
 			ParameterValue: ptr.To(value),
 		})

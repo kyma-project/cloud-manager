@@ -6,7 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/skr/azureredisinstance"
+	skrazureredisinstance "github.com/kyma-project/cloud-manager/pkg/skr/azureredisinstance"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -127,7 +127,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			redisSKUFamily, redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			redisSKUFamily, redisSKUCapacity, _ := skrazureredisinstance.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Family).To(Equal(redisSKUFamily))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))
@@ -324,7 +324,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.RemoteRef.Name).To(Equal(azureRedisInstance.Name))
 
 			By("And has spec.instance.azure equal to SKR AzureRedisInstance.spec values")
-			redisSKUFamily, redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
+			redisSKUFamily, redisSKUCapacity, _ := skrazureredisinstance.RedisTierToSKUCapacityConverter(azureRedisInstance.Spec.RedisTier)
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.SKU.Family).To(Equal(redisSKUFamily))
 			Expect(kcpRedisInstance.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisInstance.Spec.RedisVersion))

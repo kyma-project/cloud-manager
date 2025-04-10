@@ -3,38 +3,38 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	nfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 )
 
 type State struct {
 	nfsinstancetypes.State
 
-	awsClient nfsinstanceclient.Client
+	awsClient awsnfsinstanceclient.Client
 
-	efs                       *efsTypes.FileSystemDescription
-	mountTargets              []efsTypes.MountTargetDescription
+	efs                       *efstypes.FileSystemDescription
+	mountTargets              []efstypes.MountTargetDescription
 	mountTargetSecurityGroups map[string][]string
 	securityGroupId           string
-	securityGroup             *ec2Types.SecurityGroup
+	securityGroup             *ec2types.SecurityGroup
 }
 
 type StateFactory interface {
 	NewState(ctx context.Context, nfsInstanceState nfsinstancetypes.State) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[nfsinstanceclient.Client]) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[nfsinstanceclient.Client]
+	skrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstancetypes.State) (*State, error) {
@@ -55,7 +55,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 	return newState(nfsInstanceState, c), nil
 }
 
-func newState(nfsInstanceState nfsinstancetypes.State, c nfsinstanceclient.Client) *State {
+func newState(nfsInstanceState nfsinstancetypes.State, c awsnfsinstanceclient.Client) *State {
 	return &State{
 		State:     nfsInstanceState,
 		awsClient: c,

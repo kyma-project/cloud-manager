@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -31,14 +30,14 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	var err error
 
 	switch state.operation {
-	case client.ADD:
+	case gcpclient.ADD:
 		operation, err = state.filestoreClient.CreateFilestoreInstance(ctx, project, location, name, state.toInstance())
-	case client.MODIFY:
+	case gcpclient.MODIFY:
 		mask := strings.Join(state.updateMask, ",")
 		operation, err = state.filestoreClient.PatchFilestoreInstance(ctx, project, location, name, mask, state.toInstance())
-	case client.DELETE:
+	case gcpclient.DELETE:
 		operation, err = state.filestoreClient.DeleteFilestoreInstance(ctx, project, location, name)
-	case client.NONE:
+	case gcpclient.NONE:
 		//If the operation is not ADD, MODIFY or DELETE, continue.
 		return nil, nil
 	}
@@ -57,8 +56,8 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if operation != nil {
-		if state.operation == client.ADD {
-			nfsInstance.Status.Id = client.GetFilestoreInstancePath(project, location, name)
+		if state.operation == gcpclient.ADD {
+			nfsInstance.Status.Id = gcpclient.GetFilestoreInstancePath(project, location, name)
 		}
 		nfsInstance.Status.OpIdentifier = operation.Name
 		return composed.UpdateStatus(nfsInstance).

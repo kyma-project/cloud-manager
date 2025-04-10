@@ -3,10 +3,10 @@ package cloudcontrol
 import (
 	"time"
 
-	clusterpb "cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -21,7 +21,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeGcp).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
@@ -32,7 +32,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 		// Tell IpRange reconciler to ignore this kymaName
-		iprangePkg.Ignore.AddName(kcpIpRangeName)
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
 		By("And Given KCP IPRange exists", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(

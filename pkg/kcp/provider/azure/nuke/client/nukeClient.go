@@ -8,7 +8,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azurebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
 type NukeRwxBackupClient interface {
@@ -20,14 +20,14 @@ type NukeRwxBackupClient interface {
 }
 
 type nukeRwxBackupClient struct {
-	azurebackupclient.Client
+	azurerwxvolumebackupclient.Client
 }
 
 func NewClientProvider() azureclient.ClientProvider[NukeRwxBackupClient] {
-	return NukeProvider(azurebackupclient.NewClientProvider())
+	return NukeProvider(azurerwxvolumebackupclient.NewClientProvider())
 }
 
-func NukeProvider(backupProvider azureclient.ClientProvider[azurebackupclient.Client]) azureclient.ClientProvider[NukeRwxBackupClient] {
+func NukeProvider(backupProvider azureclient.ClientProvider[azurerwxvolumebackupclient.Client]) azureclient.ClientProvider[NukeRwxBackupClient] {
 
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (NukeRwxBackupClient, error) {
 		client, err := backupProvider(ctx, clientId, clientSecret, subscriptionId, tenantId, auxiliaryTenants...)
@@ -51,7 +51,7 @@ func (c *nukeRwxBackupClient) ListRwxVolumeBackupVaults(ctx context.Context) ([]
 	}
 
 	for _, vault := range vaults {
-		if value, exists := vault.Tags[azurebackupclient.TagNameCloudManager]; exists && ptr.Deref(value, "") == azurebackupclient.TagValueRwxVolumeBackup {
+		if value, exists := vault.Tags[azurerwxvolumebackupclient.TagNameCloudManager]; exists && ptr.Deref(value, "") == azurerwxvolumebackupclient.TagValueRwxVolumeBackup {
 			result = append(result, vault)
 		}
 	}
@@ -66,12 +66,12 @@ func (c *nukeRwxBackupClient) ListFileShareProtectedItems(ctx context.Context, v
 		return result, nil
 	}
 
-	_, rgName, vaultName, err := azurebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
+	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return result, nil
 	}
 
-	protectedItems, err := c.Client.ListProtectedItems(ctx, vaultName, rgName)
+	protectedItems, err := c.ListProtectedItems(ctx, vaultName, rgName)
 	if err != nil {
 		return result, nil
 	}
@@ -98,7 +98,7 @@ func (c *nukeRwxBackupClient) RemoveProtection(ctx context.Context, protected *a
 		return nil
 	}
 
-	_, rgName, vaultName, containerName, protectedName, err := azurebackupclient.ParseProtectedItemId(*protected.ID)
+	_, rgName, vaultName, containerName, protectedName, err := azurerwxvolumebackupclient.ParseProtectedItemId(*protected.ID)
 	if err != nil {
 		return err
 	}
@@ -111,12 +111,12 @@ func (c *nukeRwxBackupClient) HasProtectedItems(ctx context.Context, vault *armr
 		return false, nil
 	}
 
-	_, rgName, vaultName, err := azurebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
+	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return false, err
 	}
 
-	protectedItems, err := c.Client.ListProtectedItems(ctx, vaultName, rgName)
+	protectedItems, err := c.ListProtectedItems(ctx, vaultName, rgName)
 	if err != nil {
 		return false, nil
 	}
@@ -129,7 +129,7 @@ func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecover
 		return nil
 	}
 
-	_, rgName, vaultName, err := azurebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
+	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return err
 	}

@@ -3,14 +3,14 @@ package redisinstance
 import (
 	"context"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
-func deleteParameterGroup(getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup) composed.Action {
+func deleteParameterGroup(getParamGroup func(*State) *elasticachetypes.CacheParameterGroup) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 
 		state := st.(*State)
@@ -36,12 +36,12 @@ func deleteParameterGroup(getParamGroup func(*State) *elasticacheTypes.CachePara
 
 func deleteMainParameterGroup() composed.Action {
 	return deleteParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.parameterGroup },
 	)
 }
 
 func deleteTempParameterGroup() composed.Action {
 	return deleteParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.tempParameterGroup },
 	)
 }

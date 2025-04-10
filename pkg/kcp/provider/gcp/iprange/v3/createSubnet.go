@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,7 +24,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.computeClient.CreatePrivateSubnet(ctx, v3.CreateSubnetRequest{
+	err := state.computeClient.CreatePrivateSubnet(ctx, gcpiprangev3client.CreateSubnetRequest{
 		ProjectId:     gcpScope.Project,
 		Region:        region,
 		Network:       gcpScope.VpcNetwork,

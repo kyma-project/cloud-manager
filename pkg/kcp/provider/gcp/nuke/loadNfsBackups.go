@@ -15,7 +15,7 @@ func loadNfsBackups(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	backups, err := state.fileBackupClient.ListFilesBackups(ctx, state.State.Scope().Spec.Scope.Gcp.Project, client.GetSkrBackupsFilter(state.State.Scope().Name))
+	backups, err := state.fileBackupClient.ListFilesBackups(ctx, state.Scope().Spec.Scope.Gcp.Project, client.GetSkrBackupsFilter(state.State.Scope().Name))
 	if err != nil {
 		logger.Error(err, "Error listing Gcp Filestore Backups")
 

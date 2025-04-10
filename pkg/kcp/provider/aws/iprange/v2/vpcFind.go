@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -48,7 +48,7 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 		))
 	}
 
-	var vpc *ec2Types.Vpc
+	var vpc *ec2types.Vpc
 	for _, vv := range vpcList {
 		// loop var will change its value, and we're taking a pointer to it below
 		// MUST make a copy to another var that will not change the value

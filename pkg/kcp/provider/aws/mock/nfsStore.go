@@ -3,9 +3,9 @@ package mock
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -14,23 +14,23 @@ import (
 )
 
 type NfsConfig interface {
-	SetFileSystemLifeCycleState(id string, state efsTypes.LifeCycleState)
-	GetFileSystemById(id string) *efsTypes.FileSystemDescription
+	SetFileSystemLifeCycleState(id string, state efstypes.LifeCycleState)
+	GetFileSystemById(id string) *efstypes.FileSystemDescription
 }
 
 type mountTargetItem struct {
-	desc efsTypes.MountTargetDescription
+	desc efstypes.MountTargetDescription
 	sg   []string
 }
 
 type nfsStore struct {
 	m            sync.Mutex
-	sg           []*ec2Types.SecurityGroup
-	fs           []*efsTypes.FileSystemDescription
+	sg           []*ec2types.SecurityGroup
+	fs           []*efstypes.FileSystemDescription
 	mountTargets map[string][]mountTargetItem
 }
 
-func filterMatchesTags(tags []ec2Types.Tag, filter ec2Types.Filter) bool {
+func filterMatchesTags(tags []ec2types.Tag, filter ec2types.Filter) bool {
 	for _, t := range tags {
 		tagKey := ptr.Deref(t.Key, "")
 		filterName := ptr.Deref(filter.Name, "")
@@ -47,7 +47,7 @@ func filterMatchesTags(tags []ec2Types.Tag, filter ec2Types.Filter) bool {
 	return false
 }
 
-func anyFilterMatchTags(tags []ec2Types.Tag, filters []ec2Types.Filter) bool {
+func anyFilterMatchTags(tags []ec2types.Tag, filters []ec2types.Filter) bool {
 	for _, f := range filters {
 		if filterMatchesTags(tags, f) {
 			return true
@@ -58,7 +58,7 @@ func anyFilterMatchTags(tags []ec2Types.Tag, filters []ec2Types.Filter) bool {
 
 // Config =======
 
-func (s *nfsStore) SetFileSystemLifeCycleState(id string, state efsTypes.LifeCycleState) {
+func (s *nfsStore) SetFileSystemLifeCycleState(id string, state efstypes.LifeCycleState) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	for _, fs := range s.fs {
@@ -69,7 +69,7 @@ func (s *nfsStore) SetFileSystemLifeCycleState(id string, state efsTypes.LifeCyc
 	}
 }
 
-func (s *nfsStore) GetFileSystemById(id string) *efsTypes.FileSystemDescription {
+func (s *nfsStore) GetFileSystemById(id string) *efstypes.FileSystemDescription {
 	for _, fs := range s.fs {
 		if ptr.Deref(fs.FileSystemId, "") == id {
 			return fs
@@ -80,41 +80,41 @@ func (s *nfsStore) GetFileSystemById(id string) *efsTypes.FileSystemDescription 
 
 // Client ===============================
 
-func (s *nfsStore) DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
+func (s *nfsStore) DescribeSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	list := append([]*ec2Types.SecurityGroup{}, s.sg...)
+	list := append([]*ec2types.SecurityGroup{}, s.sg...)
 	if groupIds != nil {
-		list = pie.Filter(list, func(sg *ec2Types.SecurityGroup) bool {
+		list = pie.Filter(list, func(sg *ec2types.SecurityGroup) bool {
 			return pie.Contains(groupIds, ptr.Deref(sg.GroupId, ""))
 		})
 	}
 	if filters != nil {
-		list = pie.Filter(list, func(sg *ec2Types.SecurityGroup) bool {
+		list = pie.Filter(list, func(sg *ec2types.SecurityGroup) bool {
 			return anyFilterMatchTags(sg.Tags, filters)
 		})
 	}
-	result := make([]ec2Types.SecurityGroup, 0, len(list))
+	result := make([]ec2types.SecurityGroup, 0, len(list))
 	for _, x := range list {
 		result = append(result, *x)
 	}
 	return result, nil
 }
 
-func (s *nfsStore) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error) {
+func (s *nfsStore) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error) {
 	if isContextCanceled(ctx) {
 		return "", context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	tags = append(tags, ec2Types.Tag{
+	tags = append(tags, ec2types.Tag{
 		Key:   ptr.To("vpc-id"),
 		Value: ptr.To(vpcId),
 	})
-	sg := &ec2Types.SecurityGroup{
+	sg := &ec2types.SecurityGroup{
 		Description: ptr.To(name),
 		GroupId:     ptr.To(uuid.NewString()),
 		GroupName:   ptr.To(name),
@@ -131,19 +131,19 @@ func (s *nfsStore) DeleteSecurityGroup(ctx context.Context, id string) error {
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	s.sg = pie.Filter(s.sg, func(sg *ec2Types.SecurityGroup) bool {
+	s.sg = pie.Filter(s.sg, func(sg *ec2types.SecurityGroup) bool {
 		return ptr.Deref(sg.GroupId, "") != id
 	})
 	return nil
 }
 
-func (s *nfsStore) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
+func (s *nfsStore) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	var securityGroup *ec2Types.SecurityGroup
+	var securityGroup *ec2types.SecurityGroup
 	for _, sg := range s.sg {
 		if ptr.Deref(sg.GroupId, "") == groupId {
 			securityGroup = sg
@@ -157,20 +157,20 @@ func (s *nfsStore) AuthorizeSecurityGroupIngress(ctx context.Context, groupId st
 	return nil
 }
 
-func (s *nfsStore) DescribeFileSystems(ctx context.Context) ([]efsTypes.FileSystemDescription, error) {
+func (s *nfsStore) DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	result := make([]efsTypes.FileSystemDescription, 0, len(s.fs))
+	result := make([]efstypes.FileSystemDescription, 0, len(s.fs))
 	for _, x := range s.fs {
 		result = append(result, *x)
 	}
 	return result, nil
 }
 
-func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efsTypes.PerformanceMode, throughputMode efsTypes.ThroughputMode, tags []efsTypes.Tag) (*efs.CreateFileSystemOutput, error) {
+func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -181,9 +181,9 @@ func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efsType
 	if name == "" {
 		name = id
 	}
-	fs := &efsTypes.FileSystemDescription{
+	fs := &efstypes.FileSystemDescription{
 		FileSystemId:         ptr.To(id),
-		LifeCycleState:       efsTypes.LifeCycleStateAvailable,
+		LifeCycleState:       efstypes.LifeCycleStateAvailable,
 		NumberOfMountTargets: 0,
 		PerformanceMode:      performanceMode,
 		Tags:                 tags,
@@ -220,13 +220,13 @@ func (s *nfsStore) DeleteFileSystem(ctx context.Context, fsId string) error {
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	s.fs = pie.Filter(s.fs, func(fs *efsTypes.FileSystemDescription) bool {
+	s.fs = pie.Filter(s.fs, func(fs *efstypes.FileSystemDescription) bool {
 		return ptr.Deref(fs.FileSystemId, "") != fsId
 	})
 	return nil
 }
 
-func (s *nfsStore) DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error) {
+func (s *nfsStore) DescribeMountTargets(ctx context.Context, fsId string) ([]efstypes.MountTargetDescription, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -239,7 +239,7 @@ func (s *nfsStore) DescribeMountTargets(ctx context.Context, fsId string) ([]efs
 	if !ok {
 		return nil, nil
 	}
-	return pie.Map(res, func(i mountTargetItem) efsTypes.MountTargetDescription {
+	return pie.Map(res, func(i mountTargetItem) efstypes.MountTargetDescription {
 		return i.desc
 	}), nil
 }
@@ -256,9 +256,9 @@ func (s *nfsStore) CreateMountTarget(ctx context.Context, fsId, subnetId string,
 	list := s.mountTargets[fsId]
 	id := uuid.NewString()
 	item := mountTargetItem{
-		desc: efsTypes.MountTargetDescription{
+		desc: efstypes.MountTargetDescription{
 			FileSystemId:   ptr.To(fsId),
-			LifeCycleState: efsTypes.LifeCycleStateAvailable,
+			LifeCycleState: efstypes.LifeCycleStateAvailable,
 			MountTargetId:  ptr.To(id),
 			SubnetId:       ptr.To(subnetId),
 			IpAddress:      ptr.To("1.2.3.4"),

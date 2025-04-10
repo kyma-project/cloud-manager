@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -28,7 +28,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	var invalidMountTargets []efsTypes.MountTargetDescription
+	var invalidMountTargets []efstypes.MountTargetDescription
 
 	for _, mt := range state.mountTargets {
 		x := state.IpRange().Status.Subnets.SubnetById(ptr.Deref(mt.SubnetId, ""))
@@ -43,7 +43,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 
 	logger.WithValues(
 		"invalidMountTargets",
-		fmt.Sprintf("%v", pie.Map(invalidMountTargets, func(mt efsTypes.MountTargetDescription) string {
+		fmt.Sprintf("%v", pie.Map(invalidMountTargets, func(mt efstypes.MountTargetDescription) string {
 			return fmt.Sprintf(
 				"(%s %s %s)",
 				ptr.Deref(mt.MountTargetId, ""),
@@ -58,7 +58,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		Type:   cloudcontrolv1beta1.ConditionTypeError,
 		Status: metav1.ConditionTrue,
 		Reason: cloudcontrolv1beta1.ReasonInvalidMountTargetsAlreadyExist,
-		Message: fmt.Sprintf("Invalid mount targets already exist: %v", pie.Map(invalidMountTargets, func(mt efsTypes.MountTargetDescription) string {
+		Message: fmt.Sprintf("Invalid mount targets already exist: %v", pie.Map(invalidMountTargets, func(mt efstypes.MountTargetDescription) string {
 			return ptr.Deref(mt.MountTargetId, "")
 		})),
 	})

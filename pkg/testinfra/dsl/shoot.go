@@ -3,7 +3,7 @@ package dsl
 import (
 	"context"
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
@@ -23,7 +23,7 @@ const (
 	DefaultGardenNamespace = "garden-kyma" // must be same as infra.Garden().Namespace()
 )
 
-func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerTypes.Shoot, opts ...ObjAction) error {
+func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenertypes.Shoot, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
@@ -54,7 +54,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 
 	// Garden resources
 	if shoot == nil {
-		shoot = &gardenerTypes.Shoot{}
+		shoot = &gardenertypes.Shoot{}
 	}
 	actions := NewObjActions(opts...).
 		Append(
@@ -64,16 +64,16 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 	// Shoot
 	{
 		actions.ApplyOnObject(shoot)
-		shoot.Spec = gardenerTypes.ShootSpec{
+		shoot.Spec = gardenertypes.ShootSpec{
 			CloudProfileName: ptr.To("aws"),
 			Region:           "eu-west-1",
-			Networking: &gardenerTypes.Networking{
-				IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
+			Networking: &gardenertypes.Networking{
+				IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
 				Nodes:      ptr.To("10.180.0.0/16"),
 				Pods:       ptr.To("100.64.0.0/12"),
 				Services:   ptr.To("100.104.0.0/13"),
 			},
-			Provider: gardenerTypes.Provider{
+			Provider: gardenertypes.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAws),
 				InfrastructureConfig: &runtime.RawExtension{
 					Object: &awsgardener.InfrastructureConfig{
@@ -120,9 +120,9 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 
 	// SecretBinding
 	{
-		secretBinding := &gardenerTypes.SecretBinding{}
+		secretBinding := &gardenertypes.SecretBinding{}
 		actions.ApplyOnObject(secretBinding)
-		secretBinding.Provider = &gardenerTypes.SecretBindingProvider{
+		secretBinding.Provider = &gardenertypes.SecretBindingProvider{
 			Type: string(cloudcontrolv1beta1.ProviderAws),
 		}
 		secretBinding.SecretRef = corev1.SecretReference{
@@ -188,7 +188,7 @@ func restConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
 	return clientConfig
 }
 
-func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerTypes.Shoot, opts ...ObjAction) error {
+func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenertypes.Shoot, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
@@ -219,7 +219,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 
 	// Garden resources
 	if shoot == nil {
-		shoot = &gardenerTypes.Shoot{}
+		shoot = &gardenertypes.Shoot{}
 	}
 	actions := NewObjActions(opts...).
 		Append(
@@ -229,13 +229,13 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 	// Shoot
 	{
 		actions.ApplyOnObject(shoot)
-		shoot.Spec = gardenerTypes.ShootSpec{
+		shoot.Spec = gardenertypes.ShootSpec{
 			CloudProfileName: ptr.To("gcp"),
 			Region:           "eu-west-1",
-			Networking:       &gardenerTypes.Networking{},
-			Provider: gardenerTypes.Provider{
+			Networking:       &gardenertypes.Networking{},
+			Provider: gardenertypes.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderGCP),
-				Workers: []gardenerTypes.Worker{
+				Workers: []gardenertypes.Worker{
 					{
 						Zones: []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"},
 					},
@@ -252,9 +252,9 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 
 	// SecretBinding
 	{
-		secretBinding := &gardenerTypes.SecretBinding{}
+		secretBinding := &gardenertypes.SecretBinding{}
 		actions.ApplyOnObject(secretBinding)
-		secretBinding.Provider = &gardenerTypes.SecretBindingProvider{
+		secretBinding.Provider = &gardenertypes.SecretBindingProvider{
 			Type: string(cloudcontrolv1beta1.ProviderGCP),
 		}
 		secretBinding.SecretRef = corev1.SecretReference{
@@ -284,7 +284,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerT
 	return nil
 }
 
-func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardenerTypes.Shoot, opts ...ObjAction) error {
+func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardenertypes.Shoot, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
@@ -315,7 +315,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 
 	// Garden resources
 	if shoot == nil {
-		shoot = &gardenerTypes.Shoot{}
+		shoot = &gardenertypes.Shoot{}
 	}
 	actions := NewObjActions(opts...).
 		Append(
@@ -325,16 +325,16 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	// Shoot
 	{
 		actions.ApplyOnObject(shoot)
-		shoot.Spec = gardenerTypes.ShootSpec{
+		shoot.Spec = gardenertypes.ShootSpec{
 			CloudProfileName: ptr.To("azure"),
 			Region:           "westeurope",
-			Networking: &gardenerTypes.Networking{
-				IPFamilies: []gardenerTypes.IPFamily{gardenerTypes.IPFamilyIPv4},
+			Networking: &gardenertypes.Networking{
+				IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
 				Nodes:      ptr.To("10.250.0.0/22"),
 				Pods:       ptr.To("10.96.0.0/13"),
 				Services:   ptr.To("10.104.0.0/13"),
 			},
-			Provider: gardenerTypes.Provider{
+			Provider: gardenertypes.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAzure),
 				InfrastructureConfig: &runtime.RawExtension{
 					Object: &azuregardener.InfrastructureConfig{
@@ -388,9 +388,9 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 
 	// SecretBinding
 	{
-		secretBinding := &gardenerTypes.SecretBinding{}
+		secretBinding := &gardenertypes.SecretBinding{}
 		actions.ApplyOnObject(secretBinding)
-		secretBinding.Provider = &gardenerTypes.SecretBindingProvider{
+		secretBinding.Provider = &gardenertypes.SecretBindingProvider{
 			Type: string(cloudcontrolv1beta1.ProviderAzure),
 		}
 		secretBinding.SecretRef = corev1.SecretReference{

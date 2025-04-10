@@ -91,11 +91,11 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkGcpOperation(ctx, testState.State)
 	assert.Error(suite.T(), err)
-	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
-	assert.Equal(suite.T(), "", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
+	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Equal(suite.T(), "", testState.ObjAsNfsInstance().Status.OpIdentifier)
 }
 
 func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {

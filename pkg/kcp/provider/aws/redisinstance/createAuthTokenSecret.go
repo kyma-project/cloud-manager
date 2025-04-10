@@ -3,7 +3,7 @@ package redisinstance
 import (
 	"context"
 
-	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,7 +26,7 @@ func createAuthTokenSecret(ctx context.Context, st composed.State) (error, conte
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	err := state.awsClient.CreateAuthTokenSecret(ctx, GetAwsAuthTokenSecretName(state.Obj().GetName()), []secretsmanagerTypes.Tag{
+	err := state.awsClient.CreateAuthTokenSecret(ctx, GetAwsAuthTokenSecretName(state.Obj().GetName()), []secretsmanagertypes.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
 			Value: ptr.To(redisInstance.Spec.RemoteRef.String()),

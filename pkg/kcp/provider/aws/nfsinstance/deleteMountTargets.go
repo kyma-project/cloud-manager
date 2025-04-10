@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -18,13 +18,13 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	stateRequeueDelayed := map[efsTypes.LifeCycleState]struct{}{
-		efsTypes.LifeCycleStateCreating: {},
-		efsTypes.LifeCycleStateUpdating: {},
-		efsTypes.LifeCycleStateDeleting: {},
+	stateRequeueDelayed := map[efstypes.LifeCycleState]struct{}{
+		efstypes.LifeCycleStateCreating: {},
+		efstypes.LifeCycleStateUpdating: {},
+		efstypes.LifeCycleStateDeleting: {},
 	}
-	stateOkToDelete := map[efsTypes.LifeCycleState]struct{}{
-		efsTypes.LifeCycleStateAvailable: {},
+	stateOkToDelete := map[efstypes.LifeCycleState]struct{}{
+		efstypes.LifeCycleStateAvailable: {},
 	}
 
 	anyDeleted := false

@@ -14,7 +14,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	armRedis "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -74,8 +74,8 @@ type RedisInstanceAzureConfigs struct {
 	NotifyKeyspaceEvents string `json:"notify-keyspace-events,omitempty"`
 }
 
-func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armRedis.CommonPropertiesRedisConfiguration {
-	redisConfiguration := armRedis.CommonPropertiesRedisConfiguration{}
+func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armredis.CommonPropertiesRedisConfiguration {
+	redisConfiguration := armredis.CommonPropertiesRedisConfiguration{}
 
 	additionalProperties := map[string]interface{}{}
 

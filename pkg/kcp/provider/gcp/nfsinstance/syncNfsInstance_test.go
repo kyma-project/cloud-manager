@@ -6,7 +6,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -65,11 +64,11 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceAddSuccess() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.ADD
+	testState.operation = gcpclient.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
-	assert.NotNil(suite.T(), testState.State.ObjAsNfsInstance().Status.Id)
-	assert.Equal(suite.T(), "create-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
+	assert.NotNil(suite.T(), testState.ObjAsNfsInstance().Status.Id)
+	assert.Equal(suite.T(), "create-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -112,16 +111,16 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceAddError() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.ADD
+	testState.operation = gcpclient.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
-	assert.Equal(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Id)
+	assert.Equal(suite.T(), "", testState.ObjAsNfsInstance().Status.Id)
 	// check conditions
-	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
-	assert.NotEqual(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Conditions[0].Message)
+	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.NotEqual(suite.T(), "", testState.ObjAsNfsInstance().Status.Conditions[0].Message)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -167,12 +166,12 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchSuccess() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.MODIFY
+	testState.operation = gcpclient.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
-	assert.NotNil(suite.T(), testState.State.ObjAsNfsInstance().Status.Id)
-	assert.Equal(suite.T(), "patch-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
+	assert.NotNil(suite.T(), testState.ObjAsNfsInstance().Status.Id)
+	assert.Equal(suite.T(), "patch-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -215,16 +214,16 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstancePatchError() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.MODIFY
+	testState.operation = gcpclient.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
-	assert.Equal(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Id)
+	assert.Equal(suite.T(), "", testState.ObjAsNfsInstance().Status.Id)
 	// check conditions
-	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -263,10 +262,10 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteSuccess() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.DELETE
+	testState.operation = gcpclient.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
-	assert.Equal(suite.T(), "delete-instance-operation", testState.State.ObjAsNfsInstance().Status.OpIdentifier)
+	assert.Equal(suite.T(), "delete-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -302,15 +301,15 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteError() {
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
-	testState.operation = client.DELETE
+	testState.operation = gcpclient.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 	// check conditions
-	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
-	assert.NotEqual(suite.T(), "", testState.State.ObjAsNfsInstance().Status.Conditions[0].Message)
+	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.NotEqual(suite.T(), "", testState.ObjAsNfsInstance().Status.Conditions[0].Message)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)

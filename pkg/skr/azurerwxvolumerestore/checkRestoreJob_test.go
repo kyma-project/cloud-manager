@@ -6,12 +6,12 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	storageClient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -34,7 +34,7 @@ func TestCheckRestoreJob(t *testing.T) {
 		utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-scope",
 				Namespace: "test-ns",
 			},
@@ -56,13 +56,13 @@ func TestCheckRestoreJob(t *testing.T) {
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
-				State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
 			}
 		}
 
 		setupTest := func(withObj bool, backupRecoveryPointId string, backupStorageAccountPath string) {
 			azureRwxVolumeBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-azure-restore-backup",
 					Namespace: "test-ns",
 				},
@@ -71,11 +71,11 @@ func TestCheckRestoreJob(t *testing.T) {
 			azureRwxVolumeBackup.Status.RecoveryPointId = backupRecoveryPointId
 			azureRwxVolumeBackup.Status.StorageAccountPath = backupStorageAccountPath
 			startTime, _ := time.Parse(time.RFC3339, "2025-03-01T00:43:35.6367215Z")
-			k8sStartTime := v1.Time{
+			k8sStartTime := metav1.Time{
 				Time: startTime,
 			}
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-azure-restore",
 					Namespace: "test-ns-2",
 				},
@@ -116,7 +116,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			k8sClient = spy.NewClientSpy(fakeClient)
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
 			state.azureRwxVolumeBackup = azureRwxVolumeBackup
-			state.storageClient, _ = storageClient.NewMockClient()(nil, "", "", "", "")
+			state.storageClient, _ = azurerwxvolumebackupclient.NewMockClient()(nil, "", "", "", "")
 			state.SetScope(scope)
 		}
 
@@ -131,7 +131,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCompleted),
 				FabricName:               "",
@@ -168,7 +168,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusFailed),
 				FabricName:               "",
@@ -207,7 +207,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCancelled),
 				FabricName:               "",
@@ -245,7 +245,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCompletedWithWarnings),
 				FabricName:               "",
@@ -283,7 +283,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusInvalid),
 				FabricName:               "",
@@ -321,7 +321,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCancelling),
 				FabricName:               "",
@@ -358,7 +358,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCancelling),
 				FabricName:               "",
@@ -389,7 +389,7 @@ func TestCheckRestoreJob(t *testing.T) {
 
 			jobId := "test-job-id"
 			// This will only add a jobId to the array with inprogress status
-			request := storageClient.RestoreRequest{
+			request := azurerwxvolumebackupclient.RestoreRequest{
 				VaultName:                jobId,
 				ResourceGroupName:        string(armrecoveryservicesbackup.JobStatusCancelling),
 				FabricName:               "",

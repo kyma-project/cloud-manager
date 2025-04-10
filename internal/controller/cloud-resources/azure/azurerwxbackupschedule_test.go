@@ -8,7 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -111,7 +111,7 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 		rwxBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{}
 
 		skrRwxBackup1 := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      rwxBackup1Name,
 				Namespace: DefaultSkrNamespace,
 			},

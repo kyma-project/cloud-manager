@@ -8,16 +8,16 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
-	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 
-	gcpClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 type State struct {
 	types.State
 
-	computeClient              client.ComputeClient
-	networkComnnectivityClient client.NetworkConnectivityClient
+	computeClient              gcpiprangev3client.ComputeClient
+	networkComnnectivityClient gcpiprangev3client.NetworkConnectivityClient
 
 	subnet                  *computepb.Subnetwork
 	serviceConnectionPolicy *networkconnectivitypb.ServiceConnectionPolicy
@@ -28,14 +28,14 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	computeClientProvider             gcpClient.ClientProvider[client.ComputeClient]
-	networkConnectivityClientProvider gcpClient.ClientProvider[client.NetworkConnectivityClient]
+	computeClientProvider             gcpclient.ClientProvider[gcpiprangev3client.ComputeClient]
+	networkConnectivityClientProvider gcpclient.ClientProvider[gcpiprangev3client.NetworkConnectivityClient]
 	env                               abstractions.Environment
 }
 
 func NewStateFactory(
-	computeClientProvider gcpClient.ClientProvider[client.ComputeClient],
-	networkConnectivityClientProvider gcpClient.ClientProvider[client.NetworkConnectivityClient],
+	computeClientProvider gcpclient.ClientProvider[gcpiprangev3client.ComputeClient],
+	networkConnectivityClientProvider gcpclient.ClientProvider[gcpiprangev3client.NetworkConnectivityClient],
 	env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		computeClientProvider:             computeClientProvider,
@@ -65,7 +65,7 @@ func (statefactory *stateFactory) NewState(ctx context.Context, ipRangeState typ
 	return newState(ipRangeState, computeClient, networkConnectivityClient), nil
 }
 
-func newState(ipRangeState types.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient) *State {
+func newState(ipRangeState types.State, computeClient gcpiprangev3client.ComputeClient, networkConnectivityClient gcpiprangev3client.NetworkConnectivityClient) *State {
 	return &State{
 		State:                      ipRangeState,
 		computeClient:              computeClient,

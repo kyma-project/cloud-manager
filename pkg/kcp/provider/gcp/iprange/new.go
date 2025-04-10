@@ -2,8 +2,8 @@ package iprange
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
 )
 
 // New returns an Action that will provision and deprovision resource in the cloud.

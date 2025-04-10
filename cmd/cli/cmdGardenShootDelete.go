@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/cmd/cli/helper"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -25,7 +25,7 @@ var cmdGardenShootDelete = &cobra.Command{
 
 		c := helper.NewGardenClient()
 
-		shoot := &gardenerTypes.Shoot{
+		shoot := &gardenertypes.Shoot{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      shootName,
@@ -37,7 +37,7 @@ var cmdGardenShootDelete = &cobra.Command{
 		}
 		fmt.Println("Deleted Shoot")
 
-		sb := &gardenerTypes.SecretBinding{
+		sb := &gardenertypes.SecretBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      shootName,

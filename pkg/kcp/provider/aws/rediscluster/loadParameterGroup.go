@@ -3,15 +3,15 @@ package rediscluster
 import (
 	"context"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
 )
 
 func loadParameterGroup(
-	getParamGroup func(*State) *elasticacheTypes.CacheParameterGroup,
-	setParamGroup func(*State, *elasticacheTypes.CacheParameterGroup),
+	getParamGroup func(*State) *elasticachetypes.CacheParameterGroup,
+	setParamGroup func(*State, *elasticachetypes.CacheParameterGroup),
 	name string,
 ) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
@@ -44,16 +44,16 @@ func loadParameterGroup(
 
 func loadMainParameterGroup(state *State) composed.Action {
 	return loadParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.parameterGroup },
-		func(s *State, paramGroup *elasticacheTypes.CacheParameterGroup) { s.parameterGroup = paramGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.parameterGroup },
+		func(s *State, paramGroup *elasticachetypes.CacheParameterGroup) { s.parameterGroup = paramGroup },
 		GetAwsElastiCacheParameterGroupName(state.Obj().GetName()),
 	)
 }
 
 func loadTempParameterGroup(state *State) composed.Action {
 	return loadParameterGroup(
-		func(s *State) *elasticacheTypes.CacheParameterGroup { return s.tempParameterGroup },
-		func(s *State, paramGroup *elasticacheTypes.CacheParameterGroup) { s.tempParameterGroup = paramGroup },
+		func(s *State) *elasticachetypes.CacheParameterGroup { return s.tempParameterGroup },
+		func(s *State, paramGroup *elasticachetypes.CacheParameterGroup) { s.tempParameterGroup = paramGroup },
 		GetAwsElastiCacheTempParameterGroupName(state.Obj().GetName()),
 	)
 }

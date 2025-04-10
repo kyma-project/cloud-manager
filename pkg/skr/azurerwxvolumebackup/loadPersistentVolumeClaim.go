@@ -5,7 +5,7 @@ import (
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	client2 "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,7 +53,7 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 			Run(ctx, state)
 	}
 
-	if !client2.IsPvcProvisionerAzureCsiDriver(pvc.Annotations) {
+	if !azurerwxvolumebackupclient.IsPvcProvisionerAzureCsiDriver(pvc.Annotations) {
 		logger.Error(nil, "Specified destination PVC is not provisioned by Azure CSI driver (file.csi.azure.com)", "PVC", backup.Spec.Source.Pvc.ToNamespacedName(backup.Namespace))
 		backup.Status.State = cloudresourcesv1beta1.JobStateFailed
 		return composed.PatchStatus(backup).

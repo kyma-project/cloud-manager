@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	redis "cloud.google.com/go/redis/apiv1"
-	redispb "cloud.google.com/go/redis/apiv1/redispb"
+	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -56,7 +56,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 	if err != nil {
 		return err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	req := &redispb.UpdateInstanceRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
@@ -80,7 +80,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 	if err != nil {
 		return err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	readReplicasMode := redispb.Instance_READ_REPLICAS_DISABLED
 	if options.Tier != "BASIC" {
@@ -126,7 +126,7 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 	if err != nil {
 		return nil, nil, err
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	req := &redispb.GetInstanceRequest{
@@ -161,7 +161,7 @@ func (memorystoreClient *memorystoreClient) UpgradeRedisInstance(ctx context.Con
 	if redisClientErr != nil {
 		return redisClientErr
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	req := &redispb.UpgradeInstanceRequest{
@@ -185,7 +185,7 @@ func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Cont
 	if redisClientErr != nil {
 		return redisClientErr
 	}
-	defer redisClient.Close()
+	defer redisClient.Close() // nolint: errcheck
 
 	req := &redispb.DeleteInstanceRequest{
 		Name: GetGcpMemoryStoreRedisName(projectId, locationId, instanceId),

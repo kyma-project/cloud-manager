@@ -96,7 +96,7 @@ func (suite *validatePostCreateSuite) TestValidatePostCreateSuccess() {
 	updatedObject2 := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject2)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), updatedObject.ObjectMeta.ResourceVersion, updatedObject2.ObjectMeta.ResourceVersion)
+	assert.Equal(suite.T(), updatedObject.ResourceVersion, updatedObject2.ResourceVersion)
 }
 
 func TestValidatePostCreate(t *testing.T) {

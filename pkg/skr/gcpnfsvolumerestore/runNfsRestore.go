@@ -7,7 +7,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -43,9 +42,9 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
 
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
-	dstFullPath := client.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
+	dstFullPath := gcpclient.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
-	srcFullPath := client.GetFileBackupPath(project, srcLocation, backupName)
+	srcFullPath := gcpclient.GetFileBackupPath(project, srcLocation, backupName)
 
 	operation, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, srcFullPath)
 

@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
-	azureClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	"k8s.io/utils/ptr"
 )
@@ -19,7 +19,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	azureClientProvider azureClient.ClientProvider[client.NukeRwxBackupClient],
+	azureClientProvider azureclient.ClientProvider[client.NukeRwxBackupClient],
 	env abstractions.Environment) StateFactory {
 	return stateFactory{
 		azureClientProvider: azureClientProvider,
@@ -28,7 +28,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	azureClientProvider azureClient.ClientProvider[client.NukeRwxBackupClient]
+	azureClientProvider azureclient.ClientProvider[client.NukeRwxBackupClient]
 	env                 abstractions.Environment
 }
 
@@ -44,7 +44,7 @@ type State struct {
 	nuketypes.State
 	ProviderResources []*nuketypes.ProviderResourceKindState
 
-	azureClientProvider azureClient.ClientProvider[client.NukeRwxBackupClient]
+	azureClientProvider azureclient.ClientProvider[client.NukeRwxBackupClient]
 	env                 abstractions.Environment
 	azureClient         client.NukeRwxBackupClient
 

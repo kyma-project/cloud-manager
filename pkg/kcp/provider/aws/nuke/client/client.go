@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 )
 
 type NukeNfsBackupClient interface {
-	awsnfsbackupclient.Client
+	awsnfsvolumebackupclient.Client
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[NukeNfsBackupClient] {
@@ -17,6 +17,6 @@ func NewClientProvider() awsclient.SkrClientProvider[NukeNfsBackupClient] {
 		if err != nil {
 			return nil, err
 		}
-		return awsnfsbackupclient.NewClient(backup.NewFromConfig(cfg)), nil
+		return awsnfsvolumebackupclient.NewClient(backup.NewFromConfig(cfg)), nil
 	}
 }

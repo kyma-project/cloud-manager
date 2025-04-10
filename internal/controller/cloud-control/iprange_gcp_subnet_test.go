@@ -5,7 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -79,7 +79,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Private Subnet is created", func() {
-			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), gcpiprangev3client.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
@@ -112,7 +112,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Connection Policy does not exist", func() {
-			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), gcpiprangev3client.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
@@ -195,7 +195,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Private Subnet is created", func() {
-			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), gcpiprangev3client.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,
@@ -234,7 +234,7 @@ var _ = Describe("Feature: KCP IpRange for GCP Private Subnet", func() {
 		})
 
 		By("And Then GCP Connection Policy does not exist", func() {
-			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), v3.GetSubnetRequest{
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), gcpiprangev3client.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + ipRange.Name,
 				Region:    scope.Spec.Region,

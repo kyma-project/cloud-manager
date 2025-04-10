@@ -6,7 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
@@ -99,7 +99,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 
 		skrNfsBackup1 := &cloudresourcesv1beta1.GcpNfsVolumeBackup{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      nfsBackup1Name,
 				Namespace: DefaultSkrNamespace,
 			},

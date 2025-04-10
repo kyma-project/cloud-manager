@@ -10,20 +10,20 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	backupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type State struct {
-	commonScope.State
-	awsClientProvider awsClient.SkrClientProvider[backupclient.Client]
+	commonscope.State
+	awsClientProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client]
 	env               abstractions.Environment
 	roleName          string
 
-	awsClient         backupclient.Client
+	awsClient         awsnfsvolumebackupclient.Client
 	skrAwsNfsVolume   *cloudresourcesv1beta1.AwsNfsVolume
 	kcpAwsNfsInstance *cloudcontrolv1beta1.NfsInstance
 	vault             *backuptypes.BackupVaultListMember
@@ -34,8 +34,8 @@ type State struct {
 
 func newStateFactory(
 	composedStateFactory composed.StateFactory,
-	commonScopeStateFactory commonScope.StateFactory,
-	awsClientProvider awsClient.SkrClientProvider[backupclient.Client],
+	commonScopeStateFactory commonscope.StateFactory,
+	awsClientProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client],
 	env abstractions.Environment,
 ) *stateFactory {
 	return &stateFactory{
@@ -48,8 +48,8 @@ func newStateFactory(
 
 type stateFactory struct {
 	composedStateFactory    composed.StateFactory
-	commonScopeStateFactory commonScope.StateFactory
-	awsClientProvider       awsClient.SkrClientProvider[backupclient.Client]
+	commonScopeStateFactory commonscope.StateFactory
+	awsClientProvider       awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client]
 	env                     abstractions.Environment
 }
 

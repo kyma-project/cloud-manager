@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,14 +24,14 @@ var _ = Describe("Feature: KCP RedisInstance .status patch", Ordered, func() {
 
 	BeforeAll(func() {
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeGcp).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
 				Should(Succeed())
 		})
 
-		iprangePkg.Ignore.AddName(kcpIpRangeName)
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
 		By("And Given KCP IPRange exists", func() {
 			Eventually(CreateKcpIpRange).
 				WithArguments(

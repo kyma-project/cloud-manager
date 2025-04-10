@@ -5,16 +5,16 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type State struct {
-	commonScope.State
-	awsClientProvider awsClient.SkrClientProvider[restoreclient.Client]
+	commonscope.State
+	awsClientProvider awsclient.SkrClientProvider[restoreclient.Client]
 	env               abstractions.Environment
 	roleName          string
 
@@ -25,8 +25,8 @@ type State struct {
 
 func newStateFactory(
 	composedStateFactory composed.StateFactory,
-	commonScopeStateFactory commonScope.StateFactory,
-	awsClientProvider awsClient.SkrClientProvider[restoreclient.Client],
+	commonScopeStateFactory commonscope.StateFactory,
+	awsClientProvider awsclient.SkrClientProvider[restoreclient.Client],
 	env abstractions.Environment,
 ) *stateFactory {
 	return &stateFactory{
@@ -39,8 +39,8 @@ func newStateFactory(
 
 type stateFactory struct {
 	composedStateFactory    composed.StateFactory
-	commonScopeStateFactory commonScope.StateFactory
-	awsClientProvider       awsClient.SkrClientProvider[restoreclient.Client]
+	commonScopeStateFactory commonscope.StateFactory
+	awsClientProvider       awsclient.SkrClientProvider[restoreclient.Client]
 	env                     abstractions.Environment
 }
 

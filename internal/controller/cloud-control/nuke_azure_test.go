@@ -6,8 +6,8 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	azurebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,12 +24,12 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 	saName := "test-sa"
 	rgName := "test-rg"
 	backupPolicyName := "test-policy"
-	containerName := azurebackupclient.GetContainerName(rgName, saName)
+	containerName := azurerwxvolumebackupclient.GetContainerName(rgName, saName)
 	fileShares := []string{"test-fs-01", "test-fs-02"}
 
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
-			scopePkg.Ignore.AddName(scopeName)
+			kcpscope.Ignore.AddName(scopeName)
 			// Given Scope exists
 			Eventually(GivenScopeAzureExists).
 				WithArguments(
@@ -115,7 +115,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 					return fmt.Errorf("kind %s not found in Nuke status", kinds[0])
 				}
 				for _, fileShareName := range fileShares {
-					id := azurebackupclient.GetFileSharePath(subscriptionId, rgName, vaultName, containerName, fileShareName)
+					id := azurerwxvolumebackupclient.GetFileSharePath(subscriptionId, rgName, vaultName, containerName, fileShareName)
 					actual := sk.Objects[id]
 					if actual == cloudcontrolv1beta1.NukeResourceStatusDeleted {
 						continue
@@ -128,7 +128,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 					return fmt.Errorf("kind %s not found in Nuke status", kinds[1])
 				}
 
-				id := azurebackupclient.GetVaultPath(subscriptionId, rgName, vaultName)
+				id := azurerwxvolumebackupclient.GetVaultPath(subscriptionId, rgName, vaultName)
 				actual := sk.Objects[id]
 
 				if actual != cloudcontrolv1beta1.NukeResourceStatusDeleted {

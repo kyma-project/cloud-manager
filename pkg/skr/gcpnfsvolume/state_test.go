@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -25,7 +25,7 @@ var kymaRef = klog.ObjectRef{
 }
 
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume",
 		Namespace: "test",
 	},
@@ -42,11 +42,11 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Id:         "test-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS is instance is ready",
 			},
@@ -55,10 +55,10 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "deleted-gcp-nfs-volume",
 		Namespace: "test",
-		DeletionTimestamp: &v1.Time{
+		DeletionTimestamp: &metav1.Time{
 			Time: time.Now(),
 		},
 		Finalizers: []string{"test-finalizer"},
@@ -72,7 +72,7 @@ var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var pvGcpNfsVolume = corev1.PersistentVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name: fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name),
 		Labels: map[string]string{
 			cloudresourcesv1beta1.LabelNfsVolName: gcpNfsVolume.Name,
@@ -99,7 +99,7 @@ var pvGcpNfsVolume = corev1.PersistentVolume{
 }
 
 var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name: fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name),
 		Labels: map[string]string{
 			cloudresourcesv1beta1.LabelNfsVolName: deletedGcpNfsVolume.Name,
@@ -123,7 +123,7 @@ var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
 }
 
 var kcpScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Namespace: kymaRef.Namespace,
 		Name:      kymaRef.Name,
 	},
@@ -152,7 +152,7 @@ var kcpScope = cloudcontrolv1beta1.Scope{
 }
 
 var kcpIpRange = cloudcontrolv1beta1.IpRange{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-ip-range",
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
@@ -177,7 +177,7 @@ var kcpIpRange = cloudcontrolv1beta1.IpRange{
 }
 
 var skrIpRange = cloudresourcesv1beta1.IpRange{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name: gcpNfsVolume.Spec.IpRange.Name,
 	},
 	Spec: cloudresourcesv1beta1.IpRangeSpec{
@@ -186,7 +186,7 @@ var skrIpRange = cloudresourcesv1beta1.IpRange{
 }
 
 var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      gcpNfsVolume.Status.Id,
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
@@ -219,11 +219,11 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 	Status: cloudcontrolv1beta1.NfsInstanceStatus{
 		State: "Ready",
 		Id:    "gcp-filestore-1",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS is instance is ready",
 			},
@@ -234,7 +234,7 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 }
 
 var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "to-delete-gcp-nfs-instance",
 		Namespace: kymaRef.Namespace,
 		Labels: map[string]string{
@@ -268,7 +268,7 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 }
 
 var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume-backup",
 		Namespace: "test",
 	},
@@ -282,11 +282,11 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
 		Location: "us-west1",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS backup is ready",
 			},

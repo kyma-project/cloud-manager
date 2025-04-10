@@ -56,7 +56,7 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 	isNetworkReady := meta.IsStatusConditionTrue(ptr.Deref(remoteNetwork.Conditions(), []metav1.Condition{}), cloudcontrolv1beta1.ConditionTypeReady)
 	isNetworkDefined := remoteNetwork.Status.Network != nil
 	if !isNetworkDefined || !isNetworkReady && !composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
-		if !remoteNetwork.ObjectMeta.CreationTimestamp.After(state.ObjAsVpcPeering().ObjectMeta.CreationTimestamp.Time.Add(10 * time.Minute)) {
+		if !remoteNetwork.CreationTimestamp.After(state.ObjAsVpcPeering().CreationTimestamp.Add(10 * time.Minute)) {
 			return composed.LogErrorAndReturn(err, "[KCP GCP VPCPeering loadRemoteNetwork] KCP Remote Network is not ready yet, requeuing", composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil)
 		}
 

@@ -3,7 +3,7 @@ package azurerwxvolumerestore
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -11,7 +11,7 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -35,7 +35,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 		utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-scope",
 				Namespace: "test-ns",
 			},
@@ -57,13 +57,13 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 			return &State{
-				State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
 			}
 		}
 
 		setupTest := func(withPvc bool, pvcStatus corev1.PersistentVolumeClaimPhase) {
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-azure-restore",
 					Namespace: "test-ns-2",
 				},
@@ -90,7 +90,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 			var fakeClient client.WithWatch
 			if withPvc {
 				pvc = &corev1.PersistentVolumeClaim{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-azure-restore-pvc",
 						Namespace: "test-ns",
 						Annotations: map[string]string{

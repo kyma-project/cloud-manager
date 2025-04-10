@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
@@ -42,17 +42,17 @@ func VpcSubnetsFromScope(scope *cloudcontrolv1beta1.Scope) []VpcSubnet {
 type VpcSubnet struct {
 	AZ   string
 	Cidr string
-	Tags []ec2Types.Tag
+	Tags []ec2types.Tag
 }
 
 type VpcConfig interface {
-	AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) *ec2Types.Vpc
+	AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc
 	SetVpcError(id string, err error)
 }
 
 type vpcEntry struct {
-	vpc     ec2Types.Vpc
-	subnets []ec2Types.Subnet
+	vpc     ec2types.Vpc
+	subnets []ec2types.Subnet
 }
 
 type vpcStore struct {
@@ -80,7 +80,7 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 
 // Config implementation =======================================
 
-func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSubnet) *ec2Types.Vpc {
+func (s *vpcStore) AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc {
 	s.m.Lock()
 	defer s.m.Unlock()
 	existinIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
@@ -91,29 +91,29 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2Types.Tag, subnets []VpcSub
 	}
 
 	item := &vpcEntry{
-		vpc: ec2Types.Vpc{
+		vpc: ec2types.Vpc{
 			VpcId:     ptr.To(id),
 			CidrBlock: ptr.To(cidr),
 			Tags:      tags,
-			CidrBlockAssociationSet: []ec2Types.VpcCidrBlockAssociation{
+			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
 				{
 					AssociationId: ptr.To(uuid.NewString()),
 					CidrBlock:     ptr.To(cidr),
-					CidrBlockState: &ec2Types.VpcCidrBlockState{
-						State:         ec2Types.VpcCidrBlockStateCodeAssociated,
+					CidrBlockState: &ec2types.VpcCidrBlockState{
+						State:         ec2types.VpcCidrBlockStateCodeAssociated,
 						StatusMessage: ptr.To("Associated"),
 					},
 				},
 			},
 		},
-		subnets: pie.Map(subnets, func(x VpcSubnet) ec2Types.Subnet {
-			return ec2Types.Subnet{
+		subnets: pie.Map(subnets, func(x VpcSubnet) ec2types.Subnet {
+			return ec2types.Subnet{
 				AvailabilityZone:   ptr.To(x.AZ),
 				AvailabilityZoneId: ptr.To(x.AZ),
 				CidrBlock:          ptr.To(x.Cidr),
-				State:              ec2Types.SubnetStateAvailable,
+				State:              ec2types.SubnetStateAvailable,
 				SubnetId:           ptr.To(uuid.NewString()),
-				Tags:               append(make([]ec2Types.Tag, 0, len(tags)), x.Tags...),
+				Tags:               append(make([]ec2types.Tag, 0, len(tags)), x.Tags...),
 				VpcId:              ptr.To(id),
 			}
 		}),
@@ -129,7 +129,7 @@ func (s *vpcStore) SetVpcError(id string, err error) {
 
 // Client implementation ========================================
 
-func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc, error) {
+func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -149,24 +149,24 @@ func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2Types.Vpc
 	return nil, nil
 }
 
-func (s *vpcStore) DescribeVpcs(ctx context.Context, name string) ([]ec2Types.Vpc, error) {
+func (s *vpcStore) DescribeVpcs(ctx context.Context, name string) ([]ec2types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
-	all := pie.Map(s.items, func(e *vpcEntry) ec2Types.Vpc {
+	all := pie.Map(s.items, func(e *vpcEntry) ec2types.Vpc {
 		return e.vpc
 	})
 	if name == "" {
 		return all, nil
 	}
-	return pie.Filter(all, func(vpc ec2Types.Vpc) bool {
+	return pie.Filter(all, func(vpc ec2types.Vpc) bool {
 		return awsutil.NameEc2TagEquals(vpc.Tags, name)
 	}), nil
 }
 
-func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*ec2Types.VpcCidrBlockAssociation, error) {
+func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*ec2types.VpcCidrBlockAssociation, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -176,11 +176,11 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 	if err != nil {
 		return nil, err
 	}
-	a := ec2Types.VpcCidrBlockAssociation{
+	a := ec2types.VpcCidrBlockAssociation{
 		AssociationId: ptr.To(uuid.NewString()),
 		CidrBlock:     ptr.To(cidr),
-		CidrBlockState: &ec2Types.VpcCidrBlockState{
-			State:         ec2Types.VpcCidrBlockStateCodeAssociated,
+		CidrBlockState: &ec2types.VpcCidrBlockState{
+			State:         ec2types.VpcCidrBlockStateCodeAssociated,
 			StatusMessage: ptr.To("Associated"),
 		},
 	}
@@ -218,7 +218,7 @@ func (s *vpcStore) DisassociateVpcCidrBlockInput(ctx context.Context, associatio
 	return nil
 }
 
-func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Types.Subnet, error) {
+func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2types.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -231,7 +231,7 @@ func (s *vpcStore) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2Type
 	return item.subnets, nil
 }
 
-func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error) {
+func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2types.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -249,7 +249,7 @@ func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Typ
 	return nil, nil
 }
 
-func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []ec2Types.Tag) (*ec2Types.Subnet, error) {
+func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []ec2types.Tag) (*ec2types.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -259,13 +259,13 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tag
 	if err != nil {
 		return nil, err
 	}
-	subnet := ec2Types.Subnet{
+	subnet := ec2types.Subnet{
 		AvailabilityZone:   ptr.To(az),
 		AvailabilityZoneId: ptr.To(az),
 		CidrBlock:          ptr.To(cidr),
-		State:              ec2Types.SubnetStateAvailable,
+		State:              ec2types.SubnetStateAvailable,
 		SubnetId:           ptr.To(uuid.NewString()),
-		Tags:               append(make([]ec2Types.Tag, 0, len(tags)), tags...),
+		Tags:               append(make([]ec2types.Tag, 0, len(tags)), tags...),
 		VpcId:              ptr.To(vpcId),
 	}
 	item.subnets = append(item.subnets, subnet)

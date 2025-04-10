@@ -3,33 +3,33 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
 
 type State struct {
 	vpcpeeringtypes.State
 
-	client       vpcpeeringclient.Client
-	remoteClient vpcpeeringclient.Client
-	provider     awsclient.SkrClientProvider[vpcpeeringclient.Client]
+	client       awsvpcpeeringclient.Client
+	remoteClient awsvpcpeeringclient.Client
+	provider     awsclient.SkrClientProvider[awsvpcpeeringclient.Client]
 
 	awsAccessKeyid     string
 	awsSecretAccessKey string
 	roleName           string
 
-	vpc              *ec2Types.Vpc
-	vpcPeering       *ec2Types.VpcPeeringConnection
-	remoteVpc        *ec2Types.Vpc
-	remoteVpcPeering *ec2Types.VpcPeeringConnection
+	vpc              *ec2types.Vpc
+	vpcPeering       *ec2types.VpcPeeringConnection
+	remoteVpc        *ec2types.Vpc
+	remoteVpcPeering *ec2types.VpcPeeringConnection
 
-	routeTables       []ec2Types.RouteTable
-	remoteRouteTables []ec2Types.RouteTable
+	routeTables       []ec2types.RouteTable
+	remoteRouteTables []ec2types.RouteTable
 
 	localNetwork  *cloudcontrolv1beta1.Network
 	remoteNetwork *cloudcontrolv1beta1.Network
@@ -39,14 +39,14 @@ type StateFactory interface {
 	NewState(ctx context.Context, state vpcpeeringtypes.State, logger logr.Logger) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[vpcpeeringclient.Client]) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[vpcpeeringclient.Client]
+	skrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
@@ -78,8 +78,8 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
-	client vpcpeeringclient.Client,
-	provider awsclient.SkrClientProvider[vpcpeeringclient.Client],
+	client awsvpcpeeringclient.Client,
+	provider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 	key string,
 	secret string,
 	roleName string) *State {

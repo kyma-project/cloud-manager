@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/redis/apiv1/redispb"
-	memoryStoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -34,7 +34,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteMemorStoreRedisByName(
 	delete(memoryStoreClientFake.redisInstances, name)
 }
 
-func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string, options memoryStoreClient.CreateRedisInstanceOptions) error {
+func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string, options gcpredisinstanceclient.CreateRedisInstanceOptions) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -42,7 +42,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	redisInstance := &redispb.Instance{
 		Name:              name,
 		State:             redispb.Instance_CREATING,
@@ -52,7 +52,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) CreateRedisInstance(ctx cont
 		ReadEndpointPort:  5093,
 		MemorySizeGb:      options.MemorySizeGb,
 		RedisConfigs:      options.RedisConfigs,
-		MaintenancePolicy: memoryStoreClient.ToMaintenancePolicy(options.MaintenancePolicy),
+		MaintenancePolicy: gcpredisinstanceclient.ToMaintenancePolicy(options.MaintenancePolicy),
 		AuthEnabled:       options.AuthEnabled,
 		RedisVersion:      options.RedisVersion,
 	}
@@ -89,7 +89,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) UpgradeRedisInstance(ctx con
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
 		instance.State = redispb.Instance_UPDATING
 
@@ -107,7 +107,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) DeleteRedisInstance(ctx cont
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 
 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
 		instance.State = redispb.Instance_DELETING
@@ -128,7 +128,7 @@ func (memoryStoreClientFake *memoryStoreClientFake) GetRedisInstance(ctx context
 	memoryStoreClientFake.mutex.Lock()
 	defer memoryStoreClientFake.mutex.Unlock()
 
-	name := memoryStoreClient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+	name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 
 	if instance, ok := memoryStoreClientFake.redisInstances[name]; ok {
 		return instance, &redispb.InstanceAuthString{AuthString: "0df0aea4-2cd6-4b9a-900f-a650661e1740"}, nil

@@ -69,10 +69,7 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 	kymaNetwork := getFullNetworkUrl(kymaProject, kymaVpc)
 
 	exportCustomRoutes := false
-	importCustomRoutes := false
-	if customRoutes {
-		importCustomRoutes = true
-	}
+	importCustomRoutes := customRoutes
 
 	_, peeringExists := s.items[kymaNetwork]
 	if peeringExists {

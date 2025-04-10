@@ -41,8 +41,8 @@ func (r *skrStatusRepo) Load(ctx context.Context, name, namespace string) (*clou
 	if apierrors.IsNotFound(err) {
 		skrStatus.Name = name
 		skrStatus.Namespace = namespace
-		skrStatus.TypeMeta.Kind = "SkrStatus"
-		skrStatus.TypeMeta.APIVersion = cloudcontrolv1beta1.GroupVersion.String()
+		skrStatus.Kind = "SkrStatus"
+		skrStatus.APIVersion = cloudcontrolv1beta1.GroupVersion.String()
 		return skrStatus, nil
 	}
 	return skrStatus, nil

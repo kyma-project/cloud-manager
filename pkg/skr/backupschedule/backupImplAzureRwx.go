@@ -6,7 +6,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -15,7 +15,7 @@ type backupImplAzureRwx struct {
 }
 
 type azureRwxSource struct {
-	*v1.PersistentVolumeClaim
+	*corev1.PersistentVolumeClaim
 }
 
 func (impl *backupImplAzureRwx) emptyScheduleObject() composed.ObjWithConditionsAndState {
@@ -23,7 +23,7 @@ func (impl *backupImplAzureRwx) emptyScheduleObject() composed.ObjWithConditions
 }
 
 func (impl *backupImplAzureRwx) emptySourceObject() client.Object {
-	return &v1.PersistentVolumeClaim{}
+	return &corev1.PersistentVolumeClaim{}
 }
 
 func (impl *backupImplAzureRwx) emptyBackupList() client.ObjectList {
@@ -61,9 +61,9 @@ func (impl *backupImplAzureRwx) getBackupObject(state *State, objectMeta *metav1
 }
 
 func (impl *backupImplAzureRwx) sourceToObjWithConditionAndState(obj client.Object) (composed.ObjWithConditionsAndState, error) {
-	x, ok := obj.(*v1.PersistentVolumeClaim)
+	x, ok := obj.(*corev1.PersistentVolumeClaim)
 	if !ok {
-		return nil, errors.New("Source Object should be of type PersistentVolumeClaim")
+		return nil, errors.New("source Object should be of type PersistentVolumeClaim")
 	}
 	return &azureRwxSource{x}, nil
 }
@@ -87,11 +87,11 @@ func (src *azureRwxSource) GetObjectMeta() *metav1.ObjectMeta {
 
 func (src *azureRwxSource) State() string {
 	switch src.Status.Phase {
-	case v1.ClaimPending:
+	case corev1.ClaimPending:
 		return cloudresourcesv1beta1.StateProcessing
-	case v1.ClaimBound:
+	case corev1.ClaimBound:
 		return cloudresourcesv1beta1.StateReady
-	case v1.ClaimLost:
+	case corev1.ClaimLost:
 		return cloudresourcesv1beta1.StateError
 	default:
 		return ""

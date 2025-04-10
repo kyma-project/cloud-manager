@@ -2,7 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -26,7 +26,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
-		shoot := &gardenerTypes.Shoot{}
+		shoot := &gardenertypes.Shoot{}
 
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootAzure).

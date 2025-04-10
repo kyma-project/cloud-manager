@@ -39,7 +39,7 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysHappy() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.State.ObjAsNfsInstance().Status.Conditions))
+	assert.Equal(suite.T(), 0, len(testState.ObjAsNfsInstance().Status.Conditions))
 }
 
 func (suite *validateAlwaysSuite) TestValidateAlwaysInvalidCapacity() {
@@ -60,11 +60,11 @@ func (suite *validateAlwaysSuite) TestValidateAlwaysInvalidCapacity() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = validateAlways(ctx, testState.State)
 	assert.Error(suite.T(), err)
-	assert.Len(suite.T(), testState.State.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonValidationFailed, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
-	assert.Equal(suite.T(), 1, len(testState.State.validations))
+	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(suite.T(), v1beta1.ReasonValidationFailed, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Equal(suite.T(), 1, len(testState.validations))
 }
 
 func TestValidateAlways(t *testing.T) {

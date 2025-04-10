@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
@@ -32,21 +32,21 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 }
 
 type Client interface {
-	DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error)
-	DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error)
-	CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error)
+	DescribeSubnet(ctx context.Context, subnetId string) (*ec2types.Subnet, error)
+	DescribeSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error)
+	CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error)
 	DeleteSecurityGroup(ctx context.Context, id string) error
-	AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error
+	AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error
 
-	DescribeFileSystems(ctx context.Context) ([]efsTypes.FileSystemDescription, error)
+	DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error)
 	CreateFileSystem(
 		ctx context.Context,
-		performanceMode efsTypes.PerformanceMode,
-		throughputMode efsTypes.ThroughputMode,
-		tags []efsTypes.Tag,
+		performanceMode efstypes.PerformanceMode,
+		throughputMode efstypes.ThroughputMode,
+		tags []efstypes.Tag,
 	) (*efs.CreateFileSystemOutput, error)
 	DeleteFileSystem(ctx context.Context, fsId string) error
-	DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error)
+	DescribeMountTargets(ctx context.Context, fsId string) ([]efstypes.MountTargetDescription, error)
 	CreateMountTarget(ctx context.Context, fsId, subnetId string, securityGroups []string) (string, error)
 	DeleteMountTarget(ctx context.Context, mountTargetId string) error
 
@@ -65,9 +65,9 @@ type client struct {
 	efsSvc *efs.Client
 }
 
-func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types.Subnet, error) {
+func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2types.Subnet, error) {
 	out, err := c.ec2Svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
-		Filters: []ec2Types.Filter{
+		Filters: []ec2types.Filter{
 			{
 				Name:   ptr.To("subnet-id"),
 				Values: []string{subnetId},
@@ -78,18 +78,18 @@ func (c *client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2Types
 		return nil, err
 	}
 	if len(out.Subnets) > 1 {
-		return nil, fmt.Errorf("expected at most one subnet by id, but got: %v", pie.Map(out.Subnets, func(s ec2Types.Subnet) string {
+		return nil, fmt.Errorf("expected at most one subnet by id, but got: %v", pie.Map(out.Subnets, func(s ec2types.Subnet) string {
 			return ptr.Deref(s.SubnetId, "")
 		}))
 	}
-	var result *ec2Types.Subnet
+	var result *ec2types.Subnet
 	if len(out.Subnets) > 0 {
 		result = &out.Subnets[0]
 	}
 	return result, nil
 }
 
-func (c *client) DescribeSecurityGroups(ctx context.Context, filters []ec2Types.Filter, groupIds []string) ([]ec2Types.SecurityGroup, error) {
+func (c *client) DescribeSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error) {
 	out, err := c.ec2Svc.DescribeSecurityGroups(ctx, &ec2.DescribeSecurityGroupsInput{
 		Filters:  filters,
 		GroupIds: groupIds,
@@ -100,13 +100,13 @@ func (c *client) DescribeSecurityGroups(ctx context.Context, filters []ec2Types.
 	return out.SecurityGroups, nil
 }
 
-func (c *client) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2Types.Tag) (string, error) {
+func (c *client) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error) {
 	out, err := c.ec2Svc.CreateSecurityGroup(ctx, &ec2.CreateSecurityGroupInput{
 		Description: ptr.To(name),
 		GroupName:   ptr.To(name),
-		TagSpecifications: []ec2Types.TagSpecification{
+		TagSpecifications: []ec2types.TagSpecification{
 			{
-				ResourceType: ec2Types.ResourceTypeSecurityGroup,
+				ResourceType: ec2types.ResourceTypeSecurityGroup,
 				Tags:         tags,
 			},
 		},
@@ -126,7 +126,7 @@ func (c *client) DeleteSecurityGroup(ctx context.Context, id string) error {
 	return err
 }
 
-func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2Types.IpPermission) error {
+func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
 	_, err := c.ec2Svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       ptr.To(groupId),
 		IpPermissions: ipPermissions,
@@ -137,7 +137,7 @@ func (c *client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId stri
 	return nil
 }
 
-func (c *client) DescribeFileSystems(ctx context.Context) ([]efsTypes.FileSystemDescription, error) {
+func (c *client) DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error) {
 	in := &efs.DescribeFileSystemsInput{}
 	out, err := c.efsSvc.DescribeFileSystems(ctx, in)
 	if err != nil {
@@ -146,7 +146,7 @@ func (c *client) DescribeFileSystems(ctx context.Context) ([]efsTypes.FileSystem
 	return out.FileSystems, nil
 }
 
-func (c *client) CreateFileSystem(ctx context.Context, performanceMode efsTypes.PerformanceMode, throughputMode efsTypes.ThroughputMode, tags []efsTypes.Tag) (*efs.CreateFileSystemOutput, error) {
+func (c *client) CreateFileSystem(ctx context.Context, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
 	in := &efs.CreateFileSystemInput{
 		Encrypted:       aws.Bool(true),
 		PerformanceMode: performanceMode,
@@ -166,7 +166,7 @@ func (c *client) DeleteFileSystem(ctx context.Context, fsId string) error {
 	return err
 }
 
-func (c *client) DescribeMountTargets(ctx context.Context, fsId string) ([]efsTypes.MountTargetDescription, error) {
+func (c *client) DescribeMountTargets(ctx context.Context, fsId string) ([]efstypes.MountTargetDescription, error) {
 	out, err := c.efsSvc.DescribeMountTargets(ctx, &efs.DescribeMountTargetsInput{
 		FileSystemId: ptr.To(fsId),
 	})

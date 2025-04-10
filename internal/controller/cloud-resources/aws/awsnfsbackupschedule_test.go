@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -119,7 +119,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
 		skrNfsBackup1 := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      nfsBackup1Name,
 				Namespace: DefaultSkrNamespace,
 			},

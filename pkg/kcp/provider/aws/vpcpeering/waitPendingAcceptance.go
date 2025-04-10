@@ -2,7 +2,7 @@ package vpcpeering
 
 import (
 	"context"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,16 +16,16 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 
 	code := state.vpcPeering.Status.Code
 
-	if code == ec2Types.VpcPeeringConnectionStateReasonCodeInitiatingRequest {
+	if code == ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest {
 		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 	}
 
 	// can't continue if VPC peering connection is in one of these statuses
-	if code == ec2Types.VpcPeeringConnectionStateReasonCodeFailed ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeExpired ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeRejected ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeDeleted ||
-		code == ec2Types.VpcPeeringConnectionStateReasonCodeDeleting {
+	if code == ec2types.VpcPeeringConnectionStateReasonCodeFailed ||
+		code == ec2types.VpcPeeringConnectionStateReasonCodeExpired ||
+		code == ec2types.VpcPeeringConnectionStateReasonCodeRejected ||
+		code == ec2types.VpcPeeringConnectionStateReasonCodeDeleted ||
+		code == ec2types.VpcPeeringConnectionStateReasonCodeDeleting {
 
 		changed := false
 

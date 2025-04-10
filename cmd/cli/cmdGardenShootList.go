@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/cmd/cli/helper"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
@@ -18,13 +18,13 @@ var cmdGardenShootList = &cobra.Command{
 	Aliases: []string{"l"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := helper.NewGardenClient()
-		list := &gardenerTypes.ShootList{}
+		list := &gardenertypes.ShootList{}
 		err := c.List(context.Background(), list)
 		if err != nil {
 			return fmt.Errorf("error listing shoots: %w", err)
 		}
 
-		sb := &gardenerTypes.SecretBinding{}
+		sb := &gardenertypes.SecretBinding{}
 		fmt.Println("Namespace \t\t Shoot \t\t Provider \t Secret")
 		for _, shoot := range list.Items {
 			var provider string

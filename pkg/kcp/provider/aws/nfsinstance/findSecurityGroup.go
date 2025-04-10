@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -18,7 +18,7 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	list, err := state.awsClient.DescribeSecurityGroups(ctx, []ec2Types.Filter{
+	list, err := state.awsClient.DescribeSecurityGroups(ctx, []ec2types.Filter{
 		{
 			Name:   ptr.To("vpc-id"),
 			Values: []string{state.IpRange().Status.VpcId},

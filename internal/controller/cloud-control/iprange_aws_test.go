@@ -2,12 +2,12 @@ package cloudcontrol
 
 import (
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,7 +27,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -36,7 +36,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
-		var theVpc *ec2Types.Vpc
+		var theVpc *ec2types.Vpc
 		By("And Given AWS VPC exists", func() {
 			awsMock.AddVpc(
 				"wrong1",
@@ -175,7 +175,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -184,7 +184,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
-		var theVpc *ec2Types.Vpc
+		var theVpc *ec2types.Vpc
 		By("And Given AWS VPC exists", func() {
 			awsMock.AddVpc(
 				"wrong1",
@@ -249,7 +249,7 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 				Should(Succeed())
 		})
 
-		var theAwsSubnets []ec2Types.Subnet
+		var theAwsSubnets []ec2types.Subnet
 		By("And Given KCP IpRange AWS Subnets are created", func() {
 			awsSubnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
 			Expect(err).NotTo(HaveOccurred())
@@ -313,11 +313,11 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 
 		scope := &cloudcontrolv1beta1.Scope{}
 		iprange := &cloudcontrolv1beta1.IpRange{}
-		var theVpc *ec2Types.Vpc
+		var theVpc *ec2types.Vpc
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).

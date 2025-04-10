@@ -12,7 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
@@ -26,21 +26,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[iprangeclient.ComputeClient] {
+func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ComputeClient, error) {
+		func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ComputeClient, error) {
 			computeClient, err := compute.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return iprangeclient.NewComputeClientForService(computeClient), nil
+			return gcpiprangeclient.NewComputeClientForService(computeClient), nil
 		},
 	)
 }
 
-func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.ClientProvider[iprangeclient.ServiceNetworkingClient] {
+func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (iprangeclient.ServiceNetworkingClient, error) {
+		func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ServiceNetworkingClient, error) {
 			svcNwClient, err := servicenetworking.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
@@ -49,7 +49,7 @@ func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.Cl
 			if err != nil {
 				return nil, err
 			}
-			return iprangeclient.NewServiceNetworkingClientForService(svcNwClient, crmService), nil
+			return gcpiprangeclient.NewServiceNetworkingClientForService(svcNwClient, crmService), nil
 		},
 	)
 }
@@ -57,8 +57,8 @@ func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.Cl
 type testStateFactory struct {
 	factory                         StateFactory
 	kcpCluster                      composed.StateCluster
-	computeClientProvider           client.ClientProvider[iprangeclient.ComputeClient]
-	serviceNetworkingClientProvider client.ClientProvider[iprangeclient.ServiceNetworkingClient]
+	computeClientProvider           client.ClientProvider[gcpiprangeclient.ComputeClient]
+	serviceNetworkingClientProvider client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	fakeHttpServer                  *httptest.Server
 }
 

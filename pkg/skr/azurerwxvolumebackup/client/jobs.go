@@ -37,7 +37,7 @@ func (c jobsClient) FindRestoreJobId(ctx context.Context, vaultName string, reso
 	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
 		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Restore' and startTime ge %v", startFilter)),
 	}
-	pager := c.BackupJobsClient.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
+	pager := c.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
 	retry := false
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -51,7 +51,7 @@ func (c jobsClient) FindRestoreJobId(ctx context.Context, vaultName string, reso
 			if entityFriendlyName != fileShareName {
 				continue
 			}
-			jobDetails, err := c.JobDetailsClient.Get(ctx, vaultName, resourceGroupName, jobName, nil)
+			jobDetails, err := c.Get(ctx, vaultName, resourceGroupName, jobName, nil)
 			if err != nil {
 				return nil, false, err
 			}
@@ -75,7 +75,7 @@ func (c jobsClient) FindRestoreJobId(ctx context.Context, vaultName string, reso
 
 func (c jobsClient) GetStorageJob(ctx context.Context, vaultName string,
 	resourceGroupName string, jobId string) (*armrecoveryservicesbackup.AzureStorageJob, error) {
-	job, err := c.JobDetailsClient.Get(ctx, vaultName, resourceGroupName, jobId, nil)
+	job, err := c.Get(ctx, vaultName, resourceGroupName, jobId, nil)
 	if err != nil {
 		return nil, err
 	}

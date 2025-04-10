@@ -6,12 +6,12 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	nfsTypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
+	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -29,10 +29,10 @@ var kymaRef = klog.ObjectRef{
 
 func getDeletedGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 	return &cloudcontrolv1beta1.NfsInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "deleted-gcp-nfs-instance",
 			Namespace: "kcp-system",
-			DeletionTimestamp: &v1.Time{
+			DeletionTimestamp: &metav1.Time{
 				Time: time.Now(),
 			},
 			Finalizers: []string{"test-finalizer"},
@@ -44,7 +44,7 @@ func getDeletedGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 
 func getGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 	return &cloudcontrolv1beta1.NfsInstance{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-gcp-nfs-instance",
 			Namespace: kymaRef.Namespace,
 			Labels: map[string]string{
@@ -76,11 +76,11 @@ func getGcpNfsInstance() *cloudcontrolv1beta1.NfsInstance {
 		},
 		Status: cloudcontrolv1beta1.NfsInstanceStatus{
 			State: "Ready",
-			Conditions: []v1.Condition{
+			Conditions: []metav1.Condition{
 				{
 					Type:               "Ready",
 					Status:             "True",
-					LastTransitionTime: v1.Time{Time: time.Now()},
+					LastTransitionTime: metav1.Time{Time: time.Now()},
 					Reason:             "Ready",
 					Message:            "NFS is instance is ready",
 				},
@@ -149,7 +149,7 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 			Namespace: nfsInstance.Namespace,
 		}, nfsInstance))
 	focalState.SetScope(&cloudcontrolv1beta1.Scope{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      kymaRef.Name,
 			Namespace: kymaRef.Namespace,
 		},
@@ -166,6 +166,9 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 	typesState := newTypesState(focalState)
 
 	state, err := f.factory.NewState(ctx, typesState)
+	if err != nil {
+		return nil, err
+	}
 	if opIdentifier != "" {
 		state.ObjAsNfsInstance().Status.OpIdentifier = opIdentifier
 	}
@@ -178,24 +181,20 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 			},
 		})
 	}
-	if err != nil {
-		return nil, err
-	} else {
-		return &TestState{
-			State:          state,
-			FakeHttpServer: f.fakeHttpServer,
-		}, nil
-	}
+	return &TestState{
+		State:          state,
+		FakeHttpServer: f.fakeHttpServer,
+	}, nil
 }
 
-func NewFakeFilestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[client2.FilestoreClient] {
+func NewFakeFilestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsinstanceclient.FilestoreClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (client2.FilestoreClient, error) {
+		func(ctx context.Context, saJsonKeyPath string) (gcpnfsinstanceclient.FilestoreClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return client2.NewFilestoreClient(fsClient), nil
+			return gcpnfsinstanceclient.NewFilestoreClient(fsClient), nil
 		},
 	)
 }
@@ -218,6 +217,6 @@ func (s *typesState) SetIpRange(r *cloudcontrolv1beta1.IpRange) {
 	s.ipRange = r
 }
 
-func newTypesState(focalState focal.State) nfsTypes.State {
+func newTypesState(focalState focal.State) nfsinstancetypes.State {
 	return &typesState{State: focalState}
 }

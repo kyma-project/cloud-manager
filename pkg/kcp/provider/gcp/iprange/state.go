@@ -9,10 +9,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
-	v3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 )
 
 type StateFactory interface {
@@ -20,10 +20,10 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	serviceNetworkingClientProvider gcpclient.ClientProvider[iprangeclient.ServiceNetworkingClient],
-	computeClientProvider gcpclient.ClientProvider[iprangeclient.ComputeClient],
-	v3ComputeClientProvider gcpclient.ClientProvider[v3client.ComputeClient],
-	v3NetworkConnectivityClient gcpclient.ClientProvider[v3client.NetworkConnectivityClient],
+	serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	computeClientProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	v3ComputeClientProvider gcpclient.ClientProvider[gcpiprangev3client.ComputeClient],
+	v3NetworkConnectivityClient gcpclient.ClientProvider[gcpiprangev3client.NetworkConnectivityClient],
 	env abstractions.Environment,
 ) StateFactory {
 	return &generalStateFactory{

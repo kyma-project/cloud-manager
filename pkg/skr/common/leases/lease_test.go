@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	config2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/coordination/v1"
+	"k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"

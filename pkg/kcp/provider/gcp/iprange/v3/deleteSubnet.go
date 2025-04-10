@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -27,7 +26,7 @@ func deleteSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.computeClient.DeleteSubnet(ctx, v3.DeleteSubnetRequest{
+	err := state.computeClient.DeleteSubnet(ctx, gcpiprangev3client.DeleteSubnetRequest{
 		ProjectId:     gcpScope.Project,
 		Region:        region,
 		Name:          GetSubnetShortName(state.Obj().GetName()),
@@ -42,9 +41,9 @@ func deleteSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		logger.Error(err, "Error deleting GCP Private Subnet")
 		ipRange := state.ObjAsIpRange()
 		meta.SetStatusCondition(ipRange.Conditions(), metav1.Condition{
-			Type:    v1beta1.ConditionTypeError,
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
-			Reason:  v1beta1.ReasonCloudProviderError,
+			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 			Message: "Failed to delete IpRange",
 		})
 		ipRange.Status.State = cloudcontrolv1beta1.StateError

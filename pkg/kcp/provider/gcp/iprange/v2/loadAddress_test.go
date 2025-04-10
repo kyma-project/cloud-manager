@@ -10,18 +10,18 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
-	composed "github.com/kyma-project/cloud-manager/pkg/composed"
-	ipRangeClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -120,7 +120,7 @@ func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId s
 	panic("unimplemented")
 }
 
-func newComputeClientStub() ipRangeClient.ComputeClient {
+func newComputeClientStub() gcpiprangeclient.ComputeClient {
 	return &computeClientStub{
 		callCount: 0,
 		mutex:     &sync.Mutex{},
@@ -137,7 +137,7 @@ func TestLoadAddress(t *testing.T) {
 		var scope *cloudcontrolv1beta1.Scope
 		var k8sClient client.WithWatch
 		var address *compute.Address
-		var computeClient ipRangeClient.ComputeClient
+		var computeClient gcpiprangeclient.ComputeClient
 
 		createEmptyGcpIpRangeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudcontrolv1beta1.IpRange) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
@@ -155,7 +155,7 @@ func TestLoadAddress(t *testing.T) {
 
 		setupTest := func() {
 			scope = &cloudcontrolv1beta1.Scope{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "gcp-test",
 					Namespace: "kcp-system",
 				},
@@ -174,7 +174,7 @@ func TestLoadAddress(t *testing.T) {
 			}
 
 			ipRange = &cloudcontrolv1beta1.IpRange{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "3abd9b3c-1125-42e2-9157-72a3758b1b59",
 					Namespace: "kcp-system",
 				},

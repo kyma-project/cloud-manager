@@ -7,7 +7,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,8 +26,8 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	//Check SyncPsa Operation..
-	if ipRange.Status.State == client.SyncPsaConnection ||
-		ipRange.Status.State == client.DeletePsaConnection {
+	switch ipRange.Status.State {
+	case gcpclient.SyncPsaConnection, gcpclient.DeletePsaConnection:
 		op, err := state.serviceNetworkingClient.GetServiceNetworkingOperation(ctx, opName)
 		if err != nil {
 
@@ -74,8 +73,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 				SuccessLogMsg(fmt.Sprintf("Service Networking Operation error : %s", op.Error.Message)).
 				Run(ctx, state)
 		}
-	} else if ipRange.Status.State == client.SyncAddress ||
-		ipRange.Status.State == client.DeleteAddress {
+	case gcpclient.SyncAddress, gcpclient.DeleteAddress:
 		project := state.Scope().Spec.Scope.Gcp.Project
 		op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
 		if err != nil {
@@ -123,7 +121,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 				Run(ctx, state)
 		}
 
-	}
+	} // switch
 
 	return nil, nil
 }

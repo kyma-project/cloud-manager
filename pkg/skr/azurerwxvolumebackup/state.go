@@ -4,10 +4,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -20,11 +19,11 @@ type State struct {
 
 	AuthSecret         *corev1.Secret
 	client             client.Client
-	clientProvider     client2.ClientProvider[client.Client]
+	clientProvider     azureclient.ClientProvider[client.Client]
 	resourceGroupName  string
 	storageAccountName string
 	fileShareName      string
-	pvc                *v1.PersistentVolumeClaim
+	pvc                *corev1.PersistentVolumeClaim
 	vaultName          string
 	scope              *cloudcontrolv1beta1.Scope
 }
@@ -38,7 +37,7 @@ type stateFactory struct {
 	kymaRef          klog.ObjectRef
 	kcpCluster       composed.StateCluster
 	skrCluster       composed.StateCluster
-	clientProvider   client2.ClientProvider[client.Client]
+	clientProvider   azureclient.ClientProvider[client.Client]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -57,7 +56,7 @@ func newStateFactory(
 	kymaRef klog.ObjectRef,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
-	clientProvider client2.ClientProvider[client.Client],
+	clientProvider azureclient.ClientProvider[client.Client],
 ) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,

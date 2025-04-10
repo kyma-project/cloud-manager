@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -21,15 +20,15 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if state.gcpRedisCluster.State != clusterpb.Cluster_DELETING {
-		errorMsg := "Error: unexpected gcp redis state"
+		errorMsg := "error: unexpected gcp redis state"
 		logger.Error(errors.New(errorMsg), errorMsg)
-		redisCluster := st.Obj().(*v1beta1.RedisCluster)
+		redisCluster := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
 		redisCluster.Status.State = cloudcontrolv1beta1.StateError
 		return composed.UpdateStatus(redisCluster).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    v1beta1.ConditionTypeError,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  v1beta1.ReasonUnknown,
+				Reason:  cloudcontrolv1beta1.ReasonUnknown,
 				Message: errorMsg,
 			}).
 			SuccessError(composed.StopAndForget).

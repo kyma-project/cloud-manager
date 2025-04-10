@@ -7,15 +7,15 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func NewReconcilerFactory(
-	awsClientProvider awsClient.SkrClientProvider[client.Client],
+	awsClientProvider awsclient.SkrClientProvider[client.Client],
 	env abstractions.Environment,
 ) skrruntime.ReconcilerFactory {
 	return &reconcilerFactory{
@@ -25,7 +25,7 @@ func NewReconcilerFactory(
 }
 
 type reconcilerFactory struct {
-	awsClientProvider awsClient.SkrClientProvider[client.Client]
+	awsClientProvider awsclient.SkrClientProvider[client.Client]
 	env               abstractions.Environment
 }
 
@@ -33,7 +33,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			commonScope.NewStateFactory(
+			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
 				args.KymaRef,
 			),
@@ -58,7 +58,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"AwsNfsVolumeRestoreMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeRestore{}),
-		commonScope.New(),
+		commonscope.New(),
 		composed.IfElse(
 			composed.Not(CompletedRestorePredicate),
 			composed.ComposeActions("AwsNfsVolumeNotCompleted",

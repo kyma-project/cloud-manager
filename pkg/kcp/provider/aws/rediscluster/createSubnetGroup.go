@@ -3,7 +3,7 @@ package rediscluster
 import (
 	"context"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -26,7 +26,7 @@ func createSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 		return subnet.Id
 	})
 
-	out, err := state.awsClient.CreateElastiCacheSubnetGroup(ctx, GetAwsElastiCacheSubnetGroupName(state.Obj().GetName()), subnetIds, []elasticacheTypes.Tag{
+	out, err := state.awsClient.CreateElastiCacheSubnetGroup(ctx, GetAwsElastiCacheSubnetGroupName(state.Obj().GetName()), subnetIds, []elasticachetypes.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
 			Value: ptr.To(redisInstance.Spec.RemoteRef.String()),

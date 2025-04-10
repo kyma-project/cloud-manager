@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureMeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +27,7 @@ func deletePrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 	privateDnsZoneGroupName := ptr.Deref(state.privateDnsZoneGroup.Name, "")
 	err := state.client.DeletePrivateDnsZoneGroup(ctx, resourceGroupName, privateEndPointName, privateDnsZoneGroupName)
 	if err != nil {
-		if azureMeta.IsNotFound(err) {
+		if azuremeta.IsNotFound(err) {
 			return nil, nil
 		}
 		logger.Error(err, "Error deleting Azure PrivateDnsZoneGroup")

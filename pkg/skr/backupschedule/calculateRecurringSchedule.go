@@ -39,9 +39,9 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 
 	//Evaluate next run times.
 	var nextRunTimes []time.Time
-	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().Time.After(now) {
+	if schedule.GetStartTime() != nil && !schedule.GetStartTime().IsZero() && schedule.GetStartTime().After(now) {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info("StartTime is in future, using it.")
-		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().Time.UTC(), MaxSchedules)
+		nextRunTimes = state.cronExpression.NextN(schedule.GetStartTime().UTC(), MaxSchedules)
 	} else {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Using current time  %s", now))
 		nextRunTimes = state.cronExpression.NextN(now.UTC(), MaxSchedules)

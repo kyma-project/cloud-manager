@@ -30,7 +30,7 @@ import (
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
-	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
+	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -42,7 +42,7 @@ func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
 	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisclusterclient.Client],
-	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisinstanceclient.MemorystoreClusterClient],
+	gcpFilestoreClientProvider gcpclient.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

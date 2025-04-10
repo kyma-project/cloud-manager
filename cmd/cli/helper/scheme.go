@@ -1,7 +1,7 @@
 package helper
 
 import (
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,5 +23,5 @@ func init() {
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(SkrScheme))
 
 	utilruntime.Must(clientgoscheme.AddToScheme(GardenScheme))
-	utilruntime.Must(gardenerTypes.AddToScheme(GardenScheme))
+	utilruntime.Must(gardenertypes.AddToScheme(GardenScheme))
 }

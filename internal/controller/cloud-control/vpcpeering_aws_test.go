@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -53,7 +53,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -98,7 +98,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localMainRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -108,13 +108,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(wrong2RouteTable),
 				ptr.To(wrong2VpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", wrong2VpcId), "1"),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 
 			awsMockLocal.AddRouteTable(
 				ptr.To(localRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		By("And Given AWS remote VPC exists", func() {
@@ -143,7 +143,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteMainRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -153,13 +153,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(wrong3RouteTable),
 				ptr.To(wrong3VpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 
 			awsMockRemote.AddRouteTable(
 				ptr.To(remoteRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
@@ -271,11 +271,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When AWS VPC Peering state is active", func() {
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 
 			Expect(
-				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 		})
 
@@ -424,7 +424,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -451,7 +451,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localMainRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -461,7 +461,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		By("And Given AWS remote VPC exists", func() {
@@ -479,7 +479,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteMainRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -489,7 +489,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
@@ -574,11 +574,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When AWS VPC Peering state is active", func() {
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 
 			Expect(
-				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 		})
 
@@ -712,7 +712,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -739,7 +739,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localMainRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -749,7 +749,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		By("And Given AWS remote VPC exists", func() {
@@ -767,7 +767,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteMainRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -777,7 +777,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
@@ -858,16 +858,16 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			// change local vpc peering status to pending-acceptance (not necessary but leaving it for the clarity)
 
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
 			).NotTo(HaveOccurred())
 
 			// sets vpc peering connections active
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 
 			Expect(
-				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 		})
 
@@ -943,7 +943,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -970,7 +970,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localMainRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -980,7 +980,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(localRouteTable),
 				ptr.To(localVpcId),
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		By("And Given AWS remote VPC exists", func() {
@@ -998,7 +998,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteMainRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{
+				[]ec2types.RouteTableAssociation{
 					{
 						Main: ptr.To(true),
 					},
@@ -1008,13 +1008,13 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				ptr.To(remoteRouteTableTagged),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(kymaName, kymaName), // tag remote route table
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 
 			awsMockRemote.AddRouteTable(
 				ptr.To(remoteRouteTable),
 				ptr.To(remoteVpcId),
 				awsutil.Ec2Tags(),
-				[]ec2Types.RouteTableAssociation{})
+				[]ec2types.RouteTableAssociation{})
 		})
 
 		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
@@ -1096,16 +1096,16 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			// change local vpc peering status to pending-acceptance (not necessary but leaving it for the clarity)
 
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodePendingAcceptance),
 			).NotTo(HaveOccurred())
 
 			// sets vpc peering connections active
 			Expect(
-				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockLocal.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 
 			Expect(
-				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2Types.VpcPeeringConnectionStateReasonCodeActive),
+				awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeActive),
 			).NotTo(HaveOccurred())
 		})
 

@@ -35,7 +35,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v3gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
+	gcpiprangev3client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -48,8 +48,8 @@ func SetupIpRangeReconciler(
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
 	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
-	v3ComputeProvider gcpclient.ClientProvider[v3gcpiprangeclient.ComputeClient],
-	v3NetworkConnectivityClient gcpclient.ClientProvider[v3gcpiprangeclient.NetworkConnectivityClient],
+	v3ComputeProvider gcpclient.ClientProvider[gcpiprangev3client.ComputeClient],
+	v3NetworkConnectivityClient gcpclient.ClientProvider[gcpiprangev3client.NetworkConnectivityClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

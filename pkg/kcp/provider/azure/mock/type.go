@@ -6,11 +6,11 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
-	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
-	redisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
-	redisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	skrazureclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
+	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
 type ResourceGroupsClient interface {
@@ -67,12 +67,12 @@ type Clients interface {
 }
 
 type Providers interface {
-	VpcPeeringProvider() azureclient.ClientProvider[vpcpeeringclient.Client]
+	VpcPeeringProvider() azureclient.ClientProvider[azurevpcpeeringclient.Client]
 	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
-	RedisClientProvider() azureclient.ClientProvider[redisinstanceclient.Client]
-	RedisClusterClientProvider() azureclient.ClientProvider[redisclusterclient.Client]
-	NetworkProvider() azureclient.ClientProvider[networkclient.Client]
-	StorageProvider() azureclient.ClientProvider[skrazureclient.Client]
+	RedisClientProvider() azureclient.ClientProvider[azureredisinstanceclient.Client]
+	RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client]
+	NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client]
+	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
 }
 

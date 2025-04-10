@@ -39,7 +39,7 @@ type node struct {
 }
 
 func (n *node) prepare() {
-	addChildrenDurations := false
+	addChildrenDurations := false // nolint:staticcheck
 	if n.duration == 0 {
 		addChildrenDurations = true
 	}
