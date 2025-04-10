@@ -59,7 +59,11 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	case string(armrecoveryservicesbackup.JobStatusFailed):
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
-		message := client.PrettyPrintJobErrorDetails(job.ErrorDetails)
+		message, err := client.AzureStorageErrorInfoToJson(job.ErrorDetails)
+		if err != nil {
+			logger.Error(err, "Error in marshalling restore job error details to json")
+			message = "Could not get error details"
+		}
 		logger.Error(nil, "Restore job failed", "message", message)
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
@@ -71,7 +75,11 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	case string(armrecoveryservicesbackup.JobStatusCancelled):
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
-		message := client.PrettyPrintJobErrorDetails(job.ErrorDetails)
+		message, err := client.AzureStorageErrorInfoToJson(job.ErrorDetails)
+		if err != nil {
+			logger.Error(err, "Error in marshalling restore job error details to json")
+			message = "Could not get error details"
+		}
 		logger.Error(nil, "Restore job cancelled", "message", message)
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
@@ -98,7 +106,11 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	case string(armrecoveryservicesbackup.JobStatusCompletedWithWarnings):
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
-		message := client.PrettyPrintJobErrorDetails(job.ErrorDetails)
+		message, err := client.AzureStorageErrorInfoToJson(job.ErrorDetails)
+		if err != nil {
+			logger.Error(err, "Error in marshalling restore job error details to json")
+			message = "Could not get warning details"
+		}
 		logger.Error(nil, "Restore job completed with warnings", "message", message)
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
@@ -110,7 +122,11 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	default:
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
-		message := client.PrettyPrintJobErrorDetails(job.ErrorDetails)
+		message, err := client.AzureStorageErrorInfoToJson(job.ErrorDetails)
+		if err != nil {
+			logger.Error(err, "Error in marshalling restore job error details to json")
+			message = "Could not get error details"
+		}
 		logger.Error(nil, "Restore job is in unexpected status.", "message", message)
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{

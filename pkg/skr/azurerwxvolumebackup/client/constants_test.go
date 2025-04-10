@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -102,6 +104,33 @@ func (suite *constantsSuite) TestGetRecoveryPointPath() {
 	// Assert
 	suite.Equal(expectedPath, actualPath)
 
+}
+
+func (suite *constantsSuite) TestAzureStorageErrorInfoToJson() {
+	var errorCode int32 = 1234
+	var sampleErrors = make([]*armrecoveryservicesbackup.AzureStorageErrorInfo, 3)
+	var recommendations = make([]*string, 3)
+	recommendations[0] = to.Ptr("recommendation 1")
+	recommendations[1] = to.Ptr("recommendation 2")
+	recommendations[2] = to.Ptr("recommendation 3")
+	sampleErrors[0] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
+		ErrorCode:       to.Ptr(errorCode),
+		ErrorString:     to.Ptr("Sample message 1"),
+		Recommendations: recommendations,
+	}
+	sampleErrors[1] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
+		ErrorCode:       to.Ptr(errorCode),
+		ErrorString:     to.Ptr("Sample message 2"),
+		Recommendations: recommendations,
+	}
+	sampleErrors[2] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
+		ErrorCode:       to.Ptr(errorCode),
+		ErrorString:     to.Ptr("Sample message 3"),
+		Recommendations: recommendations,
+	}
+	detailsInJson, err := AzureStorageErrorInfoToJson(sampleErrors)
+	suite.Nil(err)
+	suite.Equal("[{\"errorCode\":1234,\"errorString\":\"Sample message 1\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 2\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 3\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]}]", detailsInJson)
 }
 
 func TestConstants(t *testing.T) {
