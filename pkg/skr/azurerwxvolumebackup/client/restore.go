@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"io"
-	"log"
 )
 
 type RestoreClient interface {
@@ -56,7 +57,7 @@ type RestoreRequest struct {
 func (c restoreClient) TriggerRestore(ctx context.Context,
 	request RestoreRequest,
 ) (*string, error) {
-
+	logger := composed.LoggerFromCtx(ctx).WithName("restoreClient - TriggerRestore")
 	parameters := armrecoveryservicesbackup.RestoreRequestResource{
 		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileShareRestoreRequest{
 			ObjectType:   to.Ptr("AzureFileShareRestoreRequest"),
@@ -88,36 +89,28 @@ func (c restoreClient) TriggerRestore(ctx context.Context,
 		nil,
 	)
 	if err != nil {
-		log.Println("failed to trigger the restore operation: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to trigger the restore operation: %w", err)
 	}
-	if poller.Done() {
-		log.Println("poller is done")
-	}
-	log.Println("poller is not done")
+
+	// Poll the restore operation
 	resp, err := poller.Poll(ctx)
 	if err != nil {
-		log.Println("failed to poll the restore operation: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to poll the restore operation: %w", err)
 	}
-	if resp != nil {
-		log.Println(resp.Status)
-	}
+
 	// Read resp body
 	if resp == nil || resp.Body == nil {
 		return nil, errors.New("response body is nil")
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("failed to read the response body: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to read the response body: %w", err)
 	}
 	var data TriggerResponse
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		log.Println("failed to unmarshal the response body: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal the response body: %w", err)
 	}
-	log.Println("jobId" + data.Id)
+	logger.Info("TriggerRestore response", "jobId", data.Id)
 	return &data.Id, nil
 }
