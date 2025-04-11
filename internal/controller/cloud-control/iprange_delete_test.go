@@ -10,6 +10,7 @@ import (
 	kcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	kcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster"
 	kcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -288,6 +289,155 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 				To(Succeed())
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
+				Should(Succeed())
+		})
+
+		By("Then IpRange is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete KCP Kyma Network", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+
+	})
+
+	It("Scenario: KCP AWS IpRange is deleted with existing RedisCluster", func() {
+		const (
+			kymaName         = "83a947aa-3947-4ba7-8703-5e4c7995f896"
+			vpcId            = "83b311b6-8519-4a41-84f7-624e6f091e63"
+			vpcCidr          = "10.180.0.0/16"
+			iprangeName      = "ec895e96-44d2-4dfa-84e5-2c5911b21229"
+			iprangeCidr      = "10.181.0.0/16"
+			redisClusterName = "635dea3f-1603-48ed-b8c4-9b223f6ea0e8"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
+		})
+
+		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+
+		By("And Given AWS VPC exists", func() {
+			var _ *ec2types.Vpc
+			_ = awsMock.AddVpc(
+				vpcId,
+				vpcCidr,
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma)).
+				To(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		iprange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange is created", func() {
+			Expect(CreateKcpIpRange(infra.Ctx(), infra.KCP().Client(), iprange,
+				WithName(iprangeName),
+				WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
+				WithScope(kymaName),
+				WithKcpIpRangeSpecCidr(iprangeCidr),
+			)).
+				To(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		redisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("And Given RedisCluster using KCP IpRange exists", func() {
+			kcprediscluster.Ignore.AddName(redisClusterName)
+			Expect(CreateRedisCluster(infra.Ctx(), infra.KCP().Client(), redisCluster,
+				WithName(redisClusterName),
+				WithRemoteRef("foo"),
+				WithScope(kymaName),
+				WithIpRange(iprangeName),
+				WithRedisClusterAws(),
+				WithKcpAwsCacheNodeType("cache.m5.large"),
+				WithKcpAwsEngineVersion("7.0"),
+				WithKcpAwsShardCount(2),
+				WithKcpAwsReadReplicas(1),
+			)).
+				To(Succeed())
+		})
+
+		By("When IpRange is marked for deletion", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), iprange)).
+				To(Succeed())
+		})
+
+		By("Then IpRange has warning state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then IpRange has DeleteWhileUsed Warning condition", func() {
+			cond := meta.FindStatusCondition(iprange.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			Expect(cond).ToNot(BeNil(), fmt.Sprintf(
+				"Expected Warning condition, but found: %v",
+				pie.Map(iprange.Status.Conditions, func(c metav1.Condition) string {
+					return c.Type
+				}),
+			))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleteWhileUsed),
+				fmt.Sprintf("Expected Reason to equal %s, but found %s", cloudcontrolv1beta1.ReasonDeleteWhileUsed, cond.Reason))
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue), fmt.Sprintf("Expected True status, but found: %s", cond.Status))
+		})
+
+		By("When RedisCluster is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), redisCluster)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
 				Should(Succeed())
 		})
 
