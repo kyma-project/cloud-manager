@@ -116,7 +116,7 @@ func (in *AzureRedisCluster) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *AzureRedisCluster) SpecificToFeature() featuretypes.FeatureName {
-	return featuretypes.FeatureRedis
+	return featuretypes.FeatureRedisCluster
 }
 
 func (in *AzureRedisCluster) SpecificToProviders() []string {
