@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func modifyRedisCluster(ctx context.Context, st composed.State) (error, context.Context) {
+func modifyRedisVersion(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
@@ -27,19 +27,23 @@ func modifyRedisCluster(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	updateParams, capacityChanged := getUpdateParams(state)
+	redisVersionChanged := *state.azureRedisCluster.Properties.RedisVersion != requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion
 
-	if !capacityChanged {
+	if !redisVersionChanged {
 		return nil, nil
 	}
 
 	resourceGroupName := state.resourceGroupName
-	logger.Info("Detected modified Redis configuration")
+	logger.Info("Detected modified Redis configuration - redisVersion")
 	err := state.client.UpdateRedisInstance(
 		ctx,
 		resourceGroupName,
 		requestedAzureRedisCluster.Name,
-		updateParams,
+		armredis.UpdateParameters{
+			Properties: &armredis.UpdateProperties{
+				RedisVersion: to.Ptr(requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion),
+			},
+		},
 	)
 
 	if err != nil {
@@ -63,28 +67,4 @@ func modifyRedisCluster(ctx context.Context, st composed.State) (error, context.
 	}
 
 	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
-}
-
-func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
-
-	requestedAzureRedisCluster := state.ObjAsRedisCluster()
-	capacityChanged := int(*state.azureRedisCluster.Properties.SKU.Capacity) != requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity
-	updateParameters := armredis.UpdateParameters{}
-
-	if !capacityChanged {
-		return updateParameters, false
-	}
-
-	updateProperties := &armredis.UpdateProperties{
-		SKU: &armredis.SKU{
-			Capacity: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity)),
-			Name:     to.Ptr(armredis.SKUNamePremium),
-			Family:   to.Ptr(armredis.SKUFamilyP),
-		},
-		ShardCount: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
-	}
-
-	updateParameters.Properties = updateProperties
-
-	return updateParameters, capacityChanged
 }
