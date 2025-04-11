@@ -40,8 +40,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 		}
 
 		// User can recover by setting permissions
-		if awsmeta.IsUnauthorized(err) ||
-			awsmeta.IsAccessDenied(err) {
+		if awsmeta.IsUnauthorized(err) || awsmeta.IsAccessDenied(err) {
 			result = composed.StopWithRequeueDelay(util.Timing.T60000ms())
 		}
 
