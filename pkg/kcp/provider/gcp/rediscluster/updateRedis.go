@@ -13,7 +13,7 @@ import (
 func updateRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	redisCluster := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsGcpRedisCluster()
 
 	if state.gcpRedisCluster == nil {
 		return composed.StopWithRequeue, nil
@@ -28,7 +28,7 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
-			"Error updating RedisCluster status",
+			"Error updating GcpRedisCluster status",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 			ctx,
 		)
@@ -43,12 +43,12 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-			Message: "Failed to update RedisCluster",
+			Message: "Failed to update GcpRedisCluster",
 		})
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating RedisCluster status due failed gcp redis creation",
+				"Error updating GcpRedisCluster status due failed gcp redis creation",
 				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
 				ctx,
 			)

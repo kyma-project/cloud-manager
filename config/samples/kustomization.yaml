@@ -29,4 +29,5 @@ resources:
 - cloud-resources_v1beta1_azurerwxbackupschedule.yaml
 - cloud-resources_v1beta1_awsrediscluster.yaml
 - cloud-control_v1beta1_gcpsubnet.yaml
+- cloud-control_v1beta1_gcprediscluster.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

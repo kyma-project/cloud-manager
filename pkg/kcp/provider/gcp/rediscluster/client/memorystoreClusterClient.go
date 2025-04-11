@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
-type CreateRedisClusterOptions struct {
+type CreateRedisClusterRequest struct {
 	VPCNetworkFullName string
 	NodeType           string
 	RedisConfigs       map[string]string
@@ -24,7 +24,7 @@ type CreateRedisClusterOptions struct {
 }
 
 type MemorystoreClusterClient interface {
-	CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterOptions) error
+	CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error
 	GetRedisCluster(ctx context.Context, projectId, locationId, clusterId string) (*clusterpb.Cluster, error)
 	UpdateRedisCluster(ctx context.Context, redisCluster *clusterpb.Cluster, updateMask []string) error
 	DeleteRedisCluster(ctx context.Context, projectId, locationId, clusterId string) error
@@ -68,7 +68,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisCluster(ctx context.Conte
 	return nil
 }
 
-func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterOptions) error {
+func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error {
 	redisClient, err := cluster.NewCloudRedisClusterClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
 	if err != nil {
 		return err

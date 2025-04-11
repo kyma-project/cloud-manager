@@ -389,10 +389,17 @@ func main() {
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
 		azureredisclusterclient.NewClientProvider(),
-		gcpredisclusterclient.NewMemorystoreClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupGcpRedisClusterReconciler(
+		mgr,
+		gcpredisclusterclient.NewMemorystoreClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(

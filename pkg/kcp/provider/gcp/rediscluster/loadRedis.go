@@ -34,19 +34,19 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		}
 
 		logger.Error(err, "Error loading GCP Redis")
-		redisCluster := state.ObjAsRedisCluster()
+		redisCluster := state.ObjAsGcpRedisCluster()
 		meta.SetStatusCondition(redisCluster.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-			Message: "Failed to load RedisCluster",
+			Message: "Failed to load GcpRedisCluster",
 		})
 		redisCluster.Status.State = cloudcontrolv1beta1.StateError
 
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating RedisCluster status due failed gcp redis loading",
+				"Error updating GcpRedisCluster status due failed gcp redis loading",
 				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
 				ctx,
 			)

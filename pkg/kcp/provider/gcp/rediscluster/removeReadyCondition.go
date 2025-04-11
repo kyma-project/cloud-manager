@@ -12,7 +12,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	redisCluster := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsGcpRedisCluster()
 
 	readyCond := meta.FindStatusCondition(*redisCluster.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond == nil {
@@ -25,7 +25,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 	redisCluster.Status.State = cloudcontrolv1beta1.StateDeleting
 	err := state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating RedisCluster status after removing Ready condition", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating GcpRedisCluster status after removing Ready condition", composed.StopWithRequeue, ctx)
 	}
 
 	return composed.StopWithRequeue, nil

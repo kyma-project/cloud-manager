@@ -37,12 +37,12 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 		}
 
 		logger.Error(err, "Error deleting GCP Redis")
-		redisCluster := state.ObjAsRedisCluster()
+		redisCluster := state.ObjAsGcpRedisCluster()
 		meta.SetStatusCondition(redisCluster.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-			Message: "Failed to delete RedisCluster",
+			Message: "Failed to delete GcpRedisCluster",
 		})
 		redisCluster.Status.State = cloudcontrolv1beta1.StateError
 

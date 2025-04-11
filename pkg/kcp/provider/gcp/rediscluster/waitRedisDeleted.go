@@ -36,6 +36,6 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, st)
 	}
 
-	logger.Info("Instance is still being deleted, requeueing with delay")
+	logger.Info("Cluster is still being deleted, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

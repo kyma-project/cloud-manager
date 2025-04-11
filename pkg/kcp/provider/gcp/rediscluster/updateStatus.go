@@ -13,7 +13,7 @@ import (
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	redisCluster := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsGcpRedisCluster()
 
 	hasChanged := false
 
@@ -29,7 +29,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	hasReadyStatusState := redisCluster.Status.State == cloudcontrolv1beta1.StateReady
 
 	if !hasChanged && hasReadyCondition && hasReadyStatusState {
-		composed.LoggerFromCtx(ctx).Info("RedisCluster status fields are already up-to-date, StopAndForget-ing")
+		composed.LoggerFromCtx(ctx).Info("GcpRedisCluster status fields are already up-to-date, StopAndForget-ing")
 		return composed.StopAndForget, nil
 	}
 
@@ -41,8 +41,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Reason:  cloudcontrolv1beta1.ReasonReady,
 			Message: "Redis instance is ready",
 		}).
-		ErrorLogMessage("Error updating KCP RedisCluster status after setting Ready condition").
-		SuccessLogMsg("KCP RedisCluster is ready").
+		ErrorLogMessage("Error updating KCP GcpRedisCluster status after setting Ready condition").
+		SuccessLogMsg("KCP GcpRedisCluster is ready").
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }

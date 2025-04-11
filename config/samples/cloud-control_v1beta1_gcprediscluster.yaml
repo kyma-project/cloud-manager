@@ -1,0 +1,18 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: GcpRedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: gcprediscluster-sample
+spec:
+  subnet:
+    name: eea4c582-42ba-428a-91d4-4c9f48fcb5fa
+  remoteRef:
+    name: testcluster-345
+    namespace: skr-gcp
+  scope:
+    name: 8faca097-0f82-4f69-9d8f-9f7b0c145b0b
+  shardCount: 2
+  replicasPerShard: 1
+  nodeType: REDIS_SHARED_CORE_NANO

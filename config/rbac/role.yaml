@@ -15,6 +15,7 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - gcpredisclusters
   - gcpsubnets
   - ipranges
   - networks
@@ -35,6 +36,7 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - gcpredisclusters/finalizers
   - gcpsubnets/finalizers
   - ipranges/finalizers
   - networks/finalizers
@@ -49,6 +51,7 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
+  - gcpredisclusters/status
   - gcpsubnets/status
   - ipranges/status
   - networks/status

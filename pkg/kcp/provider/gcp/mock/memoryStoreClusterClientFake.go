@@ -35,7 +35,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) DeleteMemorSto
 	delete(memoryStoreClusterClientFake.redisClusters, name)
 }
 
-func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options gcpredisclusterclient.CreateRedisClusterOptions) error {
+func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options gcpredisclusterclient.CreateRedisClusterRequest) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}

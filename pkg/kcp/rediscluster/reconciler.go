@@ -2,6 +2,7 @@ package rediscluster
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
-	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
 
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -26,7 +26,6 @@ type redisClusterReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	gcpStateFactory   gcprediscluster.StateFactory
 	awsStateFactory   awsrediscluster.StateFactory
 	azureStateFactory azurerediscluster.StateFactory
 }
@@ -34,14 +33,12 @@ type redisClusterReconciler struct {
 func NewRedisClusterReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	gcpStateFactory gcprediscluster.StateFactory,
 	awsStateFactory awsrediscluster.StateFactory,
 	azureStateFactory azurerediscluster.StateFactory,
 ) RedisClusterReconciler {
 	return &redisClusterReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
-		gcpStateFactory:      gcpStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 	}
@@ -71,7 +68,6 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(statewithscope.GcpProviderPredicate, gcprediscluster.New(r.gcpStateFactory)),
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
 				),

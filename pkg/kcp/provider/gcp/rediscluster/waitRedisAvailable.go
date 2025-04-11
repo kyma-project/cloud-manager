@@ -1,9 +1,10 @@
 package rediscluster
 
 import (
-	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"context"
 	"errors"
+
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -35,6 +36,6 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 		return nil, nil
 	}
 
-	logger.Info("Redis instance is not ready yet, requeueing with delay")
+	logger.Info("GCP Redis Cluster is not ready yet, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }
