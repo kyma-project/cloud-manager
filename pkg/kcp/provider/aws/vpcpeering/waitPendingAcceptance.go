@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -46,6 +47,7 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 		if changed {
 			return composed.PatchStatus(state.ObjAsVpcPeering()).
 				ErrorLogMessage("Error updating VpcPeering status while waiting for AWS VPC peering pending-acceptance").
+				SuccessLogMsg(fmt.Sprintf("VpcPeering status %s updated", code)).
 				SuccessError(composed.StopAndForget).
 				Run(ctx, state)
 		}
