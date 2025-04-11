@@ -15,7 +15,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	changed := false // nolint:staticcheck
 
-	if composed.AnyConditionChanged(state.ObjAsAwsVpcPeering(), *state.KcpVpcPeering.Conditions()...) {
+	if composed.SyncConditions(state.ObjAsAwsVpcPeering(), *state.KcpVpcPeering.Conditions()...) {
 		changed = true
 	}
 

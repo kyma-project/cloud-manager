@@ -4,11 +4,11 @@ import (
 	"context"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func waitPendingAcceptance(ctx context.Context, st composed.State) (error, context.Context) {
@@ -34,17 +34,17 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 			changed = true
 		}
 
-		condition := metav1.Condition{
+		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonFailedAcceptingVpcPeeringConnection,
 			Message: ptr.Deref(state.vpcPeering.Status.Message, ""),
+		}) {
+			changed = true
 		}
 
-		if composed.AnyConditionChanged(state.ObjAsVpcPeering(), condition) ||
-			changed {
+		if changed {
 			return composed.PatchStatus(state.ObjAsVpcPeering()).
-				SetExclusiveConditions(condition).
 				ErrorLogMessage("Error updating VpcPeering status while waiting for AWS VPC peering pending-acceptance").
 				SuccessError(composed.StopAndForget).
 				Run(ctx, state)
