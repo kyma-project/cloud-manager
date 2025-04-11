@@ -6,6 +6,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -55,6 +56,7 @@ func (r *gcpRedisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *gcpRedisClusterReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.GcpRedisCluster{}),
 		focal.New(),
 		r.newFlow(),
 	)
