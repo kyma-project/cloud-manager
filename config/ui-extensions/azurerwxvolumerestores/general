@@ -1,0 +1,11 @@
+resource:
+    kind: AzureRwxVolumeRestore
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: azurerwxvolumerestores
+name: Azure RWX Volume Restores
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AzureRwxVolumeRestore description here

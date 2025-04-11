@@ -3,6 +3,10 @@ package rediscluster
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -10,7 +14,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
-	gcprediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster"
 
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -24,7 +27,6 @@ type redisClusterReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	gcpStateFactory   gcprediscluster.StateFactory
 	awsStateFactory   awsrediscluster.StateFactory
 	azureStateFactory azurerediscluster.StateFactory
 }
@@ -32,14 +34,12 @@ type redisClusterReconciler struct {
 func NewRedisClusterReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	gcpStateFactory gcprediscluster.StateFactory,
 	awsStateFactory awsrediscluster.StateFactory,
 	azureStateFactory azurerediscluster.StateFactory,
 ) RedisClusterReconciler {
 	return &redisClusterReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
-		gcpStateFactory:      gcpStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 	}
@@ -53,12 +53,15 @@ func (r *redisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("rediscluster", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *redisClusterReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.RedisCluster{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
@@ -67,9 +70,8 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.GcpProviderPredicate, gcprediscluster.New(r.gcpStateFactory)),
-					composed.NewCase(focal.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

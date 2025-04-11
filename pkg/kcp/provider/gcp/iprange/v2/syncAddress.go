@@ -6,7 +6,6 @@ import (
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -29,12 +28,12 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 	var operation *compute.Operation
 	var err error
 	switch state.addressOp {
-	case client.ADD:
+	case gcpclient.ADD:
 		operation, err = state.computeClient.CreatePscIpRange(ctx, project, vpc, name, "Kyma cloud-manager IP Range", state.ipAddress, int64(state.prefix))
-	case client.MODIFY:
+	case gcpclient.MODIFY:
 		logger.WithValues("ipRange", ipRange.Name).Info("IpRange update not supported.")
 		return composed.StopAndForget, nil
-	case client.DELETE:
+	case gcpclient.DELETE:
 		operation, err = state.computeClient.DeleteIpRange(ctx, project, state.address.Name)
 	default:
 		logger.WithValues("ipRange", ipRange.Name).Info("Unknown Operation.")

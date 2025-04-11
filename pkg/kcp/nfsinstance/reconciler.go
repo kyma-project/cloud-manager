@@ -2,11 +2,13 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
 	cceenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -56,7 +58,9 @@ func (r *nfsInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("nfsinstance", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *nfsInstanceReconciler) newAction() composed.Action {
@@ -74,10 +78,10 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
-					composed.NewCase(focal.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

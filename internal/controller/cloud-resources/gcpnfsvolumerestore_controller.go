@@ -22,7 +22,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	restoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumerestore"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -56,7 +56,7 @@ func (r *GcpNfsVolumeRestoreReconciler) Reconcile(ctx context.Context, req ctrl.
 }
 
 type GcpNfsVolumeRestoreReconcilerFactory struct {
-	fileRestoreClientProvider gcpclient.ClientProvider[restoreclient.FileRestoreClient]
+	fileRestoreClientProvider gcpclient.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
 	env                       abstractions.Environment
 }
 
@@ -70,7 +70,7 @@ func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArg
 	}
 }
 
-func SetupGcpNfsVolumeRestoreReconciler(reg skrruntime.SkrRegistry, fileRestoreClientProvider gcpclient.ClientProvider[restoreclient.FileRestoreClient],
+func SetupGcpNfsVolumeRestoreReconciler(reg skrruntime.SkrRegistry, fileRestoreClientProvider gcpclient.ClientProvider[gcpnfsrestoreclient.FileRestoreClient],
 	env abstractions.Environment, logger logr.Logger) error {
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeRestoreReconcilerFactory{fileRestoreClientProvider: fileRestoreClientProvider, env: env}).

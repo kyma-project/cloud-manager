@@ -2,7 +2,7 @@ package v2
 
 import (
 	"context"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
@@ -14,7 +14,7 @@ func rangeDisassociateVpcAddressSpace(ctx context.Context, st composed.State) (e
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	var theBlock *ec2Types.VpcCidrBlockAssociation
+	var theBlock *ec2types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
 		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
 			theBlock = &cidrBlock
@@ -33,9 +33,9 @@ func rangeDisassociateVpcAddressSpace(ctx context.Context, st composed.State) (e
 	logger = logger.WithValues("cidrBlockState", theBlock.CidrBlockState.State)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	actMap := util.NewDelayActIgnoreBuilder[ec2Types.VpcCidrBlockStateCode](util.Ignore).
-		Delay(ec2Types.VpcCidrBlockStateCodeAssociating).
-		Act(ec2Types.VpcCidrBlockStateCodeAssociated).
+	actMap := util.NewDelayActIgnoreBuilder[ec2types.VpcCidrBlockStateCode](util.Ignore).
+		Delay(ec2types.VpcCidrBlockStateCodeAssociating).
+		Act(ec2types.VpcCidrBlockStateCodeAssociated).
 		Build()
 
 	outcome := actMap.Case(theBlock.CidrBlockState.State)

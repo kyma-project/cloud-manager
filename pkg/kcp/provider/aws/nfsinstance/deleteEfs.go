@@ -3,7 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
@@ -20,13 +20,13 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 
 	logger.Info("Deciding if EFS should be deleted")
 
-	stateRequeueDelayed := map[efsTypes.LifeCycleState]struct{}{
-		efsTypes.LifeCycleStateCreating: {},
-		efsTypes.LifeCycleStateUpdating: {},
-		efsTypes.LifeCycleStateDeleting: {},
+	stateRequeueDelayed := map[efstypes.LifeCycleState]struct{}{
+		efstypes.LifeCycleStateCreating: {},
+		efstypes.LifeCycleStateUpdating: {},
+		efstypes.LifeCycleStateDeleting: {},
 	}
-	stateOkToDelete := map[efsTypes.LifeCycleState]struct{}{
-		efsTypes.LifeCycleStateAvailable: {},
+	stateOkToDelete := map[efstypes.LifeCycleState]struct{}{
+		efstypes.LifeCycleStateAvailable: {},
 	}
 
 	_, shouldRequeueDelayed := stateRequeueDelayed[state.efs.LifeCycleState]

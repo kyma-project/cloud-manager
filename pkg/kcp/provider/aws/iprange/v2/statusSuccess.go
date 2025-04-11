@@ -3,7 +3,7 @@ package v2
 import (
 	"context"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -22,7 +22,7 @@ func statusSuccess(ctx context.Context, st composed.State) (error, context.Conte
 		changed = true
 	}
 
-	expectedSubnets := pie.Map(state.cloudResourceSubnets, func(s ec2Types.Subnet) cloudcontrolv1beta1.IpRangeSubnet {
+	expectedSubnets := pie.Map(state.cloudResourceSubnets, func(s ec2types.Subnet) cloudcontrolv1beta1.IpRangeSubnet {
 		return cloudcontrolv1beta1.IpRangeSubnet{
 			Id:    ptr.Deref(s.SubnetId, ""),
 			Zone:  ptr.Deref(s.AvailabilityZone, ""),

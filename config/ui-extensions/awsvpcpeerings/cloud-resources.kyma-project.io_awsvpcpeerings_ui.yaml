@@ -15,9 +15,10 @@ data:
           - widget: Labels
             source: remoteRegion
             name: spec.remoteRegion
-    #      - widget: Labels
-    #        source: deleteRemotePeering
-    #        name: spec.deleteRemotePeering
+          - widget: Labels
+            source: remoteRouteTableUpdateStrategy
+            name: spec.remoteRouteTableUpdateStrategy
+
 
       - name: status
         widget: Panel
@@ -26,7 +27,7 @@ data:
           - name: status.state
             source: state
             widget: Labels
-  form: |
+  form: |+
     - path: spec.remoteAccountId
       name: spec.remoteAccountId
       required: true
@@ -42,8 +43,12 @@ data:
       required: false
       disableOnEdit: true
       description: Immutable once set.
-    # - path: spec.deleteRemotePeering
-    #   name: spec.deleteRemotePeering
+    - path: spec.remoteRouteTableUpdateStrategy
+      name: spec.remoteRouteTableUpdateStrategy
+      disableOnEdit: true
+      description: Immutable once set.
+      dropdownOnly: true
+
   general: |
     resource:
         kind: AwsVpcPeering
@@ -66,13 +71,14 @@ data:
       spec.remoteAccountId: Remote Account Id
       spec.remoteVpcId: Remote VPC Id
       spec.remoteRegion: Remote Region
+      spec.remoteRouteTableUpdateStrategy: Remote Route Table Update Strategy
       spec.deleteRemotePeering: Delete Remote Peering
       status: Status
       status.state: State
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

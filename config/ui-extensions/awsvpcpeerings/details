@@ -12,9 +12,10 @@ body:
       - widget: Labels
         source: remoteRegion
         name: spec.remoteRegion
-#      - widget: Labels
-#        source: deleteRemotePeering
-#        name: spec.deleteRemotePeering
+      - widget: Labels
+        source: remoteRouteTableUpdateStrategy
+        name: spec.remoteRouteTableUpdateStrategy
+
 
   - name: status
     widget: Panel

@@ -1,5 +1,7 @@
 # Redis
 
+Use the Cloud Manager module to provision Redis instances.
+
 The Cloud Manager module allows you to provision a cloud provider-managed Redis instance within your cluster network.
 
 > [!NOTE]
@@ -26,7 +28,7 @@ When you provision a Redis instance, you can choose between Standard and Premium
 
 ## Prerequisites
 
-To instantiate Redis, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's NFS resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing (CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
+To instantiate Redis, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing (CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
 
 ## Lifecycle
 

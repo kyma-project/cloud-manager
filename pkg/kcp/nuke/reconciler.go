@@ -2,13 +2,17 @@ package nuke
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke"
+	azurenuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke"
 	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -22,6 +26,7 @@ func New(
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpStateFactory gcpnuke.StateFactory,
 	awsStateFactory awsnuke.StateFactory,
+	azureStateFactory azurenuke.StateFactory,
 ) NukeReconciler {
 	return &nukeReconciler{
 		stateFactory: NewStateFactory(
@@ -29,22 +34,26 @@ func New(
 			focal.NewStateFactory(),
 			activeSkrCollection,
 		),
-		gcpStateFactory: gcpStateFactory,
-		awsStateFactory: awsStateFactory,
+		gcpStateFactory:   gcpStateFactory,
+		awsStateFactory:   awsStateFactory,
+		azureStateFactory: azureStateFactory,
 	}
 }
 
 type nukeReconciler struct {
-	stateFactory    StateFactory
-	gcpStateFactory gcpnuke.StateFactory
-	awsStateFactory awsnuke.StateFactory
+	stateFactory      StateFactory
+	gcpStateFactory   gcpnuke.StateFactory
+	awsStateFactory   awsnuke.StateFactory
+	azureStateFactory azurenuke.StateFactory
 }
 
 func (r *nukeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	state := r.stateFactory.NewState(req)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("nuke", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *nukeReconciler) newAction() composed.Action {
@@ -64,16 +73,23 @@ func (r *nukeReconciler) newAction() composed.Action {
 			composed.If(
 				composed.All(
 					feature.FFNukeBackupsGcp.Predicate(),
-					focal.GcpProviderPredicate,
+					statewithscope.GcpProviderPredicate,
 				),
 				gcpnuke.New(r.gcpStateFactory),
 			),
 			composed.If(
 				composed.All(
 					feature.FFNukeBackupsAws.Predicate(),
-					focal.AwsProviderPredicate,
+					statewithscope.AwsProviderPredicate,
 				),
 				awsnuke.New(r.awsStateFactory),
+			),
+			composed.If(
+				composed.All(
+					feature.FFRwxBackupAzure.Predicate(),
+					statewithscope.AzureProviderPredicate,
+				),
+				azurenuke.New(r.azureStateFactory),
 			),
 			checkIfAllDeleted,
 			scopeDelete,

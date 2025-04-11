@@ -4,6 +4,9 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
@@ -26,6 +29,7 @@ func SetupScopeReconciler(
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	azureClientProvider azureclient.ClientProvider[azureexposeddataclient.Client],
 ) error {
 	return NewScopeReconciler(
 		kcpscope.New(
@@ -33,6 +37,7 @@ func SetupScopeReconciler(
 			awsStsClientProvider,
 			activeSkrCollection,
 			gcpServiceUsageClientProvider,
+			azureexposeddata.NewStateFactory(azureClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }
@@ -80,19 +85,19 @@ func (r *ScopeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.Scope{}).
 		Watches(
-			util.NewKymaUnstructured(),
-			handler.EnqueueRequestsFromMapFunc(r.mapRequestsFromKymaCR),
+			util.NewGardenerClusterUnstructured(),
+			handler.EnqueueRequestsFromMapFunc(r.mapRequestsFromGardenerClusterCR),
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
 		).
 		Complete(r)
 }
 
-func (r *ScopeReconciler) mapRequestsFromKymaCR(ctx context.Context, kymaObj client.Object) []reconcile.Request {
+func (r *ScopeReconciler) mapRequestsFromGardenerClusterCR(ctx context.Context, gcObj client.Object) []reconcile.Request {
 	return []reconcile.Request{
 		{
 			NamespacedName: types.NamespacedName{
-				Namespace: kymaObj.GetNamespace(),
-				Name:      kymaObj.GetName(),
+				Namespace: gcObj.GetNamespace(),
+				Name:      gcObj.GetName(),
 			},
 		},
 	}

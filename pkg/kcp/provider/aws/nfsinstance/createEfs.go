@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -25,9 +25,9 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 
 	out, err := state.awsClient.CreateFileSystem(
 		ctx,
-		efsTypes.PerformanceMode(state.ObjAsNfsInstance().Spec.Instance.Aws.PerformanceMode),
-		efsTypes.ThroughputMode(state.ObjAsNfsInstance().Spec.Instance.Aws.Throughput),
-		[]efsTypes.Tag{
+		efstypes.PerformanceMode(state.ObjAsNfsInstance().Spec.Instance.Aws.PerformanceMode),
+		efstypes.ThroughputMode(state.ObjAsNfsInstance().Spec.Instance.Aws.Throughput),
+		[]efstypes.Tag{
 			{
 				Key:   ptr.To("Name"),
 				Value: ptr.To(state.Obj().GetName()),

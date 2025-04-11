@@ -1,0 +1,12 @@
+- source: spec.source.backup
+  name: spec.source.backup
+  sort: true
+- source: spec.destination.pvc
+  name: spec.destination.pvc
+  sort: true
+- source: status.restoredDir
+  name: status.restoredDir
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true

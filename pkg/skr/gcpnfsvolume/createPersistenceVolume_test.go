@@ -11,7 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -45,7 +45,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 
 	//Get the created PV object
 	pvName := gcpNfsVolume.Status.Id
-	pv := v1.PersistentVolume{}
+	pv := corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate NFS attributes of PV
@@ -79,7 +79,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name)
-	pv := v1.PersistentVolume{}
+	pv := corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found
@@ -113,7 +113,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenGcpNfsVolumeNotReady() {
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", nfsVolume.Namespace, nfsVolume.Name)
-	pv := v1.PersistentVolume{}
+	pv := corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found
@@ -132,7 +132,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
-	state.PV = &v1.PersistentVolume{}
+	state.PV = &corev1.PersistentVolume{}
 
 	err, _ctx := createPersistenceVolume(ctx, state)
 
@@ -142,7 +142,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name)
-	pv := v1.PersistentVolume{}
+	pv := corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found

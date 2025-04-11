@@ -118,7 +118,7 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 	err, resCtx := loadNfsInstance(ctx, testState.State)
 	assert.Nil(suite.T(), err)
 	assert.Nil(suite.T(), resCtx)
-	assert.NotNil(suite.T(), testState.State.fsInstance)
+	assert.NotNil(suite.T(), testState.fsInstance)
 }
 func TestLoadNfsInstance(t *testing.T) {
 	suite.Run(t, new(loadNfsInstanceSuite))

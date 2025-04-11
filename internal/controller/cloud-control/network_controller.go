@@ -23,9 +23,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
-	provider "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
-	networkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -40,7 +40,7 @@ import (
 func SetupNetworkReconciler(
 	ctx context.Context,
 	kcpManager manager.Manager,
-	azureProvider provider.ClientProvider[networkclient.Client],
+	azureProvider azureclient.ClientProvider[azurenetworkclient.Client],
 ) error {
 	return NewNetworkReconciler(
 		network.NewNetworkReconciler(

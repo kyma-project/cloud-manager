@@ -7,15 +7,15 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
-	vpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
+	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
 
 type State struct {
 	vpcpeeringtypes.State
 
-	client   vpcpeeringclient.VpcPeeringClient
-	provider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
+	client   gcpvpcpeeringclient.VpcPeeringClient
+	provider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 
 	localNetwork  *cloudcontrolv1beta1.Network
 	remoteNetwork *cloudcontrolv1beta1.Network
@@ -33,11 +33,11 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	clientProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient]
+	clientProvider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	env            abstractions.Environment
 }
 
-func NewStateFactory(clientProvider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(clientProvider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		clientProvider: clientProvider,
 		env:            env,
@@ -47,7 +47,7 @@ func NewStateFactory(clientProvider gcpclient.ClientProvider[vpcpeeringclient.Vp
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
 	c, err := f.clientProvider(
 		ctx,
-		f.env.Get(vpcpeeringclient.GcpVpcPeeringPath),
+		f.env.Get(gcpvpcpeeringclient.GcpVpcPeeringPath),
 	)
 
 	if err != nil {
@@ -58,8 +58,8 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
-	client vpcpeeringclient.VpcPeeringClient,
-	provider gcpclient.ClientProvider[vpcpeeringclient.VpcPeeringClient],
+	client gcpvpcpeeringclient.VpcPeeringClient,
+	provider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient],
 ) *State {
 	return &State{
 		State:              vpcPeeringState,

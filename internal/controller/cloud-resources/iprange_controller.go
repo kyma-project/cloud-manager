@@ -62,42 +62,60 @@ func (r *IpRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 	reg.IndexField(&cloudresourcesv1beta1.AwsNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		nfsVol := object.(*cloudresourcesv1beta1.AwsNfsVolume)
+		nfsVol, ok := object.(*cloudresourcesv1beta1.AwsNfsVolume)
+		if !ok {
+			return []string{}
+		}
 		if nfsVol.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}
 		return []string{nfsVol.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		nfsVol := object.(*cloudresourcesv1beta1.GcpNfsVolume)
+		nfsVol, ok := object.(*cloudresourcesv1beta1.GcpNfsVolume)
+		if !ok {
+			return []string{}
+		}
 		if nfsVol.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}
 		return []string{nfsVol.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.GcpRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.GcpRedisInstance)
+		redisInstance, ok := object.(*cloudresourcesv1beta1.GcpRedisInstance)
+		if !ok {
+			return []string{}
+		}
 		if redisInstance.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}
 		return []string{redisInstance.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.AwsRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.AwsRedisInstance)
+		redisInstance, ok := object.(*cloudresourcesv1beta1.AwsRedisInstance)
+		if !ok {
+			return []string{}
+		}
 		if redisInstance.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}
 		return []string{redisInstance.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.AzureRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisInstance := object.(*cloudresourcesv1beta1.AzureRedisInstance)
+		redisInstance, ok := object.(*cloudresourcesv1beta1.AzureRedisInstance)
+		if !ok {
+			return []string{}
+		}
 		if redisInstance.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}
 		return []string{redisInstance.Spec.IpRange.Name}
 	})
 	reg.IndexField(&cloudresourcesv1beta1.AwsRedisCluster{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
-		redisCluster := object.(*cloudresourcesv1beta1.AwsRedisCluster)
+		redisCluster, ok := object.(*cloudresourcesv1beta1.AwsRedisCluster)
+		if !ok {
+			return []string{}
+		}
 		if redisCluster.Spec.IpRange.Name == "" {
 			return []string{"default"}
 		}

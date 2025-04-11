@@ -5,8 +5,8 @@ import (
 
 	pb "cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	networkPkg "github.com/kyma-project/cloud-manager/pkg/kcp/network"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,7 +33,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeGcp).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -57,7 +57,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Kyma Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(kymaNetworkName)
+			kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, WithName(kymaNetworkName), WithScope(scope.Name)).
@@ -81,7 +81,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Remote Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(remoteNetworkName)
+			kcpnetwork.Ignore.AddName(remoteNetworkName)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).
@@ -219,7 +219,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeGcp).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -243,7 +243,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Kyma Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(kymaNetworkName)
+			kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, WithName(kymaNetworkName), WithScope(scope.Name)).
@@ -267,7 +267,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Remote Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(remoteNetworkName)
+			kcpnetwork.Ignore.AddName(remoteNetworkName)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).
@@ -369,7 +369,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeGcp).
 				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
@@ -393,7 +393,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Kyma Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(kymaNetworkName)
+			kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, WithName(kymaNetworkName), WithScope(scope.Name)).
@@ -417,7 +417,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given Remote Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			networkPkg.Ignore.AddName(remoteNetworkName)
+			kcpnetwork.Ignore.AddName(remoteNetworkName)
 			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaVpc})
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).

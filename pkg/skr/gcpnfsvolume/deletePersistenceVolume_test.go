@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,7 +48,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 	assert.Nil(suite.T(), _ctx)
 
 	//Validate the PV is not deleted.
-	pv = &v1.PersistentVolume{}
+	pv = &corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: pvGcpNfsVolume.Name}, pv)
 	assert.Nil(suite.T(), err)
@@ -79,7 +79,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 	assert.Nil(suite.T(), _ctx)
 
 	//Validate the PV object is not deleted.
-	pv = &v1.PersistentVolume{}
+	pv = &corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: pvDeletingGcpNfsVolume.Name}, pv)
 	assert.Nil(suite.T(), err)

@@ -17,6 +17,12 @@ func statusCopy(ctx context.Context, st composed.State) (error, context.Context)
 	if state.KcpNfsInstance == nil {
 		return nil, ctx
 	}
+	if composed.IsMarkedForDeletion(state.ObjAsCceeNfsVolume()) {
+		return nil, ctx
+	}
+	if composed.IsMarkedForDeletion(state.KcpNfsInstance) {
+		return nil, ctx
+	}
 
 	oldState := state.ObjAsCceeNfsVolume().Status.State
 

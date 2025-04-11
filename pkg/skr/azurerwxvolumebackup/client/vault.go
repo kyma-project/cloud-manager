@@ -8,9 +8,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"io"
-	"log"
-	"slices"
 )
 
 type VaultClient interface {
@@ -39,37 +38,9 @@ func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredenti
 	return vaultClient{vc}, nil
 }
 
-func (c vaultClient) vaultExists(ctx context.Context, location string) (bool, error) {
-	vaults, err := c.ListVaults(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	slices.ContainsFunc(vaults, func(vault *armrecoveryservices.Vault) bool {
-
-		if vault.Location == nil || vault.Tags == nil {
-			return false
-		}
-
-		_, tagExists := vault.Tags["cloud-manager"]
-
-		return *vault.Location == location && tagExists
-
-	})
-	return false, nil
-}
-
 // Returns operationId used to check the status
 func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
-
-	// Fail if vault exists
-	exists, err := c.vaultExists(ctx, location)
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		return nil, fmt.Errorf("vault already exists in %s", location)
-	}
+	logger := composed.LoggerFromCtx(ctx).WithName("vaultClient - CreateVault")
 
 	poller, err := c.azureClient.BeginCreateOrUpdate(
 		ctx,
@@ -89,37 +60,29 @@ func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, 
 	)
 
 	if err != nil {
-		log.Println("failed to create vault: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to create vault: %w", err)
 	}
 
-	if poller.Done() {
-		log.Println("poller is done")
-	}
 	resp, err := poller.Poll(ctx)
 	if err != nil {
-		log.Println("failed to poll the create operation: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to poll the create operation: %w", err)
 	}
-	if resp != nil {
-		log.Println(resp.Status)
-	}
+
 	// Read resp body
 	if resp == nil || resp.Body == nil {
 		return nil, errors.New("response body is nil")
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("failed to read the response body: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to read the response body: %w", err)
 	}
 	var data CreateVaultResponse
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		log.Println("failed to unmarshal the response body: " + err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal the response body: %w", err)
 	}
-	log.Println("jobId" + data.Id)
+
+	logger.Info("CreateVault response", "jobId", data.Id)
 
 	return &data.Id, nil
 
@@ -154,7 +117,7 @@ func (c vaultClient) ListVaults(ctx context.Context) ([]*armrecoveryservices.Vau
 			return vaults, err
 		}
 
-		vaults = append(vaults, page.VaultList.Value...)
+		vaults = append(vaults, page.Value...)
 
 	}
 	return vaults, nil

@@ -25,9 +25,6 @@ import (
 
 // CceeNfsVolumeSpec defines the desired state of CceeNfsVolume
 type CceeNfsVolumeSpec struct {
-	// +optional
-	IpRange IpRangeRef `json:"ipRange"`
-
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
 	CapacityGb int `json:"capacityGb"`
@@ -154,10 +151,6 @@ func (in *CceeNfsVolume) SpecificToFeature() featuretypes.FeatureName {
 
 func (in *CceeNfsVolume) SpecificToProviders() []string {
 	return []string{"openstack"}
-}
-
-func (in *CceeNfsVolume) GetIpRangeRef() IpRangeRef {
-	return in.Spec.IpRange
 }
 
 func (in *CceeNfsVolume) State() string {

@@ -5,14 +5,14 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func loadPersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	list := &v1.PersistentVolumeList{}
+	list := &corev1.PersistentVolumeList{}
 	err := state.SkrCluster.K8sClient().List(
 		ctx,
 		list,
@@ -35,7 +35,7 @@ func loadPersistenceVolume(ctx context.Context, st composed.State) (error, conte
 	}
 
 	// more than one PersistentVolume found in SKR, log warning and pick one
-	names := pie.Map(list.Items, func(x v1.PersistentVolume) string {
+	names := pie.Map(list.Items, func(x corev1.PersistentVolume) string {
 		return x.Name
 	})
 	names = pie.Sort(names)

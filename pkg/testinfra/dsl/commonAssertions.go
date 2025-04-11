@@ -11,7 +11,7 @@ func HavingDeletionTimestamp() ObjAssertion {
 	return func(obj client.Object) error {
 		if obj.GetDeletionTimestamp().IsZero() {
 			return fmt.Errorf(
-				"Expected object %T %s/%s to have deletion timestamp set, but it doesnt have it",
+				"expected object %T %s/%s to have deletion timestamp set, but it doesnt have it",
 				obj,
 				obj.GetNamespace(), obj.GetName(),
 			)
@@ -34,9 +34,13 @@ func WithRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.RedisCluster:
 				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.GcpRedisCluster:
+				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.VpcPeering:
 				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.IpRange:
+				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.GcpSubnet:
 				x.Spec.RemoteRef = remoteRef
 			default:
 				panic(fmt.Sprintf("unhandled type in WithRemoteRef: %T", obj))

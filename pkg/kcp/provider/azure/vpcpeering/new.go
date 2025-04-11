@@ -24,8 +24,9 @@ func New(stateFactory StateFactory) composed.Action {
 			kcpNetworkLocalLoad,
 			kcpNetworkRemoteLoad,
 			statusInitiated,
+			initLocalClient,
 			peeringLocalLoad,
-			remoteClientCreate,
+			initRemoteClient,
 			peeringRemoteLoad,
 			composed.IfElse(
 				composed.MarkedForDeletionPredicate,
@@ -44,6 +45,7 @@ func New(stateFactory StateFactory) composed.Action {
 						vpcRemoteLoad,
 						waitNetworkTag,
 					),
+					initLocalPeeringClient,
 					peeringLocalCreate,
 					peeringRemoteCreate,
 					peeringLocalWaitReady,

@@ -36,6 +36,8 @@ const (
 	AzureRwxBackupDeleted AzureRwxBackupState = "Deleted"
 
 	AzureRwxBackupFailed AzureRwxBackupState = "Failed"
+
+	AzureRwxBackupDone AzureRwxBackupState = "Done"
 )
 
 type PvcRef struct {
@@ -110,6 +112,22 @@ type AzureRwxVolumeBackup struct {
 
 	Spec   AzureRwxVolumeBackupSpec   `json:"spec,omitempty"`
 	Status AzureRwxVolumeBackupStatus `json:"status,omitempty"`
+}
+
+func (bu *AzureRwxVolumeBackup) State() string {
+	return string(bu.Status.State)
+}
+
+func (bu *AzureRwxVolumeBackup) SetState(v string) {
+	bu.Status.State = AzureRwxBackupState(v)
+}
+
+func (bu *AzureRwxVolumeBackup) Conditions() *[]metav1.Condition {
+	return &bu.Status.Conditions
+}
+
+func (bu *AzureRwxVolumeBackup) GetObjectMeta() *metav1.ObjectMeta {
+	return &bu.ObjectMeta
 }
 
 func (bu *AzureRwxVolumeBackup) SpecificToFeature() featuretypes.FeatureName {

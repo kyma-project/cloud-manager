@@ -1,0 +1,105 @@
+apiVersion: v1
+data:
+  details: |+
+    body:
+      - name: spec.source.backup
+        widget: Panel
+        source: spec.source.backup
+        children:
+          - widget: Labels
+            source: name
+            name: spec.source.backup.name
+          - widget: Labels
+            source: namespace
+            name: spec.source.backup.namespace
+      - name: spec.destination.pvc
+        widget: Panel
+        source: spec.destination.pvc
+        children:
+          - widget: Labels
+            source: name
+            name: spec.destination.pvc.name
+          - widget: Labels
+            source: namespace
+            name: spec.destination.pvc.namespace
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.state
+            source: state
+            widget: Labels
+          - name: status.restoredDir
+            source: restoredDir
+            widget: Labels
+
+  form: |
+    - path: spec.source.backup
+      name: spec.source.backup
+      required: true
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.source.backup.name
+          required: true
+        - path: namespace
+          name: spec.source.backup.namespace
+          required: false
+
+    - path: spec.destination.pvc
+      name: spec.destination.pvc
+      required: true
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.destination.pvc.name
+          required: true
+        - path: namespace
+          name: spec.destination.pvc.namespace
+          required: false
+  general: |-
+    resource:
+        kind: AzureRwxVolumeRestore
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: azurerwxvolumerestores
+    name: Azure RWX Volume Restores
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AzureRwxVolumeRestore description here
+  list: |-
+    - source: spec.source.backup
+      name: spec.source.backup
+      sort: true
+    - source: spec.destination.pvc
+      name: spec.destination.pvc
+      sort: true
+    - source: status.restoredDir
+      name: status.restoredDir
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
+    en:
+      spec.source.backup: Source Backup
+      spec.source.backup.name: Azure RWX Volume Backup Name
+      spec.source.backup.namespace: Azure RWX Volume Backup Namespace
+      spec.destination.pvc: Destination Volume
+      spec.destination.pvc.name: Persistent Volume Claim Name
+      spec.destination.pvc.namespace: Persistent Volume Claim Namespace
+      status: Status
+      status.state: State
+      status.restoredDir: Restored Directory
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: azurerwxvolumerestores-ui.operator.kyma-project.io
+  namespace: kyma-system

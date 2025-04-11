@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,15 +25,15 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 	var err error
 
 	switch state.connectionOp {
-	case client.ADD:
+	case gcpclient.ADD:
 		operation, err = state.serviceNetworkingClient.CreateServiceConnection(ctx, project, vpc, state.ipRanges)
-	case client.MODIFY:
+	case gcpclient.MODIFY:
 		if len(state.ipRanges) > 0 {
 			operation, err = state.serviceNetworkingClient.PatchServiceConnection(ctx, project, vpc, state.ipRanges)
 		} else {
 			operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
 		}
-	case client.DELETE:
+	case gcpclient.DELETE:
 		operation, err = state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
 	}
 

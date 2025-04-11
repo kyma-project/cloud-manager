@@ -1,0 +1,10 @@
+en:
+  spec.source.backup: Source Backup
+  spec.source.backup.name: Azure RWX Volume Backup Name
+  spec.source.backup.namespace: Azure RWX Volume Backup Namespace
+  spec.destination.pvc: Destination Volume
+  spec.destination.pvc.name: Persistent Volume Claim Name
+  spec.destination.pvc.namespace: Persistent Volume Claim Namespace
+  status: Status
+  status.state: State
+  status.restoredDir: Restored Directory

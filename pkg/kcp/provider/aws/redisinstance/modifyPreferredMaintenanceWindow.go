@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -21,7 +21,7 @@ func modifyPreferredMaintenanceWindow(ctx context.Context, st composed.State) (e
 		return composed.StopWithRequeue, nil
 	}
 
-	var elastiCacheClusters []elasticacheTypes.CacheCluster = []elasticacheTypes.CacheCluster{}
+	var elastiCacheClusters = []elasticachetypes.CacheCluster{}
 
 	for _, memberClusterId := range state.elastiCacheReplicationGroup.MemberClusters {
 		clusters, err := state.awsClient.DescribeElastiCacheCluster(ctx, memberClusterId)

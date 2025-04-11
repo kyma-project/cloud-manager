@@ -5,7 +5,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -17,8 +17,8 @@ type State struct {
 	KcpIpRange         *cloudcontrolv1beta1.IpRange
 	SkrIpRange         *cloudresourcesv1beta1.IpRange
 	SkrCluster         composed.StateCluster
-	PV                 *v1.PersistentVolume
-	PVC                *v1.PersistentVolumeClaim
+	PV                 *corev1.PersistentVolume
+	PVC                *corev1.PersistentVolumeClaim
 	Scope              *cloudcontrolv1beta1.Scope
 	GcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup
 }

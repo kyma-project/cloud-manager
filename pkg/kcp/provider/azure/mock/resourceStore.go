@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	azureMeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
@@ -40,7 +40,7 @@ func (s *resourceStore) GetResourceGroup(ctx context.Context, name string) (*arm
 func (s *resourceStore) getResourceGroupNoLock(name string) (*armresources.ResourceGroup, error) {
 	rg, ok := s.items[name]
 	if !ok {
-		return nil, azureMeta.NewAzureNotFoundError()
+		return nil, azuremeta.NewAzureNotFoundError()
 	}
 
 	return util.JsonClone(rg)
@@ -54,7 +54,7 @@ func (s *resourceStore) CreateResourceGroup(ctx context.Context, name string, lo
 	defer s.m.Unlock()
 
 	_, err := s.getResourceGroupNoLock(name)
-	if azureMeta.IgnoreNotFoundError(err) != nil {
+	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return nil, err
 	}
 	if err == nil {

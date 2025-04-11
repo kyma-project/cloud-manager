@@ -3,7 +3,7 @@ package rediscluster
 import (
 	"context"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
@@ -38,15 +38,15 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 		}
 	}
 
-	var permissions []ec2Types.IpPermission
+	var permissions []ec2types.IpPermission
 
 	if !hasPods {
 		logger.Info("Adding pod cidr to the Redis security group")
-		permissions = append(permissions, ec2Types.IpPermission{
+		permissions = append(permissions, ec2types.IpPermission{
 			IpProtocol: ptr.To("tcp"),
 			FromPort:   ptr.To(toPort),
 			ToPort:     ptr.To(toPort),
-			IpRanges: []ec2Types.IpRange{
+			IpRanges: []ec2types.IpRange{
 				{
 					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.Pods),
 				},
@@ -55,11 +55,11 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	}
 	if !hasNet {
 		logger.Info("Adding vpc cidr to the Redis security group")
-		permissions = append(permissions, ec2Types.IpPermission{
+		permissions = append(permissions, ec2types.IpPermission{
 			IpProtocol: ptr.To("tcp"),
 			FromPort:   ptr.To(toPort),
 			ToPort:     ptr.To(toPort),
-			IpRanges: []ec2Types.IpRange{
+			IpRanges: []ec2types.IpRange{
 				{
 					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.VPC.CIDR),
 				},

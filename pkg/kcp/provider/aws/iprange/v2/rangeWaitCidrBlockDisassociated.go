@@ -2,7 +2,7 @@ package v2
 
 import (
 	"context"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -14,7 +14,7 @@ func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (er
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	var theBlock *ec2Types.VpcCidrBlockAssociation
+	var theBlock *ec2types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
 		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {
 			theBlock = &cidrBlock
@@ -25,13 +25,13 @@ func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (er
 		return nil, nil
 	}
 
-	actMap := util.NewDelayActIgnoreBuilder[ec2Types.VpcCidrBlockStateCode](util.Ignore).
-		Delay(ec2Types.VpcCidrBlockStateCodeDisassociating).
+	actMap := util.NewDelayActIgnoreBuilder[ec2types.VpcCidrBlockStateCode](util.Ignore).
+		Delay(ec2types.VpcCidrBlockStateCodeDisassociating).
 		Error(
-			ec2Types.VpcCidrBlockStateCodeFailing,
-			ec2Types.VpcCidrBlockStateCodeFailed,
-			ec2Types.VpcCidrBlockStateCodeAssociated,
-			ec2Types.VpcCidrBlockStateCodeAssociating,
+			ec2types.VpcCidrBlockStateCodeFailing,
+			ec2types.VpcCidrBlockStateCodeFailed,
+			ec2types.VpcCidrBlockStateCodeAssociated,
+			ec2types.VpcCidrBlockStateCodeAssociating,
 		).
 		Build()
 

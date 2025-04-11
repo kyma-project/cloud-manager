@@ -17,9 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
@@ -42,25 +45,28 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
-	awsnukenfsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
-	gcpFilestoreClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
-	gcpmemorystoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
+	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
-	awsnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	awsnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 
-	//azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -130,8 +136,15 @@ func main() {
 		opts.Development = true
 	}
 
+	baseCtx := context.Background()
+	baseCtx = feature.ContextBuilderFromCtx(baseCtx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Plane(featuretypes.PlaneKcp).
+		Build(baseCtx)
+
 	rootLogger := zap.New(zap.UseFlagOptions(&opts))
 	rootLogger = rootLogger.WithSink(util.NewLogFilterSink(rootLogger.GetSink()))
+	baseCtx = composed.LoggerIntoCtx(baseCtx, rootLogger)
 	ctrl.SetLogger(rootLogger)
 
 	setupLog.WithValues(
@@ -145,7 +158,13 @@ func main() {
 	setupLog.WithValues("config", cfg.PrintJson()).
 		Info("Config dump")
 
+	skrRegistry := skrruntime.NewRegistry(skrScheme)
+	activeSkrCollection := skrruntime.NewActiveSkrCollection(rootLogger.WithName("skr-collection"))
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		BaseContext: func() context.Context {
+			return baseCtx
+		},
 		Scheme:                 kcpScheme,
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
@@ -176,8 +195,12 @@ func main() {
 
 	ctx := ctrl.SetupSignalHandler()
 
-	skrRegistry := skrruntime.NewRegistry(skrScheme)
-	skrLoop := skrruntime.NewLooper(mgr, skrScheme, skrRegistry, mgr.GetLogger())
+	ctx = feature.ContextBuilderFromCtx(ctx).
+		Landscape(os.Getenv("LANDSCAPE")).
+		Plane(featuretypes.PlaneKcp).
+		Build(ctx)
+
+	skrLoop := skrruntime.NewLooper(activeSkrCollection, mgr, skrScheme, skrRegistry, mgr.GetLogger())
 
 	//Get env
 	env := abstractions.NewOSEnvironment()
@@ -255,12 +278,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	//if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
+		os.Exit(1)
+	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsbackupclient.NewClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsvolumebackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
 		os.Exit(1)
 	}
@@ -270,7 +293,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(skrRegistry, awsnfsrestoreclient.NewClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(skrRegistry, awsnfsvolumerestoreclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeRestore")
 		os.Exit(1)
 	}
@@ -280,25 +303,36 @@ func main() {
 	//	os.Exit(1)
 	//}
 
-	//if err = cloudresourcescontroller.SetupAzureRwxRestoreReconciler(skrRegistry); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxVolumeRestore")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupAzureRwxRestoreReconciler(skrRegistry, azurerwxvolumebackupclient.NewClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxVolumeRestore")
+		os.Exit(1)
+	}
 
-	//if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
-	//	os.Exit(1)
-	//}
+	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
+		os.Exit(1)
+	}
 
 	// KCP Controllers
-	if err = cloudcontrolcontroller.SetupScopeReconciler(ctx, mgr, scopeclient.NewAwsStsGardenClientProvider(), skrLoop, gcpclient.NewServiceUsageClientProvider()); err != nil {
+	if err = cloudcontrolcontroller.SetupScopeReconciler(
+		ctx,
+		mgr,
+		scopeclient.NewAwsStsGardenClientProvider(),
+		activeSkrCollection,
+		gcpclient.NewServiceUsageClientProvider(),
+		azureexposeddataclient.NewClientProvider(),
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupKymaReconciler(mgr, activeSkrCollection); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Kyma")
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpFilestoreClient.NewFilestoreClientProvider(),
+		gcpnfsinstanceclient.NewFilestoreClientProvider(),
 		cceenfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
@@ -329,7 +363,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
-		gcpmemorystoreclient.NewMemorystoreClientProvider(),
+		gcpredisinstanceclient.NewMemorystoreClientProvider(),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,
@@ -347,9 +381,10 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupNukeReconciler(
 		mgr,
-		skrLoop,
+		activeSkrCollection,
 		gcpnfsbackupclient.NewFileBackupClientProvider(),
-		awsnukenfsclient.NewClientProvider(),
+		awsnukeclient.NewClientProvider(),
+		azurenukeclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nuke")
@@ -362,6 +397,23 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupGcpRedisClusterReconciler(
+		mgr,
+		gcpredisclusterclient.NewMemorystoreClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(
+		mgr,
+		gcpsubnetclient.NewComputeClientProvider(),
+		gcpsubnetclient.NewNetworkConnectivityClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
@@ -386,11 +438,6 @@ func main() {
 	if err := feature.Initialize(ctx, rootLogger.WithName("ff")); err != nil {
 		setupLog.Error(err, "problem initializing feature flags")
 	}
-
-	ctx = feature.ContextBuilderFromCtx(ctx).
-		Landscape(os.Getenv("LANDSCAPE")).
-		Plane(featuretypes.PlaneKcp).
-		Build(ctx)
 
 	go func() {
 		err := cfg.Watch(ctx.Done(), func(_ fsnotify.Event) {

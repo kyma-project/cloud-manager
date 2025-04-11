@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/thomaspoignant/go-feature-flag/ffcontext"
@@ -294,7 +295,7 @@ func (b *contextBuilderImpl) KindsFromObject(obj client.Object, scheme *runtime.
 	b.CrdKindGroup("")
 	b.BusolaKindGroup("")
 
-	kindInfo := ObjectKinds(obj, scheme)
+	kindInfo := objkind.ObjectKinds(obj, scheme)
 	if !kindInfo.ObjOK {
 		return b
 	}

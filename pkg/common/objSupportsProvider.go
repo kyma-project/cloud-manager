@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,14 +35,17 @@ func ObjSupportsProvider(o client.Object, scheme *runtime.Scheme, provider strin
 		return true
 	}
 	res, err := func() (bool, error) {
-		gvkList, _, err := scheme.ObjectKinds(o)
-		if err != nil {
-			return false, err
+		kindInfo := objkind.ObjectKinds(o, scheme)
+		if !kindInfo.AnyOK() {
+			return false, errors.New("unable to determine object kind")
 		}
-		if len(gvkList) == 0 {
-			return false, errors.New("empty gvk list")
+		gk := kindInfo.RealObjGK()
+		versions := scheme.VersionsForGroupKind(gk)
+		if len(versions) == 0 {
+			return false, fmt.Errorf("ne versions in scheme for GK %s", gk)
 		}
-		obj, err := scheme.New(gvkList[0])
+		gvk := versions[0].WithKind(gk.Kind)
+		obj, err := scheme.New(gvk)
 		if err != nil {
 			return false, err
 		}
@@ -59,6 +63,33 @@ func ObjSupportsProvider(o client.Object, scheme *runtime.Scheme, provider strin
 		}
 		return false, errors.New("not a ProviderAwareObject object")
 	}()
+
+	//res, err := func() (bool, error) {
+	//	gvkList, _, err := scheme.ObjectKinds(o)
+	//	if err != nil {
+	//		return false, err
+	//	}
+	//	if len(gvkList) == 0 {
+	//		return false, errors.New("empty gvk list")
+	//	}
+	//	obj, err := scheme.New(gvkList[0])
+	//	if err != nil {
+	//		return false, err
+	//	}
+	//	if pa, ok := obj.(featuretypes.ProviderAwareObject); ok {
+	//		supportedProviders := pa.SpecificToProviders()
+	//		if len(supportedProviders) == 0 {
+	//			return true, nil
+	//		}
+	//		for _, p := range supportedProviders {
+	//			if p == provider {
+	//				return true, nil
+	//			}
+	//		}
+	//		return false, nil
+	//	}
+	//	return false, errors.New("not a ProviderAwareObject object")
+	//}()
 
 	if err == nil {
 		return res

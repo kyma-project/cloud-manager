@@ -155,6 +155,7 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
 
 
 .PHONY: uninstall

@@ -22,13 +22,11 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -43,10 +41,8 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 
 	It("Scenario: SKR CceeNfsVolume is created with empty IpRange when default IpRange does not exist", func() {
 		cceeNfsVolumeName := "d2859451-39ed-4cc5-bf6d-d04aa8feeb5b"
-		skrIpRangeId := "cddae623-d665-4dae-9899-515d1c2e1418"
 		cceeNfsVolume := &cloudresourcesv1beta1.CceeNfsVolume{}
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		capacityGb := 100
 
 		pv := &corev1.PersistentVolume{}
@@ -57,16 +53,7 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 		pvcLabels := newRandomMapStringString()
 		pvcAnnotations := newRandomMapStringString()
 
-		skriprange.Ignore.AddName("default")
-
-		By("Given default SKR IpRange does not exist", func() {
-			Consistently(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
-				ShouldNot(Succeed())
-		})
-
-		By("When CceeNfsVolume is created with empty IpRange", func() {
+		By("When CceeNfsVolume is created", func() {
 			Eventually(CreateCceeNfsVolume).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), cceeNfsVolume,
@@ -76,31 +63,6 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 					WithCceeNfsVolumePvAnnotations(pvAnnotations),
 					WithCceeNfsVolumePvcLabels(pvcLabels),
 					WithCceeNfsVolumePvcAnnotations(pvcAnnotations),
-				).
-				Should(Succeed())
-		})
-
-		By("Then default SKR IpRange is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
-				Should(Succeed())
-		})
-
-		By("And Then CceeNfsVolume is not ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), cceeNfsVolume, NewObjActions()).
-				Should(Succeed())
-			Expect(meta.IsStatusConditionTrue(cceeNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
-				To(BeFalse(), "expected CceeNfsVolume not to have Ready condition, but it has")
-		})
-
-		By("When default SKR IpRange has Ready condition", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					WithSkrIpRangeStatusId(skrIpRangeId),
-					WithConditions(SkrReadyCondition()),
 				).
 				Should(Succeed())
 		})
@@ -296,10 +258,5 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 				Should(Succeed(), "expected CceeNfsVolume not to exist")
 		})
 
-		By("// cleanup SKR IpRange", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(Succeed())
-		})
 	})
 })

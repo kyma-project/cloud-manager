@@ -62,7 +62,7 @@ type AzureRwxVolumeRestoreSpec struct {
 
 // AzureRwxVolumeRestoreStatus defines the observed state of AzureRwxVolumeRestore
 type AzureRwxVolumeRestoreStatus struct {
-	// +kubebuilder:validation:Enum=Processing;InProgress;Done;Failed;Error
+	// +kubebuilder:validation:Enum=Processing;InProgress;Done;Failed;Error;WaitingScopeReady
 	State string `json:"state,omitempty"`
 
 	// List of status conditions
@@ -90,7 +90,7 @@ type AzureRwxVolumeRestoreStatus struct {
 // +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Source",type="string",JSONPath=".spec.source.backup.name"
-// +kubebuilder:printcolumn:name="Destination",type="string",JSONPath=".spec.destination.volume.name"
+// +kubebuilder:printcolumn:name="Destination",type="string",JSONPath=".spec.destination.pvc.name"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AzureRwxVolumeRestore is the Schema for the azurerwxvolumerestores API
@@ -100,6 +100,14 @@ type AzureRwxVolumeRestore struct {
 
 	Spec   AzureRwxVolumeRestoreSpec   `json:"spec,omitempty"`
 	Status AzureRwxVolumeRestoreStatus `json:"status,omitempty"`
+}
+
+func (in *AzureRwxVolumeRestore) State() string {
+	return in.Status.State
+}
+
+func (in *AzureRwxVolumeRestore) SetState(v string) {
+	in.Status.State = v
 }
 
 func (in *AzureRwxVolumeRestore) Conditions() *[]metav1.Condition {
@@ -115,7 +123,7 @@ func (in *AzureRwxVolumeRestore) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *AzureRwxVolumeRestore) SpecificToProviders() []string {
-	return []string{"gcp"}
+	return []string{"azure"}
 }
 
 //+kubebuilder:object:root=true
@@ -147,13 +155,19 @@ func (in *AzureRwxVolumeRestore) CloneForPatchStatus() client.Object {
 
 // additional condition reasons
 const (
-	ConditionReasonMissingRwxVolumeBackup  = "MissingRwxVolumeBackup"
-	ConditionReasonRwxVolumeBackupNotReady = "RwxVolumeBackupNotReady"
-	ConditionReasonPvcNotFound             = "PvcNotFound"
-	ConditionReasonPvcNotBound             = "PvcNotBound"
-	ConditionReasonPvNotFound              = "PvNotFound"
-	ConditionReasonPvNotBound              = "PvNotBound"
-	ConditionReasonInvalidProvisioner      = "InvalidProvisioner"
-	ConditionReasonInvalidVolumeHandle     = "InvalidVolumeHandle"
-	ConditionReasonInvalidRecoveryPointId  = "InvalidRecoveryPointId"
+	ConditionReasonMissingRwxVolumeBackup          = "MissingRwxVolumeBackup"
+	ConditionReasonRwxVolumeBackupNotReady         = "RwxVolumeBackupNotReady"
+	ConditionReasonPvcNotFound                     = "PvcNotFound"
+	ConditionReasonPvcNotBound                     = "PvcNotBound"
+	ConditionReasonPvNotFound                      = "PvNotFound"
+	ConditionReasonPvNotBound                      = "PvNotBound"
+	ConditionReasonInvalidProvisioner              = "InvalidProvisioner"
+	ConditionReasonInvalidVolumeHandle             = "InvalidVolumeHandle"
+	ConditionReasonInvalidRecoveryPointId          = "InvalidRecoveryPointId"
+	ConditionReasonInvalidStorageAccountPath       = "InvalidStorageAccountPath"
+	ConditionReasonRestoreJobFailed                = "RestoreJobFailed"
+	ConditionReasonRestoreJobCancelled             = "RestoreJobCancelled"
+	ConditionReasonRestoreJobInvalidStatus         = "RestoreJobInvalidStatus"
+	ConditionReasonRestoreJobCompletedWithWarnings = "RestoreJobCompletedWithWarnings"
+	ConditionReasonErrorStartingRestore            = "ErrorStartingRestore"
 )

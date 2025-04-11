@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
-	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
@@ -50,13 +50,13 @@ func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, co
 	if err != nil {
 		logger.Error(err, "Error creating Azure KCP IpRange virtualNetworkLink")
 
-		state.ObjAsIpRange().Status.State = cloudcontrol1beta1.StateError
+		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 
 		return composed.PatchStatus(state.ObjAsIpRange()).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrol1beta1.ConditionTypeError,
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrol1beta1.ConditionTypeError,
+				Reason:  cloudcontrolv1beta1.ConditionTypeError,
 				Message: "Error creating Azure virtualNetworkLink",
 			}).
 			ErrorLogMessage("Error patching Azure KCP IpRange status after failed creating virtualNetworkLink").

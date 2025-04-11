@@ -3,7 +3,7 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -11,7 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -26,7 +26,7 @@ var kymaRef = klog.ObjectRef{
 }
 
 var scope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "skr",
 		Namespace: "test",
 	},
@@ -43,7 +43,7 @@ var scope = cloudcontrolv1beta1.Scope{
 }
 
 var awsNfsInstance = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-aws-nfs-instance",
 		Namespace: "test",
 	},
@@ -65,7 +65,7 @@ var awsNfsInstance = cloudcontrolv1beta1.NfsInstance{
 }
 
 var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-aws-nfs-volume",
 		Namespace: "test",
 	},
@@ -77,11 +77,11 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{
 		Id:     "test-aws-nfs-instance",
 		Server: "10.20.30.2",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS instance is ready",
 			},
@@ -89,7 +89,7 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	},
 }
 var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-aws-nfs-volume-backup",
 		Namespace: "test",
 	},
@@ -103,11 +103,11 @@ var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 	},
 	Status: cloudresourcesv1beta1.AwsNfsVolumeBackupStatus{
 		State: "Ready",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS backup is ready",
 			},
@@ -117,10 +117,10 @@ var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 }
 
 var deletingAwsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:              "test-aws-nfs-volume-restore",
 		Namespace:         "test",
-		DeletionTimestamp: &v1.Time{Time: time.Now()},
+		DeletionTimestamp: &metav1.Time{Time: time.Now()},
 		Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
@@ -133,11 +133,11 @@ var deletingAwsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 	},
 	Status: cloudresourcesv1beta1.AwsNfsVolumeBackupStatus{
 		State: "Ready",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS backup is ready",
 			},
@@ -181,7 +181,7 @@ func newStateFactoryWithObj(awsNfsVolumeBackup *cloudresourcesv1beta1.AwsNfsVolu
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := newStateFactory(
 		composed.NewStateFactory(skrCluster),
-		commonScope.NewStateFactory(kcpCluster, kymaRef),
+		commonscope.NewStateFactory(kcpCluster, kymaRef),
 		client.NewMockClient(), env,
 	)
 	return &testStateFactory{

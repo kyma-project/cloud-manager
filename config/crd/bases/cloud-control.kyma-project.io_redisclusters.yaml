@@ -149,8 +149,6 @@ spec:
                     required:
                     - sku
                     type: object
-                  gcp:
-                    type: object
                 type: object
               ipRange:
                 properties:

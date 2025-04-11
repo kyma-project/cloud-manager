@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: azurevpcpeerings.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -57,6 +57,11 @@ spec:
                       rule: (size(self) <= 80)
                     - message: RemotePeeringName must begin with a word character, and it must end with a word character. RemotePeeringName may contain word characters or '-'.
                       rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
+                remoteTenant:
+                  type: string
+                  x-kubernetes-validations:
+                    - message: RemoteTenant is immutable.
+                      rule: (self == oldSelf)
                 remoteVnet:
                   type: string
                   x-kubernetes-validations:

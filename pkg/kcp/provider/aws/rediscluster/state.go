@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -20,19 +20,19 @@ type State struct {
 	types.State
 	awsClient awsclient.ElastiCacheClient
 
-	subnetGroup                           *elasticacheTypes.CacheSubnetGroup
-	parameterGroup                        *elasticacheTypes.CacheParameterGroup
-	parameterGroupCurrentParams           []elasticacheTypes.Parameter
-	parameterGroupFamilyDefaultParams     []elasticacheTypes.Parameter
-	tempParameterGroup                    *elasticacheTypes.CacheParameterGroup
-	tempParameterGroupFamilyDefaultParams []elasticacheTypes.Parameter
-	tempParameterGroupCurrentParams       []elasticacheTypes.Parameter
+	subnetGroup                           *elasticachetypes.CacheSubnetGroup
+	parameterGroup                        *elasticachetypes.CacheParameterGroup
+	parameterGroupCurrentParams           []elasticachetypes.Parameter
+	parameterGroupFamilyDefaultParams     []elasticachetypes.Parameter
+	tempParameterGroup                    *elasticachetypes.CacheParameterGroup
+	tempParameterGroupFamilyDefaultParams []elasticachetypes.Parameter
+	tempParameterGroupCurrentParams       []elasticachetypes.Parameter
 
-	elastiCacheReplicationGroup *elasticacheTypes.ReplicationGroup
-	memberClusters              []elasticacheTypes.CacheCluster
+	elastiCacheReplicationGroup *elasticachetypes.ReplicationGroup
+	memberClusters              []elasticachetypes.CacheCluster
 	authTokenValue              *secretsmanager.GetSecretValueOutput
-	userGroup                   *elasticacheTypes.UserGroup
-	securityGroup               *ec2Types.SecurityGroup
+	userGroup                   *elasticachetypes.UserGroup
+	securityGroup               *ec2types.SecurityGroup
 	securityGroupId             string
 
 	modifyElastiCacheClusterOptions awsclient.ModifyElastiCacheClusterOptions
@@ -244,7 +244,7 @@ func (s *State) GetShardsForRemoval() []string {
 	nodeGroups := s.elastiCacheReplicationGroup.NodeGroups
 	nodeGroupsForRemoval := nodeGroups[len(nodeGroups)-shardsToRemoveCount:]
 
-	return pie.Map(nodeGroupsForRemoval, func(nodeGroupForRemoval elasticacheTypes.NodeGroup) string {
+	return pie.Map(nodeGroupsForRemoval, func(nodeGroupForRemoval elasticachetypes.NodeGroup) string {
 		return ptr.Deref(nodeGroupForRemoval.NodeGroupId, "")
 	})
 }
@@ -291,7 +291,7 @@ func (s *State) GetReplicasForRemoval() []string {
 
 		replicasToRemoveCount := int(currentReplicas - desiredReplicas)
 		nodeGroupMembersToRemove := nodeGroupMembers[len(nodeGroupMembers)-replicasToRemoveCount:]
-		nodeGroupMemberCacheClusterIds := pie.Map(nodeGroupMembersToRemove, func(nodeGroupMember elasticacheTypes.NodeGroupMember) string {
+		nodeGroupMemberCacheClusterIds := pie.Map(nodeGroupMembersToRemove, func(nodeGroupMember elasticachetypes.NodeGroupMember) string {
 			return ptr.Deref(nodeGroupMember.CacheClusterId, "")
 		})
 		replicasToRemove = append(replicasToRemove, nodeGroupMemberCacheClusterIds...)

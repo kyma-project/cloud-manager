@@ -1,26 +1,20 @@
 package scope
 
 import (
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerClient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerclient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	kubernetesClient "k8s.io/client-go/kubernetes"
+	kubernetesclient "k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-// NukeScopesWithoutKyma defines if during the Scope reconciliation a Nuke resource will be created
-// if Kyma does not exist. For the normal behavior it should be true, so that Nuke could
-// clean up the Scope's orphaned resources. But since the majority of tests creates Scope
-// but doesn't create Kyma, this flag in test suite setup is set to `false`, to prevent deletion
-// of all the Scope resources and allow tests to function
-var NukeScopesWithoutKyma = true
 
 type StateFactory interface {
 	NewState(req ctrl.Request) *State
@@ -28,22 +22,22 @@ type StateFactory interface {
 
 func NewStateFactory(
 	baseStateFactory composed.StateFactory,
-	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) StateFactory {
 	return &stateFactory{
 		baseStateFactory:              baseStateFactory,
-		awsStsClientProvider:          awsStsClientProvider,
 		activeSkrCollection:           activeSkrCollection,
+		awsStsClientProvider:          awsStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 	}
 }
 
 type stateFactory struct {
 	baseStateFactory              composed.StateFactory
-	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
 	activeSkrCollection           skrruntime.ActiveSkrCollection
+	awsStsClientProvider          awsclient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 }
 
@@ -52,8 +46,8 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 	return newState(
 		baseState,
-		f.awsStsClientProvider,
 		f.activeSkrCollection,
+		f.awsStsClientProvider,
 		f.gcpServiceUsageClientProvider,
 	)
 }
@@ -62,46 +56,52 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 func newState(
 	baseState composed.State,
-	awsStsClientProvider awsClient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
+	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) *State {
 	return &State{
 		State:                         baseState,
-		awsStsClientProvider:          awsStsClientProvider,
 		activeSkrCollection:           activeSkrCollection,
+		awsStsClientProvider:          awsStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 		credentialData:                map[string]string{},
+		exposedData:                   &scopetypes.ExposedData{},
 	}
 }
+
+var _ scopetypes.State = &State{}
 
 type State struct {
 	composed.State
 
-	kyma                *unstructured.Unstructured
 	activeSkrCollection skrruntime.ActiveSkrCollection
 
-	moduleState  util.KymaModuleState
-	moduleInSpec bool
-	skrActive    bool
+	gardenerCluster        *unstructured.Unstructured
+	gardenerClusterSummary *util.GardenerClusterSummary
 
 	shootName      string
 	shootNamespace string
 
-	gardenerClient  gardenerClient.CoreV1beta1Interface
-	gardenK8sClient kubernetesClient.Interface
+	gardenerClient  gardenerclient.CoreV1beta1Interface
+	gardenK8sClient kubernetesclient.Interface
 
 	provider       cloudcontrolv1beta1.ProviderType
-	shoot          *gardenerTypes.Shoot
+	shoot          *gardenertypes.Shoot
 	credentialData map[string]string
 
 	kcpNetworkKyma *cloudcontrolv1beta1.Network
-	kcpNetworkCm   *cloudcontrolv1beta1.Network
 
-	awsStsClientProvider          awsClient.GardenClientProvider[scopeclient.AwsStsClient]
+	awsStsClientProvider          awsclient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
+
+	exposedData *scopetypes.ExposedData
 }
 
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {
 	return s.Obj().(*cloudcontrolv1beta1.Scope)
+}
+
+func (s *State) ExposedData() *scopetypes.ExposedData {
+	return s.exposedData
 }

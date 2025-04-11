@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
@@ -41,7 +41,7 @@ func (suite *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
 	assert.Nil(suite.T(), err)
 
 	pvName := fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name)
-	pv := v1.PersistentVolume{}
+	pv := corev1.PersistentVolume{}
 	err = state.SkrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 	assert.Nil(suite.T(), err)
 

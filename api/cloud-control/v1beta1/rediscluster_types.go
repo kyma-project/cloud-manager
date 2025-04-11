@@ -21,9 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type RedisClusterGcp struct {
-}
-
 type RedisClusterAzure struct {
 	// +kubebuilder:validation:Required
 	SKU AzureRedisClusterSKU `json:"sku"`
@@ -96,9 +93,6 @@ type RedisClusterAws struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type RedisClusterInfo struct {
-	// +optional
-	Gcp *RedisClusterGcp `json:"gcp,omitempty"`
-
 	// +optional
 	Azure *RedisClusterAzure `json:"azure,omitempty"`
 

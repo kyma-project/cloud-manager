@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -18,7 +18,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 
 		By("Given AWS Scope exists", func() {
 			// Tell Scope reconciler to ignore this Scope
-			scopePkg.Ignore.AddName(name)
+			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeCcee).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).

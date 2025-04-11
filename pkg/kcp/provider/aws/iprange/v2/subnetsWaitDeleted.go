@@ -3,7 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -21,7 +21,7 @@ func subnetsWaitDeleted(ctx context.Context, st composed.State) (error, context.
 	logger.
 		WithValues(
 			"waitingForSubnets",
-			fmt.Sprintf("%v", pie.Map(state.cloudResourceSubnets, func(sn ec2Types.Subnet) string {
+			fmt.Sprintf("%v", pie.Map(state.cloudResourceSubnets, func(sn ec2types.Subnet) string {
 				return fmt.Sprintf(
 					"%s/%s/%s/%s",
 					ptr.Deref(sn.SubnetId, ""),

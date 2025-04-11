@@ -8,10 +8,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -28,7 +28,7 @@ var kymaRef = klog.ObjectRef{
 }
 
 var scope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "skr",
 		Namespace: "test",
 	},
@@ -44,7 +44,7 @@ var scope = cloudcontrolv1beta1.Scope{
 }
 
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume",
 		Namespace: "test",
 	},
@@ -61,11 +61,11 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Id:         "test-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS instance is ready",
 			},
@@ -73,7 +73,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	},
 }
 var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:      "test-gcp-nfs-volume-backup",
 		Namespace: "test",
 	},
@@ -89,11 +89,11 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
 		Location: "us-west1",
 		State:    "Ready",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS backup is ready",
 			},
@@ -103,10 +103,10 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 }
 
 var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
-	ObjectMeta: v1.ObjectMeta{
+	ObjectMeta: metav1.ObjectMeta{
 		Name:              "test-gcp-nfs-volume-restore",
 		Namespace:         "test",
-		DeletionTimestamp: &v1.Time{Time: time.Now()},
+		DeletionTimestamp: &metav1.Time{Time: time.Now()},
 		Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
@@ -121,11 +121,11 @@ var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
 		Location: "us-west1",
 		State:    "Ready",
-		Conditions: []v1.Condition{
+		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
 				Status:             "True",
-				LastTransitionTime: v1.Time{Time: time.Now()},
+				LastTransitionTime: metav1.Time{Time: time.Now()},
 				Reason:             "Ready",
 				Message:            "NFS backup is ready",
 			},
@@ -138,19 +138,19 @@ type testStateFactory struct {
 	factory                  StateFactory
 	skrCluster               composed.StateCluster
 	kcpCluster               composed.StateCluster
-	fileBackupClientProvider client.ClientProvider[client2.FileBackupClient]
+	fileBackupClientProvider client.ClientProvider[gcpnfsbackupclient.FileBackupClient]
 	env                      abstractions.Environment
 	fakeHttpServer           *httptest.Server
 }
 
-func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[client2.FileBackupClient] {
+func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (client2.FileBackupClient, error) {
+		func(ctx context.Context, saJsonKeyPath string) (gcpnfsbackupclient.FileBackupClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return client2.NewFileBackupClient(fsClient), nil
+			return gcpnfsbackupclient.NewFileBackupClient(fsClient), nil
 		},
 	)
 }

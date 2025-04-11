@@ -202,7 +202,7 @@ func NewVirtualNetworkPeeringResourceId(subscription, resourceGroup, virtualNetw
 	}
 }
 
-// https://portal.azure.com/#@sapsharedtenant.onmicrosoft.com/resource/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/cm-redis-0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/providers/Microsoft.Cache/Redis/0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/overview
+// NewRedisInstanceResourceId check details on https://portal.azure.com/#@sapsharedtenant.onmicrosoft.com/resource/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/cm-redis-0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/providers/Microsoft.Cache/Redis/0a1e1caa-1d2c-4eba-848e-9bdb3ef1535c/overview
 func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName string) *ResourceDetails {
 	return &ResourceDetails{
 		Subscription:  subscription,
@@ -214,12 +214,12 @@ func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName s
 	}
 }
 
-// Private endpoint private DNS zone configurations will only automatically generate if you use the recommended naming scheme
+// NewPrivateDnsZoneName Private endpoint private DNS zone configurations will only automatically generate if you use the recommended naming scheme
 func NewPrivateDnsZoneName() string {
 	return "privatelink.redis.cache.windows.net"
 }
 
-// /subscriptions/subId/resourceGroups/rg1/providers/Microsoft.Network/privateDnsZones/zone1.com
+// NewPrivateDnsZoneGroupResourceId /subscriptions/subId/resourceGroups/rg1/providers/Microsoft.Network/privateDnsZones/zone1.com
 func NewPrivateDnsZoneGroupResourceId(subscription, resourceGroup, privateDnsZoneInstanceName string) *ResourceDetails {
 	return &ResourceDetails{
 		Subscription:  subscription,

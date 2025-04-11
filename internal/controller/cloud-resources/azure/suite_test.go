@@ -18,11 +18,11 @@ package azure
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"os"
 	"testing"
 
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -76,6 +76,10 @@ var _ = BeforeSuite(func() {
 	// AzureRwxBackupSchedule
 	Expect(cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(
 		infra.Registry(), env)).NotTo(HaveOccurred())
+
+	// AzureRwxVolumeRestore
+	Expect(cloudresourcescontroller.SetupAzureRwxRestoreReconciler(
+		infra.Registry(), infra.AzureMock().StorageProvider())).NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())

@@ -1,0 +1,23 @@
+# permissions for end users to view gcpsubnets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-control-gcpsubnet-viewer-role
+rules:
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - gcpsubnets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - gcpsubnets/status
+  verbs:
+  - get

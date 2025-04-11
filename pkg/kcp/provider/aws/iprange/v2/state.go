@@ -3,37 +3,37 @@ package v2
 import (
 	"context"
 	"fmt"
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 )
 
 type State struct {
 	iprangetypes.State
 
-	awsClient iprangeclient.Client
+	awsClient awsiprangeclient.Client
 
-	vpc                  *ec2Types.Vpc
-	associatedCidrBlock  *ec2Types.VpcCidrBlockAssociation
-	allSubnets           []ec2Types.Subnet
-	cloudResourceSubnets []ec2Types.Subnet
+	vpc                  *ec2types.Vpc
+	associatedCidrBlock  *ec2types.VpcCidrBlockAssociation
+	allSubnets           []ec2types.Subnet
+	cloudResourceSubnets []ec2types.Subnet
 }
 
 type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (*State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[iprangeclient.Client]) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[awsiprangeclient.Client]) StateFactory {
 	return &stateFactory{
 		skrProvider: skrProvider,
 	}
 }
 
 type stateFactory struct {
-	skrProvider awsclient.SkrClientProvider[iprangeclient.Client]
+	skrProvider awsclient.SkrClientProvider[awsiprangeclient.Client]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (*State, error) {
@@ -61,7 +61,7 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 	return newState(ipRangeState, c), nil
 }
 
-func newState(ipRangeState iprangetypes.State, c iprangeclient.Client) *State {
+func newState(ipRangeState iprangetypes.State, c awsiprangeclient.Client) *State {
 	return &State{
 		State:     ipRangeState,
 		awsClient: c,

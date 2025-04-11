@@ -14,7 +14,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	changed := false
+	changed := false // nolint:staticcheck
 
 	if composed.AnyConditionChanged(obj, *state.KcpVpcPeering.Conditions()...) {
 		changed = true

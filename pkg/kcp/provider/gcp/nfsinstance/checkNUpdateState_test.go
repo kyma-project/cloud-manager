@@ -47,7 +47,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateDeleted() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Equal(suite.T(), client.Deleted, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.Deleted, testState.ObjAsNfsInstance().Status.State)
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
 	assert.Nil(suite.T(), err)
@@ -76,9 +76,9 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateNotDeleting() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Equal(suite.T(), client.DELETE, testState.State.operation)
-	assert.Equal(suite.T(), client.Deleting, testState.State.curState)
-	assert.Equal(suite.T(), client.Deleting, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.DELETE, testState.operation)
+	assert.Equal(suite.T(), client.Deleting, testState.curState)
+	assert.Equal(suite.T(), client.Deleting, testState.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -132,9 +132,9 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateCreate() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Equal(suite.T(), client.ADD, testState.State.operation)
-	assert.Equal(suite.T(), client.Creating, testState.State.curState)
-	assert.Equal(suite.T(), client.Creating, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.ADD, testState.operation)
+	assert.Equal(suite.T(), client.Creating, testState.curState)
+	assert.Equal(suite.T(), client.Creating, testState.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -171,9 +171,9 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateUpdate() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Equal(suite.T(), client.MODIFY, testState.State.operation)
-	assert.Equal(suite.T(), client.Updating, testState.State.curState)
-	assert.Equal(suite.T(), client.Updating, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), client.MODIFY, testState.operation)
+	assert.Equal(suite.T(), client.Updating, testState.curState)
+	assert.Equal(suite.T(), client.Updating, testState.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -215,8 +215,8 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Equal(suite.T(), v1beta1.StateReady, testState.State.curState)
-	assert.Equal(suite.T(), v1beta1.StateReady, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), v1beta1.StateReady, testState.curState)
+	assert.Equal(suite.T(), v1beta1.StateReady, testState.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -253,8 +253,8 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
-	assert.Equal(suite.T(), v1beta1.StateError, testState.State.curState)
-	assert.Equal(suite.T(), v1beta1.StateError, testState.State.ObjAsNfsInstance().Status.State)
+	assert.Equal(suite.T(), v1beta1.StateError, testState.curState)
+	assert.Equal(suite.T(), v1beta1.StateError, testState.ObjAsNfsInstance().Status.State)
 
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
@@ -300,8 +300,8 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateFilestoreStateTransient() {
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(suite.T(), err)
 	assert.Equal(suite.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
-	assert.Equal(suite.T(), gcpNfsInstance.Status.State, testState.State.curState)
-	assert.Equal(suite.T(), client.NONE, testState.State.operation)
+	assert.Equal(suite.T(), gcpNfsInstance.Status.State, testState.curState)
+	assert.Equal(suite.T(), client.NONE, testState.operation)
 }
 
 func TestCheckNUpdateState(t *testing.T) {

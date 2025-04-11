@@ -9,6 +9,9 @@ import (
 var NewLooper = looper.New
 var NewActiveSkrCollection = looper.NewActiveSkrCollection
 
+//var ActiveSkrCollectionToCtx = looper.ActiveSkrCollectionToCtx
+//var ActiveSkrCollectionFromCtx = looper.ActiveSkrCollectionFromCtx
+
 type SkrLooper = looper.SkrLooper
 
 var NewRegistry = registry.New

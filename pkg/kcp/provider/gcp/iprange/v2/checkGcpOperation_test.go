@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -85,7 +84,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 
 	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
-	ipRange.Status.State = client.DeletePsaConnection
+	ipRange.Status.State = gcpclient.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
 	assert.Nil(suite.T(), err)
@@ -134,7 +133,7 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 
 	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
-	ipRange.Status.State = client.DeletePsaConnection
+	ipRange.Status.State = gcpclient.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
 	assert.Nil(suite.T(), err)
@@ -183,7 +182,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 
 	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
-	ipRange.Status.State = client.DeleteAddress
+	ipRange.Status.State = gcpclient.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
 	assert.Nil(suite.T(), err)
@@ -232,7 +231,7 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 
 	//Get state object with IpRange
 	ipRange := gcpIpRange.DeepCopy()
-	ipRange.Status.State = client.DeleteAddress
+	ipRange.Status.State = gcpclient.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
 	assert.Nil(suite.T(), err)

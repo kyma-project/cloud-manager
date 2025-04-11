@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
-	cloudcontrol1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
@@ -15,8 +15,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sync"
@@ -24,40 +26,79 @@ import (
 )
 
 type ActiveSkrCollection interface {
-	AddScope(scope *cloudcontrol1beta1.Scope)
-	RemoveScope(scope *cloudcontrol1beta1.Scope)
+	AddScope(scope *cloudcontrolv1beta1.Scope)
+	RemoveScope(scope *cloudcontrolv1beta1.Scope)
+	AddKyma(kyma *unstructured.Unstructured)
+	RemoveKyma(kyma *unstructured.Unstructured)
 	Contains(kymaName string) bool
 	GetKymaNames() []string
 }
 
-func NewActiveSkrCollection(logger logr.Logger) ActiveSkrCollection {
+type ActiveSkrCollectionAdmin interface {
+	ActiveSkrCollection
+	Logger() logr.Logger
+	Queue() *CyclicQueue
+}
+
+//type activeSkrCtxKeyType string
+//
+//const activeSkrCtxKey activeSkrCtxKeyType = "activeSkrCtxKey"
+//
+//func ActiveSkrCollectionToCtx(ctx context.Context, val ActiveSkrCollection) context.Context {
+//	return context.WithValue(ctx, activeSkrCtxKey, val)
+//}
+//
+//func ActiveSkrCollectionFromCtx(ctx context.Context) ActiveSkrCollection {
+//	val := ctx.Value(activeSkrCtxKey)
+//	return val.(ActiveSkrCollection)
+//}
+
+func NewActiveSkrCollection(logger logr.Logger) ActiveSkrCollectionAdmin {
 	return &activeSkrCollection{
 		queue:  NewCyclicQueue(),
 		logger: logger,
 	}
 }
 
+var _ ActiveSkrCollectionAdmin = &activeSkrCollection{}
+
 type activeSkrCollection struct {
 	queue  *CyclicQueue
 	logger logr.Logger
 }
 
-func (l *activeSkrCollection) AddScope(scope *cloudcontrol1beta1.Scope) {
-	kymaName := scope.GetName()
+func (l *activeSkrCollection) Logger() logr.Logger {
+	return l.logger
+}
+
+func (l *activeSkrCollection) Queue() *CyclicQueue {
+	return l.queue
+}
+
+func (l *activeSkrCollection) AddScope(scope *cloudcontrolv1beta1.Scope) {
+	l.add(scope)
+}
+
+func (l *activeSkrCollection) AddKyma(kyma *unstructured.Unstructured) {
+	l.add(kyma)
+}
+
+func (l *activeSkrCollection) add(obj client.Object) {
+	kymaName := obj.GetName()
 
 	if l.queue.Contains(kymaName) {
 		return
 	}
 
-	labels := scope.GetLabels()
+	labels := obj.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
-	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
-	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
-	region := labels[cloudcontrol1beta1.LabelScopeRegion]
-	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
+	globalAccountId := labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrolv1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrolv1beta1.LabelScopeShootName]
+	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,
@@ -75,21 +116,29 @@ func (l *activeSkrCollection) AddScope(scope *cloudcontrol1beta1.Scope) {
 		Add(1)
 }
 
-func (l *activeSkrCollection) RemoveScope(scope *cloudcontrol1beta1.Scope) {
-	kymaName := scope.GetName()
+func (l *activeSkrCollection) RemoveScope(scope *cloudcontrolv1beta1.Scope) {
+	l.remove(scope)
+}
+
+func (l *activeSkrCollection) RemoveKyma(kyma *unstructured.Unstructured) {
+	l.remove(kyma)
+}
+
+func (l *activeSkrCollection) remove(obj client.Object) {
+	kymaName := obj.GetName()
 	if !l.queue.Contains(kymaName) {
 		return
 	}
 
-	labels := scope.GetLabels()
+	labels := obj.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
-	globalAccountId := labels[cloudcontrol1beta1.LabelScopeGlobalAccountId]
-	subaccountId := labels[cloudcontrol1beta1.LabelScopeSubaccountId]
-	shootName := labels[cloudcontrol1beta1.LabelScopeShootName]
-	region := labels[cloudcontrol1beta1.LabelScopeRegion]
-	brokerPlanName := labels[cloudcontrol1beta1.LabelScopeBrokerPlanName]
+	globalAccountId := labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId]
+	subaccountId := labels[cloudcontrolv1beta1.LabelScopeSubaccountId]
+	shootName := labels[cloudcontrolv1beta1.LabelScopeShootName]
+	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
+	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
 	l.logger.WithValues(
 		"kymaName", kymaName,
@@ -124,20 +173,22 @@ type SkrLooper interface {
 	ActiveSkrCollection
 }
 
-func New(kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
+func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
 	return &skrLooper{
-		activeSkrCollection: NewActiveSkrCollection(logger).(*activeSkrCollection),
-		kcpCluster:          kcpCluster,
-		managerFactory:      skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system", skrScheme),
-		skrStatusSaver:      NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
-		registry:            reg,
-		concurrency:         config.SkrRuntimeConfig.Concurrency,
+		ActiveSkrCollectionAdmin: activeSkrCollection,
+		logger:                   logger,
+		kcpCluster:               kcpCluster,
+		managerFactory:           skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system", skrScheme),
+		skrStatusSaver:           NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
+		registry:                 reg,
+		concurrency:              config.SkrRuntimeConfig.Concurrency,
 	}
 }
 
 type skrLooper struct {
-	*activeSkrCollection
+	ActiveSkrCollectionAdmin
 
+	logger         logr.Logger
 	kcpCluster     cluster.Cluster
 	managerFactory skrmanager.Factory
 	registry       registry.SkrRegistry
@@ -168,7 +219,7 @@ func (l *skrLooper) Start(ctx context.Context) error {
 	<-ctx.Done()
 
 	l.logger.Info("SkrLooper context closed, shutting down the queue")
-	l.queue.Shutdown()
+	l.Queue().Shutdown()
 	l.logger.Info("SkrLooper waiting workers to finish")
 	l.wg.Wait()
 	l.logger.Info("SkrLooper stopped")
@@ -181,8 +232,8 @@ func (l *skrLooper) worker(id int) {
 	logger.Info("SKR Looper worker started")
 	for {
 		shouldStop := func() bool {
-			item, shuttingDown := l.queue.Get()
-			defer l.queue.Done(item)
+			item, shuttingDown := l.Queue().Get()
+			defer l.Queue().Done(item)
 			if shuttingDown {
 				logger.Info("SKR Looper worker shutting down")
 				return true

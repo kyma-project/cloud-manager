@@ -5,11 +5,13 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
 	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
 	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -52,7 +54,9 @@ func (r *networkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("network", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *networkReconciler) newAction() composed.Action {
@@ -84,9 +88,9 @@ func (r *networkReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
-					composed.NewCase(focal.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
-					composed.NewCase(focal.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
-					composed.NewCase(focal.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
+					composed.NewCase(statewithscope.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

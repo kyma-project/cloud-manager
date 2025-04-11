@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -32,8 +32,8 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRwxVolumeRestoreMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsNfsVolumeRestore{}),
-		commonScope.New(),
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
+		commonscope.New(),
 		composed.IfElse(
 			composed.Not(CompletedOrDeletedRestorePredicate),
 			composed.ComposeActions("AzureRwxVolumeNotCompletedOrDeleted",
@@ -42,10 +42,10 @@ func (r *reconciler) newAction() composed.Action {
 				loadPersistentVolumeClaim,
 				loadPersistentVolume,
 				createAzureStorageClient,
-				setProcessing,
 				findAzureRestoreJob,
+				prepareRestore,
 				startAzureRestore,
-				//checkRestoreJob
+				checkRestoreJob,
 			),
 			nil),
 		actions.PatchRemoveCommonFinalizer(),
@@ -61,8 +61,9 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
+			commonscope.NewStateFactory(
+				composed.NewStateClusterFromCluster(args.KcpCluster),
+				args.KymaRef),
 			f.storageClientProvider,
 		),
 	}

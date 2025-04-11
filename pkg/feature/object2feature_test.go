@@ -2,15 +2,12 @@ package feature
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -63,18 +60,18 @@ func TestManifestResourceToFeature(t *testing.T) {
 			obj      *unstructured.Unstructured
 			expected types.FeatureName
 		}{
-			{"AwsNfsVolume", newUnstructuredWithGVK(g, v, "AwsNfsVolume"), types.FeatureNfs},
-			{"AwsNfsVolumeBackup", newUnstructuredWithGVK(g, v, "AwsNfsVolumeBackup"), types.FeatureNfsBackup},
-			{"AwsVpcPeering", newUnstructuredWithGVK(g, v, "AwsVpcPeering"), types.FeaturePeering},
-			{"AzureVpcPeering", newUnstructuredWithGVK(g, v, "AzureVpcPeering"), types.FeaturePeering},
-			{"CloudResources", newUnstructuredWithGVK(g, v, "CloudResources"), ""},
-			{"GcpNfsVolumeBackup", newUnstructuredWithGVK(g, v, "GcpNfsVolumeBackup"), types.FeatureNfsBackup},
-			{"GcpNfsVolumeRestore", newUnstructuredWithGVK(g, v, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
-			{"GcpNfsVolume", newUnstructuredWithGVK(g, v, "GcpNfsVolume"), types.FeatureNfs},
-			{"GcpRedisInstance", newUnstructuredWithGVK(g, v, "GcpRedisInstance"), types.FeatureRedis},
-			{"GcpRedisInstance", newUnstructuredWithGVK(g, v, "AwsRedisInstance"), types.FeatureRedis},
-			{"GcpVpcPeering", newUnstructuredWithGVK(g, v, "GcpVpcPeering"), types.FeaturePeering},
-			{"IpRange", newUnstructuredWithGVK(g, v, "IpRange"), ""},
+			{"AwsNfsVolume", objkind.NewUnstructuredWithGVK(g, v, "AwsNfsVolume"), types.FeatureNfs},
+			{"AwsNfsVolumeBackup", objkind.NewUnstructuredWithGVK(g, v, "AwsNfsVolumeBackup"), types.FeatureNfsBackup},
+			{"AwsVpcPeering", objkind.NewUnstructuredWithGVK(g, v, "AwsVpcPeering"), types.FeaturePeering},
+			{"AzureVpcPeering", objkind.NewUnstructuredWithGVK(g, v, "AzureVpcPeering"), types.FeaturePeering},
+			{"CloudResources", objkind.NewUnstructuredWithGVK(g, v, "CloudResources"), ""},
+			{"GcpNfsVolumeBackup", objkind.NewUnstructuredWithGVK(g, v, "GcpNfsVolumeBackup"), types.FeatureNfsBackup},
+			{"GcpNfsVolumeRestore", objkind.NewUnstructuredWithGVK(g, v, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
+			{"GcpNfsVolume", objkind.NewUnstructuredWithGVK(g, v, "GcpNfsVolume"), types.FeatureNfs},
+			{"GcpRedisInstance", objkind.NewUnstructuredWithGVK(g, v, "GcpRedisInstance"), types.FeatureRedis},
+			{"GcpRedisInstance", objkind.NewUnstructuredWithGVK(g, v, "AwsRedisInstance"), types.FeatureRedis},
+			{"GcpVpcPeering", objkind.NewUnstructuredWithGVK(g, v, "GcpVpcPeering"), types.FeaturePeering},
+			{"IpRange", objkind.NewUnstructuredWithGVK(g, v, "IpRange"), ""},
 		}
 
 		for _, info := range objList {
@@ -102,18 +99,18 @@ func TestManifestResourceToFeature(t *testing.T) {
 			obj      *unstructured.Unstructured
 			expected types.FeatureName
 		}{
-			{"AwsNfsVolume", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolume", g), types.FeatureNfs},
-			{"AwsNfsVolumeBackup", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolumeBackup", g), types.FeatureNfsBackup},
-			{"AwsVpcPeering", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsVpcPeering", g), types.FeaturePeering},
-			{"AzureVpcPeering", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AzureVpcPeering", g), types.FeaturePeering},
-			{"CloudResources", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "CloudResources", g), ""},
-			{"GcpNfsVolumeBackup", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolumeBackup", g), types.FeatureNfsBackup},
-			{"GcpNfsVolumeRestore", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolumeRestore", g), types.FeatureNfsBackup},
-			{"GcpNfsVolume", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolume", g), types.FeatureNfs},
-			{"GcpRedisInstance", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpRedisInstance", g), types.FeatureRedis},
-			{"GcpRedisInstance", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsRedisInstance", g), types.FeatureRedis},
-			{"GcpVpcPeering", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpVpcPeering", g), types.FeaturePeering},
-			{"IpRange", crdUnstructuredWithKindGroup(t, baseCrdUnstructured, "IpRange", g), ""},
+			{"AwsNfsVolume", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolume", g), types.FeatureNfs},
+			{"AwsNfsVolumeBackup", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsNfsVolumeBackup", g), types.FeatureNfsBackup},
+			{"AwsVpcPeering", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsVpcPeering", g), types.FeaturePeering},
+			{"AzureVpcPeering", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AzureVpcPeering", g), types.FeaturePeering},
+			{"CloudResources", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "CloudResources", g), ""},
+			{"GcpNfsVolumeBackup", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolumeBackup", g), types.FeatureNfsBackup},
+			{"GcpNfsVolumeRestore", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolumeRestore", g), types.FeatureNfsBackup},
+			{"GcpNfsVolume", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpNfsVolume", g), types.FeatureNfs},
+			{"GcpRedisInstance", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpRedisInstance", g), types.FeatureRedis},
+			{"GcpRedisInstance", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsRedisInstance", g), types.FeatureRedis},
+			{"GcpVpcPeering", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpVpcPeering", g), types.FeaturePeering},
+			{"IpRange", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "IpRange", g), ""},
 		}
 
 		for _, info := range objList {
@@ -139,18 +136,18 @@ func TestManifestResourceToFeature(t *testing.T) {
 			obj      *unstructured.Unstructured
 			expected types.FeatureName
 		}{
-			{"AwsNfsVolume", busolaCmUnstructuredKindGroup(t, "AwsNfsVolume"), types.FeatureNfs},
-			{"AwsNfsVolumeBackup", busolaCmUnstructuredKindGroup(t, "AwsNfsVolumeBackup"), types.FeatureNfsBackup},
-			{"AwsVpcPeering", busolaCmUnstructuredKindGroup(t, "AwsVpcPeering"), types.FeaturePeering},
-			{"AzureVpcPeering", busolaCmUnstructuredKindGroup(t, "AzureVpcPeering"), types.FeaturePeering},
-			{"CloudResources", busolaCmUnstructuredKindGroup(t, "CloudResources"), ""},
-			{"GcpNfsVolumeBackup", busolaCmUnstructuredKindGroup(t, "GcpNfsVolumeBackup"), types.FeatureNfsBackup},
-			{"GcpNfsVolumeRestore", busolaCmUnstructuredKindGroup(t, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
-			{"GcpNfsVolume", busolaCmUnstructuredKindGroup(t, "GcpNfsVolume"), types.FeatureNfs},
-			{"GcpRedisInstance", busolaCmUnstructuredKindGroup(t, "GcpRedisInstance"), types.FeatureRedis},
-			{"GcpRedisInstance", busolaCmUnstructuredKindGroup(t, "AwsRedisInstance"), types.FeatureRedis},
-			{"GcpVpcPeering", busolaCmUnstructuredKindGroup(t, "GcpVpcPeering"), types.FeaturePeering},
-			{"IpRange", busolaCmUnstructuredKindGroup(t, "IpRange"), ""},
+			{"AwsNfsVolume", objkind.NewBusolaCmUnstructuredKindGroup(t, "AwsNfsVolume"), types.FeatureNfs},
+			{"AwsNfsVolumeBackup", objkind.NewBusolaCmUnstructuredKindGroup(t, "AwsNfsVolumeBackup"), types.FeatureNfsBackup},
+			{"AwsVpcPeering", objkind.NewBusolaCmUnstructuredKindGroup(t, "AwsVpcPeering"), types.FeaturePeering},
+			{"AzureVpcPeering", objkind.NewBusolaCmUnstructuredKindGroup(t, "AzureVpcPeering"), types.FeaturePeering},
+			{"CloudResources", objkind.NewBusolaCmUnstructuredKindGroup(t, "CloudResources"), ""},
+			{"GcpNfsVolumeBackup", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpNfsVolumeBackup"), types.FeatureNfsBackup},
+			{"GcpNfsVolumeRestore", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpNfsVolumeRestore"), types.FeatureNfsBackup},
+			{"GcpNfsVolume", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpNfsVolume"), types.FeatureNfs},
+			{"GcpRedisInstance", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpRedisInstance"), types.FeatureRedis},
+			{"GcpRedisInstance", objkind.NewBusolaCmUnstructuredKindGroup(t, "AwsRedisInstance"), types.FeatureRedis},
+			{"GcpVpcPeering", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpVpcPeering"), types.FeaturePeering},
+			{"IpRange", objkind.NewBusolaCmUnstructuredKindGroup(t, "IpRange"), ""},
 		}
 
 		for _, info := range objList {
@@ -161,80 +158,4 @@ func TestManifestResourceToFeature(t *testing.T) {
 		}
 	})
 
-}
-
-func newUnstructuredWithGVK(g, v, k string) *unstructured.Unstructured {
-	x := &unstructured.Unstructured{}
-	x.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   g,
-		Version: v,
-		Kind:    k,
-	})
-	return x
-}
-
-func crdUnstructuredWithKindGroup(t *testing.T, baseCrd *unstructured.Unstructured, k, g string) *unstructured.Unstructured {
-	crd := baseCrd.DeepCopyObject().(*unstructured.Unstructured)
-	err := unstructured.SetNestedField(crd.Object, k, "spec", "names", "kind")
-	assert.NoError(t, err)
-	err = unstructured.SetNestedField(crd.Object, g, "spec", "group")
-	assert.NoError(t, err)
-	return crd
-}
-
-func crdTypedWithKindGroup(_ *testing.T, baseCrd *apiextensions.CustomResourceDefinition, k, g string) *apiextensions.CustomResourceDefinition {
-	crd := baseCrd.DeepCopyObject().(*apiextensions.CustomResourceDefinition)
-	crd.Spec.Names.Kind = k
-	crd.Spec.Group = g
-	return crd
-}
-
-func busolaCmTypedKindGroup(t *testing.T, k string) *corev1.ConfigMap {
-	data := map[string]interface{}{}
-	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
-	assert.NoError(t, err)
-	err = unstructured.SetNestedField(data, k, "resource", "kind")
-	assert.NoError(t, err)
-
-	b, err := yaml.Marshal(data)
-	assert.NoError(t, err)
-
-	return &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{
-				"busola.io/extension": "resource",
-			},
-		},
-		Data: map[string]string{
-			"general": string(b),
-		},
-	}
-}
-
-func busolaCmUnstructuredKindGroup(t *testing.T, k string) *unstructured.Unstructured {
-	data := map[string]interface{}{}
-	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
-	assert.NoError(t, err)
-	err = unstructured.SetNestedField(data, k, "resource", "kind")
-	assert.NoError(t, err)
-
-	b, err := yaml.Marshal(data)
-	assert.NoError(t, err)
-
-	u := &unstructured.Unstructured{Object: map[string]interface{}{}}
-	u.SetAPIVersion("v1")
-	u.SetKind("ConfigMap")
-	u.SetLabels(map[string]string{
-		"busola.io/extension": "resource",
-	})
-	err = unstructured.SetNestedMap(u.Object, map[string]interface{}{
-		"general": string(b),
-	}, "data")
-	assert.NoError(t, err)
-
-	return u
 }

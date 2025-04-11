@@ -3,10 +3,12 @@ package iprange
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -53,7 +55,9 @@ func (r *ipRangeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	state := r.newFocalState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("kcpiprange", util.RequestObjToString(req)).
+		Handle(action(ctx, state))
 }
 
 func (r *ipRangeReconciler) newAction() composed.Action {
@@ -71,9 +75,9 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					composed.BuildSwitchAction(
 						"allocateIpRangeProviderSwitch",
 						nil,
-						composed.NewCase(focal.AwsProviderPredicate, awsiprange.NewAllocateIpRangeAction(r.awsStateFactory)),
-						composed.NewCase(focal.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
-						composed.NewCase(focal.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpStateFactory)),
+						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.NewAllocateIpRangeAction(r.awsStateFactory)),
+						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpStateFactory)),
 					),
 					allocateIpRange,
 				),
@@ -108,9 +112,9 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					composed.BuildSwitchAction(
 						"providerSwitch",
 						nil,
-						composed.NewCase(focal.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
-						composed.NewCase(focal.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
-						composed.NewCase(focal.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
+						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
 					),
 				),
 				// delete

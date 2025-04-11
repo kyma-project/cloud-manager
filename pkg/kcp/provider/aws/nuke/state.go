@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
-	awsClient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	"k8s.io/utils/ptr"
 )
@@ -18,7 +18,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
 	env abstractions.Environment) StateFactory {
 	return stateFactory{
 		awsClientProvider: awsClientProvider,
@@ -27,7 +27,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
 	env               abstractions.Environment
 }
 
@@ -44,7 +44,7 @@ type State struct {
 	ProviderResources []*nuketypes.ProviderResourceKindState
 
 	vault             *types.BackupVaultListMember
-	awsClientProvider awsClient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
 	env               abstractions.Environment
 	awsClient         awsnukeclient.NukeNfsBackupClient
 }

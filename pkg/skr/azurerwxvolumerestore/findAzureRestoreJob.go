@@ -17,8 +17,12 @@ func findAzureRestoreJob(ctx context.Context, st composed.State) (error, context
 	if restore.Status.OpIdentifier != "" {
 		return nil, ctx
 	}
-
+	if restore.Status.RestoredDir == "" {
+		// Restore was not tried yet
+		return nil, ctx
+	}
 	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Finding restore job ID in case restore already started but opIdentifier failed to be set")
 	_, resourceGroup, vault, _, _, _, err := client.ParseRecoveryPointId(state.azureRwxVolumeBackup.Status.RecoveryPointId)
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed
@@ -29,14 +33,13 @@ func findAzureRestoreJob(ctx context.Context, st composed.State) (error, context
 				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidRecoveryPointId,
 				Message: fmt.Sprintf("Source AzureRwxVolumeBackup has an invalid recoveryPointId: '%v'", state.azureRwxVolumeBackup.Status.RecoveryPointId),
 			}).
-			ErrorLogMessage("Error patching AzureRwxVolumeRestore status").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
 
 	jobId, retry, err := state.storageClient.FindRestoreJobId(ctx, vault, resourceGroup, state.fileShareName, restore.Status.StartTime.Format(time.RFC3339), restore.Status.RestoredDir)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error when trying to find restore job ID", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(err, "Error when trying to find restore job ID", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
 	}
 	if retry {
 		logger.Info("Restore job not found, retrying later")

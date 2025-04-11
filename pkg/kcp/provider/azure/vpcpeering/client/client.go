@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -22,15 +23,19 @@ type Client interface {
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
-	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string) (Client, error) {
+	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{
+			AdditionallyAllowedTenants: []string{"*"},
+		})
 
 		if err != nil {
 			return nil, err
 		}
 
-		clientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, nil)
+		clientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, &arm.ClientOptions{
+			AuxiliaryTenants: auxiliaryTenants,
+		})
 
 		if err != nil {
 			return nil, err

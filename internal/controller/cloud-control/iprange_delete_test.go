@@ -3,7 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 
-	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -11,7 +11,7 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	kcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,7 +38,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
@@ -47,7 +47,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
-			var _ *ec2Types.Vpc
+			var _ *ec2types.Vpc
 			_ = awsMock.AddVpc(
 				vpcId,
 				vpcCidr,
@@ -183,7 +183,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			scopePkg.Ignore.AddName(kymaName)
+			kcpscope.Ignore.AddName(kymaName)
 
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
@@ -192,7 +192,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
-			var _ *ec2Types.Vpc
+			var _ *ec2types.Vpc
 			_ = awsMock.AddVpc(
 				vpcId,
 				vpcCidr,

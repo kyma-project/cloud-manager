@@ -62,8 +62,7 @@ This table lists the parameters of AwsRedisInstance, together with their descrip
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.                                                                                                                                                              |
 | **redisTier**                                     | string | Required. The Redis tier of the instance. Supported values are `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `S7`, `S8` for the **Standard** offering, and `P1`, `P2`, `P3`, `P4`, `P5`, `P6` for the **Premium** offering. |
 | **engineVersion**                                 | string | Optional. Supported values are `"7.1"`, `"7.0"`, and `"6.x"`. Defaults to `"7.0"`. Can be upgraded. |
-| **authEnabled**                                   | bool   | Optional. Enables using an AuthToken (password) when issuing Redis OSS commands. Defaults to `false`.                                                                                                       |
-| **readReplicas**                                  | number | Optional. Number of read replicas. If greater than zero, automatic failover is enabled to ensure the high availability of the instance. Supported values are `0` and `1`. Defaults to `0`.                       |
+| **authEnabled**                                   | bool   | Optional. Enables using an AuthToken (password) when issuing Redis OSS commands. Defaults to `false`. |
 | **parameters**                                    | object | Optional. Provided values are passed to the Redis configuration. Supported values can be read on [Amazons's Redis OSS-specific parameters page](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ParameterGroups.Redis.html). If left empty, defaults to an empty object. |
 | **preferredMaintenanceWindow**                    | string | Optional. Defines a desired window during which updates can be applied. If not provided, maintenance events can be performed at any time during the default time window. To learn more about maintenance window limitations and requirements, see [Managing maintenance](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/maintenance-window.html). |
 | **authSecret**                                    | object | Optional. Auth Secret options.                                                                                                                                                                              |
@@ -98,7 +97,6 @@ spec:
   engineVersion: "7.0"
   autoMinorVersionUpgrade: true
   authEnabled: true
-  readReplicas: 1
   parameters:
     maxmemory-policy: volatile-lru
     activedefrag: "yes"

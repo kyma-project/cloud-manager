@@ -64,7 +64,7 @@ func enableApisGcp(ctx context.Context, st composed.State) (error, context.Conte
 
 	if len(scope.Status.GcpOperations) == 0 {
 		logger.Info("All APIs are enabled. Proceeding to next step.")
-		return nil, nil
+		return nil, ctx
 	}
 	return composed.PatchStatus(scope).
 		ErrorLogMessage("Error patching KCP Scope status with updates of pending operations").
@@ -85,7 +85,7 @@ func verifyAndAddOperationToStatus(ctx context.Context, scope *v1beta1.Scope, cl
 		if operation.Done {
 			if operation.Error != nil {
 				return composed.LogErrorAndReturn(
-					fmt.Errorf("Enabling service %s operation failed: %s. Retry with delay", service, operation.Error.Message),
+					fmt.Errorf("enabling service %s operation failed: %s. Retry with delay", service, operation.Error.Message),
 					"Error enabling GCP APIs",
 					composed.StopWithRequeueDelay(gcpclient.GcpRetryWaitTime),
 					ctx)

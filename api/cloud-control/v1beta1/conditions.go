@@ -10,6 +10,7 @@ const (
 	ReasonScopeNotFound = "ScopeNoFound"
 
 	ReasonUnknown            = "Unknown"
+	ReasonNotFound           = "NotFound"
 	ReasonReady              = "Ready"
 	ReasonGcpError           = "GCPError"
 	ReasonValidationFailed   = "ValidationFailed"

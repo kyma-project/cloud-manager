@@ -2,7 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
-	gardenerTypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -12,13 +12,13 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"time"
 )
 
-var _ = Describe("Feature: KCP Scope AWS", func() {
+var _ = Describe("Feature: KCP Scope", func() {
 
-	It("Scenario: KCP AWS Scope is created when module is activated in Kyma CR", func() {
+	It("Scenario: KCP AWS Scope is created and deleted when GardenerCluster CR is created and deleted", func() {
 		const (
 			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 		)
@@ -26,42 +26,36 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
-		shoot := &gardenerTypes.Shoot{}
+		shoot := &gardenertypes.Shoot{}
 
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootAws).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for aws")
+				Should(Succeed(), "failed creating garden shoot for AWS")
 		})
 
-		kymaCR := util.NewKymaUnstructured()
-		By("And Given Kyma CR exists", func() {
-			Eventually(CreateKymaCR).
-				WithArguments(infra.Ctx(), infra, kymaCR, WithName(kymaName), WithKymaSpecChannel("dev")).
-				Should(Succeed(), "failed creating kyma cr")
+		gardenerClusterCR := util.NewGardenerClusterUnstructured()
+
+		By("And Given GardenerCluster CR exists", func() {
+			Expect(util.SetGardenerClusterSummary(gardenerClusterCR, util.GardenerClusterSummary{
+				Key:       "config",
+				Name:      fmt.Sprintf("kubeconfig-%s", kymaName),
+				Namespace: DefaultKcpNamespace,
+				Shoot:     shoot.Name,
+			}))
+			gardenerClusterCR.SetLabels(map[string]string{
+				cloudcontrolv1beta1.LabelScopeGlobalAccountId: "ga-account-id",
+				cloudcontrolv1beta1.LabelScopeSubaccountId:    "subaccount-id",
+				cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
+				cloudcontrolv1beta1.LabelScopeRegion:          "region-some",
+				cloudcontrolv1beta1.LabelScopeBrokerPlanName:  string(cloudcontrolv1beta1.ProviderAws),
+			})
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR, WithName(kymaName)).
+				Should(Succeed(), "failed creating GardenerCluster CR")
 		})
 
 		scope := &cloudcontrolv1beta1.Scope{}
-
-		By("Then Scope does not exist", func() {
-			Consistently(LoadAndCheck, time.Second).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(
-					WithName(kymaName),
-					WithNamespace(DefaultKcpNamespace),
-				)).
-				Should(Not(Succeed()), "expected Scope not to exist")
-		})
-
-		By("And Then SKR is not active", func() {
-			Expect(infra.ActiveSkrCollection().Contains(kymaName)).
-				To(BeFalse(), "expected SKR not to be active, but it is active")
-		})
-
-		By("When Kyma Module state is Processing", func() {
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateProcessing)).
-				Should(Succeed(), "failed updating KymaCR module to Processing state")
-		})
 
 		By("Then Scope is created", func() {
 			Eventually(LoadAndCheck).
@@ -75,13 +69,17 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 				Should(Succeed(), "expected created Scope to have Ready condition")
 		})
 
+		By("And Then Scope has finalizer", func() {
+			Expect(controllerutil.ContainsFinalizer(scope, api.CommonFinalizerDeletionHook)).To(BeTrue())
+		})
+
 		for _, label := range cloudcontrolv1beta1.ScopeLabels {
 			By(fmt.Sprintf("And Then Scope has label %s", label), func() {
-				Expect(scope.Labels).To(HaveKeyWithValue(label, kymaCR.GetLabels()[label]))
+				Expect(scope.Labels).To(HaveKeyWithValue(label, gardenerClusterCR.GetLabels()[label]))
 			})
 		}
 
-		By("And Then Scope provider is aws", func() {
+		By("And Then Scope provider is AWS", func() {
 			Expect(scope.Spec.Provider).To(Equal(cloudcontrolv1beta1.ProviderAws))
 		})
 
@@ -107,6 +105,10 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 			Expect(scope.Spec.Scope.Aws.AccountId).To(Equal(infra.AwsMock().GetAccount()))
 		})
 
+		By("And Then Scope has vpc network name", func() {
+			Expect(scope.Spec.Scope.Aws.VpcNetwork).To(Equal(common.GardenerVpcName(DefaultGardenNamespace, shoot.Name)))
+		})
+
 		By("And Then Scope has spec.scope.aws.network.zones as shoot", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones).To(HaveLen(3))
 			Expect(scope.Spec.Scope.Aws.Network.Zones[0].Name).To(Equal("eu-west-1a")) // as set in GivenGardenShootAwsExists
@@ -114,114 +116,68 @@ var _ = Describe("Feature: KCP Scope AWS", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
 		})
 
-		By("And Then SKR is active", func() {
-			Expect(infra.ActiveSkrCollection().Contains(kymaName)).
-				To(BeTrue(), "expected SKR to be active, but it is not active")
-		})
-
-		By("And Then Kyma CR has finalizer", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
-				Should(Succeed())
-			Expect(controllerutil.ContainsFinalizer(kymaCR, api.CommonFinalizerDeletionHook)).
-				To(BeTrue(), "expected Kyma CR to have finalizer, but it does not")
-		})
-
 		kymaNetwork := &cloudcontrolv1beta1.Network{}
+
 		By("And Then Kyma Network is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
 				Should(Succeed(), "expected Kyma Network to be created")
 		})
 
-		By("// cleanup: Delete Scope and KCP Kyma Network", func() {
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateNotPresent)).
-				Should(Succeed(), "failed updating KymaCR module state to NotPresent")
+		By("And Then Kyma Network has 'kyma' type", func() {
+			Expect(kymaNetwork.Spec.Type).To(Equal(cloudcontrolv1beta1.NetworkTypeKyma))
+		})
 
+		By("And Then Kyma Network has scope reference", func() {
+			Expect(kymaNetwork.Spec.Scope.Name).To(Equal(scope.Name))
+		})
+
+		By("And Then Kyma Network has AWS reference details", func() {
+			Expect(kymaNetwork.Spec.Network.Reference).NotTo(BeNil())
+			Expect(kymaNetwork.Spec.Network.Reference.Aws).NotTo(BeNil())
+			Expect(kymaNetwork.Spec.Network.Reference.Aws.NetworkName).To(Equal(scope.Spec.Scope.Aws.VpcNetwork))
+			Expect(kymaNetwork.Spec.Network.Reference.Aws.AwsAccountId).To(Equal(scope.Spec.Scope.Aws.AccountId))
+			Expect(kymaNetwork.Spec.Network.Reference.Aws.Region).To(Equal(scope.Spec.Region))
+		})
+
+		// DELETE =======================================================
+
+		By("When GardenerCluster CR is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR).
+				Should(Succeed(), "expected Gardener Cluster to be deleted")
+		})
+
+		By("Then Scope does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
-				Should(Succeed())
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork).
-				Should(Succeed())
-
-			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kymaCR)).
-				To(Succeed())
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR).
-				Should(Succeed())
-		})
-	})
-
-	It("Scenario: KCP AWS Scope is deleted when module is deactivated in Kyma CR", func() {
-		const (
-			kymaName = "d55ac1aa-288c-4af4-a0b7-96ce5b81046b"
-		)
-		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-
-		shoot := &gardenerTypes.Shoot{}
-		scope := &cloudcontrolv1beta1.Scope{}
-
-		By("Given Shoot exists", func() {
-			Eventually(CreateShootAws).
-				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for aws")
-		})
-
-		kymaCR := util.NewKymaUnstructured()
-		By("And Given Kyma CR exists", func() {
-			Eventually(CreateKymaCR).
-				WithArguments(infra.Ctx(), infra, kymaCR, WithName(kymaName), WithKymaSpecChannel("dev")).
-				Should(Succeed(), "failed creating kyma cr")
-		})
-
-		By("And Given module is active", func() {
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateReady)).
-				Should(Succeed(), "failed updating KymaCR module state to Processing")
-
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(WithName(kymaName)), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
-				Should(Succeed(), "expected Scope to be created and have Ready condition")
-		})
-
-		kymaNetwork := &cloudcontrolv1beta1.Network{}
-		By("And Then Kyma Network is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
-				Should(Succeed(), "expected Kyma Network to be created")
-		})
-
-		By("When module is deactivated", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
-				Should(Succeed(), "failed reloading Kyma CR")
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, WithKymaStatusModuleState(util.KymaModuleStateNotPresent)).
-				Should(Succeed(), "failed updating KymaCR module state to NotPresent")
-		})
-
-		By("Then Scope is deleted", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
-				Should(Succeed(), "expected Scope to be deleted, but it still exists")
-		})
-
-		By("And Then Kyma CR does not have finalizer", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaCR, NewObjActions()).
-				Should(Succeed(), "failed reloading Kyma CR")
-
-			Expect(controllerutil.ContainsFinalizer(kymaCR, api.CommonFinalizerDeletionHook)).
-				To(BeFalse(), "expected Kyma CR not to have finalizer, but it still has it")
+				Should(Succeed(), "expectedScope to be deleted")
 		})
 
 		By("And Then Kyma Network does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork).
-				Should(Succeed(), "expected Kyma Network to be deleted, but it still exists")
+				Should(Succeed(), "expected Kyma Network to be deleted")
 		})
+
+		// CLEANUP =======================================================
+
+		By("// cleanup: delete GardenerCluster", func() {
+			Expect(client.IgnoreNotFound(Delete(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR))).
+				To(Succeed(), "error deleting GardenerCluster CR")
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR).
+				Should(Succeed(), "expected Gardener Cluster to be deleted")
+		})
+
+		By("// cleanup: delete Shoot", func() {
+			Expect(Delete(infra.Ctx(), infra.Garden().Client(), shoot)).
+				To(Succeed(), "error deleting Shoot CR")
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.Garden().Client(), shoot).
+				Should(Succeed(), "expected Shoot to be deleted")
+		})
+
 	})
 
 })

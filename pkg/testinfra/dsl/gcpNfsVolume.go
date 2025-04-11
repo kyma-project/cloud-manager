@@ -7,7 +7,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -166,10 +166,10 @@ func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
 	}
 }
 
-func WithPvStatusPhase(phase v1.PersistentVolumePhase) ObjStatusAction {
+func WithPvStatusPhase(phase corev1.PersistentVolumePhase) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
-			x := obj.(*v1.PersistentVolume)
+			x := obj.(*corev1.PersistentVolume)
 			x.Status.Phase = phase
 		},
 	}

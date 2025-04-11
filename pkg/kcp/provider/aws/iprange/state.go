@@ -7,15 +7,15 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
-	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/v2"
+	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/v2"
 )
 
 type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error)
 }
 
-func NewStateFactory(skrProvider awsclient.SkrClientProvider[iprangeclient.Client]) StateFactory {
+func NewStateFactory(skrProvider awsclient.SkrClientProvider[awsiprangeclient.Client]) StateFactory {
 	return &generealStateFactory{
 		v2StateFactory: v2.NewStateFactory(skrProvider),
 	}

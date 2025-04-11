@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
-	efsTypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 
-	elasticacheTypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	secretsmanagerTypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -97,13 +97,13 @@ func IsRouteNotSupported(err error) bool {
 }
 
 var notFoundErrorCodes = map[string]struct{}{
-	(&efsTypes.FileSystemNotFound{}).ErrorCode():                    {},
-	(&efsTypes.AccessPointNotFound{}).ErrorCode():                   {},
-	(&efsTypes.MountTargetNotFound{}).ErrorCode():                   {},
-	(&efsTypes.PolicyNotFound{}).ErrorCode():                        {},
-	(&elasticacheTypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
-	(&elasticacheTypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
-	(&secretsmanagerTypes.ResourceNotFoundException{}).ErrorCode():  {},
+	(&efstypes.FileSystemNotFound{}).ErrorCode():                    {},
+	(&efstypes.AccessPointNotFound{}).ErrorCode():                   {},
+	(&efstypes.MountTargetNotFound{}).ErrorCode():                   {},
+	(&efstypes.PolicyNotFound{}).ErrorCode():                        {},
+	(&elasticachetypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
+	(&elasticachetypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
+	(&secretsmanagertypes.ResourceNotFoundException{}).ErrorCode():  {},
 	"InvalidVpcPeeringConnectionID.NotFound":                        {},
 }
 

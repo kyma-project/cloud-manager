@@ -10,11 +10,12 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter           | Type   | Description                                                                                  |
-|---------------------|--------|----------------------------------------------------------------------------------------------|
-| **remoteAccountId** | string | Required. Specifies the the Amazon Web Services account ID of the owner of the accepter VPC. |
-| **remoteRegion**    | string | Required. Specifies the Region code for the accepter VPC.                                    |
-| **remoteVpcId**     | string | Required. Specifies the ID of the VPC with which you are creating the VPC peering connection |
+| Parameter                          | Type   | Description                                                                                                                      |
+|------------------------------------|--------|----------------------------------------------------------------------------------------------------------------------------------|
+| **remoteAccountId**                | string | Required. Specifies the Amazon Web Services account ID of the owner of the accepter VPC.                                         |
+| **remoteRegion**                   | string | Required. Specifies the Region code for the accepter VPC.                                                                        |
+| **remoteVpcId**                    | string | Required. Specifies the ID of the VPC with which you are creating the VPC peering connection                                     |
+| **remoteRouteTableUpdateStrategy** | string | Optional. Specifies the remote route table update strategy. The value is one of the following: `AUTO`, `MATCHED`, `UNMATCHED`, or `NONE`. Defaults to `AUTO`. For more information, see [RemoteRouteTableUpdateStrategy](#RemoteRouteTableUpdateStrategy). <!-- markdown-link-check-disable-line --> |
 
 **Status:**
 
@@ -28,6 +29,18 @@ This table lists the parameters of the given resource together with their descri
 | **conditions.reason**             | string     | Defines the reason for the condition status change.                                         |
 | **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.  |
 | **conditions.type**               | string     | Provides a short description of the condition.                                              |
+
+## RemoteRouteTableUpdateStrategy
+
+To enable private Internet Protocol version 4 (IPv4) traffic between instances in peered VPC networks, Cloud Manager adds a peering route to the route tables associated with the remote VPC network. The route destination is the Classless Inter-Domain Routing (CIDR) block of the Kyma VPC network, and the target is the ID of the VPC peering connection.
+
+Once VPC peering is established, Cloud Manager updates the route tables for the VPC peering connection. 
+
+The `RemoteRouteTableUpdateStrategy` parameter specifies how Cloud Manager handles remote route tables:
+- `AUTO` adds a peering route to all remote route tables.
+- `MATCHED` adds a peering route to all remote route tables with the Kyma shoot name tag.
+- `UNMATCHED` adds a peering route to all remote route tables without the Kyma shoot name tag.
+- `NONE` does not interact with remote route tables.
 
 ## Sample Custom Resource
 

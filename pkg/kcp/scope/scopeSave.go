@@ -24,5 +24,5 @@ func scopeSave(ctx context.Context, st composed.State) (error, context.Context) 
 		composed.LoggerFromCtx(ctx).Info("Scope created")
 	}
 
-	return nil, nil
+	return nil, ctx
 }

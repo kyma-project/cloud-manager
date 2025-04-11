@@ -6,11 +6,11 @@ import (
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	composed "github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -39,7 +39,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
 
 			pv = &corev1.PersistentVolume{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-pv",
 				},
 				Spec: corev1.PersistentVolumeSpec{
@@ -81,8 +81,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			awsNfsVolume.ObjectMeta = v1.ObjectMeta{
-				DeletionTimestamp: &v1.Time{
+			awsNfsVolume.ObjectMeta = metav1.ObjectMeta{
+				DeletionTimestamp: &metav1.Time{
 					Time: time.Now(),
 				},
 			}

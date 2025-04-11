@@ -1,6 +1,7 @@
 package feature
 
 import (
+	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,7 +48,7 @@ func ObjectToFeature(obj client.Object, scheme *runtime.Scheme) types.FeatureNam
 		}
 	}
 
-	kindInfo := ObjectKinds(obj, scheme)
+	kindInfo := objkind.ObjectKinds(obj, scheme)
 
 	if kindInfo.CrdOK {
 		if f, ok := tryFeatureAwareOnGK(kindInfo.CrdGK, scheme); ok {

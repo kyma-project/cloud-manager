@@ -1,0 +1,15 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: GcpSubnet
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: gcpsubnet-sample
+spec:
+  cidr: '10.250.12.0/22'
+  remoteRef:
+    name: dule-ledu
+    namespace: ''
+  scope:
+    name: aecb0987-2246-4e3e-ae04-679ea15e9bff
+  purpose: PRIVATE

@@ -8,9 +8,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	iprangePkg "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
-	client2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	scopePkg "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	. "github.com/onsi/ginkgo/v2"
@@ -41,7 +41,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			By("Given KCP Cluster", func() {
 
 				// Tell Scope reconciler to ignore this kymaName
-				scopePkg.Ignore.AddName(kymaName)
+				kcpscope.Ignore.AddName(kymaName)
 			})
 			By("And Given KCP Scope exists", func() {
 
@@ -62,7 +62,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 			// Tell IpRange reconciler to ignore this kymaName
-			iprangePkg.Ignore.AddName(kcpIpRangeName)
+			kcpiprange.Ignore.AddName(kcpIpRangeName)
 			By("And Given KCP IPRange exists", func() {
 				Eventually(CreateKcpIpRange).
 					WithArguments(
@@ -128,7 +128,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.Updating
+					exists = gcpNfsInstance.Status.State == gcpclient.Updating
 					return exists, nil
 				}, timeout, interval)
 			})
@@ -163,7 +163,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.Deleted
+					exists = gcpNfsInstance.Status.State == gcpclient.Deleted
 					return exists, nil
 				}, timeout, interval)
 			})
@@ -189,7 +189,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			By("Given KCP Cluster", func() {
 
 				// Tell Scope reconciler to ignore this kymaName
-				scopePkg.Ignore.AddName(kymaName)
+				kcpscope.Ignore.AddName(kymaName)
 			})
 			By("And Given KCP Scope exists", func() {
 
@@ -208,7 +208,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			})
 
 			// Tell IpRange reconciler to ignore this kymaName
-			iprangePkg.Ignore.AddName(kcpIpRangeName)
+			kcpiprange.Ignore.AddName(kcpIpRangeName)
 			By("And Given KCP IPRange exists", func() {
 				Eventually(CreateKcpIpRange).
 					WithArguments(
@@ -272,7 +272,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.Creating
+					exists = gcpNfsInstance.Status.State == gcpclient.Creating
 					return exists, nil
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Creating state")
@@ -303,7 +303,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has Creating state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Creating))
+				Expect(gcpNfsInstance.Status.State).To(Equal(gcpclient.Creating))
 			})
 
 		})
@@ -342,7 +342,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has Updating state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Updating))
+				Expect(gcpNfsInstance.Status.State).To(Equal(gcpclient.Updating))
 			})
 
 		})
@@ -368,7 +368,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has SyncFilestore state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Updating))
+				Expect(gcpNfsInstance.Status.State).To(Equal(gcpclient.Updating))
 			})
 
 		})
@@ -408,7 +408,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has Deleting state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Deleting))
+				Expect(gcpNfsInstance.Status.State).To(Equal(gcpclient.Deleting))
 			})
 
 		})
@@ -434,7 +434,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					Should(BeTrue(), "expected NfsInstance for GCP with Error condition")
 			})
 			By("And KCP NfsVolume has Deleting state", func() {
-				Expect(gcpNfsInstance.Status.State).To(Equal(client2.Deleting))
+				Expect(gcpNfsInstance.Status.State).To(Equal(gcpclient.Deleting))
 			})
 			// Let it be deleted
 			infra.GcpMock().SetOperationError(nil)
@@ -468,7 +468,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			By("Given KCP Cluster", func() {
 
 				// Tell Scope reconciler to ignore this kymaName
-				scopePkg.Ignore.AddName(kymaName)
+				kcpscope.Ignore.AddName(kymaName)
 			})
 			By("And Given KCP Scope exists", func() {
 
@@ -489,7 +489,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 			// Tell IpRange reconciler to ignore this kymaName
-			iprangePkg.Ignore.AddName(kcpIpRangeName)
+			kcpiprange.Ignore.AddName(kcpIpRangeName)
 			By("And Given KCP IPRange exists", func() {
 				Eventually(CreateKcpIpRange).
 					WithArguments(
@@ -556,7 +556,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.Updating
+					exists = gcpNfsInstance.Status.State == gcpclient.Updating
 					return exists, nil
 				}, timeout, interval)
 			})
@@ -591,7 +591,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					if err != nil {
 						return false, err
 					}
-					exists = gcpNfsInstance.Status.State == client2.Deleted
+					exists = gcpNfsInstance.Status.State == gcpclient.Deleted
 					return exists, nil
 				}, timeout, interval)
 			})

@@ -8,15 +8,15 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	iprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 )
 
 type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error)
 }
 
-func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[iprangeclient.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[iprangeclient.ComputeClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient], env abstractions.Environment) StateFactory {
 	return &generalStateFactory{
 		v2StateFactory: v2.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider, env),
 	}

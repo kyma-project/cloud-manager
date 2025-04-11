@@ -20,6 +20,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"password",
+			config.Sensitive(),
 			config.SourceEnv("OS_PASSWORD"),
 			config.SourceFile("OS_PASSWORD"),
 		),
