@@ -37,63 +37,64 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 				ptr.Equal(r.DestinationCidrBlock, cidrBlock)
 		})
 
-		var err error
-
 		lll := logger.WithValues(
 			"remoteRouteTableId", ptr.Deref(t.RouteTableId, "xxx"),
 			"destinationCidrBlock", ptr.Deref(cidrBlock, "xxx"))
 
-		// Create route if it should exist but it doesn't
-		if shouldUpdateRouteTable && !routeExists {
-			err = state.remoteClient.CreateRoute(ctx, t.RouteTableId, cidrBlock, state.vpcPeering.VpcPeeringConnectionId)
-			if err != nil {
-				lll.Error(err, "Error creating remote route")
-			} else {
-				lll.Info("Remote route created")
-			}
+		if routeExists {
+			continue
 		}
 
-		if err != nil {
-
-			if awsmeta.IsErrorRetryable(err) {
-				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
-			}
-
-			successError := composed.StopWithRequeueDelay(util.Timing.T60000ms())
-
-			if awsmeta.IsRouteNotSupported(err) {
-				successError = composed.StopAndForget
-			}
-
-			changed := false
-
-			msg, _ := awsmeta.GetErrorMessage(err, "")
-			if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
-				Message: fmt.Sprintf("Failed updating routes for remote route table %s. %s", ptr.Deref(t.RouteTableId, ""), msg),
-			}) {
-				changed = true
-			}
-
-			if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateWarning) {
-				state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
-				changed = true
-			}
-
-			// Do not update status if nothing is changed
-			if !changed {
-				return successError, nil
-			}
-
-			// User can recover by modifying routes
-			return composed.PatchStatus(state.ObjAsVpcPeering()).
-				ErrorLogMessage("Error updating VpcPeering status when updating routes").
-				SuccessError(successError).
-				Run(ctx, state)
-
+		if !shouldUpdateRouteTable {
+			continue
 		}
+
+		err := state.remoteClient.CreateRoute(ctx, t.RouteTableId, cidrBlock, state.vpcPeering.VpcPeeringConnectionId)
+		if err == nil {
+			lll.Info("Remote route created")
+			continue
+		}
+
+		lll.Error(err, "Error creating remote route")
+
+		if awsmeta.IsErrorRetryable(err) {
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
+
+		successError := composed.StopWithRequeueDelay(util.Timing.T60000ms())
+
+		if awsmeta.IsRouteNotSupported(err) {
+			successError = composed.StopAndForget
+		}
+
+		changed := false
+
+		msg, _ := awsmeta.GetErrorMessage(err, "")
+		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRoutes,
+			Message: fmt.Sprintf("Failed updating routes for remote route table %s. %s", ptr.Deref(t.RouteTableId, ""), msg),
+		}) {
+			changed = true
+		}
+
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateWarning) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
+			changed = true
+		}
+
+		// Do not update status if nothing is changed
+		if !changed {
+			return successError, nil
+		}
+
+		// User can recover by modifying routes
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			ErrorLogMessage("Error updating VpcPeering status when updating remote routes").
+			SuccessError(successError).
+			Run(ctx, state)
+
 	}
 
 	return nil, nil

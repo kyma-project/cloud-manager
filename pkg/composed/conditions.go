@@ -1,6 +1,7 @@
 package composed
 
 import (
+	"github.com/elliotchance/pie/v2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,4 +59,31 @@ func StatusCopyConditionsAndState(source ObjWithConditions, destination ObjWithC
 	}
 
 	return
+}
+
+func AnyConditionChanged(obj ObjWithConditions, conditionsToSet ...metav1.Condition) bool {
+	return pie.All(conditionsToSet, func(x metav1.Condition) bool {
+		c := meta.FindStatusCondition(*obj.Conditions(), x.Type)
+		return c == nil || c.Reason != x.Reason || c.Message != x.Message || c.Status != x.Status
+	})
+}
+
+func SyncConditions(obj ObjWithConditions, conditionsToSet ...metav1.Condition) bool {
+	conditionsToRemove := pie.Filter(*obj.Conditions(), func(x metav1.Condition) bool {
+		return meta.FindStatusCondition(conditionsToSet, x.Type) == nil
+	})
+
+	changed := false
+	for _, condition := range conditionsToRemove {
+		if meta.RemoveStatusCondition(obj.Conditions(), condition.Type) {
+			changed = true
+		}
+	}
+
+	for _, condition := range conditionsToSet {
+		if meta.SetStatusCondition(obj.Conditions(), condition) {
+			changed = true
+		}
+	}
+	return changed
 }
