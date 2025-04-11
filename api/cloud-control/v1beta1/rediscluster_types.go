@@ -21,28 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type RedisClusterGcp struct {
-	// The node type determines the sizing and performance of your node.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=REDIS_SHARED_CORE_NANO;REDIS_STANDARD_SMALL;REDIS_HIGHMEM_MEDIUM;REDIS_HIGHMEM_XLARGE
-	NodeType string `json:"nodeType"`
-
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=125
-	ShardCount int32 `json:"shardCount"`
-
-	// +kubebuilder:default=0
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=2
-	ReplicasPerShard int32 `json:"replicasPerShard"`
-
-	// Redis configuration parameters, according to http://redis.io/topics/config.
-	// See docs for the list of the supported parameters
-	// +optional
-	RedisConfigs map[string]string `json:"redisConfigs"`
-}
-
 type RedisClusterAzure struct {
 	// +kubebuilder:validation:Required
 	SKU AzureRedisClusterSKU `json:"sku"`
@@ -115,9 +93,6 @@ type RedisClusterAws struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type RedisClusterInfo struct {
-	// +optional
-	Gcp *RedisClusterGcp `json:"gcp,omitempty"`
-
 	// +optional
 	Azure *RedisClusterAzure `json:"azure,omitempty"`
 
