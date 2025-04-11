@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -60,6 +61,7 @@ func (r *redisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *redisClusterReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.RedisCluster{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(

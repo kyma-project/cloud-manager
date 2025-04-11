@@ -2,7 +2,9 @@ package redisinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	awsredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
@@ -62,6 +64,7 @@ func (r *redisInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *redisInstanceReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
+		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.RedisInstance{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
