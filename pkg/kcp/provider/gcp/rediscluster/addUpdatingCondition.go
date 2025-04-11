@@ -14,7 +14,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	redisCluster := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsGcpRedisCluster()
 
 	if state.gcpRedisCluster == nil {
 		return nil, nil

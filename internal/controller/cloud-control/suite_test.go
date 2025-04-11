@@ -128,6 +128,10 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		infra.AzureMock().RedisClusterClientProvider(),
+		env,
+	)).NotTo(HaveOccurred())
+	Expect(SetupGcpRedisClusterReconciler(
+		infra.KcpManager(),
 		infra.GcpMock().MemoryStoreClusterProviderFake(),
 		env,
 	)).NotTo(HaveOccurred())
