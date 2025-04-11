@@ -179,6 +179,14 @@ func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string
 		Tags: map[string]*string{
 			"cloud-manager": to.Ptr("rwxVolumeBackup"),
 		},
+		Properties: &armrecoveryservices.VaultProperties{
+			SecuritySettings: &armrecoveryservices.SecuritySettings{
+				SoftDeleteSettings: &armrecoveryservices.SoftDeleteSettings{
+					SoftDeleteState:                 ptr.To(armrecoveryservices.SoftDeleteStateEnabled),
+					SoftDeleteRetentionPeriodInDays: ptr.To(int32(14)),
+				},
+			},
+		},
 	}
 	s.vaults = append(s.vaults, &vault)
 
@@ -256,6 +264,21 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 	}
 	s.jobs[jobId] = &JobDetailsClientGetResponse
 	return &jobId, nil
+}
+
+func (s *storageStore) GetVaultConfig(ctx context.Context, resourceGroupName, vaultName string) (*armrecoveryservicesbackup.BackupResourceVaultConfigResource, error) {
+	return &armrecoveryservicesbackup.BackupResourceVaultConfigResource{
+		Properties: &armrecoveryservicesbackup.BackupResourceVaultConfig{
+			EnhancedSecurityState:  to.Ptr(armrecoveryservicesbackup.EnhancedSecurityStateEnabled),
+			SoftDeleteFeatureState: to.Ptr(armrecoveryservicesbackup.SoftDeleteFeatureStateEnabled),
+		},
+	}, nil
+}
+func (s *storageStore) PutVaultConfig(ctx context.Context, resourceGroupName, vaultName string, config *armrecoveryservicesbackup.BackupResourceVaultConfigResource) error {
+	return nil
+}
+func (s *storageStore) UnregisterContainer(ctx context.Context, resourceGroupName, vaultName, containerName string) error {
+	return nil
 }
 
 func newStorageStore(subscription string) *storageStore {

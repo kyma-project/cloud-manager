@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
@@ -16,6 +17,7 @@ type Client interface {
 	BackupProtectableItemsClient
 	ProtectedItemsClient
 	BackupProtectedItemsClient
+	VaultConfigClient
 }
 
 type client struct {
@@ -28,6 +30,7 @@ type client struct {
 	BackupProtectableItemsClient
 	ProtectedItemsClient
 	BackupProtectedItemsClient
+	VaultConfigClient
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -84,6 +87,11 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
+		vcc, err := NewVaultConfigClient(subscriptionId, cred)
+		if err != nil {
+			return nil, err
+		}
+
 		c = client{
 			vc,
 			bc,
@@ -94,6 +102,7 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			bpic,
 			pic,
 			bprotectedic,
+			vcc,
 		}
 
 		return c, nil

@@ -5,12 +5,13 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"k8s.io/utils/ptr"
 )
 
@@ -77,9 +78,32 @@ func (v azureVault) GetObject() interface{} {
 }
 
 type ProviderNukeStatus struct {
-	v1beta1.NukeStatus
+	cloudcontrolv1beta1.NukeStatus
 }
 
 func (s *State) GetSubscriptionId() string {
 	return s.Scope().Spec.Scope.Azure.SubscriptionId
+}
+
+func (s *State) getContainerNames(vault *armrecoveryservices.Vault) []string {
+	containerNames := []string{}
+	keys := make(map[string]string)
+	for _, rks := range s.ProviderResources {
+		if rks.Kind == "AzureRwxVolumeBackup" && rks.Provider == cloudcontrolv1beta1.ProviderAzure {
+			for _, obj := range rks.Objects {
+
+				item := obj.(azureProtectedItem)
+				_, _, vaultName, containerName, _, _ := azurerwxvolumebackupclient.ParseProtectedItemId(item.GetId())
+
+				if vaultName != ptr.Deref(vault.Name, "") {
+					continue
+				}
+				if _, exists := keys[containerName]; !exists {
+					keys[containerName] = vaultName
+					containerNames = append(containerNames, containerName)
+				}
+			}
+		}
+	}
+	return containerNames
 }
