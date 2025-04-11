@@ -41,7 +41,7 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"azureRedisInstance",
+		"azureRedisCluster",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRedisInstance{}),
 		composed.LoadObj,
 		defaultiprange.New(),
