@@ -48,7 +48,7 @@ func loadRemoteVpc(ctx context.Context, st composed.State) (error, context.Conte
 		logger.WithValues("remoteVpcId", remoteVpcId).
 			Error(err, "Error loading remote AWS VPC Networks")
 
-		msg, isWarning := awsmeta.GetErrorMessage(err, "")
+		msg, isWarning := awsmeta.GetErrorMessage(err, "Error loading remote VPC Network")
 
 		if awsmeta.IsNotFound(err) {
 			msg = fmt.Sprintf("Remote VPC ID %s not found", remoteVpcId)
