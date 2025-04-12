@@ -18,7 +18,6 @@ func disableSoftDelete(ctx context.Context, st composed.State) (error, context.C
 			for _, obj := range rks.Objects {
 
 				item := obj.(azureVault)
-				logger.Info(fmt.Sprintf("Vault Properties : %v", item.Properties))
 				var softDelete *armrecoveryservices.SoftDeleteState
 				if item.Properties.SecuritySettings != nil && item.Properties.SecuritySettings.SoftDeleteSettings != nil {
 					softDelete = item.Properties.SecuritySettings.SoftDeleteSettings.SoftDeleteState

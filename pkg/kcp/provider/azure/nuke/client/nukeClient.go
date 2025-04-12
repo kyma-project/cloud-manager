@@ -2,11 +2,13 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"k8s.io/utils/ptr"
 
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
@@ -67,6 +69,8 @@ func (c *nukeRwxBackupClient) ListFileShareProtectedItems(ctx context.Context, v
 		return result, nil
 	}
 
+	logger := composed.LoggerFromCtx(ctx)
+
 	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return result, nil
@@ -77,16 +81,17 @@ func (c *nukeRwxBackupClient) ListFileShareProtectedItems(ctx context.Context, v
 		return result, nil
 	}
 
+	logger.Info(fmt.Sprintf("Number of Protected Items : %d", len(protectedItems)))
 	for _, item := range protectedItems {
 
-		fileShare, okay := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
-		if !okay {
+		switch protected := item.Properties.(type) {
+		case *armrecoveryservicesbackup.AzureFileshareProtectedItem:
+			if ptr.Deref(protected.ProtectionState, "") == armrecoveryservicesbackup.ProtectionStateProtected {
+				result = append(result, item)
+			}
+		default:
 			continue
 		}
-		if ptr.Deref(fileShare.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
-			continue
-		}
-		result = append(result, item)
 	}
 
 	return result, nil
@@ -122,6 +127,7 @@ func (c *nukeRwxBackupClient) HasProtectedItems(ctx context.Context, vault *armr
 		return false, nil
 	}
 
+	composed.LoggerFromCtx(ctx).Info(fmt.Sprintf("Protected Item Count : %d", len(protectedItems)))
 	return len(protectedItems) > 0, nil
 }
 

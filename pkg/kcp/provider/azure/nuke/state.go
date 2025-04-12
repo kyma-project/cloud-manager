@@ -11,7 +11,6 @@ import (
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
-	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"k8s.io/utils/ptr"
 )
 
@@ -93,14 +92,17 @@ func (s *State) getContainerNames(vault *armrecoveryservices.Vault) []string {
 			for _, obj := range rks.Objects {
 
 				item := obj.(azureProtectedItem)
-				_, _, vaultName, containerName, _, _ := azurerwxvolumebackupclient.ParseProtectedItemId(item.GetId())
-
-				if vaultName != ptr.Deref(vault.Name, "") {
+				switch protected := item.Properties.(type) {
+				case *armrecoveryservicesbackup.AzureFileshareProtectedItem:
+					if ptr.Deref(vault.ID, "") != ptr.Deref(protected.VaultID, "") {
+						continue
+					}
+					if _, exists := keys[*protected.ContainerName]; !exists {
+						keys[*protected.ContainerName] = *protected.VaultID
+						containerNames = append(containerNames, *protected.ContainerName)
+					}
+				default:
 					continue
-				}
-				if _, exists := keys[containerName]; !exists {
-					keys[containerName] = vaultName
-					containerNames = append(containerNames, containerName)
 				}
 			}
 		}

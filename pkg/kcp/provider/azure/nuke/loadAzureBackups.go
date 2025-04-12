@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -34,6 +35,7 @@ func loadAzureBackups(ctx context.Context, st composed.State) (error, context.Co
 				Run(ctx, state)
 		}
 
+		logger.Info(fmt.Sprintf("Loaded %d items for vault %s", len(items), *vault.Name))
 		state.protectedItems = append(state.protectedItems, items...)
 	}
 

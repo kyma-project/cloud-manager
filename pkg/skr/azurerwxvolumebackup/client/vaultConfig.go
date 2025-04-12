@@ -39,8 +39,9 @@ func (c vaultConfigClient) GetVaultConfig(ctx context.Context, resourceGroupName
 
 	result, err := c.configClient.Get(
 		ctx,
+		vaultName,
 		resourceGroupName,
-		vaultName, nil)
+		nil)
 
 	if err != nil {
 		log.Println("failed to get vault config: " + err.Error())
@@ -59,8 +60,8 @@ func (c vaultConfigClient) PutVaultConfig(ctx context.Context, resourceGroupName
 
 	_, err := c.configClient.Put(
 		ctx,
-		resourceGroupName,
 		vaultName,
+		resourceGroupName,
 		*config,
 		nil)
 

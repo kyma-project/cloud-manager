@@ -20,12 +20,12 @@ func deleteAzureBackups(ctx context.Context, st composed.State) (error, context.
 			for _, obj := range rks.Objects {
 
 				item := obj.(azureProtectedItem)
-				protected, okay := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
-				if !okay {
-					continue
-				}
-
-				if ptr.Deref(protected.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
+				switch protected := item.Properties.(type) {
+				case *armrecoveryservicesbackup.AzureFileshareProtectedItem:
+					if ptr.Deref(protected.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
+						continue
+					}
+				default:
 					continue
 				}
 
