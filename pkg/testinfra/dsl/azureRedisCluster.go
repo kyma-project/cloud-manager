@@ -210,7 +210,7 @@ func WithAzureRedisClusterDefaultSpecs() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if azureRedisCluster, ok := obj.(*cloudresourcesv1beta1.AzureRedisCluster); ok {
-				azureRedisCluster.Spec.RedisTier = cloudresourcesv1beta1.AzureRedisTierC2
+				azureRedisCluster.Spec.RedisTier = cloudresourcesv1beta1.AzureRedisTierC4
 				azureRedisCluster.Spec.RedisVersion = "6"
 				return
 			}

@@ -90,11 +90,11 @@ func parseAuthSecretExtraData(extraDataTemplates map[string]string, authSecretBa
 }
 
 var azureRedisTierToAzureRedisSKUCapacityValueMap = map[cloudresourcesv1beta1.AzureRedisClusterTier]int{
-	cloudresourcesv1beta1.AzureRedisTierC1: 1,
-	cloudresourcesv1beta1.AzureRedisTierC2: 2,
-	cloudresourcesv1beta1.AzureRedisTierC3: 3,
-	cloudresourcesv1beta1.AzureRedisTierC4: 4,
-	cloudresourcesv1beta1.AzureRedisTierC5: 5,
+	cloudresourcesv1beta1.AzureRedisTierC3: 1,
+	cloudresourcesv1beta1.AzureRedisTierC4: 2,
+	cloudresourcesv1beta1.AzureRedisTierC5: 3,
+	cloudresourcesv1beta1.AzureRedisTierC6: 4,
+	cloudresourcesv1beta1.AzureRedisTierC7: 5,
 }
 
 func RedisTierToSKUCapacityConverter(redisTier cloudresourcesv1beta1.AzureRedisClusterTier) (int, error) {

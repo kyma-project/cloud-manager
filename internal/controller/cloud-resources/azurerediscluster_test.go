@@ -23,7 +23,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
 		redisVersion := "6.0"
-		tier := cloudresourcesv1beta1.AzureRedisTierC2
+		tier := cloudresourcesv1beta1.AzureRedisTierC4
 		var shardCount int32 = 2
 		var replicaCount int32 = 4
 		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{}
@@ -131,7 +131,9 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Expect(kcpRedisCluster.Spec.RemoteRef.Name).To(Equal(azureRedisCluster.Name))
 
 			By("And has spec.cluster.azure equal to SKR AzureRedisCluster.spec values")
+			expectedSKUCapacity := 2
 			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
+			Expect(expectedSKUCapacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisCluster.Spec.RedisVersion))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisCluster.Spec.RedisConfiguration.MaxClients))
@@ -228,7 +230,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rt"
 		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
 		redisVersion := "6.0"
-		tier := cloudresourcesv1beta1.AzureRedisTierC2
+		tier := cloudresourcesv1beta1.AzureRedisTierC4
 		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{}
 		azureRedisClusterRedisConfigs.MaxClients = "5"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -333,7 +335,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisCluster.Spec.RedisConfiguration.MaxClients))
 		})
 
-		tier = cloudresourcesv1beta1.AzureRedisTierC2
+		tier = cloudresourcesv1beta1.AzureRedisTierC4
 
 		By("When AzureRedisCluster is modified", func() {
 			Eventually(UpdateAzureRedisCluster).
@@ -383,7 +385,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		azureRedisClusterName := "another-azure-redis-cluster"
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7rcr"
 		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
-		tier := cloudresourcesv1beta1.AzureRedisTierC2
+		tier := cloudresourcesv1beta1.AzureRedisTierC4
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")

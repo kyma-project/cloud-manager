@@ -18,15 +18,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +kubebuilder:validation:Enum=C1;C2;C3;C4;C5
+// +kubebuilder:validation:Enum=C3;C4;C5;C6;C7
 type AzureRedisClusterTier string
 
 const (
-	AzureRedisTierC1 AzureRedisClusterTier = "C1"
-	AzureRedisTierC2 AzureRedisClusterTier = "C2"
 	AzureRedisTierC3 AzureRedisClusterTier = "C3"
 	AzureRedisTierC4 AzureRedisClusterTier = "C4"
 	AzureRedisTierC5 AzureRedisClusterTier = "C5"
+	AzureRedisTierC6 AzureRedisClusterTier = "C6"
+	AzureRedisTierC7 AzureRedisClusterTier = "C7"
 )
 
 type RedisClusterAzureConfigs struct {
