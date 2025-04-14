@@ -29,7 +29,7 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/gardener/gardener v1.115.1
+	github.com/gardener/gardener v1.116.1
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.1
@@ -58,7 +58,7 @@ require (
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
 	k8s.io/klog/v2 v2.130.1
-	k8s.io/utils v0.0.0-20241210054802-24370beab758
+	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e
 	sigs.k8s.io/controller-runtime v0.20.4
 )
 
