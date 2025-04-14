@@ -32,7 +32,7 @@ func disableSoftDelete(ctx context.Context, st composed.State) (error, context.C
 				logger.Info(fmt.Sprintf("disableSoftDelete for vault :%s", *item.Name))
 				err := state.azureClient.DisableSoftDelete(ctx, item.Vault)
 				if err != nil {
-					logger.Error(err, fmt.Sprintf("Error Disabling SoftDelete on Azure Vault: %s", obj.GetId()))
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error Disabling SoftDelete on Azure Vault: %s", obj.GetId()), composed.StopWithRequeue, ctx)
 				}
 			}
 		}

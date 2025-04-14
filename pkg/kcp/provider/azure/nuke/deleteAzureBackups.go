@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func deleteAzureBackups(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,18 +18,10 @@ func deleteAzureBackups(ctx context.Context, st composed.State) (error, context.
 			for _, obj := range rks.Objects {
 
 				item := obj.(azureProtectedItem)
-				switch protected := item.Properties.(type) {
-				case *armrecoveryservicesbackup.AzureFileshareProtectedItem:
-					if ptr.Deref(protected.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
-						continue
-					}
-				default:
-					continue
-				}
 
 				err := state.azureClient.RemoveProtection(ctx, item.ProtectedItemResource)
 				if err != nil {
-					logger.Error(err, fmt.Sprintf("Error requesting Azure File Backup protection %s", obj.GetId()))
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error removing Azure File Backup protection %s", obj.GetId()), composed.StopWithRequeue, ctx)
 				}
 			}
 		}

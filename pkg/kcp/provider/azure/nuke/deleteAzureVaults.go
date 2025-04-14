@@ -20,17 +20,19 @@ func deleteAzureVaults(ctx context.Context, st composed.State) (error, context.C
 				item := obj.(azureVault)
 				exists, err := state.azureClient.HasProtectedItems(ctx, item.Vault)
 				if err != nil {
-					logger.Error(err, fmt.Sprintf("Error loading protected items for Azure Vault %s", obj.GetId()))
-					continue
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error loading protected items for Azure Vault %s", obj.GetId()), composed.StopWithRequeue, ctx)
 				}
 				if exists {
 					continue
 				}
 
-				containerNames := state.getContainerNames(item.Vault)
+				containerNames, err := state.getContainerNames(item.Vault)
+				if err != nil {
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error getting Azure container names for %s", *item.Name), composed.StopWithRequeue, ctx)
+				}
 				err = state.azureClient.DeleteVault(ctx, item.Vault, containerNames)
 				if err != nil {
-					logger.Error(err, fmt.Sprintf("Error Deleting Azure Vault: %s", obj.GetId()))
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error Deleting Azure Vault: %s", obj.GetId()), composed.StopWithRequeue, ctx)
 				}
 			}
 		}

@@ -84,11 +84,9 @@ func (c *nukeRwxBackupClient) ListFileShareProtectedItems(ctx context.Context, v
 	logger.Info(fmt.Sprintf("Number of Protected Items : %d", len(protectedItems)))
 	for _, item := range protectedItems {
 
-		switch protected := item.Properties.(type) {
+		switch item.Properties.(type) {
 		case *armrecoveryservicesbackup.AzureFileshareProtectedItem:
-			if ptr.Deref(protected.ProtectionState, "") == armrecoveryservicesbackup.ProtectionStateProtected {
-				result = append(result, item)
-			}
+			result = append(result, item)
 		default:
 			continue
 		}
@@ -127,7 +125,6 @@ func (c *nukeRwxBackupClient) HasProtectedItems(ctx context.Context, vault *armr
 		return false, nil
 	}
 
-	composed.LoggerFromCtx(ctx).Info(fmt.Sprintf("Protected Item Count : %d", len(protectedItems)))
 	return len(protectedItems) > 0, nil
 }
 
@@ -156,6 +153,7 @@ func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecover
 		return nil
 	}
 
+	composed.LoggerFromCtx(ctx).Info(fmt.Sprintf("Unregistering containers %v and delete vault : %v", containers, vault.Name))
 	_, rgName, vaultName, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
 	if err != nil {
 		return err
@@ -164,10 +162,13 @@ func (c *nukeRwxBackupClient) DeleteVault(ctx context.Context, vault *armrecover
 	//Unregister the containers
 	for _, containerName := range containers {
 		err = c.UnregisterContainer(ctx, rgName, vaultName, containerName)
+		composed.LoggerFromCtx(ctx).Info(fmt.Sprintf("Unregistered container : %v", containerName))
 		if err != nil {
 			return err
 		}
 	}
 
-	return c.Client.DeleteVault(ctx, rgName, vaultName)
+	err = c.Client.DeleteVault(ctx, rgName, vaultName)
+	composed.LoggerFromCtx(ctx).Info(fmt.Sprintf("Deleted Vault : %v", vaultName))
+	return err
 }
