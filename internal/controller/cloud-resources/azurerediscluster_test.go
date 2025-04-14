@@ -6,7 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	azureUtil "github.com/kyma-project/cloud-manager/pkg/skr/azurerediscluster"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/skr/azurerediscluster"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -132,7 +132,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 
 			By("And has spec.cluster.azure equal to SKR AzureRedisCluster.spec values")
 			expectedSKUCapacity := 2
-			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
+			redisSKUCapacity, _ := azureutil.RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
 			Expect(expectedSKUCapacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisCluster.Spec.RedisVersion))
@@ -329,7 +329,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Expect(kcpRedisCluster.Spec.RemoteRef.Name).To(Equal(azureRedisCluster.Name))
 
 			By("And has spec.cluster.azure equal to SKR AzureRedisCluster.spec values")
-			redisSKUCapacity, _ := azureUtil.RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
+			redisSKUCapacity, _ := azureutil.RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
 			Expect(kcpRedisCluster.Spec.Instance.Azure.SKU.Capacity).To(Equal(redisSKUCapacity))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisVersion).To(Equal(azureRedisCluster.Spec.RedisVersion))
 			Expect(kcpRedisCluster.Spec.Instance.Azure.RedisConfiguration.MaxClients).To(Equal(azureRedisCluster.Spec.RedisConfiguration.MaxClients))
