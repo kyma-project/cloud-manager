@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -18,7 +19,15 @@ func nukeCreate(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, ctx
 	}
 
-	logger.Info("Creating Nuke")
+	logger.
+		WithValues(
+			"objType", fmt.Sprintf("%T", state.Obj()),
+			"objName", state.Obj().GetName(),
+			"objNamespace", state.Obj().GetNamespace(),
+			"objRevision", state.Obj().GetResourceVersion(),
+			"objDelTs", state.Obj().GetDeletionTimestamp(),
+		).
+		Info("Creating Nuke")
 
 	nuke := &cloudcontrolv1beta1.Nuke{
 		ObjectMeta: metav1.ObjectMeta{
