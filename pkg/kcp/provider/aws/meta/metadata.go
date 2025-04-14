@@ -105,6 +105,7 @@ var notFoundErrorCodes = map[string]struct{}{
 	(&elasticachetypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
 	(&secretsmanagertypes.ResourceNotFoundException{}).ErrorCode():  {},
 	"InvalidVpcPeeringConnectionID.NotFound":                        {},
+	"InvalidVpcID.NotFound":                                         {},
 }
 
 func IsNotFound(err error) bool {
