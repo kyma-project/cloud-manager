@@ -98,6 +98,7 @@ func (r *gcpSubnetReconciler) newFlow() composed.Action {
 				composed.ComposeActions(
 					"privateSubnet-delete",
 					removeReadyCondition,
+					preventDeleteOnGcpRedisClusterUsage,
 					deleteConnectionPolicy,
 					deleteSubnet,
 					actions.RemoveCommonFinalizer(),
