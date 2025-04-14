@@ -64,7 +64,7 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 					WithName(name),
 					WithRemoteRef("skr-rediscluster-example"),
 					WithGcpSubnet(kcpGcpSubnetName),
-					WithScope(name),
+					WithScope(scope.Name),
 					WithKcpGcpRedisClusterNodeType("REDIS_SHARED_CORE_NANO"),
 					WithKcpGcpRedisClusterShardCount(3),
 					WithKcpGcpRedisClusterReplicasPerShard(1),
