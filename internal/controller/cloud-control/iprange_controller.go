@@ -19,6 +19,8 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -36,7 +38,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 )
 
 func SetupIpRangeReconciler(
@@ -110,6 +111,17 @@ func (r *IpRangeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manag
 		func(obj client.Object) []string {
 			redisInstance := obj.(*cloudcontrolv1beta1.RedisInstance)
 			return []string{fmt.Sprintf("%s/%s", redisInstance.Namespace, redisInstance.Spec.IpRange.Name)}
+		}); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.RedisCluster{},
+		cloudcontrolv1beta1.IpRangeField,
+		func(obj client.Object) []string {
+			redisCluster := obj.(*cloudcontrolv1beta1.RedisCluster)
+			return []string{fmt.Sprintf("%s/%s", redisCluster.Namespace, redisCluster.Spec.IpRange.Name)}
 		}); err != nil {
 		return err
 	}

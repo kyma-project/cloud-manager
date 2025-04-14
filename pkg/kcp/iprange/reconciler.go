@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -100,6 +101,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					composed.MarkedForDeletionPredicate,
 					preventDeleteOnNfsInstanceUsage,
 					preventDeleteOnRedisInstanceUsage,
+					preventDeleteOnRedisClusterUsage,
 				),
 				// and now branch to provider specific flow
 				composed.If(

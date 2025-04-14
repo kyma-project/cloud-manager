@@ -125,8 +125,15 @@ func (r *scopeReconciler) newAction() composed.Action {
 				// and should have been already removed
 				skrDeactivate,
 				networkReferenceKymaDelete,
-				scopeDelete,
+				// nuke reconciler deletes all resources in the scope
+				// and their reconcilers require Scope to be able to reach cloud api
+				// thus we first must create the Nuke and wait until it's completed
+				// only then it's safe to delete the scope
+				nukeLoad,
 				nukeCreate,
+				nukeWaitCompleted,
+				// now we can safely delete the Scope only when all resources have been nuked
+				scopeDelete,
 				composed.StopAndForgetAction,
 			),
 		),

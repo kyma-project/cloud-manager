@@ -95,6 +95,8 @@ type State struct {
 	awsStsClientProvider          awsclient.GardenClientProvider[scopeclient.AwsStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 
+	nuke *cloudcontrolv1beta1.Nuke
+
 	exposedData *scopetypes.ExposedData
 }
 
