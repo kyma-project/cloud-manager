@@ -14,6 +14,5 @@
   * [Creating VPC Peering in Microsoft Azure](/cloud-manager/user/tutorials/01-30-30-azure-vpc-peering.md)
   * [Using AwsRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-10-aws-redis-instance.md)
   * [Using GcpRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-20-gcp-redis-instance.md)
-  * [Using AzureRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-30-azure-redis-instance.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
 <!-- markdown-link-check-enable -->

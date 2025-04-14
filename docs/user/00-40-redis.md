@@ -47,6 +47,5 @@ AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level C
 
 * [Using AwsRedisInstance Custom Resources](./tutorials/01-40-10-aws-redis-instance.md)
 * [Using GcpRedisInstance Custom Resources](./tutorials/01-40-20-gcp-redis-instance.md)
-* [Using AzureRedisInstance Custom Resources](./tutorials/01-40-30-azure-redis-instance.md)
 * [Cloud Manager Resources: Redis](./resources/README.md#redis-resources)
 * [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
