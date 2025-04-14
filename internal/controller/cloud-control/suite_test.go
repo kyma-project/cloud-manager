@@ -152,6 +152,7 @@ var _ = BeforeSuite(func() {
 	)).To(Succeed())
 	// GcpSubnet
 	Expect(SetupGcpSubnetReconciler(
+		infra.Ctx(),
 		infra.KcpManager(),
 		infra.GcpMock().SubnetComputeClientProvider(),
 		infra.GcpMock().SubnetNetworkConnectivityProvider(),

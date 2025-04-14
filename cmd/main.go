@@ -403,6 +403,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(
+		ctx,
 		mgr,
 		gcpsubnetclient.NewComputeClientProvider(),
 		gcpsubnetclient.NewNetworkConnectivityClientProvider(),
