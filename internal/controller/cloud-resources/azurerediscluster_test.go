@@ -140,7 +140,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		})
 
 		kcpRedisClusterPrimaryEndpoint := "192.168.0.1:6576"
-		kcpRedisClusterAuthString := "a9461793-2449-48d2-8618-0881bbe61d06"
+		kcpRedisClusterAuthString := "a9461793-2449-48d2-8618-0881bbe61d07"
 
 		By("When KCP RedisCluster has Ready condition", func() {
 			Eventually(UpdateStatus).
