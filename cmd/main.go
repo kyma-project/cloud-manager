@@ -258,6 +258,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAzureRedisClusterReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRedisCluster")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
 		os.Exit(1)
