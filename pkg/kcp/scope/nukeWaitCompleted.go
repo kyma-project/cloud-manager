@@ -17,7 +17,7 @@ func nukeWaitCompleted(ctx context.Context, st composed.State) (error, context.C
 	if state.nuke == nil {
 		return nil, ctx
 	}
-	
+
 	readyCond := meta.FindStatusCondition(state.nuke.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond != nil {
 		return nil, ctx
