@@ -3,13 +3,16 @@ package backupschedule
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"strings"
 )
 
 type Reconciler struct {
@@ -30,8 +33,10 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 	//Create action handler.
 	action := r.newAction()
 
-	//Handle request
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics(strings.ToLower(fmt.Sprintf("%T", state.Obj())), util.RequestObjToString(req)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*State, error) {

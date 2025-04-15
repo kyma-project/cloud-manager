@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -41,7 +42,10 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	state := r.factory.NewState(req)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("skriprange", util.RequestObjToString(req)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {

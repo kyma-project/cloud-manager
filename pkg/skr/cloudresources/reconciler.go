@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -35,7 +36,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("cloudresources", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 // When module is deleted from the SKR Kyma spec

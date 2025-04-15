@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 
@@ -26,7 +27,10 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 	state := r.newState(req.NamespacedName)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("gcpnfsvolume", util.RequestObjToString(req)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *Reconciler) newState(name types.NamespacedName) *State {

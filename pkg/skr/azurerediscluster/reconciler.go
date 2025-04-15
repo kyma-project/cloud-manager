@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -36,13 +37,16 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("azurerediscluster", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"azureRedisCluster",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRedisInstance{}),
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRedisCluster{}),
 		composed.LoadObj,
 		defaultiprange.New(),
 		updateId,
