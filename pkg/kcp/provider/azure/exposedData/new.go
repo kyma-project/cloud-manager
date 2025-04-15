@@ -25,7 +25,12 @@ func New(sf StateFactory) composed.Action {
 		}
 
 		return composed.ComposeActionsNoName(
-			composed.Noop,
+			kcpNetworkLoad,
+			vnetLoad,
+			subnetsLoad,
+			natGatewaysLoad,
+			publicIpAddressesLoad,
+			exposedDataSet,
 		)(ctx, state)
 	}
 }
