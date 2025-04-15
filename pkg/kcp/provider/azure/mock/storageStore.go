@@ -136,8 +136,9 @@ func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resource
 	defer s.m.Unlock()
 	logger := composed.LoggerFromCtx(ctx)
 
+	fileShareName := strings.TrimPrefix(protectedItemName, "AzureFileShare;")
 	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
-	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, fileShareName)
 
 	protectedItems, okay := s.protectedItems[vaultId]
 	if !okay {
@@ -276,6 +277,9 @@ func (s *storageStore) GetVaultConfig(ctx context.Context, resourceGroupName, va
 }
 func (s *storageStore) PutVaultConfig(ctx context.Context, resourceGroupName, vaultName string, config *armrecoveryservicesbackup.BackupResourceVaultConfigResource) error {
 	return nil
+}
+func (s *storageStore) GetStorageContainers(ctx context.Context, resourceGroupName, vaultName string) ([]*armrecoveryservicesbackup.ProtectionContainerResource, error) {
+	return nil, nil
 }
 func (s *storageStore) UnregisterContainer(ctx context.Context, resourceGroupName, vaultName, containerName string) error {
 	return nil

@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -102,7 +103,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 				Should(Succeed())
 		})
 
-		kinds := []string{"AzureRwxVolumeBackup", "AzureRecoveryVault"}
+		kinds := []string{azurenukeclient.AzureFileShareProtection, azurenukeclient.AzureRecoveryVault}
 
 		By("And Then Nuke resources have state Deleted", func() {
 			Eventually(func() error {

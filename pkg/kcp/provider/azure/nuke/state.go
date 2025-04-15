@@ -11,7 +11,6 @@ import (
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
-	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	"k8s.io/utils/ptr"
 )
 
@@ -49,19 +48,21 @@ type State struct {
 	env                 abstractions.Environment
 	azureClient         client.NukeRwxBackupClient
 
-	recoveryVaults []*armrecoveryservices.Vault
-	protectedItems []*armrecoveryservicesbackup.ProtectedItemResource
+	recoveryVaults       []*armrecoveryservices.Vault
+	protectionContainers map[string]*armrecoveryservicesbackup.AzureStorageContainer
+	protectedItems       map[string]*armrecoveryservicesbackup.AzureFileshareProtectedItem
 }
 
-type azureProtectedItem struct {
-	*armrecoveryservicesbackup.ProtectedItemResource
+type azureFileshare struct {
+	*armrecoveryservicesbackup.AzureFileshareProtectedItem
+	id string
 }
 
-func (b azureProtectedItem) GetId() string {
-	return ptr.Deref(b.ID, "")
+func (b azureFileshare) GetId() string {
+	return b.id
 }
 
-func (b azureProtectedItem) GetObject() interface{} {
+func (b azureFileshare) GetObject() interface{} {
 	return b
 }
 
@@ -77,31 +78,23 @@ func (v azureVault) GetObject() interface{} {
 	return v
 }
 
+type azureContainer struct {
+	*armrecoveryservicesbackup.AzureStorageContainer
+	id string
+}
+
+func (v azureContainer) GetId() string {
+	return v.id
+}
+
+func (v azureContainer) GetObject() interface{} {
+	return v
+}
+
 type ProviderNukeStatus struct {
 	cloudcontrolv1beta1.NukeStatus
 }
 
 func (s *State) GetSubscriptionId() string {
 	return s.Scope().Spec.Scope.Azure.SubscriptionId
-}
-
-func (s *State) getContainerNames(vault *armrecoveryservices.Vault) ([]string, error) {
-	containerNames := []string{}
-	keys := make(map[string]string)
-	nuke := s.ObjAsNuke()
-	for _, rks := range nuke.Status.Resources {
-		if rks.ResourceType == cloudcontrolv1beta1.ProviderResource && rks.Kind == "AzureRwxVolumeBackup" {
-			for objId := range rks.Objects {
-				_, _, vaultName, containerName, _, err := azurerwxvolumebackupclient.ParseProtectedItemId(objId)
-				if err != nil {
-					return containerNames, err
-				}
-				if _, exists := keys[containerName]; !exists {
-					keys[containerName] = vaultName
-					containerNames = append(containerNames, containerName)
-				}
-			}
-		}
-	}
-	return containerNames, nil
 }

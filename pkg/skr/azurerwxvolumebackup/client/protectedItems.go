@@ -58,7 +58,7 @@ func (c protectedItemsClient) CreateOrUpdateProtectedItem(ctx context.Context, s
 }
 
 func (c protectedItemsClient) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
-	fabricName := "Azure"
+	fabricName := AzureFabricName
 	_, err := c.azureClient.Delete(ctx, vaultName, resourceGroupName, fabricName, containerName, protectedItemName, nil)
 	return err
 }

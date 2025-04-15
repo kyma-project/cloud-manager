@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 )
 
 func disableSoftDelete(ctx context.Context, st composed.State) (error, context.Context) {
@@ -14,7 +15,7 @@ func disableSoftDelete(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	for _, rks := range state.ProviderResources {
-		if rks.Kind == "AzureRecoveryVault" && rks.Provider == cloudcontrolv1beta1.ProviderAzure {
+		if rks.Kind == azurenukeclient.AzureRecoveryVault && rks.Provider == cloudcontrolv1beta1.ProviderAzure {
 			for _, obj := range rks.Objects {
 
 				item := obj.(azureVault)
