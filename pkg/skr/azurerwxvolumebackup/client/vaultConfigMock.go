@@ -27,6 +27,9 @@ func (m *vaultConfigMockClient) PutVaultConfig(ctx context.Context, resourceGrou
 	return nil
 
 }
+func (m *vaultConfigMockClient) GetStorageContainers(ctx context.Context, resourceGroupName, vaultName string) ([]*armrecoveryservicesbackup.ProtectionContainerResource, error) {
+	return nil, nil
+}
 
 func (m *vaultConfigMockClient) UnregisterContainer(ctx context.Context, resourceGroupName, vaultName, containerName string) error {
 
