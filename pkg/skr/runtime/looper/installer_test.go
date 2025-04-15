@@ -41,7 +41,7 @@ func TestInstaller(t *testing.T) {
 		checker.CheckAll(t, testCases)
 
 		uncheker := checker.Unchecked()
-		assert.Equal(t, 0, uncheker.Len(), "Unchecked handles:\n"+uncheker.String())
+		assert.Equal(t, 0, uncheker.Len(), "Unchecked handles:\n this manifest was installed but test didnt assert them:"+uncheker.String())
 	}
 
 	t.Run("aws", func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestInstaller(t *testing.T) {
 			{"gcpredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"gcpvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
-			{"gcpsubnets.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpsubnet.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 
 			{"gcpnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
@@ -108,7 +108,7 @@ func TestInstaller(t *testing.T) {
 			{"gcpredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
-			// {"gcpsubnets.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			// {"gcpsubnet.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 		})
 	})
 
