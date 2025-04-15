@@ -101,7 +101,11 @@ Install Kyma CRDs
 KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
   kubectl apply -f config/crd/operator/operator.kyma-project.io_kymas.yaml
 ```
-
+Install KIM CRDs
+```shell
+KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \
+  kubectl apply -f config/crd/kim/infrastructuremanager.kyma-project.io_gardenerclusters.yaml
+```
 Install Cloud Manager KCP CRDs
 ```shell
 KUBECONFIG=tools/dev/kind/kubeconfig-kcp.yaml \

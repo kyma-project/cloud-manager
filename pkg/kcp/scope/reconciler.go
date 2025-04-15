@@ -72,6 +72,7 @@ func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// in cases when Scope actually did something we have to accept the discomfort of not having this log entry
 	return composed.Handling().
 		WithMetrics("scope", util.RequestObjToString(req)).
+		WithNoLog().
 		Handle(action(ctx, state))
 }
 

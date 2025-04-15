@@ -32,6 +32,7 @@ func (r *kymaReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	return composed.Handling().
 		WithMetrics("kyma", util.RequestObjToString(req)).
+		WithNoLog().
 		Handle(action(ctx, state))
 }
 

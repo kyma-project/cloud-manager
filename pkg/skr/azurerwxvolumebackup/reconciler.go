@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
@@ -23,7 +24,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("azurerwxvolumebackup", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {

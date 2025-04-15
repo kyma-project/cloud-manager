@@ -49,7 +49,7 @@ func (r *gcpSubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	action := r.newAction()
 
 	return composed.Handling().
-		WithMetrics("gcpsubnet", util.RequestObjToString(req)).
+		WithMetrics("kcpgcpsubnet", util.RequestObjToString(req)).
 		Handle(action(ctx, state))
 }
 
@@ -98,6 +98,7 @@ func (r *gcpSubnetReconciler) newFlow() composed.Action {
 				composed.ComposeActions(
 					"privateSubnet-delete",
 					removeReadyCondition,
+					preventDeleteOnGcpRedisClusterUsage,
 					deleteConnectionPolicy,
 					deleteSubnet,
 					actions.RemoveCommonFinalizer(),
