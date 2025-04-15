@@ -49,7 +49,7 @@ func (r *gcpRedisClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	action := r.newAction()
 
 	return composed.Handling().
-		WithMetrics("gcprediscluster", util.RequestObjToString(req)).
+		WithMetrics("kcpgcprediscluster", util.RequestObjToString(req)).
 		Handle(action(ctx, state))
 }
 
