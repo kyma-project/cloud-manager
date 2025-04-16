@@ -67,6 +67,8 @@ func getCreateParams(state *State) armredis.CreateParameters {
 
 	if state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount != 0 {
 		createProperties.ShardCount = to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount))
+	}
+	if state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary != 0 {
 		createProperties.ReplicasPerPrimary = to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary))
 	}
 	if state.ObjAsRedisCluster().Spec.Instance.Azure.RedisVersion != "" {

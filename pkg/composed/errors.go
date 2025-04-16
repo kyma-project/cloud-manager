@@ -3,9 +3,6 @@ package composed
 import (
 	"errors"
 	"fmt"
-	"github.com/elliotchance/pie/v2"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 )
@@ -95,11 +92,4 @@ func (e *stopWithRequeueDelay) Delay() time.Duration {
 
 func StopWithRequeueDelay(d time.Duration) error {
 	return &stopWithRequeueDelay{delay: d}
-}
-
-func AnyConditionChanged(obj ObjWithConditions, conditionsToSet ...metav1.Condition) bool {
-	return pie.All(conditionsToSet, func(x metav1.Condition) bool {
-		c := meta.FindStatusCondition(*obj.Conditions(), x.Type)
-		return c == nil || c.Reason != x.Reason || c.Message != x.Message || c.Status != x.Status
-	})
 }

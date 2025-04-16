@@ -68,8 +68,6 @@ func startAzureRestore(ctx context.Context, st composed.State) (error, context.C
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
 		logger.Error(err, "Error starting Azure Restore")
-		restore.Status.StartTime = nil
-		restore.Status.RestoredDir = ""
 		return composed.PatchStatus(restore).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,

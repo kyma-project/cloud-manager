@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -31,8 +32,10 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 	//Create action handler.
 	action := r.newAction()
 
-	//Handle request
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("gcpnfsvolumerestore", util.RequestObjToString(req)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*State, error) {

@@ -126,6 +126,9 @@ var _ = BeforeSuite(func() {
 	// AzureRedisInstance
 	Expect(SetupAzureRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AzureRedisCluster
+	Expect(SetupAzureRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// NfsBackupSchedule
 	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
 
@@ -142,6 +145,10 @@ var _ = BeforeSuite(func() {
 
 	//AzureRwxBackup Schedule
 	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+
+	// GcpSubnet
+	Expect(SetupGcpSubnetReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 
 	migrateFinalizers.RunMigration = false
 

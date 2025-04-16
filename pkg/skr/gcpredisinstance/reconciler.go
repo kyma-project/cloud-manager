@@ -2,6 +2,7 @@ package gcpredisinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
@@ -37,7 +38,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("gcpredisinstance", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {

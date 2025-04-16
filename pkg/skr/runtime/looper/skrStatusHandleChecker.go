@@ -2,9 +2,10 @@ package looper
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type SkrStatusHandleChecker interface {
@@ -180,7 +181,7 @@ func (c *skrStatusHandleCheckerImpl) Check(t *testing.T) *KindHandleWrapper {
 	}
 	if handle == nil {
 		id := fmt.Sprintf("%s obj:%s crd:%s busola:%s name:%s", c.title, c.obj, c.crd, c.busola, c.objName)
-		assert.Fail(t, "Unmatched handle: "+id)
+		assert.Fail(t, "Unmatched handle: "+id+" This kind was asserted for in the test, but it was not installed.")
 		return nil
 	}
 	if c.nok && handle.ok {

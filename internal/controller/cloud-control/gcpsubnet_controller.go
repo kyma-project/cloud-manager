@@ -18,6 +18,8 @@ package cloudcontrol
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -29,11 +31,13 @@ import (
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 func SetupGcpSubnetReconciler(
+	ctx context.Context,
 	kcpManager manager.Manager,
 	computeClientProvider gcpclient.ClientProvider[gcpsubnetclient.ComputeClient],
 	networkConnectivityClientProvider gcpclient.ClientProvider[gcpsubnetclient.NetworkConnectivityClient],
@@ -48,7 +52,7 @@ func SetupGcpSubnetReconciler(
 			focal.NewStateFactory(),
 			subnet.NewStateFactory(computeClientProvider, networkConnectivityClientProvider, env),
 		),
-	).SetupWithManager(kcpManager)
+	).SetupWithManager(ctx, kcpManager)
 }
 
 func NewGcpSubnetReconciler(
@@ -81,7 +85,21 @@ func (r *GcpSubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *GcpSubnetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *GcpSubnetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.GcpRedisCluster{},
+		cloudcontrolv1beta1.GcpSubnetField,
+		func(obj client.Object) []string {
+			gcpRedisCluster := obj.(*cloudcontrolv1beta1.GcpRedisCluster)
+			return []string{fmt.Sprintf("%s/%s", gcpRedisCluster.Namespace, gcpRedisCluster.Spec.Subnet.Name)}
+		}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.GcpSubnet{}, builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)

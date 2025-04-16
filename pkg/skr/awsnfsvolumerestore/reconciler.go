@@ -11,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -51,7 +52,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
-	return composed.Handle(action(ctx, state))
+	return composed.Handling().
+		WithMetrics("awsnfsvolumerestore", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {

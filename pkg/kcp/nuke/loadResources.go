@@ -29,12 +29,24 @@ func loadResources(ctx context.Context, st composed.State) (error, context.Conte
 			List: &cloudcontrolv1beta1.RedisInstanceList{},
 		},
 		{
+			Kind: "RedisCluster",
+			List: &cloudcontrolv1beta1.RedisClusterList{},
+		},
+		{
+			Kind: "GcpRedisCluster",
+			List: &cloudcontrolv1beta1.GcpRedisClusterList{},
+		},
+		{
 			Kind: "NfsInstance",
 			List: &cloudcontrolv1beta1.NfsInstanceList{},
 		},
 		{
 			Kind: "IpRange",
 			List: &cloudcontrolv1beta1.IpRangeList{},
+		},
+		{
+			Kind: "GcpSubnet",
+			List: &cloudcontrolv1beta1.GcpSubnetList{},
 		},
 		{
 			Kind: "Network",
