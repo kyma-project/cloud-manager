@@ -56,7 +56,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			commonScope.NewStateFactory(
+			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
 				args.KymaRef),
 			client.NewClientProvider(),
