@@ -146,6 +146,10 @@ var _ = BeforeSuite(func() {
 	//AzureRwxBackup Schedule
 	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
 
+	// GcpSubnet
+	Expect(SetupGcpSubnetReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+
 	migrateFinalizers.RunMigration = false
 
 	// Start controllers

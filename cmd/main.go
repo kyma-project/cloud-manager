@@ -313,6 +313,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupGcpSubnetReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
+		os.Exit(1)
+	}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(
 		ctx,

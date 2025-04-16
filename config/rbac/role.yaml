@@ -88,6 +88,7 @@ rules:
   - gcpnfsvolumerestores
   - gcpnfsvolumes
   - gcpredisinstances
+  - gcpsubnets
   - gcpvpcpeerings
   - ipranges
   verbs:
@@ -121,6 +122,7 @@ rules:
   - gcpnfsvolumerestores/finalizers
   - gcpnfsvolumes/finalizers
   - gcpredisinstances/finalizers
+  - gcpsubnets/finalizers
   - gcpvpcpeerings/finalizers
   - ipranges/finalizers
   verbs:
@@ -148,6 +150,7 @@ rules:
   - gcpnfsvolumerestores/status
   - gcpnfsvolumes/status
   - gcpredisinstances/status
+  - gcpsubnets/status
   - gcpvpcpeerings/status
   - ipranges/status
   verbs:
