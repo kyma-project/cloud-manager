@@ -7,9 +7,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
-	v1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -32,7 +30,7 @@ func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolum
 type stateFactory struct {
 	baseStateFactory        composed.StateFactory
 	commonScopeStateFactory commonScope.StateFactory
-	clientProvider   azureclient.ClientProvider[client.Client]
+	clientProvider          azureclient.ClientProvider[client.Client]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
