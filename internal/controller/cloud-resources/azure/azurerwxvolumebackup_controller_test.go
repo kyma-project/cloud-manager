@@ -111,7 +111,7 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 
 		// Arrange
 		backup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{}
-		skrRwxVolumeBackupName := "azure-rwx-backup-for-backup"
+		skrRwxVolumeBackupName := "azure-rwx-backup"
 
 		It("When AzureRwxVolumeBackup Create is called", func() {
 			Eventually(CreateAzureRwxVolumeBackup).
