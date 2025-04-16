@@ -11,10 +11,8 @@ The Cloud Manager module allows you to provision a cloud provider-managed Redis 
 
 When you create a Redis cluster in SAP BTP, Kyma runtime, you depend on the cloud provider of your Kyma cluster. The cloud provider in use determines the exact implementation.
 
-The Cloud Manager module supports the Redis feature of the following cloud providers:
+The Cloud Manager module supports the Redis cluster feature of the following cloud providers:
 
-* Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
-* Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
 
 You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AzureRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-resources).
