@@ -25,6 +25,7 @@ The Cloud Manager module provides the following features tailored for each of th
 * [NFS](./00-20-nfs.md): Network File System (NFS) server that can be used as a ReadWriteMany (RWX) volume in the Kyma cluster.
 * [VPC peering](./00-30-vpc-peering.md): Virtual Private Cloud (VPC) peering between your SAP BTP, Kyma runtime and remote cloud provider's project, account, or subscription.
 * [Redis](./00-40-redis.md): cloud provider-flavored cache that can be used in your Kyma cluster.
+* [Redis cluster](./00-50-redis-cluster.md): cloud provider-flavored cache in cluster mode that can be used in your Kyma cluster.
 
 ## Architecture
 
