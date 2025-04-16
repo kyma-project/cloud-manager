@@ -6,7 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -83,7 +83,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
 	state := &State{
-		State: commonScope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup)),
+		State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup)),
 	}
 
 	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")

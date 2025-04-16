@@ -6,13 +6,13 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	commonScope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type State struct {
-	commonScope.State
+	commonscope.State
 	client             client.Client
 	clientProvider     azureclient.ClientProvider[client.Client]
 	resourceGroupName  string
@@ -29,7 +29,7 @@ func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolum
 
 type stateFactory struct {
 	baseStateFactory        composed.StateFactory
-	commonScopeStateFactory commonScope.StateFactory
+	commonScopeStateFactory commonscope.StateFactory
 	clientProvider          azureclient.ClientProvider[client.Client]
 }
 
@@ -45,7 +45,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 func newStateFactory(
 	baseStateFactory composed.StateFactory,
-	commonScopeStateFactory commonScope.StateFactory,
+	commonScopeStateFactory commonscope.StateFactory,
 	clientProvider azureclient.ClientProvider[client.Client],
 ) *stateFactory {
 	return &stateFactory{
