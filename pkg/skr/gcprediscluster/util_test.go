@@ -41,9 +41,4 @@ func TestRedisTierToNodeTypeConverter(t *testing.T) {
 		})
 	})
 
-	type replicaConverterTestCase struct {
-		InputRedisTier       cloudresourcesv1beta1.GcpRedisTier
-		ExpectedReadReplicas int32
-	}
-
 }
