@@ -243,6 +243,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupGcpRedisClusterReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAzureRedisInstanceReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureRedisInstance")
 		os.Exit(1)

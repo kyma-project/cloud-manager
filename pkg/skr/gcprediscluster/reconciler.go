@@ -1,4 +1,4 @@
-package gcpsubnet
+package gcprediscluster
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -36,41 +35,46 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	if Ignore.ShouldIgnoreKey(request) {
-		return ctrl.Result{}, nil
-	}
-
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
 	return composed.Handling().
-		WithMetrics("skrgcpsubnet", util.RequestObjToString(request)).
+		WithMetrics("gcprediscluster", util.RequestObjToString(request)).
 		WithNoLog().
 		Handle(action(ctx, state))
 }
 
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"gcpSubnet",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpSubnet{}),
+		"gcpRedisCluster",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpRedisCluster{}),
 		composed.LoadObj,
 
+		loadSubnet,
+
 		updateId,
-		loadKcpGcpSubnet,
+		loadKcpGcpRedisCluster,
+		loadAuthSecret,
 
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
-				"gcpSubnet-create",
-				createKcpGcpSubnet,
+				"gcpRedisCluster-create",
+				actions.AddCommonFinalizer(),
+				createKcpGcpRedisCluster,
+				modifyKcpGcpRedisCluster,
 				waitKcpStatusUpdate,
 				updateStatus,
-				actions.AddCommonFinalizer(),
+				waitSkrStatusReady,
+				createAuthSecret,
+				modifyAuthSecret,
 			),
 			composed.ComposeActions(
-				"gcpSubnet-delete",
-				// preventDeleteOnGcpRedisClusterUsage,
-				deleteKcpGcpSubnet,
-				waitKcpGcpSubnetDeleted,
+				"gcpRedisCluster-delete",
+				removeAuthSecretFinalizer,
+				deleteAuthSecret,
+				waitAuthSecretDeleted,
+				deleteKcpGcpRedisCluster,
+				waitKcpGcpRedisClusterDeleted,
 				actions.RemoveCommonFinalizer(),
 				composed.StopAndForgetAction,
 			),

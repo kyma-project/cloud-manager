@@ -87,6 +87,7 @@ rules:
   - gcpnfsvolumebackups
   - gcpnfsvolumerestores
   - gcpnfsvolumes
+  - gcpredisclusters
   - gcpredisinstances
   - gcpsubnets
   - gcpvpcpeerings
@@ -121,6 +122,7 @@ rules:
   - gcpnfsvolumebackups/finalizers
   - gcpnfsvolumerestores/finalizers
   - gcpnfsvolumes/finalizers
+  - gcpredisclusters/finalizers
   - gcpredisinstances/finalizers
   - gcpsubnets/finalizers
   - gcpvpcpeerings/finalizers
@@ -149,6 +151,7 @@ rules:
   - gcpnfsvolumebackups/status
   - gcpnfsvolumerestores/status
   - gcpnfsvolumes/status
+  - gcpredisclusters/status
   - gcpredisinstances/status
   - gcpsubnets/status
   - gcpvpcpeerings/status

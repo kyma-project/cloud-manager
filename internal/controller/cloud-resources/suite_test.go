@@ -117,6 +117,9 @@ var _ = BeforeSuite(func() {
 	// GcpRedisInstance
 	Expect(SetupGcpRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// GcpRedisInstance
+	Expect(SetupGcpRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// AwsRedisInstance
 	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())

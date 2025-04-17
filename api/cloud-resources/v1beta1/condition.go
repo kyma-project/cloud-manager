@@ -72,3 +72,7 @@ const (
 	ReasonInvalidEndTime        = "InvalidEndTime"
 	ReasonBackupFailed          = "BackupFailed"
 )
+
+const (
+	ReasonSubnetNotFound = "SubnetNotFound"
+)
