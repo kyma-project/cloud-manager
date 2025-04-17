@@ -30,7 +30,7 @@ func New(sf StateFactory) composed.Action {
 			subnetsLoad,
 			natGatewaysLoad,
 			publicIpAddressesLoad,
-			exposedDataSet,
+			exposedDataSetToScope,
 		)(ctx, state)
 	}
 }

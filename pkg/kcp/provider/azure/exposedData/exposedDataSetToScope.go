@@ -8,7 +8,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func exposedDataSet(ctx context.Context, st composed.State) (error, context.Context) {
+func exposedDataSetToScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	var list []string
@@ -19,11 +19,11 @@ func exposedDataSet(ctx context.Context, st composed.State) (error, context.Cont
 		}
 	}
 
-	state.ExposedData().NatGatewayIps = pie.Sort(pie.Unique(list))
+	state.ObjAsScope().Status.ExposedData.NatGatewayIps = pie.Sort(pie.Unique(list))
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.
-		WithValues("natGatewayIps", fmt.Sprintf("%v", state.ExposedData().NatGatewayIps)).
+		WithValues("natGatewayIps", fmt.Sprintf("%v", state.ObjAsScope().Status.ExposedData.NatGatewayIps)).
 		Info("Exposed Data Azure Nat Gateway IP addresses")
 
 	return nil, ctx
