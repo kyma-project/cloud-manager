@@ -93,6 +93,7 @@ func (r *gcpRedisClusterReconciler) newFlow() composed.Action {
 					updateStatusId,
 					addUpdatingCondition,
 					waitRedisAvailable,
+					loadCertificates,
 					updateRedis,
 					updateStatus,
 				),

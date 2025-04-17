@@ -21,6 +21,8 @@ type State struct {
 	gcpRedisCluster   *clusterpb.Cluster
 	memorystoreClient client.MemorystoreClusterClient
 
+	caCerts string
+
 	updateMask []string
 }
 
