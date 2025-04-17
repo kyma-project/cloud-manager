@@ -96,7 +96,7 @@ func (r *gcpRedisClusterReconciler) newFlow() composed.Action {
 					loadCertificates,
 					modifyNodeType,
 					modifyShardCount,
-					modifyShardCount,
+					modifyReplicaCount,
 					modifyRedisConfigs,
 					updateRedis,
 					updateStatus,
