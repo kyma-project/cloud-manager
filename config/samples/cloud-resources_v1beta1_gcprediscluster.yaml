@@ -13,4 +13,3 @@ spec:
   replicasPerShard: 1
   redisConfigs:
     maxmemory-policy: volatile-lru
-    activedefrag: "yes"
