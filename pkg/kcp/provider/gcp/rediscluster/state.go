@@ -6,6 +6,7 @@ import (
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 
@@ -20,6 +21,8 @@ type State struct {
 
 	gcpRedisCluster   *clusterpb.Cluster
 	memorystoreClient client.MemorystoreClusterClient
+
+	caCerts string
 
 	updateMask []string
 }
@@ -74,6 +77,21 @@ func (s *State) ShouldUpdateRedisCluster() bool {
 func (s *State) UpdateRedisConfigs(redisConfigs map[string]string) {
 	s.updateMask = append(s.updateMask, "redis_configs") // it is 'redis_configs', GCP API says 'redisConfig', but it is wrongly documented
 	s.gcpRedisCluster.RedisConfigs = redisConfigs
+}
+
+func (s *State) UpdateNodeType(nodeType string) {
+	s.updateMask = append(s.updateMask, "node_type")
+	s.gcpRedisCluster.NodeType = clusterpb.NodeType(clusterpb.NodeType_value[nodeType])
+}
+
+func (s *State) UpdateReplicaCount(replicaCount int32) {
+	s.updateMask = append(s.updateMask, "replica_count")
+	s.gcpRedisCluster.ReplicaCount = ptr.To(replicaCount)
+}
+
+func (s *State) UpdateShardCount(shardCount int32) {
+	s.updateMask = append(s.updateMask, "shard_count")
+	s.gcpRedisCluster.ShardCount = ptr.To(shardCount)
 }
 
 func (s *State) ObjAsGcpRedisCluster() *cloudcontrolv1beta1.GcpRedisCluster {

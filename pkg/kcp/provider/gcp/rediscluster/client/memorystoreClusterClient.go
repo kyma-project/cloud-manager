@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
@@ -26,6 +27,7 @@ type CreateRedisClusterRequest struct {
 type MemorystoreClusterClient interface {
 	CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error
 	GetRedisCluster(ctx context.Context, projectId, locationId, clusterId string) (*clusterpb.Cluster, error)
+	GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error)
 	UpdateRedisCluster(ctx context.Context, redisCluster *clusterpb.Cluster, updateMask []string) error
 	DeleteRedisCluster(ctx context.Context, projectId, locationId, clusterId string) error
 }
@@ -44,13 +46,36 @@ type memorystoreClient struct {
 	saJsonKeyPath string
 }
 
+func (memorystoreClient *memorystoreClient) GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error) {
+	redisClient, err := cluster.NewCloudRedisClusterClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
+	if err != nil {
+		return "", err
+	}
+	defer redisClient.Close() // nolint: errcheck
+
+	name := GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
+	response, err := redisClient.GetClusterCertificateAuthority(ctx, &clusterpb.GetClusterCertificateAuthorityRequest{
+		Name: name,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	certsWrapped := response.GetManagedServerCa().GetCaCerts()
+	if len(certsWrapped) > 0 {
+		return strings.Join(certsWrapped[0].Certificates, ""), nil
+	}
+
+	return "", nil
+}
+
 func (memorystoreClient *memorystoreClient) UpdateRedisCluster(ctx context.Context, redisCluster *clusterpb.Cluster, updateMask []string) error {
 	redisClient, err := cluster.NewCloudRedisClusterClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
 	if err != nil {
 		return err
 	}
 	defer redisClient.Close() // nolint: errcheck
-
 	req := &clusterpb.UpdateClusterRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
 			Paths: updateMask,

@@ -187,7 +187,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		gpcRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
 		By("When GcpRedisCluster exists", func() {
 			kcpgcprediscluster.Ignore.AddName(gcpRedisClusterName)
-			Eventually(CreateGcpRedisCluster).
+			Eventually(CreateKcpGcpRedisCluster).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gpcRedisCluster,
 					WithName(gcpRedisClusterName),
 					AddFinalizer(api.CommonFinalizerDeletionHook),

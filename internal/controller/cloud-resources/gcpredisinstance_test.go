@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"

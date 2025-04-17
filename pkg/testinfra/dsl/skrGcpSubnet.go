@@ -36,6 +36,29 @@ func WithSkrGcpSubnetCidr(cidr string) ObjAction {
 	}
 }
 
+func WithSkrGcpSubnetStatusCidr(cidr string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudresourcesv1beta1.GcpSubnet)
+			if x.Status.Cidr == "" {
+				x.Status.Cidr = cidr
+			}
+		},
+	}
+}
+
+func WithSkrGcpSubnetStatusId(id string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpSubnet); ok {
+				if x.Status.Id == "" {
+					x.Status.Id = id
+				}
+			}
+		},
+	}
+}
+
 func HavingGcpSubnetStatusId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.GcpSubnet)

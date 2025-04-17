@@ -136,3 +136,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) GetRedisCluste
 	}
 
 }
+
+func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error) {
+	return "secret stuff", nil
+}

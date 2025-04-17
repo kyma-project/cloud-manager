@@ -1,0 +1,15 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpRedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: gcprediscluster-sample
+spec:
+  subnet:
+    name: your-gcpsubnet
+  redisTier: C1
+  shardCount: 2
+  replicasPerShard: 1
+  redisConfigs:
+    maxmemory-policy: volatile-lru

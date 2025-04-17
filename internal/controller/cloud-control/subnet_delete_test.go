@@ -83,7 +83,7 @@ var _ = Describe("Feature: KCP GcpSubnet deletion with dependant objects", func(
 
 		By("And Given GcpRedisCluster using KCP GcpSubnet exists", func() {
 			kcprediscluster.Ignore.AddName(redisClusterName)
-			Expect(CreateGcpRedisCluster(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Expect(CreateKcpGcpRedisCluster(infra.Ctx(), infra.KCP().Client(), redisCluster,
 				WithName(redisClusterName),
 				WithRemoteRef("skr-gcprediscluster-example"),
 				WithGcpSubnet(subnetName),
