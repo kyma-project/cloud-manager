@@ -150,7 +150,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.Ctx(),
 					infra.KCP().Client(),
 					kcpRedisCluster,
-					WithGcpRedisClusterDiscoveryEndpoint(kcpRedisClusterDiscoveryEndpoint),
+					WithKcpGcpRedisClusterDiscoveryEndpoint(kcpRedisClusterDiscoveryEndpoint),
 
 					WithConditions(KcpReadyCondition()),
 				).
