@@ -5,7 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
-	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
@@ -48,19 +48,21 @@ type State struct {
 	env                 abstractions.Environment
 	azureClient         client.NukeRwxBackupClient
 
-	recoveryVaults []*armrecoveryservices.Vault
-	protectedItems []*armrecoveryservicesbackup.ProtectedItemResource
+	recoveryVaults       []*armrecoveryservices.Vault
+	protectionContainers map[string]*armrecoveryservicesbackup.AzureStorageContainer
+	protectedItems       map[string]*armrecoveryservicesbackup.AzureFileshareProtectedItem
 }
 
-type azureProtectedItem struct {
-	*armrecoveryservicesbackup.ProtectedItemResource
+type azureFileshare struct {
+	*armrecoveryservicesbackup.AzureFileshareProtectedItem
+	id string
 }
 
-func (b azureProtectedItem) GetId() string {
-	return ptr.Deref(b.ID, "")
+func (b azureFileshare) GetId() string {
+	return b.id
 }
 
-func (b azureProtectedItem) GetObject() interface{} {
+func (b azureFileshare) GetObject() interface{} {
 	return b
 }
 
@@ -76,8 +78,21 @@ func (v azureVault) GetObject() interface{} {
 	return v
 }
 
+type azureContainer struct {
+	*armrecoveryservicesbackup.AzureStorageContainer
+	id string
+}
+
+func (v azureContainer) GetId() string {
+	return v.id
+}
+
+func (v azureContainer) GetObject() interface{} {
+	return v
+}
+
 type ProviderNukeStatus struct {
-	v1beta1.NukeStatus
+	cloudcontrolv1beta1.NukeStatus
 }
 
 func (s *State) GetSubscriptionId() string {

@@ -13,16 +13,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func loadAzureBackups(ctx context.Context, st composed.State) (error, context.Context) {
+func loadAzureContainers(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.Info("LoadAzureProtectedItems")
-	state.protectedItems = make(map[string]*armrecoveryservicesbackup.AzureFileshareProtectedItem)
+	logger.Info("LoadAzureContainers")
+	state.protectionContainers = make(map[string]*armrecoveryservicesbackup.AzureStorageContainer)
 	for _, vault := range state.recoveryVaults {
-		items, err := state.azureClient.ListFileShareProtectedItems(ctx, vault)
+		items, err := state.azureClient.ListStorageContainers(ctx, vault)
 		if err != nil {
-			logger.Error(err, "Error listing AzureFileShareProtection")
+			logger.Error(err, "Error listing Azure Storage Containers")
 
 			state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.StateError)
 
@@ -30,26 +30,26 @@ func loadAzureBackups(ctx context.Context, st composed.State) (error, context.Co
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
-					Reason:  "Error listing AzureFileShareProtection",
+					Reason:  "ErrorListingAzureContainers",
 					Message: err.Error(),
 				}).
-				ErrorLogMessage("Error patching KCP Nuke status after list AzureBackups error").
+				ErrorLogMessage("Error patching KCP Nuke status after list AzureContainers error").
 				SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 				Run(ctx, state)
 		}
 
-		maps.Insert(state.protectedItems, maps.All(items))
+		maps.Insert(state.protectionContainers, maps.All(items))
 	}
 
-	azureBackups := make([]nuketypes.ProviderResourceObject, 0)
-	for id, fileShare := range state.protectedItems {
-		azureBackups = append(azureBackups, azureFileshare{fileShare, id})
+	azureContainers := make([]nuketypes.ProviderResourceObject, 0)
+	for id, container := range state.protectionContainers {
+		azureContainers = append(azureContainers, azureContainer{container, id})
 	}
 
 	state.ProviderResources = append(state.ProviderResources, &nuketypes.ProviderResourceKindState{
-		Kind:     azurenukeclient.AzureFileShareProtection,
+		Kind:     azurenukeclient.AzureStorageContainer,
 		Provider: cloudcontrolv1beta1.ProviderAzure,
-		Objects:  azureBackups,
+		Objects:  azureContainers,
 	})
 	return nil, ctx
 }
