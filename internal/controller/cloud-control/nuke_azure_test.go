@@ -82,7 +82,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 	nuke := &cloudcontrolv1beta1.Nuke{}
 	It("When Nuke for the Scope is created", func() {
 		//Disable the test case if the feature is not enabled.
-		if !feature.FFRwxBackupAzure.Value(context.Background()) {
+		if !feature.FFNukeBackupsAzure.Value(context.Background()) {
 			Skip("Nuke Backups for Azure is disabled")
 		}
 

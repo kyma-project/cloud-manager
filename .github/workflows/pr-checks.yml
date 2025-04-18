@@ -11,10 +11,10 @@ jobs:
         include:
           - nukeBackupsGcp: "false"
             nukeBackupsAws: "false"
-            rwxBackupAzure: "false"
+            nukeBackupsAzure: "false"
           - nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
-            rwxBackupAzure: "true"
+            nukeBackupsAzure: "true"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,7 +29,7 @@ jobs:
         env:
           FF_NUKE_BACKUPS_GCP: ${{ matrix.nukeBackupsGcp }}
           FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackupsAws }}
-          FF_RWX_BACKUP_AZURE: ${{ matrix.rwxBackupAzure }}
+          FF_NUKE_BACKUPS_AZURE: ${{ matrix.nukeBackupsAzure }}
         run: |
           ./config/sync.sh
           go mod tidy
