@@ -230,3 +230,27 @@ func NewPrivateDnsZoneGroupResourceId(subscription, resourceGroup, privateDnsZon
 		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(privateDnsZoneInstanceName) > 0,
 	}
 }
+
+// NewPublicIpAddressResourceId /subscriptions/4d87b2b5-d2b3-4b41-abba-58b531079560/resourceGroups/shoot--kyma-dev--c-669e584/providers/Microsoft.Network/publicIPAddresses/shoot--kyma-dev--c-669e584-nat-gateway-z3-ip
+func NewPublicIpAddressResourceId(subscription, resourceGroup, publicIpAddressName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "publicIPAddresses",
+		ResourceName:  publicIpAddressName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(publicIpAddressName) > 0,
+	}
+}
+
+// NewNatGatewayResourceId /subscriptions/4d87b2b5-d2b3-4b41-abba-58b531079560/resourceGroups/shoot--kyma-dev--c-669e584/providers/Microsoft.Network/natGateways/shoot--kyma-dev--c-669e584-nat-gateway-z3
+func NewNatGatewayResourceId(subscription, resourceGroup, natGatewayName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "natGateways",
+		ResourceName:  natGatewayName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(natGatewayName) > 0,
+	}
+}

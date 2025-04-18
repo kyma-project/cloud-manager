@@ -53,6 +53,14 @@ type RedisInstanceClient interface {
 	azureclient.RedisClient
 }
 
+type NatGatewayClient interface {
+	azureclient.NatGatewayClient
+}
+
+type PublicIpAddressesClient interface {
+	azureclient.PublicIPAddressesClient
+}
+
 type Clients interface {
 	ResourceGroupsClient
 	NetworkClient
@@ -64,6 +72,8 @@ type Clients interface {
 	PrivateDnsZoneClient
 	PrivateEndPointsClient
 	PrivateDnsZoneGroupClient
+	NatGatewayClient
+	PublicIpAddressesClient
 }
 
 type Providers interface {
@@ -94,6 +104,8 @@ type Configs interface {
 type TenantSubscription interface {
 	Clients
 	Configs
+	TenantId() string
+	SubscriptionId() string
 }
 
 type Server interface {

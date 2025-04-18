@@ -14,6 +14,8 @@ type tenantSubscriptionStore struct {
 	*virtualNetworkLinkStore
 	*privateDnsZoneGroupStore
 	*storageStore
+	*natGatewayStore
+	*publicIpAddressStore
 	tenant       string
 	subscription string
 }
@@ -29,7 +31,17 @@ func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscription
 		virtualNetworkLinkStore:  newVirtualNetworkLinkStore(subscription),
 		privateDnsZoneGroupStore: newPrivateDnsZoneGroupStore(subscription),
 		storageStore:             newStorageStore(subscription),
+		natGatewayStore:          newNatGatewayStore(subscription),
+		publicIpAddressStore:     newPublicIpAddressStore(subscription),
 		tenant:                   tenant,
 		subscription:             subscription,
 	}
+}
+
+func (s *tenantSubscriptionStore) TenantId() string {
+	return s.tenant
+}
+
+func (s *tenantSubscriptionStore) SubscriptionId() string {
+	return s.subscription
 }

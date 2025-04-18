@@ -5,6 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -63,10 +64,13 @@ func networkReferenceKymaCreate(ctx context.Context, st composed.State) (error, 
 		}
 	}
 
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Creating Kyma network reference")
+
 	err := state.Cluster().K8sClient().Create(ctx, kymaNet)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving kyma network", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, ctx
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }

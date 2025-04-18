@@ -9,18 +9,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func networksLoad(ctx context.Context, st composed.State) (error, context.Context) {
+func networkReferenceKymaLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	var kymaName string
 	if state.gardenerCluster != nil {
 		kymaName = state.gardenerCluster.GetName()
-	} else if composed.IsObjLoaded(ctx, state) {
+	} else {
 		kymaName = state.Name().Name
-	}
-
-	if kymaName == "" {
-		return nil, ctx
 	}
 
 	netList := &cloudcontrolv1beta1.NetworkList{}

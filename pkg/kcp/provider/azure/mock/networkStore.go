@@ -197,7 +197,7 @@ func (s *networkStore) getSubnetNoLock(resourceGroupName, virtualNetworkName, su
 	return nil, azuremeta.NewAzureNotFoundError()
 }
 
-func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId string) error {
+func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -233,6 +233,11 @@ func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virt
 	if securityGroupId != "" {
 		subnet.Properties.NetworkSecurityGroup = &armnetwork.SecurityGroup{
 			ID: ptr.To(securityGroupId),
+		}
+	}
+	if natGatewayId != "" {
+		subnet.Properties.NatGateway = &armnetwork.SubResource{
+			ID: ptr.To(natGatewayId),
 		}
 	}
 

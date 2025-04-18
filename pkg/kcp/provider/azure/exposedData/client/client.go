@@ -9,6 +9,9 @@ import (
 
 type Client interface {
 	azureclient.NetworkClient
+	azureclient.SubnetsClient
+	azureclient.NatGatewayClient
+	azureclient.PublicIPAddressesClient
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -25,18 +28,30 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 
 		return newClient(
 			azureclient.NewNetworkClient(networkClientFactory.NewVirtualNetworksClient()),
+			azureclient.NewSubnetsClient(networkClientFactory.NewSubnetsClient()),
+			azureclient.NewNatGatewayClient(networkClientFactory.NewNatGatewaysClient()),
+			azureclient.NewPublicIPAddressesClient(networkClientFactory.NewPublicIPAddressesClient()),
 		), nil
 	}
 }
 
 func newClient(
 	networkClient azureclient.NetworkClient,
+	subnetsClient azureclient.SubnetsClient,
+	natGatewayClient azureclient.NatGatewayClient,
+	publicIpAddressClient azureclient.PublicIPAddressesClient,
 ) *client {
 	return &client{
-		NetworkClient: networkClient,
+		NetworkClient:           networkClient,
+		NatGatewayClient:        natGatewayClient,
+		SubnetsClient:           subnetsClient,
+		PublicIPAddressesClient: publicIpAddressClient,
 	}
 }
 
 type client struct {
 	azureclient.NetworkClient
+	azureclient.SubnetsClient
+	azureclient.NatGatewayClient
+	azureclient.PublicIPAddressesClient
 }

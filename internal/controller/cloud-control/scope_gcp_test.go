@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -25,7 +24,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-		kcpnetwork.Ignore.AddName(kymaNetworkName)
+		//kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		// Set the path to an arbitrary file path to prevent errors
 		Expect(os.Setenv("GCP_SA_JSON_KEY_PATH", "testdata/serviceaccount.json")).
@@ -59,6 +58,9 @@ var _ = Describe("Feature: KCP Scope", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR, WithName(kymaName)).
 				Should(Succeed(), "failed creating GardenerCluster CR")
 		})
+
+		// kymaNetwork is not ignored, and should reconcile into ready state with network ref in the status!!!
+		// a ready kymaNetwork is a prerequisite for Scope to become ready
 
 		scope := &cloudcontrolv1beta1.Scope{}
 

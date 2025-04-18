@@ -208,6 +208,17 @@ type ScopeStatus struct {
 	// Operation Identifier to track the ServiceUsage Operation
 	// +optional
 	GcpOperations []string `json:"gcpOperations"`
+
+	// +optional
+	ExposedData ExposedData `json:"exposedData"`
+}
+
+type ExposedData struct {
+	// +optional
+	ReadTime *metav1.Time `json:"readTime,omitempty"`
+
+	// +optional
+	NatGatewayIps []string `json:"natGatewayIps"`
 }
 
 //+kubebuilder:object:root=true
@@ -250,6 +261,9 @@ func (in *Scope) CloneForPatchStatus() client.Object {
 	}
 	if result.Status.Conditions == nil {
 		result.Status.Conditions = []metav1.Condition{}
+	}
+	if result.Status.ExposedData.NatGatewayIps == nil {
+		result.Status.ExposedData.NatGatewayIps = []string{}
 	}
 	return result
 }
