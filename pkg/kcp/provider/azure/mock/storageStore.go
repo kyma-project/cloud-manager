@@ -34,6 +34,16 @@ type storageStore struct {
 	protectedItems map[string][]*armrecoveryservicesbackup.ProtectedItemResource
 }
 
+func (s *storageStore) GetLastBackupJobStartTime(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *storageStore) FindNextBackupJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *storageStore) FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error) {
 	if isContextCanceled(ctx) {
 		return nil, false, errors.New("context canceled")
@@ -260,6 +270,7 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 					},
 				}),
 				StartTime: to.Ptr(time.Now()),
+				Operation: to.Ptr(string(armrecoveryservicesbackup.JobOperationTypeRestore)),
 			}),
 		},
 	}

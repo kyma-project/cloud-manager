@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
@@ -168,4 +169,8 @@ func ParseContainerId(containerId string) (subscription string, resourceGroup st
 		}
 	}
 	return result["subscription"], result["resourceGroup"], result["vault"], result["container"], nil
+}
+
+func ToStorageJobTimeFilter(time time.Time) string {
+	return time.UTC().Format("2006-01-02 03:04:05 PM")
 }
