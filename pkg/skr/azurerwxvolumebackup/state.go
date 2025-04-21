@@ -6,18 +6,13 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type State struct {
-	composed.State
-	KymaRef    klog.ObjectRef
-	KcpCluster composed.StateCluster
-	SkrCluster composed.StateCluster
-
-	AuthSecret         *corev1.Secret
+	commonscope.State
 	client             client.Client
 	clientProvider     azureclient.ClientProvider[client.Client]
 	resourceGroupName  string
@@ -33,36 +28,29 @@ func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolum
 }
 
 type stateFactory struct {
-	baseStateFactory composed.StateFactory
-	kymaRef          klog.ObjectRef
-	kcpCluster       composed.StateCluster
-	skrCluster       composed.StateCluster
-	clientProvider   azureclient.ClientProvider[client.Client]
+	baseStateFactory        composed.StateFactory
+	commonScopeStateFactory commonscope.StateFactory
+	clientProvider          azureclient.ClientProvider[client.Client]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 	return &State{
-		State:          f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
-		KymaRef:        f.kymaRef,
-		KcpCluster:     f.kcpCluster,
-		SkrCluster:     f.skrCluster,
+		State: f.commonScopeStateFactory.NewState(
+			f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
+		),
 		clientProvider: f.clientProvider,
 	}
 }
 
 func newStateFactory(
 	baseStateFactory composed.StateFactory,
-	kymaRef klog.ObjectRef,
-	kcpCluster composed.StateCluster,
-	skrCluster composed.StateCluster,
+	commonScopeStateFactory commonscope.StateFactory,
 	clientProvider azureclient.ClientProvider[client.Client],
 ) *stateFactory {
 	return &stateFactory{
-		baseStateFactory: baseStateFactory,
-		kymaRef:          kymaRef,
-		kcpCluster:       kcpCluster,
-		skrCluster:       skrCluster,
-		clientProvider:   clientProvider,
+		baseStateFactory:        baseStateFactory,
+		commonScopeStateFactory: commonScopeStateFactory,
+		clientProvider:          clientProvider,
 	}
 }
