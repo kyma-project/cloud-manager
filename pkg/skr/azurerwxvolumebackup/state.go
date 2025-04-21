@@ -37,7 +37,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 
 	return &State{
 		State: f.commonScopeStateFactory.NewState(
-			f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
+			f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
 		),
 		clientProvider: f.clientProvider,
 	}
