@@ -2,11 +2,14 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"k8s.io/utils/ptr"
 
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
@@ -18,7 +21,7 @@ const (
 )
 
 type NukeRwxBackupClient interface {
-	ListRwxVolumeBackupVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error)
+	ListRwxVolumeBackupVaults(ctx context.Context, shootName string) ([]*armrecoveryservices.Vault, error)
 	ListFileShareProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) (map[string]*armrecoveryservicesbackup.AzureFileshareProtectedItem, error)
 	ListStorageContainers(ctx context.Context, vault *armrecoveryservices.Vault) (map[string]*armrecoveryservicesbackup.AzureStorageContainer, error)
 	HasProtectedItems(ctx context.Context, vault *armrecoveryservices.Vault) (bool, error)
@@ -50,7 +53,7 @@ func NukeProvider(backupProvider azureclient.ClientProvider[azurerwxvolumebackup
 	}
 }
 
-func (c *nukeRwxBackupClient) ListRwxVolumeBackupVaults(ctx context.Context) ([]*armrecoveryservices.Vault, error) {
+func (c *nukeRwxBackupClient) ListRwxVolumeBackupVaults(ctx context.Context, shootName string) ([]*armrecoveryservices.Vault, error) {
 
 	var result []*armrecoveryservices.Vault
 
@@ -61,6 +64,14 @@ func (c *nukeRwxBackupClient) ListRwxVolumeBackupVaults(ctx context.Context) ([]
 	}
 
 	for _, vault := range vaults {
+		_, rgName, _, err := azurerwxvolumebackupclient.ParseVaultId(ptr.Deref(vault.ID, ""))
+		if err != nil {
+			composed.LoggerFromCtx(ctx).Error(err, fmt.Sprintf("Error parsing vault ID: %v", *vault.ID))
+			continue
+		}
+		if !strings.HasSuffix(rgName, shootName) {
+			continue
+		}
 		if value, exists := vault.Tags[azurerwxvolumebackupclient.TagNameCloudManager]; exists && ptr.Deref(value, "") == azurerwxvolumebackupclient.TagValueRwxVolumeBackup {
 			result = append(result, vault)
 		}

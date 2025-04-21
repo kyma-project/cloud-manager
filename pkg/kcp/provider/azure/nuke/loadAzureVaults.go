@@ -16,7 +16,7 @@ func loadAzureRecoveryVaults(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 
 	logger.Info("Load AzureRecoveryVaults")
-	vaults, err := state.azureClient.ListRwxVolumeBackupVaults(ctx)
+	vaults, err := state.azureClient.ListRwxVolumeBackupVaults(ctx, state.Scope().Spec.ShootName)
 	if err != nil {
 
 		state.ObjAsNuke().Status.State = string(cloudcontrolv1beta1.StateError)
