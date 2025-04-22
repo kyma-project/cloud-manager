@@ -66,7 +66,6 @@ func newState(
 		awsStsClientProvider:          awsStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 		credentialData:                map[string]string{},
-		exposedData:                   &scopetypes.ExposedData{},
 	}
 }
 
@@ -96,14 +95,8 @@ type State struct {
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 
 	nuke *cloudcontrolv1beta1.Nuke
-
-	exposedData *scopetypes.ExposedData
 }
 
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {
 	return s.Obj().(*cloudcontrolv1beta1.Scope)
-}
-
-func (s *State) ExposedData() *scopetypes.ExposedData {
-	return s.exposedData
 }

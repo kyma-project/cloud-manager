@@ -408,8 +408,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 		secret := &corev1.Secret{}
 		actions.ApplyOnObject(secret)
 		secret.StringData = map[string]string{
-			"tenantID":       "someAzureTenantId",
-			"subscriptionID": "someAzureSubscriptionId",
+			"tenantID":       DefaultAzureTenantId,
+			"subscriptionID": DefaultAzureSubscriptionId,
 			"clientID":       "someAzureClientId",
 			"clientSecret":   "someAzureClientSecret",
 		}
@@ -422,3 +422,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 
 	return nil
 }
+
+const (
+	DefaultAzureTenantId       = "someAzureTenantId"
+	DefaultAzureSubscriptionId = "someAzureSubscriptionId"
+)

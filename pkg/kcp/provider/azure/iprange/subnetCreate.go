@@ -26,6 +26,7 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 		state.resourceGroupName, state.virtualNetworkName, state.subnetName,
 		state.ObjAsIpRange().Status.Cidr,
 		ptr.Deref(state.securityGroup.ID, ""),
+		"",
 	)
 
 	if azuremeta.IsTooManyRequests(err) {

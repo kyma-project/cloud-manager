@@ -8,7 +8,7 @@ import (
 
 type SubnetsClient interface {
 	GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error)
-	CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId string) error
+	CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error
 	DeleteSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) error
 }
 
@@ -22,7 +22,7 @@ type subnetsClient struct {
 	svc *armnetwork.SubnetsClient
 }
 
-func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId string) error {
+func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error {
 	subnet := armnetwork.Subnet{
 		Properties: &armnetwork.SubnetPropertiesFormat{
 			AddressPrefix:         ptr.To(addressPrefix),
@@ -32,6 +32,11 @@ func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName, vir
 	if securityGroupId != "" {
 		subnet.Properties.NetworkSecurityGroup = &armnetwork.SecurityGroup{
 			ID: ptr.To(securityGroupId),
+		}
+	}
+	if natGatewayId != "" {
+		subnet.Properties.NatGateway = &armnetwork.SubResource{
+			ID: ptr.To(natGatewayId),
 		}
 	}
 	_, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, subnetName, subnet, nil)
