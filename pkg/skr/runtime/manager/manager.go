@@ -2,9 +2,11 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 	"net/http"
@@ -33,6 +35,15 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, lo
 			Cache: &client.CacheOptions{
 				Unstructured: true,
 			},
+		}
+		clusterOptions.Cache.DefaultWatchErrorHandler = func(r *cache.Reflector, err error) {
+			if errors.Is(err, context.DeadlineExceeded) {
+				return
+			}
+			if errors.Is(err, context.Canceled) {
+				return
+			}
+			cache.DefaultWatchErrorHandler(r, err)
 		}
 	})
 	if err != nil {
