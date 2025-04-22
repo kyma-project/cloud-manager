@@ -259,7 +259,7 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 		"kyma", kymaName,
 	)
 	ctx := composed.LoggerIntoCtx(l.ctx, logger)
-	skrManager, scope, kyma, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
+	skrManager, scope, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
 	if errors.Is(err, context.DeadlineExceeded) {
 		return
 	}
@@ -283,7 +283,6 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Landscape(os.Getenv("LANDSCAPE")).
 		LoadFromScope(scope).
-		LoadFromKyma(kyma).
 		Plane(types.PlaneSkr).
 		Build(ctx)
 

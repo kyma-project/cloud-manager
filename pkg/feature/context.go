@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/thomaspoignant/go-feature-flag/ffcontext"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -107,7 +106,6 @@ type ContextBuilder interface {
 	Build(ctx context.Context) context.Context
 	FFCtx() ffcontext.Context
 
-	LoadFromKyma(u *unstructured.Unstructured) ContextBuilder
 	LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder
 	LoadFromMap(m map[string]interface{}) ContextBuilder
 	Landscape(v string) ContextBuilder
@@ -185,31 +183,23 @@ func (b *contextBuilderImpl) FFCtx() ffcontext.Context {
 	return ffCtx
 }
 
-func (b *contextBuilderImpl) LoadFromKyma(u *unstructured.Unstructured) ContextBuilder {
+func (b *contextBuilderImpl) LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder {
+	b.Provider("")
 	b.Kyma("")
 	b.BrokerPlan("")
 	b.GlobalAccount("")
 	b.SubAccount("")
 	b.Region("")
 	b.Shoot("")
-
-	if u != nil && u.Object != nil {
-		b.Kyma(u.GetName())
-		if labels := u.GetLabels(); len(labels) > 0 {
-			b.BrokerPlan(labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName])
-			b.GlobalAccount(labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId])
-			b.SubAccount(labels[cloudcontrolv1beta1.LabelScopeSubaccountId])
-			b.Region(labels[cloudcontrolv1beta1.LabelScopeRegion])
-			b.Shoot(labels[cloudcontrolv1beta1.LabelScopeShootName])
-		}
-	}
-	return b
-}
-
-func (b *contextBuilderImpl) LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder {
-	b.Provider("")
 	if scope != nil {
 		b.Provider(string(scope.Spec.Provider))
+		b.Kyma(scope.Name)
+		b.BrokerPlan(scope.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName])
+		b.GlobalAccount(scope.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId])
+		b.SubAccount(scope.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId])
+		b.Region(scope.Labels[cloudcontrolv1beta1.LabelScopeRegion])
+		b.Shoot(scope.Labels[cloudcontrolv1beta1.LabelScopeShootName])
+
 	}
 	return b
 }
