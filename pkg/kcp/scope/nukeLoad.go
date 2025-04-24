@@ -3,6 +3,7 @@ package scope
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -11,6 +12,10 @@ func nukeLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if !cloudcontrolv1beta1.AutomaticNuke {
+		return nil, ctx
+	}
+
+	if statewithscope.IsTrialPredicate(ctx, state) {
 		return nil, ctx
 	}
 

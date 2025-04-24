@@ -201,7 +201,13 @@ func isExposedDataReadNeeded(ctx context.Context, st composed.State) bool {
 	if !composed.IsObjLoaded(ctx, st) {
 		return false
 	}
+
 	state := st.(*State)
+
+	if statewithscope.IsTrialPredicate(ctx, state) {
+		return false
+	}
+
 	if state.ObjAsScope().Status.ExposedData.ReadTime == nil {
 		return true
 	}
