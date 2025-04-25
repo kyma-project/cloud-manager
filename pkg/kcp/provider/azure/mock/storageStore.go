@@ -244,6 +244,9 @@ func (s *storageStore) ListProtectedItems(ctx context.Context, vaultName string,
 
 	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	items := s.protectedItems[vaultId]
+	if items == nil {
+		return []*armrecoveryservicesbackup.ProtectedItemResource{}, nil
+	}
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.Info("mock: ListProtectedItems", "size", len(items))
@@ -298,9 +301,32 @@ func (s *storageStore) UnregisterContainer(ctx context.Context, resourceGroupNam
 }
 
 func newStorageStore(subscription string) *storageStore {
+
+	backupProtectableItems := []*armrecoveryservicesbackup.WorkloadProtectableItemResource{
+		{
+			ETag:     nil,
+			Location: nil,
+			Properties: &armrecoveryservicesbackup.AzureFileShareProtectableItem{
+				ProtectableItemType:         nil,
+				AzureFileShareType:          nil,
+				BackupManagementType:        nil,
+				FriendlyName:                to.Ptr("pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca"),
+				ParentContainerFabricID:     nil,
+				ParentContainerFriendlyName: nil,
+				ProtectionState:             nil,
+				WorkloadType:                nil,
+			},
+			Tags: nil,
+			ID:   nil,
+			Name: to.Ptr("AzureFileShare;1234"), // unfriendly name
+			Type: nil,
+		},
+	}
+
 	return &storageStore{
-		subscription:   subscription,
-		jobs:           make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
-		protectedItems: make(map[string][]*armrecoveryservicesbackup.ProtectedItemResource),
+		subscription:           subscription,
+		jobs:                   make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
+		protectedItems:         make(map[string][]*armrecoveryservicesbackup.ProtectedItemResource),
+		backupProtectableItems: backupProtectableItems,
 	}
 }
