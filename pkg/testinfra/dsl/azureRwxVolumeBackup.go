@@ -82,6 +82,18 @@ func WithSourcePvc(name, namespace string) ObjAction {
 	}
 }
 
+func WithLocation(location string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AzureRwxVolumeBackup); ok {
+				x.Spec.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithLocation", obj))
+		},
+	}
+}
+
 func WithRecoveryPointId(recoveryPointId string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
