@@ -85,20 +85,18 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	// Setting the uuid as id to prevent duplicate backups
 	if backup.Status.Id == "" {
 		backup.Status.Id = uuid.NewString()
-		return composed.PatchStatus(backup).
-			SetExclusiveConditions().
+
+		return composed.UpdateStatus(backup).
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
+
 	}
 
 	vaultName := state.vaultName
 	resourceGroupName := state.resourceGroupName
 	fileShareName := state.fileShareName
 
-	// PolicyName is systemically created
-	policyName := fmt.Sprintf("%v-backup-policy", fileShareName)
-
-	subscriptionId := state.scope.Spec.Scope.Azure.SubscriptionId
+	subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
 	storageAccountName := state.storageAccountName
 
 	// Check if Fileshare is already protected. If it is, trigger backup and return
@@ -173,6 +171,8 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Case: there's no protected items matching
 	// Create BackupPolicy on Fileshare
+	// PolicyName is systemically created
+	policyName := fmt.Sprintf("%v-backup-policy", fileShareName)
 	err = state.client.CreateBackupPolicy(ctx, vaultName, resourceGroupName, policyName)
 	if err != nil {
 		logger.Error(err, "failed to create backup policy")
@@ -305,5 +305,5 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupDone // TODO: redo with Creating
-	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+	return composed.UpdateStatus(backup).SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).Run(ctx, state)
 }
