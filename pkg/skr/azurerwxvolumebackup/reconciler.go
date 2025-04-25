@@ -52,7 +52,6 @@ func (r *reconciler) newAction() composed.Action {
 	)
 }
 
-// func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 func NewReconciler(args skrruntime.ReconcilerArguments, clientProvider azureclient.ClientProvider[client.Client]) reconcile.Reconciler {
 
 	return &reconciler{
