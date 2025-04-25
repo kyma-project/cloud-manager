@@ -2,13 +2,11 @@ package azure
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	//cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	//corev1 "k8s.io/api/core/v1"
 )
 
 var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
@@ -121,7 +119,7 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 					backup,
 					WithName(skrRwxVolumeBackupName),
 					WithSourcePvc(skrRwxVolumeClaimName, DefaultSkrNamespace),
-					// TODO: check if additional options need to be passed in
+					WithLocation("westus"),
 				).
 				Should(Succeed())
 
@@ -136,9 +134,11 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 					Should(Succeed())
 			})
 
-			// TODO: this fails
-			By("And Then the AzureRwxVolumeBackup has Done status", func() {
-				Expect(backup.Status.State).To(Equal(cloudresourcesv1beta1.AzureRwxBackupDone))
+			By("Then AzureRwxVolumeBackup has Done State", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), backup, NewObjActions(), HavingState(string(cloudresourcesv1beta1.AzureRwxBackupDone)),
+					).Should(Succeed())
 			})
 
 		})
