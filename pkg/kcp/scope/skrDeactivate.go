@@ -7,11 +7,8 @@ import (
 
 func skrDeactivate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
-	logger.Info("Stopping SKR")
-
-	state.activeSkrCollection.RemoveScope(state.ObjAsScope())
+	state.activeSkrCollection.RemoveScope(ctx, state.ObjAsScope())
 
 	return nil, ctx
 }
