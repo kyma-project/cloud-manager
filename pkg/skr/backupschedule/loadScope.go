@@ -21,7 +21,6 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		"scopeNamespace", state.KymaRef.Namespace,
 	)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-	logger.Info("Loading Scope from reference")
 
 	scope := &cloudcontrolv1beta1.Scope{}
 	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
@@ -53,7 +52,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		"region", scope.Spec.Region,
 		"shootName", scope.Spec.ShootName,
 	)
-	logger.Info("Loaded Scope from Kyma reference")
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	state.Scope = scope
 
