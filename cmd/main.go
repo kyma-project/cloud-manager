@@ -159,7 +159,7 @@ func main() {
 		Info("Config dump")
 
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
-	activeSkrCollection := skrruntime.NewActiveSkrCollection(rootLogger.WithName("skr-collection"))
+	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		BaseContext: func() context.Context {
