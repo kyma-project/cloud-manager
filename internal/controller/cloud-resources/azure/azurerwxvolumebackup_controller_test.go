@@ -64,9 +64,9 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 					WithPvClaimRef(skrRwxVolumeClaimName, DefaultSkrNamespace),
 					WithPvCsiSource(&corev1.CSIPersistentVolumeSource{
 						Driver:       "file.csi.azure.com",
-						VolumeHandle: "test-file-share-01",
+						VolumeHandle: "kh-file-share-01",
 					}),
-					WithPvVolumeHandle("shoot--kyma-dev--c-6ea9b9b#f21d936aa5673444a95852a#pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca###default"),
+					WithPvVolumeHandle("kh-rg#khstorageaccount#kh-file-share###default"),
 					WithPvLabel(cloudresourcesv1beta1.LabelCloudManaged, "true"),
 				).
 				Should(Succeed())

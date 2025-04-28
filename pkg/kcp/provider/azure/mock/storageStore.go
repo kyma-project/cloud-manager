@@ -310,7 +310,7 @@ func newStorageStore(subscription string) *storageStore {
 				ProtectableItemType:         nil,
 				AzureFileShareType:          nil,
 				BackupManagementType:        nil,
-				FriendlyName:                to.Ptr("pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca"),
+				FriendlyName:                to.Ptr("kh-file-share"),
 				ParentContainerFabricID:     nil,
 				ParentContainerFriendlyName: nil,
 				ProtectionState:             nil,
