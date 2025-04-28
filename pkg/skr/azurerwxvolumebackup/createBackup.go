@@ -96,7 +96,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	resourceGroupName := state.resourceGroupName
 	fileShareName := state.fileShareName
 
-	subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
+	subscriptionId := state.subscriptionId
 	storageAccountName := state.storageAccountName
 
 	// Check if Fileshare is already protected. If it is, trigger backup and return
