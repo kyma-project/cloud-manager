@@ -21,6 +21,7 @@ func createClient(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	state.client = cli
+	state.subscriptionId = subscriptionId
 
 	return nil, nil
 }
