@@ -28,12 +28,7 @@ func CreateAzureGardenerResources(
 
 	resourceGroupName := common.GardenerVpcName(shootNamespace, shootName)
 
-	wholeRange, err := cidr.Parse(vnetCidr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse CIDR '%s': %v", vnetCidr, err)
-	}
-
-	err = azureMock.CreateNetwork(ctx, resourceGroupName, resourceGroupName, location, vnetCidr, nil)
+	err := azureMock.CreateNetwork(ctx, resourceGroupName, resourceGroupName, location, vnetCidr, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating vnet: %w", err)
 	}
@@ -43,6 +38,11 @@ func CreateAzureGardenerResources(
 		return nil, fmt.Errorf("error getting vnet: %w", err)
 	}
 	result.VNet = vnet
+
+	wholeRange, err := cidr.Parse(nodesCidr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CIDR '%s': %v", vnetCidr, err)
+	}
 
 	numberOfSubnets := 4
 	subnetRanges, err := wholeRange.SubNetting(cidr.MethodSubnetNum, numberOfSubnets)
@@ -77,7 +77,7 @@ func CreateAzureGardenerResources(
 		}
 		result.NatGateways = append(result.NatGateways, nat)
 
-		err = azureMock.CreateSubnet(ctx, resourceGroupName, resourceGroupName, name, subnetRanges[i].CIDR().String(), "x", netGatewayId.String())
+		err = azureMock.CreateSubnet(ctx, resourceGroupName, resourceGroupName, name, subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String())
 		if err != nil {
 			return nil, fmt.Errorf("error creating subnet in zone %d: %w", i, err)
 		}

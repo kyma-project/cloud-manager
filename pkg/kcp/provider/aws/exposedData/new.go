@@ -2,7 +2,7 @@ package exposedData
 
 import (
 	"context"
-	"errors"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 )
@@ -12,25 +12,36 @@ func New(sf StateFactory) composed.Action {
 		scopeState := st.(scopetypes.State)
 		if !composed.IsObjLoaded(ctx, scopeState) {
 			return composed.LogErrorAndReturn(
-				errors.New("logical error"),
-				"Azure ExposeData flow called w/out loaded Scope",
+				common.LogicalError,
+				"AWS ExposeData flow called w/out loaded Scope",
+				composed.StopAndForget,
+				ctx,
+			)
+		}
+		if composed.IsMarkedForDeletion(scopeState.Obj()) {
+			return composed.LogErrorAndReturn(
+				common.LogicalError,
+				"AWS ExposeData flow called with Scope with deleteTimestamp",
 				composed.StopAndForget,
 				ctx,
 			)
 		}
 
-		state, err := sf.NewState(ctx, scopeState)
+		cctx, state, err := sf.NewState(ctx, scopeState)
+		if cctx != nil {
+			ctx = cctx
+		}
 		if err != nil {
 			return err, ctx
 		}
 
 		return composed.ComposeActionsNoName(
 			kcpNetworkVerify,
-			vnetLoad,
-			subnetsLoad,
-			natGatewaysLoad,
-			publicIpAddressesLoad,
+			vpcLoad,
+			natGatewayLoad,
 			exposedDataSetToScope,
+			// todo: add more actions here
+			composed.Noop,
 		)(ctx, state)
 	}
 }

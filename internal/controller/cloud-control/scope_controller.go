@@ -4,6 +4,8 @@ import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
@@ -29,6 +31,7 @@ func SetupScopeReconciler(
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	awsClientProvider awsclient.SkrClientProvider[awsexposeddataclient.Client],
 	azureClientProvider azureclient.ClientProvider[azureexposeddataclient.Client],
 ) error {
 	return NewScopeReconciler(
@@ -37,6 +40,7 @@ func SetupScopeReconciler(
 			awsStsClientProvider,
 			activeSkrCollection,
 			gcpServiceUsageClientProvider,
+			awsexposeddata.NewStateFactory(awsClientProvider),
 			azureexposeddata.NewStateFactory(azureClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
@@ -92,7 +96,7 @@ func (r *ScopeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager
 		Complete(r)
 }
 
-func (r *ScopeReconciler) mapRequestsFromGardenerClusterCR(ctx context.Context, gcObj client.Object) []reconcile.Request {
+func (r *ScopeReconciler) mapRequestsFromGardenerClusterCR(_ context.Context, gcObj client.Object) []reconcile.Request {
 	return []reconcile.Request{
 		{
 			NamespacedName: types.NamespacedName{

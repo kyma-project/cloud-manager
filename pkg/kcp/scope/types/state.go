@@ -8,4 +8,5 @@ import (
 type State interface {
 	composed.State
 	ObjAsScope() *cloudcontrolv1beta1.Scope
+	KcpNetworkKyma() *cloudcontrolv1beta1.Network
 }

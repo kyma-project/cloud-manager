@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"flag"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -325,6 +326,7 @@ func main() {
 		scopeclient.NewAwsStsGardenClientProvider(),
 		activeSkrCollection,
 		gcpclient.NewServiceUsageClientProvider(),
+		awsexposeddataclient.NewClientProvider(),
 		azureexposeddataclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")

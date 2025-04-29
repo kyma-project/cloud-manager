@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData"
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
@@ -30,6 +31,7 @@ func New(
 	// keep gcpServiceUsageClientProvider separate from the expose data client, since SRE will start enabling APIs soon,
 	// so gcpServiceUsageClientProvider will be removed completely
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
 ) ScopeReconciler {
 	return NewScopeReconciler(
@@ -39,16 +41,19 @@ func New(
 			awsStsClientProvider,
 			gcpServiceUsageClientProvider,
 		),
+		awsStateFactory,
 		azureStateFactory,
 	)
 }
 
 func NewScopeReconciler(
 	stateFactory StateFactory,
+	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
 ) ScopeReconciler {
 	return &scopeReconciler{
 		stateFactory:      stateFactory,
+		awsStateFactory:   awsStateFactory,
 		azureStateFactory: azureStateFactory,
 	}
 }
@@ -56,6 +61,7 @@ func NewScopeReconciler(
 type scopeReconciler struct {
 	stateFactory StateFactory
 
+	awsStateFactory   awsexposeddata.StateFactory
 	azureStateFactory azureexposeddata.StateFactory
 }
 
@@ -116,7 +122,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 					isExposedDataReadNeeded,
 					composed.Switch(
 						nil,
-						composed.NewCase(statewithscope.AwsProviderPredicate, composed.Noop),
+						composed.NewCase(statewithscope.AwsProviderPredicate, awsexposeddata.New(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, composed.Noop),
 					),

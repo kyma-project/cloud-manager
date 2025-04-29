@@ -100,3 +100,7 @@ type State struct {
 func (s *State) ObjAsScope() *cloudcontrolv1beta1.Scope {
 	return s.Obj().(*cloudcontrolv1beta1.Scope)
 }
+
+func (s *State) KcpNetworkKyma() *cloudcontrolv1beta1.Network {
+	return s.kcpNetworkKyma
+}

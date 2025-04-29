@@ -6,11 +6,13 @@ type accountRegionStore struct {
 	*vpcPeeringStore
 	*elastiCacheClientFake
 	*routeTablesStore
+	*scopeStore
 }
 
 func newAccountRegionStore(account, region string) *accountRegionStore {
 	return &accountRegionStore{
-		vpcStore:              newVpcStore(),
+		scopeStore:            &scopeStore{account: account},
+		vpcStore:              newVpcStore(account, region),
 		vpcPeeringStore:       newVpcPeeringStore(),
 		elastiCacheClientFake: newElastiCacheClientFake(),
 		nfsStore:              &nfsStore{},
