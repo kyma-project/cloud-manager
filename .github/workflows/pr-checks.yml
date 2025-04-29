@@ -1,7 +1,13 @@
 name: PR Checks
-run-name: '${{github.event.pull_request.title}}'
-'on':
-  - pull_request
+run-name: >-
+  ${{ github.event.pull_request.number || github.ref_name }}
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
 env:
   PIPELINE: true
 jobs:
