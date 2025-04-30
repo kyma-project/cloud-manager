@@ -131,7 +131,6 @@ func (c *config) Watch(stopCh <-chan struct{}, onConfigChange func(event fsnotif
 	go func() {
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			//c.logger.Error(fmt.Sprintf("failed to create watcher: %s", err))
 			returnErr = fmt.Errorf("error creating new watcher: %w", err)
 			return
 		}

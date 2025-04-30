@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -54,8 +53,7 @@ type State struct {
 
 	azureClient azureexposeddataclient.Client
 
-	kcpNetwork *cloudcontrolv1beta1.Network
-	networkId  *azureutil.NetworkResourceId
+	networkId *azureutil.NetworkResourceId
 
 	vnet              *armnetwork.VirtualNetwork
 	subnets           []*armnetwork.Subnet

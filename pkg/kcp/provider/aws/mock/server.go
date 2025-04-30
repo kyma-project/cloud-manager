@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"sync"
 
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -56,6 +57,12 @@ func (s *server) VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeri
 
 func (s *server) ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient] {
 	return func(ctx context.Context, account, region, key, secret, role string) (awsclient.ElastiCacheClient, error) {
+		return s.getAccountRegionContext(account, region), nil
+	}
+}
+
+func (s *server) ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (awsexposeddataclient.Client, error) {
 		return s.getAccountRegionContext(account, region), nil
 	}
 }

@@ -82,6 +82,7 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
+		infra.AwsMock().ExposedDataProvider(),
 		infra.AzureMock().ExposeDataProvider(),
 	)).NotTo(HaveOccurred())
 	// Kyma

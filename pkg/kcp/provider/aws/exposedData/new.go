@@ -13,24 +13,35 @@ func New(sf StateFactory) composed.Action {
 		if !composed.IsObjLoaded(ctx, scopeState) {
 			return composed.LogErrorAndReturn(
 				common.ErrLogical,
-				"Azure ExposeData flow called w/out loaded Scope",
+				"AWS ExposeData flow called w/out loaded Scope",
+				composed.StopAndForget,
+				ctx,
+			)
+		}
+		if composed.IsMarkedForDeletion(scopeState.Obj()) {
+			return composed.LogErrorAndReturn(
+				common.ErrLogical,
+				"AWS ExposeData flow called with Scope with deleteTimestamp",
 				composed.StopAndForget,
 				ctx,
 			)
 		}
 
-		state, err := sf.NewState(ctx, scopeState)
+		cctx, state, err := sf.NewState(ctx, scopeState)
+		if cctx != nil {
+			ctx = cctx
+		}
 		if err != nil {
 			return err, ctx
 		}
 
 		return composed.ComposeActionsNoName(
 			kcpNetworkVerify,
-			vnetLoad,
-			subnetsLoad,
-			natGatewaysLoad,
-			publicIpAddressesLoad,
+			vpcLoad,
+			natGatewayLoad,
 			exposedDataSetToScope,
+			// todo: add more actions here
+			composed.Noop,
 		)(ctx, state)
 	}
 }

@@ -2,7 +2,7 @@ package exposedData
 
 import (
 	"context"
-	"errors"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"k8s.io/utils/ptr"
@@ -12,7 +12,7 @@ func subnetsLoad(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 
 	if state.vnet == nil {
-		return errors.New("logical error: vnet should be defined"), ctx
+		return composed.LogErrorAndReturn(common.ErrLogical, "vnet should be defined", composed.StopAndForget, ctx)
 	}
 
 	for _, subnetRef := range state.vnet.Properties.Subnets {

@@ -22,7 +22,7 @@ func (w *watchedState) uniqueDirsToWatch() []string {
 	for _, item := range w.items {
 		unique[item.currentStat.configDir] = struct{}{}
 	}
-	result := make([]string, len(unique))
+	result := make([]string, 0, len(unique))
 	for k := range unique {
 		result = append(result, k)
 	}

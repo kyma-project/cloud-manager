@@ -2,6 +2,8 @@ package cloudcontrol
 
 import (
 	"fmt"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -11,6 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -23,7 +26,6 @@ var _ = Describe("Feature: KCP Scope", func() {
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-		//kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenertypes.Shoot{}
 
@@ -31,6 +33,16 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Eventually(CreateShootAws).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
 				Should(Succeed(), "failed creating garden shoot for AWS")
+		})
+
+		awsMock := infra.AwsMock().MockConfigs(infra.AwsMock().GetAccount(), shoot.Spec.Region)
+
+		var awsCreatedInfra *AwsGardenerInfra
+
+		By("An Given AWS infra exists", func() {
+			createdInfra, err := CreateAwsGardenerResources(infra.Ctx(), awsMock, shoot.Namespace, shoot.Name, "10.180.0.0/16", "10.180.0.0/16")
+			Expect(err).NotTo(HaveOccurred())
+			awsCreatedInfra = createdInfra
 		})
 
 		gardenerClusterCR := util.NewGardenerClusterUnstructured()
@@ -116,6 +128,17 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones[0].Name).To(Equal("eu-west-1a")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[1].Name).To(Equal("eu-west-1b")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
+		})
+
+		By("And Then Scope has status.exposedData.natGatewayIps", func() {
+			expected := pie.Map(awsCreatedInfra.NatGateways, func(x *ec2types.NatGateway) string {
+				return ptr.Deref(x.NatGatewayAddresses[0].PublicIp, "")
+			})
+			expected = pie.Sort(pie.Unique(pie.Filter(expected, func(s string) bool {
+				return s != ""
+			})))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(HaveLen(len(expected)))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(ConsistOf(expected))
 		})
 
 		kymaNetwork := &cloudcontrolv1beta1.Network{}
