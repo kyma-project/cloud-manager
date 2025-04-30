@@ -14,7 +14,7 @@ func kcpNetworkVerify(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 
 	if state.KcpNetworkKyma() == nil {
-		return composed.LogErrorAndReturn(common.ErrLogical, "Azure ExposedData must have KCP Network Kym loaded", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
+		return composed.LogErrorAndReturn(common.ErrLogical, "Azure ExposedData must have KCP Network Kyma loaded", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
