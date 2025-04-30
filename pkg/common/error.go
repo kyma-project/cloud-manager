@@ -2,4 +2,4 @@ package common
 
 import "errors"
 
-var LogicalError = errors.New("LogicalError")
+var ErrLogical = errors.New("LogicalError")

@@ -12,7 +12,7 @@ func New(sf StateFactory) composed.Action {
 		scopeState := st.(scopetypes.State)
 		if !composed.IsObjLoaded(ctx, scopeState) {
 			return composed.LogErrorAndReturn(
-				common.LogicalError,
+				common.ErrLogical,
 				"AWS ExposeData flow called w/out loaded Scope",
 				composed.StopAndForget,
 				ctx,
@@ -20,7 +20,7 @@ func New(sf StateFactory) composed.Action {
 		}
 		if composed.IsMarkedForDeletion(scopeState.Obj()) {
 			return composed.LogErrorAndReturn(
-				common.LogicalError,
+				common.ErrLogical,
 				"AWS ExposeData flow called with Scope with deleteTimestamp",
 				composed.StopAndForget,
 				ctx,

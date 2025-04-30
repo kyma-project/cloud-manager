@@ -28,7 +28,7 @@ require (
 	github.com/aws/smithy-go v1.22.3
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gardener/gardener v1.117.1
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
