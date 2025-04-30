@@ -2,7 +2,6 @@ package exposedData
 
 import (
 	"context"
-	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -27,15 +26,13 @@ func kcpNetworkVerify(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if state.KcpNetworkKyma().Status.Network == nil || state.KcpNetworkKyma().Status.Network.Azure == nil {
-		err := errors.New("logical error")
-		return composed.LogErrorAndReturn(err, "KCP Kyma network is ready but w/out azure status reference", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(common.ErrLogical, "KCP Kyma network is ready but w/out azure status reference", composed.StopAndForget, ctx)
 	}
 
 	state.networkId = azureutil.NewVirtualNetworkResourceIdFromNetworkReference(state.KcpNetworkKyma().Status.Network)
 
 	if !state.networkId.IsValid() {
-		err := errors.New("logical error")
-		return composed.LogErrorAndReturn(err, "KCP Kyma network is ready but has invalid azure status reference id", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(common.ErrLogical, "KCP Kyma network is ready but has invalid azure status reference id", composed.StopAndForget, ctx)
 	}
 
 	return nil, ctx

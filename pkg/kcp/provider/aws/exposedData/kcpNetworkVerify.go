@@ -2,7 +2,6 @@ package exposedData
 
 import (
 	"context"
-	"errors"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,13 +25,11 @@ func kcpNetworkVerify(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if state.KcpNetworkKyma().Status.Network == nil || state.KcpNetworkKyma().Status.Network.Aws == nil {
-		err := errors.New("logical error")
-		return composed.LogErrorAndReturn(err, "KCP Kyma network is ready but w/out aws status reference", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(common.ErrLogical, "KCP Kyma network is ready but w/out aws status reference", composed.StopAndForget, ctx)
 	}
 
 	if state.KcpNetworkKyma().Status.Network.Aws.NetworkName == "" {
-		err := errors.New("logical error")
-		return composed.LogErrorAndReturn(err, "KCP Kyma network is ready but has invalid aws status reference vpc name", composed.StopAndForget, ctx)
+		return composed.LogErrorAndReturn(common.ErrLogical, "KCP Kyma network is ready but has invalid aws status reference vpc name", composed.StopAndForget, ctx)
 	}
 
 	state.vpcName = state.KcpNetworkKyma().Status.Network.Aws.NetworkName
