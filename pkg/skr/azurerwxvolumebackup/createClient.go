@@ -12,8 +12,8 @@ func createClient(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
 	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
-	subscriptionId := state.scope.Spec.Scope.Azure.SubscriptionId
-	tenantId := state.scope.Spec.Scope.Azure.TenantId
+	subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
+	tenantId := state.Scope().Spec.Scope.Azure.TenantId
 
 	cli, err := state.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 	if err != nil {
@@ -21,6 +21,7 @@ func createClient(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	state.client = cli
+	state.subscriptionId = subscriptionId
 
 	return nil, nil
 }

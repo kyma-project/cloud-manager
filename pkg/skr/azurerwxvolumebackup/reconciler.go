@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -51,7 +52,7 @@ func (r *reconciler) newAction() composed.Action {
 	)
 }
 
-func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
+func NewReconciler(args skrruntime.ReconcilerArguments, clientProvider azureclient.ClientProvider[client.Client]) reconcile.Reconciler {
 
 	return &reconciler{
 		factory: newStateFactory(
@@ -59,7 +60,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
 				args.KymaRef),
-			client.NewClientProvider(),
+			clientProvider,
 		),
 	}
 }

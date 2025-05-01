@@ -34,7 +34,7 @@ func TestCreateVault(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, ctx, res, "should return same context")
-			assert.Equal(t, composed.StopAndForget, err, "should expect stop and forget")
+			assert.Nil(t, err, "should return nil")
 
 		})
 

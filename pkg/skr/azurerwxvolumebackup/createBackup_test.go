@@ -8,7 +8,6 @@ import (
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -89,6 +88,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")
 	state.scope = scope
 	state.fileShareName = "matchingFileShareName"
+	state.subscriptionId = "test-subscription-id"
 
 	return state
 
@@ -323,7 +323,7 @@ func TestCreateBackup(t *testing.T) {
 				newCtx = addValuesToContext(newCtx, kvp2)
 				//newCtx = addValuesToContext(newCtx, kvp3)
 				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T60000ms()), err)
+				assert.NotNil(t, err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
 
 			})

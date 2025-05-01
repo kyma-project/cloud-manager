@@ -21,6 +21,7 @@ type State struct {
 	pvc                *corev1.PersistentVolumeClaim
 	vaultName          string
 	scope              *cloudcontrolv1beta1.Scope
+	subscriptionId     string
 }
 
 func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolumeBackup {
