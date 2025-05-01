@@ -13,15 +13,16 @@ import (
 
 type State struct {
 	commonscope.State
-	client             client.Client
-	clientProvider     azureclient.ClientProvider[client.Client]
-	resourceGroupName  string
-	storageAccountName string
-	fileShareName      string
-	pvc                *corev1.PersistentVolumeClaim
-	vaultName          string
-	scope              *cloudcontrolv1beta1.Scope
-	subscriptionId     string
+	client                client.Client
+	clientProvider        azureclient.ClientProvider[client.Client]
+	resourceGroupName     string
+	storageAccountName    string
+	fileShareName         string
+	pvc                   *corev1.PersistentVolumeClaim
+	vaultName             string
+	scope                 *cloudcontrolv1beta1.Scope
+	subscriptionId        string
+	protectedResourceName string // TODO: fetch via action
 }
 
 func (s *State) ObjAsAzureRwxVolumeBackup() *cloudresourcesv1beta1.AzureRwxVolumeBackup {
