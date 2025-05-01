@@ -5,10 +5,9 @@ import (
 	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-const DefaultPolicyName = "cm-noop-policy"
 
 func createBackupPolicy(ctx context.Context, st composed.State) (error, context.Context) {
 
@@ -24,7 +23,7 @@ func createBackupPolicy(ctx context.Context, st composed.State) (error, context.
 	vaultName := state.vaultName
 	resourceGroupName := state.resourceGroupName
 
-	err := state.client.CreateBackupPolicy(ctx, vaultName, resourceGroupName, DefaultPolicyName)
+	err := state.client.CreateBackupPolicy(ctx, vaultName, resourceGroupName, azurerwxvolumebackupclient.DefaultBackupPolicyName)
 	if err != nil {
 		logger.Error(err, "failed to create backup policy")
 		backup.Status.State = cloudresourcesv1beta1.AzureRwxBackupError

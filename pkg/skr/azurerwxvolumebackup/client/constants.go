@@ -53,6 +53,8 @@ const AzureFabricName = "Azure"
 const TagNameCloudManager = "cloud-manager"
 const TagValueRwxVolumeBackup = "rwxVolumeBackup"
 
+const DefaultBackupPolicyName = "cm-noop-policy"
+
 func GetStorageAccountPath(subscriptionId, resourceGroupName, storageAccountName string) string {
 	return fmt.Sprintf(storageAccountPathPattern, subscriptionId, resourceGroupName, storageAccountName)
 }
