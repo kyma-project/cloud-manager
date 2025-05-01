@@ -59,7 +59,6 @@ func protectFileshare(ctx context.Context, st composed.State) (error, context.Co
 	resourceGroupName := state.resourceGroupName
 	storageAccountName := state.storageAccountName
 	subscriptionId := state.subscriptionId
-	policyName := fmt.Sprintf("%v-backup-policy", fileShareName) // TODO: pull from state.policyName
 
 	// Fetch unfriendly name of unprotected fileshare
 	protectableItems, err := state.client.ListBackupProtectableItems(ctx, vaultName, resourceGroupName)
@@ -136,7 +135,7 @@ func protectFileshare(ctx context.Context, st composed.State) (error, context.Co
 	protectableItemName := *matchingItems[0].Name
 	containerName := azurerwxvolumebackupclient.GetContainerName(resourceGroupName, storageAccountName)
 
-	err = state.client.CreateOrUpdateProtectedItem(ctx, subscriptionId, "location", vaultName, resourceGroupName, containerName, protectableItemName, policyName, storageAccountName)
+	err = state.client.CreateOrUpdateProtectedItem(ctx, subscriptionId, "location", vaultName, resourceGroupName, containerName, protectableItemName, azurerwxvolumebackupclient.DefaultBackupPolicyName, storageAccountName)
 	if err != nil {
 		logger.Error(err, "failed to bind backup policy to fileshare")
 		logger.Info("retrying binding backup policy to fileshare")
