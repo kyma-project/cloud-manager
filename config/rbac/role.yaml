@@ -181,3 +181,17 @@ rules:
   - kymas/status
   verbs:
   - get
+- apiGroups:
+  - v1
+  resources:
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - v1
+  resources:
+  - persistentvolumes/status
+  verbs:
+  - get
