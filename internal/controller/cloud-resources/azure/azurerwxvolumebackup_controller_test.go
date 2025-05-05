@@ -145,4 +145,58 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 
 	})
 
+	Describe("Scenario: SKR AzureRwxVolumeBackup - Delete", func() {
+
+		// Arrange
+		backup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{}
+		skrRwxVolumeBackupName := "azure-rwx-backup-delete"
+		//skrRwxVolumeBackupName := "azure-rwx-backup"
+
+		It("And Given AzureRwxVolumeBackup exists", func() {
+			Eventually(CreateAzureRwxVolumeBackup).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), backup,
+					WithName(skrRwxVolumeBackupName),
+					WithSourcePvc(skrRwxVolumeClaimName, DefaultSkrNamespace),
+					WithLocation("westus"),
+				).
+				Should(Succeed())
+
+			//Eventually(UpdateStatus).
+			//	WithArguments(
+			//		infra.Ctx(), infra.SKR().Client(), backup,
+			//		WithConditions(SkrReadyCondition()),
+			//		WithAzureRwxVolumeBackupState(cloudresourcesv1beta1.AzureRwxBackupDone),
+			//	).
+			//	Should(Succeed())
+
+		})
+
+		It("When AzureRwxVolumeBackup Delete is called", func() {
+			Eventually(Delete).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), backup,
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), backup,
+					NewObjActions(),
+					HaveDeletionTimestamp(),
+				).Should(SucceedIgnoreNotFound())
+
+			By("And Then the AzureRwxVolumeBackup in SKR is deleted", func() {
+				Eventually(IsDeleted).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), backup,
+					).
+					Should(Succeed())
+
+			})
+
+		})
+
+	})
+
 })
