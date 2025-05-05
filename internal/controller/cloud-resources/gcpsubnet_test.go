@@ -39,7 +39,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					gcpSubnet,
 					NewObjActions(),
 					HavingGcpSubnetStatusId(),
-					// HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
 
@@ -132,7 +132,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					gcpSubnet,
 					NewObjActions(),
 					HavingGcpSubnetStatusId(),
-					// HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
 
@@ -184,18 +184,18 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 				Should(Succeed(), "failed deleting GcpSubnet")
 		})
 
-		// By("Then SKR GcpSubnet has Deleting state", func() {
-		// 	Eventually(LoadAndCheck).
-		// 		WithArguments(
-		// 			infra.Ctx(),
-		// 			infra.SKR().Client(),
-		// 			gcpSubnet,
-		// 			NewObjActions(),
-		// 			HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-		// 			HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateDeleting),
-		// 		).
-		// 		Should(Succeed(), "expected GcpSubnet to have Deleting state")
-		// })
+		By("Then SKR GcpSubnet has Deleting state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpSubnet,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
+					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateDeleting),
+				).
+				Should(Succeed(), "expected GcpSubnet to have Deleting state")
+		})
 
 		By("And Then KCP GcpSubnet is marked for deletion", func() {
 			Eventually(LoadAndCheck).

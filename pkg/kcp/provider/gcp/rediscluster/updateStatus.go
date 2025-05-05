@@ -25,6 +25,11 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		}
 	}
 
+	if redisCluster.Status.CaCert != state.caCerts {
+		redisCluster.Status.CaCert = state.caCerts
+		hasChanged = true
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisCluster.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisCluster.Status.State == cloudcontrolv1beta1.StateReady
 
