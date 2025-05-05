@@ -55,6 +55,16 @@ func (r *reconciler) newAction() composed.Action {
 				createBackup,
 			), nil,
 		),
+		composed.If(
+			composed.MarkedForDeletionPredicate,
+			composed.ComposeActions("AzureRwxVolumeBackupMarkedForDeletion"),
+			loadPersistentVolumeClaim,
+			loadPersistentVolume,
+			createClient,
+			createVault,
+			getProtectedResourceName,
+			unbindBackupPolicy,
+		),
 		actions.PatchRemoveCommonFinalizer(),
 		composed.StopAndForgetAction,
 	)
