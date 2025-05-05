@@ -20,6 +20,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	skrazurerwxvolumebackup "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -71,7 +72,6 @@ var _ = Describe("Feature: SKR AzureRwxVolumeRestore in place", func() {
 		})
 
 		By("And Given SKR PV exists", func() {
-			//skrazurerwxvol.Ignore.AddName(skrRwxVolumeName)
 			//Create SKR AzureRwxVolume if it doesn't exist.
 			Eventually(GivenPvExists).
 				WithArguments(
@@ -121,6 +121,7 @@ var _ = Describe("Feature: SKR AzureRwxVolumeRestore in place", func() {
 				Should(Succeed())
 		})
 		By("And Given SKR AzureRwxVolumeBackup exists", func() {
+			skrazurerwxvolumebackup.Ignore.AddName(skrRwxVolumeName)
 			//Create SKR AzureRwxVolumeBackup if it doesn't exist.
 			Eventually(CreateAzureRwxVolumeBackup).
 				WithArguments(

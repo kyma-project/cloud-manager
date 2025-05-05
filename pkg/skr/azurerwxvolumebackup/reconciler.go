@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
@@ -20,6 +21,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+
+	if Ignore != nil && Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
 
 	state := r.factory.NewState(request)
 
