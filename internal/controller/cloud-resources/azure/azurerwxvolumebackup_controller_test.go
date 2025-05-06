@@ -159,16 +159,9 @@ var _ = Describe("Feature: SKR AzureRwxVolumeBackup", func() {
 					WithName(skrRwxVolumeBackupName),
 					WithSourcePvc(skrRwxVolumeClaimName, DefaultSkrNamespace),
 					WithLocation("westus"),
+					WithState(string(cloudresourcesv1beta1.AzureRwxBackupDone)),
 				).
 				Should(Succeed())
-
-			//Eventually(UpdateStatus).
-			//	WithArguments(
-			//		infra.Ctx(), infra.SKR().Client(), backup,
-			//		WithConditions(SkrReadyCondition()),
-			//		WithAzureRwxVolumeBackupState(cloudresourcesv1beta1.AzureRwxBackupDone),
-			//	).
-			//	Should(Succeed())
 
 		})
 
