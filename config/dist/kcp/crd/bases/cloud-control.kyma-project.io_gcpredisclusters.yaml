@@ -95,7 +95,7 @@ spec:
                 type: object
               shardCount:
                 format: int32
-                maximum: 125
+                maximum: 250
                 minimum: 1
                 type: integer
               subnet:

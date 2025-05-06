@@ -44,7 +44,7 @@ type GcpRedisClusterSpec struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=125
+	// +kubebuilder:validation:Maximum=250
 	ShardCount int32 `json:"shardCount"`
 
 	// +kubebuilder:default=0

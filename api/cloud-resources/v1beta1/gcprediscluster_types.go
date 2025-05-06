@@ -36,6 +36,9 @@ const (
 )
 
 // GcpRedisClusterSpec defines the desired state of GcpRedisCluster
+// +kubebuilder:validation:XValidation:rule=(self.replicasPerShard != 0 || self.shardCount <= 250), message="shardCount must be 250 or less when replicasPerShard is 0"
+// +kubebuilder:validation:XValidation:rule=(self.replicasPerShard != 1 || self.shardCount <= 125), message="shardCount must be 125 or less when replicasPerShard is 1"
+// +kubebuilder:validation:XValidation:rule=(self.replicasPerShard != 2 || self.shardCount <= 83), message="shardCount must be 83 or less when replicasPerShard is 2"
 type GcpRedisClusterSpec struct {
 	// +kubebuilder:validation:Required
 	Subnet GcpSubnetRef `json:"subnet"`
@@ -45,7 +48,6 @@ type GcpRedisClusterSpec struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=125
 	ShardCount int32 `json:"shardCount"`
 
 	// +kubebuilder:default=0
