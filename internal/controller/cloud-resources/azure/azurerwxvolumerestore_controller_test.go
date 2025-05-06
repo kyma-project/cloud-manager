@@ -121,7 +121,7 @@ var _ = Describe("Feature: SKR AzureRwxVolumeRestore in place", func() {
 				Should(Succeed())
 		})
 		By("And Given SKR AzureRwxVolumeBackup exists", func() {
-			skrazurerwxvolumebackup.Ignore.AddName(skrRwxVolumeName)
+			skrazurerwxvolumebackup.Ignore.AddName(skrRwxVolumeBackupName)
 			//Create SKR AzureRwxVolumeBackup if it doesn't exist.
 			Eventually(CreateAzureRwxVolumeBackup).
 				WithArguments(
