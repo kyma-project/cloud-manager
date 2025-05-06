@@ -63,7 +63,7 @@ func (r *reconciler) newAction() composed.Action {
 			createClient,
 			createVault,
 			getProtectedResourceName,
-			unbindBackupPolicy,
+			deleteProtectedItem,
 		),
 		actions.PatchRemoveCommonFinalizer(),
 		composed.StopAndForgetAction,

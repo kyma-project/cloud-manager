@@ -7,7 +7,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
-func unbindBackupPolicy(ctx context.Context, st composed.State) (error, context.Context) {
+// Action both unbinds BackupPolicy from FileShare and deletes backups/snapshots of it.
+// Currently goes into a soft-delete state for 14 days. Soft-delete is controlled at the storage account level.
+func deleteProtectedItem(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
