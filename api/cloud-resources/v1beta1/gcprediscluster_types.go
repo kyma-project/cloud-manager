@@ -40,7 +40,7 @@ const (
 // +kubebuilder:validation:XValidation:rule=(self.replicasPerShard != 1 || self.shardCount <= 125), message="shardCount must be 125 or less when replicasPerShard is 1"
 // +kubebuilder:validation:XValidation:rule=(self.replicasPerShard != 2 || self.shardCount <= 83), message="shardCount must be 83 or less when replicasPerShard is 2"
 type GcpRedisClusterSpec struct {
-	// +kubebuilder:validation:Required
+	// +optional
 	Subnet GcpSubnetRef `json:"subnet"`
 
 	// +kubebuilder:validation:Required
@@ -110,7 +110,7 @@ func (in *GcpRedisCluster) SpecificToProviders() []string {
 	return []string{"gcp"}
 }
 
-func (in *GcpRedisCluster) GetSubnetRef() GcpSubnetRef {
+func (in *GcpRedisCluster) GetGcpSubnetRef() GcpSubnetRef {
 	return in.Spec.Subnet
 }
 

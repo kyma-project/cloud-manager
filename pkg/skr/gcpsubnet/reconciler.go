@@ -68,7 +68,7 @@ func (r *reconciler) newAction() composed.Action {
 			),
 			composed.ComposeActions(
 				"gcpSubnet-delete",
-				// preventDeleteOnGcpRedisClusterUsage,
+				preventDeleteOnGcpRedisClusterUsage,
 				deleteKcpGcpSubnet,
 				waitKcpGcpSubnetDeleted,
 				actions.RemoveCommonFinalizer(),
