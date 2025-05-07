@@ -34,12 +34,14 @@ const pvVolumeHandlePattern = "(?<resourceGroupName>[^\\#]*)#(?<storageAccountNa
 const recoverPointIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/(?<protectedItem>[^\\/]*)\\/recoveryPoints\\/(?<recoveryPointId>[^\\/]*)"
 const vaultIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)"
 const protectedItemIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)\\/protectedItems\\/AzureFileShare;(?<protectedItem>[^\\/]*)"
+const containerIdPattern = "\\/subscriptions\\/(?<subscription>[^\\/]*)\\/resourceGroups\\/(?<resourceGroup>[^\\/]*)\\/providers\\/Microsoft.RecoveryServices\\/vaults\\/(?<vault>[^\\/]*)\\/backupFabrics\\/Azure\\/protectionContainers\\/(?<container>[^\\/]*)"
 
 const (
 	storageAccountPathPattern = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.Storage/storageAccounts/%v"
 	backupPolicyPathPattern   = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v/backupPolicies/%v"
 	vaultPathPattern          = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v"
 	containerNamePattern      = "StorageContainer;Storage;%v;%v"
+	fileShareNamePattern      = "AzureFileShare;%v"
 	recoveryPointPathPattern  = "/subscriptions/%v/resourceGroups/%v/providers/Microsoft.RecoveryServices/vaults/%v/backupFabrics/Azure/protectionContainers/%v/protectedItems/%v/recoveryPoints/%v"
 	fileSharePathPattern      = "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.RecoveryServices/vaults/%s/backupFabrics/Azure/protectionContainers/%s/protectedItems/AzureFileShare;%s"
 )
@@ -50,6 +52,8 @@ const azureFileShareProvisioner = "file.csi.azure.com"
 const AzureFabricName = "Azure"
 const TagNameCloudManager = "cloud-manager"
 const TagValueRwxVolumeBackup = "rwxVolumeBackup"
+
+const DefaultBackupPolicyName = "cm-noop-policy"
 
 func GetStorageAccountPath(subscriptionId, resourceGroupName, storageAccountName string) string {
 	return fmt.Sprintf(storageAccountPathPattern, subscriptionId, resourceGroupName, storageAccountName)
@@ -65,6 +69,10 @@ func GetVaultPath(subscriptionId, resourceGroupName, vaultName string) string {
 
 func GetContainerName(resourceGroupName, storageAccountName string) string {
 	return fmt.Sprintf(containerNamePattern, resourceGroupName, storageAccountName)
+}
+
+func GetFileShareName(name string) string {
+	return fmt.Sprintf(fileShareNamePattern, name)
 }
 
 func GetRecoveryPointPath(subscriptionId, resourceGroupName, vaultName, storageAccountName, protectedItemName, recoveryPointName string) string {
@@ -147,4 +155,19 @@ func ParseProtectedItemId(protectedId string) (subscription string, resourceGrou
 		}
 	}
 	return result["subscription"], result["resourceGroup"], result["vault"], result["container"], result["protectedItem"], nil
+}
+
+func ParseContainerId(containerId string) (subscription string, resourceGroup string, vault string, container string, err error) {
+	re := regexp.MustCompile(containerIdPattern)
+	match := re.FindStringSubmatch(containerId)
+	if match == nil {
+		return "", "", "", "", fmt.Errorf("container id %s does not match pattern %s", containerId, containerIdPattern)
+	}
+	result := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	return result["subscription"], result["resourceGroup"], result["vault"], result["container"], nil
 }

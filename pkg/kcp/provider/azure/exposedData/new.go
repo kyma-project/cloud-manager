@@ -2,7 +2,7 @@ package exposedData
 
 import (
 	"context"
-	"errors"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 )
@@ -12,7 +12,7 @@ func New(sf StateFactory) composed.Action {
 		scopeState := st.(scopetypes.State)
 		if !composed.IsObjLoaded(ctx, scopeState) {
 			return composed.LogErrorAndReturn(
-				errors.New("logical error"),
+				common.ErrLogical,
 				"Azure ExposeData flow called w/out loaded Scope",
 				composed.StopAndForget,
 				ctx,
@@ -25,7 +25,12 @@ func New(sf StateFactory) composed.Action {
 		}
 
 		return composed.ComposeActionsNoName(
-			composed.Noop,
+			kcpNetworkVerify,
+			vnetLoad,
+			subnetsLoad,
+			natGatewaysLoad,
+			publicIpAddressesLoad,
+			exposedDataSetToScope,
 		)(ctx, state)
 	}
 }

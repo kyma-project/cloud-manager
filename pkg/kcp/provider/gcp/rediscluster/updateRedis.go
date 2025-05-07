@@ -35,7 +35,11 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	logger.Info("Updating redis")
-	err = state.memorystoreClient.UpdateRedisCluster(ctx, state.gcpRedisCluster, state.updateMask)
+	updateSubmask := []string{}
+	if len(state.updateMask) > 0 {
+		updateSubmask = state.updateMask[:1] // max one param per update can be changed
+	}
+	err = state.memorystoreClient.UpdateRedisCluster(ctx, state.gcpRedisCluster, updateSubmask)
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Redis")

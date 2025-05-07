@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -35,6 +36,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	if Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
+
 	state := r.factory.NewState(request)
 	action := r.newAction()
 
@@ -63,7 +68,7 @@ func (r *reconciler) newAction() composed.Action {
 			),
 			composed.ComposeActions(
 				"gcpSubnet-delete",
-				// preventDeleteOnGcpRedisClusterUsage,
+				preventDeleteOnGcpRedisClusterUsage,
 				deleteKcpGcpSubnet,
 				waitKcpGcpSubnetDeleted,
 				actions.RemoveCommonFinalizer(),

@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"flag"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"os"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -159,7 +160,7 @@ func main() {
 		Info("Config dump")
 
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
-	activeSkrCollection := skrruntime.NewActiveSkrCollection(rootLogger.WithName("skr-collection"))
+	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		BaseContext: func() context.Context {
@@ -240,6 +241,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupGcpRedisInstanceReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisInstance")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupGcpRedisClusterReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")
 		os.Exit(1)
 	}
 
@@ -325,6 +331,7 @@ func main() {
 		scopeclient.NewAwsStsGardenClientProvider(),
 		activeSkrCollection,
 		gcpclient.NewServiceUsageClientProvider(),
+		awsexposeddataclient.NewClientProvider(),
 		azureexposeddataclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")

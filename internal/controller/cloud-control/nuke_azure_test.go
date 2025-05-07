@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -22,7 +23,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 	vaultName := fmt.Sprintf("cm-%s", scopeName)
 	location := "westeurope"
 	saName := "test-sa"
-	rgName := "test-rg"
+	rgName := fmt.Sprintf("rg-%v", scopeName)
 	backupPolicyName := "test-policy"
 	containerName := azurerwxvolumebackupclient.GetContainerName(rgName, saName)
 	fileShares := []string{"test-fs-01", "test-fs-02"}
@@ -81,7 +82,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 	nuke := &cloudcontrolv1beta1.Nuke{}
 	It("When Nuke for the Scope is created", func() {
 		//Disable the test case if the feature is not enabled.
-		if !feature.FFRwxBackupAzure.Value(context.Background()) {
+		if !feature.FFNukeBackupsAzure.Value(context.Background()) {
 			Skip("Nuke Backups for Azure is disabled")
 		}
 
@@ -102,7 +103,7 @@ var _ = Describe("Feature: KCP Nuke AzureRwxVolumeBackup", func() {
 				Should(Succeed())
 		})
 
-		kinds := []string{"AzureRwxVolumeBackup", "AzureRecoveryVault"}
+		kinds := []string{azurenukeclient.AzureFileShareProtection, azurenukeclient.AzureRecoveryVault}
 
 		By("And Then Nuke resources have state Deleted", func() {
 			Eventually(func() error {

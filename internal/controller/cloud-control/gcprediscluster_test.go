@@ -59,7 +59,7 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 		redisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
 
 		By("When GcpRedisCluster is created", func() {
-			Eventually(CreateGcpRedisCluster).
+			Eventually(CreateKcpGcpRedisCluster).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					WithName(name),
 					WithRemoteRef("skr-rediscluster-example"),
@@ -80,7 +80,7 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
-					HavingGcpRedisClusterStatusId()).
+					HavingKcpGcpRedisClusterStatusId()).
 				Should(Succeed(), "expected GcpRedisCluster to get status.id")
 			memorystoreGcpRedisCluster = infra.GcpMock().GetMemoryStoreRedisClusterByName(redisCluster.Status.Id)
 		})

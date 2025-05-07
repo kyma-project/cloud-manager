@@ -6,4 +6,4 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: gcpsubnet-sample
 spec:
-  # TODO(user): Add fields here
+  cidr: '10.250.12.0/22'

@@ -68,6 +68,7 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 			Run(ctx, state)
 	}
 
+	state.pvc = pvc
 	return nil, nil
 
 }

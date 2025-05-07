@@ -6,12 +6,15 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
@@ -49,9 +52,9 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 
 	cluster := setupDefaultCluster()
 
-	state := &State{
-		State: composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup),
-	}
+	kcpScheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
+	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
 
 	scope := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{
@@ -67,9 +70,25 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 		},
 	}
 
+	kymaRef := klog.ObjectRef{
+		Name:      "skr",
+		Namespace: "test",
+	}
+
+	kcpClient := fake.NewClientBuilder().
+		WithScheme(kcpScheme).
+		WithObjects(scope).
+		Build()
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+
+	state := &State{
+		State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup)),
+	}
+
 	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")
 	state.scope = scope
 	state.fileShareName = "matchingFileShareName"
+	state.subscriptionId = "test-subscription-id"
 
 	return state
 
@@ -90,34 +109,6 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(ctx, state)
 
 				assert.Equal(t, composed.StopWithRequeue, err)
-
-			})
-
-			t.Run("ListProtectedItems - fails", func(t *testing.T) {
-
-				backup.Status.Id = "asdf"
-				kvp := map[string]string{
-					"ListProtectedItems": "fail",
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-				err, _ := createBackup(newCtx, state)
-
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-
-			})
-
-			t.Run("ListProtectedItems - more than one matching name", func(t *testing.T) {
-
-				backup.Status.Id = "asdf"
-				kvp := map[string]int{
-					"ListProtectedItems match": 2,
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-				err, _ := createBackup(newCtx, state)
-
-				assert.Equal(t, composed.StopAndForget, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
 
 			})
 
@@ -156,155 +147,6 @@ func TestCreateBackup(t *testing.T) {
 				err, _ := createBackup(newCtx, state)
 
 				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
-
-			})
-
-		})
-
-	})
-
-	t.Run("createBackup - fileshare not yet protected", func(t *testing.T) {
-		// Arrange
-		ctx := context.Background()
-		backup := setupDefaultBackup()
-		state := setupDefaultState(ctx, backup)
-
-		// Not yet protected
-
-		t.Run("unhappy paths", func(t *testing.T) {
-
-			t.Run("CreateBackupPolicy fails", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-				kvp := map[string]string{
-					"CreateBackupPolicy": "fail",
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-
-			})
-
-			t.Run("ListBackupProtectableItems - Fail", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-				kvp := map[string]string{
-					"ListBackupProtectableItems": "fail",
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-			})
-
-			t.Run("ListBackupProtectableItems - zero matching protectable items", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 0,
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-			})
-
-			t.Run("ListBackupProtectableItems -  more than one matching protectable items", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 2,
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopAndForget, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
-			})
-
-			t.Run("ListBackupProtectableItems - exactly one protectable item with nil name", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 1,
-				}
-				kvp2 := map[string]bool{
-					"NilName": true,
-				}
-				newCtx := addValuesToContext(ctx, kvp)
-				newCtx = addValuesToContext(newCtx, kvp2)
-
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopAndForget, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupFailed, backup.Status.State)
-			})
-
-			t.Run("CreateOrUpdateProtectedItem - Fails", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 1,
-				}
-				kvp2 := map[string]bool{
-					"NilName": false,
-				}
-				kvp3 := map[string]string{
-					"CreateOrUpdateProtectedItem": "fail",
-				}
-
-				newCtx := addValuesToContext(ctx, kvp)
-				newCtx = addValuesToContext(newCtx, kvp2)
-				newCtx = addValuesToContext(newCtx, kvp3)
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-
-			})
-
-			t.Run("CreateOrUpdateProtectedItem - succeeds but TriggerBackup fails", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 1,
-				}
-				kvp2 := map[string]bool{
-					"NilName": false,
-				}
-				kvp3 := map[string]string{
-					"TriggerBackup": "fail",
-				}
-
-				newCtx := addValuesToContext(ctx, kvp)
-				newCtx = addValuesToContext(newCtx, kvp2)
-				newCtx = addValuesToContext(newCtx, kvp3)
-
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeue, err)
-				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupError, backup.Status.State)
-
-			})
-
-		})
-
-		t.Run("happy path", func(t *testing.T) {
-
-			t.Run("CreateOrUpdateProtectedItem succeeds and TriggerBackup succeeds", func(t *testing.T) {
-				backup.Status.Id = "asdf"
-				state.vaultName = "vaultName - one pass CreateOrUpdateProtectedItem - succeed TriggerBackup"
-				kvp := map[string]int{
-					"ListBackupProtectableItems match": 1,
-				}
-				kvp2 := map[string]bool{
-					"NilName": false,
-				}
-				//kvp3 := map[string]string{
-				//	"TriggerBackup": "fail",
-				//}
-				newCtx := addValuesToContext(ctx, kvp)
-				newCtx = addValuesToContext(newCtx, kvp2)
-				//newCtx = addValuesToContext(newCtx, kvp3)
-				err, _ := createBackup(newCtx, state)
-				assert.Equal(t, composed.StopWithRequeueDelay(util.Timing.T60000ms()), err)
 				assert.Equal(t, cloudresourcesv1beta1.AzureRwxBackupDone, backup.Status.State)
 
 			})

@@ -26,64 +26,44 @@ import (
 )
 
 type ActiveSkrCollection interface {
-	AddScope(scope *cloudcontrolv1beta1.Scope)
-	RemoveScope(scope *cloudcontrolv1beta1.Scope)
-	AddKyma(kyma *unstructured.Unstructured)
-	RemoveKyma(kyma *unstructured.Unstructured)
+	AddScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope)
+	RemoveScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope)
+	AddKyma(ctx context.Context, kyma *unstructured.Unstructured)
+	RemoveKyma(ctx context.Context, kyma *unstructured.Unstructured)
 	Contains(kymaName string) bool
 	GetKymaNames() []string
 }
 
 type ActiveSkrCollectionAdmin interface {
 	ActiveSkrCollection
-	Logger() logr.Logger
 	Queue() *CyclicQueue
 }
 
-//type activeSkrCtxKeyType string
-//
-//const activeSkrCtxKey activeSkrCtxKeyType = "activeSkrCtxKey"
-//
-//func ActiveSkrCollectionToCtx(ctx context.Context, val ActiveSkrCollection) context.Context {
-//	return context.WithValue(ctx, activeSkrCtxKey, val)
-//}
-//
-//func ActiveSkrCollectionFromCtx(ctx context.Context) ActiveSkrCollection {
-//	val := ctx.Value(activeSkrCtxKey)
-//	return val.(ActiveSkrCollection)
-//}
-
-func NewActiveSkrCollection(logger logr.Logger) ActiveSkrCollectionAdmin {
+func NewActiveSkrCollection() ActiveSkrCollectionAdmin {
 	return &activeSkrCollection{
-		queue:  NewCyclicQueue(),
-		logger: logger,
+		queue: NewCyclicQueue(),
 	}
 }
 
 var _ ActiveSkrCollectionAdmin = &activeSkrCollection{}
 
 type activeSkrCollection struct {
-	queue  *CyclicQueue
-	logger logr.Logger
-}
-
-func (l *activeSkrCollection) Logger() logr.Logger {
-	return l.logger
+	queue *CyclicQueue
 }
 
 func (l *activeSkrCollection) Queue() *CyclicQueue {
 	return l.queue
 }
 
-func (l *activeSkrCollection) AddScope(scope *cloudcontrolv1beta1.Scope) {
-	l.add(scope)
+func (l *activeSkrCollection) AddScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope) {
+	l.add(ctx, scope)
 }
 
-func (l *activeSkrCollection) AddKyma(kyma *unstructured.Unstructured) {
-	l.add(kyma)
+func (l *activeSkrCollection) AddKyma(ctx context.Context, kyma *unstructured.Unstructured) {
+	l.add(ctx, kyma)
 }
 
-func (l *activeSkrCollection) add(obj client.Object) {
+func (l *activeSkrCollection) add(ctx context.Context, obj client.Object) {
 	kymaName := obj.GetName()
 
 	if l.queue.Contains(kymaName) {
@@ -100,7 +80,8 @@ func (l *activeSkrCollection) add(obj client.Object) {
 	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
 	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
-	l.logger.WithValues(
+	logger := composed.LoggerFromCtx(ctx)
+	logger.WithValues(
 		"kymaName", kymaName,
 		"globalAccountId", globalAccountId,
 		"subaccountId", subaccountId,
@@ -116,15 +97,15 @@ func (l *activeSkrCollection) add(obj client.Object) {
 		Add(1)
 }
 
-func (l *activeSkrCollection) RemoveScope(scope *cloudcontrolv1beta1.Scope) {
-	l.remove(scope)
+func (l *activeSkrCollection) RemoveScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope) {
+	l.remove(ctx, scope)
 }
 
-func (l *activeSkrCollection) RemoveKyma(kyma *unstructured.Unstructured) {
-	l.remove(kyma)
+func (l *activeSkrCollection) RemoveKyma(ctx context.Context, kyma *unstructured.Unstructured) {
+	l.remove(ctx, kyma)
 }
 
-func (l *activeSkrCollection) remove(obj client.Object) {
+func (l *activeSkrCollection) remove(ctx context.Context, obj client.Object) {
 	kymaName := obj.GetName()
 	if !l.queue.Contains(kymaName) {
 		return
@@ -140,7 +121,8 @@ func (l *activeSkrCollection) remove(obj client.Object) {
 	region := labels[cloudcontrolv1beta1.LabelScopeRegion]
 	brokerPlanName := labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName]
 
-	l.logger.WithValues(
+	logger := composed.LoggerFromCtx(ctx)
+	logger.WithValues(
 		"kymaName", kymaName,
 		"globalAccountId", globalAccountId,
 		"subaccountId", subaccountId,
@@ -259,7 +241,7 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 		"kyma", kymaName,
 	)
 	ctx := composed.LoggerIntoCtx(l.ctx, logger)
-	skrManager, scope, kyma, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
+	skrManager, scope, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
 	if errors.Is(err, context.DeadlineExceeded) {
 		return
 	}
@@ -283,13 +265,11 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Landscape(os.Getenv("LANDSCAPE")).
 		LoadFromScope(scope).
-		LoadFromKyma(kyma).
 		Plane(types.PlaneSkr).
 		Build(ctx)
 
 	logger = feature.DecorateLogger(ctx, logger)
 
-	//logger.Info("Starting SKR Runner")
 	runner := NewSkrRunner(l.registry, l.kcpCluster, l.skrStatusSaver, kymaName)
 	to := 10 * time.Second
 	if debugged.Debugged {
@@ -300,5 +280,4 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	if err != nil {
 		logger.Error(err, "Error running SKR Runner")
 	}
-	//logger.Info("SKR Runner stopped")
 }

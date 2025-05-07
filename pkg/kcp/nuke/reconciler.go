@@ -86,7 +86,7 @@ func (r *nukeReconciler) newAction() composed.Action {
 			),
 			composed.If(
 				composed.All(
-					feature.FFRwxBackupAzure.Predicate(),
+					feature.FFNukeBackupsAzure.Predicate(),
 					statewithscope.AzureProviderPredicate,
 				),
 				azurenuke.New(r.azureStateFactory),

@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateGcpRedisCluster(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.GcpRedisCluster, opts ...ObjAction) error {
+func CreateKcpGcpRedisCluster(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.GcpRedisCluster, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.GcpRedisCluster{}
 	}
@@ -75,7 +75,7 @@ func WithKcpGcpRedisClusterReplicasPerShard(replicasPerShard int32) ObjAction {
 	}
 }
 
-func HavingGcpRedisClusterStatusId() ObjAssertion {
+func HavingKcpGcpRedisClusterStatusId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.GcpRedisCluster)
 		if !ok {
@@ -88,7 +88,7 @@ func HavingGcpRedisClusterStatusId() ObjAssertion {
 	}
 }
 
-func WithGcpRedisClusterDiscoveryEndpoint(discoveryEndpoint string) ObjStatusAction {
+func WithKcpGcpRedisClusterDiscoveryEndpoint(discoveryEndpoint string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			if redisCluster, ok := obj.(*cloudcontrolv1beta1.GcpRedisCluster); ok {
