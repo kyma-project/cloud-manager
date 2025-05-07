@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 var _ = Describe("Feature: SKR GcpRedisCluster", func() {
@@ -379,6 +380,306 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
 			Should(Succeed())
+	})
+
+	It("Scenario: SKR GcpRedisCluster is created with empty GcpSubnet when default GcpSubnet does not exist", func() {
+
+		gcpGcpRedisClusterName := "7b6e392f-bfe8-4f7f-8fbc-318aad1d3cba"
+		skrGcpSubnetId := "5170ec2e-e829-4c94-8c33-f791c35aa984"
+		gcpGcpRedisCluster := &cloudresourcesv1beta1.GcpRedisCluster{}
+		kcpGcpRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
+		skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
+
+		skrgcpsubnet.Ignore.AddName("default")
+
+		By("Given default SKR GcpSubnet does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					NewObjActions(WithName("default"))).
+				ShouldNot(Succeed())
+		})
+
+		By("When GcpRedisCluster is created with empty GcpSubnet", func() {
+			Eventually(CreateSkrGcpRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster,
+					WithName(gcpGcpRedisClusterName),
+					WithSkrGcpRedisClusterDefaultSpec(),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR GcpSubnet is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("And Then default SKR GcpSubnet has label app.kubernetes.io/managed-by: cloud-manager", func() {
+			Expect(skrGcpSubnet.Labels[util.WellKnownK8sLabelManagedBy]).To(Equal("cloud-manager"))
+		})
+
+		By("And Then default SKR GcpSubnet has label app.kubernetes.io/part-of: kyma", func() {
+			Expect(skrGcpSubnet.Labels[util.WellKnownK8sLabelPartOf]).To(Equal("kyma"))
+		})
+
+		By("And Then GcpRedisCluster is not ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster, NewObjActions()).
+				Should(Succeed())
+			Expect(meta.IsStatusConditionTrue(gcpGcpRedisCluster.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
+				To(BeFalse(), "expected GcpRedisCluster not to have Ready condition, but it has")
+		})
+
+		By("When default SKR GcpSubnet has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					WithSkrGcpSubnetStatusId(skrGcpSubnetId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP GcpRedisCluster is created", func() {
+			// load SKR GcpRedisCluster to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpGcpRedisCluster,
+					NewObjActions(),
+					HavingSkrGcpRedisClusterStatusId(),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpGcpRedisCluster,
+					NewObjActions(
+						WithName(gcpGcpRedisCluster.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When KCP GcpRedisCluster has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpGcpRedisCluster,
+					WithKcpGcpRedisClusterDiscoveryEndpoint("192.168.0.1:6576"),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR GcpRedisCluster has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpGcpRedisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		authSecret := &corev1.Secret{}
+		By("And Then SKR auth Secret is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(gcpGcpRedisCluster.Name),
+						WithNamespace(gcpGcpRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When GcpRedisCluster is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster).
+				Should(Succeed(), "expected GcpRedisCluster not to exist, but it still does")
+		})
+
+		By("Then auth Secret does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), authSecret).
+				Should(Succeed(), "expected auth Secret not to exist, but it still does")
+		})
+
+		By("And Then KCP GcpRedisCluster does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpGcpRedisCluster).
+				Should(Succeed(), "expected KCP GcpRedisCluster not to exist, but it still does")
+		})
+
+		By("And Then SKR default GcpSubnet exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet, NewObjActions()).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete default SKR GcpSubnet", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR GcpRedisCluster is created with empty GcpSubnetRef when default GcpSubnet already exist", func() {
+
+		gcpGcpRedisClusterName := "d41efe57-665c-47fe-9f3c-af306fb8161f"
+		skrGcpSubnetId := "154b6ecf-cc8c-4dac-b3d0-a32b38c98764"
+		gcpGcpRedisCluster := &cloudresourcesv1beta1.GcpRedisCluster{}
+		kcpGcpRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
+		skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
+
+		skrgcpsubnet.Ignore.AddName("default")
+
+		By("Given default SKR GcpSubnet exists", func() {
+			Eventually(CreateSkrGcpSubnet).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet, WithName("default")).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR GcpSubnet has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					WithSkrGcpSubnetStatusId(skrGcpSubnetId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("When GcpRedisCluster is created with empty GcpSubnetRef", func() {
+			Eventually(CreateSkrGcpRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster,
+					WithName(gcpGcpRedisClusterName),
+					WithSkrGcpRedisClusterDefaultSpec(),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP GcpRedisCluster is created", func() {
+			// load SKR GcpRedisCluster to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpGcpRedisCluster,
+					NewObjActions(),
+					HavingSkrGcpRedisClusterStatusId(),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpGcpRedisCluster,
+					NewObjActions(
+						WithName(gcpGcpRedisCluster.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When KCP GcpRedisCluster has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpGcpRedisCluster,
+					WithKcpGcpRedisClusterDiscoveryEndpoint("192.168.0.1:6576"),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR GcpRedisCluster has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpGcpRedisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		authSecret := &corev1.Secret{}
+		By("And Then SKR auth Secret is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(gcpGcpRedisCluster.Name),
+						WithNamespace(gcpGcpRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("When GcpRedisCluster is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpGcpRedisCluster).
+				Should(Succeed(), "expected GcpRedisCluster not to exist, but it still does")
+		})
+
+		By("Then auth Secret does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), authSecret).
+				Should(Succeed(), "expected auth Secret not to exist, but it still does")
+		})
+
+		By("And Then KCP GcpRedisCluster does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpGcpRedisCluster).
+				Should(Succeed(), "expected KCP GcpRedisCluster not to exist, but it still does")
+		})
+
+		By("And Then SKR default GcpSubnet exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet, NewObjActions()).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete default SKR GcpSubnet", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+		})
 	})
 
 })

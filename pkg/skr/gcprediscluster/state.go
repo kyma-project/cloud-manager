@@ -6,7 +6,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultgcpsubnet"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 
@@ -54,17 +56,17 @@ func (s *State) ObjAsGcpRedisCluster() *cloudresourcesv1beta1.GcpRedisCluster {
 	return s.Obj().(*cloudresourcesv1beta1.GcpRedisCluster)
 }
 
-func (s *State) GetSkrSubnet() *cloudresourcesv1beta1.GcpSubnet {
+func (s *State) GetSkrGcpSubnet() *cloudresourcesv1beta1.GcpSubnet {
 	return s.SkrSubnet
 }
 
-func (s *State) SetSkrSubnet(skrSubnet *cloudresourcesv1beta1.GcpSubnet) {
+func (s *State) SetSkrGcpSubnet(skrSubnet *cloudresourcesv1beta1.GcpSubnet) {
 	s.SkrSubnet = skrSubnet
 }
 
-// func (s *State) ObjAsObjWithSubnetRef() defaultiprange.ObjWithSubnetRef {
-// 	return s.ObjAsGcpRedisCluster()
-// }
+func (s *State) ObjAsObjWithGcpSubnetRef() defaultgcpsubnet.ObjWithGcpSubnetRef {
+	return s.ObjAsGcpRedisCluster()
+}
 
 func (s *State) ShouldModifyKcp() bool {
 	gcpRedisCluster := s.ObjAsGcpRedisCluster()
