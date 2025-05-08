@@ -3,6 +3,7 @@ package leases
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"k8s.io/api/coordination/v1"
@@ -10,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sync"
 	"time"
 )
@@ -52,6 +54,7 @@ func Acquire(ctx context.Context, cluster composed.StateCluster, resourceName, o
 				RenewTime:            &metav1.MicroTime{Time: time.Now()},
 			},
 		}
+		controllerutil.AddFinalizer(lease, api.CommonFinalizerDeletionHook)
 		err := cluster.K8sClient().Create(ctx, lease)
 		if err != nil {
 			return LeasingFailed, err
@@ -92,7 +95,18 @@ func Release(ctx context.Context, cluster composed.StateCluster, resourceName, o
 		return err
 	}
 	if lease.Name != "" && ptr.Deref(lease.Spec.HolderIdentity, "") == holderName {
-		err := cluster.K8sClient().Delete(ctx, lease)
+		controllerutil.RemoveFinalizer(lease, api.CommonFinalizerDeletionHook)
+		// patch is preferable to update, but fake client does not support it causing tests to fail
+		err = cluster.K8sClient().Update(ctx, lease)
+		if err != nil {
+			return err
+		}
+		// getting the lease again to avoid revision conflict
+		err = cluster.K8sClient().Get(ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		err = cluster.K8sClient().Delete(ctx, lease)
 		if err != nil {
 			return err
 		}
