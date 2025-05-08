@@ -2,8 +2,10 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/leases"
+	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -16,10 +18,22 @@ func acquireLease(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	restore := state.ObjAsGcpNfsVolumeRestore()
-	res, err := leases.Acquire(ctx, state.SkrCluster,
-		restore.Spec.Destination.Volume.ToNamespacedName(restore.Namespace),
-		types.NamespacedName{Name: restore.Name, Namespace: restore.Namespace},
-		"restore")
+	volumeNamespacedName := restore.Spec.Destination.Volume.ToNamespacedName(restore.Namespace)
+
+	leaseName := getLeaseName(volumeNamespacedName.Name, "restore")
+	leaseNamespace := volumeNamespacedName.Namespace
+	holderName := getHolderName(types.NamespacedName{Name: restore.Name, Namespace: restore.Namespace})
+	leaseDuration := int32(config.SkrRuntimeConfig.SkrLockingLeaseDuration.Seconds())
+
+	res, err := leases.Acquire(
+		ctx,
+		state.SkrCluster,
+		leaseName,
+		leaseNamespace,
+		holderName,
+		leaseDuration,
+	)
+
 	switch res {
 	case leases.AcquiredLease, leases.RenewedLease:
 		return nil, nil
