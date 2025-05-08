@@ -62,7 +62,7 @@ func (suite *releaseLeaseSuite) TestReleaseLease_OtherLeased() {
 	})
 	assert.Nil(suite.T(), err)
 	err, _ = releaseLease(ctx, state)
-	assert.NotNil(suite.T(), err)
+	assert.Nil(suite.T(), err)
 	lease := &coordinationv1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
 	assert.Nil(suite.T(), err)

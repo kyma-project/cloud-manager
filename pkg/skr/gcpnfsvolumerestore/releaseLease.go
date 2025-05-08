@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/leases"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -27,7 +28,17 @@ func releaseLease(ctx context.Context, st composed.State) (error, context.Contex
 		leaseNamespace,
 		holderName,
 	)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+
+		if strings.Contains(err.Error(), "belongs to another owner") {
+			logger := composed.LoggerFromCtx(ctx)
+			logger.Info("Ignoring expected ownership error.")
+			return nil, nil
+		}
+
 		return composed.LogErrorAndReturn(err, "Error releasing lease", composed.StopWithRequeueDelay(util.Timing.T100ms()), ctx)
 	}
 	return nil, nil
