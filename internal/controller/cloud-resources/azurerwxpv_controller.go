@@ -19,7 +19,6 @@ package cloudresources
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv"
@@ -60,7 +59,6 @@ type AzureRwxPvReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *AzureRwxPvReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	composed.LoggerFromCtx(ctx).Info("AzureRwxPVReconciler ::: reconcile " + req.Namespace + "/" + req.Name)
 	return r.reconciler.Reconcile(ctx, req)
 }
 

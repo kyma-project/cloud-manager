@@ -56,6 +56,7 @@ func (c client) CreateFileShare(ctx context.Context, id string) error {
 
 func (c client) GetFileShare(ctx context.Context, id string) (*armstorage.FileShareItem, error) {
 	resourceGroupName, storageAccountName, fileShareName, _, _, err := azurerwxvolumebackupclient.ParsePvVolumeHandle(id)
+
 	if err != nil {
 		return nil, err
 	}

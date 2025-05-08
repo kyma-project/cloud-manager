@@ -2,17 +2,19 @@ package azure
 
 import (
 	"context"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("Feature: SKR Azure CSI PV Deletion", func() {
+var _ = Describe("Feature: SKR Azure CSI PVC Deletion", func() {
 
 	skrRwxVolumeName := "azure-rwx-pv-deletion-test"
 	fileShareName := "file-share-01"
@@ -102,24 +104,21 @@ var _ = Describe("Feature: SKR Azure CSI PV Deletion", func() {
 
 	})
 
-	Describe("Scenario: SKR Azure PV - Delete", func() {
+	Describe("Scenario: SKR Azure PVC - Delete", func() {
 
-		It("When delete is called on Azure RWX PV", func() {
+		It("When delete is called on Azure RWX PVC", func() {
 
 			//Disable the test case if the feature is not enabled.
 			if !feature.FFNukeBackupsAzure.Value(context.Background()) {
 				Skip("PV Reconciler for Azure is disabled")
 			}
 
-			By("And Then PV in SKR is deleted.", func() {
-				Eventually(Delete).
+			azureconfig.AzureConfig.AzureFileShareDeletionWaitDuration = 1 * time.Millisecond
+			By("And Then PV in SKR goes to Released State.", func() {
+				Eventually(UpdatePvPhase).
 					WithArguments(
 						infra.Ctx(), infra.SKR().Client(), pv,
-					).
-					Should(Succeed())
-				Eventually(IsDeleted).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), pv,
+						corev1.VolumeReleased,
 					).
 					Should(Succeed())
 			})
@@ -128,6 +127,7 @@ var _ = Describe("Feature: SKR Azure CSI PV Deletion", func() {
 			rwxPvClient, _ := clientProvider(infra.Ctx(), "", "", subscriptionId, tenantId, "")
 			By(" And Given Azure FileShare is deleted", func() {
 
+				time.Sleep(time.Second)
 				fileShare, err := rwxPvClient.GetFileShare(infra.Ctx(), volumeHandle)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fileShare).To(BeNil())

@@ -43,6 +43,7 @@ func (r *reconciler) newAction() composed.Action {
 			),
 
 			composed.ComposeActions("AzureRwxPvDeleted",
+				waitBeforeDelete,
 				loadScope,
 				createAzureClient,
 				loadAzureFileShare,
@@ -71,7 +72,10 @@ func AzureRwxPvPredicate() composed.Predicate {
 		state := st.(*State)
 		pv := state.ObjAsPV()
 		value := pv.Spec.CSI != nil && pv.Spec.CSI.Driver == "file.csi.azure.com" &&
-			pv.Spec.PersistentVolumeReclaimPolicy == "Delete" && composed.MarkedForDeletionPredicate(ctx, state)
+			pv.Spec.PersistentVolumeReclaimPolicy == "Delete" && pv.Status.Phase == corev1.VolumeReleased
+		if value {
+			composed.LoggerFromCtx(ctx).Info("Reconciling Azure PV", "name", pv.Name)
+		}
 		return value
 	}
 }
