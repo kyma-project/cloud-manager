@@ -15,5 +15,6 @@
   * [Using AwsRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-10-aws-redis-instance.md)
   * [Using GcpRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-20-gcp-redis-instance.md)
   * [Using AzureRedisInstance Custom Resources](/cloud-manager/user/tutorials/01-40-30-azure-redis-instance.md)
+  * [Using AzureRedisCluster Custom Resources](/cloud-manager/user/tutorials/01-50-30-azure-redis-cluster.md)
 * [Glossary](/cloud-manager/user/00-10-glossary.md)
 <!-- markdown-link-check-enable -->
