@@ -3,8 +3,8 @@ package gcpnfsvolumerestore
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/leases"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/skr/common/leases"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
