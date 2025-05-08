@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	config2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/stretchr/testify/suite"
-	v1 "k8s.io/api/coordination/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,7 +47,7 @@ func (suite *leaseSuite) TestAcquireAndRelease() {
 	suite.Equal(AcquiredLease, res)
 
 	// arrange
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err = fakeClient.Get(suite.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
 	suite.NoError(err)
 	time1 := lease.Spec.RenewTime.Time

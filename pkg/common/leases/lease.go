@@ -7,7 +7,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	v1 "k8s.io/api/coordination/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,19 +25,19 @@ const (
 )
 
 func Acquire(ctx context.Context, cluster composed.StateCluster, leaseName, leaseNamespace, holderName string, leaseDurationSec int32) (LeaseResult, error) {
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err := cluster.K8sClient().Get(ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return LeasingFailed, err
 	}
 
 	if lease.Name == "" {
-		lease = &v1.Lease{
+		lease = &coordinationv1.Lease{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      leaseName,
 				Namespace: leaseNamespace,
 			},
-			Spec: v1.LeaseSpec{
+			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       &holderName,
 				LeaseDurationSeconds: &leaseDurationSec,
 				AcquireTime:          &metav1.MicroTime{Time: time.Now()},
@@ -74,7 +74,7 @@ func Acquire(ctx context.Context, cluster composed.StateCluster, leaseName, leas
 }
 
 func Release(ctx context.Context, cluster composed.StateCluster, leaseName, leaseNamespace, holderName string) error {
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err := cluster.K8sClient().Get(ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
