@@ -42,6 +42,13 @@
     "Microsoft.Network/virtualNetworks/write",
     "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/read",
     "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/write",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/delete",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/recoveryPoints/restore/action",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/operationResults/read",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/protectedItems/operationsStatus/read",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/read",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/write",
+    "Microsoft.RecoveryServices/Vaults/backupFabrics/protectionContainers/delete",
     "Microsoft.RecoveryServices/Vaults/backupJobs/operationResults/read",
     "Microsoft.RecoveryServices/Vaults/backupJobs/read",
     "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
@@ -50,9 +57,26 @@
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
     "Microsoft.RecoveryServices/Vaults/read",
     "Microsoft.RecoveryServices/Vaults/write",
+    "Microsoft.RecoveryServices/Vaults/delete",
+    "Microsoft.RecoveryServices/Vaults/backupconfig/read",
+    "Microsoft.RecoveryServices/Vaults/backupconfig/write",
+    "Microsoft.RecoveryServices/Vaults/registeredIdentities/read",
+    "Microsoft.RecoveryServices/Vaults/registeredIdentities/write",
+    "Microsoft.RecoveryServices/Vaults/registeredIdentities/operationResults/read",
+    "Microsoft.Storage/storageAccounts/read",
+    "Microsoft.Storage/storageAccounts/write",
+    "Microsoft.Storage/storageAccounts/listKeys/action",
+    "Microsoft.Storage/storageAccounts/fileServices/shares/read",
+    "Microsoft.Storage/storageAccounts/fileServices/shares/write",
+    "Microsoft.Storage/storageAccounts/fileServices/shares/delete",
     "Microsoft.Resources/subscriptions/resourceGroups/delete",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Resources/subscriptions/resourceGroups/write"
+  ],
+  "dataActions": [
+    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/delete",
+    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/write",
+    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/read"
   ]
 }
 ```
