@@ -16,6 +16,7 @@ type tenantSubscriptionStore struct {
 	*storageStore
 	*natGatewayStore
 	*publicIpAddressStore
+	*fileShareStore
 	tenant       string
 	subscription string
 }
@@ -33,6 +34,7 @@ func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscription
 		storageStore:             newStorageStore(subscription),
 		natGatewayStore:          newNatGatewayStore(subscription),
 		publicIpAddressStore:     newPublicIpAddressStore(subscription),
+		fileShareStore:           newFileShareStore(subscription),
 		tenant:                   tenant,
 		subscription:             subscription,
 	}

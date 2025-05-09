@@ -19,8 +19,9 @@ package main
 import (
 	"context"
 	"flag"
-	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"os"
+
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
@@ -66,6 +67,7 @@ import (
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 
@@ -316,6 +318,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAzureRwxPvReconciler(skrRegistry, azurerwxpvclient.NewClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxPV")
 		os.Exit(1)
 	}
 

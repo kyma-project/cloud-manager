@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
@@ -10,6 +11,7 @@ import (
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
@@ -84,6 +86,7 @@ type Providers interface {
 	NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client]
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
+	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
 }
 
 type NetworkConfig interface {

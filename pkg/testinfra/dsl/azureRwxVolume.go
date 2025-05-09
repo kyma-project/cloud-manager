@@ -187,7 +187,7 @@ func HavePvcPhase(expected corev1.PersistentVolumeClaimPhase) ObjAssertion {
 		if x, ok := obj.(*corev1.PersistentVolumeClaim); ok {
 			actual := x.Status.Phase
 
-			if len(actual) == 0 && actual != expected {
+			if actual != expected {
 				return fmt.Errorf(
 					"expected object %T %s/%s to have phase: %s, but found %s",
 					obj, obj.GetNamespace(), obj.GetName(), expected, actual,
@@ -204,7 +204,7 @@ func HavePvPhase(expected corev1.PersistentVolumePhase) ObjAssertion {
 		if x, ok := obj.(*corev1.PersistentVolume); ok {
 			actual := x.Status.Phase
 
-			if len(actual) == 0 && actual != expected {
+			if actual != expected {
 				return fmt.Errorf(
 					"expected object %T %s/%s to have phase: %s, but found %s",
 					obj, obj.GetNamespace(), obj.GetName(), expected, actual,
@@ -224,6 +224,18 @@ func WithPvVolumeHandle(volumeHandle string) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithPvVolumeHandle", obj))
+		},
+	}
+}
+
+func WithPVReclaimPolicy(policy corev1.PersistentVolumeReclaimPolicy) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*corev1.PersistentVolume); ok {
+				x.Spec.PersistentVolumeReclaimPolicy = policy
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithPVReclaimPolicy", obj))
 		},
 	}
 }
