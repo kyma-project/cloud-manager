@@ -11,6 +11,7 @@ import (
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
@@ -75,6 +76,12 @@ func (s *server) ExposeDataProvider() azureclient.ClientProvider[azureexposeddat
 
 func (s *server) FileShareProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.FileShareClient] {
 	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxvolumebackupclient.FileShareClient, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurevnetlinkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

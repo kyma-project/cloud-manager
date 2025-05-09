@@ -3,6 +3,7 @@ package meta
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -129,4 +130,27 @@ func GetErrorMessage(err error, def string) (string, bool) {
 	}
 
 	return def, false
+}
+
+func HandleLoadingError(name string, err error, ctx context.Context) (error, context.Context) {
+	logger := composed.LoggerFromCtx(ctx)
+	if err == nil {
+		return nil, ctx
+	}
+
+	if IsTooManyRequests(err) {
+		return composed.LogErrorAndReturn(err,
+			fmt.Sprintf("Too many requests on loading %s", name),
+			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+			ctx,
+		)
+	}
+
+	if IsNotFound(err) {
+		logger.Info(fmt.Sprintf("%s not found", name))
+		return nil, ctx
+	}
+
+	return LogErrorAndReturn(err, fmt.Sprintf("Error loading %s", name), ctx)
+
 }

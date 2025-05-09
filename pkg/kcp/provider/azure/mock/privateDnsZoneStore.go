@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
@@ -61,7 +62,7 @@ func (s *privateDnsZoneStore) getPrivateZoneNonLocking(resourceGroupName, privat
 	return info, nil
 }
 
-func (s *privateDnsZoneStore) CreatePrivateDnsZone(ctx context.Context, resourceGroupName, privateDnsZoneName string, parameters armprivatedns.PrivateZone) error {
+func (s *privateDnsZoneStore) CreatePrivateDnsZone(ctx context.Context, resourceGroupName, privateDnsZoneName string, tags map[string]string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -84,6 +85,7 @@ func (s *privateDnsZoneStore) CreatePrivateDnsZone(ctx context.Context, resource
 		Location:   to.Ptr("global"),
 		Properties: props,
 		Name:       to.Ptr(privateDnsZoneName),
+		Tags:       azureutil.AzureTags(tags),
 	}
 
 	s.items[resourceGroupName][privateDnsZoneName] = item
