@@ -254,3 +254,27 @@ func NewNatGatewayResourceId(subscription, resourceGroup, natGatewayName string)
 		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(natGatewayName) > 0,
 	}
 }
+
+func NewPrivateDnsZoneResourceId(subscription, resourceGroup, privateDnsZoneInstanceName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "privateDnsZones",
+		ResourceName:  privateDnsZoneInstanceName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(privateDnsZoneInstanceName) > 0,
+	}
+}
+
+func NewVirtualNetworkLinkResourceId(subscription, resourceGroup, privateDnsZoneName, virtualNetworkLinkName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:    subscription,
+		ResourceGroup:   resourceGroup,
+		Provider:        "Microsoft.Network",
+		ResourceType:    "privateDnsZones",
+		ResourceName:    privateDnsZoneName,
+		SubResourceType: "virtualNetworkLinks",
+		SubResourceName: virtualNetworkLinkName,
+		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(privateDnsZoneName) > 0,
+	}
+}
