@@ -2,7 +2,6 @@ package mock
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -39,7 +38,7 @@ type Providers interface {
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclient.FileBackupClient]
-	VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
+	VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient]
 	MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
 }
