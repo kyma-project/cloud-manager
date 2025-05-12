@@ -6,7 +6,7 @@ required GCP permissions
   compute.networks.addPeering => https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering
   ** Removes the VPC peering connection
   compute.networks.removePeering => https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering
-  ** Gets the network (VPCs) in order to retrieve the peerings
+  ** Gets the network (VPCs) in order to retrieve all peerings
   compute.networks.get => https://cloud.google.com/compute/docs/reference/rest/v1/networks/get
 
   - Remote Side - The service account used to create the VPC peering connection needs the additional permissions:
@@ -30,7 +30,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
 	"k8s.io/utils/ptr"
 )
@@ -55,7 +55,7 @@ func closeNetworkClient(ctx context.Context, gcpNetworkClient *compute.NetworksC
 	}
 }
 
-func NewClientProvider() cloudclient.ClientProvider[VpcPeeringClient] {
+func NewClientProvider() client.ClientProvider[VpcPeeringClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (VpcPeeringClient, error) {
 		return &networkClient{}, nil
 	}
@@ -105,7 +105,7 @@ func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sour
 
 func (c *networkClient) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	//peering from remote vpc to kyma
-	//by default exportCustomRoutes is false but if the remote vpc wants kyma to import custom routes, the peering needs to export them :)
+	//by default exportCustomRoutes is false, but if the remote vpc wants kyma to import custom routes, the peering needs to export them :)
 	exportCustomRoutes := false
 	importCustomRoutes := false
 	if customRoutes {
@@ -116,7 +116,7 @@ func (c *networkClient) CreateRemoteVpcPeering(ctx context.Context, remotePeerin
 
 func (c *networkClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
 	//peering from kyma to remote vpc
-	//Kyma will not export custom routes to the remote vpc, but if the remote vpc is exporting them we need to import them
+	//Kyma will not export custom routes to the remote vpc, but if the remote vpc is exporting them, we need to import them
 	exportCustomRoutes := false
 	importCustomRoutes := customRoutes
 	return CreateVpcPeeringRequest(ctx, remotePeeringName, kymaVpc, kymaProject, importCustomRoutes, exportCustomRoutes, remoteProject, remoteVpc)

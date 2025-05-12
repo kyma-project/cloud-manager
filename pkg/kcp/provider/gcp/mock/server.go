@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -159,7 +158,7 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 	}
 }
 
-func (s *server) VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
+func (s *server) VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (gcpvpcpeeringclient.VpcPeeringClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP VPCPeeringProvider mock...")
