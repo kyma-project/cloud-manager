@@ -21,6 +21,17 @@ func deleteConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 		return nil, nil
 	}
 
+	if state.subnet == nil {
+		return nil, nil
+	}
+
+	gcpScope := state.Scope().Spec.Scope.Gcp
+	region := state.Scope().Spec.Region
+
+	if !state.ShouldDeleteConnectionPolicy(gcpScope.Project, region) {
+		return nil, nil
+	}
+
 	logger.Info("Deleting GCP Connection Policy")
 
 	err := state.networkComnnectivityClient.DeleteServiceConnectionPolicy(ctx, gcpsubnetclient.DeleteServiceConnectionPolicyRequest{

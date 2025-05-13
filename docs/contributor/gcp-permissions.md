@@ -32,6 +32,7 @@
   "file.operations.list",
   "networkconnectivity.serviceConnectionPolicies.create",
   "networkconnectivity.serviceConnectionPolicies.delete",
+  "networkconnectivity.serviceConnectionPolicies.update",
   "networkconnectivity.serviceConnectionPolicies.get",
   "redis.clusters.create",
   "redis.clusters.delete",
