@@ -19,7 +19,3 @@ func GetServiceConnectionPolicyFullName(projectId, region, network string) strin
 	connectionPolicyNameShort := GetServiceConnectionPolicyShortName(network, region)
 	return fmt.Sprintf("%s/serviceConnectionPolicies/%s", parent, connectionPolicyNameShort)
 }
-
-func GetLeaseName(kymaName string) string {
-	return fmt.Sprintf("cm-gcpsubnet-%s", kymaName)
-}
