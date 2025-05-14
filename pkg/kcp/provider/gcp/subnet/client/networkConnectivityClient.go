@@ -6,8 +6,10 @@ import (
 
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type CreateServiceConnectionPolicyRequest struct {
@@ -26,6 +28,7 @@ type DeleteServiceConnectionPolicyRequest struct {
 
 type NetworkConnectivityClient interface {
 	CreateServiceConnectionPolicy(ctx context.Context, request CreateServiceConnectionPolicyRequest) error
+	UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error
 	GetServiceConnectionPolicy(ctx context.Context, name string) (*networkconnectivitypb.ServiceConnectionPolicy, error)
 	DeleteServiceConnectionPolicy(ctx context.Context, request DeleteServiceConnectionPolicyRequest) error
 }
@@ -42,6 +45,28 @@ func NewNetworkConnectivityClient(saJsonKeyPath string) NetworkConnectivityClien
 
 type networkConnectivityClient struct {
 	saJsonKeyPath string
+}
+
+func (ncClient *networkConnectivityClient) UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error {
+	client, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithCredentialsFile(ncClient.saJsonKeyPath))
+	if err != nil {
+		return err
+	}
+	defer client.Close() // nolint: errcheck
+
+	_, err = client.UpdateServiceConnectionPolicy(ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
+		ServiceConnectionPolicy: policy,
+		RequestId:               uuid.NewString(),
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: updateMask,
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx context.Context, request CreateServiceConnectionPolicyRequest) error {

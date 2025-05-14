@@ -33,6 +33,7 @@
   "networkconnectivity.serviceConnectionPolicies.create",
   "networkconnectivity.serviceConnectionPolicies.delete",
   "networkconnectivity.serviceConnectionPolicies.get",
+  "networkconnectivity.serviceConnectionPolicies.update",
   "redis.clusters.create",
   "redis.clusters.delete",
   "redis.clusters.get",
