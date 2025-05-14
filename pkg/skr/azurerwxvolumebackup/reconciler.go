@@ -41,15 +41,17 @@ func (r *reconciler) newAction() composed.Action {
 		"azureRwxVolumeBackupMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
 		commonscope.New(),
+
+		loadPersistentVolumeClaim,
+		loadPersistentVolume,
+		createClient,
+		createVault,
+		getProtectedResourceName,
+
 		composed.IfElse(
 			composed.Not(CompletedOrDeletedPredicate),
 			composed.ComposeActions("AzureRwxVolumeBackupNotCompletedOrDeleted",
 				actions.PatchAddCommonFinalizer(),
-				loadPersistentVolumeClaim,
-				loadPersistentVolume,
-				createClient,
-				createVault,
-				getProtectedResourceName,
 				createBackupPolicy,
 				protectFileshare,
 				createBackup,
@@ -58,14 +60,9 @@ func (r *reconciler) newAction() composed.Action {
 		composed.If(
 			composed.MarkedForDeletionPredicate,
 			composed.ComposeActions("AzureRwxVolumeBackupMarkedForDeletion"),
-			loadPersistentVolumeClaim,
-			loadPersistentVolume,
-			createClient,
-			createVault,
-			getProtectedResourceName,
+			actions.PatchRemoveCommonFinalizer(),
 			deleteProtectedItem,
 		),
-		actions.PatchRemoveCommonFinalizer(),
 		composed.StopAndForgetAction,
 	)
 }
