@@ -104,6 +104,7 @@ type AzureRwxVolumeBackupStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:categories={kyma-cloud-manager}
 
 // AzureRwxVolumeBackup is the Schema for the azurerwxvolumebackups API
 type AzureRwxVolumeBackup struct {
