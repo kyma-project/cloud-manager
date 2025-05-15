@@ -1,0 +1,72 @@
+- path: spec.redisVersion
+  name: spec.redisVersion
+  required: false
+  disableOnEdit: true
+
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+  disableOnEdit: false
+
+- path: spec.redisConfiguration
+  name: spec.redisConfiguration
+  required: false
+  widget: FormGroup
+  children:
+    - path: maxclients
+      name: spec.redisConfiguration.maxclients
+      disableOnEdit: true
+    - path: maxfragmentationmemory-reserved
+      name: spec.redisConfiguration.maxfragmentationmemory-reserved
+      disableOnEdit: true
+    - path: maxmemory-delta
+      name: spec.redisConfiguration.maxmemory-delta
+      disableOnEdit: true
+    - path: maxmemory-policy
+      name: spec.redisConfiguration.maxmemory-policy
+      disableOnEdit: true
+    - path: maxmemory-reserved
+      name: spec.redisConfiguration.maxmemory-reserved
+      disableOnEdit: true
+    - path: notify-keyspace-events
+      name: spec.redisConfiguration.notify-keyspace-events
+      disableOnEdit: true
+
+- path: spec.volume
+  name: spec.volume
+  required: false
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.volume.name
+    - path: labels
+      name: spec.volume.labels
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volume.annotations
+      widget: KeyValuePair
+    - path: extraData
+      name: spec.volume.extraData
+      widget: KeyValuePair
+
+- path: spec.ipRange
+  name: spec.ipRange
+  required: true
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.ipRange.name
+      required: true
+
+- path: spec
+  name: spec.sharding
+  widget: FormGroup
+  children:
+    - path: shardCount
+      name: spec.shardCount
+      widget: Number
+      required: false
+    - path: replicasPerPrimary
+      name: spec.replicasPerPrimary
+      widget: Number
+      required: false
