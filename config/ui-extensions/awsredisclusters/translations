@@ -1,0 +1,22 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.ipRange: Ip Range
+  spec.ipRange.name: Ip Range Name
+  spec.auth: Authentication
+  spec.authSecret: Authentication Secret
+  spec.authEnabled: Enabled
+  spec.authEnabledFull: Authentication Enabled
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
+  spec.authSecret.extraData: Extra Data
+  spec.autoMinorVersionUpgrade: Auto Minor Version Upgrade
+  spec.engineVersion: Engine Version
+  spec.parameters: Parameters
+  spec.preferredMaintenanceWindow: Preferred Maintenance Window
+  spec.redisTier: Redis Tier
+  spec.sharding: Sharding
+  spec.shardCount: Shard Count
+  spec.replicasPerShard: Replicas Per Shard

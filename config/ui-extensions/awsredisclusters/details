@@ -1,0 +1,66 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.autoMinorVersionUpgrade
+        source: autoMinorVersionUpgrade
+        widget: Labels
+      - name: spec.engineVersion
+        source: engineVersion
+        widget: Labels
+      - name: spec.parameters
+        source: parameters
+        widget: Labels
+      - name: spec.preferredMaintenanceWindow
+        source: preferredMaintenanceWindow
+        widget: Labels
+      - name: spec.redisTier
+        source: redisTier
+        widget: Labels
+
+  - name: spec.ipRange
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.ipRange.name
+        source: ipRange.name
+        widget: Labels
+
+  - name: spec.authEnabledFull
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.authEnabled
+        source: authEnabled
+        widget: Labels
+
+  - name: spec.authSecret
+    widget: Panel
+    source: spec
+    children:
+      - source: authSecret.name
+        name: spec.authSecret.name
+        widget: Labels
+      - source: authSecret.labels
+        name: spec.authSecret.labels
+        widget: Labels
+      - source: authSecret.annotations
+        name: spec.authSecret.annotations
+        widget: Labels
+      - source: authSecret.extraData
+        name: spec.authSecret.extraData
+        widget: Labels
+
+  - name: spec.sharding
+    widget: Panel
+    source: spec
+    children:
+      - source: shardCount
+        name: spec.shardCount
+        widget: Labels
+      - source: replicasPerShard
+        name: spec.replicasPerShard
+        widget: Labels
+
+
