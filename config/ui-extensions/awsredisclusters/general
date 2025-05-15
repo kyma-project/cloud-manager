@@ -1,0 +1,11 @@
+resource:
+    kind: AwsRedisCluster
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awsredisclusters
+name: AWS Redis Cluster
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AWS Redis Cluster description here
