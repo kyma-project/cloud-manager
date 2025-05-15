@@ -3,6 +3,7 @@ module github.com/kyma-project/cloud-manager
 go 1.24.1
 
 require (
+	cloud.google.com/go/auth v0.16.1
 	cloud.google.com/go/compute v1.37.0
 	cloud.google.com/go/networkconnectivity v1.17.1
 	cloud.google.com/go/redis v1.18.2
@@ -32,12 +33,13 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gardener/gardener v1.118.1
 	github.com/go-logr/logr v1.4.2
+	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.1
 	github.com/gophercloud/gophercloud/v2 v2.7.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.16
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/peterbourgon/mergemap v0.0.1
@@ -65,7 +67,6 @@ require (
 
 require (
 	cloud.google.com/go v0.120.0 // indirect
-	cloud.google.com/go/auth v0.16.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.5.0 // indirect
@@ -109,6 +110,7 @@ require (
 	github.com/google/pprof v0.0.0-20250403155104-27863c87afa6 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

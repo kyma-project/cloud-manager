@@ -2,6 +2,10 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"os"
+
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -11,7 +15,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -24,7 +27,6 @@ var _ = Describe("Feature: KCP Scope", func() {
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-		//kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		// Set the path to an arbitrary file path to prevent errors
 		Expect(os.Setenv("GCP_SA_JSON_KEY_PATH", "testdata/serviceaccount.json")).
@@ -36,6 +38,18 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Eventually(CreateShootGcp).
 				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
 				Should(Succeed(), "failed creating garden shoot for GCP")
+		})
+
+		gcpProject := DefaultGcpProject
+		gcpRegion := shoot.Spec.Region
+		gcpMock := infra.GcpMock()
+
+		var gcpCreatedInfra *GcpGardenerCloudInfra
+
+		By("And Given Gcp infra exists", func() {
+			infra, err := CreateGcpGardenerResources(infra.Ctx(), gcpMock, shoot.Namespace, shoot.Name, "10.250.0.0/22", gcpProject, gcpRegion)
+			Expect(err).NotTo(HaveOccurred())
+			gcpCreatedInfra = infra
 		})
 
 		gardenerClusterCR := util.NewGardenerClusterUnstructured()
@@ -108,7 +122,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 
 		By("And Then Scope has GCP subscriptionId and tenantId", func() {
 			Expect(scope.Spec.Scope.Gcp).NotTo(BeNil())
-			Expect(scope.Spec.Scope.Gcp.Project).To(Equal("project_id")) // fixed value from CreateShootGcp
+			Expect(scope.Spec.Scope.Gcp.Project).To(Equal(DefaultGcpProject)) // fixed value from CreateShootGcp
 		})
 
 		By("And Then Scope has vpc network name", func() {
@@ -124,9 +138,20 @@ var _ = Describe("Feature: KCP Scope", func() {
 		By("And Then Scope has worker zones as shoot", func() {
 			Expect(scope.Spec.Scope.Gcp.Workers).To(HaveLen(1))
 			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones).To(HaveLen(3))
-			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[0]).To(Equal("europe-west1-a")) // fixed value from CreateShootGcp
-			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[1]).To(Equal("europe-west1-b")) // fixed value from CreateShootGcp
-			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[2]).To(Equal("europe-west1-c")) // fixed value from CreateShootGcp
+			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[0]).To(Equal(DefaultGcpWorkerZones[0])) // fixed value from CreateShootGcp
+			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[1]).To(Equal(DefaultGcpWorkerZones[1])) // fixed value from CreateShootGcp
+			Expect(scope.Spec.Scope.Gcp.Workers[0].Zones[2]).To(Equal(DefaultGcpWorkerZones[2])) // fixed value from CreateShootGcp
+		})
+
+		By("And Then Scope has status.exposedData.natGatewayIps", func() {
+			expected := pie.Map(gcpCreatedInfra.Address, func(x *computepb.Address) string {
+				return ptr.Deref(x.Address, "")
+			})
+			expected = pie.Sort(pie.Unique(pie.Filter(expected, func(s string) bool {
+				return s != ""
+			})))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(HaveLen(len(expected)))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(ConsistOf(expected))
 		})
 
 		kymaNetwork := &cloudcontrolv1beta1.Network{}

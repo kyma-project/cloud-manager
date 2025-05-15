@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"flag"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	"os"
 
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
@@ -208,6 +209,13 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
+	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"))
+	if err != nil {
+		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH"))
+		os.Exit(1)
+	}
+	defer util.MustVoid(gcpClients.Close())
+
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
@@ -340,6 +348,7 @@ func main() {
 		gcpclient.NewServiceUsageClientProvider(),
 		awsexposeddataclient.NewClientProvider(),
 		azureexposeddataclient.NewClientProvider(),
+		gcpexposeddataclient.NewClientProvider(gcpClients),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)

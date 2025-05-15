@@ -4,6 +4,9 @@ import (
 	"context"
 	"sync"
 
+	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
@@ -47,6 +50,9 @@ func New() Server {
 			mutex:         sync.Mutex{},
 			redisClusters: map[string]*clusterpb.Cluster{},
 		},
+		exposedDataStore: &exposedDataStore{
+			ipPool: iprangeallocate.NewAddressSpace(),
+		},
 	}
 }
 
@@ -61,6 +67,7 @@ type server struct {
 	*vpcPeeringStore
 	*memoryStoreClientFake
 	*memoryStoreClusterClientFake
+	*exposedDataStore
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -175,5 +182,11 @@ func (s *server) MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanc
 func (s *server) MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (gcpredisclusterclient.MemorystoreClusterClient, error) {
 		return s, nil
+	}
+}
+
+func (s *server) ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client] {
+	return func() gcpexposeddataclient.Client {
+		return s
 	}
 }

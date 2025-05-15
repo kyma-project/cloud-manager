@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -27,6 +28,7 @@ type Clients interface {
 	NfsClient
 	gcpsubnetclient.ComputeClient
 	gcpsubnetclient.NetworkConnectivityClient
+	gcpexposeddataclient.Client
 }
 
 type Providers interface {
@@ -41,6 +43,7 @@ type Providers interface {
 	VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient]
 	MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
+	ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
@@ -63,4 +66,6 @@ type Server interface {
 	MemoryStoreClusterClientFakeUtils
 
 	VpcPeeringMockClientUtils
+
+	ExposedDataConfig
 }

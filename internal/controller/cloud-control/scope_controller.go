@@ -2,6 +2,8 @@ package cloudcontrol
 
 import (
 	"context"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData"
@@ -10,6 +12,8 @@ import (
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -22,7 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"time"
 )
 
 func SetupScopeReconciler(
@@ -33,6 +36,7 @@ func SetupScopeReconciler(
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 	awsClientProvider awsclient.SkrClientProvider[awsexposeddataclient.Client],
 	azureClientProvider azureclient.ClientProvider[azureexposeddataclient.Client],
+	gcpClientProvider gcpclient.GcpClientProvider[gcpexposeddataclient.Client],
 ) error {
 	return NewScopeReconciler(
 		kcpscope.New(
@@ -42,6 +46,7 @@ func SetupScopeReconciler(
 			gcpServiceUsageClientProvider,
 			awsexposeddata.NewStateFactory(awsClientProvider),
 			azureexposeddata.NewStateFactory(azureClientProvider),
+			gcpexposeddata.NewStateFactory(gcpClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

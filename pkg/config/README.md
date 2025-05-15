@@ -7,7 +7,7 @@ Main features:
 * Multiple sources merged into single configuration at predefined field paths
 * Filesystem watch and automatic reload on file changed or symlink replaced (ie: k8s ConfigMap change)
 * Bound Golang structs at a specified field path with automatic reload on the config change
-* Mapping from raw config to a bound struct with `github.com/mitchellh/mapstructure`
+* Mapping from raw config to a bound struct with `github.com/go-viper/mapstructure/v2`
 
 
 ## Usage
