@@ -24,6 +24,21 @@ func (b *AzureVNetLinkBuilder) WithRemoteTenant(remoteTenant string) *AzureVNetL
 	return b
 }
 
+func (b *AzureVNetLinkBuilder) WithName(name string) *AzureVNetLinkBuilder {
+	b.Obj.Name = name
+	return b
+}
+
+func (b *AzureVNetLinkBuilder) WithNamespace(namespace string) *AzureVNetLinkBuilder {
+	b.Obj.Namespace = namespace
+	return b
+}
+
+func (b *AzureVNetLinkBuilder) WithAnnotations(annotations map[string]string) *AzureVNetLinkBuilder {
+	b.Obj.Annotations = annotations
+	return b
+}
+
 func (b *AzureVNetLinkBuilder) Build() *AzureVNetLink {
 	return &b.Obj
 }

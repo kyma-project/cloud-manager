@@ -63,6 +63,10 @@ func (s *virtualNetworkLinkStore) getVirtualNetworkLinkNonLocking(resourceGroupN
 	if !ok {
 		return nil, azuremeta.NewAzureNotFoundError()
 	}
+	if virtualNetworkLink == nil {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+
 	return virtualNetworkLink, nil
 }
 

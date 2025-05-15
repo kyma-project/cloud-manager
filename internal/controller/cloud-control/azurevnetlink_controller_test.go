@@ -93,8 +93,8 @@ var _ = Describe("Feature: KCP AzureVNetLink", func() {
 
 		By("And Then VirtualNetworkLink does not exist", func() {
 			link, err := azureMockRemote.GetVirtualNetworkLink(infra.Ctx(), remoteResourceGroup, remotePrivateDnsZoneName, remoteVirtualPrivateLinkName)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(link).NotTo(BeNil())
+			Expect(err).To(HaveOccurred())
+			Expect(link).To(BeNil())
 		})
 
 		By("// cleanup: Scope", func() {

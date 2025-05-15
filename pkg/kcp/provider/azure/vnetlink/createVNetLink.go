@@ -2,10 +2,10 @@ package vnetlink
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func createVNetLink(ctx context.Context, st composed.State) (error, context.Context) {
@@ -32,13 +32,13 @@ func createVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	if azuremeta.IsTooManyRequests(err) {
-		return composed.LogErrorAndReturn(err,
-			"Too many requests on creating VirtualNetworkLink",
-			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-			ctx,
-		)
-	}
+	logger.Error(err, "Error creating VirtualNetworkLink")
 
-	return azuremeta.LogErrorAndReturn(err, "Error creating VirtualNetworkLink", ctx)
+	return azuremeta.HandleError(err, state.ObjAsAzureVNetLink()).
+		WithDefaultReason(cloudcontrolv1beta1.ReasonFailedCreatingVirtualNetworkLink).
+		WithDefaultMessage("Failed creating VirtualNetworkLink").
+		WithTooManyRequestsMessage("Too many requests on creating VirtualNetworkLink").
+		WithUpdateStatusMessage("Error updating KCP AzureVNetLink status on failed creating of VirtualNetworkLink").
+		Run(ctx, state)
+
 }

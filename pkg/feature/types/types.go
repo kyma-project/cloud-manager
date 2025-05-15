@@ -28,11 +28,12 @@ type FeatureName = string
 const (
 	FeatureUnknown FeatureName = "unknown"
 
-	FeatureNfs          FeatureName = "nfs"
-	FeatureNfsBackup    FeatureName = "nfsBackup"
-	FeaturePeering      FeatureName = "peering"
-	FeatureRedis        FeatureName = "redis"
-	FeatureRedisCluster FeatureName = "rediscluster"
+	FeatureNfs           FeatureName = "nfs"
+	FeatureNfsBackup     FeatureName = "nfsBackup"
+	FeaturePeering       FeatureName = "peering"
+	FeatureRedis         FeatureName = "redis"
+	FeatureRedisCluster  FeatureName = "rediscluster"
+	FeatureAzureVNetLink FeatureName = "azurevnetlink"
 )
 
 type PlaneName = string
