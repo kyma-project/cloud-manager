@@ -59,6 +59,11 @@ func (s *privateDnsZoneStore) getPrivateZoneNonLocking(resourceGroupName, privat
 	if !ok {
 		return nil, azuremeta.NewAzureNotFoundError()
 	}
+
+	if info == nil {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+
 	return info, nil
 }
 
