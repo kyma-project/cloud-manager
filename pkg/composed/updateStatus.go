@@ -42,6 +42,12 @@ type ObjWithDeriveStateFromConditions interface {
 	DeriveStateFromConditions() (changed bool)
 }
 
+type ObjWithStatusId interface {
+	ObjWithConditionsAndState
+	Id() string
+	SetId(id string)
+}
+
 func PatchStatus(obj ObjWithConditions) *UpdateStatusBuilder {
 	return &UpdateStatusBuilder{
 		applyType: applyServerSide,

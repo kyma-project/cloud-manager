@@ -17,19 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	ReasonFailedLoadingPrivateDnzZone      = "FailedLoadingPrivateDnzZone"
-	ReasonFailedLoadingVirtualNetworkLink  = "FailedLoadingVirtualNetworkLink"
-	ReasonFailedCreatingVirtualNetworkLink = "FailedCreatingVirtualNetworkLink"
-)
-
-const (
-	VirtualNetworkLinkStateInProgress = "InProgress"
-	VirtualNetworkLinkStateCompleted  = "Completed"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -37,8 +26,6 @@ const (
 
 // AzureVNetLinkSpec defines the desired state of AzureVNetLink
 type AzureVNetLinkSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVirtualPrivateLinkName is immutable."
@@ -52,15 +39,13 @@ type AzureVNetLinkSpec struct {
 
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteTenant is immutable."
 	RemoteTenant string `json:"remoteTenant,omitempty"`
-
-	// +kubebuilder:validation:Required
-	Scope ScopeRef `json:"scope"`
 }
 
 // AzureVNetLinkStatus defines the observed state of AzureVNetLink
 type AzureVNetLinkStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// +optional
+	Id string `json:"id,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -74,6 +59,7 @@ type AzureVNetLinkStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 
 // AzureVNetLink is the Schema for the azurevnetlinks API
 type AzureVNetLink struct {
@@ -92,35 +78,21 @@ func (in *AzureVNetLink) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }
 
-func (in *AzureVNetLink) ScopeRef() ScopeRef {
-	return in.Spec.Scope
+func (in *AzureVNetLink) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureAzureVNetLink
 }
 
-func (in *AzureVNetLink) SetScopeRef(scopeRef ScopeRef) {
-	in.Spec.Scope = scopeRef
+func (in *AzureVNetLink) SpecificToProviders() []string { return []string{"azure"} }
+
+func (in *AzureVNetLink) State() string { return in.Status.State }
+
+func (in *AzureVNetLink) SetState(v string) { in.Status.State = v }
+
+func (in *AzureVNetLink) Id() string {
+	return in.Status.Id
 }
 
-func (in *AzureVNetLink) State() string {
-	return in.Status.State
-}
-
-func (in *AzureVNetLink) SetState(v string) {
-	in.Status.State = v
-}
-
-func (in *AzureVNetLink) CloneForPatchStatus() client.Object {
-	return &AzureVNetLink{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AzureVNetLink",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-}
+func (in *AzureVNetLink) SetId(v string) { in.Status.Id = v }
 
 // +kubebuilder:object:root=true
 
