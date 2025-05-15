@@ -30,6 +30,12 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
+	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
+	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
+
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/runtime"
