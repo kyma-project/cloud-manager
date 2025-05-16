@@ -154,6 +154,8 @@ data:
           name: spec.replicasPerPrimary
           widget: Number
           required: false
+          disableOnEdit: true
+          description: Immutable once set.
   general: |
     resource:
         kind: AzureRedisCluster
