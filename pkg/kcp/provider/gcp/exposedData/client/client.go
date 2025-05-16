@@ -21,7 +21,7 @@ func NewClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProv
 	return func() Client {
 		return &client{
 			routersClient: gcpClients.ComputeRouters,
-			addressClient: gcpClients.ComputeAddress,
+			addressClient: gcpClients.ComputeAddresses,
 		}
 	}
 }

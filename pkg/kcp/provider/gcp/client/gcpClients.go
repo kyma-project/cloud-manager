@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
+	"cloud.google.com/go/auth/oauth2adapt"
 	compute "cloud.google.com/go/compute/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
 	"github.com/hashicorp/go-multierror"
@@ -12,10 +14,10 @@ import (
 )
 
 type GcpClients struct {
-	ComputeNetworking *compute.NetworksClient
-	ComputeAddress    *compute.AddressesClient
-	ComputeRouters    *compute.RoutersClient
-	RedisCluster      *rediscluster.CloudRedisClusterClient
+	ComputeNetworks  *compute.NetworksClient
+	ComputeAddresses *compute.AddressesClient
+	ComputeRouters   *compute.RoutersClient
+	RedisCluster     *rediscluster.CloudRedisClusterClient
 }
 
 func NewGcpClients(ctx context.Context, saJsonKeyPath string) (*GcpClients, error) {
@@ -23,39 +25,36 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string) (*GcpClients, erro
 
 	// compute --------------
 
-	computeHttpClient, err := b.WithScopes(compute.DefaultAuthScopes()).BuildHttpClient()
+	computeTokenProvider := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
+
+	computeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute networs client: %w", err)
 	}
-	computeNetworking, err := compute.NewNetworksRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
+	computeAddress, err := compute.NewAddressesRESTClient(ctx, option.WithTokenSource(computeTokenSource))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute addresses client: %w", err)
 	}
-	computeAddress, err := compute.NewAddressesRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
+	computeRouters, err := compute.NewRoutersRESTClient(ctx, option.WithTokenSource(computeTokenSource))
 	if err != nil {
-		return nil, err
-	}
-	computeRouters, err := compute.NewRoutersRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
 
 	// redis cluster ----------------
 
-	redisHttpClient, err := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildHttpClient()
+	redisClusterTokenProvider := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildTokenProvider()
+	redisClusterTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisClusterTokenProvider)
+	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithTokenSource(redisClusterTokenSource))
 	if err != nil {
-		return nil, err
-	}
-	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithHTTPClient(redisHttpClient))
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create redis cluster client: %w", err)
 	}
 
 	return &GcpClients{
-		ComputeNetworking: computeNetworking,
-		ComputeAddress:    computeAddress,
-		ComputeRouters:    computeRouters,
-		RedisCluster:      redisCluster,
+		ComputeNetworks:  computeNetworks,
+		ComputeAddresses: computeAddress,
+		ComputeRouters:   computeRouters,
+		RedisCluster:     redisCluster,
 	}, nil
 }
 

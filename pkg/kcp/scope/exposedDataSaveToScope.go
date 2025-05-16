@@ -2,12 +2,13 @@ package scope
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
 
-func exposedDataSave(ctx context.Context, st composed.State) (error, context.Context) {
+func exposedDataSaveToScope(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if !composed.IsObjLoaded(ctx, state) {
