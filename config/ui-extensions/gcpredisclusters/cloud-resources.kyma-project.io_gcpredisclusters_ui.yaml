@@ -107,9 +107,11 @@ data:
 
     - path: spec.shardCount
       name: spec.shardCount
+      required: true
 
     - path: spec.replicasPerShard
       name: spec.replicasPerShard
+      required: true
 
     - path: spec.subnet
       name: spec.subnet
