@@ -1,0 +1,50 @@
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+  disableOnEdit: false
+
+
+- path: spec.redisConfigs
+  name: spec.redisConfigs
+  required: false
+  widget: KeyValuePair
+
+- path: spec.authSecret
+  name: spec.authSecret
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.authSecret.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+    - path: labels
+      name: spec.authSecret.labels
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: annotations
+      name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+
+- path: spec.shardCount
+  name: spec.shardCount
+
+- path: spec.replicasPerShard
+  name: spec.replicasPerShard
+
+- path: spec.subnet
+  name: spec.subnet
+  widget: FormGroup
+  children:
+    - path: name
+      name: spec.subnet.name
+      required: true
