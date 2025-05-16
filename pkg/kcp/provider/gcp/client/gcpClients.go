@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/auth/oauth2adapt"
 	compute "cloud.google.com/go/compute/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/api/option"
 )
@@ -20,12 +21,19 @@ type GcpClients struct {
 	RedisCluster     *rediscluster.CloudRedisClusterClient
 }
 
-func NewGcpClients(ctx context.Context, saJsonKeyPath string) (*GcpClients, error) {
-	b := NewReloadingSaKeyTokenProviderOptionsBuilder(saJsonKeyPath)
+func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
+	logger.
+		WithValues("saJsonKeyPath", saJsonKeyPath).
+		Info("Creating GCP clients")
+
+	b := NewReloadingSaKeyTokenProviderOptionsBuilder(saJsonKeyPath, logger)
 
 	// compute --------------
 
-	computeTokenProvider := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	computeTokenProvider, err := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build compute token provider: %w", err)
+	}
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
 	computeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
@@ -43,7 +51,10 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string) (*GcpClients, erro
 
 	// redis cluster ----------------
 
-	redisClusterTokenProvider := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildTokenProvider()
+	redisClusterTokenProvider, err := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create redis cluster token provider: %w", err)
+	}
 	redisClusterTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisClusterTokenProvider)
 	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithTokenSource(redisClusterTokenSource))
 	if err != nil {

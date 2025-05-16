@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"cloud.google.com/go/auth"
 	"cloud.google.com/go/auth/httptransport"
+	"github.com/go-logr/logr"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -31,11 +33,11 @@ type serviceAccountCredentials struct {
 func loadServiceAccountCredentials(credentialsFile string) (*serviceAccountCredentials, error) {
 	content, err := os.ReadFile(credentialsFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read credentials file %s: %w", credentialsFile, err)
 	}
 	data := map[string]interface{}{}
 	if err := json.Unmarshal(content, &data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal credentials file %s: %w", credentialsFile, err)
 	}
 
 	tpy, ok := data["type"]
@@ -45,7 +47,7 @@ func loadServiceAccountCredentials(credentialsFile string) (*serviceAccountCrede
 
 	creds := &serviceAccountCredentials{}
 	if err := mapstructure.Decode(data, creds); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to mapstruct credentials file %s: %w", credentialsFile, err)
 	}
 
 	return creds, nil
@@ -56,6 +58,7 @@ type ReloadingSaKeyTokenProvider struct {
 }
 
 type ReloadingSaKeyTokenProviderOptions struct {
+	Logger          logr.Logger
 	CredentialsFile string
 	Scopes          []string
 }
@@ -82,7 +85,10 @@ func NewReloadingSaKeyTokenProvider(opts *ReloadingSaKeyTokenProviderOptions) *R
 func (p *ReloadingSaKeyTokenProvider) Token(ctx context.Context) (*auth.Token, error) {
 	creds, err := loadServiceAccountCredentials(p.opts.CredentialsFile)
 	if err != nil {
-		return nil, err
+		p.opts.Logger.
+			WithValues("credentialsFile", p.opts.CredentialsFile).
+			Error(err, "Failed to load credentials")
+		return nil, fmt.Errorf("failed to load credential: %w", err)
 	}
 
 	opts := &auth.Options2LO{
@@ -102,13 +108,17 @@ func (p *ReloadingSaKeyTokenProvider) Token(ctx context.Context) (*auth.Token, e
 
 	tp2lo, err := auth.New2LOTokenProvider(opts)
 	if err != nil {
-		return nil, err
+		p.opts.Logger.Error(err, "Failed to create 2LO token provider")
+		return nil, fmt.Errorf("failed to create 2lo token provider: %w", err)
 	}
 
 	t, err := tp2lo.Token(ctx)
 	if err != nil {
-		return nil, err
+		p.opts.Logger.Error(err, "Failed to get token from 2lo provider")
+		return nil, fmt.Errorf("failed to get token from 2lo provider: %w", err)
 	}
+
+	p.opts.Logger.Info("Successfully got token from 2lo provider")
 
 	return t, nil
 }
@@ -153,12 +163,16 @@ func NewHttpClient(opts *ReloadingSaKeyTokenProviderOptions) (*http.Client, erro
 // ======================================
 
 type ReloadingSaKeyTokenProviderOptionsBuilder struct {
+	logger          logr.Logger
 	credentialsFile string
 	scopes          []string
 }
 
-func NewReloadingSaKeyTokenProviderOptionsBuilder(credentialsFile string) *ReloadingSaKeyTokenProviderOptionsBuilder {
-	return &ReloadingSaKeyTokenProviderOptionsBuilder{credentialsFile: credentialsFile}
+func NewReloadingSaKeyTokenProviderOptionsBuilder(credentialsFile string, logger logr.Logger) *ReloadingSaKeyTokenProviderOptionsBuilder {
+	return &ReloadingSaKeyTokenProviderOptionsBuilder{
+		logger:          logger,
+		credentialsFile: credentialsFile,
+	}
 }
 
 func (b *ReloadingSaKeyTokenProviderOptionsBuilder) WithScopes(scopes []string) *ReloadingSaKeyTokenProviderOptionsBuilder {
@@ -168,6 +182,7 @@ func (b *ReloadingSaKeyTokenProviderOptionsBuilder) WithScopes(scopes []string) 
 
 func (b *ReloadingSaKeyTokenProviderOptionsBuilder) BuildOptions() *ReloadingSaKeyTokenProviderOptions {
 	return &ReloadingSaKeyTokenProviderOptions{
+		Logger:          b.logger,
 		CredentialsFile: b.credentialsFile,
 		Scopes:          b.scopes,
 	}
@@ -182,9 +197,13 @@ func (b *ReloadingSaKeyTokenProviderOptionsBuilder) MustBuildHttpClient() *http.
 	return util.Must(b.BuildHttpClient())
 }
 
-func (b *ReloadingSaKeyTokenProviderOptionsBuilder) BuildTokenProvider() auth.TokenProvider {
+func (b *ReloadingSaKeyTokenProviderOptionsBuilder) BuildTokenProvider() (auth.TokenProvider, error) {
+	opts := b.BuildOptions()
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
 	return auth.NewCachedTokenProvider(
 		NewReloadingSaKeyTokenProvider(b.BuildOptions()),
 		&auth.CachedTokenProviderOptions{},
-	)
+	), nil
 }
