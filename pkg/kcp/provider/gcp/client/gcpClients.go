@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 
 	compute "cloud.google.com/go/compute/apiv1"
@@ -12,9 +13,9 @@ import (
 )
 
 type GcpClients struct {
-	ComputeNetworking *compute.NetworksClient
-	ComputeAddress    *compute.AddressesClient
-	ComputeRouters    *compute.RoutersClient
+	ComputeNetworks  *compute.NetworksClient
+	ComputeAddresses *compute.AddressesClient
+	ComputeRouters   *compute.RoutersClient
 	RedisCluster      *rediscluster.CloudRedisClusterClient
 }
 
@@ -25,37 +26,38 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string) (*GcpClients, erro
 
 	computeHttpClient, err := b.WithScopes(compute.DefaultAuthScopes()).BuildHttpClient()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute http client: %w", err)
 	}
-	computeNetworking, err := compute.NewNetworksRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
+	computeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute networs client: %w", err)
 	}
 	computeAddress, err := compute.NewAddressesRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute addresses client: %w", err)
 	}
 	computeRouters, err := compute.NewRoutersRESTClient(ctx, option.WithHTTPClient(computeHttpClient))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
 
-	// redis cluster ----------------
-
-	redisHttpClient, err := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildHttpClient()
-	if err != nil {
-		return nil, err
-	}
-	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithHTTPClient(redisHttpClient))
-	if err != nil {
-		return nil, err
-	}
+	//// redis cluster ----------------
+	//
+	//redisHttpClient, err := b.WithScopes(rediscluster.DefaultAuthScopes()).BuildHttpClient()
+	//if err != nil {
+	//	return nil, fmt.Errorf("create redis http client: %w", err)
+	//}
+	//option.WithGRPCDialOption()
+	//redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithHTTPClient(redisHttpClient))
+	//if err != nil {
+	//	return nil, fmt.Errorf("create redis cluster client: %w", err)
+	//}
 
 	return &GcpClients{
-		ComputeNetworking: computeNetworking,
-		ComputeAddress:    computeAddress,
-		ComputeRouters:    computeRouters,
-		RedisCluster:      redisCluster,
+		ComputeNetworks:  computeNetworks,
+		ComputeAddresses: computeAddress,
+		ComputeRouters:   computeRouters,
+		//RedisCluster:     redisCluster,
 	}, nil
 }
 
