@@ -1,0 +1,24 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.redisVersion: Redis Version
+  spec.redisTier: Redis Tier
+  spec.authEnabled: Auth Enabled
+  spec.ipRange: Ip Range
+  spec.ipRange.name: Name
+  spec.authSecret: Authentication Secret
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
+  spec.authSecret.extraData: Extra Data
+  spec.maintenancePolicy: Maintenance Policy
+  spec.maintenancePolicy.dayOfWeek.day: Day
+  spec.maintenancePolicy.dayOfWeek.startTime: Start Time
+  spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
+  spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
+  spec.redisConfigs: Redis Configuration
+  spec.shardCount: Shard Count
+  spec.replicasPerShard: Replicas Per Shard
+  spec.subnet: Subnet
+  spec.subnet.name: Name
