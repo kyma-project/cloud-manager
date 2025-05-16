@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/tidwall/gjson"
 )
 

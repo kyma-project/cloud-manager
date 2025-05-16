@@ -4,6 +4,7 @@
 
 ```json
 [
+  "compute.addresses.list",
   "compute.globalAddresses.create",
   "compute.globalAddresses.createInternal",
   "compute.globalAddresses.delete",
@@ -14,6 +15,7 @@
   "compute.networks.get",
   "compute.networks.updatePolicy",
   "compute.networks.use",
+  "compute.routers.list",
   "compute.subnetworks.create",
   "compute.subnetworks.delete",
   "compute.subnetworks.get",

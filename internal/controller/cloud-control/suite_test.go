@@ -84,6 +84,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().ServiceUsageClientProvider(),
 		infra.AwsMock().ExposedDataProvider(),
 		infra.AzureMock().ExposeDataProvider(),
+		infra.GcpMock().ExposedDataProvider(),
 	)).NotTo(HaveOccurred())
 	// Kyma
 	Expect(SetupKymaReconciler(
