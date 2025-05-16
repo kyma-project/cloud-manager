@@ -70,3 +70,5 @@
       name: spec.replicasPerPrimary
       widget: Number
       required: false
+      disableOnEdit: true
+      description: Immutable once set.
