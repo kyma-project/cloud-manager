@@ -1,0 +1,11 @@
+resource:
+    kind: GcpRedisCluster
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpredisclusters
+name: GCP Redis Clusters
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    GcpRedisCluster description here
