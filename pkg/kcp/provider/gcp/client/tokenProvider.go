@@ -1,17 +1,18 @@
 package client
 
 import (
-	"cloud.google.com/go/auth"
-	"cloud.google.com/go/auth/httptransport"
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-viper/mapstructure/v2"
-	"github.com/hashicorp/go-multierror"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"net/http"
 	"os"
 	"time"
+
+	"cloud.google.com/go/auth"
+	"cloud.google.com/go/auth/httptransport"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 type serviceAccountCredentials struct {
@@ -179,4 +180,11 @@ func (b *ReloadingSaKeyTokenProviderOptionsBuilder) BuildHttpClient() (*http.Cli
 
 func (b *ReloadingSaKeyTokenProviderOptionsBuilder) MustBuildHttpClient() *http.Client {
 	return util.Must(b.BuildHttpClient())
+}
+
+func (b *ReloadingSaKeyTokenProviderOptionsBuilder) BuildTokenProvider() auth.TokenProvider {
+	return auth.NewCachedTokenProvider(
+		NewReloadingSaKeyTokenProvider(b.BuildOptions()),
+		&auth.CachedTokenProviderOptions{},
+	)
 }
