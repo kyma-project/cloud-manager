@@ -1,0 +1,6 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.cidr: Requested CIDR
+  status.cidr: Allocated CIDR

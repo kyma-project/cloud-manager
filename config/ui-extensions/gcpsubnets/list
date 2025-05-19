@@ -1,0 +1,11 @@
+- source: spec.cidr
+  name: spec.cidr
+  sort: true
+
+- source: status.cidr
+  name: status.cidr
+  sort: true
+
+- source: status.state
+  name: status.state
+  sort: true
