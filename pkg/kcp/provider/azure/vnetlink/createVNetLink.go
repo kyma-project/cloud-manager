@@ -24,7 +24,7 @@ func createVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 	err := state.remoteClient.CreateVirtualNetworkLink(ctx,
 		state.remotePrivateDnsZoneId.ResourceGroup,
 		state.remotePrivateDnsZoneId.ResourceName,
-		state.ObjAsAzureVNetLink().Spec.RemoteVirtualPrivateLinkName,
+		state.ObjAsAzureVNetLink().Spec.RemoteVNetLinkName,
 		vnetId)
 
 	if err == nil {

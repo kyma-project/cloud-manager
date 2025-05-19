@@ -28,10 +28,10 @@ import (
 type AzureVNetLinkSpec struct {
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVirtualPrivateLinkName is immutable."
-	// +kubebuilder:validation:XValidation:rule=(size(self) <= 80), message="RemoteVirtualPrivateLinkName can be up to 80 characters long."
-	// +kubebuilder:validation:XValidation:rule=(self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != ''), message="RemoteVirtualPrivateLinkName must begin with a word character, and it must end with a word character. RemoteVirtualPrivateLinkName may contain word characters or '-'."
-	RemoteVirtualPrivateLinkName string `json:"remoteVirtualPrivateLinkName,omitempty"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVNetLinkName is immutable."
+	// +kubebuilder:validation:XValidation:rule=(size(self) <= 80), message="RemoteVNetLinkName can be up to 80 characters long."
+	// +kubebuilder:validation:XValidation:rule=(self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != ''), message="RemoteVNetLinkName must begin with a word character, and it must end with a word character. RemoteVNetLinkName may contain word characters or '-'."
+	RemoteVNetLinkName string `json:"remoteVNetLinkName,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemotePrivateDnsZone is immutable."

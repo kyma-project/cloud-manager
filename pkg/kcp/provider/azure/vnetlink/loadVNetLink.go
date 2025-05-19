@@ -15,7 +15,7 @@ func loadVNetLink(ctx context.Context, st composed.State) (error, context.Contex
 	vnetLink, err := state.remoteClient.GetVirtualNetworkLink(ctx,
 		state.remotePrivateDnsZoneId.ResourceGroup,
 		state.remotePrivateDnsZoneId.ResourceName,
-		state.ObjAsAzureVNetLink().Spec.RemoteVirtualPrivateLinkName)
+		state.ObjAsAzureVNetLink().Spec.RemoteVNetLinkName)
 
 	if err == nil {
 		ctx = composed.LoggerIntoCtx(ctx, logger.WithValues("vnetLinkId", ptr.Deref(vnetLink.ID, "")))
