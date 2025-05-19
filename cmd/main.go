@@ -26,8 +26,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-
 	"github.com/fsnotify/fsnotify"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,7 +38,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
