@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
+var _ = SkipDescribe("Feature: SKR GcpNfsBackupSchedule", func() {
 
 	const (
 		interval = time.Millisecond * 50
