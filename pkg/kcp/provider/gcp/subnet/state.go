@@ -7,7 +7,6 @@ import (
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
@@ -86,27 +85,35 @@ func (s *State) ShouldUpdateConnectionPolicy() bool {
 	return len(s.updateMask) > 0
 }
 
-func (s *State) ConnectionPolicySubnetsContain(subnetName string) bool {
-	return pie.Contains(s.serviceConnectionPolicy.PscConfig.Subnetworks, subnetName)
+func (s *State) ConnectionPolicySubnetsContainCurrent() bool {
+	project := s.Scope().Spec.Scope.Gcp.Project
+	region := s.Scope().Spec.Region
+	currentSubnetName := GetSubnetFullName(project, region, s.ObjAsGcpSubnet().Status.Id)
+	return pie.Contains(s.serviceConnectionPolicy.PscConfig.Subnetworks, currentSubnetName)
 }
 
 func (s *State) ConnectionPolicySubnetsLen() int {
 	return len(s.serviceConnectionPolicy.PscConfig.Subnetworks)
 }
 
-func (s *State) AddToConnectionPolicySubnets(subnetName string) {
-	s.serviceConnectionPolicy.PscConfig.Subnetworks = append(s.serviceConnectionPolicy.PscConfig.Subnetworks, subnetName)
+func (s *State) AddCurrentSubnetToConnectionPolicy() {
+	project := s.Scope().Spec.Scope.Gcp.Project
+	region := s.Scope().Spec.Region
+	currentSubnetName := GetSubnetFullName(project, region, s.ObjAsGcpSubnet().Status.Id)
+	s.serviceConnectionPolicy.PscConfig.Subnetworks = append(s.serviceConnectionPolicy.PscConfig.Subnetworks, currentSubnetName)
 	s.updateMask = append(s.updateMask, "psc_config")
 }
 
-func (s *State) RemoveFromConnectionPolicySubnets(subnetName string) {
+func (s *State) RemoveCurrentSubnetFromConnectionPolicy() {
+	project := s.Scope().Spec.Scope.Gcp.Project
+	region := s.Scope().Spec.Region
+	currentSubnetName := GetSubnetFullName(project, region, s.ObjAsGcpSubnet().Status.Id)
 	s.serviceConnectionPolicy.PscConfig.Subnetworks = pie.FilterNot(s.serviceConnectionPolicy.PscConfig.Subnetworks, func(name string) bool {
-		return name == subnetName
+		return name == currentSubnetName
 	})
 	s.updateMask = append(s.updateMask, "psc_config")
 }
 
-func (s *State) ShouldDeleteConnectionPolicy(project, region string) bool {
-	currentSubnetName := GetSubnetFullName(project, region, ptr.Deref(s.subnet.Name, ""))
-	return s.ConnectionPolicySubnetsLen() == 1 && s.ConnectionPolicySubnetsContain(currentSubnetName)
+func (s *State) ShouldDeleteConnectionPolicy() bool {
+	return s.ConnectionPolicySubnetsLen() == 1 && s.ConnectionPolicySubnetsContainCurrent()
 }

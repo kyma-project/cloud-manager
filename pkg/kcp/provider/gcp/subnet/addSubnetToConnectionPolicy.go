@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func addSubnetToConnectionPolicy(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,17 +15,11 @@ func addSubnetToConnectionPolicy(ctx context.Context, st composed.State) (error,
 	if state.subnet == nil {
 		return composed.StopWithRequeue, nil
 	}
-
-	gcpScope := state.Scope().Spec.Scope.Gcp
-	region := state.Scope().Spec.Region
-
-	subnetName := GetSubnetFullName(gcpScope.Project, region, ptr.Deref(state.subnet.Name, ""))
-
-	if state.ConnectionPolicySubnetsContain(subnetName) {
+	if state.ConnectionPolicySubnetsContainCurrent() {
 		return nil, nil
 	}
 
-	state.AddToConnectionPolicySubnets(subnetName)
+	state.AddCurrentSubnetToConnectionPolicy()
 
 	return nil, nil
 }
