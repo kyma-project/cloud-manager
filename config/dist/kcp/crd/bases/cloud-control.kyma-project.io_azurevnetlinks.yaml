@@ -49,17 +49,16 @@ spec:
                 x-kubernetes-validations:
                 - message: RemoteTenant is immutable.
                   rule: (self == oldSelf)
-              remoteVirtualPrivateLinkName:
+              remoteVNetLinkName:
                 type: string
                 x-kubernetes-validations:
-                - message: RemoteVirtualPrivateLinkName is immutable.
+                - message: RemoteVNetLinkName is immutable.
                   rule: (self == oldSelf)
-                - message: RemoteVirtualPrivateLinkName can be up to 80 characters
-                    long.
+                - message: RemoteVNetLinkName can be up to 80 characters long.
                   rule: (size(self) <= 80)
-                - message: RemoteVirtualPrivateLinkName must begin with a word character,
-                    and it must end with a word character. RemoteVirtualPrivateLinkName
-                    may contain word characters or '-'.
+                - message: RemoteVNetLinkName must begin with a word character, and
+                    it must end with a word character. RemoteVNetLinkName may contain
+                    word characters or '-'.
                   rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
               scope:
                 properties:
@@ -75,7 +74,7 @@ spec:
                 type: object
             required:
             - remotePrivateDnsZone
-            - remoteVirtualPrivateLinkName
+            - remoteVNetLinkName
             - scope
             type: object
           status:
