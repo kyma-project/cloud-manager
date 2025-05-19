@@ -10,7 +10,7 @@ func (b *AzureVNetLinkBuilder) WithScope(s string) *AzureVNetLinkBuilder {
 }
 
 func (b *AzureVNetLinkBuilder) WithRemoteVirtualPrivateLinkName(name string) *AzureVNetLinkBuilder {
-	b.Obj.Spec.RemoteVirtualPrivateLinkName = name
+	b.Obj.Spec.RemoteVNetLinkName = name
 	return b
 }
 
