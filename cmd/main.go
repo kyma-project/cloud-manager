@@ -200,13 +200,14 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
-	_ = os.Setenv("GOOGLE_SDK_GO_LOGGING_LEVEL", "debug")
-	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), setupLog.WithName("gcp-clients"))
+	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), rootLogger.WithName("gcp-clients"))
 	if err != nil {
 		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH"))
 		os.Exit(1)
 	}
-	defer util.MustVoid(gcpClients.Close())
+	defer func() {
+		util.MustVoid(gcpClients.Close())
+	}()
 
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
