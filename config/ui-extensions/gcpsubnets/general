@@ -1,0 +1,11 @@
+resource:
+    kind: GcpSubnet
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: gcpsubnets
+name: GCP Subnets
+scope: cluster
+category: Discovery and Network
+icon: tnt/network
+description: >-
+    Description here
