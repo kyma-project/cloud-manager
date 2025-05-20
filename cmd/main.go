@@ -384,7 +384,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
-		gcpredisinstanceclient.NewMemorystoreClientProvider(),
+		gcpredisinstanceclient.NewMemorystoreClientProvider(gcpClients),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,

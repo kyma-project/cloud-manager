@@ -173,9 +173,9 @@ func (s *server) VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.
 	}
 }
 
-func (s *server) MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpredisinstanceclient.MemorystoreClient, error) {
-		return s, nil
+func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
+	return func() gcpredisinstanceclient.MemorystoreClient {
+		return s
 	}
 }
 
