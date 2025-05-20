@@ -31,7 +31,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	vnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 
-	vnetlink "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink"
 )
 
 func SetupAzureVNetLinkReconciler(

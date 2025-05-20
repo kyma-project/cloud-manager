@@ -244,11 +244,7 @@ func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (er
 		successError = b.conflictError
 	}
 
-	changed := false
-
-	if meta.SetStatusCondition(b.obj.Conditions(), condition) {
-		changed = true
-	}
+	changed := meta.SetStatusCondition(b.obj.Conditions(), condition)
 
 	if b.obj.State() != statusState {
 		b.obj.SetState(statusState)
