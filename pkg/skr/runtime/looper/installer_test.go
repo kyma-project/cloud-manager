@@ -108,7 +108,7 @@ func TestInstaller(t *testing.T) {
 			{"gcpredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
-			// {"gcpsubnet.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"gcpsubnet.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 		})
 	})
 
