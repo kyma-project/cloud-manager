@@ -36,7 +36,7 @@ import (
 
 func SetupGcpRedisClusterReconciler(
 	kcpManager manager.Manager,
-	memorystoreClusterClientProvider gcpclient.ClientProvider[client.MemorystoreClusterClient],
+	memorystoreClusterClientProvider gcpclient.GcpClientProvider[client.MemorystoreClusterClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

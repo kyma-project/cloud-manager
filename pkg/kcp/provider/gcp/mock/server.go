@@ -179,9 +179,9 @@ func (s *server) MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanc
 	}
 }
 
-func (s *server) MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpredisclusterclient.MemorystoreClusterClient, error) {
-		return s, nil
+func (s *server) MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
+	return func() gcpredisclusterclient.MemorystoreClusterClient {
+		return s
 	}
 }
 
