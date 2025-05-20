@@ -34,8 +34,8 @@ type Clients interface {
 type Providers interface {
 	ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient]
-	SubnetComputeClientProvider() client.ClientProvider[gcpsubnetclient.ComputeClient]
-	SubnetNetworkConnectivityProvider() client.ClientProvider[gcpsubnetclient.NetworkConnectivityClient]
+	SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient]
+	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
 	FilestoreClientProvider() client.ClientProvider[gcpnfsinstanceclient.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]

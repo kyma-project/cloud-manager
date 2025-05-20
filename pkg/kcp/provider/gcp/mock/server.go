@@ -122,14 +122,14 @@ func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.
 	}
 }
 
-func (s *server) SubnetComputeClientProvider() client.ClientProvider[gcpsubnetclient.ComputeClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpsubnetclient.ComputeClient, error) {
-		return s, nil
+func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient] {
+	return func() gcpsubnetclient.ComputeClient {
+		return s
 	}
 }
-func (s *server) SubnetNetworkConnectivityProvider() client.ClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpsubnetclient.NetworkConnectivityClient, error) {
-		return s, nil
+func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
+	return func() gcpsubnetclient.NetworkConnectivityClient {
+		return s
 	}
 }
 

@@ -431,8 +431,8 @@ func main() {
 	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(
 		ctx,
 		mgr,
-		gcpsubnetclient.NewComputeClientProvider(),
-		gcpsubnetclient.NewNetworkConnectivityClientProvider(),
+		gcpsubnetclient.NewComputeClientProvider(gcpClients),
+		gcpsubnetclient.NewNetworkConnectivityClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
