@@ -6,6 +6,15 @@ data:
         widget: Panel
         source: spec
         children:
+          - name: spec.redisTier
+            source: redisTier
+            widget: Labels
+          - name: spec.shardCount
+            source: shardCount
+            widget: Labels
+          - name: spec.replicasPerShard
+            source: replicasPerShard
+            widget: Labels
           - name: spec.autoMinorVersionUpgrade
             source: autoMinorVersionUpgrade
             widget: Labels
@@ -17,9 +26,6 @@ data:
             widget: Labels
           - name: spec.preferredMaintenanceWindow
             source: preferredMaintenanceWindow
-            widget: Labels
-          - name: spec.redisTier
-            source: redisTier
             widget: Labels
 
       - name: spec.ipRange
@@ -55,19 +61,21 @@ data:
             name: spec.authSecret.extraData
             widget: Labels
 
-      - name: spec.sharding
-        widget: Panel
-        source: spec
-        children:
-          - source: shardCount
-            name: spec.shardCount
-            widget: Labels
-          - source: replicasPerShard
-            name: spec.replicasPerShard
-            widget: Labels
 
 
-  form: |
+  form: |+
+    - path: spec.redisTier
+      name: spec.redisTier
+      required: true
+    - path: spec.shardCount
+      name: spec.shardCount
+      widget: Number
+      required: true
+    - path: spec.replicasPerShard
+      name: spec.replicasPerShard
+      widget: Number
+      required: true
+
     - path: spec.engineVersion
       name: spec.engineVersion
       required: false
@@ -97,9 +105,6 @@ data:
       name: spec.preferredMaintenanceWindow
       required: false
 
-    - path: spec.redisTier
-      name: spec.redisTier
-      required: true
 
     - path: spec.ipRange
       name: spec.ipRange
@@ -137,18 +142,6 @@ data:
           widget: KeyValuePair
           disableOnEdit: true
 
-    - path: spec
-      name: spec.sharding
-      widget: FormGroup
-      children:
-        - path: shardCount
-          name: spec.shardCount
-          widget: Number
-          required: true
-        - path: replicasPerShard
-          name: spec.replicasPerShard
-          widget: Number
-          required: true
   general: |
     resource:
         kind: AwsRedisCluster

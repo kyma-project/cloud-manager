@@ -1,3 +1,15 @@
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+- path: spec.shardCount
+  name: spec.shardCount
+  widget: Number
+  required: true
+- path: spec.replicasPerShard
+  name: spec.replicasPerShard
+  widget: Number
+  required: true
+
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
@@ -27,9 +39,6 @@
   name: spec.preferredMaintenanceWindow
   required: false
 
-- path: spec.redisTier
-  name: spec.redisTier
-  required: true
 
 - path: spec.ipRange
   name: spec.ipRange
@@ -67,15 +76,3 @@
       widget: KeyValuePair
       disableOnEdit: true
 
-- path: spec
-  name: spec.sharding
-  widget: FormGroup
-  children:
-    - path: shardCount
-      name: spec.shardCount
-      widget: Number
-      required: true
-    - path: replicasPerShard
-      name: spec.replicasPerShard
-      widget: Number
-      required: true
