@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP GcpSubnet is created", func() {
@@ -90,6 +91,8 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(subnet).NotTo(BeNil())
+			Expect(ptr.Deref(subnet.Purpose, "")).To(Equal("PRIVATE"))
+			Expect(ptr.Deref(subnet.PrivateIpGoogleAccess, false)).To(Equal(true))
 		})
 
 		By("And Then GCP Connection Policy is created", func() {

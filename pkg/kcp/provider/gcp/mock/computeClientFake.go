@@ -15,7 +15,7 @@ type computeClientFake struct {
 	subnets map[string]*computepb.Subnetwork
 }
 
-func (computeClientFake *computeClientFake) CreatePrivateSubnet(ctx context.Context, request client.CreateSubnetRequest) error {
+func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, request client.CreateSubnetRequest) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -29,8 +29,8 @@ func (computeClientFake *computeClientFake) CreatePrivateSubnet(ctx context.Cont
 		Region:                &request.Region,
 		IpCidrRange:           &request.Cidr,
 		Network:               &request.Network,
-		PrivateIpGoogleAccess: googleapi.Bool(true),
-		Purpose:               googleapi.String("PRIVATE"),
+		PrivateIpGoogleAccess: googleapi.Bool(request.PrivateIpGoogleAccess),
+		Purpose:               googleapi.String(request.Purpose),
 	}
 
 	computeClientFake.subnets[name] = subnet

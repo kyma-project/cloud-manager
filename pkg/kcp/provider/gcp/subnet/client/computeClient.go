@@ -11,12 +11,14 @@ import (
 )
 
 type CreateSubnetRequest struct {
-	ProjectId     string
-	Region        string
-	Network       string
-	Name          string
-	Cidr          string
-	IdempotenceId string
+	ProjectId             string
+	Region                string
+	Network               string
+	Name                  string
+	Cidr                  string
+	IdempotenceId         string
+	PrivateIpGoogleAccess bool
+	Purpose               string
 }
 
 type GetSubnetRequest struct {
@@ -33,7 +35,7 @@ type DeleteSubnetRequest struct {
 }
 
 type ComputeClient interface {
-	CreatePrivateSubnet(ctx context.Context, request CreateSubnetRequest) error
+	CreateSubnet(ctx context.Context, request CreateSubnetRequest) error
 	GetSubnet(ctx context.Context, request GetSubnetRequest) (*computepb.Subnetwork, error)
 	DeleteSubnet(ctx context.Context, request DeleteSubnetRequest) error
 }
@@ -53,7 +55,7 @@ type computeClient struct {
 }
 
 // Creates a Subnet with Purpose set to PRIVATE and PrivateIpGoogleAccess set to true
-func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, request CreateSubnetRequest) error {
+func (computeClient *computeClient) CreateSubnet(ctx context.Context, request CreateSubnetRequest) error {
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 
 	_, err := computeClient.subnetworksClient.Insert(ctx, &computepb.InsertSubnetworkRequest{
@@ -63,8 +65,8 @@ func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, req
 			IpCidrRange:           ptr.To(request.Cidr),
 			Name:                  ptr.To(request.Name),
 			Network:               ptr.To(networkNameFull),
-			PrivateIpGoogleAccess: ptr.To(true),
-			Purpose:               ptr.To("PRIVATE"),
+			PrivateIpGoogleAccess: ptr.To(request.PrivateIpGoogleAccess),
+			Purpose:               ptr.To(request.Purpose),
 		},
 		RequestId: ptr.To(request.IdempotenceId),
 	})
