@@ -7,11 +7,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
-var _ azurerwxpvclient.Client = &fileShareStore{}
+var _ client.FileShareClient = &fileShareStore{}
 
 func newFileShareStore(subscription string) *fileShareStore {
 	return &fileShareStore{

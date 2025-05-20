@@ -13,7 +13,7 @@ func deleteAzureFileShare(ctx context.Context, st composed.State) (error, contex
 
 	if state.fileShare == nil {
 		logger.Info("File Share not found")
-		return nil, ctx
+		return composed.StopAndForget, ctx
 	}
 
 	logger.Info("Delete Azure FileShare")

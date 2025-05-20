@@ -73,9 +73,18 @@ func (s *server) ExposeDataProvider() azureclient.ClientProvider[azureexposeddat
 	}
 }
 
-func (s *server) RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client] {
-	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxpvclient.Client, error) {
+func (s *server) FileShareProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.FileShareClient] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxvolumebackupclient.FileShareClient, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client] {
+	rwxBackupProvider := azurerwxvolumebackupclient.RwxBackupClientProvider(s.StorageProvider())
+	fileShareProvider := s.FileShareProvider()
+	pvProvider := azurerwxpvclient.NewAzurePvProvider(rwxBackupProvider, fileShareProvider)
+	return func(ctx context.Context, clientId, clientSecret, subscription, tenant string, auxiliaryTenants ...string) (azurerwxpvclient.Client, error) {
+		return pvProvider(ctx, clientId, clientSecret, subscription, tenant, auxiliaryTenants...)
 	}
 }
 
