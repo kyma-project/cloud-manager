@@ -1,12 +1,23 @@
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+  disableOnEdit: false
+- path: spec.shardCount
+  name: spec.shardCount
+  widget: Number
+  required: false
+- path: spec.replicasPerPrimary
+  name: spec.replicasPerPrimary
+  widget: Number
+  required: false
+  disableOnEdit: true
+  description: Immutable once set.
+
 - path: spec.redisVersion
   name: spec.redisVersion
   required: false
   disableOnEdit: true
 
-- path: spec.redisTier
-  name: spec.redisTier
-  required: true
-  disableOnEdit: false
 
 - path: spec.redisConfiguration
   name: spec.redisConfiguration
@@ -57,18 +68,3 @@
     - path: name
       name: spec.ipRange.name
       required: true
-
-- path: spec
-  name: spec.sharding
-  widget: FormGroup
-  children:
-    - path: shardCount
-      name: spec.shardCount
-      widget: Number
-      required: false
-    - path: replicasPerPrimary
-      name: spec.replicasPerPrimary
-      widget: Number
-      required: false
-      disableOnEdit: true
-      description: Immutable once set.

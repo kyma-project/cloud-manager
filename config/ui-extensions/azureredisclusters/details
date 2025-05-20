@@ -3,13 +3,18 @@ body:
     widget: Panel
     source: spec
     children:
-      - name: spec.redisVersion
-        source: redisVersion
-        widget: Labels
       - name: spec.redisTier
         source: redisTier
         widget: Labels
-
+      - name: spec.shardCount
+        source: shardCount
+        widget: Labels
+      - name: spec.replicasPerPrimary
+        source: replicasPerPrimary
+        widget: Labels
+      - name: spec.redisVersion
+        source: redisVersion
+        widget: Labels
 
   - name: spec.redisConfiguration
     widget: Panel
@@ -57,18 +62,6 @@ body:
     children:
       - name: spec.ipRange.name
         source: name
-        widget: Labels
-
-
-  - name: spec.sharding
-    widget: Panel
-    source: spec
-    children:
-      - source: shardCount
-        name: spec.shardCount
-        widget: Labels
-      - source: replicasPerPrimary
-        name: spec.replicasPerPrimary
         widget: Labels
 
   - name: status
