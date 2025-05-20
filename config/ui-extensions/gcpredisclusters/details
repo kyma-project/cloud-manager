@@ -6,17 +6,23 @@ body:
       - name: spec.redisTier
         source: redisTier
         widget: Labels
+      - name: spec.shardCount
+        source: shardCount
+        widget: Labels
+      - name: spec.replicasPerShard
+        source: replicasPerShard
+        widget: Labels
       - name: spec.authEnabled
         source: authEnabled
         widget: Labels
 
 
-  - name: spec.redisConfigs
-    widget: Panel
-    source: spec
-    children:
-      - source: redisConfigs
-        widget: Labels
+#  - name: spec.redisConfigs
+#    widget: Panel
+#    source: spec
+#    children:
+#      - source: redisConfigs
+#        widget: Labels
 
 
   - name: spec.authSecret
@@ -43,19 +49,6 @@ body:
       - source: name
         name: spec.subnet.name
         widget: Labels
-
-  - name: spec.sharding
-    widget: Panel
-    source: spec
-    children:
-      - source: shardCount
-        name: spec.shardCount
-        widget: Labels
-      - source: replicasPerShard
-        name: spec.replicasPerShard
-        widget: Labels
-
-
 
   - name: status
     widget: Panel

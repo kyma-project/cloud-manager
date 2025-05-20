@@ -9,17 +9,23 @@ data:
           - name: spec.redisTier
             source: redisTier
             widget: Labels
+          - name: spec.shardCount
+            source: shardCount
+            widget: Labels
+          - name: spec.replicasPerShard
+            source: replicasPerShard
+            widget: Labels
           - name: spec.authEnabled
             source: authEnabled
             widget: Labels
 
 
-      - name: spec.redisConfigs
-        widget: Panel
-        source: spec
-        children:
-          - source: redisConfigs
-            widget: Labels
+    #  - name: spec.redisConfigs
+    #    widget: Panel
+    #    source: spec
+    #    children:
+    #      - source: redisConfigs
+    #        widget: Labels
 
 
       - name: spec.authSecret
@@ -47,19 +53,6 @@ data:
             name: spec.subnet.name
             widget: Labels
 
-      - name: spec.sharding
-        widget: Panel
-        source: spec
-        children:
-          - source: shardCount
-            name: spec.shardCount
-            widget: Labels
-          - source: replicasPerShard
-            name: spec.replicasPerShard
-            widget: Labels
-
-
-
       - name: status
         widget: Panel
         source: status
@@ -73,11 +66,19 @@ data:
       required: true
       disableOnEdit: false
 
+    - path: spec.shardCount
+      name: spec.shardCount
+      required: true
 
-    - path: spec.redisConfigs
-      name: spec.redisConfigs
-      required: false
-      widget: KeyValuePair
+    - path: spec.replicasPerShard
+      name: spec.replicasPerShard
+      required: true
+
+
+    # - path: spec.redisConfigs
+    #  name: spec.redisConfigs
+    #  required: false
+    #  widget: KeyValuePair
 
     - path: spec.authSecret
       name: spec.authSecret
@@ -104,14 +105,6 @@ data:
           required: false
           widget: KeyValuePair
           disableOnEdit: true
-
-    - path: spec.shardCount
-      name: spec.shardCount
-      required: true
-
-    - path: spec.replicasPerShard
-      name: spec.replicasPerShard
-      required: true
 
     - path: spec.subnet
       name: spec.subnet
