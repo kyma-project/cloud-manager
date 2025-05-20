@@ -422,7 +422,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupGcpRedisClusterReconciler(
 		mgr,
-		gcpredisclusterclient.NewMemorystoreClientProvider(),
+		gcpredisclusterclient.NewMemorystoreClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")

@@ -42,7 +42,7 @@ type Providers interface {
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclient.FileBackupClient]
 	VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient]
-	MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
+	MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
 	ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client]
 }
 

@@ -58,7 +58,13 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 
 	// network connectivity ----------------
 
-	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithTokenSource(computeTokenSource))
+	networkConnectivityTokenProvider, err := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build network connectivity token provider: %w", err)
+	}
+	networkConnectivityTokenSource := oauth2adapt.TokenSourceFromTokenProvider(networkConnectivityTokenProvider)
+
+	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithTokenSource(networkConnectivityTokenSource))
 	if err != nil {
 		return nil, fmt.Errorf("create network connectivity cross network automation client: %w", err)
 	}
