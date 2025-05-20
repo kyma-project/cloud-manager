@@ -58,7 +58,7 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 
 	// network connectivity ----------------
 
-	networkConnectivityTokenProvider, err := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	networkConnectivityTokenProvider, err := b.WithScopes(networkconnectivity.DefaultAuthScopes()).BuildTokenProvider()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build network connectivity token provider: %w", err)
 	}
