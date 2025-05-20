@@ -154,6 +154,7 @@ type ErrorHandlerBuilder struct {
 	notFoundMessage        string
 	unauthorizedError      error
 	unauthenticatedError   error
+	conflictError          error
 }
 
 func HandleError(err error, obj composed.ObjWithConditionsAndState) *ErrorHandlerBuilder {
@@ -191,6 +192,7 @@ func (b *ErrorHandlerBuilder) WithNotFoundMessage(message string) *ErrorHandlerB
 func (b *ErrorHandlerBuilder) setDefaults() {
 	b.unauthenticatedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
 	b.unauthorizedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+	b.conflictError = composed.StopWithRequeueDelay(util.Timing.T60000ms())
 }
 
 func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (error, context.Context) {
@@ -229,17 +231,17 @@ func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (er
 	successError := composed.StopAndForget
 	if IsUnauthorized(b.err) {
 		condition.Reason = cloudcontrolv1beta1.ReasonUnauthorized
-		successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+		successError = b.unauthorizedError
 	}
 
 	if IsUnauthenticated(b.err) {
 		condition.Reason = cloudcontrolv1beta1.ReasonUnauthenticated
-		successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+		successError = b.unauthenticatedError
 	}
 
 	if IsConflictError(b.err) {
 		condition.Reason = cloudcontrolv1beta1.ReasonConflict
-		successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+		successError = b.conflictError
 	}
 
 	changed := false
