@@ -8,6 +8,7 @@ import (
 
 	"cloud.google.com/go/auth/oauth2adapt"
 	compute "cloud.google.com/go/compute/apiv1"
+	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
@@ -15,10 +16,12 @@ import (
 )
 
 type GcpClients struct {
-	ComputeNetworks  *compute.NetworksClient
-	ComputeAddresses *compute.AddressesClient
-	ComputeRouters   *compute.RoutersClient
-	RedisCluster     *rediscluster.CloudRedisClusterClient
+	ComputeNetworks                           *compute.NetworksClient
+	ComputeAddresses                          *compute.AddressesClient
+	ComputeRouters                            *compute.RoutersClient
+	ComputeSubnetworks                        *compute.SubnetworksClient
+	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
+	RedisCluster                              *rediscluster.CloudRedisClusterClient
 }
 
 func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
@@ -48,6 +51,17 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 	if err != nil {
 		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
+	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create compute subnetworks client: %w", err)
+	}
+
+	// network connectivity ----------------
+
+	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithTokenSource(computeTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create network connectivity cross network automation client: %w", err)
+	}
 
 	// redis cluster ----------------
 
@@ -62,10 +76,12 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 	}
 
 	return &GcpClients{
-		ComputeNetworks:  computeNetworks,
-		ComputeAddresses: computeAddress,
-		ComputeRouters:   computeRouters,
-		RedisCluster:     redisCluster,
+		ComputeNetworks:    computeNetworks,
+		ComputeAddresses:   computeAddress,
+		ComputeRouters:     computeRouters,
+		ComputeSubnetworks: computeSubnetworks,
+		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
+		RedisCluster: redisCluster,
 	}, nil
 }
 

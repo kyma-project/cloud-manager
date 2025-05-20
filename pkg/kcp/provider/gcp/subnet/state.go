@@ -32,14 +32,14 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	computeClientProvider             gcpclient.ClientProvider[client.ComputeClient]
-	networkConnectivityClientProvider gcpclient.ClientProvider[client.NetworkConnectivityClient]
+	computeClientProvider             gcpclient.GcpClientProvider[client.ComputeClient]
+	networkConnectivityClientProvider gcpclient.GcpClientProvider[client.NetworkConnectivityClient]
 	env                               abstractions.Environment
 }
 
 func NewStateFactory(
-	computeClientProvider gcpclient.ClientProvider[client.ComputeClient],
-	networkConnectivityClientProvider gcpclient.ClientProvider[client.NetworkConnectivityClient],
+	computeClientProvider gcpclient.GcpClientProvider[client.ComputeClient],
+	networkConnectivityClientProvider gcpclient.GcpClientProvider[client.NetworkConnectivityClient],
 	env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		computeClientProvider:             computeClientProvider,
@@ -50,21 +50,8 @@ func NewStateFactory(
 
 func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
 
-	computeClient, err := statefactory.computeClientProvider(
-		ctx,
-		statefactory.env.Get("GCP_SA_JSON_KEY_PATH"),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	networkConnectivityClient, err := statefactory.networkConnectivityClientProvider(
-		ctx,
-		statefactory.env.Get("GCP_SA_JSON_KEY_PATH"),
-	)
-	if err != nil {
-		return nil, err
-	}
+	computeClient := statefactory.computeClientProvider()
+	networkConnectivityClient := statefactory.networkConnectivityClientProvider()
 
 	return newState(focalState, computeClient, networkConnectivityClient), nil
 }
