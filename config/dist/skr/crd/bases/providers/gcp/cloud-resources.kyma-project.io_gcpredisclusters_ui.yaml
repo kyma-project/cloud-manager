@@ -1,0 +1,166 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.redisTier
+            source: redisTier
+            widget: Labels
+          - name: spec.shardCount
+            source: shardCount
+            widget: Labels
+          - name: spec.replicasPerShard
+            source: replicasPerShard
+            widget: Labels
+          - name: spec.authEnabled
+            source: authEnabled
+            widget: Labels
+
+
+    #  - name: spec.redisConfigs
+    #    widget: Panel
+    #    source: spec
+    #    children:
+    #      - source: redisConfigs
+    #        widget: Labels
+
+
+      - name: spec.authSecret
+        widget: Panel
+        source: spec
+        children:
+          - source: authSecret.name
+            name: spec.authSecret.name
+            widget: Labels
+          - source: authSecret.labels
+            name: spec.authSecret.labels
+            widget: Labels
+          - source: authSecret.annotations
+            name: spec.authSecret.annotations
+            widget: Labels
+          - source: authSecret.extraData
+            name: spec.authSecret.extraData
+            widget: Labels
+
+      - name: spec.subnet
+        widget: Panel
+        source: spec.subnet
+        children:
+          - source: name
+            name: spec.subnet.name
+            widget: Labels
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+  form: |
+    - path: spec.redisTier
+      name: spec.redisTier
+      required: true
+      disableOnEdit: false
+
+    - path: spec.shardCount
+      name: spec.shardCount
+      required: true
+
+    - path: spec.replicasPerShard
+      name: spec.replicasPerShard
+      required: true
+
+
+    # - path: spec.redisConfigs
+    #  name: spec.redisConfigs
+    #  required: false
+    #  widget: KeyValuePair
+
+    - path: spec.authSecret
+      name: spec.authSecret
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.authSecret.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+        - path: labels
+          name: spec.authSecret.labels
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+        - path: annotations
+          name: spec.authSecret.annotations
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+        - path: extraData
+          name: spec.authSecret.extraData
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+
+    - path: spec.subnet
+      name: spec.subnet
+      widget: FormGroup
+      children:
+        - path: name
+          name: spec.subnet.name
+          required: true
+  general: |
+    resource:
+        kind: GcpRedisCluster
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpredisclusters
+    name: GCP Redis Clusters
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        GcpRedisCluster description here
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.redisVersion: Redis Version
+      spec.redisTier: Redis Tier
+      spec.authEnabled: Auth Enabled
+      spec.ipRange: Ip Range
+      spec.ipRange.name: Name
+      spec.authSecret: Authentication Secret
+      spec.authSecret.name: Name
+      spec.authSecret.labels: Labels
+      spec.authSecret.annotations: Annotations
+      spec.authSecret.extraData: Extra Data
+      spec.maintenancePolicy: Maintenance Policy
+      spec.maintenancePolicy.dayOfWeek.day: Day
+      spec.maintenancePolicy.dayOfWeek.startTime: Start Time
+      spec.maintenancePolicy.dayOfWeek.startTime.hours: Hours
+      spec.maintenancePolicy.dayOfWeek.startTime.minutes: Minutes
+      spec.redisConfigs: Redis Configuration
+      spec.shardCount: Shard Count
+      spec.replicasPerShard: Replicas Per Shard
+      spec.subnet: Subnet
+      spec.subnet.name: Name
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: gcpredisclusters-ui.operator.kyma-project.io
+  namespace: kyma-system

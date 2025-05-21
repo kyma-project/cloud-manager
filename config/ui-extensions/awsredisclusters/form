@@ -1,0 +1,78 @@
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+- path: spec.shardCount
+  name: spec.shardCount
+  widget: Number
+  required: true
+- path: spec.replicasPerShard
+  name: spec.replicasPerShard
+  widget: Number
+  required: true
+
+- path: spec.engineVersion
+  name: spec.engineVersion
+  required: false
+  description: Engine Version cannot be downgraded.
+
+- path: spec.autoMinorVersionUpgrade
+  name: spec.autoMinorVersionUpgrade
+  widget: Switch
+  required: false
+
+- path: spec.parameters
+  name: spec.parameters
+  required: false
+  widget: KeyValuePair
+
+- path: spec
+  name: spec.security
+  widget: FormGroup
+  children:
+    - path: authEnabled
+      name: spec.authEnabledFull
+      widget: Switch
+      required: false
+
+
+- path: spec.preferredMaintenanceWindow
+  name: spec.preferredMaintenanceWindow
+  required: false
+
+
+- path: spec.ipRange
+  name: spec.ipRange
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.ipRange.name
+      widget: Text
+      required: true
+
+- path: spec.authSecret
+  name: spec.authSecret
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.authSecret.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+    - path: labels
+      name: spec.authSecret.labels
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: annotations
+      name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+
