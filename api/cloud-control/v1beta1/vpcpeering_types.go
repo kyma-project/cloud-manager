@@ -29,6 +29,8 @@ const (
 	ReasonFailedLoadingRemoteVpcPeeringConnection = "FailedLoadingRemoteVpcPeeringConnection"
 	ReasonFailedCreatingRoutes                    = "FailedCreatingRoutes"
 	ReasonUnauthorized                            = "Unauthorized"
+	ReasonUnauthenticated                         = "Unauthenticated"
+	ReasonConflict                                = "Conflict"
 )
 
 const (

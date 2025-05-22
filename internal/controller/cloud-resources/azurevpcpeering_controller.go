@@ -35,7 +35,7 @@ func (f *AzureVpcPeeringReconcilerFactory) New(args reconcile2.ReconcilerArgumen
 	}
 }
 
-// AzureVpcPeeringReconciler reconciles a AzureVpcPeering object
+// AzureVpcPeeringReconciler reconciles an AzureVpcPeering object
 type AzureVpcPeeringReconciler struct {
 	reconciler reconcile.Reconciler
 }
