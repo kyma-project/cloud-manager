@@ -149,6 +149,24 @@ func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscrip
 	return nil
 }
 
+func (s *storageStore) GetProtectedItem(ctx context.Context, protectedId string) (*armrecoveryservicesbackup.ProtectedItemResource, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, items := range s.protectedItems {
+		for _, protected := range items {
+			if *protected.ID == protectedId {
+				return protected, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (s *storageStore) UpdateProtectedItem(ctx context.Context, protectedItem *armrecoveryservicesbackup.ProtectedItemResource) error {
+	return nil
+}
+
 func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
