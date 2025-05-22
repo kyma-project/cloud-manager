@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
+
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/api/option"
+	"github.com/google/uuid"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type CreateServiceConnectionPolicyRequest struct {
@@ -26,36 +28,47 @@ type DeleteServiceConnectionPolicyRequest struct {
 
 type NetworkConnectivityClient interface {
 	CreateServiceConnectionPolicy(ctx context.Context, request CreateServiceConnectionPolicyRequest) error
+	UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error
 	GetServiceConnectionPolicy(ctx context.Context, name string) (*networkconnectivitypb.ServiceConnectionPolicy, error)
 	DeleteServiceConnectionPolicy(ctx context.Context, request DeleteServiceConnectionPolicyRequest) error
 }
 
-func NewNetworkConnectivityClientProvider() client.ClientProvider[NetworkConnectivityClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (NetworkConnectivityClient, error) {
-		return NewNetworkConnectivityClient(saJsonKeyPath), nil
+func NewNetworkConnectivityClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[NetworkConnectivityClient] {
+	return func() NetworkConnectivityClient {
+		return NewNetworkConnectivityClient(gcpClients)
 	}
 }
 
-func NewNetworkConnectivityClient(saJsonKeyPath string) NetworkConnectivityClient {
-	return &networkConnectivityClient{saJsonKeyPath: saJsonKeyPath}
+func NewNetworkConnectivityClient(gcpClients *gcpclient.GcpClients) NetworkConnectivityClient {
+	return &networkConnectivityClient{crossNetworkAutomationClient: *gcpClients.NetworkConnectivityCrossNetworkAutomation}
 }
 
 type networkConnectivityClient struct {
-	saJsonKeyPath string
+	crossNetworkAutomationClient networkconnectivity.CrossNetworkAutomationClient
 }
 
-func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx context.Context, request CreateServiceConnectionPolicyRequest) error {
-	client, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithCredentialsFile(ncClient.saJsonKeyPath))
+func (ncClient *networkConnectivityClient) UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error {
+	_, err := ncClient.crossNetworkAutomationClient.UpdateServiceConnectionPolicy(ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
+		ServiceConnectionPolicy: policy,
+		RequestId:               uuid.NewString(),
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: updateMask,
+		},
+	})
+
 	if err != nil {
 		return err
 	}
-	defer client.Close() // nolint: errcheck
 
+	return nil
+}
+
+func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx context.Context, request CreateServiceConnectionPolicyRequest) error {
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 	parent := fmt.Sprintf("projects/%s/locations/%s", request.ProjectId, request.Region)
 	connectionPolicyNameFull := fmt.Sprintf("%s/serviceConnectionPolicies/%s", parent, request.Name)
 
-	_, err = client.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
+	_, err := ncClient.crossNetworkAutomationClient.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
 		Parent:                    parent,
 		ServiceConnectionPolicyId: request.Name,
 		ServiceConnectionPolicy: &networkconnectivitypb.ServiceConnectionPolicy{
@@ -79,13 +92,7 @@ func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx con
 }
 
 func (ncClient *networkConnectivityClient) GetServiceConnectionPolicy(ctx context.Context, name string) (*networkconnectivitypb.ServiceConnectionPolicy, error) {
-	client, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithCredentialsFile(ncClient.saJsonKeyPath))
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close() // nolint: errcheck
-
-	connectionPolicy, err := client.GetServiceConnectionPolicy(ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
+	connectionPolicy, err := ncClient.crossNetworkAutomationClient.GetServiceConnectionPolicy(ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
 		Name: name,
 	})
 
@@ -97,13 +104,7 @@ func (ncClient *networkConnectivityClient) GetServiceConnectionPolicy(ctx contex
 }
 
 func (ncClient *networkConnectivityClient) DeleteServiceConnectionPolicy(ctx context.Context, request DeleteServiceConnectionPolicyRequest) error {
-	client, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithCredentialsFile(ncClient.saJsonKeyPath))
-	if err != nil {
-		return err
-	}
-	defer client.Close() // nolint: errcheck
-
-	_, err = client.DeleteServiceConnectionPolicy(ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
+	_, err := ncClient.crossNetworkAutomationClient.DeleteServiceConnectionPolicy(ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
 		Name:      request.Name,
 		RequestId: request.IdempotenceId,
 	})

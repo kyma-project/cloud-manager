@@ -28,6 +28,6 @@ func (c restoreMockClient) TriggerRestore(_ context.Context,
 	if request.ResourceGroupName != "" {
 		nextJobStatus = armrecoveryservicesbackup.JobStatus(request.ResourceGroupName)
 	}
-	jobsMock.AddStorageJob(request.VaultName, request.TargetFolderName, armrecoveryservicesbackup.JobStatusInProgress, nextJobStatus)
+	jobsMock.AddRestoreJob(request.VaultName, request.TargetFolderName, armrecoveryservicesbackup.JobStatusInProgress, nextJobStatus)
 	return &request.VaultName, nil
 }

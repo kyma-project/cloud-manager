@@ -3,6 +3,7 @@ package dsl
 import (
 	"context"
 	"fmt"
+
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
@@ -237,7 +238,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenert
 				Type: string(cloudcontrolv1beta1.ProviderGCP),
 				Workers: []gardenertypes.Worker{
 					{
-						Zones: []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"},
+						Zones: DefaultGcpWorkerZones,
 					},
 				},
 			},
@@ -272,8 +273,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenert
 		secret := &corev1.Secret{}
 		actions.ApplyOnObject(secret)
 		secret.StringData = map[string]string{
-			"serviceaccount.json": "{" +
-				"\"project_id\": \"project_id\"}",
+			"serviceaccount.json": fmt.Sprintf(`{"project_id": "%s"}`, DefaultGcpProject),
 		}
 		err := infra.Garden().Client().Create(ctx, secret)
 		if err != nil {
@@ -423,7 +423,13 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	return nil
 }
 
+var (
+	DefaultGcpWorkerZones = []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"}
+)
+
 const (
+	DefaultGcpProject = "project_id"
+
 	DefaultAzureTenantId       = "someAzureTenantId"
 	DefaultAzureSubscriptionId = "someAzureSubscriptionId"
 )

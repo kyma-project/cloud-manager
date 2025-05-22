@@ -3,6 +3,7 @@ package dsl
 import (
 	"context"
 	"errors"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -109,7 +110,9 @@ func WithLabels(labels map[string]string) ObjAction {
 				obj.SetLabels(make(map[string]string))
 			}
 			for key, value := range labels {
-				obj.GetLabels()[key] = value
+				if _, ok := obj.GetLabels()[key]; !ok {
+					obj.GetLabels()[key] = value
+				}
 			}
 		},
 	}

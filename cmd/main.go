@@ -19,42 +19,48 @@ package main
 import (
 	"context"
 	"flag"
-	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"os"
 
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
-	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
-	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
-
-	"github.com/fsnotify/fsnotify"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/elliotchance/pie/v2"
+	"github.com/fsnotify/fsnotify"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
-	"github.com/kyma-project/cloud-manager/pkg/quota"
-
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
+	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -63,30 +69,18 @@ import (
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
+	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
+	"github.com/kyma-project/cloud-manager/pkg/quota"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
-
+	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-
-	"github.com/kyma-project/cloud-manager/pkg/util"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
-
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -206,6 +200,15 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
+	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), rootLogger.WithName("gcp-clients"))
+	if err != nil {
+		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH"))
+		os.Exit(1)
+	}
+	defer func() {
+		util.MustVoid(gcpClients.Close())
+	}()
+
 	// SKR Controllers
 	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
@@ -319,6 +322,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAzureRwxPvReconciler(skrRegistry, azurerwxpvclient.NewClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxPV")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupGcpSubnetReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
 		os.Exit(1)
@@ -333,6 +341,7 @@ func main() {
 		gcpclient.NewServiceUsageClientProvider(),
 		awsexposeddataclient.NewClientProvider(),
 		azureexposeddataclient.NewClientProvider(),
+		gcpexposeddataclient.NewClientProvider(gcpClients),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
@@ -413,7 +422,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupGcpRedisClusterReconciler(
 		mgr,
-		gcpredisclusterclient.NewMemorystoreClientProvider(),
+		gcpredisclusterclient.NewMemorystoreClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpRedisCluster")
@@ -422,8 +431,8 @@ func main() {
 	if err = cloudcontrolcontroller.SetupGcpSubnetReconciler(
 		ctx,
 		mgr,
-		gcpsubnetclient.NewComputeClientProvider(),
-		gcpsubnetclient.NewNetworkConnectivityClientProvider(),
+		gcpsubnetclient.NewComputeClientProvider(gcpClients),
+		gcpsubnetclient.NewNetworkConnectivityClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")

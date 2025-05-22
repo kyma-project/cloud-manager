@@ -127,13 +127,15 @@ func HaveNextRunTimes(expectedTimes []time.Time) ObjAssertion {
 					len(expectedTimes), len(nextRunTimes),
 				)
 			}
-			for i, t := range expectedTimes {
-				actual := nextRunTimes[i]
-				expected := t.Format(time.RFC3339)
-				if actual != expected {
+			for i, expected := range expectedTimes {
+				actual, err := time.Parse(time.RFC3339, nextRunTimes[i])
+				//During the tests, actual could spill to the next minute
+				//if expected is set almost at the end of the previous minute.
+				//So accepting a discrepency of 1 minute as normal while comparing.
+				if err != nil || actual.Sub(expected) > time.Minute*1 {
 					return fmt.Errorf(
-						"expected object %T %s/%s to have %s runtimes set, but found %s",
-						obj, obj.GetNamespace(), obj.GetName(), expected, actual,
+						"expected object %T %s/%s to have %s runtimes set, but found %s err=%v",
+						obj, obj.GetNamespace(), obj.GetName(), expected, actual, err,
 					)
 				}
 			}

@@ -3,12 +3,14 @@ package manager
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,6 +37,7 @@ func (e *ScopeNotFoundError) Error() string {
 }
 
 type Factory interface {
+	LoadRestConfig(ctx context.Context, secretName, secretKey string) (*rest.Config, error)
 	CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, *cloudcontrolv1beta1.Scope, error)
 }
 
@@ -52,27 +55,38 @@ type skrManagerFactory struct {
 	skrScheme *runtime.Scheme
 }
 
-func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, *cloudcontrolv1beta1.Scope, error) {
+func (f *skrManagerFactory) LoadRestConfig(ctx context.Context, secretName, secretKey string) (*rest.Config, error) {
 	secret := &corev1.Secret{}
-	name := fmt.Sprintf("kubeconfig-%s", kymaName)
 	err := f.kcpClient.Get(ctx, types.NamespacedName{
 		Namespace: f.namespace,
-		Name:      name,
+		Name:      secretName,
 	}, secret)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting kubeconfig secret: %w", err)
+		return nil, fmt.Errorf("error getting kubeconfig secret: %w", err)
 	}
-	b, ok := secret.Data["config"]
+	b, ok := secret.Data[secretKey]
 	if !ok {
-		return nil, nil, fmt.Errorf("the kubeconfig secret for %s does not have the 'config' key", kymaName)
+		return nil, fmt.Errorf("the kubeconfig secret %s does not have the '%s' key", secretName, secretKey)
 	}
 	cc, err := clientcmd.NewClientConfigFromBytes(b)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error loading kubeconfig: %w", err)
+		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
 	}
 	restConfig, err := cc.ClientConfig()
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting rest config from kubeconfig: %w", err)
+		return nil, fmt.Errorf("error getting rest config from kubeconfig: %w", err)
+	}
+
+	return restConfig, nil
+}
+
+func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, logger logr.Logger) (SkrManager, *cloudcontrolv1beta1.Scope, error) {
+	// ideally secret name and key should come from the GardenerCluster using util.ExtractGardenerClusterSummary
+	// but as legacy and since it's fixed so far we can keep it hard-coded like this
+	secretName := fmt.Sprintf("kubeconfig-%s", kymaName)
+	restConfig, err := f.LoadRestConfig(ctx, secretName, "config")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	nn := types.NamespacedName{

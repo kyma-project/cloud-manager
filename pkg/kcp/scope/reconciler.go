@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
@@ -11,13 +12,13 @@ import (
 	awsexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData"
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"time"
 )
 
 type ScopeReconciler interface {
@@ -33,6 +34,7 @@ func New(
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
+	gcpStateFactory gcpexposeddata.StateFactory,
 ) ScopeReconciler {
 	return NewScopeReconciler(
 		NewStateFactory(
@@ -43,6 +45,7 @@ func New(
 		),
 		awsStateFactory,
 		azureStateFactory,
+		gcpStateFactory,
 	)
 }
 
@@ -50,11 +53,13 @@ func NewScopeReconciler(
 	stateFactory StateFactory,
 	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
+	gcpStateFactory gcpexposeddata.StateFactory,
 ) ScopeReconciler {
 	return &scopeReconciler{
 		stateFactory:      stateFactory,
 		awsStateFactory:   awsStateFactory,
 		azureStateFactory: azureStateFactory,
+		gcpStateFactory:   gcpStateFactory,
 	}
 }
 
@@ -63,6 +68,7 @@ type scopeReconciler struct {
 
 	awsStateFactory   awsexposeddata.StateFactory
 	azureStateFactory azureexposeddata.StateFactory
+	gcpStateFactory   gcpexposeddata.StateFactory
 }
 
 func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -124,9 +130,10 @@ func (r *scopeReconciler) newAction() composed.Action {
 						nil,
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsexposeddata.New(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
-						composed.NewCase(statewithscope.GcpProviderPredicate, composed.Noop),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpexposeddata.New(r.gcpStateFactory)),
 					),
-					exposedDataSave,
+					exposedDataSaveToScope,
+					exposedDataSaveToSkr,
 				),
 
 				conditionReady,

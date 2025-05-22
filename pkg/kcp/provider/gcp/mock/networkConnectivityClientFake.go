@@ -39,6 +39,18 @@ func (ncClientFake *networkConnectivityClientFake) CreateServiceConnectionPolicy
 	return nil
 }
 
+func (ncClientFake *networkConnectivityClientFake) UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	ncClientFake.mutex.Lock()
+	defer ncClientFake.mutex.Unlock()
+
+	ncClientFake.connectionPolicies[policy.Name] = policy
+
+	return nil
+}
+
 func (ncClientFake *networkConnectivityClientFake) GetServiceConnectionPolicy(ctx context.Context, name string) (*networkconnectivitypb.ServiceConnectionPolicy, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

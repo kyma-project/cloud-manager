@@ -3,6 +3,8 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
@@ -10,8 +12,8 @@ import (
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
-	"sync"
 )
 
 var _ Server = &server{}
@@ -68,6 +70,12 @@ func (s *server) NetworkProvider() azureclient.ClientProvider[azurenetworkclient
 func (s *server) ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, _ ...string) (azureexposeddataclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscriptionId, tenantId), nil
+	}
+}
+
+func (s *server) RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxpvclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }
 

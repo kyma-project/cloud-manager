@@ -8,11 +8,14 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"strings"
+	"time"
 )
 
 type JobsClient interface {
 	FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error)
 	GetStorageJob(ctx context.Context, vaultName string, resourceGroupName string, jobId string) (*armrecoveryservicesbackup.AzureStorageJob, error)
+	GetLastBackupJobStartTime(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error)
+	FindNextBackupJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*string, error)
 }
 type jobsClient struct {
 	*armrecoveryservicesbackup.BackupJobsClient
@@ -84,4 +87,67 @@ func (c jobsClient) GetStorageJob(ctx context.Context, vaultName string,
 		return nil, errors.New("failed to cast job details to AzureStorageJob")
 	}
 	return jobDetails, nil
+}
+
+// GetLastBackupJobStartTime returns the start time of the last backup job for the given vault, resource group and file share name
+func (c jobsClient) GetLastBackupJobStartTime(ctx context.Context, vaultName string,
+	resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error) {
+	var lastStartTime *time.Time
+	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
+		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Backup' and startTime eq '%v'", ToStorageJobTimeFilter(startTime))),
+	}
+	pager := c.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
+	if pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting next page: %w", err)
+		}
+		for _, job := range page.Value {
+			if job.Properties.GetJob().EntityFriendlyName == nil || *job.Properties.GetJob().EntityFriendlyName != fileShareName {
+				continue
+			}
+			startTime := job.Properties.GetJob().StartTime
+			if lastStartTime == nil || (startTime != nil && lastStartTime.Before(*startTime)) {
+				lastStartTime = startTime
+			}
+		}
+	}
+	if lastStartTime == nil {
+		return nil, nil
+	}
+	return lastStartTime, nil
+}
+
+// FindNextBackupJobId finds the backup job for the given vault, resource group, file share name that started after given startTime
+// It will error out, if it finds multiple jobs
+func (c jobsClient) FindNextBackupJobId(ctx context.Context, vaultName string,
+	resourceGroupName string, fileShareName string, startTime time.Time) (*string, error) {
+	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
+		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' "+
+			"and operation eq 'Backup' and startTime eq '%v'", ToStorageJobTimeFilter(startTime))),
+	}
+	var jobIds []string
+	pager := c.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting next page: %w", err)
+		}
+		for _, job := range page.Value {
+			if job.Properties.GetJob().EntityFriendlyName == nil || *job.Properties.GetJob().EntityFriendlyName != fileShareName {
+				continue
+			}
+			if job.Properties.GetJob().StartTime.Equal(startTime) {
+				continue
+			}
+			jobIds = append(jobIds, *job.Name)
+		}
+	}
+	if len(jobIds) == 1 {
+		return &jobIds[0], nil
+	}
+	if len(jobIds) > 1 {
+		return nil, fmt.Errorf("multiple backup jobs found for file share %s after specified start time of %s", fileShareName, startTime)
+	}
+	return nil, nil
 }

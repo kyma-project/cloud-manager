@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP GcpSubnet is created", func() {
@@ -90,6 +91,8 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(subnet).NotTo(BeNil())
+			Expect(ptr.Deref(subnet.Purpose, "")).To(Equal("PRIVATE"))
+			Expect(ptr.Deref(subnet.PrivateIpGoogleAccess, false)).To(Equal(true))
 		})
 
 		By("And Then GCP Connection Policy is created", func() {
@@ -115,7 +118,7 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
 		})
 
-		By("And Then GCP Connection Policy does not exist", func() {
+		By("And Then GCP Private Subnet does not exist", func() {
 			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
 				ProjectId: scope.Spec.Scope.Gcp.Project,
 				Name:      "cm-" + gcpSubnet.Name,
@@ -125,7 +128,7 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
-		By("And Then GCP Private Subnet does not exist", func() {
+		By("And Then GCP Connection Policy does not exist", func() {
 			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-redis-cluster",
 				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
 			)
@@ -273,6 +276,360 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
 				Should(Succeed())
+		})
+
+	})
+
+	It("Scenario: All KCP GcpSubnets that use Connection Policy are deleted in parallel", func() {
+		const (
+			kymaName       = "0f08ca00-3e86-4c9c-8103-c38a205c09d4"
+			gcpSubnetAName = "0eecbc5a-4be5-4c56-8c83-17138af340c9"
+			gcpSubnetBName = "02279018-b06c-4193-aabc-27c2c714b411"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+		gcpSubnetA := &cloudcontrolv1beta1.GcpSubnet{}
+		gcpSubnetB := &cloudcontrolv1beta1.GcpSubnet{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithGcpRef(scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet A is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					WithName(gcpSubnetAName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetAName),
+					WithKcpGcpSubnetSpecCidr("10.20.60.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet A has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet B is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					WithName(gcpSubnetBName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetBName),
+					WithKcpGcpSubnetSpecCidr("10.20.64.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet B has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given GCP Connection Policy is created", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-rc",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(connectionPolicy).NotTo(BeNil())
+			Expect(connectionPolicy.PscConfig.Subnetworks).Should(HaveLen(2))
+		})
+
+		// Delete
+
+		By("When KCP GcpSubnet A is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("And When KCP GcpSubnet B is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("Then KCP GcpSubnet A does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then KCP GcpSubnet B does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then GCP Private Subnet A does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnetA.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Private Subnet B does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnetB.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Connection Policy does not exist", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-redis-cluster",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(connectionPolicy).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+	})
+
+	It("Scenario: Some KCP GcpSubnets that use Connection Policy are deleted in parallel", func() {
+		const (
+			kymaName       = "e9e0e0c5-a87e-424c-89e3-0e6f59529a54"
+			gcpSubnetAName = "a0f95406-0716-44e1-bb94-ae5013f17e3b"
+			gcpSubnetBName = "3b12c9a5-b587-440c-a476-784c7b449fa1"
+			gcpSubnetCName = "c86be6e4-0e01-48c3-bbf5-2520c89b1f19"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+		gcpSubnetA := &cloudcontrolv1beta1.GcpSubnet{}
+		gcpSubnetB := &cloudcontrolv1beta1.GcpSubnet{}
+		gcpSubnetC := &cloudcontrolv1beta1.GcpSubnet{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithGcpRef(scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet A is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					WithName(gcpSubnetAName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetAName),
+					WithKcpGcpSubnetSpecCidr("10.20.60.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet A has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet B is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					WithName(gcpSubnetBName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetBName),
+					WithKcpGcpSubnetSpecCidr("10.20.64.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet B has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet C is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetC,
+					WithName(gcpSubnetCName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetCName),
+					WithKcpGcpSubnetSpecCidr("10.20.68.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP GcpSubnet C has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetC,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given GCP Connection Policy is created", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-rc",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(connectionPolicy).NotTo(BeNil())
+			Expect(connectionPolicy.PscConfig.Subnetworks).To(HaveLen(3))
+		})
+
+		// Delete
+
+		By("When KCP GcpSubnet A is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("And When KCP GcpSubnet B is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("Then KCP GcpSubnet A does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then KCP GcpSubnet B does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then GCP Private Subnet A does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnetA.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Private Subnet B does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnetB.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Connection Policy has only GcpSubnet C", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-rc",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(connectionPolicy).NotTo(BeNil())
+			Expect(connectionPolicy.PscConfig.Subnetworks).To(HaveLen(1))
+			Expect(connectionPolicy.PscConfig.Subnetworks[0]).To(ContainSubstring(gcpSubnetCName))
+		})
+
+		By("When KCP GcpSubnet C is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetC).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("Then KCP GcpSubnet C does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetC).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then GCP Private Subnet C does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnetC.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Connection Policy does not exist", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-redis-cluster",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(connectionPolicy).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
 	})

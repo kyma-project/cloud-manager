@@ -1,0 +1,11 @@
+resource:
+    kind: AzureRedisCluster
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: azureredisclusters
+name: Azure Redis Clusters
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AzureRedisCluster description here

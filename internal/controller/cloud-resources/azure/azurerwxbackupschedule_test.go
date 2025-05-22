@@ -105,7 +105,6 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 			time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+3, 0, 0, now.Location()).UTC(),
 		}
 
-		rwxBackupName := fmt.Sprintf("%s-%d-%s", rwxBackupScheduleName, 1, expectedTimes[0].Format("20060102-150405"))
 		rwxBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{}
 
 		skrRwxBackup1 := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
@@ -176,6 +175,9 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 			})
 
 			By("And Then the RwxVolumeBackup is created", func() {
+				expected, err := time.Parse(time.RFC3339, rwxBackupSchedule.Status.NextRunTimes[0])
+				Expect(err).ShouldNot(HaveOccurred())
+				rwxBackupName := fmt.Sprintf("%s-%d-%s", rwxBackupScheduleName, 1, expected.Format("20060102-150405"))
 				//Load and check whether the RwxVolumeBackup object got created.
 				Eventually(LoadAndCheck, timeout*6, interval).
 					WithArguments(
