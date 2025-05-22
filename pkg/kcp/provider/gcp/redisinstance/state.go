@@ -27,11 +27,11 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	memorystoreClientProvider gcpclient.ClientProvider[client.MemorystoreClient]
+	memorystoreClientProvider gcpclient.GcpClientProvider[client.MemorystoreClient]
 	env                       abstractions.Environment
 }
 
-func NewStateFactory(memorystoreClientProvider gcpclient.ClientProvider[client.MemorystoreClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(memorystoreClientProvider gcpclient.GcpClientProvider[client.MemorystoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		memorystoreClientProvider: memorystoreClientProvider,
 		env:                       env,
@@ -40,13 +40,8 @@ func NewStateFactory(memorystoreClientProvider gcpclient.ClientProvider[client.M
 
 func (statefactory *stateFactory) NewState(ctx context.Context, redisInstanceState types.State) (*State, error) {
 
-	memorystoreClient, err := statefactory.memorystoreClientProvider(
-		ctx,
-		statefactory.env.Get("GCP_SA_JSON_KEY_PATH"),
-	)
-	if err != nil {
-		return nil, err
-	}
+	memorystoreClient := statefactory.memorystoreClientProvider()
+
 	return newState(redisInstanceState, memorystoreClient), nil
 }
 

@@ -9,7 +9,9 @@ import (
 	"cloud.google.com/go/auth/oauth2adapt"
 	compute "cloud.google.com/go/compute/apiv1"
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
+	redisinstance "cloud.google.com/go/redis/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
+
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/api/option"
@@ -22,6 +24,7 @@ type GcpClients struct {
 	ComputeSubnetworks                        *compute.SubnetworksClient
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
+	RedisInstance                             *redisinstance.CloudRedisClient
 }
 
 func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
@@ -81,13 +84,25 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 		return nil, fmt.Errorf("create redis cluster client: %w", err)
 	}
 
+	// redis instance ----------------
+	redisInstanceTokenProvider, err := b.WithScopes(redisinstance.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create redis instance token provider: %w", err)
+	}
+	redisInstanceTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisInstanceTokenProvider)
+	redisInstance, err := redisinstance.NewCloudRedisClient(ctx, option.WithTokenSource(redisInstanceTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create redis instance client: %w", err)
+	}
+
 	return &GcpClients{
 		ComputeNetworks:    computeNetworks,
 		ComputeAddresses:   computeAddress,
 		ComputeRouters:     computeRouters,
 		ComputeSubnetworks: computeSubnetworks,
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
-		RedisCluster: redisCluster,
+		RedisCluster:  redisCluster,
+		RedisInstance: redisInstance,
 	}, nil
 }
 
