@@ -1,0 +1,67 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.cidr
+            source: cidr
+            widget: Labels
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.cidr
+            source: cidr
+            widget: Labels
+          - name: status.state
+            source: state
+            widget: Labels
+  form: |-
+    - path: spec.cidr
+      name: spec.cidr
+      required: true
+  general: |-
+    resource:
+        kind: GcpSubnet
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: gcpsubnets
+    name: GCP Subnets
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        Description here
+  list: |
+    - source: spec.cidr
+      name: spec.cidr
+      sort: true
+
+    - source: status.cidr
+      name: status.cidr
+      sort: true
+
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.cidr: Requested CIDR
+      status.cidr: Allocated CIDR
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: gcpsubnets-ui.operator.kyma-project.io
+  namespace: kyma-system

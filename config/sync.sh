@@ -57,6 +57,7 @@ cp $SCRIPT_DIR/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpv
 cp $SCRIPT_DIR/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 
 # ============= AZURE ================
 
