@@ -12,7 +12,7 @@ import (
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
-		state, err := stateFactory.NewState(ctx, st.(types.State), logger)
+		state, err := stateFactory.NewState(st.(types.State))
 
 		if err != nil {
 			err = fmt.Errorf("error creating new gcp vpcpeering state %w", err)
