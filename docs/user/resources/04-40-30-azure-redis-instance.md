@@ -10,12 +10,30 @@ The current implementation supports the Premium tier, which is explained in deta
 > [!TIP] _Only for advanced cases of network topology_
 > Redis requires 2 IP addresses per shard. IP addresses can be configured using the IpRange CR. For more information, see [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-instances#configure_a_reserved_ip_address_range). Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureRedisInstance, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
-When creating AzureRedisInstance, one field is mandatory: `redisTier`. Supported values of the [Tier](https://azure.microsoft.com/en-us/pricing/details/cache/#pricing) are:
-- Premium tier: P1, P2, P3, P4, P5
-- Basic tier: S1, S2, S3, S4, S5
+When creating AzureRedisInstance, one field is mandatory: `redisTier`. 
+
+In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
+
+| RedisTier | Capacity (GiB) |
+| --------- |----------------| 
+| S1        | 1              |
+| S2        | 2.5            |
+| S3        | 6              |
+| S4        | 13             |
+| S5        | 26             |
 
 > [!NOTE]
 > [Basic tier is NOT recommended for production workloads](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-cache-redis/reliability#design-considerations), as it's not covered by [standard SLA](https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services).
+
+In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
+
+| RedisTier | Capacity (GiB) |
+| --------- |----------------|
+| P1        | 6              |
+| P2        | 13             |
+| P3        | 26             |
+| P4        | 53             |
+| P5        | 120            |
 
 Optionally, you can specify the `redisConfiguration`, `redisVersion`, and `redisConfiguration` fields.
 
