@@ -11,6 +11,7 @@ import (
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
 	redisinstance "cloud.google.com/go/redis/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
@@ -25,14 +26,23 @@ type GcpClients struct {
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
 	RedisInstance                             *redisinstance.CloudRedisClient
+	VpcPeeringClients                         *VpcPeeringClients
 }
 
-func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
+// The VpcPeeringClients uses a different service account than the other clients and has different permissions as well.
+type VpcPeeringClients struct {
+	ComputeNetworks            *compute.NetworksClient
+	ResourceManagerTagBindings *resourcemanager.TagBindingsClient
+}
+
+func NewGcpClients(ctx context.Context, saJsonKeyPath string, vpcPeeringSaJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
 	logger.
 		WithValues("saJsonKeyPath", saJsonKeyPath).
+		WithValues("vpcPeeringSaJsonKeyPath", vpcPeeringSaJsonKeyPath).
 		Info("Creating GCP clients")
 
 	b := NewReloadingSaKeyTokenProviderOptionsBuilder(saJsonKeyPath, logger)
+	vpcPeeringClientBuilder := NewReloadingSaKeyTokenProviderOptionsBuilder(vpcPeeringSaJsonKeyPath, logger)
 
 	// compute --------------
 
@@ -95,6 +105,29 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 		return nil, fmt.Errorf("create redis instance client: %w", err)
 	}
 
+	// vpc peering clients ----------------
+	// Compute networks client for VPC peering, uses a different service account
+	vpcPeeringComputeNetworksTokenProvider, err := vpcPeeringClientBuilder.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build vpc peering compute token provider: %w", err)
+	}
+	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
+	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithTokenSource(vpcPeeringComputeNetworksTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("error creating vpc peering compute networks client: %w", err)
+	}
+	// resource manager client for VPC peering, uses a different service account----------------
+
+	vpcPeeringResourceManagerTokenProvider, err := vpcPeeringClientBuilder.WithScopes(resourcemanager.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build vpc peering resource manager token provider: %w", err)
+	}
+	vpcPeeringresourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
+	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx, option.WithTokenSource(vpcPeeringresourceManagerTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("error creating resource_manager tag bindings client: %w", err)
+	}
+
 	return &GcpClients{
 		ComputeNetworks:    computeNetworks,
 		ComputeAddresses:   computeAddress,
@@ -103,10 +136,18 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, logger logr.Logger
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
 		RedisCluster:  redisCluster,
 		RedisInstance: redisInstance,
+		VpcPeeringClients: &VpcPeeringClients{
+			ComputeNetworks:            vpcPeeringComputeNetworks,
+			ResourceManagerTagBindings: vpcPeeringresourceManagerTagBindings,
+		},
 	}, nil
 }
 
 func (c *GcpClients) Close() error {
+	return reflectingClose(c)
+}
+
+func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
 
