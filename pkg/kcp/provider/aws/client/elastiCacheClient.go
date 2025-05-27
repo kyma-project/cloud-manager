@@ -337,11 +337,8 @@ func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, cluste
 
 func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticachetypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
 	clusterMode := elasticachetypes.ClusterModeDisabled
-
 	if options.ClusterMode {
 		clusterMode = elasticachetypes.ClusterModeEnabled
-	} else {
-		clusterMode = elasticachetypes.ClusterModeDisabled
 	}
 
 	params := &elasticache.CreateReplicationGroupInput{
