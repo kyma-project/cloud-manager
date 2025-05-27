@@ -335,9 +335,7 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 
 	authTokenEnabled := options.AuthTokenSecretString != nil
 
-	shardCount := ptr.Deref(options.ShardCount, 1)
-
-	nodeGroups := createNodeGroups(options.Name, shardCount, options.ReplicasPerNodeGroup)
+	nodeGroups := createNodeGroups(options.Name, options.ShardCount, options.ReplicasPerNodeGroup)
 	client.replicationGroups[options.Name] = &elasticachetypes.ReplicationGroup{
 		ReplicationGroupId:       ptr.To(options.Name),
 		Status:                   ptr.To("creating"),
