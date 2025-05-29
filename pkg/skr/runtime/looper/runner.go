@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -18,8 +20,6 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"sync"
-	"time"
 )
 
 type RunOptions struct {
@@ -231,17 +231,6 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			cancelOnce.Do(cancelInternal)
 		}
 		defer cancel()
-
-		// TODO: Remove in next release - after 1.2.5 is released, aka in the 1.2.6
-		// Finalizer migration
-		func() {
-			migLogger := logger.WithName("skrFinalizerMigration")
-			mig := migrateFinalizers.NewMigrationForSkr(r.kymaName, r.kcpCluster.GetAPIReader(), r.kcpCluster.GetClient(), skrManager.GetAPIReader(), skrManager.GetClient(), migLogger)
-			_, err := mig.Run(timeoutCtx)
-			if err != nil {
-				migLogger.Error(err, "Migration failed")
-			}
-		}()
 
 		err = skrManager.Start(timeoutCtx)
 		if err != nil {

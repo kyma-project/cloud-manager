@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -14,8 +15,6 @@ func PatchRemoveCommonFinalizer() composed.Action {
 	// The migration is executed concurrently with reconcilers, and it can add new finalizers on objects with deletion timestamp
 	// so there's a risk some of the resources being deleted will remain with old finalizers
 	return composed.ComposeActionsNoName(
-		PatchRemoveFinalizer(api.DO_NOT_USE_OLD_KcpFinalizer),
-		PatchRemoveFinalizer(api.DO_NOT_USE_OLD_SkrFinalizer),
 		PatchRemoveFinalizer(api.CommonFinalizerDeletionHook),
 	)
 }
@@ -44,8 +43,6 @@ func RemoveCommonFinalizer() composed.Action {
 	// Until the pkg/migrateFinalizers is executed there's a risk old finalizers still would be present
 	// For details check PatchRemoveCommonFinalizer()
 	return RemoveFinalizers(
-		api.DO_NOT_USE_OLD_KcpFinalizer,
-		api.DO_NOT_USE_OLD_SkrFinalizer,
 		api.CommonFinalizerDeletionHook,
 	)
 }

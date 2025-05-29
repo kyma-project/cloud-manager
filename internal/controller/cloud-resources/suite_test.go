@@ -21,8 +21,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
-
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -152,8 +150,6 @@ var _ = BeforeSuite(func() {
 	// GcpSubnet
 	Expect(SetupGcpSubnetReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
-
-	migrateFinalizers.RunMigration = false
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
