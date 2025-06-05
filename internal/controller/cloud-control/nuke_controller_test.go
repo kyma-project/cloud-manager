@@ -70,7 +70,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			WithName("76b8fbba-588f-4662-b8d0-f5e9beacad47").
 			WithScope(kymaName).
 			WithRemoteRef(DefaultSkrNamespace, "name").
-			WithAzurePeering("remotePeeringName", "remoteVNet", "remoteResourceGroup").
+			WithAzurePeering("remotePeeringName", "remoteVNet", "remoteResourceGroup", false).
 			Build()
 
 		By("And Given VpcPeering exists", func() {

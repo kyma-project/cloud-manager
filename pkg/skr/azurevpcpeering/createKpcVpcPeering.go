@@ -43,6 +43,7 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 			},
 			Details: &cloudcontrolv1beta1.VpcPeeringDetails{
 				DeleteRemotePeering: obj.Spec.DeleteRemotePeering,
+				UseRemoteGateway:    obj.Spec.UseRemoteGateway,
 				PeeringName:         obj.Spec.RemotePeeringName,
 				RemoteNetwork: klog.ObjectRef{
 					Name:      state.RemoteNetwork.Name,
