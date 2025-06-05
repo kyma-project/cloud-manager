@@ -12,7 +12,8 @@ type VirtualNetworkPeeringClient interface {
 		virtualNetworkName,
 		virtualNetworkPeeringName,
 		remoteVnetId string,
-		allowVnetAccess bool) error
+		allowVnetAccess bool,
+		useVpcGateway bool) error
 
 	ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
 	GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
@@ -36,6 +37,7 @@ func (c *virtualNetworkPeeringClient) CreatePeering(
 	virtualNetworkPeeringName,
 	remoteVnetId string,
 	allowVnetAccess bool,
+	useRemoteGateway bool,
 ) error {
 	_, err := c.svc.BeginCreateOrUpdate(
 		ctx,
@@ -47,7 +49,7 @@ func (c *virtualNetworkPeeringClient) CreatePeering(
 				AllowForwardedTraffic:     ptr.To(true),
 				AllowGatewayTransit:       ptr.To(false),
 				AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-				UseRemoteGateways:         ptr.To(false),
+				UseRemoteGateways:         ptr.To(useRemoteGateway),
 				RemoteVirtualNetwork: &armnetwork.SubResource{
 					ID: ptr.To(remoteVnetId),
 				},

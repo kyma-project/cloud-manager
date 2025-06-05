@@ -29,6 +29,7 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 		state.ObjAsVpcPeering().GetLocalPeeringName(),
 		state.remoteNetworkId.String(),
 		true,
+		state.ObjAsVpcPeering().Spec.Details.UseRemoteGateway,
 	)
 	if err != nil {
 		logger.Error(err, "Error creating VPC Peering")

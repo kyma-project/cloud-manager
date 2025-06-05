@@ -26,6 +26,7 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 		state.localNetworkId.String(),
 		true,
+		false,
 	)
 
 	if err != nil {

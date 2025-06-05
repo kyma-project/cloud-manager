@@ -202,7 +202,7 @@ func main() {
 
 	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), env.Get("GCP_VPC_PEERING_KEY_PATH"), rootLogger.WithName("gcp-clients"))
 	if err != nil {
-		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH"))
+		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH")+" and vpc peering key path: "+env.Get("GCP_VPC_PEERING_KEY_PATH"))
 		os.Exit(1)
 	}
 	defer func() {

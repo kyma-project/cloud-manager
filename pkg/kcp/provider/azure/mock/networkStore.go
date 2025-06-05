@@ -272,7 +272,7 @@ func (s *networkStore) DeleteSubnet(ctx context.Context, resourceGroupName, virt
 
 // VpcPeeringClient ==============================================
 
-func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool) error {
+func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool, useRemoteGateway bool) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -313,7 +313,7 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 			AllowForwardedTraffic:     ptr.To(true),
 			AllowGatewayTransit:       ptr.To(false),
 			AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-			UseRemoteGateways:         ptr.To(false),
+			UseRemoteGateways:         ptr.To(useRemoteGateway),
 			RemoteVirtualNetwork: &armnetwork.SubResource{
 				ID: ptr.To(remoteVnetId),
 			},
