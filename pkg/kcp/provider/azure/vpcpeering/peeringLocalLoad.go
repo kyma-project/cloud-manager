@@ -34,7 +34,7 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 
 	if !ok {
 		logger.Info("Local VPC peering not loaded")
-		return nil, nil
+		return nil, ctx
 	}
 
 	// params must be the same as in peeringLocalCreate()
@@ -45,29 +45,29 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 		state.ObjAsVpcPeering().GetLocalPeeringName(),
 	)
 
-	if err != nil {
-		if azuremeta.IsTooManyRequests(err) {
-			return composed.LogErrorAndReturn(err,
-				"Too many requests on loading local VPC peering",
-				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-				ctx,
-			)
-		}
+	if err == nil {
+		logger = logger.WithValues("localPeeringId", ptr.Deref(peering.ID, ""))
+		ctx = composed.LoggerIntoCtx(ctx, logger)
 
-		if azuremeta.IsNotFound(err) {
-			logger.Info("Local VPC peering not found")
-			return nil, nil
-		}
+		state.localPeering = peering
 
-		return azuremeta.LogErrorAndReturn(err, "Error loading local VPC peering", ctx)
+		logger.Info("Local VPC peering loaded")
+
+		return nil, ctx
 	}
 
-	logger = logger.WithValues("localPeeringId", ptr.Deref(peering.ID, ""))
-	ctx = composed.LoggerIntoCtx(ctx, logger)
+	if azuremeta.IsTooManyRequests(err) {
+		return composed.LogErrorAndReturn(err,
+			"Too many requests on loading local VPC peering",
+			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+			ctx,
+		)
+	}
 
-	state.localPeering = peering
+	if azuremeta.IsNotFound(err) {
+		logger.Info("Local VPC peering not found")
+		return nil, ctx
+	}
 
-	logger.Info("Local VPC peering loaded")
-
-	return nil, ctx
+	return azuremeta.LogErrorAndReturn(err, "Error loading local VPC peering", ctx)
 }
