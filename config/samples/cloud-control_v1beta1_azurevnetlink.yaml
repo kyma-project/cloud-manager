@@ -1,0 +1,12 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: AzureVNetLink
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: azurevnetlink-sample
+spec:
+  remoteVirtualPrivateLinkName: kyma-to-example-com
+  remoteTenant: 1dabcec3-d408-453c-a6a1-ae9f1d15a427
+  remotePrivateDnsZoneId: /subscriptions/9dc4adaf-488c-49ed-bc16-71b678e16fba/resourceGroups/myresourcegroup/providers/Microsoft.Network/privateDnsZones/example.com
+

@@ -10,6 +10,7 @@ import (
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
@@ -87,6 +88,7 @@ type Providers interface {
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
 	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
+	VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
 }
 
 type NetworkConfig interface {
