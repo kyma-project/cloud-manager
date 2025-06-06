@@ -26,6 +26,7 @@ const (
 	VnetAddressSpacesOverlapMessage                      = "Cannot create or update peering. Virtual networks cannot be peered because their address spaces overlap. "
 	InvalidAuthenticationTokenTenant                     = "InvalidAuthenticationTokenTenant"
 	InvalidAuthenticationTokenTenantMessage              = "Authentication failed"
+	MissingServicePrincipalMessage                       = "The client application is missing service principal in the remote tenant"
 )
 
 func IsTooManyRequests(err error) bool {
@@ -124,7 +125,7 @@ func GetErrorMessage(err error, def string) (string, bool) {
 	}
 
 	if IsUnauthenticated(err) {
-		return "Authentication error", true
+		return MissingServicePrincipalMessage, true
 	}
 
 	return def, false
