@@ -166,7 +166,7 @@ func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResou
 }
 
 func (s *baseState) PatchObjStatus(ctx context.Context) error {
-	return PatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
+	return JSONPatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
 }
 
 // PatchObjAddFinalizer uses controllerutil.AddFinalizer() to add finalizer, if it returns false
@@ -198,6 +198,40 @@ func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusCl
 		objToPatch = objClonable.CloneForPatchStatus()
 	}
 	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+}
+
+func JSONPatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {
+
+	objBytes, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	var o map[string]interface{}
+	if err = json.Unmarshal(objBytes, &o); err != nil {
+		return err
+	}
+
+	status, ok := o["status"]
+
+	if !ok {
+		return fmt.Errorf("status not found in object %T", obj)
+	}
+
+	patch := []map[string]interface{}{
+		{
+			"op":    "replace",
+			"path":  "/status",
+			"value": status,
+		},
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return err
+	}
+
+	return clnt.Status().Patch(ctx, obj, client.RawPatch(types.JSONPatchType, patchBytes))
 }
 
 func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Writer) (bool, error) {
