@@ -48,7 +48,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		return nil, ctx
 	}
 
-	return composed.UpdateStatus(state.ObjAsVpcPeering()).
+	return composed.PatchStatus(state.ObjAsVpcPeering()).
 		ErrorLogMessage("Error patching KCP VpcPeering status to ready").
 		SuccessLogMsg("Success patching KCP VpcPeering status to ready").
 		SuccessError(composed.StopAndForget).
