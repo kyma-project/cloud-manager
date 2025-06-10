@@ -83,7 +83,7 @@ rules:
   - azurerwxbackupschedules
   - azurerwxvolumebackups
   - azurerwxvolumerestores
-  - azurevnetlinks
+  - azurevpcdnslinks
   - azurevpcpeerings
   - cceenfsvolumes
   - cloudresources
@@ -119,7 +119,7 @@ rules:
   - azurerwxbackupschedules/finalizers
   - azurerwxvolumebackups/finalizers
   - azurerwxvolumerestores/finalizers
-  - azurevnetlinks/finalizers
+  - azurevpcdnslinks/finalizers
   - azurevpcpeerings/finalizers
   - cceenfsvolumes/finalizers
   - cloudresources/finalizers
@@ -149,7 +149,7 @@ rules:
   - azurerwxbackupschedules/status
   - azurerwxvolumebackups/status
   - azurerwxvolumerestores/status
-  - azurevnetlinks/status
+  - azurevpcdnslinks/status
   - azurevpcpeerings/status
   - cceenfsvolumes/status
   - cloudresources/status

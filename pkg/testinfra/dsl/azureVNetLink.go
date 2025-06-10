@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateAzureVNetLink(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureVNetLink, opts ...ObjAction) error {
+func CreateAzureVNetLink(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureVpcDnsLink, opts ...ObjAction) error {
 	NewObjActions(opts...).
 		Append(
 			WithNamespace(DefaultSkrNamespace),
@@ -22,7 +22,7 @@ func CreateAzureVNetLink(ctx context.Context, clnt client.Client, obj *cloudreso
 func WithAzureRemoteVNetLinkName(remoteVNetLinkName string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			x := obj.(*cloudresourcesv1beta1.AzureVNetLink)
+			x := obj.(*cloudresourcesv1beta1.AzureVpcDnsLink)
 			x.Spec.RemoteVNetLinkName = remoteVNetLinkName
 		},
 	}
@@ -31,7 +31,7 @@ func WithAzureRemoteVNetLinkName(remoteVNetLinkName string) ObjAction {
 func WithAzureRemotePrivateDnsZone(remotePrivateDnsZone string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
-			x := obj.(*cloudresourcesv1beta1.AzureVNetLink)
+			x := obj.(*cloudresourcesv1beta1.AzureVpcDnsLink)
 			x.Spec.RemotePrivateDnsZone = remotePrivateDnsZone
 		},
 	}
@@ -39,7 +39,7 @@ func WithAzureRemotePrivateDnsZone(remotePrivateDnsZone string) ObjAction {
 
 func AssertAzureVNetPeeringHasId() ObjAssertion {
 	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AzureVNetLink)
+		x, ok := obj.(*cloudresourcesv1beta1.AzureVpcDnsLink)
 		if !ok {
 			return fmt.Errorf("the object %T is not  AzureVNetLink", obj)
 		}

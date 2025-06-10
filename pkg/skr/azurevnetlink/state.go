@@ -36,12 +36,12 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
 	return &State{
-		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureVNetLink{}),
+		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureVpcDnsLink{}),
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
 	}
 }
 
-func (s *State) ObjAsVNetLink() *cloudresourcesv1beta1.AzureVNetLink {
-	return s.Obj().(*cloudresourcesv1beta1.AzureVNetLink)
+func (s *State) ObjAsVNetLink() *cloudresourcesv1beta1.AzureVpcDnsLink {
+	return s.Obj().(*cloudresourcesv1beta1.AzureVpcDnsLink)
 }

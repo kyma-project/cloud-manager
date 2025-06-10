@@ -30,23 +30,23 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type AzureVNetLinkReconcilerFactory struct{}
+type AzureVpcDnsLinkReconcilerFactory struct{}
 
-func (f *AzureVNetLinkReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+func (f *AzureVpcDnsLinkReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 
-	return &AzureVNetLinkReconciler{
+	return &AzureVpcDnsLinkReconciler{
 		reconciler: azurevnetlink.NewReconcilerFactory().New(args),
 	}
 }
 
-// AzureVNetLinkReconciler reconciles an AzureVNetLink object
-type AzureVNetLinkReconciler struct {
+// AzureVpcDnsLinkReconciler reconciles an AzureDnsVpcLink object
+type AzureVpcDnsLinkReconciler struct {
 	reconciler reconcile.Reconciler
 }
 
-// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevnetlinks,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevnetlinks/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevnetlinks/finalizers,verbs=update
+// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevpcdnslinks,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevpcdnslinks/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=azurevpcdnslinks/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -57,13 +57,13 @@ type AzureVNetLinkReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.4/pkg/reconcile
-func (r *AzureVNetLinkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *AzureVpcDnsLinkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupAzureVNetLinkReconciler(req skrruntime.SkrRegistry) error {
+func SetupAzureVpcDnsLinkReconciler(req skrruntime.SkrRegistry) error {
 	return req.Register().
-		WithFactory(&AzureVNetLinkReconcilerFactory{}).
-		For(&cloudresourcesv1beta1.AzureVNetLink{}).
+		WithFactory(&AzureVpcDnsLinkReconcilerFactory{}).
+		For(&cloudresourcesv1beta1.AzureVpcDnsLink{}).
 		Complete()
 }

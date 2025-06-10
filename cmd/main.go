@@ -333,8 +333,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAzureVNetLinkReconciler(skrRegistry); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
+	if err = cloudresourcescontroller.SetupAzureVpcDnsLinkReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcDnsLink")
 		os.Exit(1)
 	}
 

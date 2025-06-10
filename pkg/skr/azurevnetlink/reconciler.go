@@ -37,7 +37,7 @@ func (r *reconciler) Reconcile(ctx context.Context, reqest reconcile.Request) (r
 	action := r.newAction()
 
 	return composed.Handling().
-		WithMetrics("skrazurevnetlink", util.RequestObjToString(reqest)).
+		WithMetrics("azurevpcdnslink", util.RequestObjToString(reqest)).
 		WithNoLog().
 		Handle(action(ctx, state))
 
@@ -46,7 +46,7 @@ func (r *reconciler) Reconcile(ctx context.Context, reqest reconcile.Request) (r
 func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crAzureVNetLinkMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureVNetLink{}),
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureVpcDnsLink{}),
 		composed.LoadObj,
 		actions.UpdateIdAndInitState(cloudcontrolv1beta1.VirtualNetworkLinkStateInProgress),
 		loadKcpAzureVNetLink,

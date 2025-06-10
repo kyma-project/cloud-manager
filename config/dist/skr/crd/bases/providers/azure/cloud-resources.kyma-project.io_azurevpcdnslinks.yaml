@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
     cloud-resources.kyma-project.io/version: v0.0.1
-  name: azurevnetlinks.cloud-resources.kyma-project.io
+  name: azurevpcdnslinks.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
-    kind: AzureVNetLink
-    listKind: AzureVNetLinkList
-    plural: azurevnetlinks
-    singular: azurevnetlink
+    kind: AzureVpcDnsLink
+    listKind: AzureVpcDnsLinkList
+    plural: azurevpcdnslinks
+    singular: azurevpcdnslink
   scope: Cluster
   versions:
     - name: v1beta1
       schema:
         openAPIV3Schema:
-          description: AzureVNetLink is the Schema for the azurevnetlinks API
+          description: AzureVpcDnsLink is the Schema for the azurevpcdnslinks API
           properties:
             apiVersion:
               description: |-
@@ -38,7 +38,7 @@ spec:
             metadata:
               type: object
             spec:
-              description: AzureVNetLinkSpec defines the desired state of AzureVNetLink
+              description: AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
               properties:
                 remotePrivateDnsZone:
                   type: string
@@ -64,7 +64,7 @@ spec:
                 - remoteVNetLinkName
               type: object
             status:
-              description: AzureVNetLinkStatus defines the observed state of AzureVNetLink
+              description: AzureVpcDnsLinkStatus defines the observed state of AzureVpcDnsLink
               properties:
                 conditions:
                   description: List of status conditions to indicate the status of a Peering.

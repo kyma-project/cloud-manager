@@ -27,4 +27,4 @@ yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumerestores.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxbackupschedules.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsredisclusters.yaml
-yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurevnetlinks.yaml
+yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurevpcdnslinks.yaml

@@ -24,8 +24,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// AzureVNetLinkSpec defines the desired state of AzureVNetLink
-type AzureVNetLinkSpec struct {
+// AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
+type AzureVpcDnsLinkSpec struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteVNetLinkName is immutable."
@@ -41,8 +41,8 @@ type AzureVNetLinkSpec struct {
 	RemoteTenant string `json:"remoteTenant,omitempty"`
 }
 
-// AzureVNetLinkStatus defines the observed state of AzureVNetLink
-type AzureVNetLinkStatus struct {
+// AzureVpcDnsLinkStatus defines the observed state of AzureVpcDnsLink
+type AzureVpcDnsLinkStatus struct {
 
 	// +optional
 	Id string `json:"id,omitempty"`
@@ -61,48 +61,48 @@ type AzureVNetLinkStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 
-// AzureVNetLink is the Schema for the azurevnetlinks API
-type AzureVNetLink struct {
+// AzureVpcDnsLink is the Schema for the azurevpcdnslinks API
+type AzureVpcDnsLink struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AzureVNetLinkSpec   `json:"spec,omitempty"`
-	Status AzureVNetLinkStatus `json:"status,omitempty"`
+	Spec   AzureVpcDnsLinkSpec   `json:"spec,omitempty"`
+	Status AzureVpcDnsLinkStatus `json:"status,omitempty"`
 }
 
-func (in *AzureVNetLink) Conditions() *[]metav1.Condition {
+func (in *AzureVpcDnsLink) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
-func (in *AzureVNetLink) GetObjectMeta() *metav1.ObjectMeta {
+func (in *AzureVpcDnsLink) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }
 
-func (in *AzureVNetLink) SpecificToFeature() featuretypes.FeatureName {
-	return featuretypes.FeatureAzureVNetLink
+func (in *AzureVpcDnsLink) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureAzureVpcDnsLink
 }
 
-func (in *AzureVNetLink) SpecificToProviders() []string { return []string{"azure"} }
+func (in *AzureVpcDnsLink) SpecificToProviders() []string { return []string{"azure"} }
 
-func (in *AzureVNetLink) State() string { return in.Status.State }
+func (in *AzureVpcDnsLink) State() string { return in.Status.State }
 
-func (in *AzureVNetLink) SetState(v string) { in.Status.State = v }
+func (in *AzureVpcDnsLink) SetState(v string) { in.Status.State = v }
 
-func (in *AzureVNetLink) Id() string {
+func (in *AzureVpcDnsLink) Id() string {
 	return in.Status.Id
 }
 
-func (in *AzureVNetLink) SetId(v string) { in.Status.Id = v }
+func (in *AzureVpcDnsLink) SetId(v string) { in.Status.Id = v }
 
 // +kubebuilder:object:root=true
 
-// AzureVNetLinkList contains a list of AzureVNetLink
-type AzureVNetLinkList struct {
+// AzureVpcDnsLinkList contains a list of AzureVpcDnsLink
+type AzureVpcDnsLinkList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AzureVNetLink `json:"items"`
+	Items           []AzureVpcDnsLink `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AzureVNetLink{}, &AzureVNetLinkList{})
+	SchemeBuilder.Register(&AzureVpcDnsLink{}, &AzureVpcDnsLinkList{})
 }

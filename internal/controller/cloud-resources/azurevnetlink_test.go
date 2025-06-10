@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: SKR AzureVNetLink", func() {
+var _ = Describe("Feature: SKR AzureVNetLink", Focus, func() {
 
 	It("Scenario: SKR AzureVNetLink is created then deleted", func() {
 		const (
@@ -17,7 +17,7 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
 		)
-		azureVNetLink := &cloudresourcesv1beta1.AzureVNetLink{}
+		azureVNetLink := &cloudresourcesv1beta1.AzureVpcDnsLink{}
 
 		remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
 
