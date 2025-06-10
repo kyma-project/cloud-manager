@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateAzureVNetLink(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureVpcDnsLink, opts ...ObjAction) error {
+func CreateAzureVpcDnsLink(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureVpcDnsLink, opts ...ObjAction) error {
 	NewObjActions(opts...).
 		Append(
 			WithNamespace(DefaultSkrNamespace),
@@ -19,7 +19,7 @@ func CreateAzureVNetLink(ctx context.Context, clnt client.Client, obj *cloudreso
 	return err
 }
 
-func WithAzureRemoteVNetLinkName(remoteVNetLinkName string) ObjAction {
+func WithAzureRemoteVpcDnsLinkName(remoteVNetLinkName string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudresourcesv1beta1.AzureVpcDnsLink)

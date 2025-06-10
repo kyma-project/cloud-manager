@@ -22,11 +22,11 @@ var _ = Describe("Feature: SKR AzureVNetLink", Focus, func() {
 		remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
 
 		By("When AzureVNetLink is created", func() {
-			Eventually(CreateAzureVNetLink).
+			Eventually(CreateAzureVpcDnsLink).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureVNetLink,
 					WithName("dea5b922-f7be-404c-9f69-72dfce914bd2"),
-					WithAzureRemoteVNetLinkName("91953457-3728-4e40-b874-ac4717f9d43e"),
+					WithAzureRemoteVpcDnsLinkName("91953457-3728-4e40-b874-ac4717f9d43e"),
 					WithAzureRemotePrivateDnsZone(remoteVnetId),
 				).Should(Succeed())
 		})
