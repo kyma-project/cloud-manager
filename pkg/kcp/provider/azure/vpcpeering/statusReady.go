@@ -19,16 +19,6 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		changed = true
 	}
 
-	if len(state.ObjAsVpcPeering().Status.Conditions) != 1 {
-		changed = true
-	}
-	cond := meta.FindStatusCondition(state.ObjAsVpcPeering().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-	if cond == nil {
-		changed = true
-	} else if cond.Status != metav1.ConditionTrue || cond.Reason != cloudcontrolv1beta1.ConditionTypeReady || cond.Message != cloudcontrolv1beta1.ConditionTypeReady {
-		changed = true
-	}
-
 	if state.ObjAsVpcPeering().Status.Id != ptr.Deref(state.localPeering.ID, "") {
 		state.ObjAsVpcPeering().Status.Id = ptr.Deref(state.localPeering.ID, "")
 		changed = true
@@ -39,18 +29,28 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		changed = true
 	}
 
+	if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeError) {
+		changed = true
+	}
+
+	condition := metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeReady,
+		Status:  metav1.ConditionTrue,
+		Reason:  cloudcontrolv1beta1.ReasonReady,
+		Message: cloudcontrolv1beta1.ReasonReady,
+	}
+
+	if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), condition) {
+		changed = true
+	}
+
 	if !changed {
 		return nil, ctx
 	}
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).
-		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudcontrolv1beta1.ConditionTypeReady,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonReady,
-			Message: cloudcontrolv1beta1.ReasonReady,
-		}).
 		ErrorLogMessage("Error patching KCP VpcPeering status to ready").
+		SuccessLogMsg("Success patching KCP VpcPeering status to ready").
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
 }
