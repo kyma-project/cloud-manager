@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -166,7 +165,7 @@ func (s *baseState) UpdateObjStatus(ctx context.Context, opts ...client.SubResou
 }
 
 func (s *baseState) PatchObjStatus(ctx context.Context) error {
-	return JSONPatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
+	return PatchObjStatus(ctx, s.Obj(), s.Cluster().K8sClient())
 }
 
 // PatchObjAddFinalizer uses controllerutil.AddFinalizer() to add finalizer, if it returns false
@@ -193,14 +192,6 @@ func MergePatchObj(ctx context.Context, obj client.Object, patch map[string]inte
 }
 
 func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {
-	objToPatch := obj
-	if objClonable, ok := obj.(ObjWithCloneForPatchStatus); ok {
-		objToPatch = objClonable.CloneForPatchStatus()
-	}
-	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
-}
-
-func JSONPatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {
 
 	objBytes, err := json.Marshal(obj)
 	if err != nil {
