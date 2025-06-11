@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.9
+    cloud-resources.kyma-project.io/version: v0.0.10
   name: gcpnfsvolumes.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -243,6 +243,8 @@ spec:
                 id:
                   type: string
                 location:
+                  type: string
+                protocol:
                   type: string
                 state:
                   description: State of the GcpNfsVolume

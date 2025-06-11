@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -68,6 +69,12 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 				},
 			},
 		},
+	}
+
+	if nfsVolume.Status.Protocol == string(client.FilestoreProtocolNFSv41) {
+		pv.Spec.MountOptions = []string{
+			"nfsvers=4.1",
+		}
 	}
 
 	//Create PV

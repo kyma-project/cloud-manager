@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"strings"
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -31,7 +32,8 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 
 	switch state.operation {
 	case gcpclient.ADD:
-		operation, err = state.filestoreClient.CreateFilestoreInstance(ctx, project, location, name, state.toInstance())
+		instance := getInstanceWithProtocol(ctx, state)
+		operation, err = state.filestoreClient.CreateFilestoreInstance(ctx, project, location, name, instance)
 	case gcpclient.MODIFY:
 		mask := strings.Join(state.updateMask, ",")
 		operation, err = state.filestoreClient.PatchFilestoreInstance(ctx, project, location, name, mask, state.toInstance())
@@ -65,4 +67,14 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 	return nil, nil
+}
+
+// addProtocol sets the protocol 4.1 for the NFS instance if tier is ZONAL or REGIONAL.
+func getInstanceWithProtocol(ctx context.Context, state *State) *file.Instance {
+	instance := state.toInstance()
+	gcpOptions := state.ObjAsNfsInstance().Spec.Instance.Gcp
+	if feature.Nfs41Gcp.Value(ctx) && gcpOptions != nil && (gcpOptions.Tier == v1beta1.ZONAL || gcpOptions.Tier == v1beta1.REGIONAL) {
+		instance.Protocol = string(gcpclient.FilestoreProtocolNFSv41)
+	}
+	return instance
 }

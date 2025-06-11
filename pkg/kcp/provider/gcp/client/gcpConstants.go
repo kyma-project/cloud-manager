@@ -25,6 +25,14 @@ const GcpApiTimeout = time.Second * 8
 
 const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
 
+const GcpNfsStateDataProtocol = "gcpNfsProtocol"
+
+type FilestoreProtocol string
+
+const (
+	FilestoreProtocolNFSv41 FilestoreProtocol = "NFS_V4_1"
+)
+
 type GcpConfigStruct struct {
 	GcpRetryWaitTime     time.Duration
 	GcpOperationWaitTime time.Duration

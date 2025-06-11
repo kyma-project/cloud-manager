@@ -5,6 +5,7 @@ import (
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,13 +33,14 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 
 	//Remove Ready Status from GcpNfsVolume
 	nfsVol := gcpNfsVolume.DeepCopy()
+	nfsProtocol := "Any NFS Protocol"
 	nfsVol.Status.Conditions = nil
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
 	assert.Nil(suite.T(), err)
 
 	state := factory.newStateWith(nfsVol)
-	state.KcpNfsInstance = &gcpNfsInstance
-
+	state.KcpNfsInstance = gcpNfsInstance.DeepCopy()
+	state.KcpNfsInstance.SetStateData(client.GcpNfsStateDataProtocol, nfsProtocol)
 	//Invoke updateStatus
 	err, _ = updateStatus(ctx, state)
 
@@ -58,6 +60,8 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeReady, nfsVol.Status.State)
+
+	assert.Equal(suite.T(), nfsProtocol, nfsVol.Status.Protocol)
 }
 
 func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
@@ -90,6 +94,7 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
 	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeReady, nfsVol.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), gcpNfsVolume.Status.State, nfsVol.Status.State)
+	assert.Empty(suite.T(), nfsVol.Status.Protocol, "Protocol should be empty when not set in KCP NfsInstance")
 }
 
 func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
@@ -140,6 +145,8 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
+	assert.Empty(suite.T(), nfsVol.Status.Protocol, "Protocol should not be set when KCP NfsInstance is in error state")
+
 }
 
 func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {

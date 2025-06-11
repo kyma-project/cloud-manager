@@ -18,9 +18,11 @@ jobs:
           - nukeBackupsGcp: "false"
             nukeBackupsAws: "false"
             nukeBackupsAzure: "false"
+            nfs41Gcp: "false"
           - nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
             nukeBackupsAzure: "true"
+            nfs41Gcp: "true"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -36,6 +38,7 @@ jobs:
           FF_NUKE_BACKUPS_GCP: ${{ matrix.nukeBackupsGcp }}
           FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackupsAws }}
           FF_NUKE_BACKUPS_AZURE: ${{ matrix.nukeBackupsAzure }}
+          FF_NFS41_GCP: ${{ matrix.nfs41Gcp }}
         run: |
           ./config/sync.sh
           go mod tidy
