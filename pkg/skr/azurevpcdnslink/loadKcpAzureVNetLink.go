@@ -1,4 +1,4 @@
-package azurevnetlink
+package azurevpcdnslink
 
 import (
 	"context"

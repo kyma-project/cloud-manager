@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: SKR AzureVNetLink", Focus, func() {
+var _ = Describe("Feature: SKR AzureVNetLink", func() {
 
 	It("Scenario: SKR AzureVNetLink is created then deleted", func() {
 		const (

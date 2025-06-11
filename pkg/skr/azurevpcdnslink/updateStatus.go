@@ -1,4 +1,4 @@
-package azurevnetlink
+package azurevpcdnslink
 
 import (
 	"context"
@@ -30,8 +30,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	return composed.UpdateStatus(obj).
-		ErrorLogMessage("Error updating SKR AzureVNetLink status").
-		SuccessLogMsg("Updated and forgot SKR AzureVNetLink status").
+		ErrorLogMessage("Error updating SKR AzureVpcDnsLink status").
+		SuccessLogMsg("Updated and forgot SKR AzureVpcDnsLink status").
 		SuccessErrorNil().
 		Run(ctx, state)
 

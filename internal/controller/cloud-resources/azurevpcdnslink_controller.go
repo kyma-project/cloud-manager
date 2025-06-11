@@ -22,7 +22,7 @@ import (
 
 	//cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 
-	"github.com/kyma-project/cloud-manager/pkg/skr/azurevnetlink"
+	"github.com/kyma-project/cloud-manager/pkg/skr/azurevpcdnslink"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -35,7 +35,7 @@ type AzureVpcDnsLinkReconcilerFactory struct{}
 func (f *AzureVpcDnsLinkReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 
 	return &AzureVpcDnsLinkReconciler{
-		reconciler: azurevnetlink.NewReconcilerFactory().New(args),
+		reconciler: azurevpcdnslink.NewReconcilerFactory().New(args),
 	}
 }
 
