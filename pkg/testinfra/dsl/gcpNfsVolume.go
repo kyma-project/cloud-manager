@@ -78,6 +78,18 @@ func WithGcpNfsVolumeSpecLocation(location string) ObjAction {
 	}
 }
 
+func WithGcpNfsVolumeSpecTier(tier cloudresourcesv1beta1.GcpFileTier) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.Tier = tier
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
+		},
+	}
+}
+
 func WithGcpNfsVolumeStatusLocation(location string) ObjAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
@@ -162,6 +174,22 @@ func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.NfsInstance)
 			x.Status.CapacityGb = capacity
+		},
+	}
+}
+
+func WithKcpNfsStatusStateData(key, value string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.NfsInstance)
+			if x.Status.StateData == nil {
+				x.Status.StateData = make(map[string]string)
+			}
+			if value == "" {
+				delete(x.Status.StateData, key)
+			} else {
+				x.Status.StateData[key] = value
+			}
 		},
 	}
 }
