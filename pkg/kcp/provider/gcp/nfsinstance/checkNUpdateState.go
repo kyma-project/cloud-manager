@@ -60,6 +60,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 		nfsInstance.Status.Host = pie.First(state.fsInstance.Networks[0].IpAddresses)
 		nfsInstance.Status.Path = state.ObjAsNfsInstance().Spec.Instance.Gcp.FileShareName
 		nfsInstance.Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
+		nfsInstance.SetStateData(client.GcpNfsStateDataProtocol, state.fsInstance.Protocol)
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,

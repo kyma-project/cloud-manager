@@ -1,0 +1,6 @@
+nfs41Gcp:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
