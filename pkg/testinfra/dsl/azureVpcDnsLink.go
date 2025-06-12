@@ -23,7 +23,7 @@ func WithAzureRemoteVpcDnsLinkName(remoteVNetLinkName string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			x := obj.(*cloudresourcesv1beta1.AzureVpcDnsLink)
-			x.Spec.RemoteVNetLinkName = remoteVNetLinkName
+			x.Spec.RemoteLinkName = remoteVNetLinkName
 		},
 	}
 }

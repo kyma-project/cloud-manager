@@ -40,6 +40,15 @@ spec:
             spec:
               description: AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
               properties:
+                remoteLinkName:
+                  type: string
+                  x-kubernetes-validations:
+                    - message: RemoteLinkName is immutable.
+                      rule: (self == oldSelf)
+                    - message: RemoteLinkName can be up to 80 characters long.
+                      rule: (size(self) <= 80)
+                    - message: RemoteLinkName must begin with a word character, and it must end with a word character. RemoteLinkName may contain word characters or '-'.
+                      rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
                 remotePrivateDnsZone:
                   type: string
                   x-kubernetes-validations:
@@ -50,18 +59,9 @@ spec:
                   x-kubernetes-validations:
                     - message: RemoteTenant is immutable.
                       rule: (self == oldSelf)
-                remoteVNetLinkName:
-                  type: string
-                  x-kubernetes-validations:
-                    - message: RemoteVNetLinkName is immutable.
-                      rule: (self == oldSelf)
-                    - message: RemoteVNetLinkName can be up to 80 characters long.
-                      rule: (size(self) <= 80)
-                    - message: RemoteVNetLinkName must begin with a word character, and it must end with a word character. RemoteVNetLinkName may contain word characters or '-'.
-                      rule: (self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != '')
               required:
+                - remoteLinkName
                 - remotePrivateDnsZone
-                - remoteVNetLinkName
               type: object
             status:
               description: AzureVpcDnsLinkStatus defines the observed state of AzureVpcDnsLink
