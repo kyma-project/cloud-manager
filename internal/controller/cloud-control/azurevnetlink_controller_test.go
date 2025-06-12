@@ -14,9 +14,9 @@ var _ = Describe("Feature: KCP AzureVNetLink", func() {
 
 	It("Scenario: KCP AzureVNetLink is created and deleted", func() {
 		const (
-			kymaName                     = "6a62936d-aa6e-4d5b-aaaa-5eae646d1bd5"
-			kcpAzureVNetLinkName         = "281bc581-8635-4d56-ba52-fa48ec6f7c69"
-			remoteSubscription           = "afdbc79f-de19-4df4-94cd-6be2739dc0e0"
+			kymaName                     = "56d6f6ba-083e-4b1a-aeff-813c517722fb"
+			kcpAzureVNetLinkName         = "58935fd4-9f0c-4203-911f-dba920d822ea"
+			remoteSubscription           = "1c65f69a-dba5-4979-bd16-a2a7e22a9e3d"
 			remoteResourceGroup          = "MyResourceGroup"
 			remotePrivateDnsZoneName     = "MyPrivateDnsZone"
 			remoteVirtualPrivateLinkName = "example-com"
