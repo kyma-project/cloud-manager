@@ -56,6 +56,7 @@ import (
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
@@ -332,6 +333,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAzureVpcDnsLinkReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcDnsLink")
+		os.Exit(1)
+	}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(
 		ctx,
@@ -436,6 +442,15 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
+		os.Exit(1)
+	}
+
+	if err = cloudcontrolcontroller.SetupAzureVNetLinkReconciler(
+		mgr,
+		azurevnetlinkclient.NewClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

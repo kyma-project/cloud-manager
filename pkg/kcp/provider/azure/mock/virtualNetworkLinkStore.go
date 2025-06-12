@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
@@ -62,10 +63,14 @@ func (s *virtualNetworkLinkStore) getVirtualNetworkLinkNonLocking(resourceGroupN
 	if !ok {
 		return nil, azuremeta.NewAzureNotFoundError()
 	}
+	if virtualNetworkLink == nil {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+
 	return virtualNetworkLink, nil
 }
 
-func (s *virtualNetworkLinkStore) CreateVirtualNetworkLink(ctx context.Context, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName string, parameters armprivatedns.VirtualNetworkLink) error {
+func (s *virtualNetworkLinkStore) CreateVirtualNetworkLink(ctx context.Context, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName, vnetId string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -87,8 +92,10 @@ func (s *virtualNetworkLinkStore) CreateVirtualNetworkLink(ctx context.Context, 
 
 	props := &armprivatedns.VirtualNetworkLinkProperties{}
 	props.ProvisioningState = ptr.To(armprivatedns.ProvisioningStateSucceeded)
+	props.VirtualNetworkLinkState = ptr.To(armprivatedns.VirtualNetworkLinkStateCompleted)
 
 	item := &armprivatedns.VirtualNetworkLink{
+		ID:         ptr.To(azureutil.NewVirtualNetworkLinkResourceId(s.subscription, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName).String()),
 		Location:   to.Ptr("global"),
 		Properties: props,
 		Name:       to.Ptr(virtualNetworkLinkName),
