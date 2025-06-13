@@ -22,6 +22,8 @@ resources:
 # if you do not want those helpers be installed with your Project.
 - cloud-resources_gcprediscluster_editor_role.yaml
 - cloud-resources_gcprediscluster_viewer_role.yaml
+- cloud-control_azurevnetlink_editor_role.yaml
+- cloud-control_azurevnetlink_viewer_role.yaml
 - cloud-resources_gcpsubnet_editor_role.yaml
 - cloud-resources_gcpsubnet_viewer_role.yaml
 - cloud-control_gcprediscluster_editor_role.yaml

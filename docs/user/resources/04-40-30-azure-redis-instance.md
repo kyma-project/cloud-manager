@@ -10,7 +10,30 @@ The current implementation supports the Premium tier, which is explained in deta
 > [!TIP] _Only for advanced cases of network topology_
 > Redis requires 2 IP addresses per shard. IP addresses can be configured using the IpRange CR. For more information, see [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-instances#configure_a_reserved_ip_address_range). Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureRedisInstance, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
-When creating AzureRedisInstance, one field is mandatory: `redisTier`.
+When creating AzureRedisInstance, one field is mandatory: `redisTier`. 
+
+In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
+
+| RedisTier | Capacity (GiB) |
+| --------- |----------------| 
+| S1        | 1              |
+| S2        | 2.5            |
+| S3        | 6              |
+| S4        | 13             |
+| S5        | 26             |
+
+> [!NOTE]
+> [Basic tier is NOT recommended for production workloads](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-cache-redis/reliability#design-considerations), as it's not covered by [standard SLA](https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services).
+
+In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
+
+| RedisTier | Capacity (GiB) |
+| --------- |----------------|
+| P1        | 6              |
+| P2        | 13             |
+| P3        | 26             |
+| P4        | 53             |
+| P5        | 120            |
 
 Optionally, you can specify the `redisConfiguration`, `redisVersion`, and `redisConfiguration` fields.
 
@@ -21,22 +44,22 @@ Optionally, you can specify the `redisConfiguration`, `redisVersion`, and `redis
 
 This table lists the parameters of AzureRedisInstance, together with their descriptions:
 
-| Parameter                                              | Type   | Description                                                                                                                                                                                                                             |
-|--------------------------------------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **ipRange**                                            | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                                                        |
-| **ipRange.name**                                       | string | Required. Name of the existing IpRange to use.                                                                                                                                                                                          | 
-| **rediTier**                                           | string | Required. The service capacity of the instance. Supported values are P1, P2, P3, P4 and P5.                                                                                                                                             |
-| **redisVersion**                                       | int    | Optional. The version of Redis software. Defaults to `6.0`.                                                                                                                                                                             |
-| **redisConfiguration**                                 | object | Optional. Object containing Redis configuration options.                                                                                                                                                                                |
-| **redisConfiguration.maxclients**                      | int    | Optional. Max number of Redis clients. Limited to [7,500 to 40,000.](https://azure.microsoft.com/en-us/pricing/details/cache/)                                                                                                          |
-| **redisConfiguration.maxmemory-reserved**              | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting) |
-| **redisConfiguration.maxmemory-delta**                 | int    | Optional. Gets or sets value in megabytes reserved for non-cache usage per shard e.g. failover.                                                                                                                                         | 
-| **redisConfiguration.maxmemory-policy**                | int    | Optional. The setting for how Redis will select what to remove when **maxmemory** (the size of the cache offering you selected when you created the cache) is reached. Defaults to `volatile-lru`.                                      | 
-| **redisConfiguration.maxfragmentationmemory-reserved** | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting) |
-| **authSecret**                                    | object | Optional. Auth Secret options.                                                                                                                                                                              |
-| **authSecret.name**                               | string | Optional. Auth Secret name.                                                                                                                                                                                 |
-| **authSecret.labels**                             | object | Optional. Auth Secret labels. Keys and values must be a string.                                                                                                                                             |
-| **authSecret.annotations**                        | object | Optional. Auth Secret annotations. Keys and values must be a string.                                                                                                                                        |
+| Parameter                                              | Type   | Description                                                                                                                                                                                                                                                                                                 |
+|--------------------------------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **ipRange**                                            | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created.                                                                                                                                                                            |
+| **ipRange.name**                                       | string | Required. Name of the existing IpRange to use.                                                                                                                                                                                                                                                              | 
+| **rediTier**                                           | string | Required. The service capacity of the instance. Supported values are P1, P2, P3, P4, P5, S1, S2, S3, S4, S5.                                                                                                                                                                                                |
+| **redisVersion**                                       | int    | Optional. The version of Redis software. Defaults to `6.0`.                                                                                                                                                                                                                                                 |
+| **redisConfiguration**                                 | object | Optional. Object containing Redis configuration options.                                                                                                                                                                                                                                                    |
+| **redisConfiguration.maxclients**                      | int    | Optional. Max number of Redis clients. Limited to [7,500 to 40,000.](https://azure.microsoft.com/en-us/pricing/details/cache/)                                                                                                                                                                              |
+| **redisConfiguration.maxmemory-reserved**              | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting)                                                                     |
+| **redisConfiguration.maxmemory-delta**                 | int    | Optional. Gets or sets value in megabytes reserved for non-cache usage per shard e.g. failover.                                                                                                                                                                                                             | 
+| **redisConfiguration.maxmemory-policy**                | int    | Optional. The setting for how Redis will select what to remove when **maxmemory** (the size of the cache offering you selected when you created the cache) is reached. Defaults to `volatile-lru`.                                                                                                          | 
+| **redisConfiguration.maxfragmentationmemory-reserved** | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting)                                                                     |
+| **authSecret**                                    | object | Optional. Auth Secret options.                                                                                                                                                                                                                                                                              |
+| **authSecret.name**                               | string | Optional. Auth Secret name.                                                                                                                                                                                                                                                                                 |
+| **authSecret.labels**                             | object | Optional. Auth Secret labels. Keys and values must be a string.                                                                                                                                                                                                                                             |
+| **authSecret.annotations**                        | object | Optional. Auth Secret annotations. Keys and values must be a string.                                                                                                                                                                                                                                        |
 | **authSecret.extraData**                          | object | Optional. Additional Secret Data entries. Keys and values must be a string. Allows users to define additional data fields that will be present in the Secret. The well-known data fields can be used as templates. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). |
 
 ## Auth Secret Details

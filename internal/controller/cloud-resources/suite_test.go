@@ -141,6 +141,9 @@ var _ = BeforeSuite(func() {
 	// AwsVpcPeering
 	Expect(SetupAwsVpcPeeringReconciler(infra.Registry()))
 
+	// AzureVNetLink
+	Expect(SetupAzureVpcDnsLinkReconciler(infra.Registry()))
+
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 
 	//GCP Vpc Peering

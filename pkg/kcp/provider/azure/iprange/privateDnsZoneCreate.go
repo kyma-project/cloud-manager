@@ -3,8 +3,6 @@ package iprange
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -24,11 +22,8 @@ func privateDnsZoneCreate(ctx context.Context, st composed.State) (error, contex
 	logger.Info("Creating Azure KCP IpRange privateDnsZone")
 
 	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
-	privateDNSZone := armprivatedns.PrivateZone{
-		Location: to.Ptr("global"),
-	}
 
-	err := state.azureClient.CreatePrivateDnsZone(ctx, state.resourceGroupName, privateDnsZoneName, privateDNSZone)
+	err := state.azureClient.CreatePrivateDnsZone(ctx, state.resourceGroupName, privateDnsZoneName, nil)
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,

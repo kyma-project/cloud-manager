@@ -32,8 +32,8 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.MarkedForDeletionPredicate,
 				composed.ComposeActions(
 					"azureVpcPeering-delete",
-					deleteVpcPeering,
 					peeringRemoteDelete,
+					deleteVpcPeering,
 					actions.PatchRemoveCommonFinalizer(),
 				),
 				composed.ComposeActions(

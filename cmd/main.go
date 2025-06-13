@@ -56,6 +56,7 @@ import (
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
 	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
@@ -200,7 +201,7 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
-	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), rootLogger.WithName("gcp-clients"))
+	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), env.Get("GCP_VPC_PEERING_KEY_PATH"), rootLogger.WithName("gcp-clients"))
 	if err != nil {
 		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH"))
 		os.Exit(1)
@@ -332,6 +333,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAzureVpcDnsLinkReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureVpcDnsLink")
+		os.Exit(1)
+	}
+
 	// KCP Controllers
 	if err = cloudcontrolcontroller.SetupScopeReconciler(
 		ctx,
@@ -364,7 +370,7 @@ func main() {
 		mgr,
 		awsvpcpeeringclient.NewClientProvider(),
 		azurevpcpeeringclient.NewClientProvider(),
-		gcpvpcpeeringclient.NewClientProvider(),
+		gcpvpcpeeringclient.NewClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcPeering")
@@ -384,7 +390,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupRedisInstanceReconciler(
 		mgr,
-		gcpredisinstanceclient.NewMemorystoreClientProvider(),
+		gcpredisinstanceclient.NewMemorystoreClientProvider(gcpClients),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
 		env,
@@ -436,6 +442,15 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")
+		os.Exit(1)
+	}
+
+	if err = cloudcontrolcontroller.SetupAzureVNetLinkReconciler(
+		mgr,
+		azurevnetlinkclient.NewClientProvider(),
+		env,
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
