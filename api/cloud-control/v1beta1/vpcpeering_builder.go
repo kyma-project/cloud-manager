@@ -47,7 +47,7 @@ func (b *VpcPeeringBuilder) WithGcpPeering(remotePeeringName, remoteProject, rem
 	return b
 }
 
-func (b *VpcPeeringBuilder) WithAzurePeering(remotePeeringName, remoteVNet, remoteResourceGroup string) *VpcPeeringBuilder {
+func (b *VpcPeeringBuilder) WithAzurePeering(remotePeeringName, remoteVNet, remoteResourceGroup string, useRemoteGateway bool) *VpcPeeringBuilder {
 	if remotePeeringName == "" {
 		if b.Obj.Spec.VpcPeering == nil {
 			return b
@@ -64,6 +64,7 @@ func (b *VpcPeeringBuilder) WithAzurePeering(remotePeeringName, remoteVNet, remo
 	b.Obj.Spec.VpcPeering.Azure.RemotePeeringName = remotePeeringName
 	b.Obj.Spec.VpcPeering.Azure.RemoteVnet = remoteVNet
 	b.Obj.Spec.VpcPeering.Azure.RemoteResourceGroup = remoteResourceGroup
+	b.Obj.Spec.VpcPeering.Azure.UseRemoteGateway = useRemoteGateway
 	return b
 }
 

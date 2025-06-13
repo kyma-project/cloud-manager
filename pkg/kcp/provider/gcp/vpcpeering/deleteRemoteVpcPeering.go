@@ -28,7 +28,7 @@ func deleteRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	// Otherwise, Google will return a 400 error saying, 'There is a peering operation in progress on the local or peer network. Try again later.'
 	// If it's not active, that means the kyma VPC Peering is already deleted, and we can proceed with the deletion of the remote VPC Peering.
 	if ptr.Deref(state.remoteVpcPeering.State, "") == computepb.NetworkPeering_ACTIVE.String() {
-		logger.Info("Remote VPC Peering is still active. It should wait for the remote VPC Peering to be deleted before proceeding with the deletion of the remote VPC Peering.")
+		logger.Info("Remote VPC Peering is still active. It should wait for the local VPC Peering to be deleted before proceeding with the deletion of the remote VPC Peering.")
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
