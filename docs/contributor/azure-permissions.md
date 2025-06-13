@@ -91,7 +91,8 @@
     "Microsoft.Network/virtualNetworks/read",
     "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete",
     "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-    "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
+    "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write",
+    "Microsoft.Network/virtualNetworks/join/action"
   ]
 }
 ```
