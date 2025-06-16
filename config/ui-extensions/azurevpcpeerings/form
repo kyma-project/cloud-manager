@@ -3,6 +3,10 @@
   widget: Text
   disableOnEdit: true
   description: Immutable once set.
+- path: spec.useRemoteGateway
+  name: spec.useRemoteGateway
+  disableOnEdit: true
+  description: Immutable once set.
 - path: spec.remotePeeringName
   name: spec.remotePeeringName
   widget: Text
