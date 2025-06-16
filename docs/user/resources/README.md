@@ -71,3 +71,7 @@ The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Google 
 ### AzureRedisInstance CR
 
 The `azureredisinstance.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis instance. For more information, see [AzureRedisInstance Custom Resource](./04-40-30-azure-redis-instance.md).
+
+### AzureRedisCluster CR
+
+The `azurerediscluster.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis cluster. For more information, see [AzureRedisCluster Custom Resource](./04-50-30-azure-redis-cluster.md).
