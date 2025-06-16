@@ -1,6 +1,6 @@
 # Creating VPC DNS Link in Microsoft Azure
 
-This tutorial explains how to link SAP, BTP Kuma runtime network to remote Private DNS zone in Microsoft Azure. Learn how to create a new resource group, VPC network and a virtual machine (VM), and assign required roles to the provided Kyma service principal in your Microsoft Azure subscription.
+This tutorial explains how to link SAP, BTP Kuma runtime network to remote Private DNS zone in Microsoft Azure. Learn how to create a new resource group, private DNS zone and record-set, and assign required roles to the provided Kyma service principal in your Microsoft Azure subscription.
 
 ## Prerequisites
 
@@ -63,7 +63,7 @@ This tutorial explains how to link SAP, BTP Kuma runtime network to remote Priva
    az network private-dns zone create --resource-group $RESOURCE_GROUP_NAME --name $ZONE_NAME
    ```
 
-4. Create Private DNS A record:
+4. Create a Private DNS A record:
 
    ```shell
    export RECORD_SET_NAME=test
