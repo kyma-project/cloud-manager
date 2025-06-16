@@ -39,6 +39,6 @@ metadata:
   name: link-to-example-com
 spec:
   remoteLinkName: link-to-my-kyma
-  remoteVnet: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/privateDnsZones/example.com
+  remotePrivateDnsZone: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/privateDnsZones/example.com
   remoteTenant: ac3ddba3-536d-4b6f-aad7-03b942e46aca
 ```
