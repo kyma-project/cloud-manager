@@ -73,7 +73,7 @@ This tutorial explains how to link SAP, BTP Kuma runtime network to remote Priva
 
 ### Allow SAP BTP, Kyma Runtime to link with your Private DNS zone
 
-Tag the Private DNS zone with the Kyma shoot name:
+Tag the private DNS zone with the Kyma shoot name:
 
    ```shell
    export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
