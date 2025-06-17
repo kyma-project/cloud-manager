@@ -116,7 +116,7 @@ Tag the private DNS zone with the Kyma shoot name:
    kubectl create ns $NAMESPACE
    ```
 
-4. Create a workload that queries previously created Private DNS A record:
+4. Create a workload that queries previously created private DNS A record:
 
    ```shell
    kubectl apply -n $NAMESPACE -f - <<EOF
