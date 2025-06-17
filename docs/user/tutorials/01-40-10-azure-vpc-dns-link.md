@@ -63,7 +63,7 @@ This tutorial explains how to link SAP, BTP Kuma runtime network to remote Priva
    az network private-dns zone create --resource-group $RESOURCE_GROUP_NAME --name $ZONE_NAME
    ```
 
-4. Create a Private DNS A record:
+4. Create a private DNS A record:
 
    ```shell
    export RECORD_SET_NAME=test
