@@ -152,7 +152,7 @@ Tag the private DNS zone with the Kyma shoot name:
    EOF
    ```
 
-   This workload should print resolved IP address of the Private DNS A record to stdout.
+   This workload should print the resolved IP address of the private DNS A record to stdout.
 
 5. To print the logs of one of the workloads, run:
 
