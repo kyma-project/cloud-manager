@@ -32,7 +32,7 @@ Before you create VPC DNS Link from a Kyma cluster, you must perform the followi
 
 VPC DNS Link CRs are cluster-level resources. Once a VPC DNS Link resource is applied, the status of the VPC DNS Link is reflected in that CR. 
 
-When you delete a VPC DNS Link CR, the VPC link in remote cloud provider landscape is deleted automatically.
+When you delete a VPC DNS Link CR, the VPC link in the remote cloud provider landscape is deleted automatically.
 
 ### Limitations
 
