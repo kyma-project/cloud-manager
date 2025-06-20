@@ -5,35 +5,36 @@ It describes the Azure Cache for Redis instance.
 Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
 By default, the created auth Secret has the same name as AzureRedisInstance.
 
-The current implementation supports the Premium tier, which is explained in detail on the [Azure Cache for Redis overview page](https://azure.microsoft.com/en-us/products/cache).
-
 > [!TIP] _Only for advanced cases of network topology_
 > Redis requires 2 IP addresses per shard. IP addresses can be configured using the IpRange CR. For more information, see [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-instances#configure_a_reserved_ip_address_range). Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureRedisInstance, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
 When creating AzureRedisInstance, one field is mandatory: `redisTier`. 
 
-In the **Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available.
+In the **Kyma Standard** service tier, the instance does not have a replica. Thus, it cannot be considered highly available. 
 
-| RedisTier | Capacity (GiB) |
-| --------- |----------------| 
-| S1        | 1              |
-| S2        | 2.5            |
-| S3        | 6              |
-| S4        | 13             |
-| S5        | 26             |
+| Kyma RedisTier | Capacity (GiB) | Azure RedisTier |
+|----------------|----------------|-----------------|
+| S1             | 1              | Basic C1        |
+| S2             | 2.5            | Basic C2        |
+| S3             | 6              | Basic C3        |
+| S4             | 13             | Basic C4        |
+| S5             | 26             | Basic C5        |
+
+> [!NOTE]
+> Kyma Standard S tier is mapped to Azure Basic C tier. It is cost-effective, and meant to be used for development purposes only.
 
 > [!NOTE]
 > [Basic tier is NOT recommended for production workloads](https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-cache-redis/reliability#design-considerations), as it's not covered by [standard SLA](https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services).
 
-In the **Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
+In the **Kyma Premium** service tier, the instance comes with a read replica and automatic failover enabled. Thus, it can be considered highly available.
 
-| RedisTier | Capacity (GiB) |
-| --------- |----------------|
-| P1        | 6              |
-| P2        | 13             |
-| P3        | 26             |
-| P4        | 53             |
-| P5        | 120            |
+| Kyma RedisTier | Capacity (GiB) | Azure RedisTier |
+|----------------|----------------|-----------------|
+| P1             | 6              | Premium P1      |
+| P2             | 13             | Premium P2      |
+| P3             | 26             | Premium P3      |
+| P4             | 53             | Premium P4      |
+| P5             | 120            | Premium P5      |
 
 Optionally, you can specify the `redisConfiguration`, `redisVersion`, and `redisConfiguration` fields.
 
