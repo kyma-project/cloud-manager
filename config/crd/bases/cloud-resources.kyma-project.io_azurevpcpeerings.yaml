@@ -67,6 +67,12 @@ spec:
                   x-kubernetes-validations:
                     - message: RemoteVnet is immutable.
                       rule: (self == oldSelf)
+                useRemoteGateway:
+                  default: false
+                  type: boolean
+                  x-kubernetes-validations:
+                    - message: UseRemoteGateway is immutable.
+                      rule: (self == oldSelf)
               required:
                 - remotePeeringName
                 - remoteVnet

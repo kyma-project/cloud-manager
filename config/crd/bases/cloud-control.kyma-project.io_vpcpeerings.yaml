@@ -90,6 +90,8 @@ spec:
                     - MATCHED
                     - UNMATCHED
                     type: string
+                  useRemoteGateway:
+                    type: boolean
                 required:
                 - localNetwork
                 - remoteNetwork
@@ -143,6 +145,8 @@ spec:
                         type: string
                       remoteVnet:
                         type: string
+                      useRemoteGateway:
+                        type: boolean
                     type: object
                   gcp:
                     properties:
