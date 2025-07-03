@@ -10,7 +10,7 @@ By default, the created auth Secret has the same name as the GcpRedisCluster, un
 Redis Cluster requires a range of IP Addresses. They can be allocated using the GcpSubnet CR.
 If a GcpSubnet CR is not specified in the GcpRedisCluster, then the default GcpSubnet is used.
 If the default GcpSubnet does not exist, it is automatically created.
-Manually create a non-default GcpSubnet with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
+You can manually create a non-default GcpSubnet with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
 When creating GcpRedisCluster, `redisTier`, and `shardCount` fields are mandatory.
 

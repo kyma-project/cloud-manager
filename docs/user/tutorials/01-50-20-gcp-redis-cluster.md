@@ -8,11 +8,10 @@ You have the Cloud Manager module added.
 
 ## Steps
 
-### Setup Example
 
-This example showcases how to instantiate Redis Cluster, connect a Pod to it, and send a PING command.
+This example showcases how to instantiate a Redis cluster, connect a Pod to it, and send a PING command.
 
-1. Create a Redis instance. The operation may take more than 10 minutes.
+1. Create a Redis cluster. The operation may take more than 10 minutes.
 
    ```yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
