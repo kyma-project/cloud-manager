@@ -1,27 +1,21 @@
 # GcpSubnet Custom Resource
 
-The `gcpsubnet.cloud-resources.kyma-project.io` is a cluster scoped custom resource (CR) that specifies the VPC Network
-Subnet.
-This resource is only available when the cluster cloud provider is Google Cloud Platform.
+The `gcpsubnet.cloud-resources.kyma-project.io` is a cluster-scoped custom resource (CR) that specifies the VPC Network Subnet. This resource is only available when the cluster cloud provider is Google Cloud Platform.
 Currently, its only use is IP address allocation for the `GcpRedisCluster` CR.
 
 Once a GcpSubnet CR is created and reconciled, the Cloud Manager controller creates a Subnet with defined CIDR
 in the Virtual Private Cloud (VPC) Network of the cluster.
 
-You don't have to create a GcpSubnet resource.
-Once needed, it is automatically created with the hardcoded CIDR `10.250.12.0/22`.
-For most use cases this automatic allocation is sufficient.
+You don't have to create a GcpSubnet resource. Once needed, it is automatically created with the hardcoded CIDR `10.250.12.0/22`. For most use cases, this automatic allocation is sufficient.
 
-You might be interested in manually creating a GcpSubnet resource with specific CIDR in the advanced cases of VPC network topology.
-This should be done when cluster and cloud resources are not the only resources in the network, so you can avoid IP range collisions.
+You can manually create a GcpSubnet resource with a specific CIDR in advanced cases of VPC network topology. To avoid IP range collisions, create GcpSubnet when cluster and cloud resources are not the only resources in the network.
 
-GcpSubnet can be deleted and deprovisioned only if there are no cloud resources using it. In other words,
-a GcpSubnet and its underlying VPC Network Subnet address range can be purged only if there are no cloud resources
-using an IP from that range.
+GcpSubnet can be deleted and deprovisioned only if no cloud resources are using it. In other words,
+a GcpSubnet and its underlying VPC Network Subnet address range can be purged only if no cloud resources are using an IP from that range.
 
 ## Specification
 
-This table lists the parameters of the given resource together with their descriptions:
+This table lists the parameters of the GcpSubnet resource together with their descriptions:
 
 **Spec:**
 
