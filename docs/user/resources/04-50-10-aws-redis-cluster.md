@@ -5,9 +5,10 @@ It describes the AWS ElastiCache Redis instance with cluster mode enabled.
 After the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
 By default, the created auth Secret has the same name as the AwsRedisCluster, unless specified otherwise.
 
-The AwsRedisCluster requires an IpRange. The size of IpRange is relative to the number of shards and replicas. Those IP addresses are allocated from the [IpRange](./04-10-iprange.md).
+The AwsRedisCluster requires an IpRange CR. The size of IpRange is relative to the number of shards and replicas. Those IP addresses are allocated from the IpRange.
 If the IpRange is not specified in the AwsRedisCluster, the default IpRange is used.
 If a default IpRange does not exist, it is automatically created.
+For more information, see [IpRange Custom Resource](./04-10-iprange.md).
 
 When creating AwsRedisCluster, the `redisTier`, and `shardCount` fields are mandatory.
 
