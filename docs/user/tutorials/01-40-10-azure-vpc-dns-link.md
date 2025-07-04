@@ -56,7 +56,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    az group create --name $RESOURCE_GROUP_NAME --location $REGION
    ```
 
-3. Create a Private DNS zone:
+3. Create a private DNS zone:
 
    ```shell
    export ZONE_NAME="example.com"
