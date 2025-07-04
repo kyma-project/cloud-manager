@@ -15,7 +15,9 @@ type Client interface {
 		virtualNetworkPeeringName,
 		remoteVnetId string,
 		allowVnetAccess bool,
-		useRemoteGateway bool) error
+		useRemoteGateway bool,
+		allowGatewayTransit bool,
+	) error
 
 	ListPeerings(ctx context.Context, resourceGroupName string, virtualNetworkName string) ([]*armnetwork.VirtualNetworkPeering, error)
 	GetPeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string) (*armnetwork.VirtualNetworkPeering, error)
