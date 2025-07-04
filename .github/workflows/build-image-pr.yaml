@@ -15,3 +15,5 @@ jobs:
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
+      platforms: |
+        linux/amd64
