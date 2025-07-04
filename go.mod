@@ -34,7 +34,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gardener/gardener v1.120.0
 	github.com/go-logr/logr v1.4.2
-	github.com/go-viper/mapstructure/v2 v2.2.1
+	github.com/go-viper/mapstructure/v2 v2.3.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.14.2
 	github.com/gophercloud/gophercloud/v2 v2.7.0
