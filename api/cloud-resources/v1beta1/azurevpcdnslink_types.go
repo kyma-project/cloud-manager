@@ -79,7 +79,7 @@ func (in *AzureVpcDnsLink) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *AzureVpcDnsLink) SpecificToFeature() featuretypes.FeatureName {
-	return featuretypes.FeatureAzureVpcDnsLink
+	return featuretypes.FeatureVpcDnsLink
 }
 
 func (in *AzureVpcDnsLink) SpecificToProviders() []string { return []string{"azure"} }
