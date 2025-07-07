@@ -19,6 +19,9 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
+	// Allow gateway transit if remote gateway is used
+	allowGatewayTransit := state.ObjAsVpcPeering().Spec.Details.UseRemoteGateway
+
 	// params must be the same as in peeringRemoteLoad()
 	err := state.remoteClient.CreatePeering(
 		ctx,
@@ -27,6 +30,8 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 		state.localNetworkId.String(),
 		true,
+		false,
+		allowGatewayTransit,
 	)
 
 	if err == nil {

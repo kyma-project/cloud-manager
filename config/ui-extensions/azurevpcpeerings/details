@@ -9,6 +9,9 @@ body:
         - widget: Labels
           source: remotePeeringName
           name: spec.remotePeeringName
+        - widget: Labels
+          source: useRemoteGateway
+          name: spec.useRemoteGateway
     - name: status
       widget: Panel
       source: status
