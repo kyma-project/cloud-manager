@@ -119,6 +119,11 @@ func (b *VpcPeeringBuilder) WithRemoteRouteTableUpdateStrategy(strategy AwsRoute
 	return b
 }
 
+func (b *VpcPeeringBuilder) WithUseRemoteGateway(useRemoteGateway bool) *VpcPeeringBuilder {
+	b.Obj.Spec.Details.UseRemoteGateway = useRemoteGateway
+	return b
+}
+
 func (b *VpcPeeringBuilder) Build() *VpcPeering {
 	return &b.Obj
 }
