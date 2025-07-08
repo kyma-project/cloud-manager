@@ -8,7 +8,7 @@ By default, the created auth Secret has the same name as AzureRedisCluster.
 The current implementation supports the Premium tier, which is explained in detail on the [Azure Cache for Redis overview page](https://azure.microsoft.com/en-us/products/cache).
 
 > [!TIP] _Only for advanced cases of network topology_
-> Redis requires 2 IP addresses per shard. IP addresses can be configured using the IpRange CR. For more information, see [Configure a reserved IP address range](https://cloud.google.com/filestore/docs/creating-clusters#configure_a_reserved_ip_address_range). Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureRedisCluster, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
+> Redis requires 2 IP addresses per shard. IP addresses can be configured using the IpRange CR. Those IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureRedisCluster, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
 
 When creating AzureRedisCluster, one field is mandatory: `redisTier`.
 
