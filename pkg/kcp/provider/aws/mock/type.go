@@ -2,6 +2,7 @@ package mock
 
 import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
@@ -37,6 +38,7 @@ type Providers interface {
 	NfsInstanceSkrProvider() awsclient.SkrClientProvider[awsnfsinstanceclient.Client]
 	VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeringclient.Client]
 	ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient]
+	ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client]
 }
 
 type Configs interface {
@@ -51,6 +53,7 @@ type AccountRegion interface {
 	Clients
 	Configs
 }
+
 type Server interface {
 	Providers
 

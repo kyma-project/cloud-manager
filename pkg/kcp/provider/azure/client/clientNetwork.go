@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -23,13 +24,6 @@ type networkClient struct {
 }
 
 func (c *networkClient) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
-	var azureTags map[string]*string
-	if tags != nil {
-		azureTags := make(map[string]*string, len(tags))
-		for k, v := range tags {
-			azureTags[k] = ptr.To(v)
-		}
-	}
 	_, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, armnetwork.VirtualNetwork{
 		Location: ptr.To(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
@@ -37,7 +31,7 @@ func (c *networkClient) CreateNetwork(ctx context.Context, resourceGroupName, vi
 				AddressPrefixes: []*string{ptr.To(addressSpace)},
 			},
 		},
-		Tags: azureTags,
+		Tags: util.AzureTags(tags),
 	}, nil)
 	if err != nil {
 		return err

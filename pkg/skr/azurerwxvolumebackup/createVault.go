@@ -33,7 +33,6 @@ func createVault(ctx context.Context, st composed.State) (error, context.Context
 
 	logger.WithValues("RwxBackup", backup.Name).Info("Creating Recovery Services Vault")
 
-	resourceGroupName := state.resourceGroupName
 	location := backup.Spec.Location
 	vaultName := fmt.Sprintf("cm-vault-%s", location)
 
@@ -42,23 +41,20 @@ func createVault(ctx context.Context, st composed.State) (error, context.Context
 		return composed.StopWithRequeue, ctx
 	}
 
+	state.vaultName = vaultName
+
 	// If exists, exit early and go next action
 	if vaultExists(vaults, location) {
 		return nil, ctx
 	}
 
 	// TODO: resp gives the jobId. Use to check status
+	resourceGroupName := state.resourceGroupName
 	_, err = state.client.CreateVault(ctx, resourceGroupName, vaultName, location)
 	if err != nil {
 		return composed.StopWithRequeue, ctx
 	}
 
-	state.vaultName = vaultName
-
-	return composed.UpdateStatus(backup).
-		ErrorLogMessage("").
-		SuccessErrorNil().
-		FailedError(composed.StopAndForget).
-		Run(ctx, state)
+	return nil, ctx
 
 }

@@ -4,13 +4,15 @@ import (
 	"context"
 	"sync"
 
+	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -48,6 +50,9 @@ func New() Server {
 			mutex:         sync.Mutex{},
 			redisClusters: map[string]*clusterpb.Cluster{},
 		},
+		exposedDataStore: &exposedDataStore{
+			ipPool: iprangeallocate.NewAddressSpace(),
+		},
 	}
 }
 
@@ -62,6 +67,7 @@ type server struct {
 	*vpcPeeringStore
 	*memoryStoreClientFake
 	*memoryStoreClusterClientFake
+	*exposedDataStore
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -116,14 +122,14 @@ func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.
 	}
 }
 
-func (s *server) SubnetComputeClientProvider() client.ClientProvider[gcpsubnetclient.ComputeClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpsubnetclient.ComputeClient, error) {
-		return s, nil
+func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient] {
+	return func() gcpsubnetclient.ComputeClient {
+		return s
 	}
 }
-func (s *server) SubnetNetworkConnectivityProvider() client.ClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpsubnetclient.NetworkConnectivityClient, error) {
-		return s, nil
+func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
+	return func() gcpsubnetclient.NetworkConnectivityClient {
+		return s
 	}
 }
 
@@ -159,22 +165,26 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 	}
 }
 
-func (s *server) VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpvpcpeeringclient.VpcPeeringClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP VPCPeeringProvider mock...")
-		return s, nil
+func (s *server) VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
+	return func() gcpvpcpeeringclient.VpcPeeringClient {
+		return s
 	}
 }
 
-func (s *server) MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpredisinstanceclient.MemorystoreClient, error) {
-		return s, nil
+func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
+	return func() gcpredisinstanceclient.MemorystoreClient {
+		return s
 	}
 }
 
-func (s *server) MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpredisclusterclient.MemorystoreClusterClient, error) {
-		return s, nil
+func (s *server) MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
+	return func() gcpredisclusterclient.MemorystoreClusterClient {
+		return s
+	}
+}
+
+func (s *server) ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client] {
+	return func() gcpexposeddataclient.Client {
+		return s
 	}
 }

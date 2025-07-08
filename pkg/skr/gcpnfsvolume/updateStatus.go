@@ -87,6 +87,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	}
 	return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
+		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 		SuccessError(composed.StopWithRequeueDelay(2*util.Timing.T100ms())).
 		Run(ctx, state)
 }

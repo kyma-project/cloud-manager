@@ -13,16 +13,16 @@ func IsNotFound(err error) bool {
 		return false
 	}
 
-	var googleapierror *googleapi.Error
-	if ok := errors.As(err, &googleapierror); ok {
-		if googleapierror.Code == 404 {
+	var googleApiError *googleapi.Error
+	if ok := errors.As(err, &googleApiError); ok {
+		if googleApiError.Code == 404 {
 			return true
 		}
 	}
 
-	var apierror *apierror.APIError
-	if ok := errors.As(err, &apierror); ok {
-		if apierror.GRPCStatus().Code() == codes.NotFound {
+	var apiError *apierror.APIError
+	if ok := errors.As(err, &apiError); ok {
+		if apiError.GRPCStatus().Code() == codes.NotFound {
 			return true
 		}
 	}
@@ -42,9 +42,9 @@ func IsNotAuthorized(err error) bool {
 		}
 	}
 
-	var apierror *apierror.APIError
-	if ok := errors.As(err, &apierror); ok {
-		if apierror.GRPCStatus().Code() == codes.PermissionDenied {
+	var apiError *apierror.APIError
+	if ok := errors.As(err, &apiError); ok {
+		if apiError.GRPCStatus().Code() == codes.PermissionDenied {
 			return true
 		}
 	}
@@ -64,10 +64,10 @@ func IsTooManyRequests(err error) bool {
 		}
 	}
 
-	var apierror *apierror.APIError
-	if ok := errors.As(err, &apierror); ok {
+	var apiError *apierror.APIError
+	if ok := errors.As(err, &apiError); ok {
 		// ResourceExhausted is the gRPC code for TooManyRequests
-		if apierror.GRPCStatus().Code() == codes.ResourceExhausted {
+		if apiError.GRPCStatus().Code() == codes.ResourceExhausted {
 			return true
 		}
 	}

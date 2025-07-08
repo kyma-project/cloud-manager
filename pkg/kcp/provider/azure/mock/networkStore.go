@@ -197,7 +197,7 @@ func (s *networkStore) getSubnetNoLock(resourceGroupName, virtualNetworkName, su
 	return nil, azuremeta.NewAzureNotFoundError()
 }
 
-func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId string) error {
+func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -235,6 +235,11 @@ func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName, virt
 			ID: ptr.To(securityGroupId),
 		}
 	}
+	if natGatewayId != "" {
+		subnet.Properties.NatGateway = &armnetwork.SubResource{
+			ID: ptr.To(natGatewayId),
+		}
+	}
 
 	entry.network.Properties.Subnets = append(entry.network.Properties.Subnets, subnet)
 
@@ -267,7 +272,7 @@ func (s *networkStore) DeleteSubnet(ctx context.Context, resourceGroupName, virt
 
 // VpcPeeringClient ==============================================
 
-func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool) error {
+func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName, remoteVnetId string, allowVnetAccess bool, useRemoteGateway bool, allowGatewayTransit bool) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -306,9 +311,9 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 		Name: ptr.To(virtualNetworkPeeringName),
 		Properties: &armnetwork.VirtualNetworkPeeringPropertiesFormat{
 			AllowForwardedTraffic:     ptr.To(true),
-			AllowGatewayTransit:       ptr.To(false),
+			AllowGatewayTransit:       ptr.To(allowGatewayTransit),
 			AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-			UseRemoteGateways:         ptr.To(false),
+			UseRemoteGateways:         ptr.To(useRemoteGateway),
 			RemoteVirtualNetwork: &armnetwork.SubResource{
 				ID: ptr.To(remoteVnetId),
 			},

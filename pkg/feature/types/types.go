@@ -33,6 +33,7 @@ const (
 	FeaturePeering      FeatureName = "peering"
 	FeatureRedis        FeatureName = "redis"
 	FeatureRedisCluster FeatureName = "rediscluster"
+	FeatureVpcDnsLink   FeatureName = "vpcdnslink"
 )
 
 type PlaneName = string

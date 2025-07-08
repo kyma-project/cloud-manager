@@ -2,7 +2,7 @@ package mock
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
+	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
@@ -28,20 +28,22 @@ type Clients interface {
 	NfsClient
 	gcpsubnetclient.ComputeClient
 	gcpsubnetclient.NetworkConnectivityClient
+	gcpexposeddataclient.Client
 }
 
 type Providers interface {
 	ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient]
-	SubnetComputeClientProvider() client.ClientProvider[gcpsubnetclient.ComputeClient]
-	SubnetNetworkConnectivityProvider() client.ClientProvider[gcpsubnetclient.NetworkConnectivityClient]
+	SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient]
+	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
 	FilestoreClientProvider() client.ClientProvider[gcpnfsinstanceclient.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclient.FileBackupClient]
-	VpcPeeringProvider() cloudclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
-	MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient]
-	MemoryStoreClusterProviderFake() client.ClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
+	VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
+	MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient]
+	MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
+	ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client]
 }
 
 // ClientErrors is an interface for setting errors on the mock client to simulate Hyperscaler API errors
@@ -64,4 +66,6 @@ type Server interface {
 	MemoryStoreClusterClientFakeUtils
 
 	VpcPeeringMockClientUtils
+
+	ExposedDataConfig
 }

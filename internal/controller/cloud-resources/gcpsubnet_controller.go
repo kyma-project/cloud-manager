@@ -24,6 +24,7 @@ import (
 	skrreconciler "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -60,6 +61,18 @@ func (r *GcpSubnetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 func SetupGcpSubnetReconciler(reg skrruntime.SkrRegistry) error {
+
+	reg.IndexField(&cloudresourcesv1beta1.GcpRedisCluster{}, cloudresourcesv1beta1.GcpSubnetField, func(object client.Object) []string {
+		gcpRedisCluster, ok := object.(*cloudresourcesv1beta1.GcpRedisCluster)
+		if !ok {
+			return []string{}
+		}
+		if gcpRedisCluster.Spec.Subnet.Name == "" {
+			return []string{"default"}
+		}
+		return []string{gcpRedisCluster.Spec.Subnet.Name}
+	})
+
 	return reg.Register().
 		WithFactory(&GcpSubnetReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.GcpSubnet{}).

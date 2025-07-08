@@ -33,6 +33,9 @@ resources:
 - bases/cloud-control.kyma-project.io_gcpsubnets.yaml
 - bases/cloud-control.kyma-project.io_gcpredisclusters.yaml
 - bases/cloud-resources.kyma-project.io_gcpsubnets.yaml
+- bases/cloud-resources.kyma-project.io_gcpredisclusters.yaml
+- bases/cloud-control.kyma-project.io_azurevnetlinks.yaml
+- bases/cloud-resources.kyma-project.io_azurevpcdnslinks.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -94,6 +97,7 @@ patches:
 #- path: patches/cainjection_in_cloud-control_gcpsubnets.yaml
 #- path: patches/cainjection_in_cloud-control_gcpredisclusters.yaml
 #- path: patches/cainjection_in_cloud-resources_gcpsubnets.yaml
+#- path: patches/cainjection_in_cloud-resources_azurevnetlinks.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

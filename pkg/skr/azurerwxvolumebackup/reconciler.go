@@ -6,9 +6,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
@@ -19,6 +21,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+
+	if Ignore != nil && Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
 
 	state := r.factory.NewState(request)
 
@@ -43,6 +49,9 @@ func (r *reconciler) newAction() composed.Action {
 				loadPersistentVolume,
 				createClient,
 				createVault,
+				getProtectedResourceName,
+				createBackupPolicy,
+				protectFileshare,
 				createBackup,
 			), nil,
 		),
@@ -51,15 +60,15 @@ func (r *reconciler) newAction() composed.Action {
 	)
 }
 
-func NewReconciler(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
+func NewReconciler(args skrruntime.ReconcilerArguments, clientProvider azureclient.ClientProvider[client.Client]) reconcile.Reconciler {
 
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
-			composed.NewStateClusterFromCluster(args.SkrCluster),
-			client.NewClientProvider(),
+			commonscope.NewStateFactory(
+				composed.NewStateClusterFromCluster(args.KcpCluster),
+				args.KymaRef),
+			clientProvider,
 		),
 	}
 }

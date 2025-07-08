@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
@@ -9,7 +10,9 @@ import (
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 )
 
@@ -53,6 +56,14 @@ type RedisInstanceClient interface {
 	azureclient.RedisClient
 }
 
+type NatGatewayClient interface {
+	azureclient.NatGatewayClient
+}
+
+type PublicIpAddressesClient interface {
+	azureclient.PublicIPAddressesClient
+}
+
 type Clients interface {
 	ResourceGroupsClient
 	NetworkClient
@@ -64,6 +75,8 @@ type Clients interface {
 	PrivateDnsZoneClient
 	PrivateEndPointsClient
 	PrivateDnsZoneGroupClient
+	NatGatewayClient
+	PublicIpAddressesClient
 }
 
 type Providers interface {
@@ -74,6 +87,8 @@ type Providers interface {
 	NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client]
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
+	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
+	VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
 }
 
 type NetworkConfig interface {
@@ -94,6 +109,8 @@ type Configs interface {
 type TenantSubscription interface {
 	Clients
 	Configs
+	TenantId() string
+	SubscriptionId() string
 }
 
 type Server interface {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func createAzureClient(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,7 +17,7 @@ func createAzureClient(ctx context.Context, st composed.State) (error, context.C
 
 	cli, err := state.azureClientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "error creating azure client", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
+		return composed.LogErrorAndReturn(err, "error creating azure client", err, ctx)
 	}
 
 	state.azureClient = cli

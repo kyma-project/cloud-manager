@@ -3,12 +3,15 @@ package mock
 import (
 	"context"
 	"fmt"
+	"github.com/3th1nk/cidr"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
 )
@@ -46,25 +49,40 @@ type VpcSubnet struct {
 }
 
 type VpcConfig interface {
+	Account() string
+	Region() string
 	AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc
 	SetVpcError(id string, err error)
+	AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGateway, error)
 }
 
 type vpcEntry struct {
-	vpc     ec2types.Vpc
-	subnets []ec2types.Subnet
+	vpc         ec2types.Vpc
+	subnets     []ec2types.Subnet
+	natGateways []*ec2types.NatGateway
 }
 
+var _ VpcConfig = &vpcStore{}
+
 type vpcStore struct {
-	m     sync.Mutex
+	m sync.Mutex
+
+	account string
+	region  string
+
 	items []*vpcEntry
+
+	addressRange iprangeallocate.AddressSpace
 
 	errorMap map[string]error
 }
 
-func newVpcStore() *vpcStore {
+func newVpcStore(account, region string) *vpcStore {
 	return &vpcStore{
-		errorMap: make(map[string]error),
+		addressRange: iprangeallocate.NewAddressSpace(),
+		account:      account,
+		region:       region,
+		errorMap:     make(map[string]error),
 	}
 }
 
@@ -73,12 +91,60 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 		return ptr.Deref(e.vpc.VpcId, "") == vpcId
 	})
 	if idx == -1 {
-		return nil, fmt.Errorf("vpc with id %s does not exist", vpcId)
+		err := &smithy.GenericAPIError{
+			Code:    "404",
+			Message: fmt.Sprintf("vpc with id %s does not exist", vpcId),
+		}
+		return nil, err
 	}
 	return s.items[idx], nil
 }
 
 // Config implementation =======================================
+
+func (s *vpcStore) Account() string {
+	return s.account
+}
+
+func (s *vpcStore) Region() string {
+	return s.region
+}
+
+func (s *vpcStore) AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGateway, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	item, err := s.itemByVpcId(vpcId)
+	if err != nil {
+		return nil, err
+	}
+	var subnet *ec2types.Subnet
+	for _, sbnt := range item.subnets {
+		if ptr.Deref(sbnt.SubnetId, "") == subnetId {
+			subnet = &sbnt
+			break
+		}
+	}
+	if subnet == nil {
+		return nil, fmt.Errorf("subnet with id %s does not exist", subnetId)
+	}
+
+	rng := s.addressRange.MustAllocate(32)
+	cdr := cidr.ParseNoError(rng)
+
+	gw := &ec2types.NatGateway{
+		NatGatewayAddresses: []ec2types.NatGatewayAddress{
+			{
+				AllocationId: ptr.To(uuid.NewString()),
+				IsPrimary:    ptr.To(true),
+				PublicIp:     ptr.To(cdr.IP().String()),
+			},
+		},
+	}
+
+	item.natGateways = append(item.natGateways, gw)
+
+	return gw, err
+}
 
 func (s *vpcStore) AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc {
 	s.m.Lock()
@@ -295,4 +361,27 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 		Code:    "404",
 		Message: fmt.Sprintf("subnet %s does not exist", subnetId),
 	}
+}
+
+func (s *vpcStore) DescribeNatGateways(ctx context.Context, vpcId string) ([]ec2types.NatGateway, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	item, err := s.itemByVpcId(vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []ec2types.NatGateway
+	for _, gw := range item.natGateways {
+		cln, err := util.JsonClone(gw)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *cln)
+	}
+	return result, nil
 }

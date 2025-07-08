@@ -2,16 +2,20 @@ package cloudcontrol
 
 import (
 	"fmt"
+
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -24,7 +28,6 @@ var _ = Describe("Feature: KCP Scope", func() {
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenertypes.Shoot{}
 
@@ -34,26 +37,25 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed(), "failed creating garden shoot for AWS")
 		})
 
+		awsMock := infra.AwsMock().MockConfigs(infra.AwsMock().GetAccount(), shoot.Spec.Region)
+
+		var awsCreatedInfra *AwsGardenerInfra
+
+		By("An Given AWS infra exists", func() {
+			createdInfra, err := CreateAwsGardenerResources(infra.Ctx(), awsMock, shoot.Namespace, shoot.Name, "10.180.0.0/16", "10.180.0.0/16")
+			Expect(err).NotTo(HaveOccurred())
+			awsCreatedInfra = createdInfra
+		})
+
 		gardenerClusterCR := util.NewGardenerClusterUnstructured()
 
 		By("And Given GardenerCluster CR exists", func() {
-			Expect(util.SetGardenerClusterSummary(gardenerClusterCR, util.GardenerClusterSummary{
-				Key:       "config",
-				Name:      fmt.Sprintf("kubeconfig-%s", kymaName),
-				Namespace: DefaultKcpNamespace,
-				Shoot:     shoot.Name,
-			}))
-			gardenerClusterCR.SetLabels(map[string]string{
-				cloudcontrolv1beta1.LabelScopeGlobalAccountId: "ga-account-id",
-				cloudcontrolv1beta1.LabelScopeSubaccountId:    "subaccount-id",
-				cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
-				cloudcontrolv1beta1.LabelScopeRegion:          "region-some",
-				cloudcontrolv1beta1.LabelScopeBrokerPlanName:  string(cloudcontrolv1beta1.ProviderAws),
-			})
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR, WithName(kymaName)).
-				Should(Succeed(), "failed creating GardenerCluster CR")
+			Expect(CreateGardenerClusterCR(infra.Ctx(), infra, gardenerClusterCR, kymaName, shoot.Name, cloudcontrolv1beta1.ProviderAws)).
+				To(Succeed(), "failed creating GardenerCluster CR")
 		})
+
+		// kymaNetwork is not ignored, and should reconcile into ready state with network ref in the status!!!
+		// a ready kymaNetwork is a prerequisite for Scope to become ready
 
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -114,6 +116,30 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Expect(scope.Spec.Scope.Aws.Network.Zones[0].Name).To(Equal("eu-west-1a")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[1].Name).To(Equal("eu-west-1b")) // as set in GivenGardenShootAwsExists
 			Expect(scope.Spec.Scope.Aws.Network.Zones[2].Name).To(Equal("eu-west-1c")) // as set in GivenGardenShootAwsExists
+		})
+
+		By("And Then Scope has status.exposedData.natGatewayIps", func() {
+			expected := pie.Map(awsCreatedInfra.NatGateways, func(x *ec2types.NatGateway) string {
+				return ptr.Deref(x.NatGatewayAddresses[0].PublicIp, "")
+			})
+			expected = pie.Sort(pie.Unique(pie.Filter(expected, func(s string) bool {
+				return s != ""
+			})))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(HaveLen(len(expected)))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(ConsistOf(expected))
+		})
+
+		infoConfigMap := &corev1.ConfigMap{}
+
+		By("And Then SKR kyma-info configmap exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), infoConfigMap, NewObjActions(WithNamespace("kyma-system"), WithName("kyma-info"))).
+				Should(Succeed())
+		})
+
+		By("And Then SKR kyma-info configmap contains natGatewayIps", func() {
+			Expect("cloud.natGatewayIps").To(BeKeyOf(infoConfigMap.Data))
+			Expect(infoConfigMap.Data["cloud.natGatewayIps"]).To(Equal(pie.Join(scope.Status.ExposedData.NatGatewayIps, ", ")))
 		})
 
 		kymaNetwork := &cloudcontrolv1beta1.Network{}

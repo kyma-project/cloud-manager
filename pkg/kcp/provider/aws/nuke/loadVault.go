@@ -2,9 +2,9 @@ package nuke
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func loadVault(ctx context.Context, st composed.State) (error, context.Context) {
@@ -14,7 +14,7 @@ func loadVault(ctx context.Context, st composed.State) (error, context.Context) 
 	vaultName := state.GetVaultName()
 	vaults, err := state.awsClient.ListBackupVaults(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error listing AWS Backup Vaults", composed.StopWithRequeueDelay(time.Second), ctx)
+		return composed.LogErrorAndReturn(err, "Error listing AWS Backup Vaults", err, ctx)
 	}
 
 	//Match the vault by name. If found, continue...

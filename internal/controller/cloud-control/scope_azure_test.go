@@ -2,16 +2,20 @@ package cloudcontrol
 
 import (
 	"fmt"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -24,7 +28,6 @@ var _ = Describe("Feature: KCP Scope", func() {
 		)
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
-		kcpnetwork.Ignore.AddName(kymaNetworkName)
 
 		shoot := &gardenertypes.Shoot{}
 
@@ -34,25 +37,24 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed(), "failed creating garden shoot for Azure")
 		})
 
+		azureTenantId := DefaultAzureTenantId
+		azureSubscriptionId := DefaultAzureSubscriptionId
+
+		azureMock := infra.AzureMock().MockConfigs(azureSubscriptionId, azureTenantId)
+
+		var azureCreatedInfra *AzureGardenerInfra
+
+		By("And Given Azure infra exists", func() {
+			createdInfra, err := CreateAzureGardenerResources(infra.Ctx(), azureMock, shoot.Namespace, shoot.Name, "10.250.0.0/22", "10.250.0.0/22", shoot.Spec.Region)
+			Expect(err).NotTo(HaveOccurred())
+			azureCreatedInfra = createdInfra
+		})
+
 		gardenerClusterCR := util.NewGardenerClusterUnstructured()
 
 		By("And Given GardenerCluster CR exists", func() {
-			Expect(util.SetGardenerClusterSummary(gardenerClusterCR, util.GardenerClusterSummary{
-				Key:       "config",
-				Name:      fmt.Sprintf("kubeconfig-%s", kymaName),
-				Namespace: DefaultKcpNamespace,
-				Shoot:     shoot.Name,
-			}))
-			gardenerClusterCR.SetLabels(map[string]string{
-				cloudcontrolv1beta1.LabelScopeGlobalAccountId: "ga-account-id",
-				cloudcontrolv1beta1.LabelScopeSubaccountId:    "subaccount-id",
-				cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
-				cloudcontrolv1beta1.LabelScopeRegion:          "region-some",
-				cloudcontrolv1beta1.LabelScopeBrokerPlanName:  string(cloudcontrolv1beta1.ProviderAzure),
-			})
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), gardenerClusterCR, WithName(kymaName)).
-				Should(Succeed(), "failed creating GardenerCluster CR")
+			Expect(CreateGardenerClusterCR(infra.Ctx(), infra, gardenerClusterCR, kymaName, shoot.Name, cloudcontrolv1beta1.ProviderAzure)).
+				To(Succeed(), "failed creating GardenerCluster CR")
 		})
 
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -63,10 +65,27 @@ var _ = Describe("Feature: KCP Scope", func() {
 				Should(Succeed(), "expected Scope to be created")
 		})
 
-		By("And Then Scope has Ready condition", func() {
+		kymaNetwork := &cloudcontrolv1beta1.Network{}
+
+		By("And Then Kyma Network is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
+				Should(Succeed(), "expected Kyma Network to be created")
+		})
+
+		// kymaNetwork is not ignored, and should reconcile into ready state with network ref in the status!!!
+		// a ready kymaNetwork is a prerequisite for Scope to become ready
+
+		By("Then Scope has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
 				Should(Succeed(), "expected created Scope to have Ready condition")
+		})
+
+		By("And Then Kyma Network has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
+				Should(Succeed(), "expected Kyma Network to be created")
 		})
 
 		By("And Then Scope has finalizer", func() {
@@ -116,13 +135,31 @@ var _ = Describe("Feature: KCP Scope", func() {
 			Expect(scope.Spec.Scope.Azure.Network.Zones[2].Name).To(Equal("1")) // as set in CreateShootAzure
 		})
 
-		kymaNetwork := &cloudcontrolv1beta1.Network{}
-
-		By("And Then Kyma Network is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kymaNetwork, NewObjActions(WithName(kymaNetworkName))).
-				Should(Succeed(), "expected Kyma Network to be created")
+		By("And Then Scope has status.exposedData.natGatewayIps", func() {
+			expected := pie.Map(azureCreatedInfra.PublicIpAddresses, func(x *armnetwork.PublicIPAddress) string {
+				return ptr.Deref(x.Properties.IPAddress, "")
+			})
+			expected = pie.Sort(pie.Unique(pie.Filter(expected, func(s string) bool {
+				return s != ""
+			})))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(HaveLen(len(expected)))
+			Expect(scope.Status.ExposedData.NatGatewayIps).To(ConsistOf(expected))
 		})
+
+		infoConfigMap := &corev1.ConfigMap{}
+
+		By("And Then SKR kyma-info configmap exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), infoConfigMap, NewObjActions(WithNamespace("kyma-system"), WithName("kyma-info"))).
+				Should(Succeed())
+		})
+
+		By("And Then SKR kyma-info configmap contains natGatewayIps", func() {
+			Expect("cloud.natGatewayIps").To(BeKeyOf(infoConfigMap.Data))
+			Expect(infoConfigMap.Data["cloud.natGatewayIps"]).To(Equal(pie.Join(scope.Status.ExposedData.NatGatewayIps, ", ")))
+		})
+
+		// KCP Kyma Network
 
 		By("And Then Kyma Network has 'kyma' type", func() {
 			Expect(kymaNetwork.Spec.Type).To(Equal(cloudcontrolv1beta1.NetworkTypeKyma))

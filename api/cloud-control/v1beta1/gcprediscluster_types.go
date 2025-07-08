@@ -44,7 +44,7 @@ type GcpRedisClusterSpec struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=125
+	// +kubebuilder:validation:Maximum=250
 	ShardCount int32 `json:"shardCount"`
 
 	// +kubebuilder:default=0
@@ -70,6 +70,9 @@ type GcpRedisClusterStatus struct {
 	AuthString string `json:"authString,omitempty"`
 
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	CaCert string `json:"caCert,omitempty"`
 
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional

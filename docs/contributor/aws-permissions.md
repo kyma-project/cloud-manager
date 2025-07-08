@@ -35,6 +35,7 @@
                 "ec2:DeleteSecurityGroup",
                 "ec2:DeleteSubnet",
                 "ec2:DeleteTags",
+                "ec2:DescribeNatGateways",
                 "ec2:DescribeNetworkInterfaceAttribute",
                 "ec2:DescribeNetworkInterfaces",
                 "ec2:DescribeSecurityGroups",

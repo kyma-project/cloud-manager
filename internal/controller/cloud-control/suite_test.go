@@ -82,7 +82,9 @@ var _ = BeforeSuite(func() {
 		infra.AwsMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
+		infra.AwsMock().ExposedDataProvider(),
 		infra.AzureMock().ExposeDataProvider(),
+		infra.GcpMock().ExposedDataProvider(),
 	)).NotTo(HaveOccurred())
 	// Kyma
 	Expect(SetupKymaReconciler(
@@ -158,6 +160,13 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().SubnetNetworkConnectivityProvider(),
 		env,
 	)).To(Succeed())
+
+	//AzureVNetLink
+	Expect(SetupAzureVNetLinkReconciler(
+		infra.KcpManager(),
+		infra.AzureMock().VNetLinkProvider(),
+		env,
+	)).NotTo(HaveOccurred())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

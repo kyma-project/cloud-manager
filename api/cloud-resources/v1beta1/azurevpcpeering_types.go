@@ -38,6 +38,11 @@ type AzureVpcPeeringSpec struct {
 
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteTenant is immutable."
 	RemoteTenant string `json:"remoteTenant,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=false
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="UseRemoteGateway is immutable."
+	UseRemoteGateway bool `json:"useRemoteGateway,omitempty"`
 }
 
 // AzureVpcPeeringStatus defines the observed state of AzureVpcPeering

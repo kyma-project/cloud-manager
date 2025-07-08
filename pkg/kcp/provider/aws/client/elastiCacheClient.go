@@ -46,8 +46,10 @@ type CreateElastiCacheClusterOptions struct {
 	PreferredMaintenanceWindow *string
 	SecurityGroupIds           []string
 	ReplicasPerNodeGroup       int32 // replicas per shard
-	ShardCount                 *int32
-	ClusterMode                *bool
+	ShardCount                 int32
+	ClusterMode                bool
+	AutomaticFailoverEnabled   bool
+	MultiAZEnabled             *bool
 }
 
 type ModifyElastiCacheClusterOptions struct {
@@ -59,6 +61,8 @@ type ModifyElastiCacheClusterOptions struct {
 	UserGroupIdsToAdd          []string
 	UserGroupIdsToRemove       []string
 	ParameterGroupName         *string
+	AutomaticFailoverEnabled   *bool
+	MultiAZEnabled             *bool
 }
 
 type RescaleElastiCacheClusterShardOptions struct {
@@ -332,22 +336,8 @@ func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, cluste
 }
 
 func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticachetypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
-	automaticFailoverEnabled := options.ReplicasPerNodeGroup > 0
-
-	shardCount := ptr.Deref(options.ShardCount, 1)
 	clusterMode := elasticachetypes.ClusterModeDisabled
-
-	if options.ClusterMode != nil {
-		clusterModeOption := ptr.Deref(options.ClusterMode, false)
-
-		if clusterModeOption {
-			clusterMode = elasticachetypes.ClusterModeEnabled
-		} else {
-			clusterMode = elasticachetypes.ClusterModeDisabled
-		}
-	}
-
-	if options.ClusterMode == nil && shardCount > 1 { // fallback
+	if options.ClusterMode {
 		clusterMode = elasticachetypes.ClusterModeEnabled
 	}
 
@@ -357,7 +347,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		CacheSubnetGroupName:        aws.String(options.SubnetGroupName),
 		CacheParameterGroupName:     aws.String(options.ParameterGroupName),
 		CacheNodeType:               aws.String(options.CacheNodeType),
-		NumNodeGroups:               aws.Int32(shardCount),
+		NumNodeGroups:               aws.Int32(options.ShardCount),
 		ClusterMode:                 clusterMode,
 		Engine:                      aws.String("redis"),
 		EngineVersion:               aws.String(options.EngineVersion),
@@ -367,7 +357,8 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 		PreferredMaintenanceWindow:  options.PreferredMaintenanceWindow,
 		SecurityGroupIds:            options.SecurityGroupIds,
 		AtRestEncryptionEnabled:     aws.Bool(true),
-		AutomaticFailoverEnabled:    aws.Bool(automaticFailoverEnabled),
+		AutomaticFailoverEnabled:    aws.Bool(options.AutomaticFailoverEnabled),
+		MultiAZEnabled:              options.MultiAZEnabled,
 		ReplicasPerNodeGroup:        aws.Int32(options.ReplicasPerNodeGroup),
 		Tags:                        tags,
 	}
@@ -409,6 +400,9 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	}
 	if options.ParameterGroupName != nil {
 		params.CacheParameterGroupName = options.ParameterGroupName
+	}
+	if options.MultiAZEnabled != nil {
+		params.MultiAZEnabled = options.MultiAZEnabled
 	}
 
 	res, err := c.elastiCacheSvc.ModifyReplicationGroup(ctx, params)

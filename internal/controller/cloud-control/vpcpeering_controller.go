@@ -23,7 +23,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/cloudclient"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
@@ -44,7 +44,7 @@ func SetupVpcPeeringReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 	azureSkrProvider azureclient.ClientProvider[azurevpcpeeringclient.Client],
-	gcpSkrProvider gcpclient.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient],
+	gcpSkrProvider gcpclient.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

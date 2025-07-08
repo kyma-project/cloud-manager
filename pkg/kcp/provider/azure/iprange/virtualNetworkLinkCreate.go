@@ -3,14 +3,12 @@ package iprange
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,17 +25,10 @@ func virtualNetworkLinkCreate(ctx context.Context, st composed.State) (error, co
 	resourceGroupName := state.resourceGroupName
 	kymaNetworkName := state.Scope().Spec.Scope.Azure.VpcNetwork
 	privateDnsZoneName := azureutil.NewPrivateDnsZoneName()
-	virtualNetworkLink := armprivatedns.VirtualNetworkLink{
-		Location: ptr.To("global"),
-		Properties: &armprivatedns.VirtualNetworkLinkProperties{
-			VirtualNetwork: &armprivatedns.SubResource{
-				ID: ptr.To(azureutil.NewVirtualNetworkResourceId(state.Scope().Spec.Scope.Azure.SubscriptionId,
-					state.Scope().Spec.Scope.Azure.VpcNetwork, kymaNetworkName).String()),
-			},
-			RegistrationEnabled: ptr.To(false),
-		},
-	}
-	err := state.azureClient.CreateVirtualNetworkLink(ctx, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName, virtualNetworkLink)
+	vnetId := azureutil.NewVirtualNetworkResourceId(state.Scope().Spec.Scope.Azure.SubscriptionId,
+		state.Scope().Spec.Scope.Azure.VpcNetwork, kymaNetworkName).String()
+
+	err := state.azureClient.CreateVirtualNetworkLink(ctx, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName, vnetId)
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,

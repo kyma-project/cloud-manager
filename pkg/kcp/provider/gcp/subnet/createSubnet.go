@@ -24,13 +24,15 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.computeClient.CreatePrivateSubnet(ctx, client.CreateSubnetRequest{
-		ProjectId:     gcpScope.Project,
-		Region:        region,
-		Network:       gcpScope.VpcNetwork,
-		Name:          GetSubnetShortName(state.Obj().GetName()),
-		Cidr:          subnet.Spec.Cidr,
-		IdempotenceId: uuid.NewString(),
+	err := state.computeClient.CreateSubnet(ctx, client.CreateSubnetRequest{
+		ProjectId:             gcpScope.Project,
+		Region:                region,
+		Network:               gcpScope.VpcNetwork,
+		Name:                  GetSubnetShortName(state.Obj().GetName()),
+		Cidr:                  subnet.Spec.Cidr,
+		PrivateIpGoogleAccess: true,
+		Purpose:               "PRIVATE",
+		IdempotenceId:         uuid.NewString(),
 	})
 
 	if err != nil {

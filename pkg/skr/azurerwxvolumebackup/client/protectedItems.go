@@ -11,6 +11,9 @@ import (
 type ProtectedItemsClient interface {
 	CreateOrUpdateProtectedItem(ctx context.Context, subscriptionId, location, vaultName, resourceGroupName, containerName, protectedItemName, backupPolicyName, storageAccountName string) error
 	RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error
+
+	GetProtectedItem(ctx context.Context, protectedId string) (*armrecoveryservicesbackup.ProtectedItemResource, error)
+	UpdateProtectedItem(ctx context.Context, protectedItem *armrecoveryservicesbackup.ProtectedItemResource) error
 }
 
 type protectedItemsClient struct {
@@ -58,7 +61,49 @@ func (c protectedItemsClient) CreateOrUpdateProtectedItem(ctx context.Context, s
 }
 
 func (c protectedItemsClient) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
-	fabricName := "Azure"
+	fabricName := AzureFabricName
 	_, err := c.azureClient.Delete(ctx, vaultName, resourceGroupName, fabricName, containerName, protectedItemName, nil)
+	return err
+}
+
+func (c protectedItemsClient) GetProtectedItem(ctx context.Context, protectedId string) (*armrecoveryservicesbackup.ProtectedItemResource, error) {
+	fabricName := AzureFabricName
+	_, rgName, vaultName, containerName, name, err := ParseProtectedItemId(protectedId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	protectedName := GetFileShareName(name)
+	protected, err := c.azureClient.Get(ctx, vaultName, rgName, fabricName, containerName, protectedName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &protected.ProtectedItemResource, nil
+}
+
+func (c protectedItemsClient) UpdateProtectedItem(ctx context.Context, protectedItem *armrecoveryservicesbackup.ProtectedItemResource) error {
+
+	if protectedItem == nil {
+		return nil
+	}
+
+	fabricName := AzureFabricName
+	_, rgName, vaultName, containerName, name, err := ParseProtectedItemId(*protectedItem.ID)
+	if err != nil {
+		return err
+	}
+	protectedName := GetFileShareName(name)
+
+	options := armrecoveryservicesbackup.ProtectedItemsClientCreateOrUpdateOptions{
+		XMSAuthorizationAuxiliary: nil,
+	}
+
+	_, err = c.azureClient.CreateOrUpdate(ctx, vaultName, rgName, fabricName, containerName, protectedName, *protectedItem, to.Ptr(options))
+	if err != nil {
+		return err
+	}
+
 	return err
 }

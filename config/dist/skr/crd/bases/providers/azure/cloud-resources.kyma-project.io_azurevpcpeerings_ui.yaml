@@ -12,6 +12,9 @@ data:
             - widget: Labels
               source: remotePeeringName
               name: spec.remotePeeringName
+            - widget: Labels
+              source: useRemoteGateway
+              name: spec.useRemoteGateway
         - name: status
           widget: Panel
           source: status
@@ -26,6 +29,10 @@ data:
     - path: spec.remoteVnet
       name: spec.remoteVnet
       widget: Text
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: spec.useRemoteGateway
+      name: spec.useRemoteGateway
       disableOnEdit: true
       description: Immutable once set.
     - path: spec.remotePeeringName
@@ -51,6 +58,9 @@ data:
     - source: spec.remoteVnet
       name: spec.remoteVnet
       sort: true
+    - source: spec.useRemoteGateway
+      name: spec.useRemoteGateway
+      sort: true
     - source: status.state
       name: status.state
       sort: true
@@ -62,6 +72,7 @@ data:
       spec.remoteVnet: Remote Vnet
       status.id: ID
       spec.remotePeeringName: Remote Peering Name
+      spec.useRemoteGateway: Use Remote Gateway
 kind: ConfigMap
 metadata:
   annotations:

@@ -33,6 +33,7 @@ cp $SCRIPT_DIR/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsv
 cp $SCRIPT_DIR/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
+cp $SCRIPT_DIR/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 
 # ============= GCP ================
 
@@ -43,6 +44,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumebackups.yam
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsvolumerestores.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpvpcpeerings.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpredisclusters.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpsubnets.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_gcpnfsbackupschedules.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 
@@ -54,6 +56,8 @@ cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_u
 cp $SCRIPT_DIR/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 cp $SCRIPT_DIR/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
+cp $SCRIPT_DIR/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/gcp
 
 # ============= AZURE ================
 
@@ -65,6 +69,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml      $SCR
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumebackups.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxvolumerestores.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurerwxbackupschedules.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azurevpcdnslinks.yaml    $SCRIPT_DIR/dist/skr/crd/bases/providers/azure/
 
 # AZURE UI
 cp $SCRIPT_DIR/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
@@ -72,6 +77,7 @@ cp $SCRIPT_DIR/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
+cp $SCRIPT_DIR/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
 
 # ============= CCEE ================

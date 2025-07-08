@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
+	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 )
 
 func deleteAzureBackups(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,22 +15,12 @@ func deleteAzureBackups(ctx context.Context, st composed.State) (error, context.
 
 	logger.Info("deleteAzureBackups")
 	for _, rks := range state.ProviderResources {
-		if rks.Kind == "AzureRwxVolumeBackup" && rks.Provider == cloudcontrolv1beta1.ProviderAzure {
+		if rks.Kind == azurenukeclient.AzureFileShareProtection && rks.Provider == cloudcontrolv1beta1.ProviderAzure {
 			for _, obj := range rks.Objects {
 
-				item := obj.(azureProtectedItem)
-				protected, okay := item.Properties.(*armrecoveryservicesbackup.AzureFileshareProtectedItem)
-				if !okay {
-					continue
-				}
-
-				if ptr.Deref(protected.ProtectionState, "") != armrecoveryservicesbackup.ProtectionStateProtected {
-					continue
-				}
-
-				err := state.azureClient.RemoveProtection(ctx, item.ProtectedItemResource)
+				err := state.azureClient.RemoveProtection(ctx, obj.GetId())
 				if err != nil {
-					logger.Error(err, fmt.Sprintf("Error requesting Azure File Backup protection %s", obj.GetId()))
+					return composed.LogErrorAndReturn(err, fmt.Sprintf("Error removing Azure File Backup protection %s", obj.GetId()), composed.StopWithRequeue, ctx)
 				}
 			}
 		}

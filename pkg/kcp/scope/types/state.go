@@ -8,9 +8,5 @@ import (
 type State interface {
 	composed.State
 	ObjAsScope() *cloudcontrolv1beta1.Scope
-	ExposedData() *ExposedData
-}
-
-type ExposedData struct {
-	NatGatewayIps []string
+	KcpNetworkKyma() *cloudcontrolv1beta1.Network
 }

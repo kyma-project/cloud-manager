@@ -6,18 +6,19 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/api/option"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/utils/ptr"
 )
 
 type CreateSubnetRequest struct {
-	ProjectId     string
-	Region        string
-	Network       string
-	Name          string
-	Cidr          string
-	IdempotenceId string
+	ProjectId             string
+	Region                string
+	Network               string
+	Name                  string
+	Cidr                  string
+	IdempotenceId         string
+	PrivateIpGoogleAccess bool
+	Purpose               string
 }
 
 type GetSubnetRequest struct {
@@ -34,44 +35,38 @@ type DeleteSubnetRequest struct {
 }
 
 type ComputeClient interface {
-	CreatePrivateSubnet(ctx context.Context, request CreateSubnetRequest) error
+	CreateSubnet(ctx context.Context, request CreateSubnetRequest) error
 	GetSubnet(ctx context.Context, request GetSubnetRequest) (*computepb.Subnetwork, error)
 	DeleteSubnet(ctx context.Context, request DeleteSubnetRequest) error
 }
 
-func NewComputeClientProvider() client.ClientProvider[ComputeClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (ComputeClient, error) {
-		return NewComputeClient(saJsonKeyPath), nil
+func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+	return func() ComputeClient {
+		return NewComputeClient(gcpClients)
 	}
 }
 
-func NewComputeClient(saJsonKeyPath string) ComputeClient {
-	return &computeClient{saJsonKeyPath: saJsonKeyPath}
+func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
+	return &computeClient{subnetworksClient: gcpClients.ComputeSubnetworks}
 }
 
 type computeClient struct {
-	saJsonKeyPath string
+	subnetworksClient *compute.SubnetworksClient
 }
 
 // Creates a Subnet with Purpose set to PRIVATE and PrivateIpGoogleAccess set to true
-func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, request CreateSubnetRequest) error {
-	subnetClient, err := compute.NewSubnetworksRESTClient(ctx, option.WithCredentialsFile(computeClient.saJsonKeyPath))
-	if err != nil {
-		return err
-	}
-	defer subnetClient.Close() // nolint: errcheck
-
+func (computeClient *computeClient) CreateSubnet(ctx context.Context, request CreateSubnetRequest) error {
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 
-	_, err = subnetClient.Insert(ctx, &computepb.InsertSubnetworkRequest{
+	_, err := computeClient.subnetworksClient.Insert(ctx, &computepb.InsertSubnetworkRequest{
 		Project: request.ProjectId,
 		Region:  request.Region,
 		SubnetworkResource: &computepb.Subnetwork{
 			IpCidrRange:           ptr.To(request.Cidr),
 			Name:                  ptr.To(request.Name),
 			Network:               ptr.To(networkNameFull),
-			PrivateIpGoogleAccess: ptr.To(true),
-			Purpose:               ptr.To("PRIVATE"),
+			PrivateIpGoogleAccess: ptr.To(request.PrivateIpGoogleAccess),
+			Purpose:               ptr.To(request.Purpose),
 		},
 		RequestId: ptr.To(request.IdempotenceId),
 	})
@@ -84,13 +79,7 @@ func (computeClient *computeClient) CreatePrivateSubnet(ctx context.Context, req
 }
 
 func (computeClient *computeClient) GetSubnet(ctx context.Context, request GetSubnetRequest) (*computepb.Subnetwork, error) {
-	subnetClient, err := compute.NewSubnetworksRESTClient(ctx, option.WithCredentialsFile(computeClient.saJsonKeyPath))
-	if err != nil {
-		return nil, err
-	}
-	defer subnetClient.Close() // nolint: errcheck
-
-	subnet, err := subnetClient.Get(ctx, &computepb.GetSubnetworkRequest{
+	subnet, err := computeClient.subnetworksClient.Get(ctx, &computepb.GetSubnetworkRequest{
 		Project:    request.ProjectId,
 		Region:     request.Region,
 		Subnetwork: request.Name,
@@ -104,13 +93,7 @@ func (computeClient *computeClient) GetSubnet(ctx context.Context, request GetSu
 }
 
 func (computeClient *computeClient) DeleteSubnet(ctx context.Context, request DeleteSubnetRequest) error {
-	subnetClient, err := compute.NewSubnetworksRESTClient(ctx, option.WithCredentialsFile(computeClient.saJsonKeyPath))
-	if err != nil {
-		return err
-	}
-	defer subnetClient.Close() // nolint: errcheck
-
-	_, err = subnetClient.Delete(ctx, &computepb.DeleteSubnetworkRequest{
+	_, err := computeClient.subnetworksClient.Delete(ctx, &computepb.DeleteSubnetworkRequest{
 		Project:    request.ProjectId,
 		Region:     request.Region,
 		Subnetwork: request.Name,

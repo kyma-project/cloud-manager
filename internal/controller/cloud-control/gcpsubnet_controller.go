@@ -39,8 +39,8 @@ import (
 func SetupGcpSubnetReconciler(
 	ctx context.Context,
 	kcpManager manager.Manager,
-	computeClientProvider gcpclient.ClientProvider[gcpsubnetclient.ComputeClient],
-	networkConnectivityClientProvider gcpclient.ClientProvider[gcpsubnetclient.NetworkConnectivityClient],
+	computeClientProvider gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient],
+	networkConnectivityClientProvider gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {

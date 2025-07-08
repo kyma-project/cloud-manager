@@ -44,7 +44,7 @@ func BreakIf(predicate Predicate) Action {
 		if val {
 			return Break, nil
 		}
-		return nil, nil
+		return nil, ctx
 	}
 }
 
@@ -70,7 +70,7 @@ func BuildBranchingAction(name string, predicate Predicate, trueAction Action, f
 			return falseAction(ctx, state)
 		}
 
-		return nil, nil
+		return nil, ctx
 	}
 }
 
@@ -110,7 +110,7 @@ func If(condition Predicate, actions ...Action) Action {
 		if condition(ctx, state) {
 			return ComposeActions("if", actions...)(ctx, state)
 		}
-		return nil, nil
+		return nil, ctx
 	}
 }
 
@@ -125,7 +125,7 @@ func IfElse(condition Predicate, trueAction Action, falseAction Action) Action {
 				return falseAction(ctx, state)
 			}
 		}
-		return nil, nil
+		return nil, ctx
 	}
 }
 

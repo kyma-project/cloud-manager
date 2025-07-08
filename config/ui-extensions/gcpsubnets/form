@@ -1,0 +1,3 @@
+- path: spec.cidr
+  name: spec.cidr
+  required: true

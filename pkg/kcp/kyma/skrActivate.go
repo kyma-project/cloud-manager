@@ -7,13 +7,8 @@ import (
 
 func skrActivate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
-	logger.
-		WithValues("skrKymaName", state.ObjAsKyma().GetName()).
-		Info("Activating SKR")
-
-	state.activeSkrCollection.AddKyma(state.ObjAsKyma())
+	state.activeSkrCollection.AddKyma(ctx, state.ObjAsKyma())
 
 	return nil, ctx
 }

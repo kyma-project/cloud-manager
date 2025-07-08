@@ -2,7 +2,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.31.0
+ENVTEST_K8S_VERSION = 1.32.0
 JV_VERSION = v0.5.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -144,6 +144,8 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/gcpredisclusters > config/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/gcpsubnets > config/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml
 
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
@@ -151,11 +153,13 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
 
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
 
 
 .PHONY: uninstall

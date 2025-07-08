@@ -3,9 +3,9 @@ package nuke
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
-	"time"
 )
 
 func createAwsClient(ctx context.Context, st composed.State) (error, context.Context) {
@@ -34,7 +34,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 		roleName,
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error assuming AWS role", composed.StopWithRequeueDelay(time.Second), ctx)
+		return composed.LogErrorAndReturn(err, "Error assuming AWS role", err, ctx)
 	}
 
 	state.awsClient = cli

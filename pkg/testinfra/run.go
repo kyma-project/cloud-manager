@@ -135,7 +135,7 @@ func Start() (Infra, error) {
 	}
 
 	registry := skrruntime.NewRegistry(infra.SKR().Scheme())
-	activeSkrCollection := skrruntime.NewActiveSkrCollection(kcpMgr.GetLogger())
+	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
 	awsMock := awsmock.New()
 	awsMock.SetAccount("some-aws-account")

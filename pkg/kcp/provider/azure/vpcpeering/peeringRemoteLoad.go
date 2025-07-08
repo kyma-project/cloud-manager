@@ -2,6 +2,8 @@ package vpcpeering
 
 import (
 	"context"
+	"fmt"
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,7 +18,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// remote client not created
+	// remote client is not created
 	if state.remoteClient == nil {
 		logger.Info("Azure remote client not initialized. Skipping loading of remote peering")
 		return nil, nil
@@ -53,70 +55,93 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 	)
 
-	if err != nil {
-		if composed.MarkedForDeletionPredicate(ctx, state) {
-			return composed.LogErrorAndReturn(err, "Ignoring as marked for deletion", nil, ctx)
+	statusState := string(cloudcontrolv1beta1.StateError)
+	message := "Error loading remote VPC peering"
+
+	if err == nil {
+		if ptr.Deref(peering.Properties.RemoteVirtualNetwork.ID, "") != state.localNetworkId.String() {
+			err = fmt.Errorf("peering with the same name already %s exists in network %s", state.ObjAsVpcPeering().Spec.Details.PeeringName, state.localNetworkId.String())
+			message = fmt.Sprintf("Peering with the same name %s already exists in network %s", state.ObjAsVpcPeering().Spec.Details.PeeringName, state.remoteNetworkId.String())
+			statusState = string(cloudcontrolv1beta1.StateWarning)
 		}
-
-		if azuremeta.IsNotFound(err) {
-			return nil, nil
-		}
-
-		if azuremeta.IsTooManyRequests(err) {
-			return composed.LogErrorAndReturn(err,
-				"Too many requests on loading remote VPC peering",
-				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
-				ctx,
-			)
-		}
-
-		logger.Error(err, "Error loading Azure remote VPC peering")
-
-		message, isWarning := azuremeta.GetErrorMessage(err, "Error loading remote VPC peering")
-
-		if isWarning {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
-		} else {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
-		}
-
-		reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcPeeringConnection
-		successError := composed.StopAndForget
-
-		if azuremeta.IsUnauthorized(err) {
-			reason = cloudcontrolv1beta1.ReasonUnauthorized
-			successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
-		}
-
-		if azuremeta.IsUnauthenticated(err) {
-			successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
-		}
-
-		condition := metav1.Condition{
-			Type:    cloudcontrolv1beta1.ConditionTypeError,
-			Status:  metav1.ConditionTrue,
-			Reason:  reason,
-			Message: message,
-		}
-
-		if !composed.AnyConditionChanged(state.ObjAsVpcPeering(), condition) {
-			return successError, nil
-		}
-
-		return composed.PatchStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(condition).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
-			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessError(successError).
-			Run(ctx, state)
 	}
 
-	logger = logger.WithValues("remotePeeringId", ptr.Deref(peering.ID, ""))
-	ctx = composed.LoggerIntoCtx(ctx, logger)
+	if err == nil {
 
-	state.remotePeering = peering
+		logger = logger.WithValues("remotePeeringId", ptr.Deref(peering.ID, ""))
+		ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	logger.Info("Remote VPC peering loaded")
+		state.remotePeering = peering
 
-	return nil, ctx
+		logger.Info("Remote VPC peering loaded")
+
+		return nil, ctx
+	}
+
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return composed.LogErrorAndReturn(err, "Ignoring as marked for deletion", nil, ctx)
+	}
+
+	if azuremeta.IsNotFound(err) {
+		return nil, nil
+	}
+
+	if azuremeta.IsTooManyRequests(err) {
+		return composed.LogErrorAndReturn(err,
+			"Too many requests on loading remote VPC peering",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
+	}
+
+	logger.Error(err, "Error loading Azure remote VPC peering")
+
+	message, isWarning := azuremeta.GetErrorMessage(err, message)
+
+	if isWarning {
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
+	}
+
+	reason := cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcPeeringConnection
+	successError := composed.StopAndForget
+
+	if azuremeta.IsUnauthorized(err) {
+		reason = cloudcontrolv1beta1.ReasonUnauthorized
+		successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+	}
+
+	if azuremeta.IsUnauthenticated(err) {
+		successError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+	}
+
+	condition := metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
+		Status:  metav1.ConditionTrue,
+		Reason:  reason,
+		Message: message,
+	}
+
+	changed := false
+
+	if state.ObjAsVpcPeering().Status.State != statusState {
+		state.ObjAsVpcPeering().Status.State = statusState
+		changed = true
+	}
+
+	if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+		changed = true
+	}
+
+	if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), condition) {
+		changed = true
+	}
+
+	if !changed {
+		return successError, nil
+	}
+
+	return composed.PatchStatus(state.ObjAsVpcPeering()).
+		ErrorLogMessage("Error updating KCP VpcPeering status on failed loading of remote VPC peering").
+		SuccessError(successError).
+		Run(ctx, state)
 }

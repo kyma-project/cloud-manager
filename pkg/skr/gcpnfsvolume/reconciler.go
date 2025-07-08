@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
@@ -53,6 +54,7 @@ func (r *Reconciler) newAction() composed.Action {
 		addFinalizer,
 		loadKcpIpRange,
 		loadKcpNfsInstance,
+		updateStatusId,
 		composed.IfElse(
 			composed.All(composed.Not(composed.MarkedForDeletionPredicate), SourceBackupPredicate(), NoKcpNfsInstancePredicate()),
 			composed.ComposeActions(

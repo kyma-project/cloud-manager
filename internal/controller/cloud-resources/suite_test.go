@@ -117,6 +117,9 @@ var _ = BeforeSuite(func() {
 	// GcpRedisInstance
 	Expect(SetupGcpRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// GcpRedisCluster
+	Expect(SetupGcpRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// AwsRedisInstance
 	Expect(SetupAwsRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
@@ -137,6 +140,9 @@ var _ = BeforeSuite(func() {
 
 	// AwsVpcPeering
 	Expect(SetupAwsVpcPeeringReconciler(infra.Registry()))
+
+	// AzureVNetLink
+	Expect(SetupAzureVpcDnsLinkReconciler(infra.Registry()))
 
 	Expect(addressSpace.Reserve("10.128.0.0/10")).NotTo(HaveOccurred())
 

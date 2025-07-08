@@ -1,0 +1,19 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: spec.cidr
+        source: cidr
+        widget: Labels
+
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - name: status.cidr
+        source: cidr
+        widget: Labels
+      - name: status.state
+        source: state
+        widget: Labels

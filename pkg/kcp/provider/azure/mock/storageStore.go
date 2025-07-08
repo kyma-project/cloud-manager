@@ -29,9 +29,20 @@ type storageStore struct {
 	m            sync.Mutex
 	subscription string
 
-	jobs           map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse
-	vaults         []*armrecoveryservices.Vault
-	protectedItems map[string][]*armrecoveryservicesbackup.ProtectedItemResource
+	jobs                   map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse
+	vaults                 []*armrecoveryservices.Vault
+	protectedItems         map[string][]*armrecoveryservicesbackup.ProtectedItemResource
+	backupProtectableItems []*armrecoveryservicesbackup.WorkloadProtectableItemResource
+}
+
+func (s *storageStore) GetLastBackupJobStartTime(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *storageStore) FindNextBackupJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*string, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (s *storageStore) FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error) {
@@ -91,13 +102,20 @@ func (s *storageStore) GetStorageJob(ctx context.Context, _ string, _ string, jo
 }
 
 func (s *storageStore) ListBackupProtectableItems(ctx context.Context, vaultName string, resourceGroupName string) ([]*armrecoveryservicesbackup.WorkloadProtectableItemResource, error) {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	// TODO: create unhappy path?
+	return s.backupProtectableItems, nil
+
 }
 
 func (s *storageStore) CreateBackupPolicy(ctx context.Context, vaultName string, resourceGroupName string, policyName string) error {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	// TODO: create unhappy path?
+	return nil
 }
 
 func (s *storageStore) DeleteBackupPolicy(ctx context.Context, vaultName string, resourceGroupName string, policyName string) error {
@@ -131,13 +149,32 @@ func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscrip
 	return nil
 }
 
+func (s *storageStore) GetProtectedItem(ctx context.Context, protectedId string) (*armrecoveryservicesbackup.ProtectedItemResource, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, items := range s.protectedItems {
+		for _, protected := range items {
+			if *protected.ID == protectedId {
+				return protected, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (s *storageStore) UpdateProtectedItem(ctx context.Context, protectedItem *armrecoveryservicesbackup.ProtectedItemResource) error {
+	return nil
+}
+
 func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	logger := composed.LoggerFromCtx(ctx)
 
+	fileShareName := strings.TrimPrefix(protectedItemName, "AzureFileShare;")
 	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
-	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
+	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, fileShareName)
 
 	protectedItems, okay := s.protectedItems[vaultId]
 	if !okay {
@@ -179,6 +216,14 @@ func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string
 		Tags: map[string]*string{
 			"cloud-manager": to.Ptr("rwxVolumeBackup"),
 		},
+		Properties: &armrecoveryservices.VaultProperties{
+			SecuritySettings: &armrecoveryservices.SecuritySettings{
+				SoftDeleteSettings: &armrecoveryservices.SoftDeleteSettings{
+					SoftDeleteState:                 ptr.To(armrecoveryservices.SoftDeleteStateEnabled),
+					SoftDeleteRetentionPeriodInDays: ptr.To(int32(14)),
+				},
+			},
+		},
 	}
 	s.vaults = append(s.vaults, &vault)
 
@@ -213,8 +258,12 @@ func (s *storageStore) ListVaults(ctx context.Context) ([]*armrecoveryservices.V
 }
 
 func (s *storageStore) TriggerBackup(ctx context.Context, vaultName, resourceGroupName, containerName, protectedItemName, location string) error {
-	//TODO implement me
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	// TODO: create unhappy path?
+	return nil
+
 }
 
 func (s *storageStore) ListProtectedItems(ctx context.Context, vaultName string, resourceGroupName string) ([]*armrecoveryservicesbackup.ProtectedItemResource, error) {
@@ -223,6 +272,9 @@ func (s *storageStore) ListProtectedItems(ctx context.Context, vaultName string,
 
 	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	items := s.protectedItems[vaultId]
+	if items == nil {
+		return []*armrecoveryservicesbackup.ProtectedItemResource{}, nil
+	}
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.Info("mock: ListProtectedItems", "size", len(items))
@@ -251,6 +303,7 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 					},
 				}),
 				StartTime: to.Ptr(time.Now()),
+				Operation: to.Ptr(string(armrecoveryservicesbackup.JobOperationTypeRestore)),
 			}),
 		},
 	}
@@ -258,10 +311,51 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 	return &jobId, nil
 }
 
+func (s *storageStore) GetVaultConfig(ctx context.Context, resourceGroupName, vaultName string) (*armrecoveryservicesbackup.BackupResourceVaultConfigResource, error) {
+	return &armrecoveryservicesbackup.BackupResourceVaultConfigResource{
+		Properties: &armrecoveryservicesbackup.BackupResourceVaultConfig{
+			EnhancedSecurityState:  to.Ptr(armrecoveryservicesbackup.EnhancedSecurityStateEnabled),
+			SoftDeleteFeatureState: to.Ptr(armrecoveryservicesbackup.SoftDeleteFeatureStateEnabled),
+		},
+	}, nil
+}
+func (s *storageStore) PutVaultConfig(ctx context.Context, resourceGroupName, vaultName string, config *armrecoveryservicesbackup.BackupResourceVaultConfigResource) error {
+	return nil
+}
+func (s *storageStore) GetStorageContainers(ctx context.Context, resourceGroupName, vaultName string) ([]*armrecoveryservicesbackup.ProtectionContainerResource, error) {
+	return nil, nil
+}
+func (s *storageStore) UnregisterContainer(ctx context.Context, resourceGroupName, vaultName, containerName string) error {
+	return nil
+}
+
 func newStorageStore(subscription string) *storageStore {
+
+	backupProtectableItems := []*armrecoveryservicesbackup.WorkloadProtectableItemResource{
+		{
+			ETag:     nil,
+			Location: nil,
+			Properties: &armrecoveryservicesbackup.AzureFileShareProtectableItem{
+				ProtectableItemType:         nil,
+				AzureFileShareType:          nil,
+				BackupManagementType:        nil,
+				FriendlyName:                to.Ptr("kh-file-share"),
+				ParentContainerFabricID:     nil,
+				ParentContainerFriendlyName: nil,
+				ProtectionState:             nil,
+				WorkloadType:                nil,
+			},
+			Tags: nil,
+			ID:   nil,
+			Name: to.Ptr("AzureFileShare;1234"), // unfriendly name
+			Type: nil,
+		},
+	}
+
 	return &storageStore{
-		subscription:   subscription,
-		jobs:           make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
-		protectedItems: make(map[string][]*armrecoveryservicesbackup.ProtectedItemResource),
+		subscription:           subscription,
+		jobs:                   make(map[string]*armrecoveryservicesbackup.JobDetailsClientGetResponse),
+		protectedItems:         make(map[string][]*armrecoveryservicesbackup.ProtectedItemResource),
+		backupProtectableItems: backupProtectableItems,
 	}
 }

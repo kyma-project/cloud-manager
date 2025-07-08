@@ -2,12 +2,17 @@ package scope
 
 import (
 	"context"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData"
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -27,7 +32,9 @@ func New(
 	// keep gcpServiceUsageClientProvider separate from the expose data client, since SRE will start enabling APIs soon,
 	// so gcpServiceUsageClientProvider will be removed completely
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
+	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
+	gcpStateFactory gcpexposeddata.StateFactory,
 ) ScopeReconciler {
 	return NewScopeReconciler(
 		NewStateFactory(
@@ -36,24 +43,32 @@ func New(
 			awsStsClientProvider,
 			gcpServiceUsageClientProvider,
 		),
+		awsStateFactory,
 		azureStateFactory,
+		gcpStateFactory,
 	)
 }
 
 func NewScopeReconciler(
 	stateFactory StateFactory,
+	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
+	gcpStateFactory gcpexposeddata.StateFactory,
 ) ScopeReconciler {
 	return &scopeReconciler{
 		stateFactory:      stateFactory,
+		awsStateFactory:   awsStateFactory,
 		azureStateFactory: azureStateFactory,
+		gcpStateFactory:   gcpStateFactory,
 	}
 }
 
 type scopeReconciler struct {
 	stateFactory StateFactory
 
+	awsStateFactory   awsexposeddata.StateFactory
 	azureStateFactory azureexposeddata.StateFactory
+	gcpStateFactory   gcpexposeddata.StateFactory
 }
 
 func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -85,7 +100,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 		composed.LoadObjNoStopIfNotFound, // loads Scope
 		providerFromScopeToState,
 		gardenerClusterLoad,
-		networksLoad,
+		networkReferenceKymaLoad,
 		gardenerClusterExtractShootName,
 		logScope,
 
@@ -105,14 +120,20 @@ func (r *scopeReconciler) newAction() composed.Action {
 					scopeSave,
 				),
 				networkReferenceKymaCreate,
+				networkReferenceKymaWaitReady,
 				apiEnable,
 
 				// collect exposed data from cloud providers
-				composed.Switch(
-					nil,
-					composed.NewCase(statewithscope.AwsProviderPredicate, composed.Noop),
-					composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
-					composed.NewCase(statewithscope.GcpProviderPredicate, composed.Noop),
+				composed.If(
+					isExposedDataReadNeeded,
+					composed.Switch(
+						nil,
+						composed.NewCase(statewithscope.AwsProviderPredicate, awsexposeddata.New(r.awsStateFactory)),
+						composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpexposeddata.New(r.gcpStateFactory)),
+					),
+					exposedDataSaveToScope,
+					exposedDataSaveToSkr,
 				),
 
 				conditionReady,
@@ -184,4 +205,27 @@ func isScopeCreateOrUpdateNeeded(ctx context.Context, st composed.State) bool {
 	}
 
 	return false
+}
+
+func isExposedDataReadNeeded(ctx context.Context, st composed.State) bool {
+	if !feature.ExposeData.Value(ctx) {
+		return false
+	}
+	if !composed.IsObjLoaded(ctx, st) {
+		return false
+	}
+
+	state := st.(*State)
+
+	if statewithscope.IsTrialPredicate(ctx, state) {
+		return false
+	}
+
+	if state.ObjAsScope().Status.ExposedData.ReadTime == nil {
+		return true
+	}
+
+	diff := time.Since(state.ObjAsScope().Status.ExposedData.ReadTime.Time)
+
+	return diff > time.Hour
 }

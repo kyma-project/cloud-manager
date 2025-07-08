@@ -115,7 +115,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+3, 0, 0, now.Location()).UTC(),
 		}
 
-		nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, expectedTimes[0].Format("20060102-150405"))
 		nfsBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
 		skrNfsBackup1 := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
@@ -185,6 +184,9 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			})
 
 			By("And Then the NfsVolumeBackup is created", func() {
+				expected, err := time.Parse(time.RFC3339, nfsBackupSchedule.Status.NextRunTimes[0])
+				Expect(err).ShouldNot(HaveOccurred())
+				nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, expected.Format("20060102-150405"))
 				//Load and check whether the NfsVolumeBackup object got created.
 				Eventually(LoadAndCheck, timeout*6, interval).
 					WithArguments(
