@@ -1,6 +1,6 @@
-# Redis
+# Redis Cluster
 
-Use the Cloud Manager module to provision Redis cluster.
+Use the Cloud Manager module to provision a Redis cluster.
 
 The Cloud Manager module allows you to provision a cloud provider-managed Redis cluster in cluster mode within your cluster network.
 
@@ -19,7 +19,7 @@ You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster
 
 ### Tiers
 
-When you provision a Redis cluster, tier is Premium.
+When you provision a Redis cluster, you must use the Premium tier. 
 
 ## Prerequisites
 
