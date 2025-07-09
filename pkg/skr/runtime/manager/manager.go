@@ -3,13 +3,15 @@ package manager
 import (
 	"context"
 	"errors"
+	"net/http"
+	"sync"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
-	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -17,7 +19,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sync"
 )
 
 var _ SkrManager = &skrManager{}
@@ -36,14 +37,14 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, lo
 				Unstructured: true,
 			},
 		}
-		clusterOptions.Cache.DefaultWatchErrorHandler = func(r *cache.Reflector, err error) {
+		clusterOptions.Cache.DefaultWatchErrorHandler = func(ctx context.Context, r *cache.Reflector, err error) {
 			if errors.Is(err, context.DeadlineExceeded) {
 				return
 			}
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			cache.DefaultWatchErrorHandler(r, err)
+			cache.DefaultWatchErrorHandler(ctx, r, err)
 		}
 	})
 	if err != nil {
