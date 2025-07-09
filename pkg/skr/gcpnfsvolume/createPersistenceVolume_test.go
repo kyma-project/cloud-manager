@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"testing"
 	"time"
 
@@ -59,6 +60,45 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
 	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
+	assert.Empty(suite.T(), pv.Spec.MountOptions)
+}
+
+func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady41() {
+	factory, err := newTestStateFactory()
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+	volume := gcpNfsVolume.DeepCopy()
+	volume.Status.Protocol = string(client.FilestoreProtocolNFSv41)
+	state := factory.newStateWith(volume)
+
+	err, _ctx := createPersistenceVolume(ctx, state)
+
+	//validate expected return values
+	assert.Equal(suite.T(), err, composed.StopWithRequeueDelay(3*time.Second))
+	assert.Nil(suite.T(), _ctx)
+
+	//Get the created PV object
+	pvName := gcpNfsVolume.Status.Id
+	pv := corev1.PersistentVolume{}
+	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
+
+	//validate NFS attributes of PV
+	assert.Nil(suite.T(), err)
+	assert.True(suite.T(), len(pvName) > 0)
+	assert.Equal(suite.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
+	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
+
+	//Validate PV Capacity
+	expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+	quantity := pv.Spec.Capacity["storage"]
+	pvQuantity, _ := quantity.AsInt64()
+	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
+	assert.NotEmpty(suite.T(), pv.Spec.MountOptions, "should have nfsvers=4.1")
+	assert.Equal(suite.T(), "nfsvers=4.1", pv.Spec.MountOptions[0], "should have nfsvers=4.1 mount option")
 }
 
 func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
