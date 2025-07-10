@@ -9,9 +9,9 @@ import (
 	redis "cloud.google.com/go/redis/apiv1"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	"google.golang.org/api/option"
+
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -36,28 +36,24 @@ type MemorystoreClient interface {
 	DeleteRedisInstance(ctx context.Context, projectId, locationId, instanceId string) error
 }
 
-func NewMemorystoreClientProvider() client.ClientProvider[MemorystoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (MemorystoreClient, error) {
-		return NewMemorystoreClient(saJsonKeyPath), nil
+func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClient] {
+	return func() MemorystoreClient {
+		return NewMemorystoreClient(gcpClients)
 	}
 }
 
-func NewMemorystoreClient(saJsonKeyPath string) MemorystoreClient {
-	return &memorystoreClient{saJsonKeyPath: saJsonKeyPath}
+func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClient {
+	return &memorystoreClient{
+		redisInstanceClient: gcpClients.RedisInstance,
+	}
 }
 
 type memorystoreClient struct {
-	saJsonKeyPath string
+	redisInstanceClient *redis.CloudRedisClient
 }
 
 // UpdateRedisInstanceConfigs implements MemorystoreClient.
 func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Context, redisInstance *redispb.Instance, updateMask []string) error {
-	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
-	if err != nil {
-		return err
-	}
-	defer redisClient.Close() // nolint: errcheck
-
 	req := &redispb.UpdateInstanceRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
 			Paths: updateMask,
@@ -65,7 +61,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 		Instance: redisInstance,
 	}
 
-	_, err = redisClient.UpdateInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.UpdateInstance(ctx, req)
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "Failed to update redis instance", "redisInstance", redisInstance.Name)
@@ -76,12 +72,6 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 }
 
 func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Context, projectId, locationId, instanceId string, options CreateRedisInstanceOptions) error {
-	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
-	if err != nil {
-		return err
-	}
-	defer redisClient.Close() // nolint: errcheck
-
 	readReplicasMode := redispb.Instance_READ_REPLICAS_DISABLED
 	if options.Tier != "BASIC" {
 		readReplicasMode = redispb.Instance_READ_REPLICAS_ENABLED
@@ -109,7 +99,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 		},
 	}
 
-	_, err = redisClient.CreateInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.CreateInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
@@ -122,18 +112,13 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 
 func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context, projectId, locationId, instanceId string) (*redispb.Instance, *redispb.InstanceAuthString, error) {
 	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "locationId", locationId, "instanceId", instanceId)
-	redisClient, err := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
-	if err != nil {
-		return nil, nil, err
-	}
-	defer redisClient.Close() // nolint: errcheck
 
 	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	req := &redispb.GetInstanceRequest{
 		Name: name,
 	}
 
-	instanceResponse, err := redisClient.GetInstance(ctx, req)
+	instanceResponse, err := memorystoreClient.redisInstanceClient.GetInstance(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Redis instance not found")
@@ -147,7 +132,7 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 		return instanceResponse, nil, err
 	}
 
-	authResponse, err := redisClient.GetInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
+	authResponse, err := memorystoreClient.redisInstanceClient.GetInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
 	if err != nil {
 		logger.Error(err, "Failed to get Redis instance Auth")
 		return nil, nil, err
@@ -157,19 +142,13 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 }
 
 func (memorystoreClient *memorystoreClient) UpgradeRedisInstance(ctx context.Context, projectId, locationId, instanceId, redisVersion string) error {
-	redisClient, redisClientErr := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
-	if redisClientErr != nil {
-		return redisClientErr
-	}
-	defer redisClient.Close() // nolint: errcheck
-
 	name := GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
 	req := &redispb.UpgradeInstanceRequest{
 		Name:         name,
 		RedisVersion: redisVersion,
 	}
 
-	_, err := redisClient.UpgradeInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.UpgradeInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
@@ -181,17 +160,11 @@ func (memorystoreClient *memorystoreClient) UpgradeRedisInstance(ctx context.Con
 }
 
 func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Context, projectId string, locationId string, instanceId string) error {
-	redisClient, redisClientErr := redis.NewCloudRedisClient(ctx, option.WithCredentialsFile(memorystoreClient.saJsonKeyPath))
-	if redisClientErr != nil {
-		return redisClientErr
-	}
-	defer redisClient.Close() // nolint: errcheck
-
 	req := &redispb.DeleteInstanceRequest{
 		Name: GetGcpMemoryStoreRedisName(projectId, locationId, instanceId),
 	}
 
-	_, err := redisClient.DeleteInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.DeleteInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)

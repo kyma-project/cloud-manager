@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -193,11 +192,37 @@ func MergePatchObj(ctx context.Context, obj client.Object, patch map[string]inte
 }
 
 func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusClient) error {
-	objToPatch := obj
-	if objClonable, ok := obj.(ObjWithCloneForPatchStatus); ok {
-		objToPatch = objClonable.CloneForPatchStatus()
+
+	objBytes, err := json.Marshal(obj)
+	if err != nil {
+		return err
 	}
-	return clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+
+	var o map[string]interface{}
+	if err = json.Unmarshal(objBytes, &o); err != nil {
+		return err
+	}
+
+	status, ok := o["status"]
+
+	if !ok {
+		return fmt.Errorf("status not found in object %T", obj)
+	}
+
+	patch := []map[string]interface{}{
+		{
+			"op":    "replace",
+			"path":  "/status",
+			"value": status,
+		},
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return err
+	}
+
+	return clnt.Status().Patch(ctx, obj, client.RawPatch(types.JSONPatchType, patchBytes))
 }
 
 func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Writer) (bool, error) {

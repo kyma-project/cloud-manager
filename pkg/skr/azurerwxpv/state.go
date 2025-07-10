@@ -1,6 +1,8 @@
 package azurerwxpv
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -15,6 +17,11 @@ type State struct {
 	client         client.Client
 	clientProvider azureclient.ClientProvider[client.Client]
 	fileShare      *armstorage.FileShareItem
+	fileShareName  string
+
+	recoveryVaults []*armrecoveryservices.Vault
+	protectedId    string
+	protectedItem  *armrecoveryservicesbackup.AzureFileshareProtectedItem
 }
 
 func (s *State) ObjAsPV() *corev1.PersistentVolume {

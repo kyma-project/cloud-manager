@@ -179,6 +179,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(ptr.Deref(localAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnetId))
 		})
 
+		By("And Then local Azure Peering has UseRemoteGateways equals to false", func() {
+			Expect(ptr.Deref(localAzurePeering.Properties.UseRemoteGateways, false)).To(BeFalse())
+		})
+
 		var remoteAzurePeering *armnetwork.VirtualNetworkPeering
 
 		By("And Then remote Azure VPC Peering is created", func() {
@@ -198,6 +202,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("And Then remote Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering local vpc id", func() {
 			localeVnetId := util.NewVirtualNetworkResourceId(scope.Spec.Scope.Azure.SubscriptionId, localResourceGroupName, localVirtualNetworkName).String()
 			Expect(ptr.Deref(remoteAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(localeVnetId))
+		})
+
+		By("And Then remote Azure Peering has UseRemoteGateways equals to false", func() {
+			Expect(ptr.Deref(remoteAzurePeering.Properties.UseRemoteGateways, false)).To(BeFalse())
 		})
 
 		// Ready ==========================================================
@@ -684,6 +692,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithRemoteRef("skr-namespace", "skr-azure-vpcpeering").
 				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), remotePeeringName, true, true).
 				WithLocalPeeringName(localPeeringName).
+				WithUseRemoteGateway(true).
 				Build()
 
 			Eventually(CreateObj).
@@ -715,6 +724,21 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
+		})
+
+		By("And Then local Azure Peering has UseRemoteGateways equals to true", func() {
+			localAzurePeering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ptr.Deref(localAzurePeering.Properties.UseRemoteGateways, false)).To(BeTrue())
+			Expect(ptr.Deref(localAzurePeering.Properties.AllowGatewayTransit, false)).To(BeFalse())
+		})
+
+		By("And Then remote Azure Peering has UseRemoteGateways equals to false", func() {
+			remoteAzurePeering, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ptr.Deref(remoteAzurePeering.Properties.UseRemoteGateways, false)).To(BeFalse())
+			Expect(ptr.Deref(remoteAzurePeering.Properties.AllowGatewayTransit, false)).To(BeTrue())
+
 		})
 
 		// DELETE

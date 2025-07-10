@@ -29,6 +29,8 @@ const (
 	ReasonFailedLoadingRemoteVpcPeeringConnection = "FailedLoadingRemoteVpcPeeringConnection"
 	ReasonFailedCreatingRoutes                    = "FailedCreatingRoutes"
 	ReasonUnauthorized                            = "Unauthorized"
+	ReasonUnauthenticated                         = "Unauthenticated"
+	ReasonConflict                                = "Conflict"
 )
 
 const (
@@ -84,6 +86,8 @@ type VpcPeeringDetails struct {
 
 	ImportCustomRoutes bool `json:"importCustomRoutes,omitempty"`
 
+	UseRemoteGateway bool `json:"useRemoteGateway,omitempty"`
+
 	DeleteRemotePeering bool `json:"deleteRemotePeering,omitempty"`
 
 	// +kubebuilder:default:=AUTO
@@ -116,6 +120,7 @@ type AzureVpcPeering struct {
 	RemotePeeringName   string `json:"remotePeeringName,omitempty"`
 	RemoteVnet          string `json:"remoteVnet,omitempty"`
 	RemoteResourceGroup string `json:"remoteResourceGroup,omitempty"`
+	UseRemoteGateway    bool   `json:"useRemoteGateway,omitempty"`
 }
 
 type AwsVpcPeering struct {

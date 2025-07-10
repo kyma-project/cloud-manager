@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
@@ -328,13 +329,15 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		By("Then Azure Virtual Network Link does not exists", func() {
 			virtualNetworkLink, err := azureMock.GetVirtualNetworkLink(infra.Ctx(), resourceGroupName, privateDnsZoneName, kcpIpRangeName)
 			Expect(virtualNetworkLink).To(BeNil())
-			Expect(err).NotTo(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(err).To(HaveOccurred())
 		})
 
 		By("Then Azure Private Dns Zone does not exists", func() {
 			privateDnsZone, err := azureMock.GetPrivateDnsZone(infra.Ctx(), resourceGroupName, privateDnsZoneName)
 			Expect(privateDnsZone).To(BeNil())
-			Expect(err).NotTo(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(err).To(HaveOccurred())
 		})
 
 	})

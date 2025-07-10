@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,6 +19,9 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		return nil, nil
 	}
 
+	// Allow gateway transit if remote gateway is used
+	allowGatewayTransit := state.ObjAsVpcPeering().Spec.Details.UseRemoteGateway
+
 	// params must be the same as in peeringRemoteLoad()
 	err := state.remoteClient.CreatePeering(
 		ctx,
@@ -26,41 +30,56 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		state.ObjAsVpcPeering().Spec.Details.PeeringName,
 		state.localNetworkId.String(),
 		true,
+		false,
+		allowGatewayTransit,
 	)
 
-	if err != nil {
-		logger.Error(err, "Error creating remote VPC peering")
+	if err == nil {
+		logger.Info("Remote VPC peering created")
 
-		if azuremeta.IsTooManyRequests(err) {
-			return composed.LogErrorAndReturn(err,
-				"Too many requests on creating remote VPC peering",
-				composed.StopWithRequeueDelay(util.Timing.T60000ms()),
-				ctx,
-			)
-		}
-
-		message, isWarning := azuremeta.GetErrorMessage(err, "Error creating remote VPC peering")
-
-		if isWarning {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
-		} else {
-			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
-		}
-
-		return composed.PatchStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: message,
-			}).
-			ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote VPC peering").
-			FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
-			Run(ctx, state)
+		return nil, ctx
 	}
 
-	logger.Info("Remote VPC peering created")
+	logger.Error(err, "Error creating remote VPC peering")
 
-	return nil, nil
+	if azuremeta.IsTooManyRequests(err) {
+		return composed.LogErrorAndReturn(err,
+			"Too many requests on creating remote VPC peering",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
+	}
+
+	message, isWarning := azuremeta.GetErrorMessage(err, "Error creating remote VPC peering")
+
+	if isWarning {
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
+	} else {
+		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
+	}
+
+	condition := metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
+		Status:  metav1.ConditionTrue,
+		Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
+		Message: message,
+	}
+
+	changed := meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
+
+	if meta.SetStatusCondition(&state.ObjAsVpcPeering().Status.Conditions, condition) {
+		changed = true
+	}
+
+	successError := composed.StopAndForget
+
+	if !changed {
+		return successError, ctx
+	}
+
+	return composed.PatchStatus(state.ObjAsVpcPeering()).
+		ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of remote VPC peering").
+		SuccessError(successError).
+		Run(ctx, state)
+
 }

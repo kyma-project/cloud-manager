@@ -32,6 +32,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		authTokenSecetString = state.authTokenValue.SecretString
 	}
 
+	automaticFailoverEnabled := redisInstance.Spec.Instance.Aws.ReadReplicas > 0
 	_, err := state.awsClient.CreateElastiCacheReplicationGroup(ctx, []types.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
@@ -60,6 +61,10 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 		SecurityGroupIds:           []string{state.securityGroupId},
 		ReplicasPerNodeGroup:       redisInstance.Spec.Instance.Aws.ReadReplicas,
+		ShardCount:                 1,
+		ClusterMode:                false,
+		AutomaticFailoverEnabled:   automaticFailoverEnabled,
+		MultiAZEnabled:             nil,
 	})
 
 	if err != nil {

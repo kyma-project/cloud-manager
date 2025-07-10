@@ -165,17 +165,15 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 	}
 }
 
-func (s *server) VpcPeeringProvider() client.ClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpvpcpeeringclient.VpcPeeringClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP VPCPeeringProvider mock...")
-		return s, nil
+func (s *server) VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
+	return func() gcpvpcpeeringclient.VpcPeeringClient {
+		return s
 	}
 }
 
-func (s *server) MemoryStoreProviderFake() client.ClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpredisinstanceclient.MemorystoreClient, error) {
-		return s, nil
+func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
+	return func() gcpredisinstanceclient.MemorystoreClient {
+		return s
 	}
 }
 

@@ -3,10 +3,14 @@ package meta
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"regexp"
 )
@@ -26,6 +30,9 @@ const (
 	VnetAddressSpacesOverlapMessage                      = "Cannot create or update peering. Virtual networks cannot be peered because their address spaces overlap. "
 	InvalidAuthenticationTokenTenant                     = "InvalidAuthenticationTokenTenant"
 	InvalidAuthenticationTokenTenantMessage              = "Authentication failed"
+	MissingServicePrincipalMessage                       = "The client application is missing service principal in the remote tenant"
+	Conflict                                             = "Conflict"
+	ConflictMessage                                      = "Another Azure operation is pending for requested object"
 )
 
 func IsTooManyRequests(err error) bool {
@@ -33,6 +40,11 @@ func IsTooManyRequests(err error) bool {
 
 	// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling
 	return errors.As(err, &respErr) && respErr.StatusCode == http.StatusTooManyRequests
+}
+
+func IsConflictError(err error) bool {
+	var respErr *azcore.ResponseError
+	return errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict
 }
 
 func NewAzureNotFoundError() error {
@@ -120,12 +132,132 @@ func GetErrorMessage(err error, def string) (string, bool) {
 			return VnetAddressSpacesOverlapMessage + r.FindString(respErr.Error()), true
 		case InvalidAuthenticationTokenTenant:
 			return InvalidAuthenticationTokenTenantMessage, true
+		case Conflict:
+			return ConflictMessage, true
 		}
 	}
 
 	if IsUnauthenticated(err) {
-		return "Authentication error", true
+		return MissingServicePrincipalMessage, true
 	}
 
 	return def, false
+}
+
+type ErrorHandlerBuilder struct {
+	err                    error
+	obj                    composed.ObjWithConditionsAndState
+	defaultReason          string
+	defaultMessage         string
+	tooManyRequestsMessage string
+	updateStatusMessage    string
+	notFoundMessage        string
+	unauthorizedError      error
+	unauthenticatedError   error
+	conflictError          error
+}
+
+func HandleError(err error, obj composed.ObjWithConditionsAndState) *ErrorHandlerBuilder {
+	return &ErrorHandlerBuilder{
+		err: err,
+		obj: obj,
+	}
+}
+
+func (b *ErrorHandlerBuilder) WithDefaultReason(reason string) *ErrorHandlerBuilder {
+	b.defaultReason = reason
+	return b
+}
+
+func (b *ErrorHandlerBuilder) WithDefaultMessage(message string) *ErrorHandlerBuilder {
+	b.defaultMessage = message
+	return b
+}
+
+func (b *ErrorHandlerBuilder) WithTooManyRequestsMessage(message string) *ErrorHandlerBuilder {
+	b.tooManyRequestsMessage = message
+	return b
+}
+
+func (b *ErrorHandlerBuilder) WithUpdateStatusMessage(message string) *ErrorHandlerBuilder {
+	b.updateStatusMessage = message
+	return b
+}
+
+func (b *ErrorHandlerBuilder) WithNotFoundMessage(message string) *ErrorHandlerBuilder {
+	b.notFoundMessage = message
+	return b
+}
+
+func (b *ErrorHandlerBuilder) setDefaults() {
+	b.unauthenticatedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+	b.unauthorizedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
+	b.conflictError = composed.StopWithRequeueDelay(util.Timing.T60000ms())
+}
+
+func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (error, context.Context) {
+	b.setDefaults()
+
+	logger := composed.LoggerFromCtx(ctx)
+
+	if IsNotFound(b.err) {
+		logger.Info(b.notFoundMessage)
+		return nil, ctx
+	}
+
+	if IsTooManyRequests(b.err) {
+		return composed.LogErrorAndReturn(b.err,
+			b.tooManyRequestsMessage,
+			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+			ctx,
+		)
+	}
+
+	message, isWarning := GetErrorMessage(b.err, b.defaultMessage)
+
+	statusState := string(cloudcontrolv1beta1.StateError)
+
+	if isWarning {
+		statusState = string(cloudcontrolv1beta1.StateWarning)
+	}
+
+	condition := metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
+		Status:  metav1.ConditionTrue,
+		Reason:  b.defaultReason,
+		Message: message,
+	}
+
+	successError := composed.StopAndForget
+	if IsUnauthorized(b.err) {
+		condition.Reason = cloudcontrolv1beta1.ReasonUnauthorized
+		successError = b.unauthorizedError
+	}
+
+	if IsUnauthenticated(b.err) {
+		condition.Reason = cloudcontrolv1beta1.ReasonUnauthenticated
+		successError = b.unauthenticatedError
+	}
+
+	if IsConflictError(b.err) {
+		condition.Reason = cloudcontrolv1beta1.ReasonConflict
+		successError = b.conflictError
+	}
+
+	changed := meta.SetStatusCondition(b.obj.Conditions(), condition)
+
+	if b.obj.State() != statusState {
+		b.obj.SetState(statusState)
+		changed = true
+	}
+
+	if changed {
+		return composed.UpdateStatus(b.obj).
+			ErrorLogMessage(b.updateStatusMessage).
+			SuccessLogMsg(fmt.Sprintf("Status successfully updated with status '%s' and message '%s'", statusState, message)).
+			SuccessError(successError).
+			Run(ctx, state)
+	}
+
+	return successError, ctx
 }

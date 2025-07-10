@@ -87,6 +87,7 @@
 {
   "Actions": [
     "Microsoft.ClassicNetwork/virtualNetworks/peer/action",
+    "Microsoft.Network/virtualNetworks/join/action",
     "Microsoft.Network/virtualNetworks/peer/action",
     "Microsoft.Network/virtualNetworks/read",
     "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete",
