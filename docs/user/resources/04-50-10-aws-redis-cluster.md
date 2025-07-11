@@ -40,7 +40,7 @@ This table lists the parameters of AwsRedisCluster, together with their descript
 | **ipRange.name**                                  | string | Required. Name of the existing IpRange to use.          |
 | **redisTier**                                     | string | Required. The Redis tier of the instance. Supported values are `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`.        |
 | **shardCount**                                    | int    | Required. Number of shards. Supported values are from `1` to `500`.     |
-| **replicasPerShard**                              | int    | Optional. Number of replicas per shard. Supported values are from `0` to `5`. If left undefined, it defaults to `0`. Without replicas, a single shard failure can result in permanent data loss. |
+| **replicasPerShard**                              | int    | Optional. Number of replicas per shard. Supported values are from `0` to `5`. If left undefined, it defaults to `1`. Without replicas, a single shard failure can result in permanent data loss. |
 | **engineVersion**                                 | string | Optional. Supported values are `"7.1"`, `"7.0"`, and `"6.x"`. Defaults to `"7.0"`. Can be upgraded. |
 | **authEnabled**                                   | bool   | Optional. Enables using an AuthToken (password) when issuing Redis OSS commands. Defaults to `false`. |
 | **parameters**                                    | object | Optional. Provided values are passed to the Redis configuration. Supported values can be read on [Amazons's Redis OSS-specific parameters page](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ParameterGroups.Redis.html). If left empty, defaults to an empty object. |

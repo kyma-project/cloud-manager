@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: gcpredisclusters.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -81,7 +81,7 @@ spec:
                     - C6
                   type: string
                 replicasPerShard:
-                  default: 0
+                  default: 1
                   format: int32
                   maximum: 2
                   minimum: 0

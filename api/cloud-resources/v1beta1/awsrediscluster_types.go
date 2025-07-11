@@ -53,7 +53,7 @@ type AwsRedisClusterSpec struct {
 	// +kubebuilder:validation:Maximum=500
 	ShardCount int32 `json:"shardCount"`
 
-	// +kubebuilder:default=0
+	// +kubebuilder:default=1
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=5
 	ReplicasPerShard int32 `json:"replicasPerShard"`
