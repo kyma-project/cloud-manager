@@ -157,6 +157,15 @@ func main() {
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
 	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
+	pprofBindAddress := ""
+	enablePprof := os.Getenv("ENABLE_PPROF") == "true"
+	if enablePprof {
+		pprofBindAddress = os.Getenv("PPROF_BIND_ADDRESS")
+		if pprofBindAddress == "" {
+			pprofBindAddress = ":8082"
+		}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		BaseContext: func() context.Context {
 			return baseCtx
@@ -183,6 +192,7 @@ func main() {
 				Unstructured: true,
 			},
 		},
+		PprofBindAddress: pprofBindAddress,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
