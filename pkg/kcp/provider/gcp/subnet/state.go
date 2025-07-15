@@ -24,6 +24,8 @@ type State struct {
 	subnet                  *computepb.Subnetwork
 	serviceConnectionPolicy *networkconnectivitypb.ServiceConnectionPolicy
 
+	network *cloudcontrolv1beta1.Network
+
 	updateMask []string
 }
 

@@ -5,8 +5,10 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 )
 
 func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.Context) {
@@ -35,6 +37,9 @@ func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 			},
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.KymaRef.Name,
+			},
+			Network: &klog.ObjectRef{
+				Name: common.KcpNetworkCMCommonName(state.KymaRef.Name),
 			},
 			Cidr:    gcpSubnet.Spec.Cidr,
 			Purpose: cloudcontrolv1beta1.GcpSubnetPurpose_PRIVATE,
