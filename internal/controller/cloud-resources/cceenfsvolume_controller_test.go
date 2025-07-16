@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -104,6 +105,7 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 					kcpNfsInstance,
 					WithNfsInstanceStatusHost(""),
 					WithNfsInstanceStatusPath(""),
+					WithNfsInstanceCapacity(resource.MustParse("100Gi")),
 					WithConditions(KcpReadyCondition()),
 				).
 				Should(Succeed())
@@ -145,6 +147,10 @@ var _ = Describe("Feature: SKR CceeNfsVolume", func() {
 					HavingCceeNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
+		})
+
+		By("And Then SKR CceeNfsVolume has status.capacity set", func() {
+			Expect(cceeNfsVolume.Status.Capacity).To(Equal(resource.MustParse("100Gi")))
 		})
 
 		// PV assertions ===============================================================

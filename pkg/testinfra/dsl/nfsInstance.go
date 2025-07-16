@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -56,6 +58,18 @@ func WithNfsInstanceStatusId(id string) ObjStatusAction {
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
 				if len(x.Status.Id) == 0 {
 					x.Status.Id = id
+				}
+			}
+		},
+	}
+}
+
+func WithNfsInstanceCapacity(v resource.Quantity) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				if x.Status.Capacity.IsZero() {
+					x.Status.Capacity = v
 				}
 			}
 		},

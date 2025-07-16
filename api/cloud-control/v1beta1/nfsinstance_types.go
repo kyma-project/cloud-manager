@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -125,6 +126,10 @@ type NfsInstanceStatus struct {
 	// Provisioned Capacity in GBs
 	// +optional
 	CapacityGb int `json:"capacityGb"`
+
+	// Provisioned Capacity
+	// +optional
+	Capacity resource.Quantity `json:"capacity"`
 
 	// +optional
 	StateData map[string]string `json:"stateData,omitempty"`
