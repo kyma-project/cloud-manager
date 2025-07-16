@@ -39,7 +39,7 @@ func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 				Name: state.KymaRef.Name,
 			},
 			Network: &klog.ObjectRef{
-				Name: common.KcpNetworkCMCommonName(state.KymaRef.Name),
+				Name: common.KcpNetworkKymaCommonName(state.KymaRef.Name),
 			},
 			Cidr:    gcpSubnet.Spec.Cidr,
 			Purpose: cloudcontrolv1beta1.GcpSubnetPurpose_PRIVATE,

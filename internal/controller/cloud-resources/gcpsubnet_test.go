@@ -9,6 +9,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcprediscluster"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -76,6 +77,9 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 
 			By("And has spec.purpose set to be PRIVATE")
 			Expect(kcpGcpSubnet.Spec.Purpose).To(Equal(cloudcontrolv1beta1.GcpSubnetPurpose_PRIVATE))
+
+			By("And has spec.network.name set to be kyma network name")
+			Expect(kcpGcpSubnet.Spec.Network.Name).To(Equal(common.KcpNetworkKymaCommonName(infra.SkrKymaRef().Name)))
 
 		})
 
