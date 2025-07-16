@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,6 +30,10 @@ type GcpSubnetPurpose string
 
 const (
 	GcpSubnetPurpose_PRIVATE = GcpSubnetPurpose("PRIVATE")
+)
+
+const (
+	GcpSubnetNetworkField = ".spec.network"
 )
 
 // GcpSubnetSpec defines the desired state of GcpSubnet
@@ -44,6 +49,11 @@ type GcpSubnetSpec struct {
 
 	// +kubebuilder:validation:Required
 	Purpose GcpSubnetPurpose `json:"purpose"`
+
+	// Network is a reference to the network where this GcpSubnet belong.
+	// If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
+	// +optional
+	Network *klog.ObjectRef `json:"network,omitempty"`
 }
 
 // GcpSubnetStatus defines the observed state of GcpSubnet

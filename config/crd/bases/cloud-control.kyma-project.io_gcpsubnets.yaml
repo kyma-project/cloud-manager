@@ -51,6 +51,18 @@ spec:
             properties:
               cidr:
                 type: string
+              network:
+                description: |-
+                  Network is a reference to the network where this GcpSubnet belong.
+                  If empty then it's implied that it belongs to the Network of the type "kyma" in its Scope.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                type: object
               purpose:
                 enum:
                 - PRIVATE

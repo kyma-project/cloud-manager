@@ -19,6 +19,8 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -30,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/network"
@@ -91,6 +92,22 @@ func (r *NetworkReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manag
 				return []string{fmt.Sprintf("%s/%s", ipRange.Namespace, common.KcpNetworkKymaCommonName(ipRange.ScopeRef().Name))}
 			}
 			return []string{fmt.Sprintf("%s/%s", ipRange.Namespace, ipRange.Spec.Network.Name)}
+		}); err != nil {
+		return err
+	}
+
+	// index GcpSubnets by network
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx,
+		&cloudcontrolv1beta1.GcpSubnet{},
+		cloudcontrolv1beta1.GcpSubnetNetworkField,
+		func(obj client.Object) []string {
+			gcpSubnet := obj.(*cloudcontrolv1beta1.GcpSubnet)
+			if gcpSubnet.Spec.Network == nil {
+				// implied that it belongs to the Network of the type "kyma" in its Scope
+				return []string{fmt.Sprintf("%s/%s", gcpSubnet.Namespace, common.KcpNetworkKymaCommonName(gcpSubnet.ScopeRef().Name))}
+			}
+			return []string{fmt.Sprintf("%s/%s", gcpSubnet.Namespace, gcpSubnet.Spec.Network.Name)}
 		}); err != nil {
 		return err
 	}

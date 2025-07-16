@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -85,5 +86,19 @@ func HavingKcpGcpSubnetStatusCidr(cidr string) ObjAssertion {
 			return fmt.Errorf("the KCP GcpSubnet expected status cidr %s, but it has %s", cidr, x.Status.Cidr)
 		}
 		return fmt.Errorf("unhandled type %T", obj)
+	}
+}
+
+func WithKcpGcpSubnetNetwork(network string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.GcpSubnet)
+			if x.Spec.Network == nil {
+				x.Spec.Network = &klog.ObjectRef{}
+			}
+			if x.Spec.Network.Name == "" {
+				x.Spec.Network.Name = network
+			}
+		},
 	}
 }

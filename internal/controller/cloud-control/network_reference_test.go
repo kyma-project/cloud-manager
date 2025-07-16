@@ -1,12 +1,14 @@
 package cloudcontrol
 
 import (
-	"github.com/kyma-project/cloud-manager/api"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	kcpgcpsubnet "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -150,6 +152,91 @@ var _ = Describe("Feature: KCP Network reference", func() {
 				To(Succeed())
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange).
+				Should(Succeed())
+		})
+
+		By("Then Network does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: Network reference can not be deleted when used by GcpSubnet", func() {
+		kymaName := "75840abb-44b3-4430-9ffb-e1806167ec38"
+		scope := &cloudcontrolv1beta1.Scope{}
+		netObjName := "b7e37580-5524-4fad-8380-5fa686c99f11"
+		var net *cloudcontrolv1beta1.Network
+		gcpSubnetName := "8eab2147-086e-42d4-9b36-fb9dfa8b9364"
+
+		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(kymaName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given Network reference is created", func() {
+			net = cloudcontrolv1beta1.NewNetworkBuilder().WithGcpRef("proj-f-876", "my-net-94").Build()
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName))).
+				To(Succeed())
+		})
+
+		By("And Given Network state is Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net, NewObjActions(), HavingState(string(cloudcontrolv1beta1.StateReady))).
+				Should(Succeed())
+		})
+
+		gcpSubnet := &cloudcontrolv1beta1.GcpSubnet{}
+
+		By("And Given GcpSubnet using Network is created", func() {
+			kcpgcpsubnet.Ignore.AddName(gcpSubnetName)
+			Expect(CreateKcpGcpSubnet(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+				WithName(gcpSubnetName),
+				WithScope(kymaName),
+				WithRemoteRef("foo"),
+				WithKcpGcpSubnetNetwork(netObjName),
+				WithKcpGcpSubnetSpecCidr("10.204.0.0/16"),
+				WithKcpGcpSubnetPurposePrivate(),
+			)).To(Succeed())
+			// give it time to be watched and indexed
+			time.Sleep(500 * time.Millisecond)
+		})
+
+		By("When Network is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), net)).
+				To(Succeed())
+		})
+
+		By("Then Network has Warning state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), net,
+					NewObjActions(),
+					HavingState(string(cloudcontrolv1beta1.StateWarning)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then Network has DeleteWhileUsed Warning condition", func() {
+			cond := meta.FindStatusCondition(net.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			Expect(cond).ToNot(BeNil())
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleteWhileUsed))
+		})
+
+		By("When GcpSubnet is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), gcpSubnet)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet).
 				Should(Succeed())
 		})
 

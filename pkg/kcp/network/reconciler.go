@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -72,6 +73,7 @@ func (r *networkReconciler) newAction() composed.Action {
 				composed.If(
 					composed.MarkedForDeletionPredicate,
 					preventDeleteWhenUsedByIpRange,
+					preventDeleteWhenUsedByGcpSubnet,
 					preventDeleteWhenUsedByPeeringLocalNetwork,
 					preventDeleteWhenUsedByPeeringRemoteNetwork,
 				),

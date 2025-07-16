@@ -84,6 +84,8 @@ func (r *gcpSubnetReconciler) newFlow() composed.Action {
 		return composed.ComposeActions(
 			"privateSubnet",
 			actions.AddCommonFinalizer(),
+			loadNetwork,
+			waitNetworkReady,
 			loadSubnet,
 			loadConnectionPolicy,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
