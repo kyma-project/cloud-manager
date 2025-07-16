@@ -168,6 +168,13 @@ spec:
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
+              capacity:
+                anyOf:
+                - type: integer
+                - type: string
+                description: Provisioned Capacity
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               capacityGb:
                 description: Provisioned Capacity in GBs
                 type: integer

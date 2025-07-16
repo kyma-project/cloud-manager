@@ -2,11 +2,13 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -57,6 +59,9 @@ func shareCreate(ctx context.Context, st composed.State) (error, context.Context
 
 	state.ObjAsNfsInstance().Status.State = "Creating"
 	state.ObjAsNfsInstance().Status.CapacityGb = state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb
+	if qty, err := resource.ParseQuantity(fmt.Sprintf("%dGi", state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb)); err == nil {
+		state.ObjAsNfsInstance().Status.Capacity = qty
+	}
 
 	return composed.PatchStatus(state.ObjAsNfsInstance()).
 		ErrorLogMessage("Error updating CCEE NfsInstance state data with created shareId").

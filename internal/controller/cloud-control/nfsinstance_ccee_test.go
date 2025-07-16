@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -99,6 +100,10 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 		By("And Then NfsInstance has status.host set", func() {
 			Expect(nfsInstance.Status.Path).To(Equal(fmt.Sprintf("%s-1", theShare.ID)))
 			Expect(nfsInstance.Status.Host).To(Equal("10.100.0.10"))
+		})
+
+		By("And Then NfsInstance has status.capacity set", func() {
+			Expect(nfsInstance.Status.Capacity.String()).To(Equal("10Gi"))
 		})
 
 		By("And Then Share has access granted", func() {
