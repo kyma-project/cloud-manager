@@ -3,6 +3,7 @@ package cceenfsvolume
 import (
 	"context"
 	"fmt"
+
 	"github.com/elliotchance/pie/v2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -28,6 +29,11 @@ func statusCopy(ctx context.Context, st composed.State) (error, context.Context)
 
 	changed, addedConditions, removedConditions, newState := composed.StatusCopyConditionsAndState(state.KcpNfsInstance, state.ObjAsCceeNfsVolume())
 	changed = changed || state.ObjAsCceeNfsVolume().DeriveStateFromConditions()
+
+	if state.ObjAsCceeNfsVolume().Status.Capacity != state.KcpNfsInstance.Status.Capacity {
+		changed = true
+		state.ObjAsCceeNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
+	}
 
 	if !changed {
 		return nil, ctx

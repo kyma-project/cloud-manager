@@ -1339,6 +1339,7 @@ func (in *NfsInstanceStatus) DeepCopyInto(out *NfsInstanceStatus) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	out.Capacity = in.Capacity.DeepCopy()
 	if in.StateData != nil {
 		in, out := &in.StateData, &out.StateData
 		*out = make(map[string]string, len(*in))

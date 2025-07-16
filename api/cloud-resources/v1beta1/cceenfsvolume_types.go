@@ -19,6 +19,7 @@ package v1beta1
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -58,6 +59,10 @@ type CceeNfsVolumeStatus struct {
 
 	// +optional
 	State string `json:"state,omitempty"`
+
+	// Provisioned Capacity
+	// +optional
+	Capacity resource.Quantity `json:"capacity"`
 }
 
 // +kubebuilder:object:root=true
