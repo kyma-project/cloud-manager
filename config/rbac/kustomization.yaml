@@ -42,8 +42,8 @@ resources:
 - cloud-control_nuke_viewer_role.yaml
 - cloud-control_network_editor_role.yaml
 - cloud-control_network_viewer_role.yaml
-- cloud-resources_cceenfsvolume_editor_role.yaml
-- cloud-resources_cceenfsvolume_viewer_role.yaml
+- cloud-resources_sapnfsvolume_editor_role.yaml
+- cloud-resources_sapnfsvolume_viewer_role.yaml
 
 # For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
 # default, aiding admins in cluster management. Those roles are

@@ -106,7 +106,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
 		infra.GcpMock().FilestoreClientProvider(),
-		infra.CceeMock().NfsInstanceProvider(),
+		infra.SapMock().NfsInstanceProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	//VpcPeering

@@ -11,17 +11,17 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
+var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 
-	It("Scenario: KCP CCEE NfsInstance is created and deleted", func() {
+	It("Scenario: KCP SAP NfsInstance is created and deleted", func() {
 		name := "f7db16a8-0fb4-4f9d-b055-e360a10e1f36"
 		scope := &cloudcontrolv1beta1.Scope{}
 
-		By("Given AWS Scope exists", func() {
+		By("Given OpenStack Scope exists", func() {
 			// Tell Scope reconciler to ignore this Scope
 			kcpscope.Ignore.AddName(name)
 
-			Eventually(CreateScopeCcee).
+			Eventually(CreateScopeOpenStack).
 				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
 				Should(Succeed(), "failed creating Scope")
 		})
@@ -29,21 +29,21 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 		networkId := "273c6391-b934-4d14-9ebc-2da48c364bf4"
 		subnetId := "031a4b51-146b-455f-9243-770b791b1b28"
 
-		By("And Given CCEE network exists", func() {
-			infra.CceeMock().AddNetwork(
+		By("And Given SAP network exists", func() {
+			infra.SapMock().AddNetwork(
 				"wrong1",
 				"wrong1",
 			)
-			infra.CceeMock().AddNetwork(
+			infra.SapMock().AddNetwork(
 				networkId,
 				scope.Spec.Scope.OpenStack.VpcNetwork,
 			)
-			infra.CceeMock().AddNetwork(
+			infra.SapMock().AddNetwork(
 				"wrong2",
 				"wrong2",
 			)
 
-			infra.CceeMock().AddSubnet(
+			infra.SapMock().AddSubnet(
 				subnetId,
 				networkId,
 				scope.Spec.Scope.OpenStack.VpcNetwork,
@@ -59,27 +59,27 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 					WithName(name),
 					WithRemoteRef("foo"),
 					WithScope(name),
-					WithNfsInstanceCcee(10),
+					WithNfsInstanceSap(10),
 				).
 				Should(Succeed(), "failed creating NfsInstance")
 		})
 
 		var theShare *shares.Share
 
-		By("Then CCEE share is created", func() {
+		By("Then SAP share is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
-			x, err := infra.CceeMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
+			x, err := infra.SapMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
 			Expect(err).NotTo(HaveOccurred())
 			theShare = x
 		})
 
 		By("When Share is available", func() {
-			infra.CceeMock().SetShareStatus(theShare.ID, "available")
+			infra.SapMock().SetShareStatus(theShare.ID, "available")
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -91,7 +91,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 				Should(Succeed(), "expected NfsInstance to have Ready state, but it didn't")
 
 			// reload share
-			x, err := infra.CceeMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
+			x, err := infra.SapMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).NotTo(BeNil())
 			theShare = x
@@ -107,7 +107,7 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 		})
 
 		By("And Then Share has access granted", func() {
-			arr, err := infra.CceeMock().ListShareAccessRules(infra.Ctx(), theShare.ID)
+			arr, err := infra.SapMock().ListShareAccessRules(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(1), "expected one access right")
 			Expect(arr[0].AccessTo).To(Equal(scope.Spec.Scope.OpenStack.Network.Nodes))
@@ -129,14 +129,14 @@ var _ = Describe("Feature: KCP NfsInstance CCEE", func() {
 				Should(Succeed(), "expected NfsInstance not to exist (be deleted), but it still exists")
 		})
 
-		By("And Then CCEE Share does not exist", func() {
-			x, err := infra.CceeMock().GetShare(infra.Ctx(), theShare.ID)
+		By("And Then SAP Share does not exist", func() {
+			x, err := infra.SapMock().GetShare(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).To(BeNil())
 		})
 
-		By("And Then CCEE Share Network does not exist", func() {
-			x, err := infra.CceeMock().GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
+		By("And Then SAP Share Network does not exist", func() {
+			x, err := infra.SapMock().GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).To(BeNil())
 		})

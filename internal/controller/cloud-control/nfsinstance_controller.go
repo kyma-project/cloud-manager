@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -27,12 +28,12 @@ import (
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	cceeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/client"
-	cceenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance"
-	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
 	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
+	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -43,7 +44,7 @@ func SetupNfsInstanceReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
 	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
-	cceeProvider cceeclient.CceeClientProvider[cceenfsinstanceclient.Client],
+	sapProvider sapclient.SapClientProvider[sapnfsinstanceclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -56,7 +57,7 @@ func SetupNfsInstanceReconciler(
 			awsnfsinstance.NewStateFactory(awsSkrProvider),
 			azurenfsinstance.NewStateFactory(),
 			gcpnfsinstance.NewStateFactory(filestoreClientProvider, env),
-			cceenfsinstance.NewStateFactory(cceeProvider),
+			sapnfsinstance.NewStateFactory(sapProvider),
 		),
 	).SetupWithManager(kcpManager)
 }

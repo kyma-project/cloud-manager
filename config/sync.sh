@@ -80,10 +80,10 @@ cp $SCRIPT_DIR/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project
 cp $SCRIPT_DIR/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
 
-# ============= CCEE ================
+# ============= OpenStack ================
 
-# CCEE
-cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_cceenfsvolumes.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+# OpenStack
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumes.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 
 echo "CRD resources are copied to ./dist kcp and skr dirs"

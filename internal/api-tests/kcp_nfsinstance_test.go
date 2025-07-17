@@ -12,7 +12,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 
 	// OpenStack ============================================
 
-	It("Scenario: KCP NfsInstance CCEE without IpRange can be created", func() {
+	It("Scenario: KCP NfsInstance SAP without IpRange can be created", func() {
 		name := uuid.NewString()
 		var err error
 		obj := &cloudcontrolv1beta1.NfsInstance{
@@ -36,7 +36,7 @@ var _ = Describe("Feature: KCP NfsInstance", func() {
 		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
 	})
 
-	It("Scenario: KCP NfsInstance CCEE with IpRange can not be created", func() {
+	It("Scenario: KCP NfsInstance SAP with IpRange can not be created", func() {
 		name := uuid.NewString()
 		var err error
 		obj := &cloudcontrolv1beta1.NfsInstance{
