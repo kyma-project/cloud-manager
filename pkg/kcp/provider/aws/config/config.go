@@ -2,12 +2,14 @@ package config
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"time"
 )
 
 type AwsConfigStruct struct {
-	Default        AwsCreds `json:"default" yaml:"default"`
-	Peering        AwsCreds `json:"peering" yaml:"peering"`
-	BackupRoleName string   `json:"backupRoleName" yaml:"backupRoleName"`
+	Default                  AwsCreds      `json:"default" yaml:"default"`
+	Peering                  AwsCreds      `json:"peering" yaml:"peering"`
+	BackupRoleName           string        `json:"backupRoleName" yaml:"backupRoleName"`
+	EfsCapacityCheckInterval time.Duration `json:"efsCapacityCheckInterval" yaml:"efsCapacityCheckInterval"`
 }
 
 var AwsConfig = &AwsConfigStruct{}
@@ -58,6 +60,11 @@ func InitConfig(cfg config.Config) {
 			"backupRoleName",
 			config.DefaultScalar("CloudManagerBackupServiceRole"),
 			config.SourceEnv("AWS_BACKUP_ROLE_NAME"),
+		),
+		config.Path(
+			"efsCapacityCheckInterval",
+			config.DefaultScalar(1*time.Hour),
+			config.SourceEnv("AWS_EFS_CAPACITY_CHECK_INTERVAL"),
 		),
 	)
 

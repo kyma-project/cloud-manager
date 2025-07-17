@@ -41,7 +41,7 @@ func New(stateFactory StateFactory) composed.Action {
 					removeMountTargetsFromOtherVpcs,
 					updateStatus,
 
-					composed.StopAndForgetAction,
+					StopAndRequeueForCapacityAction(),
 				),
 				// delete
 				composed.NewCase(
@@ -61,10 +61,10 @@ func New(stateFactory StateFactory) composed.Action {
 
 					removeFinalizer,
 
-					composed.StopAndForgetAction,
+					StopAndRequeueForCapacityAction(),
 				),
 			), // switch
-			composed.StopAndForgetAction,
+			StopAndRequeueForCapacityAction(),
 		)(awsmeta.SetAwsAccountId(ctx, nfsState.Scope().Spec.Scope.Aws.AccountId), state)
 	}
 }

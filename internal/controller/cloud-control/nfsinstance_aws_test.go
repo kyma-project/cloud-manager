@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
 	"time"
 
@@ -92,6 +93,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 			theEfs = awsMock.GetFileSystemById(nfsInstance.Status.Id)
+			awsMock.SetFileSystemStatusCapacityById(nfsInstance.Status.Id, resource.MustParse("10Gi"))
 		})
 
 		By("When EFS is Available", func() {
@@ -112,6 +114,11 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Expect(nfsInstance.Status.Hosts[0]).To(Equal(fmt.Sprintf("%s.efs.%s.amazonaws.com", *theEfs.FileSystemId, scope.Spec.Region)))
 		})
 
+		By("And Then NfsInstance has status.capacity set", func() {
+			Expect(nfsInstance.Status.Capacity).To(Equal(resource.MustParse("10Gi")),
+				"expected NfsInstance.status.capacity to be set to 10Gi")
+		})
+
 		By("And Then EFS has mount targets", func() {
 			list, err := awsMock.DescribeMountTargets(infra.Ctx(), ptr.Deref(theEfs.FileSystemId, ""))
 			Expect(err).NotTo(HaveOccurred(), "failed listing EFS mount targets")
@@ -122,6 +129,18 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			for _, subnet := range iprange.Status.Subnets {
 				Expect(subnetList).Should(ContainElement(subnet.Id), fmt.Sprintf("expected mount target in %s subnet with id %s, but its missing", subnet.Zone, subnet.Id))
 			}
+		})
+
+		By("When EFS Size changes", func() {
+			awsMock.SetFileSystemStatusCapacityById(nfsInstance.Status.Id, resource.MustParse("20Gi"))
+		})
+		By("Then NfsInstance has updated capacity", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingNfsInstanceStatusCapacity("20Gi"),
+				).
+				Should(Succeed(), "expected NfsInstance to have updated capacity, but it didn't")
 		})
 
 		// DELETE

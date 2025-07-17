@@ -124,6 +124,7 @@ type NfsInstanceStatus struct {
 	OpIdentifier string `json:"opIdentifier,omitempty"`
 
 	// Provisioned Capacity in GBs
+	// Deprecated: Use Capacity instead
 	// +optional
 	CapacityGb int `json:"capacityGb"`
 

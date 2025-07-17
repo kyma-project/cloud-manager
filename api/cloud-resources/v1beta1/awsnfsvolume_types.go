@@ -89,6 +89,9 @@ type AwsNfsVolumeStatus struct {
 
 	// +optional
 	State string `json:"state,omitempty"`
+
+	// +optional
+	Capacity resource.Quantity `json:"capacity"`
 }
 
 // +kubebuilder:object:root=true
