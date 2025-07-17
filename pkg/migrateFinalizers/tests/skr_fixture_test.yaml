@@ -51,7 +51,7 @@ spec:
 ---
 
 apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: CceeNfsVolume
+kind: SapNfsVolume
 spec:
   capacityGb: 10
 

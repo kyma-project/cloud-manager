@@ -86,7 +86,7 @@ func WithNfsInstanceAws() ObjAction {
 	}
 }
 
-func WithNfsInstanceCcee(sizeGb int) ObjAction {
+func WithNfsInstanceSap(sizeGb int) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {

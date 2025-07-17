@@ -85,7 +85,6 @@ rules:
   - azurerwxvolumerestores
   - azurevpcdnslinks
   - azurevpcpeerings
-  - cceenfsvolumes
   - cloudresources
   - gcpnfsbackupschedules
   - gcpnfsvolumebackups
@@ -96,6 +95,7 @@ rules:
   - gcpsubnets
   - gcpvpcpeerings
   - ipranges
+  - sapnfsvolumes
   verbs:
   - create
   - delete
@@ -121,7 +121,6 @@ rules:
   - azurerwxvolumerestores/finalizers
   - azurevpcdnslinks/finalizers
   - azurevpcpeerings/finalizers
-  - cceenfsvolumes/finalizers
   - cloudresources/finalizers
   - gcpnfsbackupschedules/finalizers
   - gcpnfsvolumebackups/finalizers
@@ -132,6 +131,7 @@ rules:
   - gcpsubnets/finalizers
   - gcpvpcpeerings/finalizers
   - ipranges/finalizers
+  - sapnfsvolumes/finalizers
   verbs:
   - update
 - apiGroups:
@@ -151,7 +151,6 @@ rules:
   - azurerwxvolumerestores/status
   - azurevpcdnslinks/status
   - azurevpcpeerings/status
-  - cceenfsvolumes/status
   - cloudresources/status
   - gcpnfsbackupschedules/status
   - gcpnfsvolumebackups/status
@@ -162,6 +161,7 @@ rules:
   - gcpsubnets/status
   - gcpvpcpeerings/status
   - ipranges/status
+  - sapnfsvolumes/status
   verbs:
   - get
   - patch

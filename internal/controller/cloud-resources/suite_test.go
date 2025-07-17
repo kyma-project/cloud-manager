@@ -102,8 +102,8 @@ var _ = BeforeSuite(func() {
 	// AwsNfsVolume
 	Expect(SetupAwsNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
-	// CceeNfsVolume
-	Expect(SetupCceeNfsVolumeReconciler(infra.Registry())).
+	// SapNfsVolume
+	Expect(SetupSapNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// GcpNfsVolume
 	Expect(SetupGcpNfsVolumeReconciler(infra.Registry())).

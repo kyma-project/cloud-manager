@@ -58,7 +58,7 @@ func newKindsForSkr() []KindInfo {
 		newKindInfo(&cloudresourcesv1beta1.AwsVpcPeeringList{}, ""),
 		newKindInfo(&cloudresourcesv1beta1.AzureRedisInstanceList{}, ""),
 		newKindInfo(&cloudresourcesv1beta1.AzureVpcPeeringList{}, ""),
-		newKindInfo(&cloudresourcesv1beta1.CceeNfsVolumeList{}, ""),
+		newKindInfo(&cloudresourcesv1beta1.SapNfsVolumeList{}, ""),
 		newKindInfo(&cloudresourcesv1beta1.CloudResourcesList{}, ""),
 		newKindInfo(&cloudresourcesv1beta1.GcpNfsBackupScheduleList{}, ""),
 		newKindInfo(&cloudresourcesv1beta1.GcpNfsVolumeList{}, ""),

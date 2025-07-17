@@ -2,12 +2,13 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	cceenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance"
 	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
+	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -29,7 +30,7 @@ type nfsInstanceReconciler struct {
 	awsStateFactory   awsnfsinstance.StateFactory
 	azureStateFactory azurenfsinstance.StateFactory
 	gcpStateFactory   gcpnfsinstance.StateFactory
-	cceeStateFactory  cceenfsinstance.StateFactory
+	sapStateFactory   sapnfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
@@ -38,7 +39,7 @@ func NewNfsInstanceReconciler(
 	awsStateFactory awsnfsinstance.StateFactory,
 	azureStateFactory azurenfsinstance.StateFactory,
 	gcpStateFactory gcpnfsinstance.StateFactory,
-	cceeStateFactory cceenfsinstance.StateFactory,
+	sapStateFactory sapnfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -46,7 +47,7 @@ func NewNfsInstanceReconciler(
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
-		cceeStateFactory:     cceeStateFactory,
+		sapStateFactory:      sapStateFactory,
 	}
 }
 
@@ -81,7 +82,7 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
-					composed.NewCase(statewithscope.OpenStackProviderPredicate, cceenfsinstance.New(r.cceeStateFactory)),
+					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

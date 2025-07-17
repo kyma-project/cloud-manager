@@ -58,8 +58,6 @@ import (
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
-	cceeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/config"
-	cceenfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/nfsinstance/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
@@ -70,6 +68,8 @@ import (
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
+	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
+	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
@@ -298,8 +298,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupCceeNfsVolumeReconciler(skrRegistry); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CceeNfsVolume")
+	if err = cloudresourcescontroller.SetupSapNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolume")
 		os.Exit(1)
 	}
 
@@ -370,7 +370,7 @@ func main() {
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
 		gcpnfsinstanceclient.NewFilestoreClientProvider(),
-		cceenfsinstanceclient.NewClientProvider(),
+		sapnfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
@@ -526,7 +526,7 @@ func loadConfig() config.Config {
 
 	awsconfig.InitConfig(cfg)
 	azureconfig.InitConfig(cfg)
-	cceeconfig.InitConfig(cfg)
+	sapconfig.InitConfig(cfg)
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scope.InitConfig(cfg)

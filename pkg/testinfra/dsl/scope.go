@@ -218,7 +218,7 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 	return nil
 }
 
-func CreateScopeCcee(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
 	if scope == nil {
 		scope = &cloudcontrolv1beta1.Scope{}
 	}

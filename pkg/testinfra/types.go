@@ -6,8 +6,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
-	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
+	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,7 +47,7 @@ type InfraEnv interface {
 	AwsMock() awsmock.Server
 	GcpMock() gcpmock.Server
 	AzureMock() azuremock.Server
-	CceeMock() cceemock.Server
+	SapMock() sapmock.Server
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
 	Config() config.Config

@@ -3,11 +3,13 @@ package testinfra
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
-	cceemock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/ccee/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
+	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/looper"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
@@ -16,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 )
 
 var _ InfraEnv = &infraEnv{}
@@ -29,7 +30,7 @@ type infraEnv struct {
 	awsMock             awsmock.Server
 	gcpMock             gcpmock.Server
 	azureMock           azuremock.Server
-	cceeMock            cceemock.Server
+	sapMock             sapmock.Server
 	skrKymaRef          klog.ObjectRef
 	skrManager          skrmanager.SkrManager
 	runner              skrruntime.SkrRunner
@@ -61,8 +62,8 @@ func (ie *infraEnv) GcpMock() gcpmock.Server {
 
 func (ie *infraEnv) AzureMock() azuremock.Server { return ie.azureMock }
 
-func (ie *infraEnv) CceeMock() cceemock.Server {
-	return ie.cceeMock
+func (ie *infraEnv) SapMock() sapmock.Server {
+	return ie.sapMock
 }
 
 func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {
