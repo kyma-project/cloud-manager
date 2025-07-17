@@ -1,14 +1,15 @@
 package config
 
 import (
-	"github.com/fsnotify/fsnotify"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/stretchr/testify/assert"
-	"github.com/tidwall/gjson"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
 )
 
 func TestWatchBindWhenFileContentChanges(t *testing.T) {
@@ -70,9 +71,12 @@ func TestWatchRawWhenSymlinkReplaced(t *testing.T) {
 		_ = os.RemoveAll(dir)
 	}()
 
-	cwd, err := os.Getwd()
+	err = copyFile("testdata/file-v1.yaml", filepath.Join(dir, "file-v1.yaml"))
 	assert.NoError(t, err)
-	err = os.Symlink(filepath.Join(cwd, "testdata/file-v1.yaml"), filepath.Join(dir, "file.yaml"))
+	err = copyFile("testdata/file-v2.yaml", filepath.Join(dir, "file-v2.yaml"))
+	assert.NoError(t, err)
+
+	err = os.Symlink(filepath.Join(dir, "file-v1.yaml"), filepath.Join(dir, "file.yaml"))
 	assert.NoError(t, err)
 
 	// When config is created from the watched file
@@ -93,7 +97,7 @@ func TestWatchRawWhenSymlinkReplaced(t *testing.T) {
 	assert.Equal(t, "1", res.String())
 
 	// When symlink changes
-	err = os.Symlink(filepath.Join(cwd, "testdata/file-v2.yaml"), filepath.Join(dir, "file.yaml.tmp"))
+	err = os.Symlink(filepath.Join(dir, "file-v2.yaml"), filepath.Join(dir, "file.yaml.tmp"))
 	assert.NoError(t, err)
 	err = os.Rename(filepath.Join(dir, "file.yaml.tmp"), filepath.Join(dir, "file.yaml"))
 	assert.NoError(t, err)
