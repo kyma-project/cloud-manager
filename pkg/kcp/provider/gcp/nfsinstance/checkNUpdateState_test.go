@@ -194,7 +194,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-
+	protocol := "any nfs version"
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
 	testState.fsInstance = &file.Instance{
 		Name:  "test-gcp-nfs-volume-2",
@@ -209,6 +209,7 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 				CapacityGb: int64(gcpNfsInstance.Spec.Instance.Gcp.CapacityGb),
 			},
 		},
+		Protocol: protocol,
 	}
 	assert.Nil(suite.T(), err)
 	defer testState.FakeHttpServer.Close()
@@ -226,6 +227,9 @@ func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateReady() {
 	assert.Equal(suite.T(), v1beta1.ConditionTypeReady, updatedObject.Status.Conditions[0].Type)
 	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), v1beta1.ReasonReady, updatedObject.Status.Conditions[0].Reason)
+	protocol, ok := updatedObject.GetStateData(client.GcpNfsStateDataProtocol)
+	assert.True(suite.T(), ok)
+	assert.Equal(suite.T(), protocol, protocol)
 }
 
 func (suite *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
