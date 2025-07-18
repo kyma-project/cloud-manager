@@ -3,6 +3,7 @@ kind: kyma
 bdba:
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.2.5
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.3.0
 mend:
   language: golang-mod
   exclude:
