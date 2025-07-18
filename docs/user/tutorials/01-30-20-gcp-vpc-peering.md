@@ -63,7 +63,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
    ```shell
    export TAG_VALUE=None
-   gcloud resource-manager tags values create $TAG_VALUE --tag-key=$REMOTE_PROJECT_ID/$KYMA_SHOOT_ID
+   gcloud resource-manager tags values create $TAG_VALUE --parent=$REMOTE_PROJECT_ID/$KYMA_SHOOT_ID
    ```
 
 5. Fetch the network `selfLinkWithId` from the remote VPC network.
