@@ -44,6 +44,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		}).
 		ErrorLogMessage("Error updating KCP NfsInstance status after setting Ready condition").
 		SuccessLogMsg("KCP NfsInstance is ready").
-		SuccessError(composed.StopAndForget).
+		SuccessErrorNil().
 		Run(ctx, state)
 }

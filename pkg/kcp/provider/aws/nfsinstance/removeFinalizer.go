@@ -23,5 +23,5 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return composed.LogErrorAndReturn(err, "Error updating KCP NfsInstance after finalizer removed", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopAndForget, nil
+	return nil, nil
 }

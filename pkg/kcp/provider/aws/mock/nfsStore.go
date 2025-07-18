@@ -9,6 +9,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
 	"sync"
 )
@@ -16,6 +17,7 @@ import (
 type NfsConfig interface {
 	SetFileSystemLifeCycleState(id string, state efstypes.LifeCycleState)
 	GetFileSystemById(id string) *efstypes.FileSystemDescription
+	SetFileSystemStatusCapacityById(id string, capacity resource.Quantity)
 }
 
 type mountTargetItem struct {
@@ -64,6 +66,19 @@ func (s *nfsStore) SetFileSystemLifeCycleState(id string, state efstypes.LifeCyc
 	for _, fs := range s.fs {
 		if *fs.FileSystemId == id {
 			fs.LifeCycleState = state
+			return
+		}
+	}
+}
+
+func (s *nfsStore) SetFileSystemStatusCapacityById(id string, capacity resource.Quantity) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	for _, fs := range s.fs {
+		if *fs.FileSystemId == id {
+			fs.SizeInBytes = &efstypes.FileSystemSize{
+				Value: capacity.Value(),
+			}
 			return
 		}
 	}

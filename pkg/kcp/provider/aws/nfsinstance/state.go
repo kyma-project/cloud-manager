@@ -5,6 +5,7 @@ import (
 	"fmt"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
@@ -59,5 +60,15 @@ func newState(nfsInstanceState nfsinstancetypes.State, c awsnfsinstanceclient.Cl
 	return &State{
 		State:     nfsInstanceState,
 		awsClient: c,
+	}
+}
+
+func stopAndRequeueForCapacity() error {
+	return composed.StopWithRequeueDelay(awsconfig.AwsConfig.EfsCapacityCheckInterval)
+}
+
+func StopAndRequeueForCapacityAction() composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		return stopAndRequeueForCapacity(), nil
 	}
 }

@@ -3,6 +3,7 @@ package cloudresources
 import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -145,6 +146,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					kcpNfsInstance,
 					WithNfsInstanceStatusHost(""),
 					WithConditions(KcpReadyCondition()),
+					WithNfsInstanceStatusCapacity(resource.MustParse("12Ki")),
 				).
 				Should(Succeed())
 		})
@@ -160,6 +162,11 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
+		})
+		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
+			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
+				awsNfsVolume.Status.Capacity.String())
 		})
 
 		pv := &corev1.PersistentVolume{}
@@ -518,6 +525,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					kcpNfsInstance,
 					WithNfsInstanceStatusHost(""),
 					WithConditions(KcpReadyCondition()),
+					WithNfsInstanceStatusCapacity(resource.MustParse("12Ki")),
 				).
 				Should(Succeed())
 		})
@@ -533,6 +541,12 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
+		})
+
+		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
+			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
+				awsNfsVolume.Status.Capacity.String())
 		})
 
 		pv := &corev1.PersistentVolume{}
@@ -653,6 +667,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					kcpNfsInstance,
 					WithNfsInstanceStatusHost(""),
 					WithConditions(KcpReadyCondition()),
+					WithNfsInstanceStatusCapacity(resource.MustParse("12Ki")),
 				).
 				Should(Succeed())
 		})
@@ -668,6 +683,12 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
 				).
 				Should(Succeed())
+		})
+
+		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
+			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
+				awsNfsVolume.Status.Capacity.String())
 		})
 
 		pv := &corev1.PersistentVolume{}
