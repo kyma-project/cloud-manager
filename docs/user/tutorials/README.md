@@ -19,3 +19,5 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Using AwsRedisInstance Custom Resources](./01-40-10-aws-redis-instance.md)
   * [Using GcpRedisInstance Custom Resources](./01-40-20-gcp-redis-instance.md)
   * [Using AzureRedisInstance Custom Resources](./01-40-30-azure-redis-instance.md)
+* VPC DNS Link
+  * [Creating VPC DNS Link in Microsoft Azure](01-40-10-azure-vpc-dns-link.md)
