@@ -19,6 +19,7 @@ package v1beta1
 import (
 	"github.com/elliotchance/pie/v2"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -125,8 +126,13 @@ type GcpNfsVolumeStatus struct {
 	Hosts []string `json:"hosts,omitempty"`
 
 	// Capacity of the volume with Ready Condition
+	// Deprecated
 	// +optional
 	CapacityGb int `json:"capacityGb"`
+
+	// Provisioned capacity
+	// +optional
+	Capacity resource.Quantity `json:"capacity"`
 
 	// List of status conditions
 	// +optional
@@ -144,7 +150,7 @@ type GcpNfsVolumeStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.fileShareName"
-// +kubebuilder:printcolumn:name="Capacity (GB)",type="string",JSONPath=".status.capacityGb"
+// +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".status.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 

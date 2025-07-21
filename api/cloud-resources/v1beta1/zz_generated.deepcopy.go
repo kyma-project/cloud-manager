@@ -2342,6 +2342,7 @@ func (in *GcpNfsVolumeStatus) DeepCopyInto(out *GcpNfsVolumeStatus) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	out.Capacity = in.Capacity.DeepCopy()
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make([]v1.Condition, len(*in))

@@ -53,6 +53,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR GcpNfsVolume status with Ready condition")
 		state.ObjAsGcpNfsVolume().Status.CapacityGb = state.KcpNfsInstance.Status.CapacityGb
+		state.ObjAsGcpNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
 		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
@@ -67,6 +68,17 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			SuccessError(composed.StopWithRequeue). // have to continue and requeue to create PV
 			Run(ctx, state)
 	}
+
+	// This is necessary for the existing gcpNfsVolumes that only have capacityGb but missing capacity
+	if !state.ObjAsGcpNfsVolume().Status.Capacity.Equal(state.KcpNfsInstance.Status.Capacity) {
+		state.ObjAsGcpNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
+		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
+			SuccessErrorNil().
+			ErrorLogMessage("Error updating SKR GcpNfsVolume status with Capacity change").
+			SuccessLogMsg("Updated SKR GcpNfsVolume status with Capacity").
+			Run(ctx, state)
+	}
+
 	if kcpCondReady != nil && skrCondReady != nil {
 		// already with Ready condition
 		// continue with next actions to create PV

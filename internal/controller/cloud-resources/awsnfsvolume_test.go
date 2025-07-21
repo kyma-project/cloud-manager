@@ -164,7 +164,8 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed())
 		})
 		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
-			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+			Expect(awsNfsVolume.Status.Capacity.Equal(kcpNfsInstance.Status.Capacity)).To(BeTrue(), "Expected AwsNfsVolume capacity %s to match NfsInstance capacity %s", awsNfsVolume.Status.Capacity.String(), kcpNfsInstance.Status.Capacity.String())
+			Expect(awsNfsVolume.Status.Capacity).To(BeComparableTo(kcpNfsInstance.Status.Capacity),
 				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
 				awsNfsVolume.Status.Capacity.String())
 		})
@@ -544,7 +545,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		})
 
 		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
-			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+			Expect(awsNfsVolume.Status.Capacity).To(BeComparableTo(kcpNfsInstance.Status.Capacity),
 				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
 				awsNfsVolume.Status.Capacity.String())
 		})
@@ -686,7 +687,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		})
 
 		By("And Then SKR AwsNfsVolume status.capacity match nfsInstance status.capacity", func() {
-			Expect(awsNfsVolume.Status.Capacity).To(Equal(kcpNfsInstance.Status.Capacity),
+			Expect(awsNfsVolume.Status.Capacity).To(BeComparableTo(kcpNfsInstance.Status.Capacity),
 				"expected AwsNfsVolume to have capacity %s, but got %s", kcpNfsInstance.Status.Capacity.String(),
 				awsNfsVolume.Status.Capacity.String())
 		})

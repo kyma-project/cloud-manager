@@ -2,10 +2,11 @@ package cloudcontrol
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
-	"time"
-
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -109,6 +110,10 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			By("And KCP NfsVolume has Ready state", func() {
 				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 			})
+			By("And KCP NfsVolume has correct status.Capacity", func() {
+				Expect(gcpNfsInstance.Status.CapacityGb).To(Equal(DefaultGcpNfsInstanceCapacityGb))
+				Expect(gcpNfsInstance.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", DefaultGcpNfsInstanceCapacityGb))))
+			})
 		})
 
 		It("Scenario: GCP NFSVolume Updating", func() {
@@ -122,16 +127,6 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					).
 					Should(Succeed())
 			})
-			By("Then at first KCP NfsVolume will get SyncFilestore state", func() {
-				Eventually(func() (exists bool, err error) {
-					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
-					if err != nil {
-						return false, err
-					}
-					exists = gcpNfsInstance.Status.State == gcpclient.Updating
-					return exists, nil
-				}, timeout, interval)
-			})
 			By("And NfsVolume keeps Ready state", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
 			})
@@ -143,7 +138,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					}
 					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.StateReady
 					return exists, nil
-				}, timeout, interval)
+				}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP with Ready state")
 			})
 		})
 
@@ -157,16 +152,6 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					).
 					Should(Succeed())
 			})
-			By("Then at first KCP NfsVolume will get Deleted state", func() {
-				Eventually(func() (exists bool, err error) {
-					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
-					if err != nil {
-						return false, err
-					}
-					exists = gcpNfsInstance.Status.State == gcpclient.Deleted
-					return exists, nil
-				}, timeout, interval)
-			})
 			By("And NfsVolume keeps Ready state", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
 			})
@@ -175,7 +160,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
 					exists = apierrors.IsNotFound(err)
 					return exists, client.IgnoreNotFound(err)
-				}, timeout, interval)
+				}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP to be deleted")
 			})
 		})
 	})
@@ -276,7 +261,6 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					return exists, nil
 				}, timeout, interval).
 					Should(BeTrue(), "expected NfsInstance for GCP with Creating state")
-				//Expect(gcpNfsInstance.Status.State).To(Equal(client2.SyncFilestore))
 			})
 			By("And KCP NfsVolume will get Error condition", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)).To(BeTrue())
@@ -514,8 +498,8 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 				Eventually(CreateNfsInstance).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
-						WithName("gcp-nfs-instance-1"),
-						WithRemoteRef("gcp-nfs-instance-1"),
+						WithName("gcp-nfs-instance-3"),
+						WithRemoteRef("gcp-nfs-instance-3"),
 						WithScope(scope.Name),
 						WithIpRange(kcpIpRange.Name),
 						WithNfsInstanceGcp(scope.Spec.Region),
@@ -537,6 +521,10 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			By("And KCP NfsVolume has Ready state", func() {
 				Expect(gcpNfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 			})
+			By("And KCP NfsVolume has correct status.Capacity", func() {
+				Expect(gcpNfsInstance.Status.CapacityGb).To(Equal(DefaultGcpNfsInstanceCapacityGb))
+				Expect(gcpNfsInstance.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", DefaultGcpNfsInstanceCapacityGb))))
+			})
 		})
 
 		It("Scenario: GCP NFSVolume Updating", func() {
@@ -550,16 +538,6 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					).
 					Should(Succeed())
 			})
-			By("Then at first KCP NfsVolume will get SyncFilestore state", func() {
-				Eventually(func() (exists bool, err error) {
-					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
-					if err != nil {
-						return false, err
-					}
-					exists = gcpNfsInstance.Status.State == gcpclient.Updating
-					return exists, nil
-				}, timeout, interval)
-			})
 			By("And NfsVolume keeps Ready state", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
 			})
@@ -571,7 +549,19 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					}
 					exists = gcpNfsInstance.Status.State == cloudcontrolv1beta1.StateReady
 					return exists, nil
-				}, timeout, interval)
+				}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP with Ready state")
+			})
+			Eventually(func() (exists bool, err error) {
+				err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
+				if err != nil {
+					return false, err
+				}
+				exists = gcpNfsInstance.Status.CapacityGb == 2*DefaultGcpNfsInstanceCapacityGb
+				return exists, nil
+			}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP with updated capacity")
+			By("And KCP NfsVolume has correct status.Capacity", func() {
+				Expect(gcpNfsInstance.Status.CapacityGb).To(Equal(2 * DefaultGcpNfsInstanceCapacityGb))
+				Expect(gcpNfsInstance.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", 2*DefaultGcpNfsInstanceCapacityGb))))
 			})
 		})
 
@@ -585,16 +575,6 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					).
 					Should(Succeed())
 			})
-			By("Then at first KCP NfsVolume will get Deleted state", func() {
-				Eventually(func() (exists bool, err error) {
-					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
-					if err != nil {
-						return false, err
-					}
-					exists = gcpNfsInstance.Status.State == gcpclient.Deleted
-					return exists, nil
-				}, timeout, interval)
-			})
 			By("And NfsVolume keeps Ready state", func() {
 				Expect(meta.IsStatusConditionTrue(gcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
 			})
@@ -603,7 +583,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					err = infra.KCP().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsInstance), gcpNfsInstance)
 					exists = apierrors.IsNotFound(err)
 					return exists, client.IgnoreNotFound(err)
-				}, timeout, interval)
+				}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP to be deleted")
 			})
 		})
 	})

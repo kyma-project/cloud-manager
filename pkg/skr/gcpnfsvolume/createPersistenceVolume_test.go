@@ -55,7 +55,7 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
 
 	//Validate PV Capacity
-	expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+	expectedCapacity := gcpNfsVolume.Status.Capacity.Value()
 	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
 	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
