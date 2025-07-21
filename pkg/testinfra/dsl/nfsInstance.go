@@ -41,7 +41,7 @@ func WithNfsInstanceStatusCapacity(capacity resource.Quantity) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
-				if x.Status.Capacity != capacity {
+				if !x.Status.Capacity.Equal(capacity) {
 					x.Status.Capacity = capacity
 				}
 			}

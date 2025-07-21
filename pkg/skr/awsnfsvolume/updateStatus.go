@@ -24,7 +24,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	skrCondErr := meta.FindStatusCondition(state.ObjAsAwsNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeError)
 	skrCondReady := meta.FindStatusCondition(state.ObjAsAwsNfsVolume().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 
-	capacityChanged := state.ObjAsAwsNfsVolume().Status.Capacity != state.KcpNfsInstance.Status.Capacity
+	capacityChanged := !state.ObjAsAwsNfsVolume().Status.Capacity.Equal(state.KcpNfsInstance.Status.Capacity)
 	state.ObjAsAwsNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
 
 	if kcpCondErr != nil && skrCondErr == nil {

@@ -115,7 +115,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		})
 
 		By("And Then NfsInstance has status.capacity set", func() {
-			Expect(nfsInstance.Status.Capacity).To(Equal(resource.MustParse("10Gi")),
+			Expect(nfsInstance.Status.Capacity).To(BeComparableTo(resource.MustParse("10Gi")),
 				"expected NfsInstance.status.capacity to be set to 10Gi")
 		})
 

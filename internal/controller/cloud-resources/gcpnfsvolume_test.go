@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
@@ -210,6 +211,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has the capacity equal to provisioned value.")
 				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
+				Expect(gcpNfsVolume.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", gcpNfsVolume.Spec.CapacityGb))))
 			})
 
 			By("Then PersistentVolume is created in SKR", func() {
@@ -232,7 +234,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
 
 				By("And has the Capacity equal to requested value in GB.")
-				expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+				expectedCapacity := gcpNfsVolume.Status.Capacity.Value()
 				quantity := pv.Spec.Capacity["storage"]
 				pvQuantity, _ := quantity.AsInt64()
 				Expect(pvQuantity).To(Equal(expectedCapacity))
@@ -473,6 +475,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has status CapacityGb matching that of the SKR GcpNfsVolume Spec.")
 				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(updatedCapacityGb))
+				Expect(gcpNfsVolume.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", updatedCapacityGb))))
 			})
 
 			By("And Then SKR PersistentVolume is updated", func() {
@@ -806,6 +809,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has the capacity equal to provisioned value.")
 				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
+				Expect(gcpNfsVolume.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", gcpNfsVolume.Spec.CapacityGb))))
 			})
 
 			By("Then PersistentVolume is created in SKR", func() {
@@ -828,7 +832,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
 
 				By("And has the Capacity equal to requested value in GB.")
-				expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+				expectedCapacity := gcpNfsVolume.Status.Capacity.Value()
 				quantity := pv.Spec.Capacity["storage"]
 				pvQuantity, _ := quantity.AsInt64()
 				Expect(pvQuantity).To(Equal(expectedCapacity))
@@ -1083,6 +1087,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And has status CapacityGb matching that of the SKR GcpNfsVolume Spec.")
 				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(updatedCapacityGb))
+				Expect(gcpNfsVolume.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", updatedCapacityGb))))
 			})
 
 			By("And Then SKR PersistentVolume is updated", func() {

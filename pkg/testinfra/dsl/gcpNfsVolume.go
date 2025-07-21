@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -162,6 +163,7 @@ func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.NfsInstance)
 			x.Status.CapacityGb = capacity
+			x.Status.Capacity = resource.MustParse(fmt.Sprintf("%dGi", capacity))
 		},
 	}
 }

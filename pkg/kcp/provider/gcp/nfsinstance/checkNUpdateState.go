@@ -2,6 +2,8 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -54,12 +56,16 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 	prevState := nfsInstance.Status.State
 	nfsInstance.Status.State = state.curState
 	logger.Info("State Info", "curState", state.curState, "Operation", state.operation)
-
 	if state.curState == v1beta1.StateReady {
 		nfsInstance.Status.Hosts = state.fsInstance.Networks[0].IpAddresses
 		nfsInstance.Status.Host = pie.First(state.fsInstance.Networks[0].IpAddresses)
 		nfsInstance.Status.Path = state.ObjAsNfsInstance().Spec.Instance.Gcp.FileShareName
 		nfsInstance.Status.CapacityGb = int(state.fsInstance.FileShares[0].CapacityGb)
+		if qty, err := resource.ParseQuantity(fmt.Sprintf("%dGi", state.fsInstance.FileShares[0].CapacityGb)); err == nil {
+			nfsInstance.Status.Capacity = qty
+		} else {
+			logger.Error(err, "Error parsing capacity quantity")
+		}
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -52,6 +53,7 @@ func (suite *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 
 	//Update the capacity in status
 	nfsVol.Status.CapacityGb = nfsVol.Spec.CapacityGb
+	nfsVol.Status.Capacity = resource.MustParse(fmt.Sprintf("%dGi", nfsVol.Spec.CapacityGb))
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, &nfsVol)
 	assert.Nil(suite.T(), err)
 
@@ -73,7 +75,7 @@ func (suite *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
 
 	//Validate PV Capacity
-	expectedCapacity := int64(nfsVol.Status.CapacityGb) * 1024 * 1024 * 1024
+	expectedCapacity := nfsVol.Status.Capacity.Value()
 	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
 	assert.Equal(suite.T(), expectedCapacity, pvQuantity)

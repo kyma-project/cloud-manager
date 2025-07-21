@@ -18,8 +18,8 @@ spec:
     - jsonPath: .spec.scope.name
       name: Scope
       type: string
-    - jsonPath: .status.capacityGb
-      name: SizeGb
+    - jsonPath: .status.capacity
+      name: Size
       type: string
     - jsonPath: .status.state
       name: State
