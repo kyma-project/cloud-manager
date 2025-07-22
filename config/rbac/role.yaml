@@ -25,6 +25,8 @@ rules:
   - redisclusters
   - redisinstances
   - scopes
+  - subscriptions
+  - vpcnetworks
   - vpcpeerings
   verbs:
   - create
@@ -47,6 +49,8 @@ rules:
   - redisclusters/finalizers
   - redisinstances/finalizers
   - scopes/finalizers
+  - subscriptions/finalizers
+  - vpcnetworks/finalizers
   - vpcpeerings/finalizers
   verbs:
   - update
@@ -63,6 +67,8 @@ rules:
   - redisclusters/status
   - redisinstances/status
   - scopes/status
+  - subscriptions/status
+  - vpcnetworks/status
   - vpcpeerings/status
   verbs:
   - get

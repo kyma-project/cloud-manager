@@ -72,6 +72,7 @@ import (
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
@@ -461,6 +462,20 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
+		os.Exit(1)
+	}
+	if err = (&cloudcontrolcontroller.VpcNetworkReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupSubscriptionReconciler(
+		mgr,
+		subscriptionclient.NewAwsStsGardenClientProvider(),
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
