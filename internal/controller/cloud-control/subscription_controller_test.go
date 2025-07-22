@@ -218,7 +218,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(), HavingConditionReasonTrue(cloudcontrolv1beta1.ConditionTypeWarning, cloudcontrolv1beta1.ReasonDeleteWhileUsed)).
 				Should(Succeed())
 			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
-			// Used by: cloud-control.kyma-project.io/v1beta1/IpRange: f5591f18-a6d0-4864-b08c-5a874023be2e, cloud-control.kyma-project.io/v1beta1/Scope: f5591f18-a6d0-4864-b08c-5a874023be2e
+			// Used by: cloud-control.kyma-project.io/v1beta1/IpRange: f5591f18-a6d0-4864-b08c-5a874023be2., cloud-control.kyma-project.io/v1beta1/Scope: f5591f18-a6d0-4864-b08c-5a874023be..
 			// order of the listed resources is not guaranteed so it must be checked one by one with substring
 			Expect(cond.Message).To(ContainSubstring("Used by: "))
 			Expect(cond.Message).To(ContainSubstring(fmt.Sprintf("%s/IpRange: %s", cloudcontrolv1beta1.GroupVersion.String(), subscriptionName)))
