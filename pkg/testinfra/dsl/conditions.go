@@ -108,6 +108,27 @@ func HavingConditionTrue(conditionType string) ObjAssertion {
 	}
 }
 
+func HavingConditionReasonTrue(conditionType, reason string) ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(composed.ObjWithConditions); ok {
+			cond := meta.FindStatusCondition(*x.Conditions(), conditionType)
+			if cond == nil || cond.Reason != reason {
+				return fmt.Errorf(
+					"expected object %T %s/%s to have status condition %s/%s true, but following conditions found: %v",
+					obj,
+					obj.GetNamespace(), obj.GetName(),
+					conditionType,
+					reason,
+					pie.Map(*x.Conditions(), func(c metav1.Condition) string {
+						return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+					}),
+				)
+			}
+		}
+		return nil
+	}
+}
+
 func NotHavingConditionTrue(conditionType string) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(composed.ObjWithConditions); ok {

@@ -36,6 +36,8 @@ resources:
 - bases/cloud-resources.kyma-project.io_gcpredisclusters.yaml
 - bases/cloud-control.kyma-project.io_azurevnetlinks.yaml
 - bases/cloud-resources.kyma-project.io_azurevpcdnslinks.yaml
+- bases/cloud-control.kyma-project.io_vpcnetworks.yaml
+- bases/cloud-control.kyma-project.io_subscriptions.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

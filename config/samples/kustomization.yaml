@@ -34,4 +34,6 @@ resources:
 - cloud-resources_v1beta1_gcprediscluster.yaml
 - cloud-control_v1beta1_azurevnetlink.yaml
 - cloud-resources_v1beta1_azurevnetlink.yaml
+- cloud-control_v1beta1_vpcnetwork.yaml
+- cloud-control_v1beta1_subscription.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

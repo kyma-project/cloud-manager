@@ -1,36 +1,27 @@
-package scope
+package subscription
 
 import (
 	"context"
 
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 )
 
 func gardenerClientCreate(ctx context.Context, st composed.State) (error, context.Context) {
-	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-
-	logger.Info("Loading gardener credentials")
 
 	out, err := commongardener.CreateGardenerClient(ctx, commongardener.CreateGardenerClientInput{
 		KcpClient:                 state.Cluster().ApiReader(),
-		GardenerFallbackNamespace: ScopeConfig.GardenerNamespace,
+		GardenerFallbackNamespace: scope.ScopeConfig.GardenerNamespace,
 	})
-
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating gardener client", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error creating Gardener client for Subscription", composed.StopWithRequeue, ctx)
 	}
 
-	state.shootNamespace = out.Namespace
-
-	logger = logger.WithValues("shootNamespace", state.shootNamespace)
-	logger.Info("Detected shoot namespace")
-
+	state.gardenNamespace = out.Namespace
 	state.gardenerClient = out.GardenerClient
 	state.gardenK8sClient = out.GardenK8sClient
 
-	logger.Info("Gardener clients created")
-
-	return nil, composed.LoggerIntoCtx(ctx, logger)
+	return nil, ctx
 }

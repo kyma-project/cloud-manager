@@ -1,0 +1,28 @@
+apiVersion: cloud-control.kyma-project.io/v1beta1
+kind: Subscription
+metadata:
+  name: subscription-sample
+spec:
+  secretBindingName: secret-binding-22
+status:
+  state: Ready|Error|Warning
+  conditions:
+    - type: Ready
+      reason: Ready
+    - type: Error
+      reason: Error
+    - type: Warning
+      reason: DeleteWhileUsed
+      message: Used by ...
+  provider: gcp|aws|azure|openstack
+  subscriptionInfo:
+    gcp:
+      project: gcp-project-id
+    azure:
+      tenantId: azure-tenant-id
+      subscriptionId: azure-subscription-id
+    aws:
+      account: '1234556'
+    openStack:
+      domainName: os-domain-name
+      tenantName: os-tenant-name
