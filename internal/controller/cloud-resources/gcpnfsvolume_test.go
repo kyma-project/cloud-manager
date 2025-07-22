@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -212,6 +213,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 				By("And has the capacity equal to provisioned value.")
 				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
 				Expect(gcpNfsVolume.Status.Capacity).To(BeComparableTo(resource.MustParse(fmt.Sprintf("%dGi", gcpNfsVolume.Spec.CapacityGb))))
+
+				By("And has empty Protocol")
+				Expect(gcpNfsVolume.Status.Protocol).To(BeEmpty())
 			})
 
 			By("Then PersistentVolume is created in SKR", func() {
@@ -252,6 +256,9 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And it has defined cloud-manager finalizer")
 				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
+
+				By("And has empty mount options")
+				Expect(pv.Spec.MountOptions).To(BeEmpty())
 			})
 
 			By("Then PersistantVolumeClaim is created in SKR", func() {
@@ -1299,4 +1306,214 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			})
 		})
 	})
+
+	Describe("Scenario: SKR GcpNfsVolume Create with Zonal tier", func() {
+		//Define variables.
+		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		pv := &corev1.PersistentVolume{}
+
+		gcpNfsVolumeName := "gcp-nfs-volume-7"
+		nfsIpAddress := "10.11.12.17"
+		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
+			Name: "gcp-nfs-pv-7",
+			Labels: map[string]string{
+				"app": "gcp-nfs",
+			},
+			Annotations: map[string]string{
+				"volume": "gcp-nfs-volume-7",
+			},
+		}
+
+		pvc := &corev1.PersistentVolumeClaim{}
+		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+			Name: "gcp-nfs-pvc-7",
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+			Annotations: map[string]string{
+				"baz": "qux",
+			},
+		}
+
+		It("When GcpNfsVolume Create is called", func() {
+			Eventually(CreateGcpNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					WithName(gcpNfsVolumeName),
+					WithGcpNfsVolumeIpRange(skrIpRange.Name),
+					WithPvSpec(pvSpec),
+					WithPvcSpec(pvcSpec),
+					WithGcpNfsVolumeSpecTier(cloudresourcesv1beta1.ZONAL),
+				).
+				Should(Succeed())
+
+			By("Then GcpNfsVolume is created in SKR", func() {
+				// load GcpNfsVolume to get ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+						AssertGcpNfsVolumeHasId(),
+					).
+					Should(Succeed())
+			})
+
+			By("Then NfsInstance is created in KCP", func() {
+
+				// check KCP NfsInstance is created with name=gcpNfsVolume.ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+
+				By("And has label cloud-manager.kyma-project.io/kymaName")
+				Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+
+				By("And has label cloud-manager.kyma-project.io/remoteName")
+				Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(gcpNfsVolume.Name))
+
+				By("And has label cloud-manager.kyma-project.io/remoteNamespace")
+				Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(gcpNfsVolume.Namespace))
+
+				By("And has spec.scope.name equal to SKR Cluster kyma name")
+				Expect(kcpNfsInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+
+				By("And has spec.remoteRef matching to to SKR IpRange")
+				Expect(kcpNfsInstance.Spec.RemoteRef.Namespace).To(Equal(gcpNfsVolume.Namespace))
+				Expect(kcpNfsInstance.Spec.RemoteRef.Name).To(Equal(gcpNfsVolume.Name))
+			})
+
+			By("When KCP NfsInstance is switched to Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+						WithConditions(KcpReadyCondition()),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
+						WithKcpNfsStatusHost(nfsIpAddress),
+						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
+						WithKcpNfsStatusStateData(gcpclient.GcpNfsStateDataProtocol, string(gcpclient.FilestoreProtocolNFSv41)),
+					).
+					Should(Succeed())
+			})
+
+			By("Then SKR GcpNfsVolume will get to Ready condition", func() {
+				//amir
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed())
+
+				By("And has the File store Host")
+				Expect(gcpNfsVolume.Status.Hosts).To(HaveLen(1))
+
+				By("And has the capacity equal to provisioned value.")
+				Expect(gcpNfsVolume.Status.CapacityGb).To(Equal(gcpNfsVolume.Spec.CapacityGb))
+
+				By("And has the protocol equal to NFSv4.1")
+				Expect(gcpNfsVolume.Status.Protocol).To(Equal(string(gcpclient.FilestoreProtocolNFSv41)))
+			})
+
+			By("Then PersistentVolume is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pv,
+						NewObjActions(
+							WithName(pvSpec.Name),
+						),
+					).
+					Should(Succeed())
+
+				By("And has the Server Name matching the provisioned File server host.")
+				Expect(pv.Spec.PersistentVolumeSource.NFS.Server).To(Equal(gcpNfsVolume.Status.Hosts[0]))
+
+				By("And has the Volume Name matching the requested FileShare name.")
+				path := fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName)
+				Expect(pv.Spec.PersistentVolumeSource.NFS.Path).To(Equal(path))
+
+				By("And has the Capacity equal to requested value in GB.")
+				expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
+				quantity := pv.Spec.Capacity["storage"]
+				pvQuantity, _ := quantity.AsInt64()
+				Expect(pvQuantity).To(Equal(expectedCapacity))
+
+				By("And has defined cloud-manager default labels")
+				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+				By("And has the Labels matching the requested values in PvSpec.")
+				Expect(pv.Labels).Should(HaveKeyWithValue("app", pvSpec.Labels["app"]))
+
+				By("And has the Annotations matching the requested values in PvSpec.")
+				Expect(pvSpec.Annotations).To(Equal(pv.Annotations))
+
+				By("And it has defined cloud-manager finalizer")
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
+
+				By("And has mount options for NFSv4.1")
+				Expect(pv.Spec.MountOptions).To(ContainElement("nfsvers=4.1"))
+			})
+
+			By("Then PersistantVolumeClaim is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pvc,
+						NewObjActions(
+							WithName(pvcSpec.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
+
+				By("And its .spec.volumeName is PV name")
+				Expect(pvc.Spec.VolumeName).To(Equal(pv.GetName()))
+
+				By("And it has defined cloud-manager default labels")
+				Expect(pv.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
+				Expect(pv.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
+
+				By("And it has defined custom label for capacity")
+				storageCapacity := pv.Spec.Capacity["storage"]
+				Expect(pvc.Labels[cloudresourcesv1beta1.LabelStorageCapacity]).To(Equal(storageCapacity.String()))
+
+				By("And it has user defined custom labels")
+				for k, v := range pvcSpec.Labels {
+					Expect(pvc.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have label %s=%s", k, v))
+				}
+				By("And it has user defined custom annotations")
+				for k, v := range pvcSpec.Annotations {
+					Expect(pvc.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected PVC to have annotation %s=%s", k, v))
+				}
+
+				By("And it has defined cloud-manager finalizer")
+				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
+			})
+		})
+	})
+
 })

@@ -144,6 +144,9 @@ type GcpNfsVolumeStatus struct {
 	State GcpNfsVolumeState `json:"state,omitempty"`
 
 	Location string `json:"location,omitempty"`
+
+	// +optional
+	Protocol string `json:"protocol,omitempty"`
 }
 
 // +kubebuilder:object:root=true

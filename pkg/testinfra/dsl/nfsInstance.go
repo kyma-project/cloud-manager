@@ -18,7 +18,7 @@ const (
 	DefaultGcpNfsInstanceFileShareName = "vol1"
 	DefaultGcpNfsInstanceCapacityGb    = 1024
 	DefaultGcpNfsInstanceConnectMode   = "PRIVATE_SERVICE_ACCESS"
-	DefaultGcpNfsInstanceTier          = "BASIC_HDD"
+	DefaultGcpNfsInstanceTier          = "ZONAL"
 )
 
 func WithNfsInstanceStatusHost(host string) ObjStatusAction {

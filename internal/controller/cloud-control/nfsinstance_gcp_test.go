@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"time"
 
@@ -140,6 +141,21 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 					return exists, nil
 				}, timeout, interval).Should(BeTrue(), "expected NfsInstance for GCP with Ready state")
 			})
+			if feature.Nfs41Gcp.Value(context.Background()) {
+				By("And NfsVolume has NFSv4.1 protocol", func() {
+					protocol, ok := gcpNfsInstance.GetStateData(gcpclient.GcpNfsStateDataProtocol)
+					Expect(ok).To(BeTrue())
+					Expect(string(gcpclient.FilestoreProtocolNFSv41)).To(Equal(protocol))
+				})
+			} else {
+				By("And NfsVolume does not have NFSv4.1 protocol", func() {
+					protocol, ok := gcpNfsInstance.GetStateData(gcpclient.GcpNfsStateDataProtocol)
+					if ok {
+						Expect(string(gcpclient.FilestoreProtocolNFSv41)).To(Not(Equal(protocol)))
+					}
+					// If the protocol is not set, it means NFSv3 is used
+				})
+			}
 		})
 
 		It("Scenario: GCP NFSVolume Deletion", func() {

@@ -56,6 +56,10 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		state.ObjAsGcpNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
+		protocol, ok := state.KcpNfsInstance.GetStateData(client.GcpNfsStateDataProtocol)
+		if ok {
+			state.ObjAsGcpNfsVolume().Status.Protocol = protocol
+		}
 		return composed.PatchStatus(state.ObjAsGcpNfsVolume()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,

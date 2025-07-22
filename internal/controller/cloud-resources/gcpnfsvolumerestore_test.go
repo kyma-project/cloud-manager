@@ -62,7 +62,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore", func() {
 					infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume,
 					WithName(skrGcpNfsVolumeName),
 					WithGcpNfsVolumeIpRange(skrIpRangeName),
-					WithGcpNfsValues(),
 				).
 				Should(Succeed())
 		})

@@ -6,6 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -318,6 +319,141 @@ func (suite *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteError() {
 	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
 	assert.Equal(suite.T(), v1beta1.ReasonGcpError, updatedObject.Status.Conditions[0].Reason)
 	assert.NotEqual(suite.T(), "", updatedObject.Status.Conditions[0].Message)
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_BasicHdd() {
+	gcpNfsInstance := getGcpNfsInstance()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Empty(suite.T(), instance.Protocol)
+	assert.Equal(suite.T(), testState.toInstance(), instance)
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_BasicSsd() {
+	gcpNfsInstance := getGcpNfsInstance()
+	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.BASIC_SSD
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Empty(suite.T(), instance.Protocol)
+	assert.Equal(suite.T(), testState.toInstance(), instance)
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Zonal_Without_FF() {
+	gcpNfsInstance := getGcpNfsInstance()
+	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.ZONAL
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Empty(suite.T(), instance.Protocol)
+	assert.Equal(suite.T(), testState.toInstance(), instance)
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Zonal_With_FF() {
+
+	gcpNfsInstance := getGcpNfsInstance()
+	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.ZONAL
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = feature.Initialize(ctx, logr.Discard(), feature.WithFile("testdata/nfs41Enabled.yaml"))
+	assert.NoError(suite.T(), err)
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Equal(suite.T(), string(gcpclient.FilestoreProtocolNFSv41), instance.Protocol)
+	instance.Protocol = ""
+	assert.Equal(suite.T(), testState.toInstance(), instance)
+	_ = feature.Initialize(ctx, logr.Discard())
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Regional_Without_FF() {
+	gcpNfsInstance := getGcpNfsInstance()
+	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.REGIONAL
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Empty(suite.T(), instance.Protocol)
+	assert.Equal(suite.T(), testState.toInstance(), instance)
+}
+
+func (suite *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Regional_With_FF() {
+	gcpNfsInstance := getGcpNfsInstance()
+	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.REGIONAL
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request.")
+	}))
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(suite.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err = feature.Initialize(ctx, logr.Discard(), feature.WithFile("testdata/nfs41Enabled.yaml"))
+	assert.NoError(suite.T(), err)
+	//Get state object with GcpNfsVolume
+
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(suite.T(), err)
+	defer testState.FakeHttpServer.Close()
+	instance := getInstanceWithProtocol(ctx, testState.State)
+	assert.Equal(suite.T(), string(gcpclient.FilestoreProtocolNFSv41), instance.Protocol)
+	instance.Protocol = ""
+	assert.Equal(suite.T(), testState.toInstance(), instance)
 }
 
 func TestSyncNfsInstance(t *testing.T) {

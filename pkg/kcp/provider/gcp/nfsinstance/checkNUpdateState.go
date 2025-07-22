@@ -66,6 +66,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 		} else {
 			logger.Error(err, "Error parsing capacity quantity")
 		}
+		nfsInstance.SetStateData(client.GcpNfsStateDataProtocol, state.fsInstance.Protocol)
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeReady,
