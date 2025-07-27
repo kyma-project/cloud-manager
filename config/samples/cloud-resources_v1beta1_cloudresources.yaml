@@ -2,4 +2,5 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: CloudResources
 metadata:
   name: cloudresources-sample
+  namespace: kyma-system
 spec: {}
