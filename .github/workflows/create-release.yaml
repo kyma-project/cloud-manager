@@ -25,19 +25,19 @@ jobs:
           fetch-depth: 0
       
       - name: Create changelog
-        run: ./hack/create_changelog.sh $REPOSITORY $RELEASE_TAG
+        run: ./.github/workflows/scripts/create_changelog.sh $REPOSITORY $RELEASE_TAG
 
       - name: Create draft release
         id: create-draft
         run: |
-          RELEASE_ID=$(./hack/create_draft_release.sh $REPOSITORY $RELEASE_TAG)
+          RELEASE_ID=$(./.github/workflows/scripts/create_draft_release.sh $REPOSITORY $RELEASE_TAG)
           echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
 
       - name: Get manifest and example
         run: |
           MANIFEST_FILEPATH=./config/crd/bases/cloud-resources.kyma-project.io_cloudresources.yaml
           EXAMPLE_FILEPATH=./config/samples/cloud-resources_v1beta1_cloudresources.yaml
-          ./hack/upload_manifests.sh $REPOSITORY $MANIFEST_FILEPATH $EXAMPLE_FILEPATH ${{steps.create-draft.outputs.release_id}}
+          ./.github/workflows/scripts/upload_manifests.sh $REPOSITORY $MANIFEST_FILEPATH $EXAMPLE_FILEPATH ${{steps.create-draft.outputs.release_id}}
       
       - name: Add lightweight tag
         run: |
