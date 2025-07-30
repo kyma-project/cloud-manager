@@ -34,6 +34,8 @@ jobs:
             else
               echo "Changes found. Commiting to repo"
               echo "bumped sec-scanners-config.yaml to ${RELEASE_TAG}"
+              git config --global user.email "test@test.com"
+              git config --global user.name "Test Test"
               git add ./sec-scanners-config.yaml
               git commit -m "bumped sec-scanners-config.yaml to ${RELEASE_TAG}"
               git push
