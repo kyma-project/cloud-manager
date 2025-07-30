@@ -1,0 +1,44 @@
+name: Bump version
+on:
+  workflow_dispatch:
+    inputs:
+      version: # github.event.inputs.version
+        description: 'Release version ( e.g. "2.1.3")'
+        default: ""
+        required: true
+
+jobs:
+  bump-version:
+      name: Bump version
+      runs-on: ubuntu-latest
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        RELEASE_TAG: ${{github.event.inputs.VERSION}}
+        REPOSITORY: ${{github.repository}}
+      
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        
+        - name: Generate sec-scanners-config
+          run: |
+            echo "Creating sec-scanners-config.yaml"
+            ./.github/workflows/scripts/render-sec-scanners-config.sh ${RELEASE_TAG}
+        
+        - name: Check if generated sec-scanners-config differs and commit
+          run: |
+            if [ -z "$(git status --porcelain)" ]; then
+               echo "No changes found"
+            else
+              echo "Changes found. Commiting to repo"
+              echo "bumped sec-scanners-config.yaml to ${RELEASE_TAG}"
+              git add ./sec-scanners-config.yaml
+              git commit -m "bumped sec-scanners-config.yaml to ${RELEASE_TAG}"
+              git push
+            fi
+        
+
+            
+
