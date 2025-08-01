@@ -3,13 +3,15 @@ package client
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 var (
@@ -111,15 +113,16 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 
 	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", MockAwsRegion, MockAwsAccount, rPointId)
 	rPoint := backup.DescribeRecoveryPointOutput{
-		BackupVaultArn:   vault.BackupVaultArn,
-		BackupVaultName:  vault.BackupVaultName,
-		CreationDate:     ptr.To(time.Now()),
-		IamRoleArn:       ptr.To(params.IamRoleArn),
-		IsEncrypted:      false,
-		RecoveryPointArn: ptr.To(arn),
-		ResourceArn:      ptr.To(params.ResourceArn),
-		ResourceType:     nil,
-		Status:           backuptypes.RecoveryPointStatusCompleted,
+		BackupVaultArn:    vault.BackupVaultArn,
+		BackupVaultName:   vault.BackupVaultName,
+		CreationDate:      ptr.To(time.Now()),
+		IamRoleArn:        ptr.To(params.IamRoleArn),
+		IsEncrypted:       false,
+		RecoveryPointArn:  ptr.To(arn),
+		ResourceArn:       ptr.To(params.ResourceArn),
+		ResourceType:      nil,
+		Status:            backuptypes.RecoveryPointStatusCompleted,
+		BackupSizeInBytes: ptr.To(rand.Int64N(10240)),
 	}
 
 	job := backup.DescribeBackupJobOutput{
