@@ -33,7 +33,7 @@ func deleteAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 	//If failed, update status with error state.
 	if err != nil && !state.awsClient.IsNotFound(err) {
 		backup.Status.State = cloudresourcesv1beta1.StateError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -47,7 +47,7 @@ func deleteAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	//update status with deleting state.
 	backup.Status.State = cloudresourcesv1beta1.StateDeleting
-	return composed.UpdateStatus(backup).
+	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)

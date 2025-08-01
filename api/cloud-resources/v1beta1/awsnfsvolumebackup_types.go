@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -98,6 +99,14 @@ type AwsNfsVolumeBackupStatus struct {
 	// IdempotencyToken
 	// +optional
 	IdempotencyToken string `json:"idempotencyToken"`
+
+	// Capacity
+	// +optional
+	Capacity resource.Quantity `json:"capacity"`
+
+	// LastCapacityUpdate specifies the time when the last time backup size got updated
+	// +optional
+	LastCapacityUpdate *metav1.Time `json:"lastCapacityUpdate,omitempty"`
 }
 
 // +kubebuilder:object:root=true

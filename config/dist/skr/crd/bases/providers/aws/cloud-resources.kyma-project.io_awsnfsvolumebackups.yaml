@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   name: awsnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -85,6 +85,13 @@ spec:
             status:
               description: AwsNfsVolumeBackupStatus defines the observed state of AwsNfsVolumeBackup
               properties:
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: Capacity
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
                 conditions:
                   description: List of status conditions
                   items:
@@ -152,6 +159,10 @@ spec:
                   type: string
                 jobId:
                   description: AWS Backup Job Identifier
+                  type: string
+                lastCapacityUpdate:
+                  description: LastCapacityUpdate specifies the time when the last time backup size got updated
+                  format: date-time
                   type: string
                 state:
                   type: string

@@ -1,7 +1,9 @@
 package awsnfsvolumebackup
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -106,5 +108,25 @@ func (s *State) GetTags() map[string]string {
 		common.TagCloudManagerName: s.Name().String(),
 		common.TagScope:            s.Scope().Name,
 		common.TagShoot:            s.Scope().Spec.ShootName,
+	}
+}
+
+func (s *State) isTimeForCapacityUpdate() bool {
+	backup := s.ObjAsAwsNfsVolumeBackup()
+
+	lastUpdate := backup.Status.LastCapacityUpdate
+	configInterval := awsconfig.AwsConfig.EfsCapacityCheckInterval
+	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
+	fmt.Println("Capacity Update Due:", lastUpdate, ", ", configInterval, ", ", capacityUpdateDue)
+	return capacityUpdateDue
+}
+
+func stopAndRequeueForCapacity() error {
+	return composed.StopWithRequeueDelay(awsconfig.AwsConfig.EfsCapacityCheckInterval)
+}
+
+func StopAndRequeueForCapacityAction() composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		return stopAndRequeueForCapacity(), nil
 	}
 }

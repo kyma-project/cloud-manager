@@ -25,7 +25,7 @@ func setIdempotencyToken(ctx context.Context, st composed.State) (error, context
 
 	logger.WithValues("AwsBackup", backup.Name).Info("Setting the Idempotency Token")
 	backup.Status.IdempotencyToken = uuid.NewString()
-	return composed.UpdateStatus(state.ObjAsAwsNfsVolumeBackup()).
+	return composed.PatchStatus(state.ObjAsAwsNfsVolumeBackup()).
 		ErrorLogMessage("Failed to set Idempotency Token").
 		SuccessLogMsg("Set the idempotency token").
 		SuccessError(composed.StopWithRequeue).
