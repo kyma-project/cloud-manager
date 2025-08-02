@@ -87,7 +87,7 @@ func (s *State) GetRecoveryPointArn() string {
 		return ""
 	}
 	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s",
-		s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, id)
+		s.GetBackupLocation(), s.Scope().Spec.Scope.Aws.AccountId, id)
 	return arn
 }
 
@@ -117,8 +117,16 @@ func (s *State) isTimeForCapacityUpdate() bool {
 	lastUpdate := backup.Status.LastCapacityUpdate
 	configInterval := awsconfig.AwsConfig.EfsCapacityCheckInterval
 	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
-	fmt.Println("Capacity Update Due:", lastUpdate, ", ", configInterval, ", ", capacityUpdateDue)
 	return capacityUpdateDue
+}
+
+func (s *State) GetBackupLocation() string {
+	backup := s.ObjAsAwsNfsVolumeBackup()
+
+	if len(backup.Spec.Location) > 0 {
+		return backup.Spec.Location
+	}
+	return s.Scope().Spec.Region
 }
 
 func stopAndRequeueForCapacity() error {

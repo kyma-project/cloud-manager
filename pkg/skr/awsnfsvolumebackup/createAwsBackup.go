@@ -43,7 +43,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	//Update the status with details.
 	backup.Status.JobId = ptr.Deref(res.BackupJobId, "")
-	backup.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
+	backup.Status.Location, _, backup.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
 	backup.Status.State = cloudresourcesv1beta1.StateCreating
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
