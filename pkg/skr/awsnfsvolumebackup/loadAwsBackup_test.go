@@ -2,13 +2,14 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadAwsBackupSuite struct {
@@ -110,7 +111,7 @@ func (suite *loadAwsBackupSuite) TestLoadAwsBackupAfterCreatingBackup() {
 
 	//update jobId and Id fields with empty values
 	obj.Status.State = cloudresourcesv1beta1.StateReady
-	obj.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
+	obj.Status.Location, _, obj.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
 	obj.Status.JobId = ptr.Deref(res.BackupJobId, "")
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
 	suite.Nil(err)

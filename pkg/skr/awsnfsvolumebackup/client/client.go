@@ -3,17 +3,18 @@ package client
 import (
 	"context"
 	"errors"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
-	"regexp"
 )
 
 type LocalClient interface {
 	IsNotFound(err error) bool
 	IsAlreadyExists(err error) bool
-	ParseRecoveryPointId(recoveryPointArn string) string
+	ParseRecoveryPointId(recoveryPointArn string) (string, string, string)
 }
 
 type Client interface {
@@ -92,9 +93,11 @@ func (c *localClient) IsAlreadyExists(err error) bool {
 	return errors.As(err, &alreadyExistsException)
 }
 
-func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) string {
+func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) (string, string, string) {
 	match := c.recoveryPointRe.FindStringSubmatch(recoveryPointArn)
-	return match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
+	return match[c.recoveryPointRe.SubexpIndex("Region")],
+		match[c.recoveryPointRe.SubexpIndex("AccountID")],
+		match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
