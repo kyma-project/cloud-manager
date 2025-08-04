@@ -29,7 +29,7 @@ func createDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, c
 			},
 		},
 		Spec: cloudresourcesv1beta1.GcpSubnetSpec{
-			Cidr: "10.250.12.0/22",
+			Cidr: "10.251.0.0/22",
 		},
 	}
 
