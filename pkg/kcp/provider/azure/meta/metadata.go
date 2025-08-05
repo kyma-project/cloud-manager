@@ -215,6 +215,10 @@ func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (er
 
 	message, isWarning := GetErrorMessage(b.err, b.defaultMessage)
 
+	if b.err != nil {
+		logger.Error(b.err, message)
+	}
+
 	statusState := string(cloudcontrolv1beta1.StateError)
 
 	if isWarning {
