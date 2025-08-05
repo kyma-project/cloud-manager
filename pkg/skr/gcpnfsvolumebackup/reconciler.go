@@ -66,7 +66,7 @@ func (r *Reconciler) newAction() composed.Action {
 		removeFinalizer,
 		updateCapacity,
 		updateStatus,
-		composed.StopAndForgetAction,
+		StopAndRequeueForCapacityAction(),
 	)
 }
 

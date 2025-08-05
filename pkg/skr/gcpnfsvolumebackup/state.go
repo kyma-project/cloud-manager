@@ -83,3 +83,13 @@ func (s *State) isTimeForCapacityUpdate() bool {
 	return capacityUpdateDue
 
 }
+
+func stopAndRequeueForCapacity() error {
+	return composed.StopWithRequeueDelay(gcpclient.GcpCapacityCheckInterval)
+}
+
+func StopAndRequeueForCapacityAction() composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		return stopAndRequeueForCapacity(), nil
+	}
+}
