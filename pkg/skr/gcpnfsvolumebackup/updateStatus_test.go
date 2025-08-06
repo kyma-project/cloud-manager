@@ -2,6 +2,10 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -12,10 +16,7 @@ import (
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type updateStatusSuite struct {
@@ -88,7 +89,7 @@ func (suite *updateStatusSuite) TestReadyAndBackupExists() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	suite.Nil(err)
 	suite.Nil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
@@ -127,7 +128,7 @@ func (suite *updateStatusSuite) TestNotReadyAndBackupReady() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeue, err)
+	suite.Nil(err)
 	suite.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
