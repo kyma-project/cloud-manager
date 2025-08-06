@@ -1,18 +1,20 @@
 package keb
 
 import (
+	"fmt"
+
 	gardener "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	registrycache "github.com/kyma-project/kim-snatch/api/v1beta1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type State string
-
-const (
-	ReadyState State = "Ready"
-	ErrorState State = "Error"
-)
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="STATE",type=string,JSONPath=`.status.state`
+//+kubebuilder:printcolumn:name="SHOOT-NAME",type=string,JSONPath=`.metadata.labels.kyma-project\.io/shoot-name`
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 const (
 	Finalizer                              = "runtime-controller.infrastructure-manager.kyma-project.io/deletion-hook"
@@ -86,6 +88,13 @@ const (
 	ConditionReasonSeedClusterPostProcessingError = RuntimeConditionReason("SeedClusterPostProcessingErr")
 )
 
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Provider",type="string",JSONPath=".spec.shoot.provider.type"
+//+kubebuilder:printcolumn:name="Region",type="string",JSONPath=".spec.shoot.region"
+//+kubebuilder:printcolumn:name="STATE",type=string,JSONPath=`.status.state`
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
 // Runtime is the Schema for the runtimes API
 type Runtime struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -94,6 +103,8 @@ type Runtime struct {
 	Spec   RuntimeSpec   `json:"spec,omitempty"`
 	Status RuntimeStatus `json:"status,omitempty"`
 }
+
+//+kubebuilder:object:root=true
 
 // RuntimeList contains a list of Runtime
 type RuntimeList struct {
@@ -201,4 +212,114 @@ type Ingress struct {
 // Egress filtering is a default filtering mode for `shoot-networking-fitler` extension.
 type Egress struct {
 	Enabled bool `json:"enabled"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Runtime{}, &RuntimeList{})
+}
+
+func (k *Runtime) UpdateStateReady(c RuntimeConditionType, r RuntimeConditionReason, msg string) {
+	k.Status.State = RuntimeStateReady
+	condition := metav1.Condition{
+		Type:               string(c),
+		Status:             "True",
+		LastTransitionTime: metav1.Now(),
+		Reason:             string(r),
+		Message:            msg,
+	}
+	meta.SetStatusCondition(&k.Status.Conditions, condition)
+}
+
+func (k *Runtime) UpdateStateDeletion(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
+	if status != "False" {
+		k.Status.State = RuntimeStateTerminating
+	} else {
+		k.Status.State = RuntimeStateFailed
+	}
+
+	condition := metav1.Condition{
+		Type:               string(c),
+		Status:             metav1.ConditionStatus(status),
+		LastTransitionTime: metav1.Now(),
+		Reason:             string(r),
+		Message:            msg,
+	}
+	meta.SetStatusCondition(&k.Status.Conditions, condition)
+}
+
+func (k *Runtime) UpdateStatePending(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
+	if status == "False" {
+		k.Status.State = RuntimeStateFailed
+	} else {
+		k.Status.State = RuntimeStatePending
+	}
+
+	condition := metav1.Condition{
+		Type:               string(c),
+		Status:             metav1.ConditionStatus(status),
+		LastTransitionTime: metav1.Now(),
+		Reason:             string(r),
+		Message:            msg,
+	}
+	meta.SetStatusCondition(&k.Status.Conditions, condition)
+}
+
+func (k *Runtime) UpdateStateProvisioningCompleted() {
+	k.Status.ProvisioningCompleted = true
+}
+
+func (k *Runtime) IsProvisioningCompletedStatusSet() bool {
+	return k.Status.ProvisioningCompleted
+}
+
+func (k *Runtime) IsStateWithConditionSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason) bool {
+	if k.Status.State != runtimeState {
+		return false
+	}
+
+	return k.IsConditionSet(c, r)
+}
+
+func (k *Runtime) IsConditionSet(c RuntimeConditionType, r RuntimeConditionReason) bool {
+	condition := meta.FindStatusCondition(k.Status.Conditions, string(c))
+	if condition != nil && condition.Reason == string(r) {
+		return true
+	}
+	return false
+}
+
+func (k *Runtime) IsStateWithConditionAndStatusSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
+	if k.Status.State != runtimeState {
+		return false
+	}
+
+	return k.IsConditionSetWithStatus(c, r, s)
+}
+
+func (k *Runtime) IsConditionSetWithStatus(c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
+	condition := meta.FindStatusCondition(k.Status.Conditions, string(c))
+	if condition != nil && condition.Reason == string(r) && condition.Status == s {
+		return true
+	}
+	return false
+}
+
+func (k *Runtime) ValidateRequiredLabels() error {
+	var requiredLabelKeys = []string{
+		LabelKymaInstanceID,
+		LabelKymaRuntimeID,
+		LabelKymaRegion,
+		LabelKymaName,
+		LabelKymaBrokerPlanID,
+		LabelKymaBrokerPlanName,
+		LabelKymaGlobalAccountID,
+		LabelKymaSubaccountID,
+	}
+
+	for _, key := range requiredLabelKeys {
+		if k.Labels[key] == "" {
+			return fmt.Errorf("missing required label %s", key)
+		}
+	}
+	return nil
 }

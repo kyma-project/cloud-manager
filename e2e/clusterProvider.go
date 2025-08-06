@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"maps"
 	"sync"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
@@ -21,6 +22,7 @@ import (
 type ClusterProvider interface {
 	KCP(ctx context.Context) (*Cluster, error)
 	SKR(ctx context.Context, id string) (*Cluster, error)
+	KnownSkrClusters() map[string]*Cluster
 	Garden(ctx context.Context) (*Cluster, error)
 }
 
@@ -30,13 +32,17 @@ var _ ClusterProvider = &defaultClusterProvider{}
 // * KCP loads from the KUBECONFIG environment variable
 // * SKR loads from the SKR_KUBECONFIG environment variable
 type defaultClusterProvider struct {
-	m      sync.Mutex
-
-	kcpNamespace string
+	m sync.Mutex
 
 	kcp    *Cluster
 	skr    map[string]*Cluster
 	garden *Cluster
+}
+
+func (p *defaultClusterProvider) KnownSkrClusters() map[string]*Cluster {
+	result := make(map[string]*Cluster)
+	maps.Copy(result, p.skr)
+	return result
 }
 
 func (p *defaultClusterProvider) KCP(ctx context.Context) (*Cluster, error) {
@@ -60,11 +66,15 @@ func (p *defaultClusterProvider) KCP(ctx context.Context) (*Cluster, error) {
 		return nil, fmt.Errorf("failed to create KCP cluster: %w", err)
 	}
 
-	p.kcp = &Cluster{
-		Cluster: clstr,
-	}
+	p.kcp = NewCluster(clstr)
 
 	err = p.kcp.Start(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start KCP cluster: %w", err)
+	}
+	if !p.kcp.GetCache().WaitForCacheSync(ctx) {
+		return nil, fmt.Errorf("failed to sync KCP cluster")
+	}
 
 	return p.kcp, err
 }
@@ -89,7 +99,7 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 	gardenerClusterLoaders := []func() (*unstructured.Unstructured, error){
 		func() (*unstructured.Unstructured, error) {
 			gc := util.NewGardenerClusterUnstructured()
-			err := kcp.GetClient().Get(ctx, client.ObjectKey{Namespace: p.kcpNamespace, Name: id}, gc)
+			err := kcp.GetClient().Get(ctx, client.ObjectKey{Namespace: Config.KcpNamespace, Name: id}, gc)
 			if client.IgnoreNotFound(err) != nil {
 				return nil, fmt.Errorf("error loading GardenerCluster exact name %s: %w", id, err)
 			}
@@ -100,7 +110,7 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 		},
 		func() (*unstructured.Unstructured, error) {
 			gardenerClusterList := util.NewGardenerClusterListUnstructured()
-			err := kcp.GetClient().List(ctx, gardenerClusterList, client.InNamespace(p.kcpNamespace), client.MatchingLabels{keb.LabelKymaRuntimeID: id})
+			err := kcp.GetClient().List(ctx, gardenerClusterList, client.InNamespace(Config.KcpNamespace), client.MatchingLabels{keb.LabelKymaRuntimeID: id})
 			if err != nil {
 				return nil, fmt.Errorf("error listing GardenerCluster by runtime-id label: %w", err)
 			}
@@ -114,7 +124,7 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 		},
 		func() (*unstructured.Unstructured, error) {
 			gardenerClusterList := util.NewGardenerClusterListUnstructured()
-			err := kcp.GetClient().List(ctx, gardenerClusterList, client.InNamespace(p.kcpNamespace), client.MatchingLabels{keb.LabelKymaShootName: id})
+			err := kcp.GetClient().List(ctx, gardenerClusterList, client.InNamespace(Config.KcpNamespace), client.MatchingLabels{keb.LabelKymaShootName: id})
 			if err != nil {
 				return nil, fmt.Errorf("error listing GardenerCluster by shoot-name label: %w", err)
 			}
@@ -148,7 +158,7 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 	}
 	ns := gardenerClusterSummary.Namespace
 	if ns == "" {
-		ns = p.kcpNamespace
+		ns = Config.KcpNamespace
 	}
 
 	skrManagerFactory := skrmanager.NewFactory(kcp.GetAPIReader(), ns, bootstrap.SkrScheme)
@@ -169,9 +179,7 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 		return nil, fmt.Errorf("failed to create SKR cluster: %w", err)
 	}
 
-	p.skr[id] = &Cluster{
-		Cluster: clstr,
-	}
+	p.skr[id] = NewCluster(clstr)
 
 	err = p.skr[id].Start(ctx)
 
@@ -179,16 +187,16 @@ func (p *defaultClusterProvider) SKR(ctx context.Context, id string) (*Cluster, 
 }
 
 func (p *defaultClusterProvider) Garden(ctx context.Context) (*Cluster, error) {
+	kcp, err := p.KCP(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get KCP cluster: %w", err)
+	}
+
 	p.m.Lock()
 	defer p.m.Unlock()
 
 	if p.garden != nil {
 		return p.garden, nil
-	}
-
-	kcp, err := p.KCP(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get KCP cluster: %w", err)
 	}
 
 	secret := &corev1.Secret{}
@@ -222,12 +230,9 @@ func (p *defaultClusterProvider) Garden(ctx context.Context) (*Cluster, error) {
 		return nil, fmt.Errorf("failed to create Garden cluster: %w", err)
 	}
 
-	p.garden = &Cluster{
-		Cluster: clstr,
-	}
+	p.garden = NewCluster(clstr)
 
 	err = p.garden.Start(ctx)
 
 	return p.garden, err
 }
-

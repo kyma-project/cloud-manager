@@ -6,15 +6,34 @@ import (
 
 	"github.com/cucumber/godog"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/config"
 )
 
 const (
 	sharedSkrId = "bcb334ad-9a19-4d67-aab2-ba1520fe8f21"
 )
 
+func InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	ctx.BeforeSuite(func() { fmt.Println("Get the party started!") })
+}
+
+
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		return setWorld(ctx, NewWorld()), nil
+		env := abstractions.NewOSEnvironment()
+		cfg := config.NewConfig(env)
+		configDir := env.Get("CONFIG_DIR")
+		if configDir == "" {
+			configDir = "../../../"
+		}
+		cfg.BaseDir(configDir)
+		InitConfig(cfg)
+		cfg.Read()
+
+		world := NewWorld()
+		err := world.Init(ctx)
+		return setWorld(ctx, NewWorld()), err
 	})
 
 	ctx.Step(`^there is SKR with "(AWS|Azure|GCP|OpenStack")" provider and default IpRange$`, thereIsSKRWithProviderAndDefaultIpRange)
@@ -40,13 +59,16 @@ func thereIsSKRWithProviderAndDefaultIpRange(ctx context.Context, provider strin
 		return ctx, err
 	}
 
-	sub := SubscriptionRegistry.GetDefaultForProvider(pt)
+	sub := Config.Subscriptions.GetDefaultForProvider(pt)
 	if sub == nil {
 		return ctx, fmt.Errorf("no default subscription found for provider %q", provider)
 	}
 
-	skrCreator := NewSkrCreator(world, sub)
-	_, err = skrCreator.CreateSkr(ctx, pt)
+	skrCreator := NewSkrCreator(world)
+	_, err = skrCreator.CreateSkr(ctx, CreateSkrInput{
+		Provider:     pt,
+		Subscription: sub,
+	})
 	if err != nil {
 		return ctx, fmt.Errorf("error creating SKR: %w", err)
 	}

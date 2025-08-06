@@ -39,7 +39,7 @@ func RandomId(length int) string {
 	id := uuid.New()
 	result := strings.ReplaceAll(id.String(), "-", "")
 	if !unicode.IsLetter(rune(result[0])) {
-		result = "c" + result[1:]
+		result = "c-" + result[1:]
 	}
 	f := fmt.Sprintf("%%.%ds", length)
 	result = fmt.Sprintf(f, result)

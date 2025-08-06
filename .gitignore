@@ -33,3 +33,5 @@ config/featureToggles/featureToggles.local.yaml
 
 upgradefile.txt
 tree.txt
+
+e2e-config.yaml

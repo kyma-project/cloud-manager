@@ -1,0 +1,28 @@
+# alternative env var GARDEN_KUBECONFIG
+# used to create kcp secret kcp-system/gardener-credentials
+gardenKubeconfig: /path/to/garden/kubeconfig
+
+# if ommitted, defaults to kcp-system
+kcpNamespace: kcp-system
+# if ommitted, defaults to garden
+gardenNamespace: garden
+# if ommitted, defaults to skr
+skrNamespace: skr
+
+subscriptions:
+    # name is SecretBinding name in garden
+  - name: subscription-1
+    provider: aws
+    isDefault: true
+
+# gardener or kyma (once implemented
+networkOwner: gardener
+
+# shoot oidc client id
+oidcClientId: abc-123
+# shoot oidc issuer url
+oidcIssuerUrl: https://oidc.example.com
+
+# shoot admins
+administrators:
+  - john.smith@example.com

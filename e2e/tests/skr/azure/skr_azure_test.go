@@ -2,7 +2,6 @@ package azure
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
@@ -14,8 +13,8 @@ import (
 var opts = godog.Options{
 	Output:      colors.Colored(os.Stdout),
 	Concurrency: 10,
-	FS: e2e.Features,
-	Tags: "@skr && @azure",
+	FS:          e2e.Features,
+	Tags:        "@skr && @azure",
 }
 
 func init() {
@@ -27,9 +26,9 @@ func TestFeatures(t *testing.T) {
 	o.TestingT = t
 
 	status := godog.TestSuite{
-		Name:                 "shared",
+		Name:                 "skr-azure",
 		Options:              &o,
-		TestSuiteInitializer: InitializeTestSuite,
+		TestSuiteInitializer: e2e.InitializeTestSuite,
 		ScenarioInitializer:  e2e.InitializeScenario,
 	}.Run()
 
@@ -41,8 +40,4 @@ func TestFeatures(t *testing.T) {
 	if status != 0 {
 		t.Fatalf("zero status code expected, %d received", status)
 	}
-}
-
-func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() { fmt.Println("Get the party started!") })
 }

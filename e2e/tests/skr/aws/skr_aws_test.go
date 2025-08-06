@@ -2,7 +2,6 @@ package aws
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
@@ -27,9 +26,9 @@ func TestFeatures(t *testing.T) {
 	o.TestingT = t
 
 	status := godog.TestSuite{
-		Name:                 "shared",
+		Name:                 "skr-aws",
 		Options:              &o,
-		TestSuiteInitializer: InitializeTestSuite,
+		TestSuiteInitializer: e2e.InitializeTestSuite,
 		ScenarioInitializer:  e2e.InitializeScenario,
 	}.Run()
 
@@ -43,6 +42,3 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() { fmt.Println("Get the party started!") })
-}

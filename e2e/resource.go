@@ -3,6 +3,8 @@ package e2e
 import (
 	"github.com/cucumber/godog"
 	"github.com/rdumont/assistdog"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type ResourceDeclaration struct {
@@ -10,6 +12,7 @@ type ResourceDeclaration struct {
 	Kind       string
 	ApiVersion string
 	Name       string
+	Namespace  string
 }
 
 var (
@@ -27,4 +30,6 @@ func ParseResourceDeclarations(tbl *godog.Table) ([]*ResourceDeclaration, error)
 type ResourceInfo struct {
 	ResourceDeclaration
 	Evaluated bool
+	GVK       schema.GroupVersionKind
+	Source    source.Source
 }

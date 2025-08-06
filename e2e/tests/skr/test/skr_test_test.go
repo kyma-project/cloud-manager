@@ -14,7 +14,7 @@ var opts = godog.Options{
 	Output:      colors.Colored(os.Stdout),
 	Concurrency: 10,
 	FS: e2e.Features,
-	Tags: "@skr && @gcp",
+	Tags: "@skr && @test",
 }
 
 func init() {
@@ -26,7 +26,7 @@ func TestFeatures(t *testing.T) {
 	o.TestingT = t
 
 	status := godog.TestSuite{
-		Name:                 "skr-gcp",
+		Name:                 "skr-test",
 		Options:              &o,
 		TestSuiteInitializer: e2e.InitializeTestSuite,
 		ScenarioInitializer:  e2e.InitializeScenario,
