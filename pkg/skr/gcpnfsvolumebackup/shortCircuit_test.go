@@ -2,16 +2,20 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type shortCircuitSuite struct {
@@ -44,12 +48,14 @@ func (suite *shortCircuitSuite) TestWhenBackupIsDeleting() {
 	suite.Nil(_ctx)
 }
 
-func (suite *shortCircuitSuite) TestWhenBackupIsReady() {
+func (suite *shortCircuitSuite) TestWhenBackupIsReadyAndCapacityUpdate() {
+	// isTimeForCapacityUpdate == true
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.GcpNfsBackupReady
+	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().Add(-1 * time.Hour).Add(-1 * time.Minute)}
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 	suite.Nil(err)
 
@@ -59,10 +65,45 @@ func (suite *shortCircuitSuite) TestWhenBackupIsReady() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 
+	client.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 	err, _ctx := shortCircuitCompleted(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	suite.Nil(err)
+	suite.NotNil(_ctx)
+
+	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
+	err = factory.skrCluster.K8sClient().Get(ctx,
+		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,
+			Namespace: gcpNfsVolumeBackup.Namespace},
+		fromK8s)
+	suite.Nil(err)
+
+	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
+}
+
+func (suite *shortCircuitSuite) TestWhenBackupIsReadyAndNotCapacityUpdate() {
+	// isTimeForCapacityUpdate == true
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+	}))
+	obj := gcpNfsVolumeBackup.DeepCopy()
+	obj.Status.State = v1beta1.GcpNfsBackupReady
+	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now()}
+	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
+	suite.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	//Get state object with GcpNfsVolume
+	state, err := factory.newStateWith(obj)
+	suite.Nil(err)
+
+	client.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
+	err, _ctx := shortCircuitCompleted(ctx, state)
+
+	//validate expected return values
+	suite.Equal(stopAndRequeueForCapacity(), err)
 	suite.Nil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
@@ -73,6 +114,7 @@ func (suite *shortCircuitSuite) TestWhenBackupIsReady() {
 	suite.Nil(err)
 
 	suite.Equal(v1beta1.GcpNfsBackupReady, fromK8s.Status.State)
+
 }
 
 func (suite *shortCircuitSuite) TestWhenBackupIsInError() {

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: gcpnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -88,6 +88,13 @@ spec:
             status:
               description: GcpNfsVolumeBackupStatus defines the observed state of GcpNfsVolumeBackup
               properties:
+                capacity:
+                  anyOf:
+                    - type: integer
+                    - type: string
+                  description: Capacity
+                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                  x-kubernetes-int-or-string: true
                 conditions:
                   description: List of status conditions
                   items:
@@ -148,6 +155,10 @@ spec:
                     - type
                   x-kubernetes-list-type: map
                 id:
+                  type: string
+                lastCapacityUpdate:
+                  description: LastCapacityUpdate specifies the time when the last time backup size got updated
+                  format: date-time
                   type: string
                 location:
                   type: string
