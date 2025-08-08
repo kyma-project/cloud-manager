@@ -21,7 +21,7 @@ func initLocalPeeringClient(ctx context.Context, st composed.State) (error, cont
 	}
 
 	// This client uses auxiliary tenant to authenticate in remote tenant and fails if SPN does not exist
-	// in remote tenant. This client should only be used for local CreatePeering API call.
+	// in remote tenant. This client should only be used for local CreateOrUpdatePeering API call.
 	client, err := state.clientProvider(ctx,
 		azureconfig.AzureConfig.PeeringCreds.ClientId,
 		azureconfig.AzureConfig.PeeringCreds.ClientSecret,

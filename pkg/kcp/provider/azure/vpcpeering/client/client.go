@@ -9,7 +9,7 @@ import (
 )
 
 type Client interface {
-	CreatePeering(ctx context.Context,
+	CreateOrUpdatePeering(ctx context.Context,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,

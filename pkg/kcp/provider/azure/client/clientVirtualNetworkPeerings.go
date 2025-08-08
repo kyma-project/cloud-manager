@@ -8,7 +8,7 @@ import (
 )
 
 type VirtualNetworkPeeringClient interface {
-	CreatePeering(ctx context.Context,
+	CreateOrUpdatePeering(ctx context.Context,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,
@@ -32,7 +32,7 @@ type virtualNetworkPeeringClient struct {
 	svc *armnetwork.VirtualNetworkPeeringsClient
 }
 
-func (c *virtualNetworkPeeringClient) CreatePeering(
+func (c *virtualNetworkPeeringClient) CreateOrUpdatePeering(
 	ctx context.Context,
 	resourceGroupName,
 	virtualNetworkName,
