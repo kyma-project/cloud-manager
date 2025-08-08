@@ -54,12 +54,12 @@ func (s *networkStore) SetPeeringStateConnected(ctx context.Context, resourceGro
 	}
 
 	if peering.Properties == nil {
-		peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-			PeeringState: ptr.To(armnetwork.VirtualNetworkPeeringStateConnected),
-		}
-	} else {
-		peering.Properties.PeeringState = ptr.To(armnetwork.VirtualNetworkPeeringStateConnected)
+		peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{}
 	}
+
+	peering.Properties.PeeringState = ptr.To(armnetwork.VirtualNetworkPeeringStateConnected)
+
+	peering.Properties.PeeringSyncLevel = ptr.To(armnetwork.VirtualNetworkPeeringLevelFullyInSync)
 
 	return nil
 }
@@ -287,14 +287,10 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 
 	id := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName).String()
 
-	_, err = s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+	peering, err := s.getPeeringNoLock(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		// errors like network not found
 		return err
-	}
-	if err == nil {
-		// peering already exists
-		return fmt.Errorf("vpc peering %s already exists", id)
 	}
 
 	entry, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
@@ -306,22 +302,25 @@ func (s *networkStore) CreatePeering(ctx context.Context, resourceGroupName, vir
 		entry.network.Properties = &armnetwork.VirtualNetworkPropertiesFormat{}
 	}
 
-	peering := &armnetwork.VirtualNetworkPeering{
-		ID:   ptr.To(id),
-		Name: ptr.To(virtualNetworkPeeringName),
-		Properties: &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-			AllowForwardedTraffic:     ptr.To(true),
-			AllowGatewayTransit:       ptr.To(allowGatewayTransit),
-			AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-			UseRemoteGateways:         ptr.To(useRemoteGateway),
-			RemoteVirtualNetwork: &armnetwork.SubResource{
-				ID: ptr.To(remoteVnetId),
-			},
-			PeeringState: ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),
-		},
+	if peering == nil {
+		peering = &armnetwork.VirtualNetworkPeering{
+			ID:   ptr.To(id),
+			Name: ptr.To(virtualNetworkPeeringName),
+		}
+
+		entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
 	}
 
-	entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
+	peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{
+		AllowForwardedTraffic:     ptr.To(true),
+		AllowGatewayTransit:       ptr.To(allowGatewayTransit),
+		AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
+		UseRemoteGateways:         ptr.To(useRemoteGateway),
+		RemoteVirtualNetwork: &armnetwork.SubResource{
+			ID: ptr.To(remoteVnetId),
+		},
+		PeeringState: ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),
+	}
 
 	return nil
 }

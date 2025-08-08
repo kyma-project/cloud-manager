@@ -2,7 +2,9 @@ package vpcpeering
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/utils/ptr"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,7 +18,13 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.remotePeering != nil {
-		return nil, nil
+		peeringSyncLevel := ptr.Deref(state.remotePeering.Properties.PeeringSyncLevel, "")
+		if peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelFullyInSync ||
+			peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelRemoteNotInSync {
+			return nil, nil
+		}
+
+		logger.Info("Remote VPC peering sync required", "peeringSyncLevel", peeringSyncLevel)
 	}
 
 	// Allow gateway transit if remote gateway is used

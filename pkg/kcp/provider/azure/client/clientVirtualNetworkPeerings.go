@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"k8s.io/utils/ptr"
 )
@@ -57,7 +58,9 @@ func (c *virtualNetworkPeeringClient) CreatePeering(
 				},
 			},
 		},
-		nil,
+		&armnetwork.VirtualNetworkPeeringsClientBeginCreateOrUpdateOptions{
+			SyncRemoteAddressSpace: to.Ptr(armnetwork.SyncRemoteAddressSpaceTrue),
+		},
 	)
 
 	return err
