@@ -71,6 +71,9 @@ type GcpSubnetStatus struct {
 
 	// +optional
 	Cidr string `json:"cidr,omitempty"`
+
+	// +optional
+	SubnetCreationOperationName string `json:"subnetCreationOperationName,omitempty"`
 }
 
 // +kubebuilder:object:root=true

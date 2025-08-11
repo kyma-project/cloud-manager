@@ -450,6 +450,7 @@ func main() {
 		mgr,
 		gcpsubnetclient.NewComputeClientProvider(gcpClients),
 		gcpsubnetclient.NewNetworkConnectivityClientProvider(gcpClients),
+		gcpsubnetclient.NewRegionOperationsClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")

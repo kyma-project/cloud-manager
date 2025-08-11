@@ -70,6 +70,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed())
 		})
 
+		By("And When GcpSubnet creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnet.Status.SubnetCreationOperationName)
+		})
+
 		By("Then KCP GcpSubnet has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
@@ -105,6 +118,111 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 		})
 
 		// Delete
+
+		By("When KCP GcpSubnet is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet).
+				Should(Succeed(), "failed deleting KCP GcpSubnet")
+		})
+
+		By("Then KCP GcpSubnet does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet).
+				Should(Succeed(), "expected KCP GcpSubnet to be deleted, but it exists")
+		})
+
+		By("And Then GCP Private Subnet does not exist", func() {
+			subnet, err := infra.GcpMock().GetSubnet(infra.Ctx(), client.GetSubnetRequest{
+				ProjectId: scope.Spec.Scope.Gcp.Project,
+				Name:      "cm-" + gcpSubnet.Name,
+				Region:    scope.Spec.Region,
+			})
+			Expect(subnet).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP Connection Policy does not exist", func() {
+			policyName := fmt.Sprintf("projects/%s/locations/%s/serviceConnectionPolicies/cm-%s-%s-redis-cluster",
+				scope.Spec.Scope.Gcp.Project, scope.Spec.Region, scope.Spec.Scope.Gcp.VpcNetwork, scope.Spec.Region,
+			)
+			connectionPolicy, err := infra.GcpMock().GetServiceConnectionPolicy(infra.Ctx(), policyName)
+			Expect(connectionPolicy).To(BeNil())
+			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+	})
+
+	It("Scenario: KCP GcpSubnet goes into error state when subnet operation fails", Focus, func() {
+		const (
+			kymaName      = "c8bdab81-c6f6-45f8-8ea0-d6f3dec18cdb"
+			gcpSubnetName = "1c7a0058-5390-44cb-bd05-09f6afeb2267"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+		gcpSubnet := &cloudcontrolv1beta1.GcpSubnet{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithGcpRef(scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("When KCP GcpSubnet is created", func() {
+			Eventually(CreateKcpGcpSubnet).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+					WithName(gcpSubnetName),
+					WithKcpGcpSubnetRemoteRef(gcpSubnetName),
+					WithKcpGcpSubnetSpecCidr("10.20.80.0/24"),
+					WithKcpGcpSubnetPurposePrivate(),
+					WithScope(kymaName),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet creation operation has errors", func() {
+			infra.GcpMock().SetRegionOperationError(gcpSubnet.Status.SubnetCreationOperationName)
+		})
+
+		By("Then KCP GcpSubnet has Error condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError),
+				).
+				Should(Succeed())
+		})
 
 		By("When KCP GcpSubnet is deleted", func() {
 			Eventually(Delete).

@@ -3,52 +3,57 @@ package subnet
 import (
 	"context"
 
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func createSubnet(ctx context.Context, st composed.State) (error, context.Context) {
+func loadSubnetCreationOperation(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.subnet != nil {
+	subnet := state.ObjAsGcpSubnet()
+
+	if subnet.Status.SubnetCreationOperationName == "" {
 		return nil, nil
 	}
 
-	subnet := state.ObjAsGcpSubnet()
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	opKey, err := state.computeClient.CreateSubnet(ctx, client.CreateSubnetRequest{
-		ProjectId:             gcpScope.Project,
-		Region:                region,
-		Network:               gcpScope.VpcNetwork,
-		Name:                  GetSubnetShortName(state.Obj().GetName()),
-		Cidr:                  subnet.Spec.Cidr,
-		PrivateIpGoogleAccess: true,
-		Purpose:               "PRIVATE",
-		IdempotenceId:         uuid.NewString(),
+	logger.Info("loading GCP Subnet Creation Operation")
+
+	op, err := state.regionOperationsClient.GetRegionOperation(ctx, client.GetRegionOperationRequest{
+		ProjectId: gcpScope.Project,
+		Region:    region,
+		Name:      subnet.Status.SubnetCreationOperationName,
 	})
 
 	if err != nil {
-		logger.Error(err, "Error creating GCP Private Subnet")
+		if gcpmeta.IsNotFound(err) {
+			logger.Info("target GCP Subnet Creation Operation not found, continuing")
+			return nil, nil
+		}
+
+		logger.Error(err, "Error loading GCP GCP Subnet Creation Operation")
+
+		subnet := state.ObjAsGcpSubnet()
 		meta.SetStatusCondition(subnet.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-			Message: "Failed to create GCP Private Subnet",
+			Message: "Failed to load GCP Subnet Creation Operation",
 		})
 		subnet.Status.State = cloudcontrolv1beta1.StateError
 
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating Subnet status due failed GCP Private Subnet creation",
+				"Error updating Subnet status due failed GCP GCP Subnet Creation Operation loading",
 				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
 				ctx,
 			)
@@ -57,11 +62,10 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	subnet.Status.SubnetCreationOperationName = opKey
+	if op != nil {
+		logger.Info("GCP GCP Subnet Creation Operation found and loaded")
+		state.subnetCreationOperation = op
+	}
 
-	return composed.UpdateStatus(subnet).
-		SuccessError(composed.StopWithRequeue).
-		SuccessLogMsg("successfully updated GcpSubnet status with operation id").
-		ErrorLogMessage("failed to update GcpSubnet status with operation id").
-		Run(ctx, st)
+	return nil, nil
 }
