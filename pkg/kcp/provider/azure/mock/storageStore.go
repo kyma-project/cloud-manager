@@ -37,12 +37,12 @@ type storageStore struct {
 
 func (s *storageStore) GetLastBackupJobStartTime(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (s *storageStore) FindNextBackupJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startTime time.Time) (*string, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (s *storageStore) FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error) {
@@ -120,7 +120,7 @@ func (s *storageStore) CreateBackupPolicy(ctx context.Context, vaultName string,
 
 func (s *storageStore) DeleteBackupPolicy(ctx context.Context, vaultName string, resourceGroupName string, policyName string) error {
 	//TODO implement me
-	panic("implement me")
+	return errors.New("not implemented")
 }
 
 func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscriptionId, location, vaultName, resourceGroupName, containerName, protectedItemName, backupPolicyName, storageAccountName string) error {
@@ -193,14 +193,14 @@ func (s *storageStore) RemoveProtection(ctx context.Context, vaultName, resource
 	return nil
 }
 
-func (s *storageStore) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (armrecoveryservicesbackup.RecoveryPointResource, error) {
+func (s *storageStore) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (*armrecoveryservicesbackup.RecoveryPointResource, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (s *storageStore) ListRecoveryPoints(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string) ([]*armrecoveryservicesbackup.RecoveryPointResource, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("not implemented")
 }
 
 func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string, vaultName string, location string) (*string, error) {
