@@ -152,7 +152,7 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 
 	})
 
-	It("Scenario: KCP GcpSubnet goes into error state when subnet operation fails", Focus, func() {
+	It("Scenario: KCP GcpSubnet goes into error state when subnet operation fails", func() {
 		const (
 			kymaName      = "c8bdab81-c6f6-45f8-8ea0-d6f3dec18cdb"
 			gcpSubnetName = "1c7a0058-5390-44cb-bd05-09f6afeb2267"
@@ -307,6 +307,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed())
 		})
 
+		By("And When GcpSubnet creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnet.Status.SubnetCreationOperationName)
+		})
+
 		By("And Given KCP GcpSubnet has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnet,
@@ -450,6 +463,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed())
 		})
 
+		By("And When GcpSubnet A creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet A creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnetA.Status.SubnetCreationOperationName)
+		})
+
 		By("And Given KCP GcpSubnet A has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
@@ -469,6 +495,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 					WithScope(kymaName),
 				).
 				Should(Succeed())
+		})
+
+		By("And When GcpSubnet B creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet B creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnetB.Status.SubnetCreationOperationName)
 		})
 
 		By("And Given KCP GcpSubnet B has Ready condition", func() {
@@ -601,6 +640,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed())
 		})
 
+		By("And When GcpSubnet A creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet A creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnetA.Status.SubnetCreationOperationName)
+		})
+
 		By("And Given KCP GcpSubnet A has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetA,
@@ -622,6 +674,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 				Should(Succeed())
 		})
 
+		By("And When GcpSubnet B creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet B creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnetB.Status.SubnetCreationOperationName)
+		})
+
 		By("And Given KCP GcpSubnet B has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetB,
@@ -641,6 +706,19 @@ var _ = Describe("Feature: KCP GcpSubnet is created", func() {
 					WithScope(kymaName),
 				).
 				Should(Succeed())
+		})
+
+		By("And When GcpSubnet C creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpSubnetC,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet C creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(gcpSubnetC.Status.SubnetCreationOperationName)
 		})
 
 		By("And Given KCP GcpSubnet C has Ready condition", func() {
