@@ -41,6 +41,7 @@ func SetupGcpSubnetReconciler(
 	kcpManager manager.Manager,
 	computeClientProvider gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient],
 	networkConnectivityClientProvider gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient],
+	regionOperationsClientProvider gcpclient.GcpClientProvider[gcpsubnetclient.RegionOperationsClient],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -50,7 +51,7 @@ func SetupGcpSubnetReconciler(
 		subnet.NewGcpSubnetReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			subnet.NewStateFactory(computeClientProvider, networkConnectivityClientProvider, env),
+			subnet.NewStateFactory(computeClientProvider, networkConnectivityClientProvider, regionOperationsClientProvider, env),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

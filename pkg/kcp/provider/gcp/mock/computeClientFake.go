@@ -13,11 +13,13 @@ import (
 type computeClientFake struct {
 	mutex   sync.Mutex
 	subnets map[string]*computepb.Subnetwork
+
+	operationsClientUtils RegionalOperationsClientFakeUtils
 }
 
-func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, request client.CreateSubnetRequest) error {
+func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, request client.CreateSubnetRequest) (string, error) {
 	if isContextCanceled(ctx) {
-		return context.Canceled
+		return "", context.Canceled
 	}
 	computeClientFake.mutex.Lock()
 	defer computeClientFake.mutex.Unlock()
@@ -35,7 +37,9 @@ func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, re
 
 	computeClientFake.subnets[name] = subnet
 
-	return nil
+	opKey := computeClientFake.operationsClientUtils.AddRegionOperation(request.Name)
+
+	return opKey, nil
 }
 
 func (computeClientFake *computeClientFake) GetSubnet(ctx context.Context, request client.GetSubnetRequest) (*computepb.Subnetwork, error) {

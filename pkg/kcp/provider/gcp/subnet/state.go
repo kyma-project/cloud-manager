@@ -20,9 +20,12 @@ type State struct {
 
 	computeClient              client.ComputeClient
 	networkComnnectivityClient client.NetworkConnectivityClient
+	regionOperationsClient     client.RegionOperationsClient
 
 	subnet                  *computepb.Subnetwork
 	serviceConnectionPolicy *networkconnectivitypb.ServiceConnectionPolicy
+
+	subnetCreationOperation *computepb.Operation
 
 	network *cloudcontrolv1beta1.Network
 
@@ -36,16 +39,19 @@ type StateFactory interface {
 type stateFactory struct {
 	computeClientProvider             gcpclient.GcpClientProvider[client.ComputeClient]
 	networkConnectivityClientProvider gcpclient.GcpClientProvider[client.NetworkConnectivityClient]
+	regionOperationsClientProvider    gcpclient.GcpClientProvider[client.RegionOperationsClient]
 	env                               abstractions.Environment
 }
 
 func NewStateFactory(
 	computeClientProvider gcpclient.GcpClientProvider[client.ComputeClient],
 	networkConnectivityClientProvider gcpclient.GcpClientProvider[client.NetworkConnectivityClient],
+	regionOperationsClientProvider gcpclient.GcpClientProvider[client.RegionOperationsClient],
 	env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		computeClientProvider:             computeClientProvider,
 		networkConnectivityClientProvider: networkConnectivityClientProvider,
+		regionOperationsClientProvider:    regionOperationsClientProvider,
 		env:                               env,
 	}
 }
@@ -54,15 +60,17 @@ func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal
 
 	computeClient := statefactory.computeClientProvider()
 	networkConnectivityClient := statefactory.networkConnectivityClientProvider()
+	regionOperationsClient := statefactory.regionOperationsClientProvider()
 
-	return newState(focalState, computeClient, networkConnectivityClient), nil
+	return newState(focalState, computeClient, networkConnectivityClient, regionOperationsClient), nil
 }
 
-func newState(focalState focal.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient) *State {
+func newState(focalState focal.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient, regionOperationsClient client.RegionOperationsClient) *State {
 	return &State{
 		State:                      focalState,
 		computeClient:              computeClient,
 		networkComnnectivityClient: networkConnectivityClient,
+		regionOperationsClient:     regionOperationsClient,
 	}
 }
 

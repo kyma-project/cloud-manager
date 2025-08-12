@@ -70,6 +70,19 @@ var _ = Describe("Feature: KCP GcpSubnet deletion with dependant objects", func(
 				To(Succeed())
 		})
 
+		By("And When GcpSubnet creation operation is started", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), subnet,
+					NewObjActions(),
+					HavingKcpGcpSubnetCreationOperationDefined(),
+				).
+				Should(Succeed())
+		})
+
+		By("And When GcpSubnet creation operation is done", func() {
+			infra.GcpMock().SetRegionOperationDone(subnet.Status.SubnetCreationOperationName)
+		})
+
 		By("And Given KCP GcpSubnet has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subnet,

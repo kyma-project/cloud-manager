@@ -158,6 +158,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.GcpMock().SubnetComputeClientProvider(),
 		infra.GcpMock().SubnetNetworkConnectivityProvider(),
+		infra.GcpMock().SubnetRegionOperationsClientProvider(),
 		env,
 	)).To(Succeed())
 	//AzureVNetLink
