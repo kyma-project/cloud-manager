@@ -37,11 +37,13 @@ type networkStore struct {
 	items map[string]map[string]*networkEntry
 
 	errorMap map[string]error
+
+	remoteSubscription *TenantSubscription
 }
 
 // Config ===================================================
 
-func (s *networkStore) SetPeeringStateConnected(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error {
+func (s *networkStore) SetPeeringConnectedFullInSync(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -77,6 +79,57 @@ func (s *networkStore) SetPeeringError(ctx context.Context, resourceGroup, virtu
 
 	resourceId := azureutil.NewVirtualNetworkPeeringResourceId(s.subscription, resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
 	s.errorMap[resourceId.String()] = err
+}
+
+func (s *networkStore) SetPeeringSyncLevel(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string, peeringLevel armnetwork.VirtualNetworkPeeringLevel) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	peering, err := s.getPeeringNoLock(resourceGroup, virtualNetworkName, virtualNetworkPeeringName)
+	if err != nil {
+		return err
+	}
+
+	if peering.Properties == nil {
+		peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{}
+	}
+
+	peering.Properties.PeeringSyncLevel = ptr.To(peeringLevel)
+
+	return nil
+}
+
+func (s *networkStore) SetNetworkAddressSpace(ctx context.Context, resourceGroup, virtualNetworkName, addressSpace string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	entry, err := s.getNetworkEntryNoLock(resourceGroup, virtualNetworkName)
+	if err != nil {
+		return err
+	}
+
+	entry.network.Properties.AddressSpace = &armnetwork.AddressSpace{
+		AddressPrefixes: []*string{ptr.To(addressSpace)},
+	}
+
+	return nil
+}
+
+func (s *networkStore) AddRemoteSubscription(ctx context.Context, remoteSubscription *TenantSubscription) {
+	if isContextCanceled(ctx) {
+		return
+	}
+
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	s.remoteSubscription = remoteSubscription
 }
 
 // NetworkClient ===================================================
@@ -279,7 +332,8 @@ func (s *networkStore) CreateOrUpdatePeering(ctx context.Context, resourceGroupN
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	err := s.getError(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+	var err error
+	err = s.getError(resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 
 	if err != nil {
 		return err
@@ -311,6 +365,21 @@ func (s *networkStore) CreateOrUpdatePeering(ctx context.Context, resourceGroupN
 		entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
 	}
 
+	resourceId, err := azureutil.ParseResourceID(remoteVnetId)
+
+	if err != nil {
+		return err
+	}
+
+	var remoteAddressSpace *string
+	if s.remoteSubscription != nil {
+
+		remoteVnet, err := (*s.remoteSubscription).GetNetwork(ctx, resourceId.ResourceGroup, resourceId.ResourceName)
+		if err != nil {
+			return err
+		}
+		remoteAddressSpace = remoteVnet.Properties.AddressSpace.AddressPrefixes[0]
+	}
 	peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{
 		AllowForwardedTraffic:     ptr.To(true),
 		AllowGatewayTransit:       ptr.To(allowGatewayTransit),
@@ -319,7 +388,18 @@ func (s *networkStore) CreateOrUpdatePeering(ctx context.Context, resourceGroupN
 		RemoteVirtualNetwork: &armnetwork.SubResource{
 			ID: ptr.To(remoteVnetId),
 		},
-		PeeringState: ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),
+		PeeringState:     ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),   // check if this is needed
+		PeeringSyncLevel: ptr.To(armnetwork.VirtualNetworkPeeringLevelFullyInSync), // check if this is needed
+		LocalAddressSpace: &armnetwork.AddressSpace{
+			AddressPrefixes: []*string{
+				entry.network.Properties.AddressSpace.AddressPrefixes[0],
+			},
+		},
+		RemoteAddressSpace: &armnetwork.AddressSpace{
+			AddressPrefixes: []*string{
+				remoteAddressSpace,
+			},
+		},
 	}
 
 	return nil
