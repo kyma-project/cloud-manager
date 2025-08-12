@@ -86,7 +86,6 @@ func (r *gcpSubnetReconciler) newFlow() composed.Action {
 			actions.AddCommonFinalizer(),
 			loadNetwork,
 			waitNetworkReady,
-			loadSubnetCreationOperation,
 			loadSubnet,
 			loadConnectionPolicy,
 			loadSubnetCreationOperation,
