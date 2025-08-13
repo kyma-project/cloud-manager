@@ -1,7 +1,6 @@
 package cloudcontrol
 
 import (
-	"errors"
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
@@ -158,54 +157,23 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// Peering Created ===============================================================
 
-		var localAzurePeering *armnetwork.VirtualNetworkPeering
-
-		By("Then local Azure VPC Peering is created", func() { //TODO
-			Eventually(func() error {
-				p, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
-				if err != nil {
-					return err
-				}
-				if p == nil {
-					return errors.New("nil peering received")
-				}
-				localAzurePeering = p
-				return nil
-			}).Should(Succeed())
-		})
-
-		By("And Then local Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering remote vpc id", func() {
+		By("Then local Azure VPC Peering is created", func() {
 			remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
-			Expect(ptr.Deref(localAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(remoteVnetId))
+			Eventually(LoadAzurePeeringAndCheck).
+				WithArguments(infra.Ctx(), azureMockLocal, localResourceGroupName, localVirtualNetworkName, localPeeringName,
+					HavingRemoteNetworkId(remoteVnetId),
+					HavingUseRemoteGateways(false)).
+				Should(Succeed())
 		})
-
-		By("And Then local Azure Peering has UseRemoteGateways equals to false", func() {
-			Expect(ptr.Deref(localAzurePeering.Properties.UseRemoteGateways, false)).To(BeFalse())
-		})
-
-		var remoteAzurePeering *armnetwork.VirtualNetworkPeering
 
 		By("And Then remote Azure VPC Peering is created", func() {
-			Eventually(func() error {
-				p, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
-				if err != nil {
-					return err
-				}
-				if p == nil {
-					return errors.New("nil peering received")
-				}
-				remoteAzurePeering = p
-				return nil
-			}).Should(Succeed())
-		})
-
-		By("And Then remote Azure Peering has RemoteVirtualNetwork.ID equal to KCP VpcPeering local vpc id", func() {
-			localeVnetId := util.NewVirtualNetworkResourceId(scope.Spec.Scope.Azure.SubscriptionId, localResourceGroupName, localVirtualNetworkName).String()
-			Expect(ptr.Deref(remoteAzurePeering.Properties.RemoteVirtualNetwork.ID, "xxx")).To(Equal(localeVnetId))
-		})
-
-		By("And Then remote Azure Peering has UseRemoteGateways equals to false", func() {
-			Expect(ptr.Deref(remoteAzurePeering.Properties.UseRemoteGateways, false)).To(BeFalse())
+			localVnetId := util.NewVirtualNetworkResourceId(scope.Spec.Scope.Azure.SubscriptionId, localResourceGroupName, localVirtualNetworkName).String()
+			Eventually(LoadAzurePeeringAndCheck).
+				WithArguments(infra.Ctx(), azureMockRemote,
+					remoteResourceGroup, remoteVnetName, remotePeeringName,
+					HavingUseRemoteGateways(false),
+					HavingRemoteNetworkId(localVnetId)).
+				Should(Succeed())
 		})
 
 		// Ready ==========================================================
@@ -241,12 +209,19 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(kcpPeering.Status.State).To(Equal(cloudcontrolv1beta1.VirtualNetworkPeeringStateConnected))
 		})
 
-		By("And Then KCP VpcPeering has status.id equal to local Azure Peering ID", func() {
-			Expect(kcpPeering.Status.Id).To(Equal(ptr.Deref(localAzurePeering.ID, "xxx")))
+		By("And Then KCP VpcPeering Id matches local Azure peering ID", func() {
+			Expect(
+				LoadAzurePeeringAndCheck(infra.Ctx(), azureMockLocal, localResourceGroupName, localVirtualNetworkName, localPeeringName,
+					HavingAzurePeeringId(kcpPeering.Status.Id))).
+				To(Succeed())
+			//Expect(kcpPeering.Status.Id).To(Equal(ptr.Deref(localAzurePeering.ID, "xxx")))
 		})
 
-		By("And Then KCP VpcPeering has status.remoteId equal to remote Azure Peering ID", func() {
-			Expect(kcpPeering.Status.RemoteId).To(Equal(ptr.Deref(remoteAzurePeering.ID, "xxx")))
+		By("And Then KCP VpcPeering RemoteId matches remote Azure peering ID", func() {
+			Expect(
+				LoadAzurePeeringAndCheck(infra.Ctx(), azureMockRemote, remoteResourceGroup, remoteVnetName, remotePeeringName,
+					HavingAzurePeeringId(kcpPeering.Status.RemoteId))).
+				To(Succeed())
 		})
 
 		// DELETE
@@ -788,7 +763,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
-	It("Scenario: KCP Azure VpcPeering can sync", Focus, func() {
+	It("Scenario: KCP Azure VpcPeering can sync", func() {
 		const (
 			kymaName            = "be27ef0c-013a-4011-96b8-86381ff64ab9"
 			kcpPeeringName      = "f35f52ef-269d-49d6-8d6c-332e96d2293e"
@@ -945,6 +920,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then local Azure peering has PeeringSyncLevel equals VirtualNetworkPeeringLevelLocalNotInSync", func() {
+			Expect(
+				LoadAzurePeeringAndCheck(infra.Ctx(), azureMockLocal,
+					localResourceGroupName, localVirtualNetworkName, localPeeringName,
+					HavingPeeringSyncLevel(armnetwork.VirtualNetworkPeeringLevelLocalNotInSync))).
+				To(Succeed())
+
 			localAzurePeering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ptr.Deref(localAzurePeering.Properties.PeeringSyncLevel, "")).To(Equal(armnetwork.VirtualNetworkPeeringLevelLocalNotInSync))
@@ -957,20 +938,20 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then local Azure peering address spaces are synced", func() {
-			Eventually(LoadAzureVpcPeeringAndCheck).
+			Eventually(LoadAzurePeeringAndCheck).
 				WithArguments(infra.Ctx(), azureMockLocal, localResourceGroupName, localVirtualNetworkName, localPeeringName,
-					HasLocalAddressPrefix("10.200.0.0/24"),
-					HasRemoteAddressPrefix("10.100.0.0/24"),
-					HasPeeringSyncLevel(armnetwork.VirtualNetworkPeeringLevelFullyInSync)).
+					HavingLocalAddressPrefix("10.200.0.0/24"),
+					HavingRemoteAddressPrefix("10.100.0.0/24"),
+					HavingPeeringSyncLevel(armnetwork.VirtualNetworkPeeringLevelFullyInSync)).
 				Should(Succeed())
 		})
 
 		By("And Then remote Azure peering address spaces are synced", func() {
-			Eventually(LoadAzureVpcPeeringAndCheck).
+			Eventually(LoadAzurePeeringAndCheck).
 				WithArguments(infra.Ctx(), azureMockRemote, remoteResourceGroup, remoteVnetName, remotePeeringName,
-					HasLocalAddressPrefix("10.100.0.0/24"),
-					HasRemoteAddressPrefix("10.200.0.0/24"),
-					HasPeeringSyncLevel(armnetwork.VirtualNetworkPeeringLevelFullyInSync)).
+					HavingLocalAddressPrefix("10.100.0.0/24"),
+					HavingRemoteAddressPrefix("10.200.0.0/24"),
+					HavingPeeringSyncLevel(armnetwork.VirtualNetworkPeeringLevelFullyInSync)).
 				Should(Succeed())
 		})
 

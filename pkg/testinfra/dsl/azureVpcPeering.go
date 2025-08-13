@@ -53,26 +53,9 @@ func AssertAzureVpcPeeringHasId() ObjAssertion {
 	}
 }
 
-type GenericAssertion[T any] func(obj T) error
+func LoadAzurePeeringAndCheck(ctx context.Context, client azure.Client, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string, asserts ...GenericAssertion[armnetwork.VirtualNetworkPeering]) error {
 
-type GenericAssertions[T any] []GenericAssertion[T]
-
-func (x GenericAssertions[T]) AssertObj(obj T) error {
-	for _, f := range x {
-		if err := f(obj); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func NewGenericAssertions[T any](items []GenericAssertion[T]) GenericAssertions[T] {
-	return append(GenericAssertions[T]{}, items...)
-}
-
-func LoadAzureVpcPeeringAndCheck(ctx context.Context, clnt azure.Client, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string, asserts ...GenericAssertion[armnetwork.VirtualNetworkPeering]) error {
-
-	peering, err := clnt.GetPeering(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
+	peering, err := client.GetPeering(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 
 	if err != nil {
 		return err
@@ -81,7 +64,7 @@ func LoadAzureVpcPeeringAndCheck(ctx context.Context, clnt azure.Client, resourc
 	return NewGenericAssertions(asserts).AssertObj(*peering)
 }
 
-func HasLocalAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+func HavingLocalAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
 	return func(obj armnetwork.VirtualNetworkPeering) error {
 		actual := ptr.Deref(obj.Properties.LocalAddressSpace.AddressPrefixes[0], "")
 		if actual != addressPrefix {
@@ -91,7 +74,7 @@ func HasLocalAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.Vir
 	}
 }
 
-func HasRemoteAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+func HavingRemoteAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
 	return func(obj armnetwork.VirtualNetworkPeering) error {
 		actual := ptr.Deref(obj.Properties.RemoteAddressSpace.AddressPrefixes[0], "")
 		if actual != addressPrefix {
@@ -101,11 +84,40 @@ func HasRemoteAddressPrefix(addressPrefix string) GenericAssertion[armnetwork.Vi
 	}
 }
 
-func HasPeeringSyncLevel(level armnetwork.VirtualNetworkPeeringLevel) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+func HavingRemoteNetworkId(remoteNetworkId string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+	return func(obj armnetwork.VirtualNetworkPeering) error {
+		actual := ptr.Deref(obj.Properties.RemoteVirtualNetwork.ID, "")
+		if actual != remoteNetworkId {
+			return fmt.Errorf("expected peering remote network id %s to be %s", actual, remoteNetworkId)
+		}
+		return nil
+	}
+}
+
+func HavingUseRemoteGateways(useRemoteGateways bool) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+	return func(obj armnetwork.VirtualNetworkPeering) error {
+		actual := ptr.Deref(obj.Properties.UseRemoteGateways, false)
+		if actual != useRemoteGateways {
+			return fmt.Errorf("expected useRemoteGateways %s to be %s", actual, useRemoteGateways)
+		}
+		return nil
+	}
+}
+func HavingPeeringSyncLevel(level armnetwork.VirtualNetworkPeeringLevel) GenericAssertion[armnetwork.VirtualNetworkPeering] {
 	return func(obj armnetwork.VirtualNetworkPeering) error {
 		actual := ptr.Deref(obj.Properties.PeeringSyncLevel, "")
 		if actual != level {
 			return fmt.Errorf("expected peering sync level %s to be %s", actual, level)
+		}
+		return nil
+	}
+}
+
+func HavingAzurePeeringId(id string) GenericAssertion[armnetwork.VirtualNetworkPeering] {
+	return func(obj armnetwork.VirtualNetworkPeering) error {
+		actual := ptr.Deref(obj.ID, "")
+		if actual != id {
+			return fmt.Errorf("expected peering id %s to be %s", actual, id)
 		}
 		return nil
 	}
