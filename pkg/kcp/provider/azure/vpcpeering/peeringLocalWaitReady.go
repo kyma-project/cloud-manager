@@ -12,26 +12,17 @@ func peeringLocalWaitReady(ctx context.Context, st composed.State) (error, conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	//if state.localPeering != nil {
-	//	if ptr.Deref(state.localPeering.Properties.PeeringState, "") != armnetwork.VirtualNetworkPeeringStateConnected {
-	//		logger.Info("Waiting for peering Connected state")
-	//		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
-	//	}
-	//
-	//	if ptr.Deref(state.localPeering.Properties.PeeringSyncLevel, "") != armnetwork.VirtualNetworkPeeringLevelFullyInSync {
-	//		logger.Info("Waiting for peering FullInSync")
-	//		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
-	//	}
-	//}
-	//
-	//return nil, nil
+	if state.localPeering != nil {
+		if ptr.Deref(state.localPeering.Properties.PeeringState, "") != armnetwork.VirtualNetworkPeeringStateConnected {
+			logger.Info("Waiting for peering Connected state")
+			return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+		}
 
-	if state.localPeering != nil &&
-		ptr.Deref(state.localPeering.Properties.PeeringState, "") == armnetwork.VirtualNetworkPeeringStateConnected {
-		return nil, nil
+		if ptr.Deref(state.localPeering.Properties.PeeringSyncLevel, "") != armnetwork.VirtualNetworkPeeringLevelFullyInSync {
+			logger.Info("Waiting for peering FullInSync")
+			return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+		}
 	}
 
-	logger.Info("Waiting for peering Connected state")
-
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+	return nil, nil
 }
