@@ -2,6 +2,8 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/go-logr/logr"
@@ -13,7 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type updateStatusSuite struct {
@@ -90,7 +91,7 @@ func (suite *updateStatusSuite) TestUpdateStatusWhenObjectReady() {
 	suite.Nil(err)
 
 	err, _ = updateStatus(ctx, state)
-	suite.Equal(composed.StopAndForget, err)
+	suite.Nil(err)
 
 	fromK8s := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
@@ -129,7 +130,7 @@ func (suite *updateStatusSuite) TestUpdateStatusWhenObjectNotReady() {
 	suite.Nil(err)
 
 	err, _ = updateStatus(ctx, state)
-	suite.Equal(composed.StopAndForget, err)
+	suite.Nil(err)
 
 	fromK8s := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,

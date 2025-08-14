@@ -42,6 +42,7 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Id:         "test-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: 1024,
+		Capacity:   resource.MustParse("1024Gi"),
 		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
@@ -68,6 +69,7 @@ var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		Id:         "to-delete-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.4"},
 		CapacityGb: 1024,
+		Capacity:   resource.MustParse("1024Gi"),
 	},
 }
 
@@ -230,6 +232,7 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 		},
 		Hosts:      []string{"10.20.30.2"},
 		CapacityGb: gcpNfsVolume.Spec.CapacityGb,
+		Capacity:   resource.MustParse(fmt.Sprintf("%dGi", gcpNfsVolume.Spec.CapacityGb)),
 	},
 }
 

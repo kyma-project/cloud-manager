@@ -2,12 +2,13 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"time"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func createAwsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -44,7 +45,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 	backup.Status.JobId = ptr.Deref(res.BackupJobId, "")
 	backup.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
 	backup.Status.State = cloudresourcesv1beta1.StateCreating
-	return composed.UpdateStatus(backup).
+	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
 		Run(ctx, state)

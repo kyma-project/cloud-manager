@@ -3,12 +3,13 @@ package testinfra
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
-	"strings"
-	"time"
 )
 
 func ReportAfterSuite(report ginkgo.Report) {

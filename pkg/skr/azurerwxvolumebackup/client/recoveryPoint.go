@@ -7,7 +7,7 @@ import (
 )
 
 type RecoveryPointClient interface {
-	GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (armrecoveryservicesbackup.RecoveryPointResource, error)
+	GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (*armrecoveryservicesbackup.RecoveryPointResource, error)
 	ListRecoveryPoints(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string) ([]*armrecoveryservicesbackup.RecoveryPointResource, error)
 }
 
@@ -25,8 +25,7 @@ func NewRecoveryPointClient(subscriptionId string, cred *azidentity.ClientSecret
 	return recoveryPointClient{rpc}, nil
 }
 
-func (c recoveryPointClient) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (armrecoveryservicesbackup.RecoveryPointResource, error) {
-	var result armrecoveryservicesbackup.RecoveryPointResource
+func (c recoveryPointClient) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (*armrecoveryservicesbackup.RecoveryPointResource, error) {
 	resp, err := c.azureClient.Get(
 		ctx,
 		vaultName,
@@ -39,10 +38,10 @@ func (c recoveryPointClient) GetRecoveryPoint(ctx context.Context, vaultName str
 	)
 
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	result = armrecoveryservicesbackup.RecoveryPointResource{
+	result := &armrecoveryservicesbackup.RecoveryPointResource{
 		ETag:       resp.ETag,
 		Location:   resp.Location,
 		Properties: resp.Properties,

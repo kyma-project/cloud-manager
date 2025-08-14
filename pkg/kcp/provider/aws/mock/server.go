@@ -3,8 +3,10 @@ package mock
 import (
 	"context"
 	"fmt"
-	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	"sync"
+
+	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
@@ -33,6 +35,12 @@ type server struct {
 
 func (s *server) ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient] {
 	return func(ctx context.Context, region, key, secret string) (scopeclient.AwsStsClient, error) {
+		return s, nil
+	}
+}
+
+func (s *server) SubscriptionGardenProvider() awsclient.GardenClientProvider[subscriptionclient.AwsStsClient] {
+	return func(ctx context.Context, region, key, secret string) (subscriptionclient.AwsStsClient, error) {
 		return s, nil
 	}
 }

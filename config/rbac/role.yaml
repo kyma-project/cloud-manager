@@ -25,6 +25,9 @@ rules:
   - redisclusters
   - redisinstances
   - scopes
+  - skrstatuses
+  - subscriptions
+  - vpcnetworks
   - vpcpeerings
   verbs:
   - create
@@ -47,6 +50,9 @@ rules:
   - redisclusters/finalizers
   - redisinstances/finalizers
   - scopes/finalizers
+  - skrstatuses/finalizers
+  - subscriptions/finalizers
+  - vpcnetworks/finalizers
   - vpcpeerings/finalizers
   verbs:
   - update
@@ -63,6 +69,9 @@ rules:
   - redisclusters/status
   - redisinstances/status
   - scopes/status
+  - skrstatuses/status
+  - subscriptions/status
+  - vpcnetworks/status
   - vpcpeerings/status
   verbs:
   - get
@@ -166,6 +175,28 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - infrastructuremanager.kyma-project.io
+  resources:
+  - gardenerclusters
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - infrastructuremanager.kyma-project.io
+  resources:
+  - gardenerclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - infrastructuremanager.kyma-project.io
+  resources:
+  - gardenerclusters/status
+  verbs:
+  - get
 - apiGroups:
   - operator.kyma-project.io
   resources:

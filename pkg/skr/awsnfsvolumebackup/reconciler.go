@@ -2,6 +2,7 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -80,8 +81,9 @@ func (r *reconciler) newAction() composed.Action {
 		createAwsBackup,
 		deleteAwsBackup,
 		removeFinalizer,
+		updateCapacity,
 		updateStatus,
 
-		composed.StopAndForgetAction,
+		StopAndRequeueForCapacityAction(),
 	)
 }

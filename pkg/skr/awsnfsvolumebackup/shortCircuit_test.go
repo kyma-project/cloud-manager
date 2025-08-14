@@ -2,13 +2,18 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	"github.com/stretchr/testify/suite"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type shortCircuitSuite struct {
@@ -41,8 +46,12 @@ func (suite *shortCircuitSuite) TestWhenBackupIsDeleting() {
 
 func (suite *shortCircuitSuite) TestWhenBackupIsReady() {
 
+	config.AwsConfig.EfsCapacityCheckInterval = time.Hour * 6
+
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateReady
+	obj.Status.Capacity = *resource.NewQuantity(int64(1024), resource.BinarySI)
+	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().Add(-1 * time.Hour)}
 	factory, err := newStateFactoryWithObj(obj)
 	suite.Nil(err)
 
@@ -55,7 +64,7 @@ func (suite *shortCircuitSuite) TestWhenBackupIsReady() {
 	err, _ctx := shortCircuitCompleted(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	suite.Equal(stopAndRequeueForCapacity(), err)
 	suite.Nil(_ctx)
 
 	fromK8s := &v1beta1.AwsNfsVolumeBackup{}

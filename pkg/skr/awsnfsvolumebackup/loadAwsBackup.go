@@ -3,6 +3,7 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -50,7 +51,7 @@ func loadAwsBackup(ctx context.Context, st composed.State) (error, context.Conte
 
 	//Update the status with error, and stop reconciliation
 	backup.Status.State = cloudresourcesv1beta1.StateError
-	return composed.UpdateStatus(backup).
+	return composed.PatchStatus(backup).
 		SetExclusiveConditions(metav1.Condition{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,

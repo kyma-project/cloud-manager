@@ -27,11 +27,17 @@ import (
 var _ Server = &server{}
 
 func New() Server {
+
+	regionalOperationsClientfake := &regionalOperationsClientFake{
+		mutex:      sync.Mutex{},
+		operations: map[string]*computepb.Operation{},
+	}
 	return &server{
 		iprangeStore: &iprangeStore{},
 		computeClientFake: &computeClientFake{
-			mutex:   sync.Mutex{},
-			subnets: map[string]*computepb.Subnetwork{},
+			mutex:                 sync.Mutex{},
+			subnets:               map[string]*computepb.Subnetwork{},
+			operationsClientUtils: regionalOperationsClientfake,
 		},
 		networkConnectivityClientFake: &networkConnectivityClientFake{
 			mutex:              sync.Mutex{},
@@ -53,6 +59,7 @@ func New() Server {
 		exposedDataStore: &exposedDataStore{
 			ipPool: iprangeallocate.NewAddressSpace(),
 		},
+		regionalOperationsClientFake: regionalOperationsClientfake,
 	}
 }
 
@@ -68,6 +75,7 @@ type server struct {
 	*memoryStoreClientFake
 	*memoryStoreClusterClientFake
 	*exposedDataStore
+	*regionalOperationsClientFake
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -127,6 +135,13 @@ func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubne
 		return s
 	}
 }
+
+func (s *server) SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
+	return func() gcpsubnetclient.RegionOperationsClient {
+		return s
+	}
+}
+
 func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
 	return func() gcpsubnetclient.NetworkConnectivityClient {
 		return s

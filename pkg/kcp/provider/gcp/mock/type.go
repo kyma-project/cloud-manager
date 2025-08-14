@@ -36,6 +36,7 @@ type Providers interface {
 	ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient]
 	SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient]
 	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
+	SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient]
 	FilestoreClientProvider() client.ClientProvider[gcpnfsinstanceclient.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
@@ -64,6 +65,8 @@ type Server interface {
 
 	MemoryStoreClientFakeUtils
 	MemoryStoreClusterClientFakeUtils
+
+	RegionalOperationsClientFakeUtils
 
 	VpcPeeringMockClientUtils
 

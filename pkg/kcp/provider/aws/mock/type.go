@@ -7,6 +7,7 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 )
 
 type IpRangeClient interface {
@@ -34,6 +35,7 @@ type Clients interface {
 
 type Providers interface {
 	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AwsStsClient]
+	SubscriptionGardenProvider() awsclient.GardenClientProvider[subscriptionclient.AwsStsClient]
 	IpRangeSkrProvider() awsclient.SkrClientProvider[awsiprangeclient.Client]
 	NfsInstanceSkrProvider() awsclient.SkrClientProvider[awsnfsinstanceclient.Client]
 	VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeringclient.Client]

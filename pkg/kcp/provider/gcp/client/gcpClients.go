@@ -23,6 +23,7 @@ type GcpClients struct {
 	ComputeAddresses                          *compute.AddressesClient
 	ComputeRouters                            *compute.RoutersClient
 	ComputeSubnetworks                        *compute.SubnetworksClient
+	RegionOperations                          *compute.RegionOperationsClient
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
 	RedisInstance                             *redisinstance.CloudRedisClient
@@ -67,6 +68,10 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, vpcPeeringSaJsonKe
 	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
 	if err != nil {
 		return nil, fmt.Errorf("create compute subnetworks client: %w", err)
+	}
+	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create compute region operations client: %w", err)
 	}
 
 	// network connectivity ----------------
@@ -133,6 +138,7 @@ func NewGcpClients(ctx context.Context, saJsonKeyPath string, vpcPeeringSaJsonKe
 		ComputeAddresses:   computeAddress,
 		ComputeRouters:     computeRouters,
 		ComputeSubnetworks: computeSubnetworks,
+		RegionOperations:   computeRegionOperations,
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
 		RedisCluster:  redisCluster,
 		RedisInstance: redisInstance,

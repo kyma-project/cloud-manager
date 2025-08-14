@@ -24,33 +24,39 @@ const (
 	DefaultGardenNamespace = "garden-kyma" // must be same as infra.Garden().Namespace()
 )
 
+func CreateGardenerCredentials(ctx context.Context, infra testinfra.Infra) error {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: infra.KCP().Namespace(),
+			Name:      "gardener-credentials",
+		},
+	}
+	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
+	if client.IgnoreNotFound(err) != nil {
+		return fmt.Errorf("error getting gardener-credentials secret: %w", err)
+	}
+	if apierrors.IsNotFound(err) {
+		b, err := kubeconfigToBytes(restConfigToKubeconfig(infra.Garden().Cfg()))
+		if err != nil {
+			return fmt.Errorf("error getting garden kubeconfig bytes: %w", err)
+		}
+		secret.Data = map[string][]byte{
+			"kubeconfig": b,
+		}
+
+		err = infra.KCP().Client().Create(ctx, secret)
+		if client.IgnoreAlreadyExists(err) != nil {
+			return fmt.Errorf("error creating gardener-credentials secret: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenertypes.Shoot, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
-	{
-		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "gardener-credentials",
-			},
-		}
-		err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
-		if client.IgnoreNotFound(err) != nil {
-			return fmt.Errorf("error getting gardener-credentials secret: %w", err)
-		}
-		if apierrors.IsNotFound(err) {
-			b, err := kubeconfigToBytes(restConfigToKubeconfig(infra.Garden().Cfg()))
-			if err != nil {
-				return fmt.Errorf("error getting garden kubeconfig bytes: %w", err)
-			}
-			secret.Data = map[string][]byte{
-				"kubeconfig": b,
-			}
-
-			err = infra.KCP().Client().Create(ctx, secret)
-			if client.IgnoreAlreadyExists(err) != nil {
-				return fmt.Errorf("error creating gardener-credentials secret: %w", err)
-			}
-		}
+	if err := CreateGardenerCredentials(ctx, infra); err != nil {
+		return err
 	}
 
 	// Garden resources

@@ -63,13 +63,19 @@ type ScopeReconciler struct {
 	Reconciler kcpscope.ScopeReconciler
 }
 
-//+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes/finalizers,verbs=update
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=scopes/finalizers,verbs=update
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/status,verbs=get
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses/finalizers,verbs=update
+// +kubebuilder:rbac:groups=infrastructuremanager.kyma-project.io,resources=gardenerclusters,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=infrastructuremanager.kyma-project.io,resources=gardenerclusters/status,verbs=get
+// +kubebuilder:rbac:groups=infrastructuremanager.kyma-project.io,resources=gardenerclusters/finalizers,verbs=update
 
 func (r *ScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return r.Reconciler.Reconcile(ctx, req)

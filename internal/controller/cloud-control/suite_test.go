@@ -158,15 +158,20 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.GcpMock().SubnetComputeClientProvider(),
 		infra.GcpMock().SubnetNetworkConnectivityProvider(),
+		infra.GcpMock().SubnetRegionOperationsClientProvider(),
 		env,
 	)).To(Succeed())
-
 	//AzureVNetLink
 	Expect(SetupAzureVNetLinkReconciler(
 		infra.KcpManager(),
 		infra.AzureMock().VNetLinkProvider(),
 		env,
 	)).NotTo(HaveOccurred())
+	// Subscription
+	Expect(SetupSubscriptionReconciler(
+		infra.KcpManager(),
+		infra.AwsMock().SubscriptionGardenProvider(),
+	)).To(Succeed())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

@@ -2,31 +2,30 @@ package scope
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func gardenerCredentialsLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	bindingName := *state.shoot.Spec.SecretBindingName
-
-	secretBinding, err := state.gardenerClient.SecretBindings(state.shootNamespace).Get(ctx, bindingName, metav1.GetOptions{})
+	out, err := commongardener.LoadGardenerCloudProviderCredentials(ctx, commongardener.LoadGardenerCloudProviderCredentialsInput{
+		GardenerClient:  state.gardenerClient,
+		GardenK8sClient: state.gardenK8sClient,
+		Namespace:       state.shootNamespace,
+		BindingName:     ptr.Deref(state.shoot.Spec.SecretBindingName, ""),
+	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting shoot secret binding", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error loading gardener cloud credentials", composed.StopWithRequeue, ctx)
 	}
 
-	state.provider = cloudcontrolv1beta1.ProviderType(secretBinding.Provider.Type)
+	state.provider = cloudcontrolv1beta1.ProviderType(out.Provider)
 
-	secret, err := state.gardenK8sClient.CoreV1().Secrets(secretBinding.SecretRef.Namespace).
-		Get(ctx, secretBinding.SecretRef.Name, metav1.GetOptions{})
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting shoot secret", composed.StopWithRequeue, ctx)
-	}
-
-	for k, v := range secret.Data {
+	for k, v := range out.CredentialsData {
 		state.credentialData[k] = string(v)
 	}
 

@@ -3,6 +3,7 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -50,7 +51,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		if backupReady != nil && backupReady.Status == metav1.ConditionTrue &&
 			backup.Status.State == cloudresourcesv1beta1.StateReady {
 			// already with Ready condition
-			return composed.StopAndForget, nil
+			return nil, nil
 		} else {
 			logger.Info("Updating SKR AwsNfsVolumeBackup status with Ready condition")
 			backup.Status.State = cloudresourcesv1beta1.StateReady
@@ -62,7 +63,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 					Message: "Backup is ready for use.",
 				}).
 				SuccessLogMsg("AwsNfsVolumeBackup status got updated with Ready condition ").
-				SuccessError(composed.StopAndForget).
+				SuccessErrorNil().
 				Run(ctx, state)
 		}
 	} else if jobStatus == types.BackupJobStateAborting ||

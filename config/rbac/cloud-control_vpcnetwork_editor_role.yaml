@@ -1,0 +1,33 @@
+# This rule is not used by the project cloud-manager itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants permissions to create, update, and delete resources within the cloud-control.kyma-project.io.
+# This role is intended for users who need to manage these resources
+# but should not control RBAC or manage permissions for others.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: cloud-control-vpcnetwork-editor-role
+rules:
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - vpcnetworks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - vpcnetworks/status
+  verbs:
+  - get

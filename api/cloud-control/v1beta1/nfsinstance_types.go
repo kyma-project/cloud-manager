@@ -124,6 +124,7 @@ type NfsInstanceStatus struct {
 	OpIdentifier string `json:"opIdentifier,omitempty"`
 
 	// Provisioned Capacity in GBs
+	// Deprecated: Use Capacity instead
 	// +optional
 	CapacityGb int `json:"capacityGb"`
 
@@ -142,7 +143,7 @@ var _ client.Object = &NfsInstance{}
 
 // NfsInstance is the Schema for the nfsinstances API
 // +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
-// +kubebuilder:printcolumn:name="SizeGb",type="string",JSONPath=".status.capacityGb"
+// +kubebuilder:printcolumn:name="Size",type="string",JSONPath=".status.capacity"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 type NfsInstance struct {
 	metav1.TypeMeta   `json:",inline"`

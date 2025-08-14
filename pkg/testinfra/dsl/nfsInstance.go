@@ -18,7 +18,7 @@ const (
 	DefaultGcpNfsInstanceFileShareName = "vol1"
 	DefaultGcpNfsInstanceCapacityGb    = 1024
 	DefaultGcpNfsInstanceConnectMode   = "PRIVATE_SERVICE_ACCESS"
-	DefaultGcpNfsInstanceTier          = "BASIC_HDD"
+	DefaultGcpNfsInstanceTier          = "ZONAL"
 )
 
 func WithNfsInstanceStatusHost(host string) ObjStatusAction {
@@ -31,6 +31,18 @@ func WithNfsInstanceStatusHost(host string) ObjStatusAction {
 				if len(x.Status.Hosts) == 0 {
 					x.Status.Hosts = []string{host}
 					x.Status.Host = host
+				}
+			}
+		},
+	}
+}
+
+func WithNfsInstanceStatusCapacity(capacity resource.Quantity) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				if !x.Status.Capacity.Equal(capacity) {
+					x.Status.Capacity = capacity
 				}
 			}
 		},
@@ -212,6 +224,22 @@ func HavingNfsInstanceStatusId() ObjAssertion {
 		}
 		if x.Status.Id == "" {
 			return errors.New("the KCP NfsInstance status.id is not set")
+		}
+		return nil
+	}
+}
+
+func HavingNfsInstanceStatusCapacity(capacity string) ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
+		if !ok {
+			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
+		}
+		if x.Status.Capacity.IsZero() {
+			return errors.New("the KCP NfsInstance status.capacity is not set")
+		}
+		if x.Status.Capacity.String() != capacity {
+			return fmt.Errorf("the KCP NfsInstance status.capacity is %s, but expected %s", x.Status.Capacity.String(), capacity)
 		}
 		return nil
 	}

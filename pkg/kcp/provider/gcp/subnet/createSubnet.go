@@ -24,7 +24,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.computeClient.CreateSubnet(ctx, client.CreateSubnetRequest{
+	opKey, err := state.computeClient.CreateSubnet(ctx, client.CreateSubnetRequest{
 		ProjectId:             gcpScope.Project,
 		Region:                region,
 		Network:               gcpScope.VpcNetwork,
@@ -57,5 +57,11 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	return composed.StopWithRequeue, nil
+	subnet.Status.SubnetCreationOperationName = opKey
+
+	return composed.UpdateStatus(subnet).
+		SuccessError(composed.StopWithRequeue).
+		SuccessLogMsg("successfully updated GcpSubnet status with operation id").
+		ErrorLogMessage("failed to update GcpSubnet status with operation id").
+		Run(ctx, st)
 }

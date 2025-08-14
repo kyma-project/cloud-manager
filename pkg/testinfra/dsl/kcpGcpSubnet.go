@@ -89,6 +89,18 @@ func HavingKcpGcpSubnetStatusCidr(cidr string) ObjAssertion {
 	}
 }
 
+func HavingKcpGcpSubnetCreationOperationDefined() ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(*cloudcontrolv1beta1.GcpSubnet); ok {
+			if x.Status.SubnetCreationOperationName != "" {
+				return nil
+			}
+			return fmt.Errorf("the KCP GcpSubnet expected status subnetCreationOperationName to be defined")
+		}
+		return fmt.Errorf("unhandled type %T", obj)
+	}
+}
+
 func WithKcpGcpSubnetNetwork(network string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

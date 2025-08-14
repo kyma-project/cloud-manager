@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -71,6 +72,18 @@ func WithGcpNfsVolumeSpecLocation(location string) ObjAction {
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
 				x.Spec.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
+		},
+	}
+}
+
+func WithGcpNfsVolumeSpecTier(tier cloudresourcesv1beta1.GcpFileTier) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Spec.Tier = tier
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
@@ -162,6 +175,23 @@ func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
 		f: func(obj client.Object) {
 			x := obj.(*cloudcontrolv1beta1.NfsInstance)
 			x.Status.CapacityGb = capacity
+			x.Status.Capacity = resource.MustParse(fmt.Sprintf("%dGi", capacity))
+		},
+	}
+}
+
+func WithKcpNfsStatusStateData(key, value string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.NfsInstance)
+			if x.Status.StateData == nil {
+				x.Status.StateData = make(map[string]string)
+			}
+			if value == "" {
+				delete(x.Status.StateData, key)
+			} else {
+				x.Status.StateData[key] = value
+			}
 		},
 	}
 }
