@@ -26,7 +26,7 @@ jobs:
             nukeBackupsAzure: "true"
             nfs41Gcp: "true"
             vpcPeeringSync: "true"
-            name: Build & Test (Nuke Backups, FSv4.1, Peering Sync)
+            name: Build & Test (Nuke Backups, NFSv4.1, Peering Sync)
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
     steps:
