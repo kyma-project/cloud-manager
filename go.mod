@@ -32,7 +32,7 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gardener/gardener v1.124.0
+	github.com/gardener/gardener v1.125.1
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/google/uuid v1.6.0
@@ -126,7 +126,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/common v0.65.0 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
