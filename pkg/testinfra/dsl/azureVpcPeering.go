@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
+	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -53,7 +53,7 @@ func AssertAzureVpcPeeringHasId() ObjAssertion {
 	}
 }
 
-func LoadAzurePeeringAndCheck(ctx context.Context, client azure.Client, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string, asserts ...GenericAssertion[armnetwork.VirtualNetworkPeering]) error {
+func LoadAzurePeeringAndCheck(ctx context.Context, client azurevpcpeeringclient.Client, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName string, asserts ...GenericAssertion[armnetwork.VirtualNetworkPeering]) error {
 
 	peering, err := client.GetPeering(ctx, resourceGroupName, virtualNetworkName, virtualNetworkPeeringName)
 
