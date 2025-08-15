@@ -28,7 +28,7 @@ func updateCapacity(ctx context.Context, st composed.State) (error, context.Cont
 
 	// Update Capacity and timestamp (?)
 	logger.Info("Updating SKR GCPNfsVolumeBackup status with Capacity")
-	size := state.fileBackup.CapacityGb
+	size := state.fileBackup.StorageBytes
 	capacity := resource.NewQuantity(size, resource.BinarySI)
 	backup.Status.Capacity = *capacity
 	backup.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().UTC()}

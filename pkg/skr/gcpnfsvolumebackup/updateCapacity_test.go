@@ -65,7 +65,7 @@ func (suite *updateCapacitySuite) TestLastCapacityUpdateNil() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 	state.fileBackup = &file.Backup{
-		CapacityGb: 1024,
+		StorageBytes: 1024,
 	}
 	suite.NotNil(state.fileBackup)
 
@@ -93,7 +93,7 @@ func (suite *updateCapacitySuite) TestLastCapacityUpdateIsZero() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 	state.fileBackup = &file.Backup{
-		CapacityGb: 1024,
+		StorageBytes: 1024,
 	}
 	suite.NotNil(state.fileBackup)
 
@@ -120,7 +120,7 @@ func (suite *updateCapacitySuite) TestLastCapacityUpdateGreater() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 	state.fileBackup = &file.Backup{
-		CapacityGb: 1024,
+		StorageBytes: 1024,
 	}
 	suite.NotNil(state.fileBackup)
 
@@ -150,7 +150,7 @@ func (suite *updateCapacitySuite) TestLastCapacityUpdateLesser() {
 	state, err := factory.newStateWith(obj)
 	suite.Nil(err)
 	state.fileBackup = &file.Backup{
-		CapacityGb: 1024,
+		StorageBytes: 1024,
 	}
 	suite.NotNil(state.fileBackup)
 
