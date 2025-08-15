@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"github.com/kyma-project/cloud-manager/api"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -773,6 +774,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remotePeeringName   = "my-peering"
 			localPeeringName    = "kyma-peering"
 		)
+
+		if !feature.VpcPeeringSync.Value(infra.Ctx()) {
+			Skip("Nuke Backups for Azure is disabled")
+		}
 
 		scope := &cloudcontrolv1beta1.Scope{}
 

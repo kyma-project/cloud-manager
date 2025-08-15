@@ -98,7 +98,7 @@ func HavingUseRemoteGateways(useRemoteGateways bool) GenericAssertion[armnetwork
 	return func(obj armnetwork.VirtualNetworkPeering) error {
 		actual := ptr.Deref(obj.Properties.UseRemoteGateways, false)
 		if actual != useRemoteGateways {
-			return fmt.Errorf("expected useRemoteGateways %s to be %s", actual, useRemoteGateways)
+			return fmt.Errorf("expected useRemoteGateways %t to be %t", actual, useRemoteGateways)
 		}
 		return nil
 	}
