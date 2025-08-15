@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/utils/ptr"
 
@@ -18,6 +19,11 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.remotePeering != nil {
+
+		if !feature.VpcPeeringSync.Value(ctx) {
+			return nil, nil
+		}
+
 		peeringSyncLevel := ptr.Deref(state.remotePeering.Properties.PeeringSyncLevel, "")
 		if peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelFullyInSync ||
 			peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelRemoteNotInSync {

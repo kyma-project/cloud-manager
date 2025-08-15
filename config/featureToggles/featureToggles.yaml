@@ -34,3 +34,10 @@ nukeBackupsAws:
     no: false
   defaultRule:
     variation: "no"
+
+vpcPeeringSync:
+  variations:
+    yes: true
+    no: false
+  defaultRule:
+    variation: "yes"
