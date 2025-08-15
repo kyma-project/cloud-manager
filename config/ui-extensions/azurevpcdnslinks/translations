@@ -1,0 +1,7 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.remoteLinkName: Remote Link Name
+  spec.remotePrivateDnsZone: Remote Private Dns Zone
+  spec.remoteTenant: Remote Tenant

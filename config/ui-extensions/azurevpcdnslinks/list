@@ -1,0 +1,12 @@
+- source: spec.remoteLinkName
+  name: spec.remoteLinkName
+  sort: true
+- source: spec.remotePrivateDnsZone
+  name: spec.remotePrivateDnsZone
+  sort: true
+- source: spec.remoteTenant
+  name: spec.remoteTenant
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true
