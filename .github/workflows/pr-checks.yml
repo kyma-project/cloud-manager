@@ -20,12 +20,15 @@ jobs:
             nukeBackupsAzure: "false"
             nfs41Gcp: "false"
             vpcPeeringSync: "false"
+            name: Build & Test
           - nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
             nukeBackupsAzure: "true"
             nfs41Gcp: "true"
             vpcPeeringSync: "true"
+            name: Build & Test (Nuke Backups, FSv4.1, Peering Sync)
     runs-on: ubuntu-latest
+    name: ${{ matrix.name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
