@@ -2,12 +2,13 @@ package client
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"k8s.io/utils/ptr"
 )
 
 type VirtualNetworkPeeringClient interface {
-	CreatePeering(ctx context.Context,
+	CreateOrUpdatePeering(ctx context.Context,
 		resourceGroupName,
 		virtualNetworkName,
 		virtualNetworkPeeringName,
@@ -31,7 +32,7 @@ type virtualNetworkPeeringClient struct {
 	svc *armnetwork.VirtualNetworkPeeringsClient
 }
 
-func (c *virtualNetworkPeeringClient) CreatePeering(
+func (c *virtualNetworkPeeringClient) CreateOrUpdatePeering(
 	ctx context.Context,
 	resourceGroupName,
 	virtualNetworkName,
@@ -57,7 +58,9 @@ func (c *virtualNetworkPeeringClient) CreatePeering(
 				},
 			},
 		},
-		nil,
+		&armnetwork.VirtualNetworkPeeringsClientBeginCreateOrUpdateOptions{
+			SyncRemoteAddressSpace: to.Ptr(armnetwork.SyncRemoteAddressSpaceTrue),
+		},
 	)
 
 	return err

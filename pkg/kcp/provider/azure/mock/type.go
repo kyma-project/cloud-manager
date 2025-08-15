@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -92,8 +93,11 @@ type Providers interface {
 }
 
 type NetworkConfig interface {
-	SetPeeringStateConnected(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error
+	SetPeeringConnectedFullInSync(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string) error
 	SetPeeringError(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string, err error)
+	SetPeeringSyncLevel(ctx context.Context, resourceGroup, virtualNetworkName, virtualNetworkPeeringName string, peeringLevel armnetwork.VirtualNetworkPeeringLevel) error
+	SetNetworkAddressSpace(ctx context.Context, resourceGroup, virtualNetworkName, addressSpace string) error
+	AddRemoteSubscription(ctx context.Context, remoteSubscription *TenantSubscription)
 }
 
 type RedisConfig interface {
