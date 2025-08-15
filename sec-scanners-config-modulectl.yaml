@@ -2,7 +2,6 @@ module-name: cloud-manager
 kind: kyma
 rc-tag: 1.4.0
 bdba:
-  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.2.5
   - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.4.0
 mend:
