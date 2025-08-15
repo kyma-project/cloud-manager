@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -37,7 +38,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	//If file backup is ready, update the status of the backup
 	if backupReady != nil && backupReady.Status == metav1.ConditionTrue {
 		// already with Ready condition
-		return composed.StopAndForget, nil
+		return nil, nil
 	} else {
 		logger.Info("Updating SKR GcpNfsVolumeBackup status with Ready condition")
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupReady
@@ -49,7 +50,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Message: "Backup is ready for use.",
 			}).
 			SuccessLogMsg("GcpNfsVolumeBackup status got updated with Ready condition ").
-			SuccessError(composed.StopWithRequeue).
+			SuccessErrorNil().
 			Run(ctx, state)
 	}
 }

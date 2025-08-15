@@ -188,6 +188,7 @@ func Start() (Infra, error) {
 	_ = os.Setenv("GCP_OPERATION_WAIT_DURATION", "300ms")
 	_ = os.Setenv("GCP_API_TIMEOUT_DURATION", "300ms")
 	_ = os.Setenv("AWS_EFS_CAPACITY_CHECK_INTERVAL", "1s")
+	_ = os.Setenv("GCP_CAPACITY_CHECK_INTERVAL", "1s")
 
 	// init config
 	awsconfig.InitConfig(infra.Config())
