@@ -1,0 +1,22 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: remoteLinkName
+        name: spec.remoteLinkName
+      - widget: Labels
+        source: remotePrivateDnsZone
+        name: spec.remotePrivateDnsZone
+      - widget: Labels
+        source: remoteTenant
+        name: spec.remoteTenant
+  
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state
