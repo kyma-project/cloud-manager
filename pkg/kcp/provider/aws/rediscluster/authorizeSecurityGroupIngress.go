@@ -34,7 +34,7 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 			}
 		}
 		if hasPods && hasNet {
-			return nil, nil
+			return nil, ctx
 		}
 	}
 
@@ -68,7 +68,7 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	}
 
 	if len(permissions) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err := state.awsClient.AuthorizeElastiCacheSecurityGroupIngress(ctx, state.securityGroupId, permissions)

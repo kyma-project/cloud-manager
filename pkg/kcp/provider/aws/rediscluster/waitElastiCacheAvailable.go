@@ -35,7 +35,7 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
 	if cacheState == awsmeta.ElastiCache_AVAILABLE {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Redis instance is not ready yet, requeueing with delay")

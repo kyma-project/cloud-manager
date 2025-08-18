@@ -14,11 +14,11 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpRedisInstance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if composed.IsMarkedForDeletion(state.KcpRedisInstance) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance := state.ObjAsAwsRedisInstance()
@@ -35,7 +35,7 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting KCP RedisInstance for AwsRedisInstance")
@@ -52,5 +52,5 @@ func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 		return composed.LogErrorAndReturn(err, "Failed status update on AWS RedisInstance", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

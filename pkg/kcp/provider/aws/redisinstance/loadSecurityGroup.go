@@ -16,13 +16,13 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 	if state.securityGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance := state.ObjAsRedisInstance()
 
 	if len(state.securityGroupId) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	sg, err := state.awsClient.DescribeElastiCacheSecurityGroups(
@@ -59,5 +59,5 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	logger.Info("Created security group is loaded")
 
-	return nil, nil
+	return nil, ctx
 }

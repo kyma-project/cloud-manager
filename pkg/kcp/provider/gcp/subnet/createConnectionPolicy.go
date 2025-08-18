@@ -18,7 +18,7 @@ func createConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.serviceConnectionPolicy != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.subnet == nil {

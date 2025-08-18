@@ -18,7 +18,7 @@ func loadParameterGroup(
 		state := st.(*State)
 		paramGroup := getParamGroup(state)
 		if paramGroup != nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger := composed.LoggerFromCtx(ctx)
@@ -38,7 +38,7 @@ func loadParameterGroup(
 
 		logger.Info("ElastiCache parameter group not found")
 
-		return nil, nil
+		return nil, ctx
 	}
 }
 

@@ -19,7 +19,7 @@ func loadSubnetCreationOperation(ctx context.Context, st composed.State) (error,
 	subnet := state.ObjAsGcpSubnet()
 
 	if subnet.Status.SubnetCreationOperationName == "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
@@ -36,7 +36,7 @@ func loadSubnetCreationOperation(ctx context.Context, st composed.State) (error,
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target GCP Subnet Creation Operation not found, continuing")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP GCP Subnet Creation Operation")
@@ -67,5 +67,5 @@ func loadSubnetCreationOperation(ctx context.Context, st composed.State) (error,
 		state.subnetCreationOperation = op
 	}
 
-	return nil, nil
+	return nil, ctx
 }

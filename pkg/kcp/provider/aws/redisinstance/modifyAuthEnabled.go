@@ -22,7 +22,7 @@ func modifyAuthEnabled(ctx context.Context, st composed.State) (error, context.C
 	desiredAuthEnabled := redisInstance.Spec.Instance.Aws.AuthEnabled
 
 	if currentAuthEnabled == desiredAuthEnabled && len(state.elastiCacheReplicationGroup.UserGroupIds) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if desiredAuthEnabled && state.authTokenValue == nil {
@@ -39,5 +39,5 @@ func modifyAuthEnabled(ctx context.Context, st composed.State) (error, context.C
 
 	state.UpdateAuthEnabled(desiredAuthEnabled)
 
-	return nil, nil
+	return nil, ctx
 }

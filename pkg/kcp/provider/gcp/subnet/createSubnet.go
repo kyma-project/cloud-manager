@@ -17,7 +17,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnet != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet := state.ObjAsGcpSubnet()

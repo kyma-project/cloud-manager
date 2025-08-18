@@ -14,7 +14,7 @@ func createAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.AuthSecret != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	secret := &corev1.Secret{
@@ -36,5 +36,5 @@ func createAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("AuthSecret for GcpRedisInstance created")
 
-	return nil, nil
+	return nil, ctx
 }

@@ -31,7 +31,7 @@ func loadKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.Co
 	if apierrors.IsNotFound(err) {
 		state.KcpGcpSubnet = nil
 		logger.Info("KCP GcpSubnet does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP GcpSubnet", composed.StopWithRequeue, ctx)
@@ -39,5 +39,5 @@ func loadKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.Co
 
 	state.KcpGcpSubnet = kcpSubnet
 
-	return nil, nil
+	return nil, ctx
 }

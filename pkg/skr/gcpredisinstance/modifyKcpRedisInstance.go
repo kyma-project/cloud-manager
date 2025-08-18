@@ -24,7 +24,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	shouldModifyKcp := state.ShouldModifyKcp()
 
 	if !shouldModifyKcp {
-		return nil, nil
+		return nil, ctx
 	}
 
 	_, memorySizeGb, err := redisTierToTierAndMemorySizeConverter(gcpRedisInstance.Spec.RedisTier)

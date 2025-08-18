@@ -14,11 +14,11 @@ func deleteKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpGcpRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if composed.IsMarkedForDeletion(state.KcpGcpRedisCluster) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisCluster := state.ObjAsGcpRedisCluster()
@@ -35,7 +35,7 @@ func deleteKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting KCP GcpRedisCluster for GcpRedisCluster")
@@ -52,5 +52,5 @@ func deleteKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 		return composed.LogErrorAndReturn(err, "Failed status update on GCP GcpRedisCluster", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

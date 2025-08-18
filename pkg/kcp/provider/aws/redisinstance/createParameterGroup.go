@@ -17,7 +17,7 @@ func createParameterGroup(getParamGroup func(*State) *elasticachetypes.CachePara
 		state := st.(*State)
 
 		if getParamGroup(state) != nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		redisInstance := state.ObjAsRedisInstance()

@@ -21,7 +21,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	redisInstance := state.ObjAsRedisCluster()
 
 	if state.elastiCacheReplicationGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Creating AWS ElastiCache")

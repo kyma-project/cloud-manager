@@ -15,17 +15,17 @@ func updateConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.serviceConnectionPolicy == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.subnet == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet := state.ObjAsGcpSubnet()
 
 	if !state.ShouldUpdateConnectionPolicy() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err := state.networkComnnectivityClient.UpdateServiceConnectionPolicy(ctx, state.serviceConnectionPolicy, state.updateMask)

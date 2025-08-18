@@ -17,18 +17,18 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	redisCluster := state.ObjAsGcpRedisCluster()
 
 	if state.gcpRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	isModifying := state.gcpRedisCluster.State == clusterpb.Cluster_UPDATING
 	hasUpdatingCondition := meta.FindStatusCondition(redisCluster.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
 
 	if !isModifying && !hasUpdatingCondition {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if isModifying && hasUpdatingCondition {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if isModifying && !hasUpdatingCondition {
@@ -54,5 +54,5 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, st)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

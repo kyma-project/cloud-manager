@@ -31,7 +31,7 @@ func loadKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, cont
 	if apierrors.IsNotFound(err) {
 		state.KcpGcpRedisCluster = nil
 		logger.Info("KCP GcpRedisCluster does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP GcpRedisCluster", composed.StopWithRequeue, ctx)
@@ -39,5 +39,5 @@ func loadKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, cont
 
 	state.KcpGcpRedisCluster = kcpGcpRedisCluster
 
-	return nil, nil
+	return nil, ctx
 }

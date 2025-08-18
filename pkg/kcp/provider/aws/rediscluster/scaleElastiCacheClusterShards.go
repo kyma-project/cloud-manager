@@ -17,11 +17,11 @@ func scaleElastiCacheClusterShards(ctx context.Context, st composed.State) (erro
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.IsShardCountUpToDate() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Updating shard count...")
