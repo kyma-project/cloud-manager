@@ -18,18 +18,20 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	syncRequired := false
 	if state.localPeering != nil {
 
 		if !feature.VpcPeeringSync.Value(ctx) {
-			return nil, nil
+			return nil, ctx
 		}
 
 		peeringSyncLevel := ptr.Deref(state.localPeering.Properties.PeeringSyncLevel, "")
 		if peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelFullyInSync ||
 			peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelRemoteNotInSync {
-			return nil, nil
+			return nil, ctx
 		}
 
+		syncRequired = true
 		logger.Info("Local VPC peering sync required", "peeringSyncLevel", peeringSyncLevel)
 	}
 
@@ -49,11 +51,20 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	)
 
 	if err == nil {
-		logger.Info("Local VPC peering created/updated")
+		if syncRequired {
+			logger.Info("Local VPC peering updated")
+		} else {
+			logger.Info("Local VPC peering created")
+		}
+
 		return nil, ctx
 	}
 
-	logger.Error(err, "Error creating/updating VPC Peering")
+	if syncRequired {
+		logger.Error(err, "Error updating VPC Peering")
+	} else {
+		logger.Error(err, "Error creating VPC Peering")
+	}
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
@@ -63,7 +74,13 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 		)
 	}
 
-	message, isWarning := azuremeta.GetErrorMessage(err, "Error creating/updating VPC peering")
+	defaultMassage := "Error creating VPC peering"
+
+	if syncRequired {
+		defaultMassage = "Error updating VPC peering"
+	}
+
+	message, isWarning := azuremeta.GetErrorMessage(err, defaultMassage)
 
 	changed := false
 
@@ -97,7 +114,7 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	successError := composed.StopAndForget
 
 	if !changed {
-		return successError, nil
+		return successError, ctx
 	}
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).

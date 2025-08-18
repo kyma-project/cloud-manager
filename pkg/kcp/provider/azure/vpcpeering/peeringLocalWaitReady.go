@@ -16,20 +16,20 @@ func peeringLocalWaitReady(ctx context.Context, st composed.State) (error, conte
 	stopWithRequeue := composed.StopWithRequeueDelay(util.Timing.T1000ms())
 
 	if state.localPeering == nil {
-		return stopWithRequeue, nil
+		return stopWithRequeue, ctx
 	}
 
 	if ptr.Deref(state.localPeering.Properties.PeeringState, "") != armnetwork.VirtualNetworkPeeringStateConnected {
 		logger.Info("Waiting for peering Connected state")
-		return stopWithRequeue, nil
+		return stopWithRequeue, ctx
 	}
 
 	if feature.VpcPeeringSync.Value(ctx) {
 		if ptr.Deref(state.localPeering.Properties.PeeringSyncLevel, "") != armnetwork.VirtualNetworkPeeringLevelFullyInSync {
 			logger.Info("Waiting for peering FullInSync")
-			return stopWithRequeue, nil
+			return stopWithRequeue, ctx
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

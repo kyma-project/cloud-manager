@@ -18,17 +18,21 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	syncRequired := false
+
 	if state.remotePeering != nil {
 
 		if !feature.VpcPeeringSync.Value(ctx) {
-			return nil, nil
+			return nil, ctx
 		}
 
 		peeringSyncLevel := ptr.Deref(state.remotePeering.Properties.PeeringSyncLevel, "")
 		if peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelFullyInSync ||
 			peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelRemoteNotInSync {
-			return nil, nil
+			return nil, ctx
 		}
+
+		syncRequired = true
 
 		logger.Info("Remote VPC peering sync required", "peeringSyncLevel", peeringSyncLevel)
 	}
@@ -49,12 +53,20 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 	)
 
 	if err == nil {
-		logger.Info("Remote VPC peering created/updated")
+		if syncRequired {
+			logger.Info("Remote VPC peering updated")
+		} else {
+			logger.Info("Remote VPC peering created")
+		}
 
 		return nil, ctx
 	}
 
-	logger.Error(err, "Error creating/updating remote VPC peering")
+	if syncRequired {
+		logger.Error(err, "Error updating remote VPC peering")
+	} else {
+		logger.Error(err, "Error creating remote VPC peering")
+	}
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
@@ -64,7 +76,13 @@ func peeringRemoteCreate(ctx context.Context, st composed.State) (error, context
 		)
 	}
 
-	message, isWarning := azuremeta.GetErrorMessage(err, "Error creating/updating remote VPC peering")
+	defaultMessage := "Error creating remote VPC peering"
+
+	if syncRequired {
+		defaultMessage = "Error updating remote VPC peering"
+	}
+
+	message, isWarning := azuremeta.GetErrorMessage(err, defaultMessage)
 
 	if isWarning {
 		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateWarning)
