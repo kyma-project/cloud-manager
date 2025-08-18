@@ -775,7 +775,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		)
 
 		if !feature.VpcPeeringSync.Value(infra.Ctx()) {
-			Skip("Nuke Backups for Azure is disabled")
+			Skip("VPC peering sync for Azure is disabled")
 		}
 
 		scope := &cloudcontrolv1beta1.Scope{}
