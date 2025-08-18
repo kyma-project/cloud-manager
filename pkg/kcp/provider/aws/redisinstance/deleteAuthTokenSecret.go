@@ -13,7 +13,7 @@ func deleteAuthTokenSecret(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.authTokenValue == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting authToken secret")

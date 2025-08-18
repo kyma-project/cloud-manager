@@ -19,10 +19,10 @@ func modifyMemoryReplicaCount(ctx context.Context, st composed.State) (error, co
 	desiredReplicaCount := redisInstance.Spec.Instance.Gcp.ReplicaCount
 
 	if currentReplicaCount == desiredReplicaCount {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateReplicaCount(desiredReplicaCount)
 
-	return nil, nil
+	return nil, ctx
 }

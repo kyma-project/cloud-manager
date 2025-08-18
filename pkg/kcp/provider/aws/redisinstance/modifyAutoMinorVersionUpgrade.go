@@ -20,10 +20,10 @@ func modifyAutoMinorVersionUpgrade(ctx context.Context, st composed.State) (erro
 	desiredAutoMinorVersionUpgrade := redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade
 
 	if currentAutoMinorVersionUpgrade == desiredAutoMinorVersionUpgrade {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateAutoMinorVersionUpgrade(desiredAutoMinorVersionUpgrade)
 
-	return nil, nil
+	return nil, ctx
 }

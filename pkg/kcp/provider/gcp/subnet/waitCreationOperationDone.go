@@ -14,14 +14,14 @@ func waitCreationOperationDone(ctx context.Context, st composed.State) (error, c
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnetCreationOperation == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	actual := ptr.Deref(state.subnetCreationOperation.Status, computepb.Operation_PENDING).String()
 	done := computepb.Operation_DONE.String()
 
 	if actual == done {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Waiting KCP GcpSubnet creation operation to be done")

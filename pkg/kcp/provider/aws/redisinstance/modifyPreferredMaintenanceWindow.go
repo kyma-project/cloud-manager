@@ -41,13 +41,13 @@ func modifyPreferredMaintenanceWindow(ctx context.Context, st composed.State) (e
 	desiredPreferredMaintenanceWindow := ptr.Deref(redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow, "")
 
 	if currentPreferredMaintenanceWindow == desiredPreferredMaintenanceWindow {
-		return nil, nil
+		return nil, ctx
 	}
 	if desiredPreferredMaintenanceWindow == "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdatePreferredMaintenanceWindow(desiredPreferredMaintenanceWindow)
 
-	return nil, nil
+	return nil, ctx
 }

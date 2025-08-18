@@ -15,11 +15,11 @@ func setErrorIfOperationErrors(ctx context.Context, st composed.State) (error, c
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnetCreationOperation == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.subnetCreationOperation.Error == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet := state.ObjAsGcpSubnet()

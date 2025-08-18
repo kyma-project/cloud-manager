@@ -17,7 +17,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 
 	if state.gcpRedisInstance != nil {
 		logger.Info("GCP Redis already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Loading GCP Redis")
@@ -30,7 +30,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target redis instance not found, continuing")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP Redis")
@@ -61,5 +61,5 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		state.gcpRedisInstanceAuth = redisAuth
 	}
 
-	return nil, nil
+	return nil, ctx
 }

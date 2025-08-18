@@ -16,7 +16,7 @@ func waitRedisDeleted(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.gcpRedisInstance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.gcpRedisInstance.State != redispb.Instance_DELETING {

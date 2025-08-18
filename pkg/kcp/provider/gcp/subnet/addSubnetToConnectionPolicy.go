@@ -16,10 +16,10 @@ func addSubnetToConnectionPolicy(ctx context.Context, st composed.State) (error,
 		return composed.StopWithRequeue, nil
 	}
 	if state.ConnectionPolicySubnetsContainCurrent() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.AddCurrentSubnetToConnectionPolicy()
 
-	return nil, nil
+	return nil, ctx
 }

@@ -17,11 +17,11 @@ func scaleElastiCacheClusterReplicas(ctx context.Context, st composed.State) (er
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.IsReplicaCountUpToDate() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Updating replica count...")

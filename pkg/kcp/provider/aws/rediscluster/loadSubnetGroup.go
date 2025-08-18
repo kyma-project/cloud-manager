@@ -11,7 +11,7 @@ import (
 func loadSubnetGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.subnetGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -30,5 +30,5 @@ func loadSubnetGroup(ctx context.Context, st composed.State) (error, context.Con
 
 	logger.Info("ElastiCache subnet group not found")
 
-	return nil, nil
+	return nil, ctx
 }

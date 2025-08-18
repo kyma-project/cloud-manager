@@ -51,5 +51,5 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 
 	state.SetSubnet(gcpSubnet)
 
-	return nil, nil
+	return nil, ctx
 }

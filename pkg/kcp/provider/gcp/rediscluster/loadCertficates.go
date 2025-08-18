@@ -17,7 +17,7 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 
 	if state.caCerts != "" {
 		logger.Info("GCP Redis certs already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Loading GCP Redis certs")
@@ -30,7 +30,7 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target redis instance certs not found, continuing")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP Redis certs")
@@ -60,5 +60,5 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 		state.caCerts = certs
 	}
 
-	return nil, nil
+	return nil, ctx
 }

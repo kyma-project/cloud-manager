@@ -14,7 +14,7 @@ func deleteSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnetGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.

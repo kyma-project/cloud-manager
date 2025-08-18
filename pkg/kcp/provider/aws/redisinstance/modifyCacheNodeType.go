@@ -20,10 +20,10 @@ func modifyCacheNodeType(ctx context.Context, st composed.State) (error, context
 	desiredCacheNodeType := redisInstance.Spec.Instance.Aws.CacheNodeType
 
 	if currentCacheNodeType == desiredCacheNodeType {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateCacheNodeType(desiredCacheNodeType)
 
-	return nil, nil
+	return nil, ctx
 }

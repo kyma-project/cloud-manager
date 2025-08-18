@@ -10,13 +10,13 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet := state.ObjAsGcpSubnet()
 
 	if subnet.Status.Id != "" { // already set
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet.Status.Id = *state.subnet.Name

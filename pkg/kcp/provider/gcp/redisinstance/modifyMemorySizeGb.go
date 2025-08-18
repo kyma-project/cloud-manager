@@ -19,10 +19,10 @@ func modifyMemorySizeGb(ctx context.Context, st composed.State) (error, context.
 	desiredMemorySizeGb := redisInstance.Spec.Instance.Gcp.MemorySizeGb
 
 	if currentMemorySizeGb == desiredMemorySizeGb {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateMemorySizeGb(desiredMemorySizeGb)
 
-	return nil, nil
+	return nil, ctx
 }

@@ -19,10 +19,10 @@ func modifyRedisConfigs(ctx context.Context, st composed.State) (error, context.
 	desiredConfig := redisInstance.Spec.RedisConfigs
 
 	if !AreConfigsMissmatched(currentConfig, desiredConfig) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateRedisConfigs(desiredConfig)
 
-	return nil, nil
+	return nil, ctx
 }

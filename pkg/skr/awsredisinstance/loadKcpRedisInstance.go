@@ -31,7 +31,7 @@ func loadKcpRedisInstance(ctx context.Context, st composed.State) (error, contex
 	if apierrors.IsNotFound(err) {
 		state.KcpRedisInstance = nil
 		logger.Info("KCP RedisInstance does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP RedisInstance", composed.StopWithRequeue, ctx)
@@ -39,5 +39,5 @@ func loadKcpRedisInstance(ctx context.Context, st composed.State) (error, contex
 
 	state.KcpRedisInstance = kcpRedisInstnace
 
-	return nil, nil
+	return nil, ctx
 }

@@ -20,10 +20,10 @@ func modifyMaintenancePolicy(ctx context.Context, st composed.State) (error, con
 	desiredPolicy := client.ToMaintenancePolicy(redisInstance.Spec.Instance.Gcp.MaintenancePolicy)
 
 	if AreEqualPolicies(currentPolicy, desiredPolicy) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateMaintenancePolicy(desiredPolicy)
 
-	return nil, nil
+	return nil, ctx
 }

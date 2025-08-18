@@ -14,14 +14,14 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 
 	if state.AuthSecret == nil {
 		logger.Info("cant modify auth secret, not found")
-		return nil, nil
+		return nil, ctx
 	}
 
 	currentSecretData := state.AuthSecret.Data
 	desiredSecretData := state.GetAuthSecretData()
 
 	if maps.EqualFunc(currentSecretData, desiredSecretData, func(l, r []byte) bool { return bytes.Equal(l, r) }) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.AuthSecret.Data = desiredSecretData
@@ -33,5 +33,5 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("AuthSecret for AwsRedisInstance updated")
 
-	return nil, nil
+	return nil, ctx
 }
