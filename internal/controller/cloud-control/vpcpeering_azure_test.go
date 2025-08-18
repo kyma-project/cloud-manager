@@ -215,7 +215,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				LoadAzurePeeringAndCheck(infra.Ctx(), azureMockLocal, localResourceGroupName, localVirtualNetworkName, localPeeringName,
 					HavingAzurePeeringId(kcpPeering.Status.Id))).
 				To(Succeed())
-			//Expect(kcpPeering.Status.Id).To(Equal(ptr.Deref(localAzurePeering.ID, "xxx")))
 		})
 
 		By("And Then KCP VpcPeering RemoteId matches remote Azure peering ID", func() {
