@@ -21,7 +21,7 @@ func upgradeRedis(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if !state.ShouldUpgradeRedisInstance() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing ready state to begin upgrade")

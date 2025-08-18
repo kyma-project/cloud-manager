@@ -16,7 +16,7 @@ func loadConnectionPolicy(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.serviceConnectionPolicy != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
@@ -31,7 +31,7 @@ func loadConnectionPolicy(ctx context.Context, st composed.State) (error, contex
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Service Connection Policy not found, continuing")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP Service Connection Policy")
@@ -62,5 +62,5 @@ func loadConnectionPolicy(ctx context.Context, st composed.State) (error, contex
 		state.serviceConnectionPolicy = connectionPolicy
 	}
 
-	return nil, nil
+	return nil, ctx
 }

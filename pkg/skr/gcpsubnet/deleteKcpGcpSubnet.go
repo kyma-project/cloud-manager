@@ -14,11 +14,11 @@ func deleteKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpGcpSubnet == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if composed.IsMarkedForDeletion(state.KcpGcpSubnet) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpSubnet := state.ObjAsGcpSubnet()
@@ -35,7 +35,7 @@ func deleteKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting KCP GcpSubnet for GcpSubnet")
@@ -52,5 +52,5 @@ func deleteKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 		return composed.LogErrorAndReturn(err, "Failed status update on GCP GcpSubnet", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

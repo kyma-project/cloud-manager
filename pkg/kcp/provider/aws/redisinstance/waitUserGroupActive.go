@@ -14,12 +14,12 @@ func waitUserGroupActive(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.userGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	userGroupState := ptr.Deref(state.userGroup.Status, "")
 	if userGroupState == awsmeta.ElastiCache_UserGroup_ACTIVE {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Redis elasticache user group is not ready yet, requeueing with delay")

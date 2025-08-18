@@ -15,7 +15,7 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpRedisCluster != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	awsRedisCluster := state.ObjAsAwsRedisCluster()

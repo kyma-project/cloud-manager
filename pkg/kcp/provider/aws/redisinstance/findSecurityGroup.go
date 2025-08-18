@@ -14,7 +14,7 @@ import (
 func findSecurityGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.securityGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -47,5 +47,5 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	logger.Info("Security group not found")
 
-	return nil, nil
+	return nil, ctx
 }

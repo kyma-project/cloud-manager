@@ -10,18 +10,18 @@ func removeSubnetFromConnectionPolicy(ctx context.Context, st composed.State) (e
 	state := st.(*State)
 
 	if state.serviceConnectionPolicy == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !state.ConnectionPolicySubnetsContainCurrent() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.ConnectionPolicySubnetsLen() == 1 { // last one in, cant remove
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.RemoveCurrentSubnetFromConnectionPolicy()
 
-	return nil, nil
+	return nil, ctx
 }

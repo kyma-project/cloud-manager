@@ -14,7 +14,7 @@ func createKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpGcpRedisCluster != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.SkrSubnet == nil {

@@ -17,7 +17,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.gcpRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.gcpRedisCluster.State == clusterpb.Cluster_DELETING {

@@ -19,7 +19,7 @@ func modifyElastiCacheReplicationGroup(updateParamsFn func(*State) client.Modify
 		redisInstance := state.ObjAsRedisCluster()
 
 		if state.elastiCacheReplicationGroup == nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger := composed.LoggerFromCtx(ctx)

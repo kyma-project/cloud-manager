@@ -16,7 +16,7 @@ func loadSpecifiedGcpSubnet(ctx context.Context, st composed.State) (error, cont
 
 	gcpSubnetRef := state.ObjAsObjWithGcpSubnetRef().GetGcpSubnetRef()
 	if len(gcpSubnetRef.Name) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
@@ -41,5 +41,5 @@ func loadSpecifiedGcpSubnet(ctx context.Context, st composed.State) (error, cont
 
 	state.SetSkrGcpSubnet(skrGcpSubnet)
 
-	return nil, nil
+	return nil, ctx
 }

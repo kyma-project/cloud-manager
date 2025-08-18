@@ -13,7 +13,7 @@ func createDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, c
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.GetSkrGcpSubnet() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{
@@ -41,5 +41,5 @@ func createDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, c
 	logger.Info("Created default SKR GcpSubnet")
 	state.SetSkrGcpSubnet(skrGcpSubnet)
 
-	return nil, nil
+	return nil, ctx
 }

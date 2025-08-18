@@ -17,7 +17,7 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnet != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
@@ -33,7 +33,7 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Subnet not found, continuing")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP Private Subnet")
@@ -64,5 +64,5 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 		state.subnet = subnet
 	}
 
-	return nil, nil
+	return nil, ctx
 }

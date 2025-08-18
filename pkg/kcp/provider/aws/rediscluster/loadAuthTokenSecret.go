@@ -10,7 +10,7 @@ import (
 func loadAuthTokenSecret(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.authTokenValue != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,11 +22,11 @@ func loadAuthTokenSecret(ctx context.Context, st composed.State) (error, context
 
 	if authTokenValue == nil {
 		logger.Info("ElastiCache auth token valuenot found")
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.authTokenValue = authTokenValue
 	logger.Info("ElastiCache auth token value found and loaded")
 
-	return nil, nil
+	return nil, ctx
 }

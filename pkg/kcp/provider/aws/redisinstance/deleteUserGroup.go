@@ -14,12 +14,12 @@ func deleteUserGroup(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.userGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	userGroupState := ptr.Deref(state.userGroup.Status, "")
 	if userGroupState == awsmeta.ElastiCache_UserGroup_DELETING {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting userGroup")

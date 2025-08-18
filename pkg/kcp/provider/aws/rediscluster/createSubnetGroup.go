@@ -16,7 +16,7 @@ import (
 func createSubnetGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.subnetGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance := state.ObjAsRedisCluster()

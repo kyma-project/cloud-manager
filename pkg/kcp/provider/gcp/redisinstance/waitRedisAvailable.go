@@ -33,7 +33,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 	}
 
 	if state.gcpRedisInstance.State == redispb.Instance_READY {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Redis instance is not ready yet, requeueing with delay")

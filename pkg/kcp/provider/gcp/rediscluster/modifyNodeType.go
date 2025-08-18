@@ -19,10 +19,10 @@ func modifyNodeType(ctx context.Context, st composed.State) (error, context.Cont
 	desiredNodeType := redisCluster.Spec.NodeType
 
 	if currentNodeType == desiredNodeType {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateNodeType(desiredNodeType)
 
-	return nil, nil
+	return nil, ctx
 }

@@ -15,7 +15,7 @@ func loadMemberClusters(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	var elastiCacheClusters = []elasticachetypes.CacheCluster{}
@@ -35,5 +35,5 @@ func loadMemberClusters(ctx context.Context, st composed.State) (error, context.
 		return composed.LogErrorAndReturn(errors.New("no replication group clusters found"), "no replication group clusters found", composed.StopWithRequeueDelay(5*util.Timing.T10000ms()), ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

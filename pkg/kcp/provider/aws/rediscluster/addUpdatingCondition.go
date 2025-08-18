@@ -18,7 +18,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	redisInstance := state.ObjAsRedisCluster()
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
@@ -26,11 +26,11 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	hasUpdatingCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
 
 	if !isModifying && !hasUpdatingCondition {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if isModifying && hasUpdatingCondition {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if isModifying && !hasUpdatingCondition {
@@ -56,5 +56,5 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, st)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

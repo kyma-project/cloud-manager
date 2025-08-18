@@ -19,10 +19,10 @@ func modifyAuthEnabled(ctx context.Context, st composed.State) (error, context.C
 	desiredAuthEnabled := redisInstance.Spec.Instance.Gcp.AuthEnabled
 
 	if currentAuthEnabled == desiredAuthEnabled {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateAuthEnabled(desiredAuthEnabled)
 
-	return nil, nil
+	return nil, ctx
 }

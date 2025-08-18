@@ -15,13 +15,13 @@ import (
 func createAuthTokenSecret(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.authTokenValue != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance := state.ObjAsRedisCluster()
 
 	if !redisInstance.Spec.Instance.Aws.AuthEnabled {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

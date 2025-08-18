@@ -16,7 +16,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 
 	readyCond := meta.FindStatusCondition(*redisCluster.Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing Ready condition")

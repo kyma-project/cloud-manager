@@ -13,7 +13,7 @@ func waitAuthSecretDeleted(ctx context.Context, st composed.State) (error, conte
 
 	if state.AuthSecret == nil {
 		logger.Info("Auth Secret is deleted")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Waiting for Auth Secret to be deleted")

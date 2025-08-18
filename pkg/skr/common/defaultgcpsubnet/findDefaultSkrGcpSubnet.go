@@ -14,7 +14,7 @@ func findDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.GetSkrGcpSubnet() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
@@ -23,7 +23,7 @@ func findDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, con
 	}, skrGcpSubnet)
 	if apierrors.IsNotFound(err) {
 		logger.Info("Default SKR GcpSubnet does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error getting default SKR GcpSubnet", composed.StopWithRequeue, ctx)
@@ -32,5 +32,5 @@ func findDefaultSkrGcpSubnet(ctx context.Context, st composed.State) (error, con
 	logger.Info("Loaded default SKR GcpSubnet")
 	state.SetSkrGcpSubnet(skrGcpSubnet)
 
-	return nil, nil
+	return nil, ctx
 }

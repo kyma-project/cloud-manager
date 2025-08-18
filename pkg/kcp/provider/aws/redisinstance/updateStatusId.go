@@ -11,13 +11,13 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance := state.ObjAsRedisInstance()
 
 	if redisInstance.Status.Id != "" { // already set
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance.Status.Id = ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, "")
@@ -28,5 +28,5 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 		return composed.LogErrorAndReturn(err, "Error updating RedisInstance .status.id", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

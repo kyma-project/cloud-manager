@@ -10,7 +10,7 @@ import (
 func loadUserGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.userGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,11 +22,11 @@ func loadUserGroup(ctx context.Context, st composed.State) (error, context.Conte
 
 	if userGroup == nil {
 		logger.Info("ElastiCache User group not found")
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.userGroup = userGroup
 	logger.Info("ElastiCache user group found and loaded")
 
-	return nil, nil
+	return nil, ctx
 }

@@ -20,10 +20,10 @@ func modifyReplicaCount(ctx context.Context, st composed.State) (error, context.
 	desiredReplicaCount := redisCluster.Spec.ReplicasPerShard
 
 	if currentReplicaCount == desiredReplicaCount {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateReplicaCount(desiredReplicaCount)
 
-	return nil, nil
+	return nil, ctx
 }
