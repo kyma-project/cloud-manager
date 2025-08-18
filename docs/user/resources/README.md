@@ -75,3 +75,10 @@ The `azureredisinstance.cloud-resources.kyma-project.io` CRD describes the Micro
 ### AzureRedisCluster CR
 
 The `azurerediscluster.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis cluster. For more information, see [AzureRedisCluster Custom Resource](./04-50-30-azure-redis-cluster.md).
+
+
+## VPC DNS Link Resources
+
+### AzureVpcDnsLink CR
+
+The `azurevpcdnslink.cloud-resources.kyma-project.io` CRD describes the Azure VPC DNS link between Kyma network and the remote Azure Private DNS. For more information, see [AzureVpcDnsLink Custom Resource](./04-40-40-azure-vpc-dns-link.md).
