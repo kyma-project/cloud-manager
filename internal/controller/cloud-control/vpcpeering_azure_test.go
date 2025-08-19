@@ -980,8 +980,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			}).Should(Succeed())
 
 			Expect(remotePeering).ToNot(BeNil())
-			Expect(remotePeering.Properties.LocalAddressSpace.AddressPrefixes[0]).To(Equal("10.100.0.0/24"))
-			Expect(remotePeering.Properties.RemoteAddressSpace.AddressPrefixes[0]).To(Equal("10.200.0.0/24"))
+			Expect(ptr.Deref(remotePeering.Properties.LocalAddressSpace.AddressPrefixes[0], "")).To(Equal("10.100.0.0/24"))
+			Expect(ptr.Deref(remotePeering.Properties.RemoteAddressSpace.AddressPrefixes[0], "")).To(Equal("10.200.0.0/24"))
 		})
 
 		// DELETE
