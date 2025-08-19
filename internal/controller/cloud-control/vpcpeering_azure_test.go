@@ -772,7 +772,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 	})
 
-	It("Scenario: KCP Azure VpcPeering can sync", Focus, func() {
+	It("Scenario: KCP Azure VpcPeering can sync", func() {
 		const (
 			kymaName            = "be27ef0c-013a-4011-96b8-86381ff64ab9"
 			kcpPeeringName      = "f35f52ef-269d-49d6-8d6c-332e96d2293e"
