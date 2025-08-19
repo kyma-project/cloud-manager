@@ -16,10 +16,10 @@ func deletePrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateDnsZoneGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 	if *state.privateDnsZoneGroup.Properties.ProvisioningState == "Deleting" {
-		return nil, nil
+		return nil, ctx
 	}
 	logger.Info("Deleting Azure PrivateDnsZoneGroup")
 	resourceGroupName := state.resourceGroupName
@@ -28,7 +28,7 @@ func deletePrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 	err := state.client.DeletePrivateDnsZoneGroup(ctx, resourceGroupName, privateEndPointName, privateDnsZoneGroupName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			return nil, nil
+			return nil, ctx
 		}
 		logger.Error(err, "Error deleting Azure PrivateDnsZoneGroup")
 		meta.SetStatusCondition(state.ObjAsRedisCluster().Conditions(), metav1.Condition{

@@ -30,7 +30,7 @@ func waitRedisClusterAvailable(ctx context.Context, st composed.State) (error, c
 	}
 
 	if ptr.Deref(state.azureRedisCluster.Properties.ProvisioningState, "") == armredis.ProvisioningStateSucceeded {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Azure Redis Cluster is not ready yet, requeuing with delay")

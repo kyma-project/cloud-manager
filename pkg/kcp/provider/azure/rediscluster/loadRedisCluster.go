@@ -17,7 +17,7 @@ func loadRedisCluster(ctx context.Context, st composed.State) (error, context.Co
 
 	if state.azureRedisCluster != nil {
 		logger.Info("Azure Redis already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Loading Azure Redis")
@@ -29,7 +29,7 @@ func loadRedisCluster(ctx context.Context, st composed.State) (error, context.Co
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
 			logger.Info("Azure Redis Cluster not found")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading Azure Redis")
@@ -52,5 +52,5 @@ func loadRedisCluster(ctx context.Context, st composed.State) (error, context.Co
 	}
 	state.azureRedisCluster = redisCluster
 
-	return nil, nil
+	return nil, ctx
 }

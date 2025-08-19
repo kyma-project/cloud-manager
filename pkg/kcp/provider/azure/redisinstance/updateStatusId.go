@@ -12,7 +12,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	redisInstance := state.ObjAsRedisInstance()
 
 	if redisInstance.Status.Id != "" { // already set
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisInstance.Status.Id = *(state.azureRedisInstance.Name)

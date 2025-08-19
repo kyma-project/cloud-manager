@@ -16,11 +16,11 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	azureRedisCluster := state.ObjAsAzureRedisCluster()
 
 	if !meta.IsStatusConditionTrue(azureRedisCluster.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisSKUCapacity, err := RedisTierToSKUCapacityConverter(azureRedisCluster.Spec.RedisTier)
@@ -51,7 +51,7 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	paramsChanged := capacityChanged || shardCountChanged || replicasChanged || redisVersionChanged
 
 	if !paramsChanged {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.KcpRedisCluster.Spec.Instance.Azure.SKU.Capacity = redisSKUCapacity

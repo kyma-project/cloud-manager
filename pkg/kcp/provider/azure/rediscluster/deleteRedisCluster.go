@@ -16,7 +16,7 @@ func deleteRedisCluster(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.azureRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if *state.azureRedisCluster.Properties.ProvisioningState == "Deleting" {
@@ -31,7 +31,7 @@ func deleteRedisCluster(ctx context.Context, st composed.State) (error, context.
 	err := state.client.DeleteRedisInstance(ctx, resourceGroupName, redisClusterName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error deleting Azure Redis")

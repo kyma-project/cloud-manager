@@ -14,7 +14,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpRedisInstance != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
