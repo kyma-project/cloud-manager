@@ -15,10 +15,10 @@ func deletePrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateEndPoint == nil {
-		return nil, nil
+		return nil, ctx
 	}
 	if *state.privateEndPoint.Properties.ProvisioningState == "Deleting" {
-		return nil, nil
+		return nil, ctx
 	}
 	logger.Info("Deleting Azure PrivateEndPoint")
 	redisInstanceName := state.ObjAsRedisInstance().Name
@@ -26,7 +26,7 @@ func deletePrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 	err := state.client.DeletePrivateEndPoint(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			return nil, nil
+			return nil, ctx
 		}
 		logger.Error(err, "Error deleting Azure PrivateEndPoint")
 		meta.SetStatusCondition(state.ObjAsRedisInstance().Conditions(), metav1.Condition{

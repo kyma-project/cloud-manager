@@ -13,7 +13,7 @@ func waitPrivateDnsZoneGroupDeleted(ctx context.Context, st composed.State) (err
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateDnsZoneGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 	if *state.privateDnsZoneGroup.Properties.ProvisioningState != armnetwork.ProvisioningStateDeleting {
 		errorMsg := "Error: unexpected Azure PrivateDnsZoneGroup state"

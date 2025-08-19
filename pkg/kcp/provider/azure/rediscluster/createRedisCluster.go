@@ -17,7 +17,7 @@ func createRedisCluster(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.azureRedisCluster != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Creating Azure Redis")

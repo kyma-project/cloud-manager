@@ -17,7 +17,7 @@ func createPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateDnsZoneGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 	if state.privateEndPoint == nil {
 		logger.Info("Can not create Azure Private DnsZone Group, Private EndPoint is not loaded, reque")

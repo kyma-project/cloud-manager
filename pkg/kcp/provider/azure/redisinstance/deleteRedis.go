@@ -16,7 +16,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.azureRedisInstance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if *state.azureRedisInstance.Properties.ProvisioningState == "Deleting" {
@@ -31,7 +31,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	err := state.client.DeleteRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error deleting Azure Redis")

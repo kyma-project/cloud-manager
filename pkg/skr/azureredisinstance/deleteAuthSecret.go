@@ -13,11 +13,11 @@ func deleteAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.AuthSecret == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !state.AuthSecret.DeletionTimestamp.IsZero() {
-		return nil, nil
+		return nil, ctx
 	}
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
 	azureRedisInstance.Status.State = cloudresourcesv1beta1.StateDeleting
@@ -34,7 +34,7 @@ func deleteAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting AuthSecret for AzureRedisInstance")

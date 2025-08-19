@@ -20,17 +20,17 @@ func modifyRedisVersion(ctx context.Context, st composed.State) (error, context.
 	requestedAzureRedisCluster := state.ObjAsRedisCluster()
 
 	if !meta.IsStatusConditionTrue(requestedAzureRedisCluster.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.azureRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisVersionChanged := *state.azureRedisCluster.Properties.RedisVersion != requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion
 
 	if !redisVersionChanged {
-		return nil, nil
+		return nil, ctx
 	}
 
 	resourceGroupName := state.resourceGroupName

@@ -15,7 +15,7 @@ func waitRedisClusterDeleted(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.azureRedisCluster == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if *state.azureRedisCluster.Properties.ProvisioningState != armredis.ProvisioningStateDeleting {

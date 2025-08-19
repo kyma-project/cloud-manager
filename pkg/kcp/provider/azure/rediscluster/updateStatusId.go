@@ -12,7 +12,7 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	redisCluster := state.ObjAsRedisCluster()
 
 	if redisCluster.Status.Id != "" { // already set
-		return nil, nil
+		return nil, ctx
 	}
 
 	redisCluster.Status.Id = *(state.azureRedisCluster.Name)
