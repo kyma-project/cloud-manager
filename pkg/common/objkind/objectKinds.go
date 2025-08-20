@@ -1,7 +1,9 @@
 package objkind
 
 import (
-	"gopkg.in/yaml.v3"
+	"strings"
+
+	"github.com/goccy/go-yaml"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -11,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"strings"
 )
 
 type ObjectKindsInfo struct {
