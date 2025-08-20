@@ -1,0 +1,14 @@
+- path: spec.remoteLinkName
+  name: spec.remoteLinkName
+  widget: Text
+  disableOnEdit: true
+  required: true
+- path: spec.remotePrivateDnsZone
+  name: spec.remotePrivateDnsZone
+  widget: Text
+  disableOnEdit: true
+  required: true
+- path: spec.remoteTenant
+  name: spec.remoteTenant
+  widget: Text
+  disableOnEdit: true

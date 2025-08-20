@@ -78,6 +78,7 @@ cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_u
 cp $SCRIPT_DIR/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
+cp $SCRIPT_DIR/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
 
 # ============= OpenStack ================
