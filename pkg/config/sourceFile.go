@@ -60,7 +60,7 @@ func (s *sourceFile) Read(inJsonString string) string {
 		newJsonString = loadedFileString
 	case ".yaml", ".yml":
 		newData = map[string]interface{}{}
-		err = yaml.Unmarshal([]byte(loadedFileString), newData)
+		err = yaml.Unmarshal(buf, &newData)
 		if err != nil {
 			return inJsonString
 		}
