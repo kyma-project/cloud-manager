@@ -34,7 +34,7 @@ func createAwsDestBackup(ctx context.Context, st composed.State) (error, context
 	res, err := state.awsClient.StartCopyJob(ctx, &client.StartCopyJobInput{
 		SourceBackupVaultName:     state.GetVaultName(),
 		DestinationBackupVaultArn: state.GetDestinationBackupVaultArn(),
-		RecoveryPointArn:          state.GetDestinationRecoveryPointArn(),
+		RecoveryPointArn:          state.GetRecoveryPointArn(),
 		IamRoleArn:                state.GetBackupRoleArn(),
 		IdempotencyToken:          ptr.To(backup.Status.IdempotencyToken),
 	})

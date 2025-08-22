@@ -2,9 +2,13 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/service/backup/types"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func loadAwsCopyJob(ctx context.Context, st composed.State) (error, context.Context) {
@@ -36,11 +40,34 @@ func loadAwsCopyJob(ctx context.Context, st composed.State) (error, context.Cont
 
 	//store the copyJob in the state object
 	state.copyJob = copyJob
-	if len(backup.Status.RemoteId) >= 0 || copyJob == nil {
+
+	//If the Remote RestorePoint already exists, continue
+	if len(backup.Status.RemoteId) > 0 {
 		return nil, ctx
 	}
 
+	//If the CopyJob is nil or not able to get the recoveryPoint ARN, continue
+	jobState := copyJob.CopyJob.State
+	if jobState == types.CopyJobStateFailed || copyJob.CopyJob.State == types.CopyJobStatePartial {
+		msg := *copyJob.CopyJob.StatusMessage
+		backup.Status.State = v1beta1.StateError
+		return composed.PatchStatus(backup).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonBackupFailed,
+				Message: msg,
+			}).
+			SuccessLogMsg(fmt.Sprint("AwsNfsVolumeBackup copy Job Failed:", msg)).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	} else if copyJob.CopyJob.DestinationRecoveryPointArn == nil {
+		logger.Info(fmt.Sprint("Waiting for the CopyJob to get RestorePoint details: ", string(jobState)))
+		return composed.LogErrorAndReturn(err, "AWS Copy Job does not have RestorePoint ARN, will wait", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
+
 	//Update the remoteId with the value from CopyJob.
+	logger.Info("Updating the Status with remote RestorePoint details")
 	remoteId := state.awsClient.ParseRecoveryPointId(*copyJob.CopyJob.DestinationRecoveryPointArn)
 	backup.Status.RemoteId = remoteId
 	return composed.PatchStatus(backup).

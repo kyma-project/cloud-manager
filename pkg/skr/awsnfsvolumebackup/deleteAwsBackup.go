@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/service/backup/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -29,12 +30,12 @@ func deleteAwsBackup(ctx context.Context, st composed.State, local bool) (error,
 		return nil, ctx
 	}
 
-	//If the backup not already exists, return
-	if recoveryPoint == nil {
+	//If the backup not already exists (or getting deleted),  return
+	if recoveryPoint == nil || recoveryPoint.Status == types.RecoveryPointStatusDeleting {
 		return nil, ctx
 	}
 
-	logger.WithValues("AwsBackup", backup.Name, "local", local).Info("Deleting AWS File RecoveryPoint")
+	logger.WithValues("AwsBackup", backup.Name, "local", local, "status", recoveryPoint.Status).Info("Deleting AWS File RecoveryPoint")
 
 	_, err := client.DeleteRecoveryPoint(ctx, state.GetVaultName(), arn)
 
