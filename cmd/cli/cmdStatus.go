@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"github.com/spf13/cobra"
+	"go.yaml.in/yaml/v3"
 )
 
 var (
