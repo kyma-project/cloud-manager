@@ -2,6 +2,8 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -9,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type createAwsBackupSuite struct {
@@ -92,7 +93,7 @@ func (suite *createAwsBackupSuite) TestCreateAwsBackupWhenIdsAreNil() {
 	suite.Nil(err)
 
 	//loadVault
-	err, _ = loadVault(ctx, state)
+	err, _ = loadLocalVault(ctx, state)
 	suite.Nil(err)
 
 	//Invoke API under test

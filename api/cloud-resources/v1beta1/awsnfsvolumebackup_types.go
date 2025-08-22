@@ -31,6 +31,10 @@ type AwsNfsVolumeBackupSpec struct {
 
 	// Lifecycle specifies the lifecycle of the created backup
 	Lifecycle AwsNfsVolumeBackupLifecycle `json:"lifecycle,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
+	Location string `json:"location"`
 }
 
 type AwsNfsVolumeBackupSource struct {
@@ -107,6 +111,14 @@ type AwsNfsVolumeBackupStatus struct {
 	// LastCapacityUpdate specifies the time when the last time backup size got updated
 	// +optional
 	LastCapacityUpdate *metav1.Time `json:"lastCapacityUpdate,omitempty"`
+
+	// Identifier of the Remote AWS Recovery Point
+	// +optional
+	RemoteId string `json:"remoteId,omitempty"`
+
+	// AWS Copy Job Identifier
+	// +optional
+	CopyJobId string `json:"copyJobId,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -2,13 +2,14 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadAwsBackupSuite struct {
@@ -38,9 +39,9 @@ func (suite *loadAwsBackupSuite) TestLoadAwsBackupWhenIdIsNil() {
 	suite.Nil(err)
 
 	//Call loadAwsBackup
-	err, _ctx := loadAwsBackup(ctx, state)
+	err, _ctx := loadLocalAwsBackup(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *loadAwsBackupSuite) TestLoadAwsBackupWhenJobNotExists() {
@@ -69,9 +70,9 @@ func (suite *loadAwsBackupSuite) TestLoadAwsBackupWhenJobNotExists() {
 	suite.Nil(err)
 
 	//Call loadAwsBackup
-	err, _ctx := loadAwsBackup(ctx, state)
+	err, _ctx := loadLocalAwsBackup(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *loadAwsBackupSuite) TestLoadAwsBackupAfterCreatingBackup() {
@@ -96,7 +97,7 @@ func (suite *loadAwsBackupSuite) TestLoadAwsBackupAfterCreatingBackup() {
 	suite.Nil(err)
 
 	//loadVault
-	err, _ = loadVault(ctx, state)
+	err, _ = loadLocalVault(ctx, state)
 	suite.Nil(err)
 
 	//createAwsBackup
@@ -116,7 +117,7 @@ func (suite *loadAwsBackupSuite) TestLoadAwsBackupAfterCreatingBackup() {
 	suite.Nil(err)
 
 	//loadAwsBackup
-	err, _ = loadAwsBackup(ctx, state)
+	err, _ = loadLocalAwsBackup(ctx, state)
 	suite.Nil(err)
 
 }

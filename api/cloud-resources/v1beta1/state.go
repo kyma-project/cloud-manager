@@ -11,6 +11,9 @@ const (
 	StateUpdating          = "Updating"
 	StateDeleted           = "Deleted"
 	StateFailed            = "Failed"
+	StateCreatingRemote    = "CreatingRemote"
+	StateUpdatingRemote    = "UpdatingRemote"
+	StateDeletingRemote    = "DeletingRemote"
 )
 
 const (
