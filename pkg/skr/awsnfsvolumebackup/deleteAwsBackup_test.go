@@ -2,6 +2,8 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type deleteAwsBackupSuite struct {
@@ -34,9 +35,9 @@ func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupWhenNotDeleting() {
 	suite.Nil(err)
 
 	//Call deleteAwsBackup
-	err, _ctx := deleteAwsBackup(ctx, state)
+	err, _ctx := deleteLocalAwsBackup(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupWhenRecoveryPointIsNil() {
@@ -51,9 +52,9 @@ func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupWhenRecoveryPointIsNil() {
 	suite.Nil(err)
 
 	//Call deleteAwsBackup
-	err, _ctx := deleteAwsBackup(ctx, state)
+	err, _ctx := deleteLocalAwsBackup(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupAfterCreatingBackup() {
@@ -78,7 +79,7 @@ func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupAfterCreatingBackup() {
 	suite.Nil(err)
 
 	//loadVault
-	err, _ = loadVault(ctx, state)
+	err, _ = loadLocalVault(ctx, state)
 	suite.Nil(err)
 
 	//createAwsBackup
@@ -98,11 +99,11 @@ func (suite *deleteAwsBackupSuite) TestDeleteAwsBackupAfterCreatingBackup() {
 	suite.Nil(err)
 
 	//loadAwsBackup
-	err, _ = loadAwsBackup(ctx, state)
+	err, _ = loadLocalAwsBackup(ctx, state)
 	suite.Nil(err)
 
 	//Invoke API under test
-	err, _ = deleteAwsBackup(ctx, state)
+	err, _ = deleteLocalAwsBackup(ctx, state)
 	suite.Equal(composed.StopWithRequeue, err)
 
 	fromK8s := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
