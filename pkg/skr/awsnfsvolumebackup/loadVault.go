@@ -27,6 +27,8 @@ func loadVault(ctx context.Context, st composed.State, local bool) (error, conte
 		return nil, ctx
 	}
 
+	// load backup vaults
+	logger.WithValues("local", local).Info("Loading AWS Backup Vault")
 	vaultName := state.GetVaultName()
 	vaults, err := client.ListBackupVaults(ctx)
 	if err != nil {

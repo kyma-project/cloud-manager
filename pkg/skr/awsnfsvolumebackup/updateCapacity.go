@@ -34,6 +34,9 @@ func updateCapacity(ctx context.Context, st composed.State) (error, context.Cont
 	//Update Capacity and timestamp.
 	logger.Info("Updating SKR AwsNfsVolumeBackup status with Capacity")
 	size := ptr.Deref(state.recoveryPoint.BackupSizeInBytes, 0)
+	if state.destRecoveryPoint != nil {
+		size += ptr.Deref(state.destRecoveryPoint.BackupSizeInBytes, 0)
+	}
 	capacity := resource.NewQuantity(size, resource.BinarySI)
 	backup.Status.Capacity = *capacity
 	backup.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().UTC()}
