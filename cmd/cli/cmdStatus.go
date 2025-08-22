@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
+	"go.yaml.in/yaml/v3"
 )
 
 var (

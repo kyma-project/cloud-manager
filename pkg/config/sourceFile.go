@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/goccy/go-yaml"
 	"github.com/peterbourgon/mergemap"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"go.yaml.in/yaml/v3"
 )
 
 type sourceFile struct {
