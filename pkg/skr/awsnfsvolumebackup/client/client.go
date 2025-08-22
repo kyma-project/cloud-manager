@@ -3,11 +3,12 @@ package client
 import (
 	"context"
 	"errors"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
-	"regexp"
 )
 
 type LocalClient interface {
@@ -32,6 +33,9 @@ type Client interface {
 	ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error)
 	DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error)
 	DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error)
+
+	StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*backup.StartCopyJobOutput, error)
+	DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error)
 }
 
 type StartBackupJobInput struct {
@@ -42,6 +46,16 @@ type StartBackupJobInput struct {
 	DeleteAfterDays            *int64
 	MoveToColdStorageAfterDays *int64
 	RecoveryPointTags          map[string]string
+}
+
+type StartCopyJobInput struct {
+	SourceBackupVaultName      string
+	DestinationBackupVaultArn  string
+	RecoveryPointArn           string
+	IamRoleArn                 string
+	IdempotencyToken           *string
+	DeleteAfterDays            *int64
+	MoveToColdStorageAfterDays *int64
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -223,6 +237,41 @@ func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recov
 		RecoveryPointArn: ptr.To(recoveryPointArn),
 	}
 	out, err := c.svc.DeleteRecoveryPoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *client) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
+	var lifecycle *backuptypes.Lifecycle
+	if params.DeleteAfterDays != nil || params.MoveToColdStorageAfterDays != nil {
+		lifecycle = &backuptypes.Lifecycle{
+			DeleteAfterDays:            params.DeleteAfterDays,
+			MoveToColdStorageAfterDays: params.MoveToColdStorageAfterDays,
+		}
+	}
+	in := &backup.StartCopyJobInput{
+		DestinationBackupVaultArn: ptr.To(params.DestinationBackupVaultArn),
+		IamRoleArn:                ptr.To(params.IamRoleArn),
+		RecoveryPointArn:          ptr.To(params.RecoveryPointArn),
+		SourceBackupVaultName:     ptr.To(params.SourceBackupVaultName),
+		IdempotencyToken:          params.IdempotencyToken,
+		Lifecycle:                 lifecycle,
+	}
+
+	out, err := c.svc.StartCopyJob(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *client) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
+	in := &backup.DescribeCopyJobInput{
+		CopyJobId: ptr.To(copyJobId),
+	}
+	out, err := c.svc.DescribeCopyJob(ctx, in)
 	if err != nil {
 		return nil, err
 	}

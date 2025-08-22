@@ -203,3 +203,11 @@ func (s *mockClient) DeleteRecoveryPoint(ctx context.Context, backupVaultName, r
 	}
 	return &backup.DeleteRecoveryPointOutput{}, nil
 }
+
+func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
+	return nil, nil
+}
+
+func (s *mockClient) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
+	return nil, nil
+}

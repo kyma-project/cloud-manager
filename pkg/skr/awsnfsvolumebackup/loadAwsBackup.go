@@ -7,46 +7,51 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func loadAwsBackup(ctx context.Context, st composed.State) (error, context.Context) {
+func loadAwsBackup(ctx context.Context, st composed.State, local bool) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	backup := state.ObjAsAwsNfsVolumeBackup()
 	deleting := composed.IsMarkedForDeletion(backup)
 
+	id := backup.Status.Id
+	client := state.awsClient
+	arn := state.GetRecoveryPointArn()
+	if !local {
+		id = backup.Status.RemoteId
+		client = state.destAwsClient
+		arn = state.GetDestinationRecoveryPointArn()
+	}
+
 	//Backup Id is empty, Continue.
-	if backup.Status.Id == "" {
-		return nil, nil
+	if len(id) == 0 {
+		return nil, ctx
 	}
 
 	// Load the backup from AWS
-	logger.Info("Loading AWS Backup")
-	backupJob, err := state.awsClient.DescribeBackupJob(ctx, backup.Status.JobId)
-	if err != nil && !state.awsClient.IsNotFound(err) {
-		return composed.LogErrorAndReturn(err, "Error loading AWS Backup Job", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
-	}
-
-	//store the backupJob in the state object
-	state.backupJob = backupJob
+	logger.WithValues("local", local).Info("Loading AWS RecoveryPoint")
 
 	//Load the recovery point from AWS
-	recoveryPoint, err := state.awsClient.DescribeRecoveryPoint(ctx,
+	recoveryPoint, err := client.DescribeRecoveryPoint(ctx,
 		state.Scope().Spec.Scope.Aws.AccountId,
 		state.GetVaultName(),
-		state.GetRecoveryPointArn())
+		arn)
 
 	if err == nil {
 		//store the recoveryPoint in the state object
-		state.recoveryPoint = recoveryPoint
-		return nil, nil
+		if local {
+			state.recoveryPoint = recoveryPoint
+		} else {
+			state.destRecoveryPoint = recoveryPoint
+		}
+		return nil, ctx
 	}
 
 	// If deleting and not found, continue...
-	if deleting && state.awsClient.IsNotFound(err) {
-		return nil, nil
+	if deleting && client.IsNotFound(err) {
+		return nil, ctx
 	}
 
 	//Update the status with error, and stop reconciliation
@@ -61,4 +66,12 @@ func loadAwsBackup(ctx context.Context, st composed.State) (error, context.Conte
 		SuccessLogMsg(fmt.Sprintf("Error loading the Recovery Point : %s", err)).
 		SuccessError(composed.StopAndForget).
 		Run(ctx, state)
+}
+
+func loadLocalAwsBackup(ctx context.Context, st composed.State) (error, context.Context) {
+	return loadAwsBackup(ctx, st, true)
+}
+
+func loadDestAwsBackup(ctx context.Context, st composed.State) (error, context.Context) {
+	return loadAwsBackup(ctx, st, false)
 }

@@ -3,12 +3,13 @@ package awsnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadVaultSuite struct {
@@ -34,9 +35,9 @@ func (suite *loadVaultSuite) TestLoadVaultOnDeletingObj() {
 	state.vault = nil
 
 	//Call loadVault
-	err, _ctx := loadVault(ctx, state)
+	err, _ctx := loadLocalVault(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNotNil() {
@@ -53,9 +54,9 @@ func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNotNil() {
 	state.vault = &backuptypes.BackupVaultListMember{}
 
 	//Call loadVault
-	err, _ctx := loadVault(ctx, state)
+	err, _ctx := loadLocalVault(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 }
 
 func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNil() {
@@ -80,9 +81,9 @@ func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNil() {
 	suite.Nil(err)
 
 	//Invoke API under test
-	err, _ctx := loadVault(ctx, state)
+	err, _ctx := loadLocalVault(ctx, state)
 	suite.Nil(err)
-	suite.Nil(_ctx)
+	suite.Equal(ctx, _ctx)
 
 	suite.NotNil(state.vault)
 	suite.Equal(fmt.Sprintf("cm-%s", state.Scope().Name), ptr.Deref(state.vault.BackupVaultName, ""))
