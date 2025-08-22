@@ -1,5 +1,8 @@
 # AwsNfsBackupSchedule Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `awsnfsbackupschedule.cloud-resources.kyma-project.io` custom resource (CR) represents the user-defined schedule for creating a backup of the `AwsNfsVolume` instances at regular intervals. The CR performs the following actions:
 
 - Creates the backups by creating the `awsnfsvolumebackup.cloud-resources.kyma-project.io` resources at the specified interval.

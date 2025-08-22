@@ -1,5 +1,8 @@
 # Redis Cluster
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 Use the Cloud Manager module to provision a Redis cluster.
 
 The Cloud Manager module allows you to provision a cloud provider-managed Redis cluster in cluster mode within your cluster network.
@@ -13,9 +16,11 @@ When you create a Redis cluster in SAP BTP, Kyma runtime, you depend on the clou
 
 The Cloud Manager module supports the Redis cluster feature of the following cloud providers:
 
+* Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
+* Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
 
-You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AzureRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-resources).
+You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AzureRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-cluster-resources).
 
 ### Tiers
 
@@ -23,11 +28,14 @@ When you provision a Redis cluster, you must use the Premium tier.
 
 ## Prerequisites
 
-To instantiate Redis cluster, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing(CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
+To instantiate Redis cluster:
+
+* An IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing(CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
+* For Google Cloud, a GcpSubnet CR must exist in the Kyma cluster. GcpSubnet specifies the VPC Network Subnet. For more information, see [GcpSubnet Custom Resource](./resources/04-50-21-gcp-subnet.md).
 
 ## Lifecycle
 
-AzureRedisCluster is namespace-level CR. Once you create any of the Redis cluster resources, the following resources are also created automatically:
+AwsRedisCluster, GcpRedisCluster, and AzureRedisCluster are namespace-level CRs. Once you create any of the Redis cluster resources, the following resources are also created automatically:
 
 * IpRange CR
   * IpRange is a cluster-level CR.
@@ -37,3 +45,11 @@ AzureRedisCluster is namespace-level CR. Once you create any of the Redis cluste
   * The Secret is a namespace-level CR.
   * The Secret's name is the same as the name of the respective Redis cluster CR.
   * The Secret holds values and information used to access the Redis cluster.
+
+## Related Information
+
+* [Using AwsRedisCluster Custom Resources](./tutorials/01-50-10-aws-redis-cluster.md)
+* [Using GcpRedisCluster Custom Resources](./tutorials/01-50-20-gcp-redis-cluster.md)
+* [Using AzureRedisCluster Custom Resources](./tutorials//01-50-30-azure-redis-cluster.md)
+* [Cloud Manager Resources: Redis Cluster](./resources/README.md#redis-cluster-resources)
+* [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)

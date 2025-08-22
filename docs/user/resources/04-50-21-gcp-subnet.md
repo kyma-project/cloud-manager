@@ -1,5 +1,8 @@
 # GcpSubnet Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `gcpsubnet.cloud-resources.kyma-project.io` is a cluster-scoped custom resource (CR) that specifies the VPC Network Subnet. This resource is only available when the cluster cloud provider is Google Cloud Platform.
 Currently, its only use is IP address allocation for the `GcpRedisCluster` CR.
 
