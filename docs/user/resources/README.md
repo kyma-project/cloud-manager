@@ -72,6 +72,20 @@ The `gcpredisinstance.cloud-resources.kyma-project.io` CRD describes the Google 
 
 The `azureredisinstance.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis instance. For more information, see [AzureRedisInstance Custom Resource](./04-40-30-azure-redis-instance.md).
 
-### AzureRedisCluster CR
+## Redis Cluster Resources
+
+### AwsRedisCluster CR [**Beta feature**]
+
+The `awsrediscluster.cloud-resources.kyma-project.io` CRD describes the Amazon ElastiCache Redis instance with cluster mode enabled. For more information, see [AwsRedisCluster Custom Resource](./04-50-10-azure-redis-cluster.md).
+
+### GcpRedisCluster CR [**Beta feature**]
+
+The `gcprediscluster.cloud-resources.kyma-project.io` CRD describes the [Google Memorystore Redis Cluster](https://cloud.google.com/memorystore/docs/cluster/memorystore-for-redis-cluster-overview) instance. For more information, see [GcpRedisCluster Custom Resource](./04-50-20-gcp-redis-cluster.md).
+
+#### GcpSubnet CR [**Beta feature**]
+
+The `gcpsubnet.cloud-resources.kyma-project.io` CRD  specifies the VPC Network Subnet. This resource is related to the Redis cluster feature and is only available when the cluster cloud provider is Google Cloud Platform. For more information, see [GcpSubnet Custom Resource](./04-50-21-gcp-subnet.md).
+
+### AzureRedisCluster CR [**Beta feature**]
 
 The `azurerediscluster.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis cluster. For more information, see [AzureRedisCluster Custom Resource](./04-50-30-azure-redis-cluster.md).
