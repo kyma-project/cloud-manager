@@ -76,7 +76,7 @@ The `azureredisinstance.cloud-resources.kyma-project.io` CRD describes the Micro
 
 ### AwsRedisCluster CR [**Beta feature**]
 
-The `awsrediscluster.cloud-resources.kyma-project.io` CRD describes the Amazon ElastiCache Redis instance with cluster mode enabled. For more information, see [AwsRedisCluster Custom Resource](./04-50-10-azure-redis-cluster.md).
+The `awsrediscluster.cloud-resources.kyma-project.io` CRD describes the Amazon ElastiCache Redis instance with cluster mode enabled. For more information, see [AwsRedisCluster Custom Resource](./04-50-10-aws-redis-cluster.md).
 
 ### GcpRedisCluster CR [**Beta feature**]
 
