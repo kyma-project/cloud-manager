@@ -1,5 +1,8 @@
 # AwsNfsVolumeBackup Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `awsnfsvolumebackup.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes the AWS EFS Filesystem backup.
 While the AWS EFS Filesystem backup is created in the underlying cloud provider subscription, it needs its source AWS 
 EFS Filesystem instance to be available. But upon its creation, it can be used independently of the source instance.

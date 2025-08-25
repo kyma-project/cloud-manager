@@ -1,5 +1,8 @@
 # Using AwsRedisCluster Custom Resources
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The Cloud Manager module offers an AwsRedisCluster Custom Resource Definition (CRD). When you apply an AwsRedisCluster custom resource (CR), it creates an ElastiCache for Redis OSS instance, with cluster mode enabled, that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->

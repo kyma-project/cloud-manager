@@ -1,7 +1,7 @@
 # Backing Up NFS Volumes in Amazon Web Services
 
 > [!WARNING]
-> This is a feature available only per request for SAP-internal teams.
+> This is a beta feature available only per request for SAP-internal teams.
 
 This tutorial explains how to create backups for Network File System (NFS) volumes in Amazon Web Services (AWS).
 

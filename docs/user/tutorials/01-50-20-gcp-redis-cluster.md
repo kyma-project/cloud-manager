@@ -1,5 +1,8 @@
 # Using GcpRedisCluster Custom Resources
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The Cloud Manager module offers a GcpRedisCluster Custom Resource Definition (CRD). When you apply a GcpRedisCluster custom resource (CR), it creates a Memorystore for Redis Cluster instance that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->

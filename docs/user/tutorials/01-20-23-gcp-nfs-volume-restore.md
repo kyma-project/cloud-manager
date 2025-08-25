@@ -1,7 +1,7 @@
 # Restoring NFS Volume Backups in Google Cloud
 
 > [!WARNING]
-> This is a feature available only per request for SAP-internal teams.
+> This is a beta feature available only per request for SAP-internal teams.
 
 This tutorial explains how to initiate a restore operation for the Network File System (NFS) volumes in Google Cloud. You can do it either using an existiong filestore or a new one.
 

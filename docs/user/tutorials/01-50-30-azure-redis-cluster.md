@@ -1,5 +1,8 @@
 # Using AzureRedisCluster Custom Resources
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The Cloud Manager module offers a AzureRedisCluster Custom Resource Definition (CRD). When you apply a AzureRedisCluster custom resource (CR), it creates a Azure Cache for Redis cluster that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->

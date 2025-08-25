@@ -1,5 +1,8 @@
 # GcpNfsVolumeBackup Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `gcpnfsvolumebackup.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes the GCP Filestore
 instance's backup.
 While the GCP Filestore backup is created in the underlying cloud provider subscription, it needs its source GCP 

@@ -1,5 +1,8 @@
 # AwsNfsVolumeRestore Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `awsnfsvolumerestore.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes the AWS EFS file 
 system full restore operation on the same existing EFS file system.
 
