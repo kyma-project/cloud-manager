@@ -29,7 +29,7 @@ The offered tires depends on the cloud provider. Cloud Manager doesn't offer all
 To instantiate Redis cluster:
 
 * For Amazon Web Service and Microsoft Azure, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing(CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
-* For Google Cloud, a GcpSubnet CR must exist in the Kyma cluster. GcpSubnet specifies the VPC Network Subnet. Once needed, the resource is automatically created with the hardcoded CIDR `10.251.0.0/22`. For most use cases, this automatic allocation is sufficient. For more information, see [GcpSubnet Custom Resource](./resources/04-50-21-gcp-subnet.md).
+* For Google Cloud, a GcpSubnet CR must exist in the Kyma cluster. GcpSubnet specifies the VPC Network Subnet. Once needed, the resource is automatically created with the hardcoded CIDR. For most use cases, this automatic allocation is sufficient. For more information, see [GcpSubnet Custom Resource](./resources/04-50-21-gcp-subnet.md).
 
 ## Lifecycle
 
