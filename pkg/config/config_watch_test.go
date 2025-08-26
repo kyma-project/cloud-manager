@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -64,6 +65,10 @@ func TestWatchBindWhenFileContentChanges(t *testing.T) {
 }
 
 func TestWatchRawWhenSymlinkReplaced(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("Skipping test: watching target file changes via symlink doesn't work on macOS")
+	}
+
 	// Given a symlink exists
 	dir, err := os.MkdirTemp("", "cloud-manager-config")
 	assert.NoError(t, err, "error creating tmp dir")
