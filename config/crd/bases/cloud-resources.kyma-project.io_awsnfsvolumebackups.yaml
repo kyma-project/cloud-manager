@@ -60,6 +60,7 @@ spec:
                       type: integer
                   type: object
                 location:
+                  description: Location specifies the AWS region where to copy over the backup.
                   type: string
                   x-kubernetes-validations:
                     - message: Location is immutable.

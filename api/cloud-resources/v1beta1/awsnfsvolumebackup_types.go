@@ -34,6 +34,7 @@ type AwsNfsVolumeBackupSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
+	// Location specifies the AWS region where to copy over the backup.
 	Location string `json:"location"`
 }
 
