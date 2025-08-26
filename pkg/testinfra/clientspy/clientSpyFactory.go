@@ -107,8 +107,8 @@ func (clientSpy *clientSpy) Client() client.WithWatch {
 	return clientSpy.client
 }
 
-func (clientSpy *clientSpy) SetClient(client client.WithWatch) {
-	clientSpy.client = client
+func (clientSpy *clientSpy) SetClient(cl client.WithWatch) {
+	clientSpy.client = cl
 }
 
 func NewClientSpy(client client.WithWatch) client.WithWatch {
