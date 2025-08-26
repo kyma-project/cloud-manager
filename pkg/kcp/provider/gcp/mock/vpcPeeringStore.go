@@ -1,11 +1,12 @@
 package mock
 
 import (
-	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"fmt"
-	"k8s.io/utils/ptr"
 	"sync"
+
+	pb "cloud.google.com/go/compute/apiv1/computepb"
+	"k8s.io/utils/ptr"
 )
 
 type vpcPeeringEntry struct {
@@ -92,7 +93,7 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 	return nil
 }
 
-func (s *vpcPeeringStore) GetRemoteNetworkTags(context context.Context, vpc string, project string) ([]string, error) {
+func (s *vpcPeeringStore) GetRemoteNetworkTags(ctx context.Context, vpc string, project string) ([]string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 

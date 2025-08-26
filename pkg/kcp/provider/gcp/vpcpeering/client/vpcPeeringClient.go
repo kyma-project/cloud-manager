@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/api/iterator"
 	"strings"
+
+	"google.golang.org/api/iterator"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	pb "cloud.google.com/go/compute/apiv1/computepb"
@@ -131,16 +132,16 @@ func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
 
-func (c *gcpVpcPeeringClient) GetRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string) ([]string, error) {
+func (c *gcpVpcPeeringClient) GetRemoteNetworkTags(ctx context.Context, remoteVpc string, remoteProject string) ([]string, error) {
 	var tagsArray []string
 
 	//NetworkPeering will only be created if the remote vpc has a tag with the kyma shoot name
-	remoteNetwork, err := c.networksClient.Get(context, &pb.GetNetworkRequest{Network: remoteVpc, Project: remoteProject})
+	remoteNetwork, err := c.networksClient.Get(ctx, &pb.GetNetworkRequest{Network: remoteVpc, Project: remoteProject})
 	if err != nil {
 		return nil, err
 	}
 
-	tagIterator := c.resourceManagerClient.ListEffectiveTags(context, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
+	tagIterator := c.resourceManagerClient.ListEffectiveTags(ctx, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
 	for {
 		tag, err := tagIterator.Next()
 		if err != nil {

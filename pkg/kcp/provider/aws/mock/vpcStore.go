@@ -3,6 +3,8 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/3th1nk/cidr"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go"
@@ -13,7 +15,6 @@ import (
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-	"sync"
 )
 
 func VpcSubnetsFromScope(scope *cloudcontrolv1beta1.Scope) []VpcSubnet {
@@ -146,7 +147,7 @@ func (s *vpcStore) AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGa
 	return gw, err
 }
 
-func (s *vpcStore) AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc {
+func (s *vpcStore) AddVpc(id, cidr_ string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc {
 	s.m.Lock()
 	defer s.m.Unlock()
 	existinIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
@@ -159,12 +160,12 @@ func (s *vpcStore) AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSub
 	item := &vpcEntry{
 		vpc: ec2types.Vpc{
 			VpcId:     ptr.To(id),
-			CidrBlock: ptr.To(cidr),
+			CidrBlock: ptr.To(cidr_),
 			Tags:      tags,
 			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
 				{
 					AssociationId: ptr.To(uuid.NewString()),
-					CidrBlock:     ptr.To(cidr),
+					CidrBlock:     ptr.To(cidr_),
 					CidrBlockState: &ec2types.VpcCidrBlockState{
 						State:         ec2types.VpcCidrBlockStateCodeAssociated,
 						StatusMessage: ptr.To("Associated"),
@@ -232,7 +233,7 @@ func (s *vpcStore) DescribeVpcs(ctx context.Context, name string) ([]ec2types.Vp
 	}), nil
 }
 
-func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string) (*ec2types.VpcCidrBlockAssociation, error) {
+func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr_ string) (*ec2types.VpcCidrBlockAssociation, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -244,7 +245,7 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidr string
 	}
 	a := ec2types.VpcCidrBlockAssociation{
 		AssociationId: ptr.To(uuid.NewString()),
-		CidrBlock:     ptr.To(cidr),
+		CidrBlock:     ptr.To(cidr_),
 		CidrBlockState: &ec2types.VpcCidrBlockState{
 			State:         ec2types.VpcCidrBlockStateCodeAssociated,
 			StatusMessage: ptr.To("Associated"),
@@ -315,7 +316,7 @@ func (s *vpcStore) DescribeSubnet(ctx context.Context, subnetId string) (*ec2typ
 	return nil, nil
 }
 
-func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []ec2types.Tag) (*ec2types.Subnet, error) {
+func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr_ string, tags []ec2types.Tag) (*ec2types.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -328,7 +329,7 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tag
 	subnet := ec2types.Subnet{
 		AvailabilityZone:   ptr.To(az),
 		AvailabilityZoneId: ptr.To(az),
-		CidrBlock:          ptr.To(cidr),
+		CidrBlock:          ptr.To(cidr_),
 		State:              ec2types.SubnetStateAvailable,
 		SubnetId:           ptr.To(uuid.NewString()),
 		Tags:               append(make([]ec2types.Tag, 0, len(tags)), tags...),

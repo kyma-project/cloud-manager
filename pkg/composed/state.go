@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -12,18 +13,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func NewStateClusterFromCluster(cluster cluster.Cluster) StateCluster {
-	return NewStateCluster(cluster.GetClient(), cluster.GetAPIReader(), cluster.GetEventRecorderFor("cloud-manager"), cluster.GetScheme())
+func NewStateClusterFromCluster(cl cluster.Cluster) StateCluster {
+	return NewStateCluster(cl.GetClient(), cl.GetAPIReader(), cl.GetEventRecorderFor("cloud-manager"), cl.GetScheme())
 }
 
 func NewStateCluster(
-	client client.Client,
+	cl client.Client,
 	reader client.Reader,
 	eventRecorder record.EventRecorder,
 	scheme *runtime.Scheme,
 ) StateCluster {
 	return &stateCluster{
-		client:        client,
+		client:        cl,
 		reader:        reader,
 		eventRecorder: eventRecorder,
 		scheme:        scheme,
@@ -96,8 +97,8 @@ type StateFactory interface {
 	NewState(name types.NamespacedName, obj client.Object) State
 }
 
-func NewStateFactory(cluster StateCluster) StateFactory {
-	return &stateFactory{cluster: cluster}
+func NewStateFactory(stateCluster StateCluster) StateFactory {
+	return &stateFactory{cluster: stateCluster}
 }
 
 type stateFactory struct {
