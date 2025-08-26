@@ -229,7 +229,7 @@ func HavingNfsInstanceStatusId() ObjAssertion {
 	}
 }
 
-func HavingNfsInstanceStatusCapacity(capacity string) ObjAssertion {
+func HavingNfsInstanceStatusCapacity(capacity resource.Quantity) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
 		if !ok {
@@ -238,8 +238,8 @@ func HavingNfsInstanceStatusCapacity(capacity string) ObjAssertion {
 		if x.Status.Capacity.IsZero() {
 			return errors.New("the KCP NfsInstance status.capacity is not set")
 		}
-		if x.Status.Capacity.String() != capacity {
-			return fmt.Errorf("the KCP NfsInstance status.capacity is %s, but expected %s", x.Status.Capacity.String(), capacity)
+		if !x.Status.Capacity.Equal(capacity) {
+			return fmt.Errorf("the KCP NfsInstance status.capacity is %v, but expected %v", x.Status.Capacity, capacity)
 		}
 		return nil
 	}
