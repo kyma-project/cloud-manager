@@ -4,6 +4,7 @@ import (
 	"context"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 	"sync"
 )
@@ -11,7 +12,6 @@ import (
 type RouteTableConfig interface {
 	AddRouteTable(routeTableId, vpcId *string, tags []ec2types.Tag, associations []ec2types.RouteTableAssociation) ec2types.RouteTable
 	GetRoute(vpcId, routeTableId, vpcPeeringConnectionId, destinationCidrBlock string) *ec2types.Route
-	GetRouteCount(vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int
 }
 type routeTableEntry struct {
 	routeTable ec2types.RouteTable
@@ -73,7 +73,11 @@ func (s *routeTablesStore) GetRoute(vpcId, routeTableId, vpcPeeringConnectionId,
 		if *e.routeTable.VpcId == vpcId && *e.routeTable.RouteTableId == routeTableId {
 			for _, r := range e.routeTable.Routes {
 				if *r.DestinationCidrBlock == destinationCidrBlock && *r.VpcPeeringConnectionId == vpcPeeringConnectionId {
-					return &r
+					cln, err := util.JsonClone(r)
+					if err != nil {
+						return nil
+					}
+					return &cln
 				}
 			}
 		}
@@ -119,23 +123,4 @@ func (s *routeTablesStore) DeleteRoute(ctx context.Context, routeTableId, destin
 	})
 
 	return nil
-}
-
-func (s *routeTablesStore) GetRouteCount(vpcId, vpcPeeringConnectionId, destinationCidrBlock string) int {
-	tables, err := s.describeRouteTables(vpcId)
-
-	if err != nil {
-		return -1
-	}
-
-	cnt := 0
-	for _, t := range tables {
-		for _, r := range t.Routes {
-			if ptr.Deref(r.VpcPeeringConnectionId, "") == vpcPeeringConnectionId &&
-				ptr.Deref(r.DestinationCidrBlock, "") == destinationCidrBlock {
-				cnt++
-			}
-		}
-	}
-	return cnt
 }
