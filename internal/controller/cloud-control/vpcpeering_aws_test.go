@@ -1186,10 +1186,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteRouteTableTagged = "rtb-042142cb73d698886"
 		)
 
-		if !feature.VpcPeeringSync.Value(infra.Ctx()) {
-			//Skip("VPC peering sync for AWS is disabled")
-		}
-
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
