@@ -173,6 +173,11 @@ spec:
                   description: LastCapacityUpdate specifies the time when the last time backup size got updated
                   format: date-time
                   type: string
+                locations:
+                  description: AWS locations where the backups are created.
+                  items:
+                    type: string
+                  type: array
                 remoteId:
                   description: Identifier of the Remote AWS Recovery Point
                   type: string

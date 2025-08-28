@@ -14,6 +14,7 @@ import (
 type LocalClient interface {
 	IsNotFound(err error) bool
 	IsAlreadyExists(err error) bool
+	ParseBackupVaultArn(backupVaultArn string) (string, string, string)
 	ParseRecoveryPointId(recoveryPointArn string) string
 }
 
@@ -70,6 +71,7 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 
 func newLocalClient() *localClient {
 	return &localClient{
+		backupVaultRe:   regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):backup-vault:(?P<VaultName>[^:\n]*)$`),
 		recoveryPointRe: regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):recovery-point:(?P<RecoveryPointID>[^:\n]*)$`),
 	}
 }
@@ -82,6 +84,7 @@ func NewClient(svc *backup.Client) Client {
 }
 
 type localClient struct {
+	backupVaultRe   *regexp.Regexp
 	recoveryPointRe *regexp.Regexp
 }
 
@@ -104,6 +107,11 @@ func (c *localClient) IsAlreadyExists(err error) bool {
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
 	return errors.As(err, &alreadyExistsException)
+}
+
+func (c *localClient) ParseBackupVaultArn(backupVaultArn string) (string, string, string) {
+	match := c.backupVaultRe.FindStringSubmatch(backupVaultArn)
+	return match[1], match[2], match[3]
 }
 
 func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) string {

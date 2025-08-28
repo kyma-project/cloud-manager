@@ -14,8 +14,10 @@ func loadVault(ctx context.Context, st composed.State, local bool) (error, conte
 	backup := state.ObjAsAwsNfsVolumeBackup()
 
 	client := state.awsClient
+	vault := state.vault
 	if !local {
 		client = state.destAwsClient
+		vault = state.destVault
 	}
 
 	//If the object is being deleted continue...
@@ -23,7 +25,7 @@ func loadVault(ctx context.Context, st composed.State, local bool) (error, conte
 		return nil, ctx
 	}
 
-	if state.vault != nil {
+	if vault != nil {
 		return nil, ctx
 	}
 
@@ -36,12 +38,12 @@ func loadVault(ctx context.Context, st composed.State, local bool) (error, conte
 	}
 
 	//Match the vault by name. If found, continue...
-	for _, vault := range vaults {
-		if ptr.Deref(vault.BackupVaultName, "") == vaultName {
+	for _, tmp := range vaults {
+		if ptr.Deref(tmp.BackupVaultName, "") == vaultName {
 			if local {
-				state.vault = &vault
+				state.vault = &tmp
 			} else {
-				state.destVault = &vault
+				state.destVault = &tmp
 			}
 			return nil, ctx
 		}
@@ -49,7 +51,7 @@ func loadVault(ctx context.Context, st composed.State, local bool) (error, conte
 
 	// vault does not exist
 	logger.WithValues("local", local).Info("Creating AWS Backup Vault")
-	_, err = state.awsClient.CreateBackupVault(ctx, vaultName, map[string]string{
+	_, err = client.CreateBackupVault(ctx, vaultName, map[string]string{
 		"cloud-resources.kyma-project.io/scope": state.Scope().Name,
 	})
 	if err != nil {

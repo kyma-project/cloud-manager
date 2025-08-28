@@ -120,6 +120,10 @@ type AwsNfsVolumeBackupStatus struct {
 	// AWS Copy Job Identifier
 	// +optional
 	CopyJobId string `json:"copyJobId,omitempty"`
+
+	// AWS locations where the backups are created.
+	// +optional
+	Locations []string `json:"locations"`
 }
 
 // +kubebuilder:object:root=true

@@ -2,9 +2,12 @@ package awsnfsvolumerestore
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
+
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -18,7 +21,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"time"
 )
 
 var kymaRef = klog.ObjectRef{

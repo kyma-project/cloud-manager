@@ -70,6 +70,7 @@ func loadAwsCopyJob(ctx context.Context, st composed.State) (error, context.Cont
 	logger.Info("Updating the Status with remote RestorePoint details")
 	remoteId := state.awsClient.ParseRecoveryPointId(*copyJob.CopyJob.DestinationRecoveryPointArn)
 	backup.Status.RemoteId = remoteId
+	backup.Status.Locations = append(backup.Status.Locations, backup.Spec.Location)
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).

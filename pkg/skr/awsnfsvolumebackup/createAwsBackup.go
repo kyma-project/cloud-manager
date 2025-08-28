@@ -45,6 +45,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 	backup.Status.JobId = ptr.Deref(res.BackupJobId, "")
 	backup.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
 	backup.Status.State = cloudresourcesv1beta1.StateCreating
+	backup.Status.Locations = append(backup.Status.Locations, state.Scope().Spec.Region)
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).

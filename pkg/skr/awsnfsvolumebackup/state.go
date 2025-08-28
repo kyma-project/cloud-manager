@@ -127,7 +127,6 @@ func (s *State) isTimeForCapacityUpdate() bool {
 	lastUpdate := backup.Status.LastCapacityUpdate
 	configInterval := awsconfig.AwsConfig.EfsCapacityCheckInterval
 	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
-	fmt.Println("Capacity Update Due:", lastUpdate, ", ", configInterval, ", ", capacityUpdateDue)
 	return capacityUpdateDue
 }
 

@@ -56,6 +56,6 @@ func createAwsDestBackup(ctx context.Context, st composed.State) (error, context
 	backup.Status.State = cloudresourcesv1beta1.StateCreatingRemote
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
-		SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
+		SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 		Run(ctx, state)
 }
