@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,4 +99,30 @@ func GivenAwsNfsVolumeBackupExists(ctx context.Context, clnt client.Client, obj 
 		err = clnt.Update(ctx, obj)
 	}
 	return err
+}
+
+func WithAwsNfsVolumeBackupLocation(location string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolumeBackup); ok {
+				x.Spec.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumeBackupLocation", obj))
+		},
+	}
+}
+
+func AssertAwsNfsVolumeBackupHasLocation(location string) ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolumeBackup)
+		if !ok {
+			return fmt.Errorf("expected *cloudresourcesv1beta1.AwsNfsVolumeBackup, but got %T", obj)
+		}
+		if len(x.Status.Locations) > 0 && slices.Contains(x.Status.Locations, location) {
+			return nil
+		}
+		return fmt.Errorf("the AwsNfsVolumeBackup %s/%s expected location is %s, but it has %s",
+			x.Namespace, x.Name, location, x.Status.Locations)
+	}
 }

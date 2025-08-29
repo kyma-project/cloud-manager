@@ -76,14 +76,27 @@ func (r *reconciler) newAction() composed.Action {
 		loadKcpAwsNfsInstance,
 		setIdempotencyToken,
 		createAwsClient,
-		loadVault,
-		loadAwsBackup,
+		loadLocalVault,
+		loadAwsBackupJob,
+		loadLocalAwsBackup,
 		createAwsBackup,
-		deleteAwsBackup,
+		composed.If(
+			RemoteBackupPredicate,
+			loadDestVault,
+			loadAwsCopyJob,
+			loadDestAwsBackup,
+			createAwsDestBackup,
+			deleteDestAwsBackup,
+		),
+		deleteLocalAwsBackup,
 		removeFinalizer,
 		updateCapacity,
 		updateStatus,
 
 		StopAndRequeueForCapacityAction(),
 	)
+}
+
+func RemoteBackupPredicate(_ context.Context, state composed.State) bool {
+	return state.(*State).requiresRemoteBackup()
 }

@@ -55,7 +55,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		} else {
 			logger.Info("Updating SKR AwsNfsVolumeBackup status with Ready condition")
 			backup.Status.State = cloudresourcesv1beta1.StateReady
-			return composed.UpdateStatus(backup).
+			return composed.PatchStatus(backup).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeReady,
 					Status:  metav1.ConditionTrue,
@@ -82,7 +82,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			message = fmt.Sprintf("AWS BackupJob State: %s. Message: %s", state.backupJob.State, ptr.Deref(state.backupJob.StatusMessage, ""))
 		}
 		backup.Status.State = cloudresourcesv1beta1.StateError
-		return composed.UpdateStatus(backup).
+		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
