@@ -37,6 +37,8 @@ linters:
             - "^[a-z][a-z0-9]{0,}$"
         - name: redundant-import-alias
           disabled: false
+        - name: import-shadowing
+          disabled: true
     importas:
       alias:
         - pkg: github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1
