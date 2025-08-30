@@ -21,15 +21,15 @@ type leaseSuite struct {
 	ctx context.Context
 }
 
-func (suite *leaseSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (ste *leaseSuite) SetupTest() {
+	ste.ctx = context.Background()
 	env := abstractions.NewMockedEnvironment(map[string]string{})
 	cfg := config.NewConfig(env)
 	config2.InitConfig(cfg)
 	cfg.Read()
 }
 
-func (suite *leaseSuite) TestAcquireAndRelease() {
+func (ste *leaseSuite) TestAcquireAndRelease() {
 	// arrange
 	fakeClient := fake.NewClientBuilder().Build()
 	skrScheme := runtime.NewScheme()
@@ -40,62 +40,62 @@ func (suite *leaseSuite) TestAcquireAndRelease() {
 	leaseDurationSec := int32(600)
 
 	// act (owner acquires lease)
-	res, err := Acquire(suite.ctx, client, leaseName, leaseNamespace, owner, leaseDurationSec)
+	res, err := Acquire(ste.ctx, client, leaseName, leaseNamespace, owner, leaseDurationSec)
 
 	// assert
-	suite.NoError(err)
-	suite.Equal(AcquiredLease, res)
+	ste.NoError(err)
+	ste.Equal(AcquiredLease, res)
 
 	// arrange
 	lease := &coordinationv1.Lease{}
-	err = fakeClient.Get(suite.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
-	suite.NoError(err)
+	err = fakeClient.Get(ste.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
+	ste.NoError(err)
 	time1 := lease.Spec.RenewTime.Time
 
 	//act (owner extends lease)
-	res, err = Acquire(suite.ctx, client, leaseName, leaseNamespace, owner, leaseDurationSec)
+	res, err = Acquire(ste.ctx, client, leaseName, leaseNamespace, owner, leaseDurationSec)
 
 	// assert
-	suite.NoError(err)
-	err = fakeClient.Get(suite.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
-	suite.NoError(err)
-	suite.Equal(RenewedLease, res)
+	ste.NoError(err)
+	err = fakeClient.Get(ste.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
+	ste.NoError(err)
+	ste.Equal(RenewedLease, res)
 	time2 := lease.Spec.RenewTime.Time
-	suite.True(time2.After(time1)) // make sure time2 is greater than time1
+	ste.True(time2.After(time1)) // make sure time2 is greater than time1
 
 	// arrange
 	otherOwner := "test-owner2"
 
 	// act (owner owner tries to acquire same lease - fails)
-	res, err = Acquire(suite.ctx, client, leaseName, leaseNamespace, otherOwner, leaseDurationSec)
+	res, err = Acquire(ste.ctx, client, leaseName, leaseNamespace, otherOwner, leaseDurationSec)
 
 	// assert
-	suite.NoError(err)
-	suite.Equal(OtherLeased, res)
+	ste.NoError(err)
+	ste.Equal(OtherLeased, res)
 
 	// act (other owner tries to release lease he doesnt own - fails)
-	err = Release(suite.ctx, client, leaseName, leaseNamespace, otherOwner)
+	err = Release(ste.ctx, client, leaseName, leaseNamespace, otherOwner)
 
 	// assert
-	suite.Error(err)
-	err = fakeClient.Get(suite.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
-	suite.NoError(err)
-	suite.Equal(owner, *lease.Spec.HolderIdentity)
+	ste.Error(err)
+	err = fakeClient.Get(ste.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
+	ste.NoError(err)
+	ste.Equal(owner, *lease.Spec.HolderIdentity)
 
 	// act (lease is released by original owner)
-	err = Release(suite.ctx, client, leaseName, leaseNamespace, owner)
+	err = Release(ste.ctx, client, leaseName, leaseNamespace, owner)
 
 	// assert
-	suite.NoError(err)
-	err = fakeClient.Get(suite.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
-	suite.Error(err)
-	suite.True(apierrors.IsNotFound(err))
+	ste.NoError(err)
+	err = fakeClient.Get(ste.ctx, types.NamespacedName{Name: leaseName, Namespace: leaseNamespace}, lease)
+	ste.Error(err)
+	ste.True(apierrors.IsNotFound(err))
 
 	// act (nothing happens when releasing non-existant lease)
-	err = Release(suite.ctx, client, leaseName, leaseNamespace, owner)
+	err = Release(ste.ctx, client, leaseName, leaseNamespace, owner)
 
 	// assert
-	suite.NoError(err)
+	ste.NoError(err)
 }
 
 func TestLeaseSuite(t *testing.T) {

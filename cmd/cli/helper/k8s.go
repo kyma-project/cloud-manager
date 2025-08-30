@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -11,10 +15,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/homedir"
-	"os"
-	"path/filepath"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func mustGetRestConfig(kubeconfigVars []string, contextVars []string) *rest.Config {
@@ -44,9 +45,9 @@ func mustGetRestConfig(kubeconfigVars []string, contextVars []string) *rest.Conf
 
 		var contexts []string
 		for _, envVarName := range contextVars {
-			context := os.Getenv(envVarName)
-			if len(context) != 0 {
-				contexts = append(contexts, context)
+			ctx := os.Getenv(envVarName)
+			if len(ctx) != 0 {
+				contexts = append(contexts, ctx)
 			}
 		}
 	loop:

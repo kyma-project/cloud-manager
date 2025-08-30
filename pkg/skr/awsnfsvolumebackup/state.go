@@ -122,9 +122,9 @@ func (s *State) GetTags() map[string]string {
 }
 
 func (s *State) isTimeForCapacityUpdate() bool {
-	backup := s.ObjAsAwsNfsVolumeBackup()
+	bu := s.ObjAsAwsNfsVolumeBackup()
 
-	lastUpdate := backup.Status.LastCapacityUpdate
+	lastUpdate := bu.Status.LastCapacityUpdate
 	configInterval := awsconfig.AwsConfig.EfsCapacityCheckInterval
 	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
 	return capacityUpdateDue

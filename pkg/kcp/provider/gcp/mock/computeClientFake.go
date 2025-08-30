@@ -26,7 +26,7 @@ func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, re
 
 	name := subnet.GetSubnetFullName(request.ProjectId, request.Region, request.Name)
 
-	subnet := &computepb.Subnetwork{
+	subnetwork := &computepb.Subnetwork{
 		Name:                  &name,
 		Region:                &request.Region,
 		IpCidrRange:           &request.Cidr,
@@ -35,7 +35,7 @@ func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, re
 		Purpose:               googleapi.String(request.Purpose),
 	}
 
-	computeClientFake.subnets[name] = subnet
+	computeClientFake.subnets[name] = subnetwork
 
 	opKey := computeClientFake.operationsClientUtils.AddRegionOperation(request.Name)
 
