@@ -21,7 +21,6 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter                         | Type       | Description                                                                                 |
 |-----------------------------------|------------|---------------------------------------------------------------------------------------------|
-| **id**                            | string     | Represents the VPC peering name on the Kyma cluster underlying cloud provider subscription. |
 | **state**                         | string     | Signifies the current state of CustomObject.                                                |
 | **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                        |
 | **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                       |
