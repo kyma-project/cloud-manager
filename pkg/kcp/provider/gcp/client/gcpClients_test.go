@@ -7,7 +7,7 @@ import (
 )
 
 func Test_GcpClientsCanCloseOnNilClients(t *testing.T) {
-	gcpClients :=  &GcpClients{}
+	gcpClients := &GcpClients{}
 	err := gcpClients.Close()
 	assert.NoError(t, err)
 }
