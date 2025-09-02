@@ -1,5 +1,8 @@
 # AzureVpcDnsLink Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `azurevpcdnslink.cloud-resources.kyma-project.io` custom resource (CR) specifies the link between Kyma network and the remote Azure private DNS zone.
 
 Once an `AzureVpcDnsLink` CR is created and reconciled, the Cloud Manager controller creates an Azure Virtual Network Link in the private DNS zone of the remote underlying cloud provider landscape, pointing to the Kyma underlying cloud provider network.
