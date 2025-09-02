@@ -1,4 +1,4 @@
-package keb
+package infrastructuremanagerv1
 
 import (
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"

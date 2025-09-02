@@ -5,7 +5,7 @@ Feature: AWS NfsVolume feature
 
     Given there is SKR with "AWS" provider and default IpRange
 
-    Given SKR resource declaration:
+    Given resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
       | vol       | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
       | pv        | PersistentVolume      | v1                                      | ${vol.status.id ?? ''}                          |           |

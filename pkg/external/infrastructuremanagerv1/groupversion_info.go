@@ -1,4 +1,4 @@
-package keb
+package infrastructuremanagerv1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

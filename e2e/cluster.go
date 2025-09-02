@@ -13,16 +13,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-func NewCluster(clstr cluster.Cluster) *Cluster {
-	return &Cluster{
+type Cluster interface {
+	cluster.Cluster
+
+	Alias() string
+
+	IsStarted() bool
+	Start(ctx context.Context) error
+	Stop() error
+	AddResources(ctx context.Context, arr ...*ResourceDeclaration) error
+	Has(alias string) bool
+	Get(ctx context.Context, alias string) (client.Object, error)
+	EvaluationContext(ctx context.Context) (map[string]interface{}, error)
+}
+
+func NewCluster(alias string, clstr cluster.Cluster) Cluster {
+	return &defaultCluster{
 		Cluster:   clstr,
+		alias:     alias,
 		resources: make(map[string]*ResourceInfo),
 		sources:   make(map[schema.GroupVersionKind]source.SyncingSource),
 	}
 }
 
-type Cluster struct {
+type defaultCluster struct {
 	cluster.Cluster
+
+	alias string
 
 	runCtx     context.Context
 	cancelRun  context.CancelFunc
@@ -33,11 +50,15 @@ type Cluster struct {
 	sources   map[schema.GroupVersionKind]source.SyncingSource
 }
 
-func (c *Cluster) IsStarted() bool {
+func (c *defaultCluster) Alias() string {
+	return c.alias
+}
+
+func (c *defaultCluster) IsStarted() bool {
 	return c.started
 }
 
-func (c *Cluster) Start(ctx context.Context) error {
+func (c *defaultCluster) Start(ctx context.Context) error {
 	if c.started {
 		return fmt.Errorf("cluster already started")
 	}
@@ -67,7 +88,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	return err
 }
 
-func (c *Cluster) Stop() error {
+func (c *defaultCluster) Stop() error {
 	if !c.started {
 		return fmt.Errorf("cluster not started")
 	}
@@ -77,7 +98,7 @@ func (c *Cluster) Stop() error {
 	return err
 }
 
-func (c *Cluster) AddResources(ctx context.Context, arr []*ResourceDeclaration) error {
+func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
 	if !c.started {
 		return fmt.Errorf("cluster not started")
 	}
@@ -139,7 +160,7 @@ func (c *Cluster) AddResources(ctx context.Context, arr []*ResourceDeclaration) 
 	return nil
 }
 
-func (c *Cluster) New(alias string) (client.Object, error) {
+func (c *defaultCluster) new(alias string) (client.Object, error) {
 	ri, exists := c.resources[alias]
 	if !exists {
 		return nil, fmt.Errorf("alias %s not found", alias)
@@ -153,10 +174,34 @@ func (c *Cluster) New(alias string) (client.Object, error) {
 	return rObj.(client.Object), nil
 }
 
-func (c *Cluster) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {
+func (c *defaultCluster) Has(alias string) bool {
+	_, ok := c.resources[alias]
+	return ok
+}
+
+func (c *defaultCluster) Get(ctx context.Context, alias string) (client.Object, error) {
+	ri, ok := c.resources[alias]
+	if !ok {
+		return nil, fmt.Errorf("alias %s not found", alias)
+	}
+	obj, err := c.new(alias)
+	if err != nil {
+		return nil, err
+	}
+	err = c.GetClient().Get(ctx, types.NamespacedName{
+		Namespace: ri.Namespace,
+		Name:      ri.Name,
+	}, obj)
+	if err != nil {
+		return nil, fmt.Errorf("error loading resource %q", alias)
+	}
+	return obj, err
+}
+
+func (c *defaultCluster) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {
 	result := make(map[string]interface{}, len(c.resources))
 	for _, ri := range c.resources {
-		obj, err := c.New(ri.Alias)
+		obj, err := c.new(ri.Alias)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create object for alias %q: %w", ri.Alias, err)
 		}

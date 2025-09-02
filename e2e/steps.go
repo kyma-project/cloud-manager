@@ -6,119 +6,54 @@ import (
 
 	"github.com/cucumber/godog"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/config"
 )
-
-const (
-	sharedSkrId = "bcb334ad-9a19-4d67-aab2-ba1520fe8f21"
-)
-
-func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() { fmt.Println("Get the party started!") })
-}
-
-
-func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		env := abstractions.NewOSEnvironment()
-		cfg := config.NewConfig(env)
-		configDir := env.Get("CONFIG_DIR")
-		if configDir == "" {
-			configDir = "../../../"
-		}
-		cfg.BaseDir(configDir)
-		InitConfig(cfg)
-		cfg.Read()
-
-		world := NewWorld()
-		err := world.Init(ctx)
-		return setWorld(ctx, NewWorld()), err
-	})
-
-	ctx.Step(`^there is SKR with "(AWS|Azure|GCP|OpenStack")" provider and default IpRange$`, thereIsSKRWithProviderAndDefaultIpRange)
-	ctx.Step(`^(SKR|KCP|Garden) resource declaration:$`, resourceDeclaration)
-	ctx.Step(`^SKR "([^"]*)" resource declaration:$`, resourceDeclaration)
-	ctx.Step(`^eventually "([^"]*)" is ok, unless:$`, eventuallyValueIsOkUnless)
-	ctx.Step(`^"([^"]*)" is ok$`, valueIsOk)
-	ctx.Step(`^eventually "([^"]*)" is ok$`, eventuallyValueIsOk)
-	ctx.Step(`^PVC "([^"]*)" file operations succeed:$`, pvcFileOperationsSucceed)
-	ctx.Step(`^resource "([^"]*)" is created:$`, resourceIsCreated)
-	ctx.Step(`^resource "([^"]*)" is deleted$`, resourceIsDeleted)
-	ctx.Step(`^eventually resource "([^"]*)" does not exist$`, eventuallyResourceDoesNotExist)
-	ctx.Step(`^resource "([^"]*)" does not exist$`, resourceDoesNotExist)
-	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
-	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
-	ctx.Step(`^Redis "([^"]*)" gives "([^"]*)" with:$`, redisGivesWith)
-}
 
 func thereIsSKRWithProviderAndDefaultIpRange(ctx context.Context, provider string) (context.Context, error) {
-	world := getWorld(ctx)
+	world := GetWorld()
 	pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
 	if err != nil {
 		return ctx, err
 	}
 
-	sub := Config.Subscriptions.GetDefaultForProvider(pt)
-	if sub == nil {
-		return ctx, fmt.Errorf("no default subscription found for provider %q", provider)
+	clusterAlias := SharedSkrClusterAlias(pt)
+	skr := world.SKR().Get(clusterAlias)
+	if skr == nil {
+		return ctx, fmt.Errorf("could not find precreated cluster %q", clusterAlias)
 	}
 
-	skrCreator := NewSkrCreator(world)
-	_, err = skrCreator.CreateSkr(ctx, CreateSkrInput{
-		Provider:     pt,
-		Subscription: sub,
-	})
-	if err != nil {
-		return ctx, fmt.Errorf("error creating SKR: %w", err)
-	}
+	GetScenarioSession(ctx).SetCurrentCluster(skr.Cluster, skr.Alias)
+
 	return ctx, nil
 }
 
-func resourceDeclaration(ctx context.Context, plane string, tbl *godog.Table) (context.Context, error) {
-	rd, err := ParseResourceDeclarations(tbl)
+func moduleIsAdded(ctx context.Context, moduleName string) (context.Context, error) {
+	session, err := GetScenarioSessionEnsureCluster(ctx)
 	if err != nil {
-		return ctx, fmt.Errorf("failed to parse resource declaration: %w", err)
+		return ctx, err
 	}
 
-	world := getWorld(ctx)
+	// TODO: continue here
+	session.CurrentCluster().
 
-	switch plane {
-	case "SKR":
-		return skrResourceDeclaration(ctx, sharedSkrId, tbl)
-	case "KCP":
-		kcp, err := world.ClusterProvider.KCP(ctx)
-		if err != nil {
-			return ctx, err
-		}
-		err = kcp.AddResources(ctx, rd)
-		return ctx, err
-	case "Garden":
-		gc, err := world.ClusterProvider.Garden(ctx)
-		if err != nil {
-			return ctx, err
-		}
-		err = gc.AddResources(ctx, rd)
-		return ctx, err
-	default:
-		return ctx, fmt.Errorf("unknown plane %q", plane)
-	}
+	return ctx, nil
 }
 
-func skrResourceDeclaration(ctx context.Context, skrId string, tbl *godog.Table) (context.Context, error) {
+func resourceDeclaration(ctx context.Context, tbl *godog.Table) (context.Context, error) {
 	rd, err := ParseResourceDeclarations(tbl)
 	if err != nil {
 		return ctx, fmt.Errorf("failed to parse resource declaration: %w", err)
 	}
 
-	world := getWorld(ctx)
-
-	skr, err := world.ClusterProvider.SKR(ctx, skrId)
-	if err != nil {
-		return ctx, fmt.Errorf("failed to get SKR cluster: %w", err)
+	if GetScenarioSession(ctx).CurrentCluster() == nil {
+		return ctx, fmt.Errorf("current cluster is not defined")
 	}
-	err = skr.AddResources(ctx, rd)
-	return ctx, err
+
+	err = GetScenarioSession(ctx).CurrentCluster().AddResources(ctx, rd...)
+	if err != nil {
+		return ctx, fmt.Errorf("error adding resource declaration: %w", err)
+	}
+
+	return ctx, nil
 }
 
 func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) (context.Context, error) {

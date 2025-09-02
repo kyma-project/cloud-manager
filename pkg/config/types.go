@@ -6,6 +6,7 @@ import (
 
 type Config interface {
 	BaseDir(baseDir string)
+	GetBaseDir() string
 	GetEnv(key string) string
 	Path(path string, actions ...PathAction) Config
 	DefaultScalar(path string, scalar interface{})

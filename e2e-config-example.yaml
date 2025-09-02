@@ -26,3 +26,9 @@ oidcIssuerUrl: https://oidc.example.com
 # shoot admins
 administrators:
   - john.smith@example.com
+
+cloudProfiles:
+  aws: aws
+  azure: az
+  gcp: gcp
+  openstack: converged-cloud-kyma

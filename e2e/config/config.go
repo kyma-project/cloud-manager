@@ -1,7 +1,8 @@
-package e2e
+package config
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 )
 
@@ -10,25 +11,27 @@ var Config = &ConfigType{}
 type NetworkOwner string
 
 const (
-	NetworkOwnerKyma = NetworkOwner("kyma")
+	NetworkOwnerKyma     = NetworkOwner("kyma")
 	NetworkOwnerGardener = NetworkOwner("gardener")
 )
 
 type ConfigType struct {
 	GardenKubeconfig string `yaml:"gardenKubeconfig"`
 
-	KcpNamespace  string `yaml:"kcpNamespace"`
+	KcpNamespace    string `yaml:"kcpNamespace"`
 	GardenNamespace string `yaml:"gardenNamespace"`
-	SkrNamespace   string `yaml:"skrNamespace"`
+	SkrNamespace    string `yaml:"skrNamespace"`
 
 	Subscriptions Subscriptions `yaml:"subscriptions"`
 
 	NetworkOwner NetworkOwner `yaml:"networkOwner"`
 
-	OidcClientId string `yaml:"oidcClientId"`
+	OidcClientId  string `yaml:"oidcClientId"`
 	OidcIssuerUrl string `yaml:"oidcIssuerUrl"`
 
 	Administrators []string `yaml:"administrators"`
+
+	CloudProfiles map[string]string `yaml:"cloudProfiles"`
 }
 
 type Subscriptions []SubscriptionInfo
@@ -65,7 +68,7 @@ func InitConfig(cfg config.Config) {
 		"e2e.config",
 		config.Bind(Config),
 		// intention is to load the whole config from a file
-		config.SourceFile("../e2e-config.yaml"),
+		config.SourceFile("e2e-config.yaml"),
 
 		// below are some defaults that can be omitted from the file
 		config.Path(
@@ -89,5 +92,32 @@ func InitConfig(cfg config.Config) {
 			"networkOwner",
 			config.DefaultScalar(NetworkOwnerGardener),
 		),
+
+		config.Path(
+			"cloudProfiles",
+			config.DefaultObj(map[string]string{
+				"aws":       "aws",
+				"azure":     "az",
+				"gcp":       "gcp",
+				"openstack": "converged-cloud-kyma",
+			}),
+		),
 	)
+}
+
+func LoadConfig() config.Config {
+	env := abstractions.NewOSEnvironment()
+	cfg := config.NewConfig(env)
+	configDir := env.Get("CONFIG_DIR")
+	if configDir == "" {
+		configDir = env.Get("PROJECTROOT")
+	}
+	if configDir == "" {
+		configDir = "../../../../"
+	}
+	cfg.BaseDir(configDir)
+	InitConfig(cfg)
+	cfg.Read()
+
+	return cfg
 }

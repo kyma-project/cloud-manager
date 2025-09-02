@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	"github.com/kyma-project/cloud-manager/pkg/external/keb"
-	"github.com/kyma-project/cloud-manager/pkg/util"
+	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -19,8 +19,10 @@ import (
 
 const gardenLinuxVersion = "1592.8.0"
 
+const aliasLabel = "e2e.kyma-project.io/alias"
+
 type RuntimeBuilder struct {
-	Obj keb.Runtime
+	Obj infrastructuremanagerv1.Runtime
 
 	errProvider error
 }
@@ -29,47 +31,49 @@ func NewRuntimeBuilder() *RuntimeBuilder {
 	globalAccountId := uuid.NewString()
 	subAccountId := uuid.NewString()
 	name := uuid.NewString()
-	shootName := util.RandomId(7)
+	shootName := NewRandomShootName()
 	return &RuntimeBuilder{
-		Obj: keb.Runtime{
+		Obj: infrastructuremanagerv1.Runtime{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: keb.GroupVersion.String(),
+				APIVersion: infrastructuremanagerv1.GroupVersion.String(),
 				Kind:       "Runtime",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
-				Namespace: Config.KcpNamespace,
+				Namespace: e2econfig.Config.KcpNamespace,
 				Labels: map[string]string{
+					cloudcontrolv1beta1.LabelRuntimeId:            name,
 					cloudcontrolv1beta1.LabelScopeGlobalAccountId: globalAccountId,
 					cloudcontrolv1beta1.LabelScopeSubaccountId:    subAccountId,
 					cloudcontrolv1beta1.LabelScopeShootName:       shootName,
 					cloudcontrolv1beta1.LabelKymaName:             name,
 					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "", // required!!!
+					aliasLabel: "", // required!!!
 				},
 			},
-			Spec: keb.RuntimeSpec{
-				Security: keb.Security{
-					Administrators: Config.Administrators,
-					Networking: keb.NetworkingSecurity{
-						Filter: keb.Filter{
-							Egress: keb.Egress{
+			Spec: infrastructuremanagerv1.RuntimeSpec{
+				Security: infrastructuremanagerv1.Security{
+					Administrators: e2econfig.Config.Administrators,
+					Networking: infrastructuremanagerv1.NetworkingSecurity{
+						Filter: infrastructuremanagerv1.Filter{
+							Egress: infrastructuremanagerv1.Egress{
 								Enabled: true,
 							},
-							Ingress: &keb.Ingress{
+							Ingress: &infrastructuremanagerv1.Ingress{
 								Enabled: false,
 							},
 						},
 					},
 				},
-				Shoot: keb.RuntimeShoot{
-					Kubernetes: keb.Kubernetes{
+				Shoot: infrastructuremanagerv1.RuntimeShoot{
+					Kubernetes: infrastructuremanagerv1.Kubernetes{
 						Version: ptr.To("1.32"),
-						KubeAPIServer: keb.APIServer{
-							AdditionalOidcConfig: &[]keb.OIDCConfig{
+						KubeAPIServer: infrastructuremanagerv1.APIServer{
+							AdditionalOidcConfig: &[]infrastructuremanagerv1.OIDCConfig{
 								{
 									OIDCConfig: gardenertypes.OIDCConfig{
-										ClientID:       ptr.To(Config.OidcClientId),
-										IssuerURL:      ptr.To(Config.OidcIssuerUrl),
+										ClientID:       ptr.To(e2econfig.Config.OidcClientId),
+										IssuerURL:      ptr.To(e2econfig.Config.OidcIssuerUrl),
 										GroupsClaim:    ptr.To("groups"),
 										GroupsPrefix:   ptr.To("-"),
 										UsernameClaim:  ptr.To("sub"),
@@ -81,13 +85,13 @@ func NewRuntimeBuilder() *RuntimeBuilder {
 						},
 					},
 					Name: shootName,
-					Networking: keb.Networking{
+					Networking: infrastructuremanagerv1.Networking{
 						Nodes:    "10.250.0.0/16",
 						Pods:     "10.96.0.0/13",
 						Services: "10.104.0.0/13",
 					},
 					PlatformRegion: "cf-us10-staging",
-					Provider: keb.Provider{
+					Provider: infrastructuremanagerv1.Provider{
 						Type:    "",  // required!!!
 						Workers: nil, // required!!!
 					},
@@ -110,12 +114,18 @@ func (b *RuntimeBuilder) WithNamespace(ns string) *RuntimeBuilder {
 	return b
 }
 
+func (b *RuntimeBuilder) WithAlias(alias string) *RuntimeBuilder {
+	b.Obj.Labels[aliasLabel] = alias
+	return b
+}
+
 func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType, region string) *RuntimeBuilder {
 	b.errProvider = nil
 	lProvider := strings.ToLower(string(provider))
 	uProvider := strings.ToUpper(string(provider))
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName] = lProvider
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeProvider] = uProvider
+	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeRegion] = region
 
 	zones, ok := providerRegions[provider][region]
 	if !ok {
@@ -168,13 +178,13 @@ func (b *RuntimeBuilder) WithAdministrators(admins ...string) *RuntimeBuilder {
 }
 
 func (b *RuntimeBuilder) WithOidc(clientId, issuerUrl string) *RuntimeBuilder {
-	var data []keb.OIDCConfig
+	var data []infrastructuremanagerv1.OIDCConfig
 	if b.Obj.Spec.Shoot.Kubernetes.KubeAPIServer.AdditionalOidcConfig != nil {
 		data = *b.Obj.Spec.Shoot.Kubernetes.KubeAPIServer.AdditionalOidcConfig
 	}
 	data = append(
 		data,
-		keb.OIDCConfig{
+		infrastructuremanagerv1.OIDCConfig{
 			OIDCConfig: gardenertypes.OIDCConfig{
 				ClientID:       ptr.To(clientId),
 				IssuerURL:      ptr.To(issuerUrl),
@@ -199,6 +209,9 @@ func (b *RuntimeBuilder) Validate() error {
 	var err error
 	if b.errProvider != nil {
 		err = multierror.Append(err, b.errProvider)
+	}
+	if b.Obj.Labels[aliasLabel] == "" {
+		err = multierror.Append(err, errors.New("missing required label alias"))
 	}
 	if b.Obj.Namespace == "" {
 		err = multierror.Append(err, errors.New("namespace is required"))
@@ -236,8 +249,15 @@ func (b *RuntimeBuilder) Validate() error {
 	return err
 }
 
-func (b *RuntimeBuilder) Build() *keb.Runtime {
+func (b *RuntimeBuilder) Build() *infrastructuremanagerv1.Runtime {
 	return &b.Obj
+}
+
+var defaultRegions = map[cloudcontrolv1beta1.ProviderType]string{
+	cloudcontrolv1beta1.ProviderAws:       "us-east-1",
+	cloudcontrolv1beta1.ProviderGCP:       "us-east1",
+	cloudcontrolv1beta1.ProviderAzure:     "westeurope",
+	cloudcontrolv1beta1.ProviderOpenStack: "eu-de-1",
 }
 
 var providerRegions = map[cloudcontrolv1beta1.ProviderType]map[string][]string{
@@ -357,7 +377,7 @@ var providerRegions = map[cloudcontrolv1beta1.ProviderType]map[string][]string{
 var machineTypes = map[cloudcontrolv1beta1.ProviderType][]string{
 	cloudcontrolv1beta1.ProviderAws:       {"m5.large", "m6i.large"},
 	cloudcontrolv1beta1.ProviderGCP:       {"n2-standard-2"},
-	cloudcontrolv1beta1.ProviderAzure:     {"Standard_D2s_v5"},
+	cloudcontrolv1beta1.ProviderAzure:     {"Standard_D2s_v5", "Standard_D4s_v5"},
 	cloudcontrolv1beta1.ProviderOpenStack: {"g_c2_m8"},
 }
 

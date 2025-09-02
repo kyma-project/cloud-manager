@@ -1,4 +1,4 @@
-package keb
+package infrastructuremanagerv1
 
 import (
 	"fmt"
