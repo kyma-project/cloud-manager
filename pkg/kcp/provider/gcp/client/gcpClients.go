@@ -37,6 +37,11 @@ type VpcPeeringClients struct {
 }
 
 func NewGcpClients(ctx context.Context, saJsonKeyPath string, vpcPeeringSaJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
+	if saJsonKeyPath == "" || saJsonKeyPath == "none" || vpcPeeringSaJsonKeyPath == "" || vpcPeeringSaJsonKeyPath == "none" {
+		logger.Info("Creating GCP clients stub since no GCP credentials provided")
+		return &GcpClients{}, nil
+	}
+
 	logger.
 		WithValues("saJsonKeyPath", saJsonKeyPath).
 		WithValues("vpcPeeringSaJsonKeyPath", vpcPeeringSaJsonKeyPath).
