@@ -31,7 +31,7 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
 			return nil, fmt.Errorf("failed to create network v2 client: %v", err)
 		}
 		return &client{
-			netSvc:   netSvc,
+			netSvc: netSvc,
 		}, nil
 	}
 }
