@@ -2,12 +2,13 @@ package config
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+
 	"github.com/peterbourgon/mergemap"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
+	"go.yaml.in/yaml/v3"
 )
 
 type sourceFile struct {
@@ -59,7 +60,7 @@ func (s *sourceFile) Read(inJsonString string) string {
 		newJsonString = loadedFileString
 	case ".yaml", ".yml":
 		newData = map[string]interface{}{}
-		err = yaml.Unmarshal([]byte(loadedFileString), newData)
+		err = yaml.Unmarshal(buf, &newData)
 		if err != nil {
 			return inJsonString
 		}
