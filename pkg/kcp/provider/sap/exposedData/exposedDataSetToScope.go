@@ -28,4 +28,3 @@ func exposedDataSetToScope(ctx context.Context, st composed.State) (error, conte
 
 	return nil, ctx
 }
-
