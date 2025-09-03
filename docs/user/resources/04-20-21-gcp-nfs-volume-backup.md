@@ -36,6 +36,7 @@ This table lists the parameters of the given resource together with their descri
 |-----------------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------|
 | **state**                         | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
 | **location**                      | string     | Signifies the location of the backup. This is particularly useful, if location is not provided in the spec.                          |
+| **capacity**                      | Quantity   | Provides the storage size of the backup.        |
 | **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                                 |
 | **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                                |
 | **conditions.message**            | string     | Provides more details about the condition status change.                                                                             |

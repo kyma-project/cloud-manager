@@ -1,4 +1,4 @@
-# Google Cloud Platform Permissions
+# AWS Permissions
 
 ## Default Principal
 
@@ -10,11 +10,14 @@
             "Effect": "Allow",
             "Action": [
                 "backup-storage:MountCapsule",
+                "backup:CopyFromBackupVault",
+                "backup:CopyIntoBackupVault",
                 "backup:CreateBackupVault",
                 "backup:DeleteBackupVault",
                 "backup:DeleteRecoveryPoint",
                 "backup:DescribeBackupJob",
                 "backup:DescribeBackupVault",
+                "backup:DescribeCopyJob",
                 "backup:DescribeRecoveryPoint",
                 "backup:DescribeRestoreJob",
                 "backup:GetRecoveryPointRestoreMetadata",
@@ -22,6 +25,7 @@
                 "backup:ListRecoveryPointsByBackupVault",
                 "backup:ListRecoveryPointsByResource",
                 "backup:StartBackupJob",
+                "backup:StartCopyJob",
                 "backup:StartRestoreJob",
                 "backup:TagResource",
                 "backup:UntagResource",
