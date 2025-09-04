@@ -17,60 +17,60 @@ type loadVaultSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadVaultSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadVaultSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadVaultSuite) TestLoadVaultOnDeletingObj() {
+func (s *loadVaultSuite) TestLoadVaultOnDeletingObj() {
 
 	deletingObj := deletingAwsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	state.vault = nil
 
 	//Call loadVault
 	err, _ctx := loadLocalVault(ctx, state)
-	suite.Nil(err)
-	suite.Equal(ctx, _ctx)
+	s.Nil(err)
+	s.Equal(ctx, _ctx)
 }
 
-func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNotNil() {
+func (s *loadVaultSuite) TestLoadVaultWhenVaultIsNotNil() {
 
 	obj := awsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	state.vault = &backuptypes.BackupVaultListMember{}
 
 	//Call loadVault
 	err, _ctx := loadLocalVault(ctx, state)
-	suite.Nil(err)
-	suite.Equal(ctx, _ctx)
+	s.Nil(err)
+	s.Equal(ctx, _ctx)
 }
 
-func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNil() {
+func (s *loadVaultSuite) TestLoadVaultWhenVaultIsNil() {
 
 	obj := awsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//load the scope object into state
 	awsScope := scope.DeepCopy()
@@ -78,15 +78,15 @@ func (suite *loadVaultSuite) TestLoadVaultWhenVaultIsNil() {
 
 	//Call createAwsClient
 	err, _ = createAwsClient(ctx, state)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ctx := loadLocalVault(ctx, state)
-	suite.Nil(err)
-	suite.Equal(ctx, _ctx)
+	s.Nil(err)
+	s.Equal(ctx, _ctx)
 
-	suite.NotNil(state.vault)
-	suite.Equal(fmt.Sprintf("cm-%s", state.Scope().Name), ptr.Deref(state.vault.BackupVaultName, ""))
+	s.NotNil(state.vault)
+	s.Equal(fmt.Sprintf("cm-%s", state.Scope().Name), ptr.Deref(state.vault.BackupVaultName, ""))
 }
 
 func TestLoadVault(t *testing.T) {

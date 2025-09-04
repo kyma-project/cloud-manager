@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -10,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type modifyKcpNfsInstanceSuite struct {
@@ -18,13 +19,13 @@ type modifyKcpNfsInstanceSuite struct {
 	ctx context.Context
 }
 
-func (suite *modifyKcpNfsInstanceSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *modifyKcpNfsInstanceSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
+func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -36,7 +37,7 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -44,46 +45,46 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
-	assert.NotEqual(suite.T(), gcpNfsInstance.Name, gcpNfsVolume.Status.Id)
+	assert.Nil(s.T(), err)
+	assert.NotEqual(s.T(), gcpNfsInstance.Name, gcpNfsVolume.Status.Id)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Status.Id, Namespace: kymaRef.Namespace}, &nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate KCP NfsInstance labels.
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
-	assert.Equal(suite.T(), gcpNfsVolume.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
-	assert.Equal(suite.T(), gcpNfsVolume.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
+	assert.Equal(s.T(), gcpNfsVolume.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
+	assert.Equal(s.T(), gcpNfsVolume.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
 
 	//Validate KCPNfsInstance attributes.
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Name, nfsInstance.Spec.RemoteRef.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
-	assert.Equal(suite.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
-	assert.Equal(suite.T(), string(gcpNfsVolume.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.Location, nfsInstance.Spec.Instance.Gcp.Location)
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
-	assert.Equal(suite.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Name, nfsInstance.Spec.RemoteRef.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
+	assert.Equal(s.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	assert.Equal(s.T(), string(gcpNfsVolume.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
+	assert.Equal(s.T(), gcpNfsVolume.Spec.Location, nfsInstance.Spec.Instance.Gcp.Location)
+	assert.Equal(s.T(), gcpNfsVolume.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
+	assert.Equal(s.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
+func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackup = cloudresourcesv1beta1.GcpNfsVolumeBackupRef{
 		Name:      gcpNfsVolumeBackup.Name,
 		Namespace: gcpNfsVolumeBackup.Namespace,
 	}
 	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj, &deletedGcpNfsVolume)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -96,7 +97,7 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -104,42 +105,42 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
-	assert.NotEqual(suite.T(), gcpNfsInstance.Name, nfsVol.Status.Id)
+	assert.Nil(s.T(), err)
+	assert.NotEqual(s.T(), gcpNfsInstance.Name, nfsVol.Status.Id)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: nfsVol.Status.Id, Namespace: kymaRef.Namespace}, &nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate KCP NfsInstance labels.
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
-	assert.Equal(suite.T(), nfsVol.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
-	assert.Equal(suite.T(), nfsVol.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
+	assert.Equal(s.T(), nfsVol.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
+	assert.Equal(s.T(), nfsVol.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
 
 	//Validate KCPNfsInstance attributes.
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Name, nfsInstance.Spec.RemoteRef.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
-	assert.Equal(suite.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
-	assert.Equal(suite.T(), string(gcpNfsVolume.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.Location, nfsInstance.Spec.Instance.Gcp.Location)
-	assert.Equal(suite.T(), gcpNfsVolume.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
-	assert.Equal(suite.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Name, nfsInstance.Spec.RemoteRef.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
+	assert.Equal(s.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
+	assert.Equal(s.T(), gcpNfsVolume.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	assert.Equal(s.T(), string(gcpNfsVolume.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
+	assert.Equal(s.T(), gcpNfsVolume.Spec.Location, nfsInstance.Spec.Instance.Gcp.Location)
+	assert.Equal(s.T(), gcpNfsVolume.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
+	assert.Equal(s.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
-	assert.Equal(suite.T(), "projects/test-project/locations/us-west1/backups/cm-backup-uuid", nfsInstance.Spec.Instance.Gcp.SourceBackup)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
+	assert.Equal(s.T(), "projects/test-project/locations/us-west1/backups/cm-backup-uuid", nfsInstance.Spec.Instance.Gcp.SourceBackup)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
+func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -153,7 +154,7 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -161,41 +162,41 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
 		types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
-	assert.NotEqual(suite.T(), nfsVol.Name, nfsVol.Status.Id)
+	assert.Nil(s.T(), err)
+	assert.NotEqual(s.T(), nfsVol.Name, nfsVol.Status.Id)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Status.Id, Namespace: kymaRef.Namespace}, &nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate KCP NfsInstance labels.
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
-	assert.Equal(suite.T(), obj.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
-	assert.Contains(suite.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
-	assert.Equal(suite.T(), obj.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelKymaName)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteName)
+	assert.Equal(s.T(), obj.Name, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName])
+	assert.Contains(s.T(), nfsInstance.Labels, cloudcontrolv1beta1.LabelRemoteNamespace)
+	assert.Equal(s.T(), obj.Namespace, nfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace])
 
 	//Validate KCPNfsInstance attributes.
-	assert.Equal(suite.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
-	assert.Equal(suite.T(), obj.Name, nfsInstance.Spec.RemoteRef.Name)
-	assert.Equal(suite.T(), obj.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
-	assert.Equal(suite.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
-	assert.Equal(suite.T(), obj.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
-	assert.Equal(suite.T(), string(obj.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
-	assert.Contains(suite.T(), kcpScope.Spec.Scope.Gcp.Workers[0].Zones, nfsInstance.Spec.Instance.Gcp.Location)
-	assert.Equal(suite.T(), obj.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
-	assert.Equal(suite.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
+	assert.Equal(s.T(), kymaRef.Name, nfsInstance.Spec.Scope.Name)
+	assert.Equal(s.T(), obj.Name, nfsInstance.Spec.RemoteRef.Name)
+	assert.Equal(s.T(), obj.Namespace, nfsInstance.Spec.RemoteRef.Namespace)
+	assert.Equal(s.T(), kcpIpRange.Name, nfsInstance.Spec.IpRange.Name)
+	assert.Equal(s.T(), obj.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	assert.Equal(s.T(), string(obj.Spec.Tier), string(nfsInstance.Spec.Instance.Gcp.Tier))
+	assert.Contains(s.T(), kcpScope.Spec.Scope.Gcp.Workers[0].Zones, nfsInstance.Spec.Instance.Gcp.Location)
+	assert.Equal(s.T(), obj.Spec.FileShareName, nfsInstance.Spec.Instance.Gcp.FileShareName)
+	assert.Equal(s.T(), gcpNfsInstance.Spec.Instance.Gcp.ConnectMode, nfsInstance.Spec.Instance.Gcp.ConnectMode)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones() {
+func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -210,7 +211,7 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones()
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopAndForget, err)
+	assert.Equal(s.T(), composed.StopAndForget, err)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -218,15 +219,15 @@ func (suite *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones()
 		types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
-	assert.NotEqual(suite.T(), nfsVol.Name, nfsVol.Status.Id)
-	assert.Equal(suite.T(), nfsVol.Status.Conditions[0].Type, cloudresourcesv1beta1.ConditionTypeError)
-	assert.Equal(suite.T(), nfsVol.Status.Conditions[0].Reason, cloudresourcesv1beta1.ConditionReasonNoWorkerZones)
+	assert.Nil(s.T(), err)
+	assert.NotEqual(s.T(), nfsVol.Name, nfsVol.Status.Id)
+	assert.Equal(s.T(), nfsVol.Status.Conditions[0].Type, cloudresourcesv1beta1.ConditionTypeError)
+	assert.Equal(s.T(), nfsVol.Status.Conditions[0].Reason, cloudresourcesv1beta1.ConditionReasonNoWorkerZones)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
+func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -240,30 +241,30 @@ func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 	//Update GcpNfsVolume with new CapacityGb
 	nfsVol.Spec.CapacityGb = 2048
 	err = factory.skrCluster.K8sClient().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke modifyKcpNfsInstance
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: nfsVol.Status.Id, Namespace: kymaRef.Namespace}, &nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate KCPNfsInstance attributes.
-	assert.Equal(suite.T(), nfsVol.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	assert.Equal(s.T(), nfsVol.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
+func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -279,30 +280,30 @@ func (suite *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
 	//Update GcpNfsVolume with new CapacityGb
 	nfsVol.Spec.CapacityGb = 2048
 	err = factory.skrCluster.K8sClient().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke modifyKcpNfsInstance
 	err, _ = modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the KcpNfsInstance using theGcpNfsVolume.Status.Id
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: nfsVol.Status.Id, Namespace: kymaRef.Namespace}, &nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate KCPNfsInstance attributes.
-	assert.Equal(suite.T(), nfsVol.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	assert.Equal(s.T(), nfsVol.Spec.CapacityGb, nfsInstance.Spec.Instance.Gcp.CapacityGb)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeProcessing, nfsVol.Status.State)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {
+func (s *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -313,13 +314,13 @@ func (suite *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {
 	err, _ctx := modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 }
 
-func (suite *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeNotChanged() {
+func (s *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeNotChanged() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -331,8 +332,8 @@ func (suite *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeNotChanged() {
 	err, _ctx := modifyKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 }
 
 func TestModifyKcpNfsInstance(t *testing.T) {

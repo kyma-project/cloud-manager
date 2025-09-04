@@ -3,18 +3,19 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
-	"time"
 )
 
 type identifyPeeringIpRangesSuite struct {
@@ -22,18 +23,18 @@ type identifyPeeringIpRangesSuite struct {
 	ctx context.Context
 }
 
-func (suite *identifyPeeringIpRangesSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *identifyPeeringIpRangesSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenAddressIsNil() {
+func (s *identifyPeeringIpRangesSuite) TestWhenAddressIsNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		suite.Fail("unexpected request: " + r.URL.String())
+		s.Fail("unexpected request: " + r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -43,23 +44,23 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenAddressIsNil() {
 	ipRange.Spec.Options.Gcp.Purpose = v1beta1.GcpPurposePSC
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 	state.address = nil
 
 	//Invoke the function under test
 	err, resCtx := identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
-	suite.Nil(resCtx)
+	s.Nil(err)
+	s.Nil(resCtx)
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenDeletingAndSvcConnectionIsNil() {
+func (s *identifyPeeringIpRangesSuite) TestWhenDeletingAndSvcConnectionIsNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		suite.Fail("unexpected request: " + r.URL.String())
+		s.Fail("unexpected request: " + r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -69,7 +70,7 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenDeletingAndSvcConnectionIsNil
 	ipRange.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 
 	state.address = &compute.Address{
 		Name: "test-address",
@@ -78,19 +79,19 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenDeletingAndSvcConnectionIsNil
 
 	//Invoke the function under test
 	err, resCtx := identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
-	suite.Nil(resCtx)
-	suite.Nil(state.ipRanges)
+	s.Nil(err)
+	s.Nil(resCtx)
+	s.Nil(state.ipRanges)
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenNotDeletingAndSvcConnectionIsNil() {
+func (s *identifyPeeringIpRangesSuite) TestWhenNotDeletingAndSvcConnectionIsNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		suite.Fail("unexpected request: " + r.URL.String())
+		s.Fail("unexpected request: " + r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -99,7 +100,7 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenNotDeletingAndSvcConnectionIs
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 
 	state.address = &compute.Address{
 		Name: "test-address",
@@ -108,13 +109,13 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenNotDeletingAndSvcConnectionIs
 
 	//Invoke the function under test
 	err, resCtx := identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
-	suite.Nil(resCtx)
-	suite.Equal(1, len(state.ipRanges))
-	suite.Equal(state.address.Name, state.ipRanges[0])
+	s.Nil(err)
+	s.Nil(resCtx)
+	s.Equal(1, len(state.ipRanges))
+	s.Equal(state.address.Name, state.ipRanges[0])
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenAdding() {
+func (s *identifyPeeringIpRangesSuite) TestWhenAdding() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *compute.AddressList
 
@@ -134,24 +135,24 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenAdding() {
 					},
 				}
 			} else {
-				suite.Fail("unexpected request: " + r.URL.String())
+				s.Fail("unexpected request: " + r.URL.String())
 			}
 		default:
-			suite.Fail("unexpected request: " + r.URL.String())
+			s.Fail("unexpected request: " + r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			suite.Fail("unable to marshal request: " + err.Error())
+			s.Fail("unable to marshal request: " + err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			suite.Fail("unable to write to provided ResponseWriter: " + err.Error())
+			s.Fail("unable to write to provided ResponseWriter: " + err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -160,7 +161,7 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenAdding() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//set state attributes
 	state.address = &compute.Address{
@@ -174,13 +175,13 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenAdding() {
 
 	//Invoke the function under test
 	err, _ = identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(2, len(state.ipRanges))
-	suite.Equal(state.address.Name, state.ipRanges[1])
+	s.Equal(2, len(state.ipRanges))
+	s.Equal(state.address.Name, state.ipRanges[1])
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenUpdating() {
+func (s *identifyPeeringIpRangesSuite) TestWhenUpdating() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *compute.AddressList
 
@@ -200,24 +201,24 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenUpdating() {
 					},
 				}
 			} else {
-				suite.Fail("unexpected request: " + r.URL.String())
+				s.Fail("unexpected request: " + r.URL.String())
 			}
 		default:
-			suite.Fail("unexpected request: " + r.URL.String())
+			s.Fail("unexpected request: " + r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			suite.Fail("unable to marshal request: " + err.Error())
+			s.Fail("unable to marshal request: " + err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			suite.Fail("unable to write to provided ResponseWriter: " + err.Error())
+			s.Fail("unable to write to provided ResponseWriter: " + err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -226,7 +227,7 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenUpdating() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//set state attributes
 	state.address = &compute.Address{
@@ -240,13 +241,13 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenUpdating() {
 
 	//Invoke the function under test
 	err, _ = identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(1, len(state.ipRanges))
-	suite.Equal(state.address.Name, state.ipRanges[0])
+	s.Equal(1, len(state.ipRanges))
+	s.Equal(state.address.Name, state.ipRanges[0])
 }
 
-func (suite *identifyPeeringIpRangesSuite) TestWhenDeleting() {
+func (s *identifyPeeringIpRangesSuite) TestWhenDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *compute.AddressList
 
@@ -266,24 +267,24 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenDeleting() {
 					},
 				}
 			} else {
-				suite.Fail("unexpected request: " + r.URL.String())
+				s.Fail("unexpected request: " + r.URL.String())
 			}
 		default:
-			suite.Fail("unexpected request: " + r.URL.String())
+			s.Fail("unexpected request: " + r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			suite.Fail("unable to marshal request: " + err.Error())
+			s.Fail("unable to marshal request: " + err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			suite.Fail("unable to write to provided ResponseWriter: " + err.Error())
+			s.Fail("unable to write to provided ResponseWriter: " + err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -293,7 +294,7 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenDeleting() {
 	ipRange.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//set state attributes
 	state.address = &compute.Address{
@@ -307,9 +308,9 @@ func (suite *identifyPeeringIpRangesSuite) TestWhenDeleting() {
 
 	//Invoke the function under test
 	err, _ = identifyPeeringIpRanges(ctx, state)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(0, len(state.ipRanges))
+	s.Equal(0, len(state.ipRanges))
 }
 
 func TestIdentifyPeeringIpRanges(t *testing.T) {

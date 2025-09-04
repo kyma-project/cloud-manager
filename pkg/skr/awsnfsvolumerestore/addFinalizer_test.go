@@ -2,13 +2,14 @@ package awsnfsvolumerestore
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type addFinalizerSuite struct {
@@ -16,62 +17,62 @@ type addFinalizerSuite struct {
 	ctx context.Context
 }
 
-func (suite *addFinalizerSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *addFinalizerSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *addFinalizerSuite) TestAddFinalizer() {
+func (s *addFinalizerSuite) TestAddFinalizer() {
 
 	obj := awsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	err, _ = addFinalizer(ctx, state)
-	suite.Equal(composed.StopWithRequeue, err)
-	suite.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	s.Equal(composed.StopWithRequeue, err)
+	s.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
-func (suite *addFinalizerSuite) TestAddFinalizerWhenAlreadyExists() {
+func (s *addFinalizerSuite) TestAddFinalizerWhenAlreadyExists() {
 
 	obj := awsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	controllerutil.AddFinalizer(obj, api.CommonFinalizerDeletionHook)
 
 	err, _ = addFinalizer(ctx, state)
-	suite.Nil(err)
-	suite.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	s.Nil(err)
+	s.Contains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
-func (suite *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
+func (s *addFinalizerSuite) TestDoNotAddFinalizerOnDeletingObject() {
 
 	deletingObj := deletingAwsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.Obj().SetFinalizers([]string{})
 
 	//Call addFinalizer
 	err, _ = addFinalizer(ctx, state)
-	suite.Nil(err)
-	suite.NotContains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	s.Nil(err)
+	s.NotContains(state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestAddFinalizer(t *testing.T) {

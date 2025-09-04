@@ -19,18 +19,18 @@ type syncAddressSuite struct {
 	ctx context.Context
 }
 
-func (suite *syncAddressSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *syncAddressSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *syncAddressSuite) TestUpdate() {
+func (s *syncAddressSuite) TestUpdate() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -39,13 +39,13 @@ func (suite *syncAddressSuite) TestUpdate() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.addressOp = client.MODIFY
 
 	//Invoke the function under test
 	err, resCtx := syncAddress(ctx, state)
-	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Equal(s.T(), composed.StopAndForget, err)
+	assert.Nil(s.T(), resCtx)
 }
 
 func TestSyncAddress(t *testing.T) {

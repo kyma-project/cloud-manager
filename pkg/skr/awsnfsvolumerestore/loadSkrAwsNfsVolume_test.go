@@ -2,11 +2,12 @@ package awsnfsvolumerestore
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadSkrAwsNfsVolumeSuite struct {
@@ -14,64 +15,64 @@ type loadSkrAwsNfsVolumeSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadSkrAwsNfsVolumeSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadSkrAwsNfsVolumeSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeOnDeletingObj() {
+func (s *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeOnDeletingObj() {
 
 	deletingObj := deletingAwsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(deletingObj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Call loadSkrAwsNfsVolume
 	err, _ctx := loadSkrAwsNfsVolume(ctx, state)
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeWhenExists() {
+func (s *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeWhenExists() {
 
 	obj := awsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(obj)
 	state.skrAwsNfsVolumeBackup = awsNfsVolumeBackup.DeepCopy()
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Call loadSkrAwsNfsVolume
 	err, _ctx := loadSkrAwsNfsVolume(ctx, state)
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeWhenNotExists() {
+func (s *loadSkrAwsNfsVolumeSuite) TestLoadSkrAwsNfsVolumeWhenNotExists() {
 
 	obj := awsNfsVolumeRestore.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	state, err := factory.newStateWith(obj)
 	state.skrAwsNfsVolumeBackup = awsNfsVolumeBackup.DeepCopy()
-	suite.Nil(err)
+	s.Nil(err)
 
 	//delete awsNfsvolume from k8s
 	err = factory.skrCluster.K8sClient().Delete(context.Background(), awsNfsVolume.DeepCopy())
-	suite.Nil(err)
+	s.Nil(err)
 	//Call loadSkrAwsNfsVolume
 	err, _ctx := loadSkrAwsNfsVolume(ctx, state)
-	suite.Equal(composed.StopAndForget, err)
-	suite.Equal(ctx, _ctx)
+	s.Equal(composed.StopAndForget, err)
+	s.Equal(ctx, _ctx)
 }
 
 func TestLoadSkrAwsNfsVolume(t *testing.T) {

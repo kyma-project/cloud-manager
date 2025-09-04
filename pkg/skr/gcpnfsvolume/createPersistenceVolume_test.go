@@ -3,9 +3,10 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"testing"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -24,13 +25,13 @@ type createPersistenceVolumeSuite struct {
 	ctx context.Context
 }
 
-func (suite *createPersistenceVolumeSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *createPersistenceVolumeSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
+func (s *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -41,8 +42,8 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	err, _ctx := createPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeueDelay(3*time.Second))
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), err, composed.StopWithRequeueDelay(3*time.Second))
+	assert.Nil(s.T(), _ctx)
 
 	//Get the created PV object
 	pvName := gcpNfsVolume.Status.Id
@@ -50,22 +51,22 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate NFS attributes of PV
-	assert.Nil(suite.T(), err)
-	assert.True(suite.T(), len(pvName) > 0)
-	assert.Equal(suite.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
-	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), len(pvName) > 0)
+	assert.Equal(s.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
+	assert.Equal(s.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
 
 	//Validate PV Capacity
 	expectedCapacity := gcpNfsVolume.Status.Capacity.Value()
 	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
-	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
-	assert.Empty(suite.T(), pv.Spec.MountOptions)
+	assert.Equal(s.T(), expectedCapacity, pvQuantity)
+	assert.Empty(s.T(), pv.Spec.MountOptions)
 }
 
-func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady41() {
+func (s *createPersistenceVolumeSuite) TestWhenNfsVolumeReady41() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -78,8 +79,8 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady41() {
 	err, _ctx := createPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeueDelay(3*time.Second))
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), err, composed.StopWithRequeueDelay(3*time.Second))
+	assert.Nil(s.T(), _ctx)
 
 	//Get the created PV object
 	pvName := gcpNfsVolume.Status.Id
@@ -87,23 +88,23 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeReady41() {
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate NFS attributes of PV
-	assert.Nil(suite.T(), err)
-	assert.True(suite.T(), len(pvName) > 0)
-	assert.Equal(suite.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
-	assert.Equal(suite.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), len(pvName) > 0)
+	assert.Equal(s.T(), pv.Spec.NFS.Server, gcpNfsVolume.Status.Hosts[0])
+	assert.Equal(s.T(), pv.Spec.NFS.Path, fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName))
 
 	//Validate PV Capacity
 	expectedCapacity := int64(gcpNfsVolume.Status.CapacityGb) * 1024 * 1024 * 1024
 	quantity := pv.Spec.Capacity["storage"]
 	pvQuantity, _ := quantity.AsInt64()
-	assert.Equal(suite.T(), expectedCapacity, pvQuantity)
-	assert.NotEmpty(suite.T(), pv.Spec.MountOptions, "should have nfsvers=4.1")
-	assert.Equal(suite.T(), "nfsvers=4.1", pv.Spec.MountOptions[0], "should have nfsvers=4.1 mount option")
+	assert.Equal(s.T(), expectedCapacity, pvQuantity)
+	assert.NotEmpty(s.T(), pv.Spec.MountOptions, "should have nfsvers=4.1")
+	assert.Equal(s.T(), "nfsvers=4.1", pv.Spec.MountOptions[0], "should have nfsvers=4.1 mount option")
 }
 
-func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
+func (s *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -114,8 +115,8 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
 	err, _ctx := createPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name)
@@ -123,15 +124,15 @@ func (suite *createPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(s.T(), err)
 	if status, ok := err.(*errors.StatusError); ok {
-		assert.Equal(suite.T(), int32(404), status.ErrStatus.Code)
+		assert.Equal(s.T(), int32(404), status.ErrStatus.Code)
 	}
 }
 
-func (suite *createPersistenceVolumeSuite) TestWhenGcpNfsVolumeNotReady() {
+func (s *createPersistenceVolumeSuite) TestWhenGcpNfsVolumeNotReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -148,8 +149,8 @@ func (suite *createPersistenceVolumeSuite) TestWhenGcpNfsVolumeNotReady() {
 	err, _ctx := createPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", nfsVolume.Namespace, nfsVolume.Name)
@@ -157,15 +158,15 @@ func (suite *createPersistenceVolumeSuite) TestWhenGcpNfsVolumeNotReady() {
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(s.T(), err)
 	if status, ok := err.(*errors.StatusError); ok {
-		assert.Equal(suite.T(), int32(404), status.ErrStatus.Code)
+		assert.Equal(s.T(), int32(404), status.ErrStatus.Code)
 	}
 }
 
-func (suite *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
+func (s *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -177,8 +178,8 @@ func (suite *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
 	err, _ctx := createPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the PV object
 	pvName := fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name)
@@ -186,9 +187,9 @@ func (suite *createPersistenceVolumeSuite) TestWhenPVAlreadyPresent() {
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
 
 	//validate for PV not found
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(s.T(), err)
 	if status, ok := err.(*errors.StatusError); ok {
-		assert.Equal(suite.T(), int32(404), status.ErrStatus.Code)
+		assert.Equal(s.T(), int32(404), status.ErrStatus.Code)
 	}
 }
 

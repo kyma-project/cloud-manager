@@ -122,39 +122,34 @@ func (s *State) GetTags() map[string]string {
 }
 
 func (s *State) isTimeForCapacityUpdate() bool {
-	backup := s.ObjAsAwsNfsVolumeBackup()
-
-	lastUpdate := backup.Status.LastCapacityUpdate
+	lastUpdate := s.ObjAsAwsNfsVolumeBackup().Status.LastCapacityUpdate
 	configInterval := awsconfig.AwsConfig.EfsCapacityCheckInterval
 	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
 	return capacityUpdateDue
 }
 
 func (s *State) requiresRemoteBackup() bool {
-	backup := s.ObjAsAwsNfsVolumeBackup()
-	location := backup.Spec.Location
+	location := s.ObjAsAwsNfsVolumeBackup().Spec.Location
 	return len(location) > 0 && s.Scope() != nil && s.Scope().Spec.Region != location
 }
 
 func (s *State) GetDestinationBackupVaultArn() string {
-	backup := s.ObjAsAwsNfsVolumeBackup()
-	if len(backup.Spec.Location) == 0 || s.Scope() == nil {
+	if len(s.ObjAsAwsNfsVolumeBackup().Spec.Location) == 0 || s.Scope() == nil {
 		return ""
 	}
 	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s",
-		backup.Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, s.GetVaultName())
+		s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, s.GetVaultName())
 	return arn
 }
 
 func (s *State) GetDestinationRecoveryPointArn() string {
-	backup := s.ObjAsAwsNfsVolumeBackup()
-	id := backup.Status.RemoteId
-	if len(backup.Spec.Location) == 0 || s.Scope() == nil || len(id) == 0 {
+	id := s.ObjAsAwsNfsVolumeBackup().Status.RemoteId
+	if len(s.ObjAsAwsNfsVolumeBackup().Spec.Location) == 0 || s.Scope() == nil || len(id) == 0 {
 		return ""
 	}
 
 	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s",
-		backup.Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, id)
+		s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, id)
 	return arn
 }
 

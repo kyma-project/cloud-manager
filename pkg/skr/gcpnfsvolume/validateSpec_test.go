@@ -20,13 +20,13 @@ type validateSpecSuite struct {
 	ctx context.Context
 }
 
-func (suite *validateSpecSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *validateSpecSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *validateSpecSuite) TestIpRangeWhenNotExist() {
+func (s *validateSpecSuite) TestIpRangeWhenNotExist() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -37,24 +37,24 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotExist() {
 	err, _ = validateIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopAndForget, err)
+	assert.Equal(s.T(), composed.StopAndForget, err)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonIpRangeNotFound, nfsVol.Status.Conditions[0].Reason)
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionReasonIpRangeNotFound, nfsVol.Status.Conditions[0].Reason)
 }
 
-func (suite *validateSpecSuite) TestIpRangeWhenNotReady() {
+func (s *validateSpecSuite) TestIpRangeWhenNotReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -69,7 +69,7 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotReady() {
 		},
 	}
 	err = factory.skrCluster.K8sClient().Create(ctx, &ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newState()
 
@@ -77,26 +77,26 @@ func (suite *validateSpecSuite) TestIpRangeWhenNotReady() {
 	err, _ctx := validateIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(3*time.Second), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(3*time.Second), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionReasonIpRangeNotReady, nfsVol.Status.Conditions[0].Reason)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionReasonIpRangeNotReady, nfsVol.Status.Conditions[0].Reason)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
 }
 
-func (suite *validateSpecSuite) TestIpRangeWhenReady() {
+func (s *validateSpecSuite) TestIpRangeWhenReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -124,7 +124,7 @@ func (suite *validateSpecSuite) TestIpRangeWhenReady() {
 	}
 
 	err = factory.skrCluster.K8sClient().Create(ctx, &ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newState()
 
@@ -132,17 +132,17 @@ func (suite *validateSpecSuite) TestIpRangeWhenReady() {
 	err, _ctx := validateIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Nil(suite.T(), nfsVol.Status.Conditions)
+	assert.Nil(s.T(), nfsVol.Status.Conditions)
 }
 
 func TestValidateSpec(t *testing.T) {

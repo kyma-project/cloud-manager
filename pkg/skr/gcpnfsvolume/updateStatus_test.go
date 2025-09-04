@@ -2,6 +2,9 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,8 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 type updateStatusSuite struct {
@@ -20,13 +21,13 @@ type updateStatusSuite struct {
 	ctx context.Context
 }
 
-func (suite *updateStatusSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *updateStatusSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
+func (s *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -36,7 +37,7 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	nfsProtocol := "Any NFS Protocol"
 	nfsVol.Status.Conditions = nil
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newStateWith(nfsVol)
 	state.KcpNfsInstance = gcpNfsInstance.DeepCopy()
@@ -45,7 +46,7 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 	err, _ = updateStatus(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopWithRequeue)
+	assert.Equal(s.T(), err, composed.StopWithRequeue)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -53,20 +54,20 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsReady() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), gcpNfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeReady, nfsVol.Status.State)
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), gcpNfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), gcpNfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeReady, nfsVol.Status.State)
 
-	assert.Equal(suite.T(), nfsProtocol, nfsVol.Status.Protocol)
+	assert.Equal(s.T(), nfsProtocol, nfsVol.Status.Protocol)
 }
 
-func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
+func (s *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -78,8 +79,8 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol := &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -87,19 +88,19 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreReady() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeReady, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), gcpNfsVolume.Status.State, nfsVol.Status.State)
-	assert.Empty(suite.T(), nfsVol.Status.Protocol, "Protocol should be empty when not set in KCP NfsInstance")
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionTypeReady, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), gcpNfsVolume.Status.State, nfsVol.Status.State)
+	assert.Empty(s.T(), nfsVol.Status.Protocol, "Protocol should be empty when not set in KCP NfsInstance")
 }
 
-func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
+func (s *updateStatusSuite) TestWhenKcpStatusIsError() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -115,13 +116,13 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 		},
 	}
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Remove Ready Status from GcpNfsVolume
 	nfsVol := gcpNfsVolume.DeepCopy()
 	nfsVol.Status.Conditions = nil
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newStateWith(nfsVol)
 	state.KcpNfsInstance = nfsInstance
@@ -130,7 +131,7 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 	err, _ = updateStatus(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), err, composed.StopAndForget)
+	assert.Equal(s.T(), err, composed.StopAndForget)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -138,20 +139,20 @@ func (suite *updateStatusSuite) TestWhenKcpStatusIsError() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), nfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
-	assert.Empty(suite.T(), nfsVol.Status.Protocol, "Protocol should not be set when KCP NfsInstance is in error state")
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), nfsInstance.Status.Conditions[0].Status, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), nfsInstance.Status.Conditions[0].Type, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVol.Status.State)
+	assert.Empty(s.T(), nfsVol.Status.Protocol, "Protocol should not be set when KCP NfsInstance is in error state")
 
 }
 
-func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
+func (s *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -167,7 +168,7 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
 		},
 	}
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Update SKR GcpNfsVolume Status to error
 	nfsVol := gcpNfsVolume.DeepCopy()
@@ -180,7 +181,7 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
 		},
 	}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newStateWith(nfsVol)
 	state.KcpNfsInstance = nfsInstance
@@ -189,8 +190,8 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopAndForget, err)
+	assert.Nil(s.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
@@ -198,19 +199,19 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrStatusAreError() {
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
 
 	//validate Status.ID of the GcpNfsVolume
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 1, len(nfsVol.Status.Conditions))
-	assert.Equal(suite.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), "SKR NFS Volume is in error", nfsVol.Status.Conditions[0].Message)
+	assert.Equal(s.T(), 1, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), metav1.ConditionTrue, nfsVol.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudresourcesv1beta1.ConditionTypeError, nfsVol.Status.Conditions[0].Type)
+	assert.Equal(s.T(), "SKR NFS Volume is in error", nfsVol.Status.Conditions[0].Message)
 
 }
 
-func (suite *updateStatusSuite) TestWhenKcpNSkrConditionsEmpty() {
+func (s *updateStatusSuite) TestWhenKcpNSkrConditionsEmpty() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -219,13 +220,13 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrConditionsEmpty() {
 	nfsInstance := gcpNfsInstance.DeepCopy()
 	nfsInstance.Status.Conditions = nil
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, nfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Update SKR GcpNfsVolume with empty conditions
 	nfsVol := gcpNfsVolume.DeepCopy()
 	nfsVol.Status.Conditions = nil
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state := factory.newStateWith(nfsVol)
 	state.KcpNfsInstance = nfsInstance
@@ -234,17 +235,17 @@ func (suite *updateStatusSuite) TestWhenKcpNSkrConditionsEmpty() {
 	err, _ctx := updateStatus(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(200*time.Millisecond), err)
-	assert.NotNil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(200*time.Millisecond), err)
+	assert.NotNil(s.T(), _ctx)
 
 	//Get the modified GcpNfsVolume object
 	nfsVol = &cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Validate GcpNfsVolume status.
-	assert.Equal(suite.T(), 0, len(nfsVol.Status.Conditions))
+	assert.Equal(s.T(), 0, len(nfsVol.Status.Conditions))
 }
 
 func TestUpdateStatus(t *testing.T) {

@@ -3,17 +3,18 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/servicenetworking/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type loadPsaConnectionSuite struct {
@@ -21,11 +22,11 @@ type loadPsaConnectionSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadPsaConnectionSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadPsaConnectionSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
+func (s *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *servicenetworking.ListConnectionsResponse
 
@@ -36,24 +37,24 @@ func (suite *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
 					Connections: nil,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -63,23 +64,23 @@ func (suite *loadPsaConnectionSuite) TestWhenIpRangePurposeIsNotPSA() {
 	ipRange.Spec.Options.Gcp.Purpose = v1beta1.GcpPurposePSC
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := loadPsaConnection(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	ipRange = state.ObjAsIpRange()
 
 	// check error condition in status
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
+	assert.Len(s.T(), ipRange.Status.Conditions, 0)
 }
 
-func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
+func (s *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *servicenetworking.ListConnectionsResponse
 
@@ -90,24 +91,24 @@ func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 					Connections: nil,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -116,23 +117,23 @@ func (suite *loadPsaConnectionSuite) TestWhenSvcConnectionNotFound() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := loadPsaConnection(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	ipRange = state.ObjAsIpRange()
 
 	// check error condition in status
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
+	assert.Len(s.T(), ipRange.Status.Conditions, 0)
 }
 
-func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
+func (s *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var resp *servicenetworking.ListConnectionsResponse
 
@@ -150,24 +151,24 @@ func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 					},
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -176,21 +177,21 @@ func (suite *loadPsaConnectionSuite) TestWhenMatchingConnectionFound() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := loadPsaConnection(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	ipRange = state.ObjAsIpRange()
 
 	// check error condition in status
-	assert.NotNil(suite.T(), state.serviceConnection)
-	assert.Len(suite.T(), ipRange.Status.Conditions, 0)
+	assert.NotNil(s.T(), state.serviceConnection)
+	assert.Len(s.T(), ipRange.Status.Conditions, 0)
 }
 
 func TestLoadPsaConnection(t *testing.T) {

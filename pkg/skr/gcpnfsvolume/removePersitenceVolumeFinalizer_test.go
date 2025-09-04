@@ -3,6 +3,8 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/stretchr/testify/assert"
@@ -10,7 +12,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type removePersistenceVolumeFinalizerSuite struct {
@@ -18,13 +19,13 @@ type removePersistenceVolumeFinalizerSuite struct {
 	ctx context.Context
 }
 
-func (suite *removePersistenceVolumeFinalizerSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *removePersistenceVolumeFinalizerSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
+func (s *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -35,22 +36,22 @@ func (suite *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
 
 	//Create PV.
 	err = state.SkrCluster.K8sClient().Create(ctx, state.PV)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	err, _ = removePersistenceVolumeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	pvName := fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name)
 	pv := corev1.PersistentVolume{}
 	err = state.SkrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, &pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
-	assert.NotContains(suite.T(), pv.GetFinalizers(), api.CommonFinalizerDeletionHook)
+	assert.NotContains(s.T(), pv.GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
-func (suite *removePersistenceVolumeFinalizerSuite) TestContinueIfPVNotExists() {
+func (s *removePersistenceVolumeFinalizerSuite) TestContinueIfPVNotExists() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -59,24 +60,24 @@ func (suite *removePersistenceVolumeFinalizerSuite) TestContinueIfPVNotExists() 
 	state := factory.newStateWith(&deletedGcpNfsVolume)
 
 	err, _ = removePersistenceVolumeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 }
 
-func (suite *removePersistenceVolumeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
+func (s *removePersistenceVolumeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with Deleted GcpNfsVolume
 	state := factory.newState()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Call removePersistenceVolumeFinalizer
 	err, _ = removePersistenceVolumeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	assert.Nil(s.T(), err)
+	assert.Contains(s.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestRemovePersistenceVolumeFinalizer(t *testing.T) {

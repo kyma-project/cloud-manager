@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -9,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadKcpNfsInstanceSuite struct {
@@ -17,13 +18,13 @@ type loadKcpNfsInstanceSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadKcpNfsInstanceSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadKcpNfsInstanceSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadKcpNfsInstanceSuite) TestWithMatchingNfsInstance() {
+func (s *loadKcpNfsInstanceSuite) TestWithMatchingNfsInstance() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -34,17 +35,17 @@ func (suite *loadKcpNfsInstanceSuite) TestWithMatchingNfsInstance() {
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the NfsInstance object
-	assert.NotNil(suite.T(), state.KcpNfsInstance)
-	assert.Equal(suite.T(), gcpNfsVolume.Status.Id, state.KcpNfsInstance.Name)
+	assert.NotNil(s.T(), state.KcpNfsInstance)
+	assert.Equal(s.T(), gcpNfsVolume.Status.Id, state.KcpNfsInstance.Name)
 }
 
-func (suite *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
+func (s *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -61,16 +62,16 @@ func (suite *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the NfsInstance object
-	assert.Nil(suite.T(), state.KcpNfsInstance)
+	assert.Nil(s.T(), state.KcpNfsInstance)
 }
 
-func (suite *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
+func (s *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -88,7 +89,7 @@ func (suite *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
 		},
 	}
 	err = factory.kcpCluster.K8sClient().Create(ctx, &nfsInstance2)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
@@ -96,11 +97,11 @@ func (suite *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the NfsInstance object
-	assert.NotNil(suite.T(), state.KcpNfsInstance)
+	assert.NotNil(s.T(), state.KcpNfsInstance)
 }
 
 func TestLoadKcpNfsInstanceSuite(t *testing.T) {

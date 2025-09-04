@@ -21,18 +21,18 @@ type compareStatesSuite struct {
 	ctx context.Context
 }
 
-func (suite *compareStatesSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *compareStatesSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists() {
+func (s *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -40,35 +40,35 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressOrConnectionExists(
 	//Get state object with ipRange
 	ipRange := gcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Delete(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.Deleted, state.curState)
-	assert.Equal(suite.T(), client.NONE, state.connectionOp)
-	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.True(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.Deleted, state.curState)
+	assert.Equal(s.T(), client.NONE, state.connectionOp)
+	assert.Equal(s.T(), client.NONE, state.addressOp)
+	assert.True(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnectionExists() {
+func (s *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -76,14 +76,14 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 	//Get state object with ipRange
 	ipRange := gcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Delete(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Set Address
 	address := &compute.Address{
@@ -94,24 +94,24 @@ func (suite *compareStatesSuite) TestWhenDeletingAndAddressExistsAndNoConnection
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.DeleteAddress, state.curState)
-	assert.Equal(suite.T(), client.NONE, state.connectionOp)
-	assert.Equal(suite.T(), client.DELETE, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.DeleteAddress, state.curState)
+	assert.Equal(s.T(), client.NONE, state.connectionOp)
+	assert.Equal(s.T(), client.DELETE, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnectionExists() {
+func (s *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -119,14 +119,14 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 	//Get state object with ipRange
 	ipRange := gcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Delete(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	ipRange = state.ObjAsIpRange()
 
 	//Set Connection
@@ -137,24 +137,24 @@ func (suite *compareStatesSuite) TestWhenDeletingAndNoAddressExistsAndConnection
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.Deleted, state.curState)
-	assert.Equal(suite.T(), client.NONE, state.connectionOp)
-	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.True(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.Deleted, state.curState)
+	assert.Equal(s.T(), client.NONE, state.connectionOp)
+	assert.Equal(s.T(), client.NONE, state.addressOp)
+	assert.True(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExists() {
+func (s *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -162,14 +162,14 @@ func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExis
 	//Get state object with ipRange
 	ipRange := gcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Delete(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	ipRange = state.ObjAsIpRange()
 
 	//Set Address
@@ -187,24 +187,24 @@ func (suite *compareStatesSuite) TestWhenDeletingAndBothAddressAndConnectionExis
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.DeletePsaConnection, state.curState)
-	assert.Equal(suite.T(), client.MODIFY, state.connectionOp)
-	assert.Equal(suite.T(), client.DELETE, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.DeletePsaConnection, state.curState)
+	assert.Equal(s.T(), client.MODIFY, state.connectionOp)
+	assert.Equal(s.T(), client.DELETE, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists() {
+func (s *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -213,32 +213,32 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_NoAddressOrConnectionExists
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.SyncAddress, state.curState)
-	assert.Equal(suite.T(), client.NONE, state.connectionOp)
-	assert.Equal(suite.T(), client.ADD, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.SyncAddress, state.curState)
+	assert.Equal(s.T(), client.NONE, state.connectionOp)
+	assert.Equal(s.T(), client.ADD, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectionExists() {
+func (s *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -247,11 +247,11 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Set Address
 	address := &compute.Address{
@@ -266,24 +266,24 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndNoConnectio
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.SyncPsaConnection, state.curState)
-	assert.Equal(suite.T(), client.ADD, state.connectionOp)
-	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.SyncPsaConnection, state.curState)
+	assert.Equal(s.T(), client.ADD, state.connectionOp)
+	assert.Equal(s.T(), client.NONE, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
+func (s *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -292,11 +292,11 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Set Address
 	address := &compute.Address{
@@ -310,24 +310,24 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressNotMatches() {
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.SyncAddress, state.curState)
-	assert.Equal(suite.T(), client.ADD, state.connectionOp)
-	assert.Equal(suite.T(), client.MODIFY, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.SyncAddress, state.curState)
+	assert.Equal(s.T(), client.ADD, state.connectionOp)
+	assert.Equal(s.T(), client.MODIFY, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionNotInclusive() {
+func (s *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionNotInclusive() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -336,11 +336,11 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Set Address
 	address := &compute.Address{
@@ -361,24 +361,24 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_AddressExistsAndConnectionN
 
 	//Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), client.SyncPsaConnection, state.curState)
-	assert.Equal(suite.T(), client.MODIFY, state.connectionOp)
-	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.False(suite.T(), state.inSync)
+	assert.Equal(s.T(), client.SyncPsaConnection, state.curState)
+	assert.Equal(s.T(), client.MODIFY, state.connectionOp)
+	assert.Equal(s.T(), client.NONE, state.addressOp)
+	assert.False(s.T(), state.inSync)
 }
 
-func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExists() {
+func (s *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -387,11 +387,11 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 	ipRange := gcpIpRange.DeepCopy()
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get the updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Set Address
 	address := &compute.Address{
@@ -412,14 +412,14 @@ func (suite *compareStatesSuite) TestWhenNotDeleting_BothAddressAndConnectionExi
 
 	////Invoke the function under test
 	err, resCtx := compareStates(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Validate state attributes
-	assert.Equal(suite.T(), cloudcontrolv1beta1.StateReady, state.curState)
-	assert.Equal(suite.T(), client.NONE, state.connectionOp)
-	assert.Equal(suite.T(), client.NONE, state.addressOp)
-	assert.True(suite.T(), state.inSync)
+	assert.Equal(s.T(), cloudcontrolv1beta1.StateReady, state.curState)
+	assert.Equal(s.T(), client.NONE, state.connectionOp)
+	assert.Equal(s.T(), client.NONE, state.addressOp)
+	assert.True(s.T(), state.inSync)
 }
 
 func TestCompareStates(t *testing.T) {

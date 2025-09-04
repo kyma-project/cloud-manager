@@ -2,6 +2,10 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -13,10 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/json"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type checkRestoreOperationSuite struct {
@@ -24,31 +25,31 @@ type checkRestoreOperationSuite struct {
 	ctx context.Context
 }
 
-func (suite *checkRestoreOperationSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *checkRestoreOperationSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNoOpId() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationNoOpId() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationErrorNotFound() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationErrorNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	}))
@@ -56,7 +57,7 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationErrorNotFound(
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -64,23 +65,23 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationErrorNotFound(
 	//Get state object with GcpNfsVolume
 	obj.Status.OpIdentifier = "op-123"
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
+	assert.Equal(s.T(), composed.StopWithRequeue, err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), v1beta1.StateError, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), v1beta1.StateError, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationOtherError() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationOtherError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}))
@@ -90,30 +91,30 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationOtherError() {
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	obj.Status.OpIdentifier = "op-123"
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
+	assert.Equal(s.T(), composed.StopWithRequeue, err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "op-123", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), v1beta1.StateError, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "op-123", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), v1beta1.StateError, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		opResp := file.Operation{
 			Name: "op-123",
@@ -121,11 +122,11 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted()
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal response: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal response: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
@@ -134,37 +135,37 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted()
 	obj.Status.OpIdentifier = "op-123"
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "op-123", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), "", fromK8s.Status.State)
-	assert.Equal(suite.T(), 0, len(fromK8s.Status.Conditions))
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "op-123", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), "", fromK8s.Status.State)
+	assert.Equal(s.T(), 0, len(fromK8s.Status.Conditions))
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNil() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *file.Operation
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal response: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal response: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
@@ -172,29 +173,29 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationNil() {
 	obj.Status.OpIdentifier = "op-123"
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
+	assert.Equal(s.T(), composed.StopWithRequeue, err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), v1beta1.StateError, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), v1beta1.StateError, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFailed() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFailed() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		opResp := file.Operation{
 			Name: "op-123",
@@ -206,11 +207,11 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFaile
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal response: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal response: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
@@ -219,30 +220,30 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedFaile
 	obj.Status.OpIdentifier = "op-123"
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), v1beta1.JobStateFailed, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), v1beta1.JobStateFailed, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucceeded() {
+func (s *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucceeded() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		opResp := file.Operation{
 			Name: "op-123",
@@ -250,11 +251,11 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucce
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal response: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal response: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
@@ -263,27 +264,27 @@ func (suite *checkRestoreOperationSuite) TestCheckRestoreOperationCompletedSucce
 	obj.Status.OpIdentifier = "op-123"
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "", fromK8s.Status.OpIdentifier)
-	assert.Equal(suite.T(), v1beta1.JobStateDone, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "", fromK8s.Status.OpIdentifier)
+	assert.Equal(s.T(), v1beta1.JobStateDone, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeReady, fromK8s.Status.Conditions[0].Type)
 }
 
 func TestCheckRestoreOperation(t *testing.T) {

@@ -2,12 +2,13 @@ package backupschedule
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type removeFinalizerSuite struct {
@@ -15,45 +16,45 @@ type removeFinalizerSuite struct {
 	ctx context.Context
 }
 
-func (suite *removeFinalizerSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *removeFinalizerSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
+func (s *removeFinalizerSuite) TestRemoveFinalizer() {
 
 	deletingObj := deletingGcpBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(deletingObj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(deletingObj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err, _ = removeFinalizer(ctx, state)
-	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.Equal(suite.T(), len(state.Obj().GetFinalizers()), 0)
+	assert.Equal(s.T(), composed.StopAndForget, err)
+	assert.Equal(s.T(), len(state.Obj().GetFinalizers()), 0)
 }
 
-func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfNotDeleting() {
+func (s *removeFinalizerSuite) TestDoNotRemoveFinalizerIfNotDeleting() {
 
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//First add finalizer
 	err, _ = addFinalizer(ctx, state)
-	suite.Nil(err)
+	s.Nil(err)
 	//Call removeFinalizer
 	err, _ = removeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), len(state.Obj().GetFinalizers()), 1)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), len(state.Obj().GetFinalizers()), 1)
 }
 
 func TestRemoveFinalizer(t *testing.T) {

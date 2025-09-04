@@ -3,14 +3,15 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
 type loadGcpNfsVolumeBackupSuite struct {
@@ -18,11 +19,11 @@ type loadGcpNfsVolumeBackupSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (s *loadGcpNfsVolumeBackupSuite) SetupTest() {
+	s.ctx = context.Background()
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -32,34 +33,34 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 				//Return 404
 				http.Error(w, "Not Found", http.StatusNotFound)
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolumeBackup.DeepCopy()
 
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, objDiffName)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
 	state, err := factory.newStateWith(objDiffName)
-	suite.Nil(err)
+	s.Nil(err)
 	state.Scope = &scope
 
 	//Invoke loadNfsBackup API
 	err, _ctx := loadNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -69,34 +70,34 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
 				//Return 500
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolumeBackup.DeepCopy()
 
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, objDiffName)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
 	state, err := factory.newStateWith(objDiffName)
-	suite.Nil(err)
+	s.Nil(err)
 	state.Scope = &scope
 
 	//Invoke loadNfsBackup API
 	err, _ctx := loadNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
-	suite.Equal(ctx, _ctx)
+	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	s.Equal(ctx, _ctx)
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -105,28 +106,28 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume-backup"}`))
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.Scope = &scope
 
 	//Invoke loadNfsBackup API
 	err, ctx = loadNfsBackup(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
 }
 
 func TestLoadGcpNfsVolumeBackupSuite(t *testing.T) {
