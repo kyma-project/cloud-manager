@@ -3,9 +3,9 @@ module github.com/kyma-project/cloud-manager
 go 1.25.0
 
 require (
-	cloud.google.com/go/auth v0.16.4
+	cloud.google.com/go/auth v0.16.5
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.43.0
+	cloud.google.com/go/compute v1.44.0
 	cloud.google.com/go/networkconnectivity v1.18.0
 	cloud.google.com/go/redis v1.18.2
 	cloud.google.com/go/resourcemanager v1.10.6
@@ -52,10 +52,10 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
-	google.golang.org/api v0.246.0
+	google.golang.org/api v0.248.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
-	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.7
+	google.golang.org/grpc v1.75.0
+	google.golang.org/protobuf v1.36.8
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.33.4
 	k8s.io/apiextensions-apiserver v0.33.4
@@ -155,7 +155,7 @@ require (
 	golang.org/x/tools v0.36.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250804133106-a7a43d27e69b // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250701173324-9bd5c66d9911 // indirect
