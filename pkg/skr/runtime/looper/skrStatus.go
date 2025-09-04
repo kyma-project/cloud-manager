@@ -3,6 +3,9 @@ package looper
 import (
 	"context"
 	"fmt"
+	"math"
+	"time"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -10,9 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"math"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 // SkrStatusRepo ============================================================================
@@ -49,7 +50,7 @@ func (r *skrStatusRepo) Load(ctx context.Context, name, namespace string) (*clou
 }
 
 func (r *skrStatusRepo) Save(ctx context.Context, skrStatus *cloudcontrolv1beta1.SkrStatus) error {
-	return r.kcpClient.Patch(ctx, skrStatus, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner))
+	return r.kcpClient.Patch(ctx, skrStatus, client.Apply, client.ForceOwnership, client.FieldOwner(common.FieldOwner)) //nolint:staticcheck // will be removed once client.Apply is removed
 }
 
 // SkrStatusSaver ==========================================================================

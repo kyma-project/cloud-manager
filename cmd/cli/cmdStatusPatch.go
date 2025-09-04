@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/cmd/cli/helper"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -51,7 +52,7 @@ var cmdStatusPatch = &cobra.Command{
 		objToPatch.SetNamespace(namespace)
 		objToPatch.Object["status"] = statusData["status"]
 
-		if err := clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(patchOwner)); err != nil {
+		if err := clnt.Status().Patch(ctx, objToPatch, client.Apply, client.ForceOwnership, client.FieldOwner(patchOwner)); err != nil { //nolint:staticcheck // will be removed once client.Apply is removed
 			return err
 		}
 
