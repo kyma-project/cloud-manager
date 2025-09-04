@@ -3,6 +3,11 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -13,11 +18,7 @@ import (
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type deleteNfsBackupSuite struct {
@@ -25,57 +26,57 @@ type deleteNfsBackupSuite struct {
 	ctx context.Context
 }
 
-func (suite *deleteNfsBackupSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *deleteNfsBackupSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *deleteNfsBackupSuite) TestWhenBackupIsNotDeleting() {
+func (s *deleteNfsBackupSuite) TestWhenBackupIsNotDeleting() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke deleteNfsBackup API
 	state.fileBackup = &file.Backup{}
 	err, _ctx := deleteNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *deleteNfsBackupSuite) TestWhenGcpBackupNotExists() {
+func (s *deleteNfsBackupSuite) TestWhenGcpBackupNotExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	state.fileBackup = nil
 	err, _ctx := deleteNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
+func (s *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -85,22 +86,22 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 				//Return 500
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the scope and gcpNfsVolume objects in state
 	state.Scope = scope.DeepCopy()
@@ -111,8 +112,8 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 	err, _ctx := deleteNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
-	suite.NotNil(_ctx)
+	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	s.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
 	_ = factory.skrCluster.K8sClient().Get(ctx,
@@ -121,13 +122,13 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupReturnsError() {
 		fromK8s)
 
 	//Validate expected status
-	suite.Equal(v1beta1.GcpNfsBackupError, fromK8s.Status.State)
-	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	suite.Equal(cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
-	suite.Equal(cloudcontrolv1beta1.ReasonGcpError, fromK8s.Status.Conditions[0].Reason)
+	s.Equal(v1beta1.GcpNfsBackupError, fromK8s.Status.State)
+	s.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	s.Equal(cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	s.Equal(cloudcontrolv1beta1.ReasonGcpError, fromK8s.Status.Conditions[0].Reason)
 }
 
-func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
+func (s *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -138,22 +139,22 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume-backup-operation-id"}`))
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the scope and gcpNfsVolume objects in state
 	state.Scope = scope.DeepCopy()
@@ -164,22 +165,22 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessful() {
 	err, _ctx := deleteNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.NotNil(_ctx)
+	s.Nil(err)
+	s.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletingGpNfsVolumeBackup.Name,
 			Namespace: deletingGpNfsVolumeBackup.Namespace},
 		fromK8s)
-	suite.Nil(err, "unexpected error")
+	s.Nil(err, "unexpected error")
 
 	//Validate expected status
-	suite.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)
-	suite.Equal(0, len(fromK8s.Status.Conditions))
+	s.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)
+	s.Equal(0, len(fromK8s.Status.Conditions))
 }
 
-func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessfulWithStatusLocation() {
+func (s *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessfulWithStatusLocation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -190,22 +191,22 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessfulWithStatusLocat
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume-backup-operation-id"}`))
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the scope and gcpNfsVolume objects in state
 	state.Scope = scope.DeepCopy()
@@ -216,19 +217,19 @@ func (suite *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessfulWithStatusLocat
 	err, _ctx := deleteNfsBackup(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.NotNil(_ctx)
+	s.Nil(err)
+	s.NotNil(_ctx)
 
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletingGpNfsVolumeBackup.Name,
 			Namespace: deletingGpNfsVolumeBackup.Namespace},
 		fromK8s)
-	suite.Nil(err, "unexpected error")
+	s.Nil(err, "unexpected error")
 
 	//Validate expected status
-	suite.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)
-	suite.Equal(0, len(fromK8s.Status.Conditions))
+	s.Equal(v1beta1.GcpNfsBackupDeleting, fromK8s.Status.State)
+	s.Equal(0, len(fromK8s.Status.Conditions))
 }
 
 func TestDeleteNfsBackup(t *testing.T) {

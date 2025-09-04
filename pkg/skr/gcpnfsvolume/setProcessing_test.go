@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -11,7 +13,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type setProcessingSuite struct {
@@ -19,33 +20,33 @@ type setProcessingSuite struct {
 	ctx context.Context
 }
 
-func (suite *setProcessingSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *setProcessingSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *setProcessingSuite) TestSetProcessingWhenDeleting() {
+func (s *setProcessingSuite) TestSetProcessingWhenDeleting() {
 
 	obj := deletedGcpNfsVolume.DeepCopy()
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
-	suite.Nil(err)
-	suite.Nil(ctx)
+	s.Nil(err)
+	s.Nil(ctx)
 }
 
-func (suite *setProcessingSuite) TestSetProcessingWhenStateDone() {
+func (s *setProcessingSuite) TestSetProcessingWhenStateDone() {
 
 	obj := gcpNfsVolume.DeepCopy()
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -59,18 +60,18 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateDone() {
 		Message: "test",
 	})
 	state := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
-	suite.Nil(err)
-	suite.Nil(ctx)
+	s.Nil(err)
+	s.Nil(ctx)
 }
 
-func (suite *setProcessingSuite) TestSetProcessingWhenStateError() {
+func (s *setProcessingSuite) TestSetProcessingWhenStateError() {
 
 	obj := gcpNfsVolume.DeepCopy()
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -84,18 +85,18 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateError() {
 		Message: "test",
 	})
 	state := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
-	suite.Nil(err)
-	suite.Nil(ctx)
+	s.Nil(err)
+	s.Nil(ctx)
 }
 
-func (suite *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
+func (s *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
 
 	obj := gcpNfsVolume.DeepCopy()
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -105,18 +106,18 @@ func (suite *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
-	suite.Equal(composed.StopWithRequeue, err)
+	s.Equal(composed.StopWithRequeue, err)
 	fromK8s := &v1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	suite.Nil(err)
-	suite.Equal(v1beta1.GcpNfsVolumeProcessing, fromK8s.Status.State)
-	suite.Nil(fromK8s.Status.Conditions)
+	s.Nil(err)
+	s.Equal(v1beta1.GcpNfsVolumeProcessing, fromK8s.Status.State)
+	s.Nil(fromK8s.Status.Conditions)
 }
 
 func TestSetProcessing(t *testing.T) {

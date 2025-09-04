@@ -2,6 +2,9 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,8 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 type deletePersistenceVolumeSuite struct {
@@ -20,13 +21,13 @@ type deletePersistenceVolumeSuite struct {
 	ctx context.Context
 }
 
-func (suite *deletePersistenceVolumeSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *deletePersistenceVolumeSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
+func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -34,7 +35,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 	//Create PV
 	pv := pvGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
@@ -44,20 +45,20 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 	err, _ctx := deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the PV is not deleted.
 	pv = &corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: pvGcpNfsVolume.Name}, pv)
-	assert.Nil(suite.T(), err)
-	assert.True(suite.T(), pv.DeletionTimestamp.IsZero())
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), pv.DeletionTimestamp.IsZero())
 }
 
-func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
+func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -65,7 +66,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 	//Create PV
 	pv := pvDeletingGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(&deletedGcpNfsVolume)
@@ -75,20 +76,20 @@ func (suite *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 	err, _ctx := deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(3*time.Second), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(3*time.Second), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the PV object is not deleted.
 	pv = &corev1.PersistentVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: pvDeletingGcpNfsVolume.Name}, pv)
-	assert.Nil(suite.T(), err)
-	assert.False(suite.T(), pv.DeletionTimestamp.IsZero())
+	assert.Nil(s.T(), err)
+	assert.False(s.T(), pv.DeletionTimestamp.IsZero())
 }
 
-func (suite *deletePersistenceVolumeSuite) TestWhenPVDoNotExist() {
+func (s *deletePersistenceVolumeSuite) TestWhenPVDoNotExist() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -100,13 +101,13 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVDoNotExist() {
 	err, _ctx := deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 }
 
-func (suite *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
+func (s *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -115,7 +116,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 	pv := pvDeletingGcpNfsVolume.DeepCopy()
 	pv.Status.Phase = "Bound"
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(&deletedGcpNfsVolume)
@@ -125,21 +126,21 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 	err, _ = deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopAndForget, err)
+	assert.Equal(s.T(), composed.StopAndForget, err)
 
 	//Validate the Error Status is removed.
 	nfsVolume := cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletedGcpNfsVolume.Name, Namespace: deletedGcpNfsVolume.Namespace},
 		&nfsVolume)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 1, len(nfsVolume.Status.Conditions))
-	assert.Equal(suite.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVolume.Status.State)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 1, len(nfsVolume.Status.Conditions))
+	assert.Equal(s.T(), cloudresourcesv1beta1.GcpNfsVolumeError, nfsVolume.Status.State)
 }
 
-func (suite *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
+func (s *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -147,14 +148,14 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
 	//Create PV with Available Phase
 	pv := pvDeletingGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Add Error Condition to GcpNfsVolume.
 	nfsVolume := cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletedGcpNfsVolume.Name, Namespace: deletedGcpNfsVolume.Namespace},
 		&nfsVolume)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	nfsVolume.Status.Conditions = []metav1.Condition{
 		{
 			Type:    cloudresourcesv1beta1.ConditionTypeError,
@@ -166,7 +167,7 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
 
 	//Update status
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, &nfsVolume)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(&nfsVolume)
@@ -176,16 +177,16 @@ func (suite *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
 	err, _ctx := deletePersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopWithRequeue, err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopWithRequeue, err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the Error Status is removed.
 	nfsVolume = cloudresourcesv1beta1.GcpNfsVolume{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: deletedGcpNfsVolume.Name, Namespace: deletedGcpNfsVolume.Namespace},
 		&nfsVolume)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(nfsVolume.Status.Conditions))
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(nfsVolume.Status.Conditions))
 }
 
 func TestDeletePersistenceVolumeSuite(t *testing.T) {

@@ -2,12 +2,13 @@ package client
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type constantsSuite struct {
@@ -15,27 +16,27 @@ type constantsSuite struct {
 	ctx context.Context
 }
 
-func (suite *constantsSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *constantsSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *constantsSuite) TestParsePvVolumeHandle() {
+func (s *constantsSuite) TestParsePvVolumeHandle() {
 	sampleVolumeHandle := "shoot--kyma-dev--c-6ea9b9b#f21d936aa5673444a95852a#pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca###default"
 	resourceGroupName, storageAccountName, fileShareName, uuid, secretNamespace, err := ParsePvVolumeHandle(sampleVolumeHandle)
-	suite.Nil(err)
-	suite.Equal("shoot--kyma-dev--c-6ea9b9b", resourceGroupName)
-	suite.Equal("f21d936aa5673444a95852a", storageAccountName)
-	suite.Equal("pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca", fileShareName)
-	suite.Equal("", uuid)
-	suite.Equal("default", secretNamespace)
+	s.Nil(err)
+	s.Equal("shoot--kyma-dev--c-6ea9b9b", resourceGroupName)
+	s.Equal("f21d936aa5673444a95852a", storageAccountName)
+	s.Equal("pv-shoot-kyma-dev-c-6ea9b9b-8aa269ae-f581-427b-b05c-a2a2bbfca", fileShareName)
+	s.Equal("", uuid)
+	s.Equal("default", secretNamespace)
 }
 
-func (suite *constantsSuite) TestGetStorageAccountPath() {
+func (s *constantsSuite) TestGetStorageAccountPath() {
 	samplePath := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/testsa"
-	suite.Equal(samplePath, GetStorageAccountPath("3f1d2fbd-117a-4742-8bde-6edbcdee6a04", "test-rg", "testsa"))
+	s.Equal(samplePath, GetStorageAccountPath("3f1d2fbd-117a-4742-8bde-6edbcdee6a04", "test-rg", "testsa"))
 }
 
-func (suite *constantsSuite) TestGetBackupPolicyPath() {
+func (s *constantsSuite) TestGetBackupPolicyPath() {
 
 	// Arrange
 	subscriptionId := "3f1d2fbd-117a-4742-8bde-6edbcdee6a04"
@@ -49,11 +50,11 @@ func (suite *constantsSuite) TestGetBackupPolicyPath() {
 	actualPath := GetBackupPolicyPath(subscriptionId, resourceGroupName, vaultName, backupPolicyName)
 
 	// Assert
-	suite.Equal(expectedPath, actualPath)
+	s.Equal(expectedPath, actualPath)
 
 }
 
-func (suite *constantsSuite) TestGetVaultPath() {
+func (s *constantsSuite) TestGetVaultPath() {
 
 	// Arrange
 	subscriptionId := "3f1d2fbd-117a-4742-8bde-6edbcdee6a04"
@@ -66,11 +67,11 @@ func (suite *constantsSuite) TestGetVaultPath() {
 	actualPath := GetVaultPath(subscriptionId, resourceGroupName, vaultName)
 
 	// Assert
-	suite.Equal(expectedPath, actualPath)
+	s.Equal(expectedPath, actualPath)
 
 }
 
-func (suite *constantsSuite) TestGetContainerName() {
+func (s *constantsSuite) TestGetContainerName() {
 
 	// Arrange
 	resourceGroupName := "kh-rg"
@@ -82,11 +83,11 @@ func (suite *constantsSuite) TestGetContainerName() {
 	actualPath := GetContainerName(resourceGroupName, storageAccountName)
 
 	// Assert
-	suite.Equal(expectedPath, actualPath)
+	s.Equal(expectedPath, actualPath)
 
 }
 
-func (suite *constantsSuite) TestGetRecoveryPointPath() {
+func (s *constantsSuite) TestGetRecoveryPointPath() {
 
 	// Arrange
 	subscriptionId := "3f1d2fbd-117a-4742-8bde-6edbcdee6a04"
@@ -102,11 +103,11 @@ func (suite *constantsSuite) TestGetRecoveryPointPath() {
 	actualPath := GetRecoveryPointPath(subscriptionId, resourceGroupName, vaultName, storageAccountName, protectedItemName, recoveryPointName)
 
 	// Assert
-	suite.Equal(expectedPath, actualPath)
+	s.Equal(expectedPath, actualPath)
 
 }
 
-func (suite *constantsSuite) TestAzureStorageErrorInfoToJson() {
+func (s *constantsSuite) TestAzureStorageErrorInfoToJson() {
 	var errorCode int32 = 1234
 	var sampleErrors = make([]*armrecoveryservicesbackup.AzureStorageErrorInfo, 3)
 	var recommendations = make([]*string, 3)
@@ -129,8 +130,8 @@ func (suite *constantsSuite) TestAzureStorageErrorInfoToJson() {
 		Recommendations: recommendations,
 	}
 	detailsInJson, err := AzureStorageErrorInfoToJson(sampleErrors)
-	suite.Nil(err)
-	suite.Equal("[{\"errorCode\":1234,\"errorString\":\"Sample message 1\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 2\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 3\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]}]", detailsInJson)
+	s.Nil(err)
+	s.Equal("[{\"errorCode\":1234,\"errorString\":\"Sample message 1\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 2\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]},{\"errorCode\":1234,\"errorString\":\"Sample message 3\",\"recommendations\":[\"recommendation 1\",\"recommendation 2\",\"recommendation 3\"]}]", detailsInJson)
 }
 
 func TestConstants(t *testing.T) {

@@ -22,143 +22,143 @@ type updateCapacitySuite struct {
 	ctx context.Context
 }
 
-func (suite *updateCapacitySuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *updateCapacitySuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *updateCapacitySuite) TestWhileDeleting() {
+func (s *updateCapacitySuite) TestWhileDeleting() {
 
 	obj := deletingGpNfsVolumeBackup.DeepCopy()
 
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, _ctx := updateCapacity(ctx, state)
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 
 }
 
-func (suite *updateCapacitySuite) TestLastCapacityUpdateNil() {
+func (s *updateCapacitySuite) TestLastCapacityUpdateNil() {
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	obj.Status.LastCapacityUpdate = nil
 
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.fileBackup = &file.Backup{
 		StorageBytes: 1024,
 	}
-	suite.NotNil(state.fileBackup)
+	s.NotNil(state.fileBackup)
 
 	err, _ctx := updateCapacity(ctx, state)
-	suite.Nil(err)
-	suite.NotNil(_ctx)
+	s.Nil(err)
+	s.NotNil(_ctx)
 
 }
 
-func (suite *updateCapacitySuite) TestLastCapacityUpdateIsZero() {
+func (s *updateCapacitySuite) TestLastCapacityUpdateIsZero() {
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	var timeZero time.Time
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: timeZero}
 
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.fileBackup = &file.Backup{
 		StorageBytes: 1024,
 	}
-	suite.NotNil(state.fileBackup)
+	s.NotNil(state.fileBackup)
 
 	err, _ctx := updateCapacity(ctx, state)
-	suite.Nil(err)
-	suite.NotNil(_ctx)
+	s.Nil(err)
+	s.NotNil(_ctx)
 
 }
 
-func (suite *updateCapacitySuite) TestLastCapacityUpdateGreater() {
+func (s *updateCapacitySuite) TestLastCapacityUpdateGreater() {
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().Add(-5 * time.Second)}
 
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.fileBackup = &file.Backup{
 		StorageBytes: 1024,
 	}
-	suite.NotNil(state.fileBackup)
+	s.NotNil(state.fileBackup)
 
 	gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Second * 5
 	// gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 
 	err, _ctx := updateCapacity(ctx, state)
-	suite.Nil(err)
-	suite.NotNil(_ctx)
+	s.Nil(err)
+	s.NotNil(_ctx)
 
 }
 
-func (suite *updateCapacitySuite) TestLastCapacityUpdateLesser() {
+func (s *updateCapacitySuite) TestLastCapacityUpdateLesser() {
 
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().Add(-1 * time.Second)}
 
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	state.fileBackup = &file.Backup{
 		StorageBytes: 1024,
 	}
-	suite.NotNil(state.fileBackup)
+	s.NotNil(state.fileBackup)
 
 	gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 
 	err, _ctx := updateCapacity(ctx, state)
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 
 }
 

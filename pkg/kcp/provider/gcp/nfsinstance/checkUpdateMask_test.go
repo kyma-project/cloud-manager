@@ -2,15 +2,16 @@ package nfsinstance
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type checkUpdateMaskSuite struct {
@@ -18,18 +19,18 @@ type checkUpdateMaskSuite struct {
 	ctx context.Context
 }
 
-func (suite *checkUpdateMaskSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *checkUpdateMaskSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyIncrease() {
+func (s *checkUpdateMaskSuite) TestCheckUpdateMaskModifyIncrease() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
 
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -47,22 +48,22 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyIncrease() {
 		},
 	}
 	testState.operation = client.MODIFY
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "FileShares", testState.updateMask[0])
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "FileShares", testState.updateMask[0])
 }
 
-func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyDecrease() {
+func (s *checkUpdateMaskSuite) TestCheckUpdateMaskModifyDecrease() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
 
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -80,22 +81,22 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyDecrease() {
 		},
 	}
 	testState.operation = client.MODIFY
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), "FileShares", testState.updateMask[0])
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "FileShares", testState.updateMask[0])
 }
 
-func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyNoChange() {
+func (s *checkUpdateMaskSuite) TestCheckUpdateMaskModifyNoChange() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
 
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -113,22 +114,22 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskModifyNoChange() {
 		},
 	}
 	testState.operation = client.MODIFY
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.updateMask))
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(testState.updateMask))
 }
 
-func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
+func (s *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstanceWithoutStatus()
 
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -147,30 +148,30 @@ func (suite *checkUpdateMaskSuite) TestCheckUpdateMaskNotModify() {
 	}
 	//NONE operation
 	testState.operation = client.NONE
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.updateMask))
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(testState.updateMask))
 
 	//ADD operation
 	testState.operation = client.ADD
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx = checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.updateMask))
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(testState.updateMask))
 
 	//DELETE operation
 	testState.operation = client.DELETE
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx = checkUpdateMask(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), 0, len(testState.updateMask))
+	assert.Nil(s.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 0, len(testState.updateMask))
 }
 
 func TestCheckUpdateMask(t *testing.T) {

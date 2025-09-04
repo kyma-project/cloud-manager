@@ -2,15 +2,16 @@ package v2
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type preventCidrEditSuite struct {
@@ -18,18 +19,18 @@ type preventCidrEditSuite struct {
 	ctx context.Context
 }
 
-func (suite *preventCidrEditSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *preventCidrEditSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *preventCidrEditSuite) TestWhenCidrIsSetEqualReady() {
+func (s *preventCidrEditSuite) TestWhenCidrIsSetEqualReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -46,31 +47,31 @@ func (suite *preventCidrEditSuite) TestWhenCidrIsSetEqualReady() {
 	}
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := preventCidrEdit(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	newIpRange := state.ObjAsIpRange()
-	assert.Equal(suite.T(), newIpRange.Status.Cidr, ipRange.Status.Cidr)
+	assert.Equal(s.T(), newIpRange.Status.Cidr, ipRange.Status.Cidr)
 
 	// check error condition in status
-	assert.Len(suite.T(), newIpRange.Status.Conditions, 0)
+	assert.Len(s.T(), newIpRange.Status.Conditions, 0)
 }
 
-func (suite *preventCidrEditSuite) TestWhenCidrIsSetNotEqualNotReady() {
+func (s *preventCidrEditSuite) TestWhenCidrIsSetNotEqualNotReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -80,31 +81,31 @@ func (suite *preventCidrEditSuite) TestWhenCidrIsSetNotEqualNotReady() {
 	ipRange.Status.Cidr = "10.10.10.10/28"
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := preventCidrEdit(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 
 	//Load updated object
 	err = state.LoadObj(ctx)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	newIpRange := state.ObjAsIpRange()
-	assert.Equal(suite.T(), newIpRange.Status.Cidr, ipRange.Status.Cidr)
+	assert.Equal(s.T(), newIpRange.Status.Cidr, ipRange.Status.Cidr)
 
 	// check error condition in status
-	assert.Len(suite.T(), newIpRange.Status.Conditions, 0)
+	assert.Len(s.T(), newIpRange.Status.Conditions, 0)
 }
 
-func (suite *preventCidrEditSuite) TestWhenSpecCidrIsNotSetReady() {
+func (s *preventCidrEditSuite) TestWhenSpecCidrIsNotSetReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -121,22 +122,22 @@ func (suite *preventCidrEditSuite) TestWhenSpecCidrIsNotSetReady() {
 		},
 	}
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := preventCidrEdit(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
-func (suite *preventCidrEditSuite) TestWhenStatusCidrIsNotSetReady() {
+func (s *preventCidrEditSuite) TestWhenStatusCidrIsNotSetReady() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -151,12 +152,12 @@ func (suite *preventCidrEditSuite) TestWhenStatusCidrIsNotSetReady() {
 		},
 	}
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := preventCidrEdit(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
 func TestPreventCidrEdit(t *testing.T) {

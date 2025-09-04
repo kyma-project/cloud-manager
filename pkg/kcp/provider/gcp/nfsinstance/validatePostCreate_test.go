@@ -2,6 +2,10 @@ package nfsinstance
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -9,10 +13,7 @@ import (
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type validatePostCreateSuite struct {
@@ -20,17 +21,17 @@ type validatePostCreateSuite struct {
 	ctx context.Context
 }
 
-func (suite *validatePostCreateSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *validatePostCreateSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *validatePostCreateSuite) TestValidatePostCreateScaleDownFail() {
+func (s *validatePostCreateSuite) TestValidatePostCreateScaleDownFail() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -46,30 +47,30 @@ func (suite *validatePostCreateSuite) TestValidatePostCreateScaleDownFail() {
 			},
 		},
 	}
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = validatePostCreate(ctx, testState.State)
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(s.T(), err)
 	// validate status conditions error
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonValidationFailed, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Equal(s.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(s.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(s.T(), v1beta1.ReasonValidationFailed, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, updatedObject.Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonValidationFailed, updatedObject.Status.Conditions[0].Reason)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), v1beta1.ConditionTypeError, updatedObject.Status.Conditions[0].Type)
+	assert.Equal(s.T(), metav1.ConditionTrue, updatedObject.Status.Conditions[0].Status)
+	assert.Equal(s.T(), v1beta1.ReasonValidationFailed, updatedObject.Status.Conditions[0].Reason)
 }
 
-func (suite *validatePostCreateSuite) TestValidatePostCreateSuccess() {
+func (s *validatePostCreateSuite) TestValidatePostCreateSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.ZONAL
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -85,18 +86,18 @@ func (suite *validatePostCreateSuite) TestValidatePostCreateSuccess() {
 			},
 		},
 	}
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	updatedObject := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err, resCtx := validatePostCreate(ctx, testState.State)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 	updatedObject2 := &v1beta1.NfsInstance{}
 	err = factory.kcpCluster.K8sClient().Get(ctx, types.NamespacedName{Name: gcpNfsInstance.Name, Namespace: gcpNfsInstance.Namespace}, updatedObject2)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), updatedObject.ResourceVersion, updatedObject2.ResourceVersion)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), updatedObject.ResourceVersion, updatedObject2.ResourceVersion)
 }
 
 func TestValidatePostCreate(t *testing.T) {

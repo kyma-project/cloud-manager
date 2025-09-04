@@ -3,6 +3,11 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -10,11 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type checkGcpOperationSuite struct {
@@ -22,18 +23,18 @@ type checkGcpOperationSuite struct {
 	ctx context.Context
 }
 
-func (suite *checkGcpOperationSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *checkGcpOperationSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *checkGcpOperationSuite) TestWhenOpIdentifierIsNil() {
+func (s *checkGcpOperationSuite) TestWhenOpIdentifierIsNil() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -41,15 +42,15 @@ func (suite *checkGcpOperationSuite) TestWhenOpIdentifierIsNil() {
 	//Get state object with ipRange
 	ipRange := gcpIpRange.DeepCopy()
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
-func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
+func (s *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *servicenetworking.Operation
 		switch r.Method {
@@ -60,24 +61,24 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 					Done: false,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -87,18 +88,18 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	ipRange.Status.State = gcpclient.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
-	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Nil(s.T(), resCtx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 }
 
-func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
+func (s *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *servicenetworking.Operation
 		switch r.Method {
@@ -109,24 +110,24 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 					Done: true,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -136,18 +137,18 @@ func (suite *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
 	ipRange.Status.State = gcpclient.DeletePsaConnection
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
-func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
+func (s *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *compute.Operation
 		switch r.Method {
@@ -158,24 +159,24 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 					Status: "PENDING",
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -185,18 +186,18 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	ipRange.Status.State = gcpclient.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
-	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Nil(s.T(), resCtx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 }
 
-func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
+func (s *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *compute.Operation
 		switch r.Method {
@@ -207,24 +208,24 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 					Status: "DONE",
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory(fakeHttpServer)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -234,15 +235,15 @@ func (suite *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {
 	ipRange.Status.State = gcpclient.DeleteAddress
 	ipRange.Status.OpIdentifier = opIdentifier
 	err = factory.kcpCluster.K8sClient().Status().Update(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	state, err := factory.newStateWith(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
 func TestCheckGcpOperation(t *testing.T) {

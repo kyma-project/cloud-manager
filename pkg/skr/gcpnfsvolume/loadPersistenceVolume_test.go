@@ -2,13 +2,14 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadPersistenceVolumeSuite struct {
@@ -16,13 +17,13 @@ type loadPersistenceVolumeSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadPersistenceVolumeSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadPersistenceVolumeSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadPersistenceVolumeSuite) TestWithMatchingPV() {
+func (s *loadPersistenceVolumeSuite) TestWithMatchingPV() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -33,21 +34,21 @@ func (suite *loadPersistenceVolumeSuite) TestWithMatchingPV() {
 	//Add an PV to SKR.
 	pv := pvGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	err, _ctx := loadPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.NotNil(suite.T(), state.PV)
+	assert.NotNil(s.T(), state.PV)
 }
 
-func (suite *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
+func (s *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -55,7 +56,7 @@ func (suite *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
 	//Add an PV to SKR.
 	pv := pvGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	nfsVol := cloudresourcesv1beta1.GcpNfsVolume{
@@ -69,16 +70,16 @@ func (suite *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
 	err, _ctx := loadPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.Nil(suite.T(), state.PV)
+	assert.Nil(s.T(), state.PV)
 }
 
-func (suite *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
+func (s *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -86,13 +87,13 @@ func (suite *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
 	//Add an PV to SKR.
 	pv := pvGcpNfsVolume.DeepCopy()
 	err = factory.skrCluster.K8sClient().Create(ctx, pv)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Add another PV to SKR.
 	pv2 := pvGcpNfsVolume.DeepCopy()
 	pv2.Name = "test-pv-2"
 	err = factory.skrCluster.K8sClient().Create(ctx, pv2)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
@@ -100,11 +101,11 @@ func (suite *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
 	err, _ctx := loadPersistenceVolume(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.NotNil(suite.T(), state.PV)
+	assert.NotNil(s.T(), state.PV)
 }
 
 func TestLoadPersistenceVolumeSuite(t *testing.T) {

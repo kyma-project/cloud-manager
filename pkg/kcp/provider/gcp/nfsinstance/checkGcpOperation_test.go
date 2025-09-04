@@ -3,6 +3,11 @@ package nfsinstance
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,11 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type checkGcpOperationSuite struct {
@@ -23,17 +24,17 @@ type checkGcpOperationSuite struct {
 	ctx context.Context
 }
 
-func (suite *checkGcpOperationSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *checkGcpOperationSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
+func (s *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -41,14 +42,14 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNoOperation() {
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
-func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
+func (s *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *file.Operation
 		switch r.Method {
@@ -63,23 +64,23 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 					},
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -87,18 +88,18 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationFailedOperation() {
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkGcpOperation(ctx, testState.State)
-	assert.Error(suite.T(), err)
-	assert.Len(suite.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
-	assert.Equal(suite.T(), "", testState.ObjAsNfsInstance().Status.OpIdentifier)
+	assert.Error(s.T(), err)
+	assert.Len(s.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
+	assert.Equal(s.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(s.T(), metav1.ConditionTrue, testState.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(s.T(), v1beta1.ReasonGcpError, testState.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Equal(s.T(), "", testState.ObjAsNfsInstance().Status.OpIdentifier)
 }
 
-func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
+func (s *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *file.Operation
 		switch r.Method {
@@ -109,23 +110,23 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 					Done: false,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -133,14 +134,14 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
-	assert.Nil(suite.T(), resCtx)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Nil(s.T(), resCtx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
 }
 
-func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() {
+func (s *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var opResp *file.Operation
 		switch r.Method {
@@ -151,23 +152,23 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() 
 					Done: true,
 				}
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 		b, err := json.Marshal(opResp)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to marshal request: "+err.Error())
+			assert.Fail(s.T(), "unable to marshal request: "+err.Error())
 		}
 		_, err = w.Write(b)
 		if err != nil {
-			assert.Fail(suite.T(), "unable to write to provided ResponseWriter: "+err.Error())
+			assert.Fail(s.T(), "unable to write to provided ResponseWriter: "+err.Error())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -175,11 +176,11 @@ func (suite *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() 
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "/projects/test-project/locations/us-west1/operations/create-operation")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 func TestCheckGcpOperation(t *testing.T) {
 	suite.Run(t, new(checkGcpOperationSuite))

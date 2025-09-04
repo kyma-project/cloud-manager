@@ -134,12 +134,12 @@ func AddFinalizer(finalizer string) ObjAction {
 	}
 }
 
-func Update(ctx context.Context, client client.Client, obj client.Object, opts ...ObjAction) error {
+func Update(ctx context.Context, clnt client.Client, obj client.Object, opts ...ObjAction) error {
 	if obj == nil {
 		return errors.New("the object for Update() can not be nil")
 	}
 
-	err := LoadAndCheck(ctx, client, obj, NewObjActions())
+	err := LoadAndCheck(ctx, clnt, obj, NewObjActions())
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func Update(ctx context.Context, client client.Client, obj client.Object, opts .
 	NewObjActions(opts...).
 		ApplyOnObject(obj)
 
-	err = client.Update(ctx, obj)
+	err = clnt.Update(ctx, obj)
 	return err
 }
 
