@@ -73,8 +73,6 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
 
 func (c *client) ListInternalNetworks(ctx context.Context, name string) ([]networks.Network, error) {
 	pg, err := networks.List(c.netSvc, networks.ListOpts{
-		//TenantID:  "c70ec64b9b3e4766bf1a5aaaf5693663",
-		//ProjectID: "f37face36bb74b1fa84e9f6e4f2c6cbf",
 		Name: name,
 	}).AllPages(ctx)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {

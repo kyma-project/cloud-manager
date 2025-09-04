@@ -14,6 +14,9 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData"
+	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -37,6 +40,7 @@ func SetupScopeReconciler(
 	awsClientProvider awsclient.SkrClientProvider[awsexposeddataclient.Client],
 	azureClientProvider azureclient.ClientProvider[azureexposeddataclient.Client],
 	gcpClientProvider gcpclient.GcpClientProvider[gcpexposeddataclient.Client],
+	sapClientProvider sapclient.SapClientProvider[sapexposeddataclient.Client],
 ) error {
 	return NewScopeReconciler(
 		kcpscope.New(
@@ -47,6 +51,7 @@ func SetupScopeReconciler(
 			awsexposeddata.NewStateFactory(awsClientProvider),
 			azureexposeddata.NewStateFactory(azureClientProvider),
 			gcpexposeddata.NewStateFactory(gcpClientProvider),
+			sapexposeddata.NewStateFactory(sapClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

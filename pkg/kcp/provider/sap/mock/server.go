@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 )
 
@@ -18,6 +19,12 @@ type server struct {
 
 func (s *server) NfsInstanceProvider() sapclient.SapClientProvider[sapnfsinstanceclient.Client] {
 	return func(ctx context.Context, pp sapclient.ProviderParams) (sapnfsinstanceclient.Client, error) {
+		return s, nil
+	}
+}
+
+func (s *server) ExposedDataProvider() sapclient.SapClientProvider[sapexposeddataclient.Client] {
+	return func(ctx context.Context, pp sapclient.ProviderParams) (sapexposeddataclient.Client, error) {
 		return s, nil
 	}
 }

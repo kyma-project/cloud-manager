@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
+	sapgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -429,6 +430,98 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	return nil
 }
 
+func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenertypes.Shoot, opts ...ObjAction) error {
+	// KCP Gardener-credentials secret
+	if err := CreateGardenerCredentials(ctx, infra); err != nil {
+		return err
+	}
+
+	// Garden resources
+	if shoot == nil {
+		shoot = &gardenertypes.Shoot{}
+	}
+	actions := NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultGardenNamespace),
+		)
+
+	// Shoot
+	{
+		actions.ApplyOnObject(shoot)
+		shoot.Spec = gardenertypes.ShootSpec{
+			CloudProfileName: ptr.To("converged-cloud-kyma"),
+			Region:           "eu-de-1",
+			Networking: &gardenertypes.Networking{
+				IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
+				Nodes:      ptr.To("10.250.0.0/16"),
+				Pods:       ptr.To("10.96.0.0/13"),
+				Services:   ptr.To("10.104.0.0/13"),
+			},
+			Provider: gardenertypes.Provider{
+				Type: string(cloudcontrolv1beta1.ProviderOpenStack),
+				InfrastructureConfig: &runtime.RawExtension{
+					Object: &sapgardener.InfrastructureConfig{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "InfrastructureConfig",
+							APIVersion: "openstack.provider.extensions.gardener.cloud/v1alpha1",
+						},
+						FloatingPoolName: "FloatingIP-external-kyma-01",
+						Networks: sapgardener.Networks{
+							Workers: "10.250.0.0/16",
+						},
+					},
+				},
+				Workers: []gardenertypes.Worker{
+					{
+						Name:  "cpu-worker-0",
+						Zones: []string{"eu-de-1b", "eu-de-1a", "eu-de-1c"},
+					},
+				},
+			},
+			SecretBindingName: ptr.To(shoot.Name),
+		}
+
+		err := infra.Garden().Client().Create(ctx, shoot)
+		if err != nil {
+			return fmt.Errorf("error creating Shoot: %w", err)
+		}
+	}
+
+	// SecretBinding
+	{
+		secretBinding := &gardenertypes.SecretBinding{}
+		actions.ApplyOnObject(secretBinding)
+		secretBinding.Provider = &gardenertypes.SecretBindingProvider{
+			Type: string(cloudcontrolv1beta1.ProviderOpenStack),
+		}
+		secretBinding.SecretRef = corev1.SecretReference{
+			Name:      shoot.Name,
+			Namespace: shoot.Namespace,
+		}
+		err := infra.Garden().Client().Create(ctx, secretBinding)
+		if err != nil {
+			return fmt.Errorf("error creating SecretBinding: %w", err)
+		}
+	}
+
+	// Secret
+	{
+		secret := &corev1.Secret{}
+		actions.ApplyOnObject(secret)
+		secret.StringData = map[string]string{
+			"domainName": DefaultSapDomain,
+			"tenantName": DefaultSapTenant,
+		}
+
+		err := infra.Garden().Client().Create(ctx, secret)
+		if err != nil {
+			return fmt.Errorf("error creating garden secret: %w", err)
+		}
+	}
+
+	return nil
+}
+
 var (
 	DefaultGcpWorkerZones = []string{"europe-west1-a", "europe-west1-b", "europe-west1-c"}
 )
@@ -438,4 +531,7 @@ const (
 
 	DefaultAzureTenantId       = "someAzureTenantId"
 	DefaultAzureSubscriptionId = "someAzureSubscriptionId"
+
+	DefaultSapDomain = "kyma"
+	DefaultSapTenant = "kyma-project-01"
 )

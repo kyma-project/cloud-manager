@@ -13,6 +13,7 @@ import (
 	azureexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData"
+	sapexposeddata "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -35,6 +36,7 @@ func New(
 	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
 	gcpStateFactory gcpexposeddata.StateFactory,
+	sapStateFactory sapexposeddata.StateFactory,
 ) ScopeReconciler {
 	return NewScopeReconciler(
 		NewStateFactory(
@@ -46,6 +48,7 @@ func New(
 		awsStateFactory,
 		azureStateFactory,
 		gcpStateFactory,
+		sapStateFactory,
 	)
 }
 
@@ -54,12 +57,14 @@ func NewScopeReconciler(
 	awsStateFactory awsexposeddata.StateFactory,
 	azureStateFactory azureexposeddata.StateFactory,
 	gcpStateFactory gcpexposeddata.StateFactory,
+	sapStateFactory sapexposeddata.StateFactory,
 ) ScopeReconciler {
 	return &scopeReconciler{
 		stateFactory:      stateFactory,
 		awsStateFactory:   awsStateFactory,
 		azureStateFactory: azureStateFactory,
 		gcpStateFactory:   gcpStateFactory,
+		sapStateFactory:   sapStateFactory,
 	}
 }
 
@@ -69,6 +74,7 @@ type scopeReconciler struct {
 	awsStateFactory   awsexposeddata.StateFactory
 	azureStateFactory azureexposeddata.StateFactory
 	gcpStateFactory   gcpexposeddata.StateFactory
+	sapStateFactory   sapexposeddata.StateFactory
 }
 
 func (r *scopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -131,6 +137,7 @@ func (r *scopeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsexposeddata.New(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureexposeddata.New(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpexposeddata.New(r.gcpStateFactory)),
+						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapexposeddata.New(r.sapStateFactory)),
 					),
 					exposedDataSaveToScope,
 					exposedDataSaveToSkr,
