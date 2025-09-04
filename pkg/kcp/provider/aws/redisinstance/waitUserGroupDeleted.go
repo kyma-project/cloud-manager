@@ -17,7 +17,7 @@ func waitUserGroupDeleted(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.userGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	cacheState := ptr.Deref(state.userGroup.Status, "")

@@ -17,7 +17,7 @@ func loadParameterGroupFamilyDefaultParams(
 		state := st.(*State)
 		paramGroup := getParamGroup(state)
 		if paramGroup == nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		defaultParams, err := state.awsClient.DescribeEngineDefaultParameters(ctx, ptr.Deref(paramGroup.CacheParameterGroupFamily, ""))
@@ -27,7 +27,7 @@ func loadParameterGroupFamilyDefaultParams(
 
 		setDefaultParams(state, defaultParams)
 
-		return nil, nil
+		return nil, ctx
 	}
 }
 

@@ -17,11 +17,11 @@ type pvEventHandlerSuite struct {
 	ctx context.Context
 }
 
-func (suite *pvEventHandlerSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *pvEventHandlerSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *pvEventHandlerSuite) TestIsMatchingPV() {
+func (s *pvEventHandlerSuite) TestIsMatchingPV() {
 	//Update the capacity in spec.
 	pv := corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
@@ -35,12 +35,12 @@ func (suite *pvEventHandlerSuite) TestIsMatchingPV() {
 	}
 
 	matching, key := isMatchingPV(&pv)
-	assert.True(suite.T(), matching)
-	assert.Equal(suite.T(), pv.Namespace, key.Namespace)
-	assert.Equal(suite.T(), pv.Name, key.Name)
+	assert.True(s.T(), matching)
+	assert.Equal(s.T(), pv.Namespace, key.Namespace)
+	assert.Equal(s.T(), pv.Name, key.Name)
 }
 
-func (suite *pvEventHandlerSuite) TestNotMatchingPV() {
+func (s *pvEventHandlerSuite) TestNotMatchingPV() {
 	//Update the capacity in spec.
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -50,8 +50,8 @@ func (suite *pvEventHandlerSuite) TestNotMatchingPV() {
 	}
 
 	matching, key := isMatchingPV(&pod)
-	assert.False(suite.T(), matching)
-	assert.Nil(suite.T(), key)
+	assert.False(s.T(), matching)
+	assert.Nil(s.T(), key)
 }
 
 func TestPvEventHandler(t *testing.T) {

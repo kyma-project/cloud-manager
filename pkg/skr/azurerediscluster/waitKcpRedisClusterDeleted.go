@@ -19,7 +19,7 @@ func waitKcpRedisClusterDeleted(ctx context.Context, st composed.State) (error, 
 
 	if state.KcpRedisCluster == nil {
 		logger.Info("Kcp RedisCluster is deleted")
-		return nil, nil
+		return nil, ctx
 	}
 
 	kcpCondErr := meta.FindStatusCondition(state.KcpRedisCluster.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)

@@ -16,87 +16,87 @@ type calculateRecurringScheduleSuite struct {
 	ctx context.Context
 }
 
-func (suite *calculateRecurringScheduleSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (s *calculateRecurringScheduleSuite) SetupTest() {
+	s.ctx = context.Background()
 }
 
-func (suite *calculateRecurringScheduleSuite) TestWhenNfsScheduleIsDeleting() {
+func (s *calculateRecurringScheduleSuite) TestWhenNfsScheduleIsDeleting() {
 
 	obj := deletingGcpBackupSchedule.DeepCopy()
 	obj.Spec.Schedule = "* * * * *"
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ctx := calculateRecurringSchedule(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestOnetimeSchedule() {
+func (s *calculateRecurringScheduleSuite) TestOnetimeSchedule() {
 
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	obj.Spec.Schedule = ""
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ctx := calculateRecurringSchedule(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestAlreadySetSchedule() {
+func (s *calculateRecurringScheduleSuite) TestAlreadySetSchedule() {
 
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	obj.Spec.Schedule = "* * * * *"
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the schedule
 	now := time.Now()
 	obj.Status.Schedule = obj.Spec.Schedule
 	obj.Status.NextRunTimes = []string{now.Format(time.RFC3339)}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set cron expression in state
 	expr, err := cronexpr.Parse(obj.Spec.Schedule)
-	suite.Nil(err)
+	s.Nil(err)
 	state.cronExpression = expr
 
 	//Invoke API under test
 	err, _ctx := calculateRecurringSchedule(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *calculateRecurringScheduleSuite) testSchedule(schedule string, start, end *time.Time, expectedState string, expectedRunTimes ...time.Time) {
+func (s *calculateRecurringScheduleSuite) testSchedule(schedule string, start, end *time.Time, expectedState string, expectedRunTimes ...time.Time) {
 
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	obj.Spec.Schedule = schedule
@@ -107,47 +107,47 @@ func (suite *calculateRecurringScheduleSuite) testSchedule(schedule string, star
 		obj.Spec.EndTime = &metav1.Time{Time: *end}
 	}
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the Status.schedule
 	obj.Status.Schedule = obj.Spec.Schedule
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set cron expression in state
 	expr, err := cronexpr.Parse(obj.Spec.Schedule)
-	suite.Nil(err)
+	s.Nil(err)
 	state.cronExpression = expr
 
 	//Invoke API under test
 	err, _ = calculateRecurringSchedule(ctx, state)
 
 	//validate expected return values
-	suite.NotNil(err)
+	s.NotNil(err)
 
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsBackupSchedule.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
-	suite.Nil(err)
-	suite.Equal(len(expectedRunTimes), len(fromK8s.Status.NextRunTimes))
+	s.Nil(err)
+	s.Equal(len(expectedRunTimes), len(fromK8s.Status.NextRunTimes))
 
 	for i, expected := range expectedRunTimes {
 		actual, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[i])
-		suite.Nil(err)
-		suite.WithinDuration(expected, actual, time.Minute*1)
+		s.Nil(err)
+		s.WithinDuration(expected, actual, time.Minute*1)
 	}
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMinute() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMinute() {
 	now := time.Now()
 	schedule := "* * * * *"
 	expectedState := v1beta1.JobStateActive
@@ -156,10 +156,10 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMinute() {
 		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+2, 0, 0, now.Location()).UTC(),
 		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+3, 0, 0, now.Location()).UTC(),
 	}
-	suite.testSchedule(schedule, nil, nil, expectedState, expectedTimes...)
+	s.testSchedule(schedule, nil, nil, expectedState, expectedTimes...)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithStartTime() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMinuteWithStartTime() {
 	now := time.Now()
 	schedule := "* * * * *"
 	start := now.Add(time.Hour * 24 * 5)
@@ -169,10 +169,10 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithStartTime() 
 		time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+2, 0, 0, now.Location()).UTC(),
 		time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute()+3, 0, 0, now.Location()).UTC(),
 	}
-	suite.testSchedule(schedule, &start, nil, expectedState, expectedTimes...)
+	s.testSchedule(schedule, &start, nil, expectedState, expectedTimes...)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithEndTime() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMinuteWithEndTime() {
 	now := time.Now().UTC()
 	schedule := "* * * * *"
 	end := now.AddDate(1, 0, 0)
@@ -184,10 +184,10 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMinuteWithEndTime() {
 		time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+3, 0, 0, now.Location()).UTC(),
 	}
 
-	suite.testSchedule(schedule, nil, &end, expectedState, expectedTimes...)
+	s.testSchedule(schedule, nil, &end, expectedState, expectedTimes...)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMonth() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMonth() {
 	now := time.Now().UTC()
 	schedule := "0 0 1 * *"
 	expectedState := v1beta1.JobStateActive
@@ -196,10 +196,10 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMonth() {
 		time.Date(now.Year(), now.Month()+2, 1, 0, 0, 0, 0, now.Location()).UTC(),
 		time.Date(now.Year(), now.Month()+3, 1, 0, 0, 0, 0, now.Location()).UTC(),
 	}
-	suite.testSchedule(schedule, nil, nil, expectedState, expectedTimes...)
+	s.testSchedule(schedule, nil, nil, expectedState, expectedTimes...)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithStartTime() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMonthWithStartTime() {
 	now := time.Now().UTC()
 	schedule := "0 0 1 * *"
 	start := now.Add(time.Hour * 24)
@@ -209,10 +209,10 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithStartTime() {
 		time.Date(start.Year(), start.Month()+2, 1, 0, 0, 0, 0, now.Location()).UTC(),
 		time.Date(start.Year(), start.Month()+3, 1, 0, 0, 0, 0, now.Location()).UTC(),
 	}
-	suite.testSchedule(schedule, &start, nil, expectedState, expectedTimes...)
+	s.testSchedule(schedule, &start, nil, expectedState, expectedTimes...)
 }
 
-func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithEndTime() {
+func (s *calculateRecurringScheduleSuite) TestForEveryMonthWithEndTime() {
 	now := time.Now().UTC()
 	schedule := "0 0 1 * *"
 	start := now.Add(time.Hour * 24)
@@ -225,7 +225,7 @@ func (suite *calculateRecurringScheduleSuite) TestForEveryMonthWithEndTime() {
 		time.Date(start.Year(), start.Month()+3, 1, 0, 0, 0, 0, now.Location()).UTC(),
 	}
 
-	suite.testSchedule(schedule, &start, &end, expectedState, expectedTimes...)
+	s.testSchedule(schedule, &start, &end, expectedState, expectedTimes...)
 }
 
 func TestCalculateRecurringScheduleSuite(t *testing.T) {

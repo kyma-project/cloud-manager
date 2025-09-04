@@ -14,11 +14,11 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.ObjAsAzureRedisInstance().Status.Id != "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	id := uuid.NewString()

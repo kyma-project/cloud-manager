@@ -17,13 +17,13 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnet != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	logger.Info("loading GCP Private Subnet")
+	logger.Info("loading GCP Subnet")
 	subnet, err := state.computeClient.GetSubnet(ctx, client.GetSubnetRequest{
 		ProjectId: gcpScope.Project,
 		Region:    region,
@@ -32,8 +32,8 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
-			logger.Info("target Private Subnet not found, continuing")
-			return nil, nil
+			logger.Info("target Subnet not found, continuing")
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading GCP Private Subnet")
@@ -43,14 +43,14 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  "True",
 			Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-			Message: "Failed to load Private Subnet",
+			Message: "Failed to load Subnet",
 		})
 		subnet.Status.State = cloudcontrolv1beta1.StateError
 
 		err = state.UpdateObjStatus(ctx)
 		if err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error updating Subnet status due failed GCP Private Subnet loading",
+				"Error updating Subnet status due failed GCP Subnet loading",
 				composed.StopWithRequeueDelay((util.Timing.T10000ms())),
 				ctx,
 			)
@@ -64,5 +64,5 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 		state.subnet = subnet
 	}
 
-	return nil, nil
+	return nil, ctx
 }

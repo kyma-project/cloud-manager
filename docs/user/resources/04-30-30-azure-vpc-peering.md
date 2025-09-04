@@ -1,5 +1,8 @@
 # AzureVpcPeering Custom Resource
 
+> [!Warning]
+> VPC peering for Microsoft Azure is a feature available only for SAP-internal teams.
+
 The `azurevpcpeering.cloud-resources.kyma-project.io` custom resource (CR) specifies the virtual network peering between Kyma and the remote Azure Virtual Private Cloud (VPC) network. Virtual network peering is only possible within Microsoft Azure networks whose subscriptions are sharing the same tenant determined by the Kyma underlying cloud provider landscape.
 
 Once an `AzureVpcPeering` CR is created and reconciled, the Cloud Manager controller creates a VPC peering connection in the VPC network of the Kyma cluster in the underlying cloud provider landscape, and accepts a VPC peering connection in the remote cloud provider landscape.
@@ -20,7 +23,6 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter                         | Type       | Description                                                                                 |
 |-----------------------------------|------------|---------------------------------------------------------------------------------------------|
-| **id**                            | string     | Represents the VPC peering name on the Kyma cluster underlying cloud provider subscription. |
 | **state**                         | string     | Signifies the current state of CustomObject.                                                |
 | **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                        |
 | **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                       |

@@ -2,9 +2,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/config"
 	"regexp"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/config"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
@@ -22,6 +23,7 @@ const fileBackupRegex = `projects/(?P<Project>[^/]+)/locations/(?P<Location>[^/]
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
 const GcpApiTimeout = time.Second * 8
+const GcpCapacityCheckInterval = time.Hour * 1
 
 const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
 
@@ -34,20 +36,23 @@ const (
 )
 
 type GcpConfigStruct struct {
-	GcpRetryWaitTime     time.Duration
-	GcpOperationWaitTime time.Duration
-	GcpApiTimeout        time.Duration
+	GcpRetryWaitTime         time.Duration
+	GcpOperationWaitTime     time.Duration
+	GcpApiTimeout            time.Duration
+	GcpCapacityCheckInterval time.Duration
 
 	//Config from files...
-	RetryWaitTime     string `yaml:"retryWaitTime,omitempty" json:"retryWaitTime,omitempty"`
-	OperationWaitTime string `yaml:"operationWaitTime,omitempty" json:"operationWaitTime,omitempty"`
-	ApiTimeout        string `yaml:"apiTimeout,omitempty" json:"apiTimeout,omitempty"`
+	RetryWaitTime         string `yaml:"retryWaitTime,omitempty" json:"retryWaitTime,omitempty"`
+	OperationWaitTime     string `yaml:"operationWaitTime,omitempty" json:"operationWaitTime,omitempty"`
+	ApiTimeout            string `yaml:"apiTimeout,omitempty" json:"apiTimeout,omitempty"`
+	CapacityCheckInterval string `yaml:"capacityCheckInterval,omitempty" json:"capacityCheckInterval,omitempty"`
 }
 
 func (c *GcpConfigStruct) AfterConfigLoaded() {
 	c.GcpRetryWaitTime = GetDuration(c.RetryWaitTime, GcpRetryWaitTime)
 	c.GcpOperationWaitTime = GetDuration(c.OperationWaitTime, GcpOperationWaitTime)
 	c.GcpApiTimeout = GetDuration(c.ApiTimeout, GcpApiTimeout)
+	c.GcpCapacityCheckInterval = GetDuration(c.CapacityCheckInterval, GcpCapacityCheckInterval)
 }
 
 func InitConfig(cfg config.Config) {
@@ -67,6 +72,11 @@ func InitConfig(cfg config.Config) {
 			"apiTimeout",
 			config.DefaultScalar("8s"),
 			config.SourceEnv("GCP_API_TIMEOUT_DURATION"),
+		),
+		config.Path(
+			"capacityCheckInterval",
+			config.DefaultScalar(1*time.Hour),
+			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
 		),
 		config.SourceFile("gcpclient.GcpConfig.yaml"),
 		config.Bind(GcpConfig),

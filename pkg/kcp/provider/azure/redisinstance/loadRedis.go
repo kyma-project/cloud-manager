@@ -17,7 +17,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 
 	if state.azureRedisInstance != nil {
 		logger.Info("Azure Redis already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Loading Azure Redis")
@@ -29,7 +29,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
 			logger.Info("Azure Redis instance not found")
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Error(err, "Error loading Azure Redis")
@@ -52,5 +52,5 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	}
 	state.azureRedisInstance = redisInstance
 
-	return nil, nil
+	return nil, ctx
 }

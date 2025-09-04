@@ -17,7 +17,7 @@ func loadParameterGroupCurrentParams(
 		state := st.(*State)
 		paramGroup := getParamGroup(state)
 		if paramGroup == nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		currentParams, err := state.awsClient.DescribeElastiCacheParameters(ctx, ptr.Deref(paramGroup.CacheParameterGroupName, ""))
@@ -27,7 +27,7 @@ func loadParameterGroupCurrentParams(
 
 		setCurrentParams(state, currentParams)
 
-		return nil, nil
+		return nil, ctx
 	}
 }
 

@@ -1,5 +1,8 @@
 # AzureRedisCluster Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `azurerediscluster.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the Azure Cache for Redis cluster.
 Once the cluster is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.

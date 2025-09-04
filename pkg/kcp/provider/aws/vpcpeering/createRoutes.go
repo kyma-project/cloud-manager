@@ -6,6 +6,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +49,7 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 			lll.Error(err, "Error creating route")
 
 			if awsmeta.IsErrorRetryable(err) {
-				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 			}
 
 			changed := false
@@ -79,9 +80,43 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 			}
 
 			// prevents alternating error messages
-			return composed.StopAndForget, nil
+			return composed.StopAndForget, ctx
+		}
+
+		if !feature.VpcPeeringSync.Value(ctx) {
+			continue
+		}
+
+		peeringRoutes := pie.Filter(t.Routes, func(r types.Route) bool {
+			return ptr.Equal(r.VpcPeeringConnectionId, state.vpcPeering.VpcPeeringConnectionId)
+		})
+
+		for _, r := range peeringRoutes {
+			exists := pie.Any(state.remoteVpc.CidrBlockAssociationSet, func(a types.VpcCidrBlockAssociation) bool {
+				return ptr.Equal(a.CidrBlock, r.DestinationCidrBlock)
+			})
+
+			if !exists {
+				err := state.client.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
+
+				if awsmeta.IsErrorRetryable(err) {
+					return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+				}
+
+				lll := logger.WithValues(
+					"routeTableId", ptr.Deref(t.RouteTableId, "xxx"),
+					"destinationCidrBlock", ptr.Deref(r.DestinationCidrBlock, "xxx"),
+				)
+
+				if err != nil {
+					lll.Error(err, "Error deleting orphan route")
+					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+				}
+
+				lll.Info("Orphan route deleted")
+			}
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

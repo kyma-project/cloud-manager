@@ -23,7 +23,7 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	shouldModifyKcp := state.ShouldModifyKcp()
 
 	if !shouldModifyKcp {
-		return nil, nil
+		return nil, ctx
 	}
 
 	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisCluster.Spec.RedisTier)
@@ -60,5 +60,5 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 		return composed.LogErrorAndReturn(err, "Error updating KCP RedisCluster", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

@@ -21,59 +21,59 @@ type updateCapacitySuite struct {
 	ctx context.Context
 }
 
-func (suite *updateCapacitySuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *updateCapacitySuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *updateCapacitySuite) TestWhenBackupIsDeleting() {
+func (s *updateCapacitySuite) TestWhenBackupIsDeleting() {
 
 	obj := deletingAwsNfsVolumeBackup.DeepCopy()
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, _ctx := updateCapacity(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *updateCapacitySuite) TestWhenRecoveryPointNotExists() {
+func (s *updateCapacitySuite) TestWhenRecoveryPointNotExists() {
 
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateProcessing
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, _ctx := updateCapacity(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 
 	fromK8s := &v1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(v1beta1.StateProcessing, fromK8s.Status.State)
+	s.Equal(v1beta1.StateProcessing, fromK8s.Status.State)
 }
 
-func (suite *updateCapacitySuite) TestWhenUpdateIsNotDue() {
+func (s *updateCapacitySuite) TestWhenUpdateIsNotDue() {
 
 	config.AwsConfig.EfsCapacityCheckInterval = time.Duration(6 * time.Hour)
 
@@ -81,13 +81,13 @@ func (suite *updateCapacitySuite) TestWhenUpdateIsNotDue() {
 	obj.Status.State = v1beta1.StateCreating
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now().Add(-1 * time.Hour)}
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the recovery point object
 	var backupSize int64 = 1075
@@ -99,31 +99,31 @@ func (suite *updateCapacitySuite) TestWhenUpdateIsNotDue() {
 	err, _ctx := updateCapacity(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 
 	fromK8s := &v1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(v1beta1.StateCreating, fromK8s.Status.State)
+	s.Equal(v1beta1.StateCreating, fromK8s.Status.State)
 }
 
-func (suite *updateCapacitySuite) TestWhenLastCapacityUpdateNotExists() {
+func (s *updateCapacitySuite) TestWhenLastCapacityUpdateNotExists() {
 
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateCreating
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the recovery point object
 	var backupSize int64 = 15676
@@ -135,34 +135,34 @@ func (suite *updateCapacitySuite) TestWhenLastCapacityUpdateNotExists() {
 	err, _ctx := updateCapacity(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Equal(ctx, _ctx)
+	s.Nil(err)
+	s.Equal(ctx, _ctx)
 
 	fromK8s := &v1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(v1beta1.StateCreating, fromK8s.Status.State)
-	suite.Equal(backupSize, fromK8s.Status.Capacity.Value())
-	suite.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
+	s.Equal(v1beta1.StateCreating, fromK8s.Status.State)
+	s.Equal(backupSize, fromK8s.Status.Capacity.Value())
+	s.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
 }
 
-func (suite *updateCapacitySuite) TestWhenLastCapacityUpdateIsZero() {
+func (s *updateCapacitySuite) TestWhenLastCapacityUpdateIsZero() {
 
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateCreating
 	obj.Status.LastCapacityUpdate = &metav1.Time{}
 	factory, err := newStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with AwsNfsVolume
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Set the recovery point object
 	var backupSize int64 = 15726
@@ -174,19 +174,19 @@ func (suite *updateCapacitySuite) TestWhenLastCapacityUpdateIsZero() {
 	err, _ctx := updateCapacity(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Equal(ctx, _ctx)
+	s.Nil(err)
+	s.Equal(ctx, _ctx)
 
 	fromK8s := &v1beta1.AwsNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
 			Namespace: obj.Namespace},
 		fromK8s)
-	suite.Nil(err)
+	s.Nil(err)
 
-	suite.Equal(v1beta1.StateCreating, fromK8s.Status.State)
-	suite.Equal(backupSize, fromK8s.Status.Capacity.Value())
-	suite.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
+	s.Equal(v1beta1.StateCreating, fromK8s.Status.State)
+	s.Equal(backupSize, fromK8s.Status.Capacity.Value())
+	s.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
 }
 
 func TestUpdateCapacity(t *testing.T) {

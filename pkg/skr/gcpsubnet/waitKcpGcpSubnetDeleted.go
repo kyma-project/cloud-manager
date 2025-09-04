@@ -19,7 +19,7 @@ func waitKcpGcpSubnetDeleted(ctx context.Context, st composed.State) (error, con
 
 	if state.KcpGcpSubnet == nil {
 		logger.Info("Kcp GcpSubnet is deleted")
-		return nil, nil
+		return nil, ctx
 	}
 
 	kcpCondErr := meta.FindStatusCondition(state.KcpGcpSubnet.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)

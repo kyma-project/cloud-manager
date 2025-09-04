@@ -20,17 +20,17 @@ func modifyRedis(ctx context.Context, st composed.State) (error, context.Context
 	requestedAzureRedisInstance := state.ObjAsRedisInstance()
 
 	if !meta.IsStatusConditionTrue(requestedAzureRedisInstance.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.azureRedisInstance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	updateParams, capacityChanged := getUpdateParams(state)
 
 	if !capacityChanged {
-		return nil, nil
+		return nil, ctx
 	}
 
 	resourceGroupName := state.resourceGroupName

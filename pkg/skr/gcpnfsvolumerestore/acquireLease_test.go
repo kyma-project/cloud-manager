@@ -3,6 +3,11 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -12,11 +17,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 type acquireLeaseSuite struct {
@@ -24,18 +25,18 @@ type acquireLeaseSuite struct {
 	ctx context.Context
 }
 
-func (suite *acquireLeaseSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *acquireLeaseSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *acquireLeaseSuite) TestAcquireLease_Acquire() {
+func (s *acquireLeaseSuite) TestAcquireLease_Acquire() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -43,61 +44,61 @@ func (suite *acquireLeaseSuite) TestAcquireLease_Acquire() {
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err, _ = acquireLease(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	lease := &v1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
-	assert.Nil(suite.T(), err)
-	suite.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
+	assert.Nil(s.T(), err)
+	s.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
 }
 
-func (suite *acquireLeaseSuite) TestAcquireLease_Renew() {
+func (s *acquireLeaseSuite) TestAcquireLease_Renew() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	err, _ = acquireLease(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	lease := &v1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
-	assert.Nil(suite.T(), err)
-	suite.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
+	assert.Nil(s.T(), err)
+	s.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
 	time1 := lease.Spec.RenewTime.Time
 	err, _ = acquireLease(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	time2 := lease.Spec.RenewTime.Time
-	suite.True(time2.After(time1))
+	s.True(time2.After(time1))
 }
 
-func (suite *acquireLeaseSuite) TestAcquireLease_OtherLeased() {
+func (s *acquireLeaseSuite) TestAcquireLease_OtherLeased() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	obj := gcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	leaseDuration := new(int32)
 	*leaseDuration = 600
@@ -114,38 +115,38 @@ func (suite *acquireLeaseSuite) TestAcquireLease_OtherLeased() {
 			RenewTime:            &metav1.MicroTime{Time: time.Now()},
 		},
 	})
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	err, _ = acquireLease(ctx, state)
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), err)
 	lease := &v1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
-	assert.Nil(suite.T(), err)
-	suite.Equal(*lease.Spec.HolderIdentity, otherOwner)
+	assert.Nil(s.T(), err)
+	s.Equal(*lease.Spec.HolderIdentity, otherOwner)
 }
 
-func (suite *acquireLeaseSuite) TestDoNotAcquireLeaseOnDeletingObject() {
+func (s *acquireLeaseSuite) TestDoNotAcquireLeaseOnDeletingObject() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	obj := deletingGcpNfsVolumeRestore.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 
 	err, _ = acquireLease(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	lease := &v1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
-	assert.NotNil(suite.T(), err)
-	assert.True(suite.T(), apierrors.IsNotFound(err))
+	assert.NotNil(s.T(), err)
+	assert.True(s.T(), apierrors.IsNotFound(err))
 }
 
 func TestAcquireLease(t *testing.T) {

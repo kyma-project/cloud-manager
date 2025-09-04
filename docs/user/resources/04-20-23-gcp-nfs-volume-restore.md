@@ -1,5 +1,8 @@
 # GcpNfsVolumeRestore Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes the GCP Filestore
 instance's restore operation on the same or an existing Filestore. This operation is only supported for BASIC tiers.
 To learn more, read [Supported tiers](https://cloud.google.com/filestore/docs/backup-restore).

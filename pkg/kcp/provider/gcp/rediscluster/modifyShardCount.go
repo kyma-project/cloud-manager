@@ -20,10 +20,10 @@ func modifyShardCount(ctx context.Context, st composed.State) (error, context.Co
 	desiredShardCount := redisCluster.Spec.ShardCount
 
 	if currentShardCount == desiredShardCount {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.UpdateShardCount(desiredShardCount)
 
-	return nil, nil
+	return nil, ctx
 }

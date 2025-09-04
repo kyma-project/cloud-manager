@@ -1,12 +1,15 @@
 # GcpSubnet Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `gcpsubnet.cloud-resources.kyma-project.io` is a cluster-scoped custom resource (CR) that specifies the VPC Network Subnet. This resource is only available when the cluster cloud provider is Google Cloud Platform.
 Currently, its only use is IP address allocation for the `GcpRedisCluster` CR.
 
 Once a GcpSubnet CR is created and reconciled, the Cloud Manager controller creates a Subnet with defined CIDR
 in the Virtual Private Cloud (VPC) Network of the cluster.
 
-You don't have to create a GcpSubnet resource. Once needed, it is automatically created with the hardcoded CIDR `10.250.12.0/22`. For most use cases, this automatic allocation is sufficient.
+You don't have to create a GcpSubnet resource. Once needed, it is automatically created with the hardcoded CIDR `10.251.0.0/22`. For most use cases, this automatic allocation is sufficient.
 
 You can manually create a GcpSubnet resource with a specific CIDR in advanced cases of VPC network topology. To avoid IP range collisions, create GcpSubnet when cluster and cloud resources are not the only resources in the network.
 

@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -9,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type removeFinalizerSuite struct {
@@ -17,13 +18,13 @@ type removeFinalizerSuite struct {
 	ctx context.Context
 }
 
-func (suite *removeFinalizerSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *removeFinalizerSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
+func (s *removeFinalizerSuite) TestRemoveFinalizer() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -32,13 +33,13 @@ func (suite *removeFinalizerSuite) TestRemoveFinalizer() {
 	state := factory.newStateWith(&deletedGcpNfsVolume)
 
 	err, _ = removeFinalizer(ctx, state)
-	assert.Equal(suite.T(), composed.StopAndForget, err)
-	assert.NotContains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	assert.Equal(s.T(), composed.StopAndForget, err)
+	assert.NotContains(s.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
-func (suite *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExists() {
+func (s *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExists() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -47,32 +48,32 @@ func (suite *removeFinalizerSuite) TestDonNotRemoveFinalizerIfKcpNfsInstanceExis
 	nfsVol := deletedGcpNfsVolume.DeepCopy()
 	controllerutil.AddFinalizer(nfsVol, api.CommonFinalizerDeletionHook)
 	err = factory.skrCluster.K8sClient().Update(ctx, nfsVol)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(nfsVol)
 	state.KcpNfsInstance = &gcpNfsInstanceToDelete
 
 	err, _ = removeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	assert.Nil(s.T(), err)
+	assert.Contains(s.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
-func (suite *removeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
+func (s *removeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with Deleted GcpNfsVolume
 	state := factory.newState()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Call removeFinalizer
 	err, _ = removeFinalizer(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Contains(suite.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
+	assert.Nil(s.T(), err)
+	assert.Contains(s.T(), state.Obj().GetFinalizers(), api.CommonFinalizerDeletionHook)
 }
 
 func TestRemoveFinalizer(t *testing.T) {

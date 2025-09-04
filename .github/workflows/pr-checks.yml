@@ -19,11 +19,16 @@ jobs:
             nukeBackupsAws: "false"
             nukeBackupsAzure: "false"
             nfs41Gcp: "false"
+            vpcPeeringSync: "false"
+            name: Build & Test
           - nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
             nukeBackupsAzure: "true"
             nfs41Gcp: "true"
+            vpcPeeringSync: "true"
+            name: Build & Test (Nuke Backups, NFSv4.1, Peering Sync)
     runs-on: ubuntu-latest
+    name: ${{ matrix.name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,6 +44,7 @@ jobs:
           FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackupsAws }}
           FF_NUKE_BACKUPS_AZURE: ${{ matrix.nukeBackupsAzure }}
           FF_NFS41_GCP: ${{ matrix.nfs41Gcp }}
+          FF_VPC_PEERING_SYNC: ${{ matrix.vpcPeeringSync }}
         run: |
           ./config/sync.sh
           go mod tidy

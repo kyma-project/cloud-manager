@@ -17,11 +17,11 @@ func loadPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateDnsZoneGroup != nil {
 		logger.Info("Azure Private DnsZone Group already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 	if state.privateEndPoint == nil {
 		logger.Info("Skipping Azure Private DnsZone Group loading, Private EndPoint is not loaded")
-		return nil, nil
+		return nil, ctx
 	}
 	logger.Info("Loading Azure Private DnsZone Group")
 	resourceGroupName := state.resourceGroupName
@@ -31,7 +31,7 @@ func loadPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, con
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
 			logger.Info("Azure Private DnsZone Group Cluster not found")
-			return nil, nil
+			return nil, ctx
 		}
 		logger.Error(err, "Error loading Azure Private DnsZone Group")
 		meta.SetStatusCondition(state.ObjAsRedisCluster().Conditions(), metav1.Condition{
@@ -51,5 +51,5 @@ func loadPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, con
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 	state.privateDnsZoneGroup = privateDnsZoneGroupCluster
-	return nil, nil
+	return nil, ctx
 }

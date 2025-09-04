@@ -36,7 +36,7 @@ func (impl *backupImplAwsNfs) toObjectSlice(list client.ObjectList) []client.Obj
 }
 func (impl *backupImplAwsNfs) getBackupObject(state *State, objectMeta *metav1.ObjectMeta) (client.Object, error) {
 	schedule := state.ObjAsBackupSchedule()
-	_, ok := schedule.(*cloudresourcesv1beta1.AwsNfsBackupSchedule)
+	x, ok := schedule.(*cloudresourcesv1beta1.AwsNfsBackupSchedule)
 	if !ok {
 		return nil, fmt.Errorf("provider %s not supported", state.Scope.Spec.Provider)
 	}
@@ -44,6 +44,7 @@ func (impl *backupImplAwsNfs) getBackupObject(state *State, objectMeta *metav1.O
 	return &cloudresourcesv1beta1.AwsNfsVolumeBackup{
 		ObjectMeta: *objectMeta,
 		Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
+			Location: x.Spec.Location,
 			Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
 				Volume: cloudresourcesv1beta1.VolumeRef{
 					Name:      schedule.GetSourceRef().Name,

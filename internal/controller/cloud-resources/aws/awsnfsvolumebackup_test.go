@@ -121,6 +121,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
 						NewObjActions(),
 						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+						AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
 					).
 					Should(Succeed())
 			})
@@ -151,6 +152,98 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 						NewObjActions(),
 						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 						AssertAwsNfsVolumeBackupHasState(cloudresourcesv1beta1.StateReady),
+						AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
+					).
+					Should(Succeed())
+			})
+		})
+		It("When SKR AwsNfsVolumeBackup Delete is called ", func() {
+
+			//Delete SKR AwsNfsVolume
+			Eventually(Delete).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+				).Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			By("Then DeletionTimestamp is set in AwsNfsVolumeBackup", func() {
+				Expect(awsNfsVolumeBackup.DeletionTimestamp.IsZero()).NotTo(BeTrue())
+			})
+
+			By("And Then the AwsNfsVolumeBackup in SKR is deleted.", func() {
+				Eventually(IsDeleted).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+					).
+					Should(Succeed())
+			})
+		})
+	})
+
+	Describe("Scenario: SKR AwsNfsVolumeBackup with location is created", func() {
+		//Define variables.
+		awsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+		awsNfsVolumeBackupName := "aws-nfs-volume-backup-02"
+		awsNfsVolumeBackupLocation := "us-west-1"
+
+		It("When AwsNfsVolumeBackup Create is called", func() {
+			Eventually(CreateAwsNfsVolumeBackup).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+					WithName(awsNfsVolumeBackupName),
+					WithAwsNfsVolume(skrAwsNfsVolumeName),
+					WithAwsNfsVolumeBackupLocation(awsNfsVolumeBackupLocation),
+				).
+				Should(Succeed())
+
+			By("And Then AwsNfsVolumeBackup has Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+						AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
+						AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
+					).
+					Should(Succeed())
+			})
+		})
+	})
+
+	Describe("Scenario: SKR AwsNfsVolumeBackup with location is deleted", Ordered, func() {
+		//Define variables.
+		awsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+		awsNfsVolumeBackupName := "aws-nfs-volume-backup-02"
+		awsNfsVolumeBackupLocation := "us-west-1"
+
+		BeforeEach(func() {
+			By("And Given SKR AwsNfsVolumeBackup has Ready condition", func() {
+
+				//Create AwsNfsVolume
+				Eventually(CreateAwsNfsVolumeBackup).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+						WithName(awsNfsVolumeBackupName),
+						WithAwsNfsVolume(skrAwsNfsVolumeName),
+						WithAwsNfsVolumeBackupLocation(awsNfsVolumeBackupLocation),
+					).
+					Should(Succeed())
+
+				//Load SKR AwsNfsVolumeBackup and check for Ready condition
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+						AssertAwsNfsVolumeBackupHasState(cloudresourcesv1beta1.StateReady),
+						AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
+						AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
 					).
 					Should(Succeed())
 			})

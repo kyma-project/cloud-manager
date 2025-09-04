@@ -16,7 +16,7 @@ func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.KcpGcpSubnet != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	gcpSubnet := state.ObjAsGcpSubnet()

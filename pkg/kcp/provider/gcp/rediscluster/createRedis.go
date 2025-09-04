@@ -19,7 +19,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	redisCluster := state.ObjAsGcpRedisCluster()
 
 	if state.gcpRedisCluster != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Creating GCP Redis")

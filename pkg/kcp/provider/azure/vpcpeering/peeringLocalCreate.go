@@ -2,7 +2,10 @@ package vpcpeering
 
 import (
 	"context"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/utils/ptr"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -15,15 +18,28 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	syncRequired := false
 	if state.localPeering != nil {
-		return nil, nil
+
+		if !feature.VpcPeeringSync.Value(ctx) {
+			return nil, ctx
+		}
+
+		peeringSyncLevel := ptr.Deref(state.localPeering.Properties.PeeringSyncLevel, "")
+		if peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelFullyInSync ||
+			peeringSyncLevel == armnetwork.VirtualNetworkPeeringLevelRemoteNotInSync {
+			return nil, ctx
+		}
+
+		syncRequired = true
+		logger.Info("Local VPC peering sync required", "peeringSyncLevel", peeringSyncLevel)
 	}
 
 	// params must be the same as in peeringLocalLoad()
-	// CreatePeering requires that client is authorized to access local and remote subscription.
-	// If remote and local subscriptions are on different tenants CreatePeering in local subscription will fail if SPN
+	// CreateOrUpdatePeering requires that client is authorized to access local and remote subscription.
+	// If remote and local subscriptions are on different tenants CreateOrUpdatePeering in local subscription will fail if SPN
 	// does not exist in remote tenant.
-	err := state.localPeeringClient.CreatePeering(
+	err := state.localPeeringClient.CreateOrUpdatePeering(
 		ctx,
 		state.localNetworkId.ResourceGroup,
 		state.localNetworkId.NetworkName(),
@@ -35,21 +51,36 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	)
 
 	if err == nil {
-		logger.Info("Local VPC peering created")
+		if syncRequired {
+			logger.Info("Local VPC peering updated")
+		} else {
+			logger.Info("Local VPC peering created")
+		}
+
 		return nil, ctx
 	}
 
-	logger.Error(err, "Error creating VPC Peering")
+	if syncRequired {
+		logger.Error(err, "Error updating VPC Peering")
+	} else {
+		logger.Error(err, "Error creating VPC Peering")
+	}
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
-			"Too many requests on creating local VPC peering",
+			"Too many requests on creating/updating local VPC peering",
 			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
 			ctx,
 		)
 	}
 
-	message, isWarning := azuremeta.GetErrorMessage(err, "Error creating VPC peering")
+	defaultMassage := "Error creating VPC peering"
+
+	if syncRequired {
+		defaultMassage = "Error updating VPC peering"
+	}
+
+	message, isWarning := azuremeta.GetErrorMessage(err, defaultMassage)
 
 	changed := false
 
@@ -83,11 +114,11 @@ func peeringLocalCreate(ctx context.Context, st composed.State) (error, context.
 	successError := composed.StopAndForget
 
 	if !changed {
-		return successError, nil
+		return successError, ctx
 	}
 
 	return composed.PatchStatus(state.ObjAsVpcPeering()).
-		ErrorLogMessage("Error updating KCP VpcPeering status on failed creation of local VPC peering").
+		ErrorLogMessage("Error updating KCP VpcPeering status on failed create/update of local VPC peering").
 		SuccessError(successError).
 		Run(ctx, state)
 

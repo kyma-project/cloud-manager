@@ -2,13 +2,14 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
 )
 
 type loadKcpIpRangeSuite struct {
@@ -16,13 +17,13 @@ type loadKcpIpRangeSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadKcpIpRangeSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadKcpIpRangeSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadKcpIpRangeSuite) TestWithMatchingIpRange() {
+func (s *loadKcpIpRangeSuite) TestWithMatchingIpRange() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -34,21 +35,21 @@ func (suite *loadKcpIpRangeSuite) TestWithMatchingIpRange() {
 	//Add an IPRange to KCP.
 	ipRange := kcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Create(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	err, _ctx := loadKcpIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.NotNil(suite.T(), state.KcpIpRange)
+	assert.NotNil(s.T(), state.KcpIpRange)
 }
 
-func (suite *loadKcpIpRangeSuite) TestWithNotMatchingIpRange() {
+func (s *loadKcpIpRangeSuite) TestWithNotMatchingIpRange() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -56,7 +57,7 @@ func (suite *loadKcpIpRangeSuite) TestWithNotMatchingIpRange() {
 	//Add an IPRange to KCP.
 	ipRange := kcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Create(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	nfsVol := cloudresourcesv1beta1.GcpNfsVolume{
@@ -76,16 +77,16 @@ func (suite *loadKcpIpRangeSuite) TestWithNotMatchingIpRange() {
 	err, _ctx := loadKcpIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.Nil(suite.T(), state.KcpIpRange)
+	assert.Nil(s.T(), state.KcpIpRange)
 }
 
-func (suite *loadKcpIpRangeSuite) TestWithMultipleMatchingIpRanges() {
+func (s *loadKcpIpRangeSuite) TestWithMultipleMatchingIpRanges() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -93,13 +94,13 @@ func (suite *loadKcpIpRangeSuite) TestWithMultipleMatchingIpRanges() {
 	//Add an IPRange to KCP.
 	ipRange := kcpIpRange.DeepCopy()
 	err = factory.kcpCluster.K8sClient().Create(ctx, ipRange)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Add another IPRange to KCP.
 	ipRange2 := kcpIpRange.DeepCopy()
 	ipRange2.Name = "test-ip-range-2"
 	err = factory.kcpCluster.K8sClient().Create(ctx, ipRange2)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
@@ -108,11 +109,11 @@ func (suite *loadKcpIpRangeSuite) TestWithMultipleMatchingIpRanges() {
 	err, _ctx := loadKcpIpRange(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the IpRange object
-	assert.NotNil(suite.T(), state.KcpIpRange)
+	assert.NotNil(s.T(), state.KcpIpRange)
 }
 
 func TestLoadKcpIpRangeSuite(t *testing.T) {

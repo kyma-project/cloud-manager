@@ -14,7 +14,7 @@ func deleteSecurityGroup(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.securityGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.

@@ -24,7 +24,7 @@ func modifyParameterGroup(
 		parameterGroup := getParamGroup(state)
 
 		if parameterGroup == nil {
-			return nil, nil
+			return nil, ctx
 		}
 		currentParameters := getParamGroupCurrentParams(state)
 		defaultParameters := getParamGroupDefaultParams(state)
@@ -36,7 +36,7 @@ func modifyParameterGroup(
 		forUpdateParameters := GetMissmatchedParameters(currentParametersMap, desiredParametersMap)
 
 		if len(forUpdateParameters) == 0 {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.Info("Modifying cache parameters")

@@ -30,7 +30,7 @@ func waitPrivateEndPointAvailable(ctx context.Context, st composed.State) (error
 	}
 
 	if ptr.Deref(state.privateEndPoint.Properties.ProvisioningState, "") == armnetwork.ProvisioningStateSucceeded {
-		return nil, nil
+		return nil, ctx
 	}
 	logger.Info("Azure Private End Point is not ready yet", "provisioningState", state.privateEndPoint.Properties.ProvisioningState)
 

@@ -53,5 +53,5 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 
 	state.SetIpRange(ipRange)
 
-	return nil, nil
+	return nil, ctx
 }

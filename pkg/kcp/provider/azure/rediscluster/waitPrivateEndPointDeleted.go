@@ -13,7 +13,7 @@ func waitPrivateEndPointDeleted(ctx context.Context, st composed.State) (error, 
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateEndPoint == nil {
-		return nil, nil
+		return nil, ctx
 	}
 	if *state.privateEndPoint.Properties.ProvisioningState != armnetwork.ProvisioningStateDeleting {
 		errorMsg := "Error: unexpected Azure PrivateEndPoint state"

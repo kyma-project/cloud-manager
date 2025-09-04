@@ -18,24 +18,39 @@ var (
 	MockAwsRegion  = "eu-west-1"
 	MockAwsAccount = "some-aws-account"
 
-	mock = &mockClient{
-		localClient: *newLocalClient(),
-		tags:        make(map[string]map[string]string),
-	}
+	clients = make(map[string]*mockClient)
 )
 
 type mockClient struct {
 	localClient
+	account        string
+	location       string
 	vaults         []backup.DescribeBackupVaultOutput
 	backupJobs     []backup.DescribeBackupJobOutput
 	recoveryPoints []backup.DescribeRecoveryPointOutput
 	tags           map[string]map[string]string
+	copyJobs       []backup.DescribeCopyJobOutput
 }
 
 func NewMockClient() awsclient.SkrClientProvider[Client] {
 	return func(ctx context.Context, account, region, key, secret, role string) (Client, error) {
-		return mock, nil
+		return getMockClient(account, region)
 	}
+}
+
+func getMockClient(account, region string) (*mockClient, error) {
+	clientKey := fmt.Sprintf("%s::%s", account, region)
+	client, exists := clients[clientKey]
+	if !exists {
+		client = &mockClient{
+			localClient: *newLocalClient(),
+			account:     account,
+			location:    region,
+			tags:        make(map[string]map[string]string),
+		}
+		clients[clientKey] = client
+	}
+	return client, nil
 }
 
 func (s *mockClient) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
@@ -78,7 +93,7 @@ func (s *mockClient) DescribeBackupVault(ctx context.Context, backupVaultName st
 }
 func (s *mockClient) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s", MockAwsRegion, MockAwsAccount, name)
+	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s", s.location, s.account, name)
 	vault := backup.DescribeBackupVaultOutput{
 		BackupVaultArn:         ptr.To(arn),
 		BackupVaultName:        ptr.To(name),
@@ -111,7 +126,7 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	rPointId := uuid.NewString()
 	jobId := uuid.NewString()
 
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", MockAwsRegion, MockAwsAccount, rPointId)
+	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", s.location, s.account, rPointId)
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:    vault.BackupVaultArn,
 		BackupVaultName:   vault.BackupVaultName,
@@ -126,7 +141,7 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	}
 
 	job := backup.DescribeBackupJobOutput{
-		AccountId:        ptr.To(MockAwsAccount),
+		AccountId:        ptr.To(s.account),
 		BackupJobId:      ptr.To(jobId),
 		BackupVaultArn:   rPoint.BackupVaultArn,
 		BackupVaultName:  rPoint.BackupVaultName,
@@ -202,4 +217,90 @@ func (s *mockClient) DeleteRecoveryPoint(ctx context.Context, backupVaultName, r
 		}
 	}
 	return &backup.DeleteRecoveryPointOutput{}, nil
+}
+
+func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
+	logger := composed.LoggerFromCtx(ctx)
+	dstRegion, dstAccount, vaultName := s.ParseBackupVaultArn(params.DestinationBackupVaultArn)
+
+	srcVault, err := s.DescribeBackupVault(ctx, params.SourceBackupVaultName)
+	if err != nil {
+		return nil, err
+	}
+
+	//Source RecoveryPoint
+	srcRecoveryPoint, err := s.DescribeRecoveryPoint(ctx, dstAccount, vaultName, params.RecoveryPointArn)
+	if err != nil {
+		return nil, err
+	}
+
+	//Destination client
+	dstClient, err := getMockClient(dstAccount, dstRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	//Destination Vault
+	dstVault, err := dstClient.DescribeBackupVault(ctx, vaultName)
+	if err != nil {
+		return nil, err
+	}
+	rPointId := uuid.NewString()
+	jobId := uuid.NewString()
+
+	dstArn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", dstRegion, dstAccount, rPointId)
+	rPoint := backup.DescribeRecoveryPointOutput{
+		BackupVaultArn:         dstVault.BackupVaultArn,
+		BackupVaultName:        dstVault.BackupVaultName,
+		CreationDate:           ptr.To(time.Now()),
+		IamRoleArn:             ptr.To(params.IamRoleArn),
+		IsEncrypted:            false,
+		RecoveryPointArn:       ptr.To(dstArn),
+		ResourceType:           nil,
+		Status:                 backuptypes.RecoveryPointStatusCompleted,
+		BackupSizeInBytes:      ptr.To(rand.Int64N(10240)),
+		ParentRecoveryPointArn: srcRecoveryPoint.RecoveryPointArn,
+		ResourceArn:            srcRecoveryPoint.ResourceArn,
+		ResourceName:           srcRecoveryPoint.ResourceName,
+		SourceBackupVaultArn:   srcVault.BackupVaultArn,
+		VaultType:              dstVault.VaultType,
+	}
+
+	job := backup.DescribeCopyJobOutput{
+		CopyJob: &backuptypes.CopyJob{
+			AccountId:                   ptr.To(s.account),
+			CreationDate:                rPoint.CreationDate,
+			IamRoleArn:                  rPoint.IamRoleArn,
+			ResourceArn:                 rPoint.ResourceArn,
+			State:                       backuptypes.CopyJobStateCompleted,
+			BackupSizeInBytes:           ptr.To(rand.Int64N(10240)),
+			CompletionDate:              rPoint.CreationDate,
+			CopyJobId:                   ptr.To(jobId),
+			CreatedBy:                   &backuptypes.RecoveryPointCreator{},
+			DestinationBackupVaultArn:   srcVault.BackupVaultArn,
+			DestinationRecoveryPointArn: rPoint.RecoveryPointArn,
+			IsParent:                    false,
+		},
+	}
+	s.copyJobs = append(s.copyJobs, job)
+	dstClient.recoveryPoints = append(dstClient.recoveryPoints, rPoint)
+	logger.WithName("StartCopyJob - mock").Info(
+		fmt.Sprintf("Backup ID :: %s, RecoveryPointArn :: %s", jobId, dstArn))
+
+	return &backup.StartCopyJobOutput{
+		CopyJobId:    job.CopyJob.CopyJobId,
+		CreationDate: &time.Time{},
+		IsParent:     false,
+	}, nil
+}
+
+func (s *mockClient) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
+	for _, job := range s.copyJobs {
+		if ptr.Deref(job.CopyJob.CopyJobId, "") == copyJobId {
+			return &job, nil
+		}
+	}
+	return nil, &backuptypes.ResourceNotFoundException{
+		Message: ptr.To("CopyJob not found"),
+	}
 }

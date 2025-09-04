@@ -2,6 +2,9 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -11,8 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"testing"
-	"time"
 )
 
 type deleteKcpNfsInstanceSuite struct {
@@ -20,13 +21,13 @@ type deleteKcpNfsInstanceSuite struct {
 	ctx context.Context
 }
 
-func (suite *deleteKcpNfsInstanceSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *deleteKcpNfsInstanceSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
+func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -38,8 +39,8 @@ func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
 	err, _ctx := deleteKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the NfsInstance object is not deleted.
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
@@ -47,13 +48,13 @@ func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
 		types.NamespacedName{Name: gcpNfsVolume.Status.Id,
 			Namespace: kymaRef.Namespace},
 		&nfsInstance)
-	assert.Nil(suite.T(), err)
-	assert.True(suite.T(), nfsInstance.DeletionTimestamp.IsZero())
+	assert.Nil(s.T(), err)
+	assert.True(s.T(), nfsInstance.DeletionTimestamp.IsZero())
 }
 
-func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
+func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,8 +67,8 @@ func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
 	err, _ctx := deleteKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Equal(suite.T(), composed.StopWithRequeueDelay(3*time.Second), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(3*time.Second), err)
+	assert.Nil(s.T(), _ctx)
 
 	//Validate the NfsInstance object is not deleted.
 	nfsInstance := cloudcontrolv1beta1.NfsInstance{}
@@ -75,13 +76,13 @@ func (suite *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
 		types.NamespacedName{Name: deletedGcpNfsVolume.Status.Id,
 			Namespace: kymaRef.Namespace},
 		&nfsInstance)
-	assert.Nil(suite.T(), err)
-	assert.False(suite.T(), nfsInstance.DeletionTimestamp.IsZero())
+	assert.Nil(s.T(), err)
+	assert.False(s.T(), nfsInstance.DeletionTimestamp.IsZero())
 }
 
-func (suite *deleteKcpNfsInstanceSuite) TestWhenKcpNfsInstanceDoNotExist() {
+func (s *deleteKcpNfsInstanceSuite) TestWhenKcpNfsInstanceDoNotExist() {
 	factory, err := newTestStateFactory()
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -105,8 +106,8 @@ func (suite *deleteKcpNfsInstanceSuite) TestWhenKcpNfsInstanceDoNotExist() {
 	err, _ctx := deleteKcpNfsInstance(ctx, state)
 
 	//validate expected return values
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), _ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), _ctx)
 }
 
 func TestDeleteKcpNfsInstanceSuite(t *testing.T) {

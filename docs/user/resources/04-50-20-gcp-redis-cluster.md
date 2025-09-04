@@ -1,5 +1,8 @@
 # GcpRedisCluster Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `gcprediscluster.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 
 It describes the [Google Memorystore Redis Cluster](https://cloud.google.com/memorystore/docs/cluster/memorystore-for-redis-cluster-overview) instance.

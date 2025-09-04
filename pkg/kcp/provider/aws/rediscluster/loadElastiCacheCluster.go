@@ -11,7 +11,7 @@ import (
 func loadElastiCacheCluster(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.elastiCacheReplicationGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -30,5 +30,5 @@ func loadElastiCacheCluster(ctx context.Context, st composed.State) (error, cont
 
 	logger.Info("ElastiCache cluster not found")
 
-	return nil, nil
+	return nil, ctx
 }

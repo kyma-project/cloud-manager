@@ -11,7 +11,7 @@ func copyCidrToStatus(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 
 	if state.subnet == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet := state.ObjAsGcpSubnet()
@@ -20,7 +20,7 @@ func copyCidrToStatus(ctx context.Context, st composed.State) (error, context.Co
 
 	if subnet.Status.Cidr == actualCidr ||
 		subnet.Spec.Cidr == "" && len(subnet.Status.Cidr) > 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	subnet.Status.Cidr = actualCidr

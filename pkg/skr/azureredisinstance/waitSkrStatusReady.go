@@ -15,5 +15,5 @@ func waitSkrStatusReady(ctx context.Context, st composed.State) (error, context.
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	return nil, nil
+	return nil, ctx
 }

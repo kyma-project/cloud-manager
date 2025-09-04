@@ -15,7 +15,7 @@ func waitGcpSubnetReady(ctx context.Context, st composed.State) (error, context.
 
 	isReady := meta.IsStatusConditionTrue(state.GetSkrGcpSubnet().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
 	if isReady {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

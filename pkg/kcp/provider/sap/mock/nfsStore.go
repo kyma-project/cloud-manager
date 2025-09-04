@@ -4,17 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
-	"net/http"
-	"sync"
-	"time"
 )
 
 func deptrSlice[T any](arr []*T) []T {
@@ -25,6 +27,7 @@ func deptrSlice[T any](arr []*T) []T {
 
 type NfsConfig interface {
 	AddNetwork(id, name string) *networks.Network
+	AddRouter(id, name string, ipAddresses ...string) *routers.Router
 	AddSubnet(id, networkId, name, cidr string) *subnets.Subnet
 	SetShareStatus(id, status string)
 }
@@ -32,6 +35,7 @@ type NfsConfig interface {
 type nfsStore struct {
 	m             sync.Mutex
 	networks      []*networks.Network
+	routers       []*routers.Router
 	subnets       map[string][]*subnets.Subnet
 	shareNetworks map[string][]*sharenetworks.ShareNetwork
 	shares        map[string][]*shares.Share
@@ -51,6 +55,26 @@ func (s *nfsStore) AddNetwork(id, name string) *networks.Network {
 	}
 	s.networks = append(s.networks, n)
 	return n
+}
+
+func (s *nfsStore) AddRouter(id, name string, ipAddresses ...string) *routers.Router {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	r := &routers.Router{
+		ID:   id,
+		Name: name,
+	}
+	subnetId := uuid.NewString()
+	for _, ip := range ipAddresses {
+		r.GatewayInfo.ExternalFixedIPs = append(r.GatewayInfo.ExternalFixedIPs, routers.ExternalFixedIP{
+			IPAddress: ip,
+			SubnetID:  subnetId,
+		})
+	}
+
+	s.routers = append(s.routers, r)
+	return r
 }
 
 func (s *nfsStore) AddSubnet(id, networkId, name, cidr string) *subnets.Subnet {
@@ -127,6 +151,22 @@ func (s *nfsStore) GetNetwork(ctx context.Context, id string) (*networks.Network
 	for _, network := range s.networks {
 		if network.ID == id {
 			return network, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *nfsStore) GetRouterByName(ctx context.Context, routerName string) (*routers.Router, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	for _, router := range s.routers {
+		if router.Name == routerName {
+			return router, nil
 		}
 	}
 	return nil, nil

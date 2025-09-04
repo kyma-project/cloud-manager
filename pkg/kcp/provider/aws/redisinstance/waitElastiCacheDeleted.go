@@ -17,7 +17,7 @@ func waitElastiCacheDeleted(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")

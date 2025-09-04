@@ -1,0 +1,14 @@
+module-name: cloud-manager
+kind: kyma
+rc-tag: 1.4.1
+bdba:
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.4.1
+mend:
+  language: golang-mod
+  exclude:
+    - "**/*_test.go"
+checkmarx-one:
+  preset: go-default
+  exclude:
+    - '**/*_test.go'
+    - 'pkg/testinfra/**'

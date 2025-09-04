@@ -88,9 +88,12 @@ func (r *gcpSubnetReconciler) newFlow() composed.Action {
 			waitNetworkReady,
 			loadSubnet,
 			loadConnectionPolicy,
+			loadSubnetCreationOperation,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"privateSubnet-create",
+					waitCreationOperationDone,
+					setErrorIfOperationErrors,
 					createSubnet,
 					updateStatusId,
 					copyCidrToStatus,

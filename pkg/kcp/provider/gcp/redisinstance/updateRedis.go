@@ -20,7 +20,7 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	if !state.ShouldUpdateRedisInstance() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing ready state to begin update")

@@ -17,7 +17,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.azureRedisInstance != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Creating Azure Redis")

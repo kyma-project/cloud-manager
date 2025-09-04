@@ -2,6 +2,10 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -9,9 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 type loadScopeSuite struct {
@@ -19,56 +20,56 @@ type loadScopeSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadScopeSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (s *loadScopeSuite) SetupTest() {
+	s.ctx = context.Background()
 }
 
-func (suite *loadScopeSuite) TestScopeNotFound() {
+func (s *loadScopeSuite) TestScopeNotFound() {
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	//remove scope
 	err = factory.kcpCluster.K8sClient().Delete(context.Background(), kcpScope.DeepCopy())
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	obj := gcpNfsVolume.DeepCopy()
 	state := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 	err, _ = loadScope(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	s.Equal(composed.StopAndForget, err)
 	fromK8s := &v1beta1.GcpNfsVolume{}
 
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name,
 			Namespace: gcpNfsVolume.Namespace},
 		fromK8s)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), v1beta1.GcpNfsVolumeError, fromK8s.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), v1beta1.GcpNfsVolumeError, fromK8s.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *loadScopeSuite) TestScopeExists() {
+func (s *loadScopeSuite) TestScopeExists() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 
 	factory, err := newTestStateFactory()
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state := factory.newState()
-	suite.Nil(err)
+	s.Nil(err)
 	err, _ = loadScope(ctx, state)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 }
 
 func TestLoadScopeSuite(t *testing.T) {

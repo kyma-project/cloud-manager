@@ -30,7 +30,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 	}
 
 	if ptr.Deref(state.azureRedisInstance.Properties.ProvisioningState, "") == armredis.ProvisioningStateSucceeded {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Azure Redis instance is not ready yet, requeuing with delay")

@@ -16,7 +16,7 @@ func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 	if state.privateEndPoint != nil {
 		logger.Info("Azure Private EndPoint already loaded")
-		return nil, nil
+		return nil, ctx
 	}
 	logger.Info("Loading Azure Private EndPoint")
 	privateEndPointName := state.ObjAsRedisCluster().Name
@@ -25,7 +25,7 @@ func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
 			logger.Info("Azure Private EndPoint Cluster not found")
-			return nil, nil
+			return nil, ctx
 		}
 		logger.Error(err, "Error loading Azure Private EndPoint")
 		meta.SetStatusCondition(state.ObjAsRedisCluster().Conditions(), metav1.Condition{
@@ -46,5 +46,5 @@ func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context
 	}
 	logger.Info("Azure Private EndPoint Cluster loaded", "provisioningState", privateEndPointCluster.Properties.ProvisioningState)
 	state.privateEndPoint = privateEndPointCluster
-	return nil, nil
+	return nil, ctx
 }

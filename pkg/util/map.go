@@ -43,12 +43,12 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 
 	for k, v := range templatesMap {
 		var parseResult bytes.Buffer
-		template, err := template.New(k).Parse(v)
+		tpl, err := template.New(k).Parse(v)
 		if err != nil {
 			result[k] = []byte(v)
 			continue
 		}
-		err = template.Execute(&parseResult, dataMap)
+		err = tpl.Execute(&parseResult, dataMap)
 		if err != nil {
 			result[k] = []byte(v)
 			continue

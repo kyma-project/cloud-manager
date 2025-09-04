@@ -1,5 +1,8 @@
 # AwsRedisCluster Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `awsrediscluster.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
 It describes the AWS ElastiCache Redis instance with cluster mode enabled.
 After the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.

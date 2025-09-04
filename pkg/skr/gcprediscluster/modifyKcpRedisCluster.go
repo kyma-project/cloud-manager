@@ -24,7 +24,7 @@ func modifyKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 	shouldModifyKcp := state.ShouldModifyKcp()
 
 	if !shouldModifyKcp {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nodeType, err := redisTierToNodeTypeConverter(gcpRedisCluster.Spec.RedisTier)

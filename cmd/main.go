@@ -21,6 +21,7 @@ import (
 	"flag"
 	"os"
 
+	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -359,6 +360,7 @@ func main() {
 		awsexposeddataclient.NewClientProvider(),
 		azureexposeddataclient.NewClientProvider(),
 		gcpexposeddataclient.NewClientProvider(gcpClients),
+		sapexposeddataclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Scope")
 		os.Exit(1)
@@ -450,6 +452,7 @@ func main() {
 		mgr,
 		gcpsubnetclient.NewComputeClientProvider(gcpClients),
 		gcpsubnetclient.NewNetworkConnectivityClientProvider(gcpClients),
+		gcpsubnetclient.NewRegionOperationsClientProvider(gcpClients),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpSubnet")

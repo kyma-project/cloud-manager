@@ -13,18 +13,20 @@ import (
 type computeClientFake struct {
 	mutex   sync.Mutex
 	subnets map[string]*computepb.Subnetwork
+
+	operationsClientUtils RegionalOperationsClientFakeUtils
 }
 
-func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, request client.CreateSubnetRequest) error {
+func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, request client.CreateSubnetRequest) (string, error) {
 	if isContextCanceled(ctx) {
-		return context.Canceled
+		return "", context.Canceled
 	}
 	computeClientFake.mutex.Lock()
 	defer computeClientFake.mutex.Unlock()
 
 	name := subnet.GetSubnetFullName(request.ProjectId, request.Region, request.Name)
 
-	subnet := &computepb.Subnetwork{
+	computeClientFake.subnets[name] = &computepb.Subnetwork{
 		Name:                  &name,
 		Region:                &request.Region,
 		IpCidrRange:           &request.Cidr,
@@ -33,9 +35,9 @@ func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, re
 		Purpose:               googleapi.String(request.Purpose),
 	}
 
-	computeClientFake.subnets[name] = subnet
+	opKey := computeClientFake.operationsClientUtils.AddRegionOperation(request.Name)
 
-	return nil
+	return opKey, nil
 }
 
 func (computeClientFake *computeClientFake) GetSubnet(ctx context.Context, request client.GetSubnetRequest) (*computepb.Subnetwork, error) {

@@ -2,16 +2,17 @@ package nfsinstance
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"net/http/httptest"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"testing"
 )
 
 type loadNfsInstanceSuite struct {
@@ -19,11 +20,11 @@ type loadNfsInstanceSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadNfsInstanceSuite) SetupTest() {
-	suite.ctx = log.IntoContext(context.Background(), logr.Discard())
+func (s *loadNfsInstanceSuite) SetupTest() {
+	s.ctx = log.IntoContext(context.Background(), logr.Discard())
 }
 
-func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
+func (s *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 
@@ -32,15 +33,15 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 				//Return 404
 				http.Error(w, "Not Found", http.StatusNotFound)
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -48,14 +49,14 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceNotFound() {
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := loadNfsInstance(ctx, testState.State)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
 }
 
-func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceOtherErrors() {
+func (s *loadNfsInstanceSuite) TestLoadNfsInstanceOtherErrors() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -63,32 +64,32 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceOtherErrors() {
 				//Return 500
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, _ = loadNfsInstance(ctx, testState.State)
-	assert.NotNil(suite.T(), err)
+	assert.NotNil(s.T(), err)
 	// check error condition in status
-	assert.Equal(suite.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
-	assert.Equal(suite.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
-	assert.Equal(suite.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
+	assert.Equal(s.T(), v1beta1.ConditionTypeError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Type)
+	assert.Equal(s.T(), metav1.ConditionTrue, testState.State.ObjAsNfsInstance().Status.Conditions[0].Status)
+	assert.Equal(s.T(), v1beta1.ReasonGcpError, testState.State.ObjAsNfsInstance().Status.Conditions[0].Reason)
 }
 
-func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
+func (s *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -97,15 +98,15 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(`{"name":"test-gcp-nfs-volume"}`))
 			} else {
-				assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 			}
 		default:
-			assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 		}
 	}))
 	gcpNfsInstance := getGcpNfsInstance()
 	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -113,12 +114,12 @@ func (suite *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 	//Get state object with GcpNfsVolume
 
 	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
-	assert.Nil(suite.T(), err)
+	assert.Nil(s.T(), err)
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := loadNfsInstance(ctx, testState.State)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), resCtx)
-	assert.NotNil(suite.T(), testState.fsInstance)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
+	assert.NotNil(s.T(), testState.fsInstance)
 }
 func TestLoadNfsInstance(t *testing.T) {
 	suite.Run(t, new(loadNfsInstanceSuite))

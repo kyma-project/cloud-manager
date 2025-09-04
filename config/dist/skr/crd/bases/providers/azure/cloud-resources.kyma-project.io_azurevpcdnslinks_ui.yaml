@@ -1,0 +1,67 @@
+apiVersion: v1
+data:
+  details: "body:\n  - name: configuration\n    widget: Panel\n    source: spec\n
+    \   children:\n      - widget: Labels\n        source: remoteLinkName\n        name:
+    spec.remoteLinkName\n      - widget: Labels\n        source: remotePrivateDnsZone\n
+    \       name: spec.remotePrivateDnsZone\n      - widget: Labels\n        source:
+    remoteTenant\n        name: spec.remoteTenant\n  \n  - name: status\n    widget:
+    Panel\n    source: status\n    children:\n      - widget: Labels\n        source:
+    state\n        name: status.state\n"
+  form: |
+    - path: spec.remoteLinkName
+      name: spec.remoteLinkName
+      widget: Text
+      disableOnEdit: true
+      required: true
+    - path: spec.remotePrivateDnsZone
+      name: spec.remotePrivateDnsZone
+      widget: Text
+      disableOnEdit: true
+      required: true
+    - path: spec.remoteTenant
+      name: spec.remoteTenant
+      widget: Text
+      disableOnEdit: true
+  general: |-
+    resource:
+        kind: AzureVpcDnsLink
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: azurevpcdnslinks
+    name: Azure VPC DNS Links
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        AzureVpcDnsLinks description here
+  list: |-
+    - source: spec.remoteLinkName
+      name: spec.remoteLinkName
+      sort: true
+    - source: spec.remotePrivateDnsZone
+      name: spec.remotePrivateDnsZone
+      sort: true
+    - source: spec.remoteTenant
+      name: spec.remoteTenant
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.remoteLinkName: Remote Link Name
+      spec.remotePrivateDnsZone: Remote Private Dns Zone
+      spec.remoteTenant: Remote Tenant
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: azurevpcdnslinks-ui.operator.kyma-project.io
+  namespace: kyma-system

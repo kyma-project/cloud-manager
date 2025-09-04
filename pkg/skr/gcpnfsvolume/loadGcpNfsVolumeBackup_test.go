@@ -2,6 +2,10 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,9 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 type loadGcpNfsVolumeBackupSuite struct {
@@ -20,13 +21,13 @@ type loadGcpNfsVolumeBackupSuite struct {
 	ctx context.Context
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (s *loadGcpNfsVolumeBackupSuite) SetupTest() {
+	s.ctx = context.Background()
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Fail(suite.T(), "unexpected request: "+r.URL.String())
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
 	}))
 	defer fakeHttpServer.Close()
 	objDiffName := gcpNfsVolume.DeepCopy()
@@ -34,7 +35,7 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	objDiffName.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
 
 	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, objDiffName)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -43,17 +44,17 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	err, _ctx := loadGcpNfsVolumeBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
-	suite.Equal(ctx, _ctx)
+	s.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
+	s.Equal(ctx, _ctx)
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackup.Name = gcpNfsVolumeBackup.Name
 	obj.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
 	backup := gcpNfsVolumeBackup.DeepCopy()
 	factory, err := newTestStateFactoryWithObject(backup, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -62,36 +63,36 @@ func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	// Remove the conditions from backup
 	backup.Status.Conditions = []metav1.Condition{}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, backup)
-	suite.Nil(err)
+	s.Nil(err)
 
 	err, _ = loadGcpNfsVolumeBackup(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
+	s.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name,
 			Namespace: gcpNfsVolume.Namespace},
 		obj)
-	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), v1beta1.GcpNfsVolumeError, obj.Status.State)
-	assert.Equal(suite.T(), metav1.ConditionTrue, obj.Status.Conditions[0].Status)
-	assert.Equal(suite.T(), cloudcontrolv1beta1.ConditionTypeError, obj.Status.Conditions[0].Type)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), v1beta1.GcpNfsVolumeError, obj.Status.State)
+	assert.Equal(s.T(), metav1.ConditionTrue, obj.Status.Conditions[0].Status)
+	assert.Equal(s.T(), cloudcontrolv1beta1.ConditionTypeError, obj.Status.Conditions[0].Type)
 }
 
-func (suite *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackup.Name = gcpNfsVolumeBackup.Name
 	obj.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
 	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(obj)
 	err, ctx = loadGcpNfsVolumeBackup(ctx, state)
-	assert.Nil(suite.T(), err)
-	assert.Nil(suite.T(), ctx)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
 }
 
 func TestLoadGcpNfsVolumeBackupSuite(t *testing.T) {

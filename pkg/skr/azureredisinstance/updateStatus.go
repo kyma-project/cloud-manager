@@ -54,5 +54,5 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

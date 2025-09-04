@@ -115,8 +115,12 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		})
 
 		By("And Then NfsInstance has status.capacity set", func() {
-			Expect(nfsInstance.Status.Capacity).To(BeComparableTo(resource.MustParse("10Gi")),
-				"expected NfsInstance.status.capacity to be set to 10Gi")
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingNfsInstanceStatusCapacity(resource.MustParse("10Gi")),
+				).
+				Should(Succeed(), "expected NfsInstance.status.capacity to be set to 10Gi")
 		})
 
 		By("And Then EFS has mount targets", func() {
@@ -138,7 +142,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusCapacity("20Gi"),
+					HavingNfsInstanceStatusCapacity(resource.MustParse("20Gi")),
 				).
 				Should(Succeed(), "expected NfsInstance to have updated capacity, but it didn't")
 		})

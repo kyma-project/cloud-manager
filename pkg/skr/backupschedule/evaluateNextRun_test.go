@@ -2,13 +2,14 @@ package backupschedule
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"testing"
-	"time"
 )
 
 type evaluateNextRunSuite struct {
@@ -16,46 +17,46 @@ type evaluateNextRunSuite struct {
 	ctx context.Context
 }
 
-func (suite *evaluateNextRunSuite) SetupTest() {
-	suite.ctx = context.Background()
+func (s *evaluateNextRunSuite) SetupTest() {
+	s.ctx = context.Background()
 }
 
-func (suite *evaluateNextRunSuite) TestWhenNfsScheduleIsDeleting() {
+func (s *evaluateNextRunSuite) TestWhenNfsScheduleIsDeleting() {
 	obj := deletingGcpBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ctx := evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
+	s.Nil(err)
+	s.Nil(_ctx)
 }
 
-func (suite *evaluateNextRunSuite) TestWhenNextRunTimesIsNotSet() {
+func (s *evaluateNextRunSuite) TestWhenNextRunTimesIsNotSet() {
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ = evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	s.Equal(composed.StopAndForget, err)
 
 	//Get the object from K8s
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
@@ -63,33 +64,33 @@ func (suite *evaluateNextRunSuite) TestWhenNextRunTimesIsNotSet() {
 		types.NamespacedName{Name: obj.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
-	suite.Nil(err)
-	suite.Equal(v1beta1.JobStateError, fromK8s.Status.State)
-	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	suite.Equal(v1beta1.JobStateError, fromK8s.Status.Conditions[0].Type)
+	s.Nil(err)
+	s.Equal(v1beta1.JobStateError, fromK8s.Status.State)
+	s.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	s.Equal(v1beta1.JobStateError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *evaluateNextRunSuite) TestWhenNextRunTimesIsNotParseable() {
+func (s *evaluateNextRunSuite) TestWhenNextRunTimesIsNotParseable() {
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Update the next run time to an invalid time
 	obj.Status.NextRunTimes = []string{"invalid-time"}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ = evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopAndForget, err)
+	s.Equal(composed.StopAndForget, err)
 
 	//Get the object from K8s
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
@@ -97,30 +98,30 @@ func (suite *evaluateNextRunSuite) TestWhenNextRunTimesIsNotParseable() {
 		types.NamespacedName{Name: obj.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
-	suite.Nil(err)
-	suite.Equal(v1beta1.JobStateError, fromK8s.Status.State)
-	suite.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
-	suite.Equal(v1beta1.JobStateError, fromK8s.Status.Conditions[0].Type)
+	s.Nil(err)
+	s.Equal(v1beta1.JobStateError, fromK8s.Status.State)
+	s.Equal(metav1.ConditionTrue, fromK8s.Status.Conditions[0].Status)
+	s.Equal(v1beta1.JobStateError, fromK8s.Status.Conditions[0].Type)
 }
 
-func (suite *evaluateNextRunSuite) TestWhenNextRunTimeIsNotDueYet() {
+func (s *evaluateNextRunSuite) TestWhenNextRunTimeIsNotDueYet() {
 	now := time.Now().UTC()
 	offset := 1 * time.Hour
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	obj.Spec.EndTime = &metav1.Time{Time: now.Add(5 * time.Hour)}
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Update the next run time with current time
 	obj.Status.NextRunTimes = []string{now.Add(offset).Format(time.RFC3339)}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ = evaluateNextRun(ctx, state)
@@ -128,38 +129,38 @@ func (suite *evaluateNextRunSuite) TestWhenNextRunTimeIsNotDueYet() {
 	//validate expected return values
 	result, err := composed.HandleWithoutLogging(err, ctx)
 	delay := result.RequeueAfter
-	suite.Nil(err)
-	suite.NotNil(delay)
-	suite.Greater(delay, time.Duration(int64(0.95*float64(offset))))
-	suite.LessOrEqual(delay, offset)
+	s.Nil(err)
+	s.NotNil(delay)
+	s.Greater(delay, time.Duration(int64(0.95*float64(offset))))
+	s.LessOrEqual(delay, offset)
 }
 
-func (suite *evaluateNextRunSuite) TestWhenScheduleJustRun() {
+func (s *evaluateNextRunSuite) TestWhenScheduleJustRun() {
 	now := time.Now().UTC()
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	obj.Spec.Schedule = "* * * * *"
 
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Update the lastCreateRun with current time
 	obj.Status.NextRunTimes = []string{now.Format(time.RFC3339)}
 	obj.Status.LastCreateRun = &metav1.Time{Time: now}
 	obj.Status.LastDeleteRun = &metav1.Time{Time: now}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ = evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Equal(composed.StopWithRequeue, err)
+	s.Equal(composed.StopWithRequeue, err)
 
 	//Get the object from K8s
 	fromK8s := &v1beta1.GcpNfsBackupSchedule{}
@@ -167,34 +168,34 @@ func (suite *evaluateNextRunSuite) TestWhenScheduleJustRun() {
 		types.NamespacedName{Name: obj.Name,
 			Namespace: gcpNfsBackupSchedule.Namespace},
 		fromK8s)
-	suite.Nil(err)
-	suite.Nil(fromK8s.Status.NextRunTimes)
+	s.Nil(err)
+	s.Nil(fromK8s.Status.NextRunTimes)
 }
 
-func (suite *evaluateNextRunSuite) TestWhenNextRunTimesIsValid() {
+func (s *evaluateNextRunSuite) TestWhenNextRunTimesIsValid() {
 	now := time.Now().UTC()
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsBackupSchedule
 	state, err := factory.newStateWith(obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Update the next run time with current time
 	obj.Status.NextRunTimes = []string{now.Format(time.RFC3339)}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, obj)
-	suite.Nil(err)
+	s.Nil(err)
 
 	//Invoke API under test
 	err, _ctx := evaluateNextRun(ctx, state)
 
 	//validate expected return values
-	suite.Nil(err)
-	suite.Nil(_ctx)
-	suite.Equal(now.Unix(), state.nextRunTime.Unix())
+	s.Nil(err)
+	s.Nil(_ctx)
+	s.Equal(now.Unix(), state.nextRunTime.Unix())
 }
 
 func TestEvaluateNextRunSuite(t *testing.T) {

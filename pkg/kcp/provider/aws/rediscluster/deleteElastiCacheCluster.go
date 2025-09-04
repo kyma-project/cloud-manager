@@ -14,11 +14,11 @@ func deleteElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.elastiCacheReplicationGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
 	if cacheState == awsmeta.ElastiCache_DELETING {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.

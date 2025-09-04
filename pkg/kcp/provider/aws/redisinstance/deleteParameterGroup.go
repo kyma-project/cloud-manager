@@ -18,7 +18,7 @@ func deleteParameterGroup(getParamGroup func(*State) *elasticachetypes.CachePara
 
 		parameterGroup := getParamGroup(state)
 		if parameterGroup == nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.

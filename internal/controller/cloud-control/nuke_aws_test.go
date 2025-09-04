@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
@@ -54,7 +55,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 		})
 
 		nukeClient, _ := clientProvider(infra.Ctx(),
-			scope.Spec.Scope.Aws.AccountId, "", "", "", "")
+			scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, "", "", "")
 
 		By(" And Given Aws Vault exits for the same scope", func() {
 			_, err := nukeClient.CreateBackupVault(
@@ -89,7 +90,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 		}
 
 		nukeClient, _ := clientProvider(infra.Ctx(),
-			scope.Spec.Scope.Aws.AccountId, "", "", "", "")
+			scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, "", "", "")
 
 		Eventually(CreateObj(infra.Ctx(), infra.KCP().Client(), nuke,
 			WithName(nukeName),

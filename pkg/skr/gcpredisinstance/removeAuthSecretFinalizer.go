@@ -12,11 +12,11 @@ func removeAuthSecretFinalizer(ctx context.Context, st composed.State) (error, c
 	state := st.(*State)
 
 	if state.AuthSecret == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !controllerutil.ContainsFinalizer(state.AuthSecret, api.CommonFinalizerDeletionHook) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	controllerutil.RemoveFinalizer(state.AuthSecret, api.CommonFinalizerDeletionHook)
@@ -25,5 +25,5 @@ func removeAuthSecretFinalizer(ctx context.Context, st composed.State) (error, c
 		return composed.LogErrorAndReturn(err, "Error saving SKR Secret after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

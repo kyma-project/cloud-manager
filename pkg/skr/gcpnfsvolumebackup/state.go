@@ -2,6 +2,8 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -69,4 +71,25 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 
 func (s *State) ObjAsGcpNfsVolumeBackup() *cloudresourcesv1beta1.GcpNfsVolumeBackup {
 	return s.Obj().(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
+}
+
+func (s *State) isTimeForCapacityUpdate() bool {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+
+	lastUpdate := backup.Status.LastCapacityUpdate
+	configInterval := gcpclient.GcpConfig.GcpCapacityCheckInterval
+	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
+
+	return capacityUpdateDue
+
+}
+
+func stopAndRequeueForCapacity() error {
+	return composed.StopWithRequeueDelay(gcpclient.GcpCapacityCheckInterval)
+}
+
+func StopAndRequeueForCapacityAction() composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		return stopAndRequeueForCapacity(), nil
+	}
 }

@@ -1,7 +1,7 @@
 # Creating Scheduled Automatic NFS Volume Backups in Amazon Web Services
 
 > [!WARNING]
-> This is a feature available only per request for SAP-internal teams.
+> This is a beta feature available only per request for SAP-internal teams.
 
 > [!WARNING]
 > Long-running or frequent schedules can create too many backups and may result in cloud provider quota issues.

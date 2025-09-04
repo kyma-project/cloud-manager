@@ -43,5 +43,5 @@ func loadNetwork(ctx context.Context, st composed.State) (error, context.Context
 
 	state.network = net
 
-	return nil, nil
+	return nil, ctx
 }
