@@ -27,8 +27,8 @@ type clientSpy struct {
 	patchCallCount  int64
 }
 
-func (clientSpy *clientSpy) Apply(ctx context.Context, obj runtime.ApplyConfiguration, opts ...client.ApplyOption) error {
-	return clientSpy.client.Apply(ctx, obj, opts...)
+func (s *clientSpy) Apply(ctx context.Context, obj runtime.ApplyConfiguration, opts ...client.ApplyOption) error {
+	return s.client.Apply(ctx, obj, opts...)
 }
 
 func (s *clientSpy) Create(ctx context.Context, obj client.Object, opts ...client.CreateOption) error {
