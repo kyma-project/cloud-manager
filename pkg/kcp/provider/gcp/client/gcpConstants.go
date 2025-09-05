@@ -90,6 +90,9 @@ func GetDuration(value string, defaultValue time.Duration) time.Duration {
 	if err != nil {
 		return defaultValue
 	}
+	if duration <= 0 {
+		return GcpApiTimeout
+	}
 	return duration
 }
 
