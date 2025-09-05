@@ -75,7 +75,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"capacityCheckInterval",
-			config.DefaultScalar(1*time.Hour),
+			config.DefaultScalar("1h"),
 			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
 		),
 		config.SourceFile("gcpclient.GcpConfig.yaml"),
