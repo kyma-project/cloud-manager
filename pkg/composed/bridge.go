@@ -3,6 +3,8 @@ package composed
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -82,6 +84,10 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 		var ed *stopWithRequeueDelay
 		errors.As(err, &ed)
 		logger.WithValues("delay", ed.Delay().String()).Info("Reconciliation finished with requeue delayed")
+		if ed.Delay() <= 0 {
+			ed = &stopWithRequeueDelay{delay: time.Hour}
+			logger.Info("Reconciliation requeue delayed set to 1h since it was zero")
+		}
 		result = labelRequeueAfter
 		return ctrl.Result{RequeueAfter: ed.Delay()}, nil
 	}

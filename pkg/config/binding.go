@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/tidwall/gjson"
 )
@@ -30,11 +31,26 @@ func (b *binding) Copy(in string) {
 		return
 	}
 
-	err = mapstructure.Decode(data, b.obj)
+	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:   b.obj,
+		Metadata: nil,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+			mapstructure.StringToIPHookFunc(),
+			mapstructure.StringToIPNetHookFunc(),
+			mapstructure.StringToByteHookFunc(),
+			mapstructure.StringToBasicTypeHookFunc(),
+		),
+	})
 	if err != nil {
 		return
 	}
+	err = dec.Decode(data)
 	if aclObj, ok := b.obj.(AfterConfigLoaded); ok {
 		aclObj.AfterConfigLoaded()
+	}
+	if err != nil {
+		return
 	}
 }

@@ -1,3 +1,4 @@
 defaults:
   ipranges: 1
   awsnfsvolumes: 3
+  duration: 30s
