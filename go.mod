@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	cloud.google.com/go/auth v0.16.5
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.44.0
+	cloud.google.com/go/compute v1.45.0
 	cloud.google.com/go/networkconnectivity v1.18.0
 	cloud.google.com/go/redis v1.18.2
 	cloud.google.com/go/resourcemanager v1.10.6
@@ -67,7 +67,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.121.4 // indirect
+	cloud.google.com/go v0.121.6 // indirect
 	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
@@ -153,7 +153,7 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250804133106-a7a43d27e69b // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
