@@ -27,9 +27,9 @@ import (
 
 func NewSimRuntime(mgr ctrl.Manager, kcp client.Client, garden client.Client) error {
 	rec := &simRuntime{
-		kcp:               kcp,
-		garden:            garden,
-		clock:             clock.RealClock{},
+		kcp:    kcp,
+		garden: garden,
+		clock:  clock.RealClock{},
 	}
 	return rec.SetupWithManager(mgr)
 }
@@ -49,6 +49,10 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, fmt.Errorf("error loading Runtime: %w", err)
 	}
 	if apierrors.IsNotFound(err) {
+		return reconcile.Result{}, nil
+	}
+
+	if _, ok := rt.Labels[DoNotReconcile]; ok {
 		return reconcile.Result{}, nil
 	}
 
@@ -222,12 +226,11 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 				Labels: map[string]string{
 					cloudcontrolv1beta1.LabelScopeGlobalAccountId: rt.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId],
 					cloudcontrolv1beta1.LabelScopeSubaccountId:    rt.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId],
-					cloudcontrolv1beta1.LabelScopeShootName:       rt.Labels[cloudcontrolv1beta1.LabelScopeShootName],
+					cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
 					cloudcontrolv1beta1.LabelScopeRegion:          rt.Labels[cloudcontrolv1beta1.LabelScopeRegion],
 					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  rt.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName],
 					cloudcontrolv1beta1.LabelScopeProvider:        rt.Labels[cloudcontrolv1beta1.LabelScopeProvider],
 					cloudcontrolv1beta1.LabelRuntimeId:            rt.Name,
-					clusterCRNameLabel:                            shoot.Name,
 					expiresAtAnnotation:                           r.clock.Now().Add(expiresIn).Format(time.RFC3339),
 				},
 			},
@@ -255,8 +258,8 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		kyma = &operatorv1beta2.Kyma{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: rt.Namespace,
-				Name: rt.Name,
-				Labels: rt.Labels,
+				Name:      rt.Name,
+				Labels:    rt.Labels,
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,

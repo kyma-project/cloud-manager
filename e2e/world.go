@@ -7,6 +7,7 @@ import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/hashicorp/go-multierror"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -52,7 +53,7 @@ func (w *defaultWorld) SKR() SkrCreator {
 func (w *defaultWorld) Stop(ctx context.Context) error {
 	var result error
 	for _, skr := range w.SKR().AllClusters() {
-		if err := w.SKR().Remove(skr.Alias); err != nil {
+		if err := w.SKR().Remove(skr.Alias()); err != nil {
 			result = multierror.Append(result, fmt.Errorf("failed to remove skr cluster %s: %w", skr.Alias, err))
 		}
 	}
@@ -64,7 +65,7 @@ func (w *defaultWorld) Stop(ctx context.Context) error {
 }
 
 func (w *defaultWorld) DeleteSKR(ctx context.Context, skr SkrCluster) error {
-	err := w.skr.Remove(skr.Alias)
+	err := w.skr.Remove(skr.Alias())
 	if err != nil {
 		return fmt.Errorf("could not remove skr %q: %w", skr.Alias, err)
 	}
@@ -92,8 +93,8 @@ func (w *defaultWorld) DeleteSKR(ctx context.Context, skr SkrCluster) error {
 
 	kyma := &operatorv1beta2.Kyma{}
 	err = kcp.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: Config.KcpNamespace,
-		Name:      skr.RuntimeID,
+		Namespace: e2econfig.Config.KcpNamespace,
+		Name:      skr.RuntimeID(),
 	}, kyma)
 	if client.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("error getting kyma for skr: %w", err)
@@ -109,8 +110,8 @@ func (w *defaultWorld) DeleteSKR(ctx context.Context, skr SkrCluster) error {
 
 	rt := &infrastructuremanagerv1.Runtime{}
 	err = kcp.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: Config.KcpNamespace,
-		Name:      skr.RuntimeID,
+		Namespace: e2econfig.Config.KcpNamespace,
+		Name:      skr.RuntimeID(),
 	}, rt)
 	if client.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("error getting runtime for skr: %w", err)
@@ -126,14 +127,14 @@ func (w *defaultWorld) DeleteSKR(ctx context.Context, skr SkrCluster) error {
 
 	gc := &infrastructuremanagerv1.GardenerCluster{}
 	err = kcp.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: Config.KcpNamespace,
-		Name:      skr.RuntimeID,
+		Namespace: e2econfig.Config.KcpNamespace,
+		Name:      skr.RuntimeID(),
 	}, rt)
 	if client.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("error getting gardenercluster for skr: %w", err)
 	}
-	kubeSecretName := "kubeconfig-" + skr.RuntimeID
-	kubeSecretNamespace := Config.KcpNamespace
+	kubeSecretName := "kubeconfig-" + skr.RuntimeID()
+	kubeSecretNamespace := e2econfig.Config.KcpNamespace
 	if err == nil {
 		kubeSecretName = gc.Spec.Kubeconfig.Secret.Name
 		kubeSecretNamespace = gc.Spec.Kubeconfig.Secret.Namespace
@@ -164,8 +165,8 @@ func (w *defaultWorld) DeleteSKR(ctx context.Context, skr SkrCluster) error {
 
 	shoot := &gardenertypes.Shoot{}
 	err = garden.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: Config.GardenNamespace,
-		Name:      skr.ShootName,
+		Namespace: e2econfig.Config.GardenNamespace,
+		Name:      skr.ShootName(),
 	}, shoot)
 	if apierrors.IsNotFound(err) {
 		return nil

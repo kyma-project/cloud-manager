@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/kyma-project/cloud-manager/config/crd"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,7 +61,7 @@ func (f *WorldFactory) setGardenNamespaceInConfig(gardenKubeBytes []byte) error 
 	}
 
 	if len(rawConfig.CurrentContext) > 0 {
-		Config.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+		e2econfig.Config.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
 	}
 
 	return nil
@@ -68,12 +70,12 @@ func (f *WorldFactory) setGardenNamespaceInConfig(gardenKubeBytes []byte) error 
 func (f *WorldFactory) initGardenerCredentials(ctx context.Context, kcp Cluster) error {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: Config.KcpNamespace,
+			Namespace: e2econfig.Config.KcpNamespace,
 			Name:      "gardener-credentials",
 		},
 	}
 
-	err := kcp.Cluster.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(secret), secret)
+	err := kcp.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 	if err == nil {
 		// already exists
 		err = f.setGardenNamespaceInConfig(secret.Data["kubeconfig"])
@@ -83,12 +85,12 @@ func (f *WorldFactory) initGardenerCredentials(ctx context.Context, kcp Cluster)
 		return nil
 	}
 
-	if Config.GardenKubeconfig == "" {
+	if e2econfig.Config.GardenKubeconfig == "" {
 		return fmt.Errorf("garden kubeconfig is not set in config")
 	}
-	kubeBytes, err := os.ReadFile(Config.GardenKubeconfig)
+	kubeBytes, err := os.ReadFile(e2econfig.Config.GardenKubeconfig)
 	if err != nil {
-		return fmt.Errorf("failed to read garden kubeconfig from %q: %w", Config.GardenKubeconfig, err)
+		return fmt.Errorf("failed to read garden kubeconfig from %q: %w", e2econfig.Config.GardenKubeconfig, err)
 	}
 
 	err = f.setGardenNamespaceInConfig(kubeBytes)
@@ -98,14 +100,14 @@ func (f *WorldFactory) initGardenerCredentials(ctx context.Context, kcp Cluster)
 
 	secret = &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: Config.KcpNamespace,
+			Namespace: e2econfig.Config.KcpNamespace,
 			Name:      "gardener-credentials",
 		},
 		Data: map[string][]byte{
 			"kubeconfig": kubeBytes,
 		},
 	}
-	err = kcp.Cluster.GetClient().Create(ctx, secret)
+	err = kcp.GetClient().Create(ctx, secret)
 	if apierrors.IsAlreadyExists(err) {
 		// some race condition, let's assume the secret correctly created
 		return nil
@@ -122,7 +124,7 @@ func (f *WorldFactory) installCrds(ctx context.Context, kcp Cluster) error {
 	if err != nil {
 		return fmt.Errorf("error reading CRDs: %w", err)
 	}
-	err = Install(ctx, kcp.GetClient(), arr)
+	err = util.Apply(ctx, kcp.GetClient(), arr)
 	if err != nil {
 		return fmt.Errorf("error installing CRDs: %w", err)
 	}

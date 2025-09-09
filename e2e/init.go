@@ -88,7 +88,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		}
 
 		for _, alias := range GetScenarioSession(ctx).AllRegisteredClusters() {
-			err = GetWorld().DeleteSKR(ctx, GetWorld().SKR().Get(alias))
+			err = GetWorld().DeleteSKR(ctx, GetWorld().SKR().GetByAlias(alias))
 			if err != nil {
 				result = multierror.Append(result, fmt.Errorf("failed to stop transient SKR %q: %w", alias, err))
 			}

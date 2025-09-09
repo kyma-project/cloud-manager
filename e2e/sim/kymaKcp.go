@@ -57,6 +57,10 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
+	if _, ok := kcpKyma.Labels[DoNotReconcile]; ok {
+		return reconcile.Result{}, nil
+	}
+
 	skr, err := r.skrProvider.GetSKR(ctx, kcpKyma.Name)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("error getting KCP SKR: %w", err)
@@ -235,6 +239,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *simKymaKcp) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("kyma-kcp").
 		For(&operatorv1beta2.Kyma{}).
 		Complete(r)
 }

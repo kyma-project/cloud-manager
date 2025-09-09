@@ -48,7 +48,6 @@ func NewRuntimeBuilder() *RuntimeBuilder {
 					cloudcontrolv1beta1.LabelScopeShootName:       shootName,
 					cloudcontrolv1beta1.LabelKymaName:             name,
 					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "", // required!!!
-					aliasLabel: "", // required!!!
 				},
 			},
 			Spec: infrastructuremanagerv1.RuntimeSpec{
@@ -111,11 +110,6 @@ func (b *RuntimeBuilder) WithName(name string) *RuntimeBuilder {
 
 func (b *RuntimeBuilder) WithNamespace(ns string) *RuntimeBuilder {
 	b.Obj.Namespace = ns
-	return b
-}
-
-func (b *RuntimeBuilder) WithAlias(alias string) *RuntimeBuilder {
-	b.Obj.Labels[aliasLabel] = alias
 	return b
 }
 
@@ -209,9 +203,6 @@ func (b *RuntimeBuilder) Validate() error {
 	var err error
 	if b.errProvider != nil {
 		err = multierror.Append(err, b.errProvider)
-	}
-	if b.Obj.Labels[aliasLabel] == "" {
-		err = multierror.Append(err, errors.New("missing required label alias"))
 	}
 	if b.Obj.Namespace == "" {
 		err = multierror.Append(err, errors.New("namespace is required"))

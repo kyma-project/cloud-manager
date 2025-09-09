@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/e2e"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -42,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg := e2e.LoadConfig()
+	cfg := e2econfig.LoadConfig()
 
 	if filename == "" {
 		filename = path.Join(cfg.GetBaseDir(), ".runtimes.yaml")

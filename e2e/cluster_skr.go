@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/config/crd"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -143,16 +144,20 @@ func (s *defaultSkrCluster) EnsureKymaCR(ctx context.Context) error {
 
 	// create namespace Config.SkrNamespace
 	ns = &corev1.Namespace{}
-	err = s.GetClient().Get(ctx, client.ObjectKey{Name: Config.SkrNamespace}, ns)
+	err = s.GetClient().Get(ctx, client.ObjectKey{Name: e2econfig.Config.SkrNamespace}, ns)
 	if client.IgnoreNotFound(err) != nil {
-		return fmt.Errorf("error getting %q namespace: %w", Config.SkrNamespace, err)
+		return fmt.Errorf("error getting %q namespace: %w", e2econfig.Config.SkrNamespace, err)
 	}
 	if apierrors.IsNotFound(err) {
-		ns.Name = Config.SkrNamespace
+		ns.Name = e2econfig.Config.SkrNamespace
 		err = s.GetClient().Create(ctx, ns)
 		if err != nil {
-			return fmt.Errorf("error creating %q namespace: %w", Config.SkrNamespace, err)
+			return fmt.Errorf("error creating %q namespace: %w", e2econfig.Config.SkrNamespace, err)
 		}
 	}
 	return nil
+}
+
+func (s *defaultSkrCluster) ModuleAdd(ctx context.Context, moduleName string) {
+
 }

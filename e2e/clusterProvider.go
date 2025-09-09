@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -137,7 +138,7 @@ func (p *defaultClusterProvider) Garden(ctx context.Context) (Cluster, error) {
 		// https://book.kubebuilder.io/cronjob-tutorial/empty-main.html
 		// https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/cache#MultiNamespacedCacheBuilder
 		clusterOptions.Cache.DefaultNamespaces = map[string]cache.Config{
-			Config.GardenNamespace: {},
+			e2econfig.Config.GardenNamespace: {},
 		}
 		clusterOptions.Scheme = bootstrap.GardenScheme
 		clusterOptions.Client = client.Options{

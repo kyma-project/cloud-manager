@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
+// Start starts Runtime, GardenerCluster and KymaKcp managers and blocks until the context is done.
 func Start(ctx context.Context, kcp cluster.Cluster, garden cluster.Cluster, skrProvider SkrProvider, logger logr.Logger) error {
 	mngr := NewManager(kcp, logger)
 	var err error

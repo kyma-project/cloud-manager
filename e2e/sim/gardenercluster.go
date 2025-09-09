@@ -7,6 +7,7 @@ import (
 
 	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -25,13 +26,13 @@ import (
 const (
 	expiresAtAnnotation               = "operator.kyma-project.io/expires-at"
 	forceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
-	clusterCRNameLabel                = "operator.kyma-project.io/cluster-name"
 )
 
 func NewSimGardenerCluster(mgr ctrl.Manager, kcp client.Client, garden client.Client) error {
 	rec := &simGardenerCluster{
 		kcp:    kcp,
 		garden: garden,
+		clock:  clock.RealClock{},
 	}
 	return rec.SetupWithManager(mgr)
 }
@@ -39,7 +40,7 @@ func NewSimGardenerCluster(mgr ctrl.Manager, kcp client.Client, garden client.Cl
 type simGardenerCluster struct {
 	kcp    client.Client
 	garden client.Client
-	clock clock.Clock
+	clock  clock.Clock
 }
 
 func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -52,10 +53,11 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		return reconcile.Result{}, fmt.Errorf("error loading GardenerCluster: %w", err)
 	}
 
-	shootName := ""
-	if gc.Labels != nil {
-		shootName = gc.Labels[clusterCRNameLabel]
+	if _, ok := gc.Labels[DoNotReconcile]; ok {
+		return reconcile.Result{}, nil
 	}
+
+	shootName := gc.Labels[cloudcontrolv1beta1.LabelScopeShootName]
 
 	if shootName == "" {
 		gc.Status.State = infrastructuremanagerv1.ErrorState
@@ -64,7 +66,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 			Status:             metav1.ConditionFalse,
 			ObservedGeneration: gc.Generation,
 			Reason:             string(infrastructuremanagerv1.ConditionReasonConfigurationErr),
-			Message:            fmt.Sprintf("Runtime missing label %s", clusterCRNameLabel),
+			Message:            fmt.Sprintf("Runtime missing label %s", cloudcontrolv1beta1.LabelScopeShootName),
 		})
 		err = composed.PatchObjStatus(ctx, gc, r.kcp)
 		if err != nil {
@@ -180,7 +182,7 @@ func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCl
 	if gc.Annotations == nil {
 		return true, time.Minute
 	}
-	if _, ok := gc.Annotations[forceKubeconfigRotationAnnotation]; !ok {
+	if _, ok := gc.Annotations[forceKubeconfigRotationAnnotation]; ok {
 		return true, time.Minute
 	}
 	expiresAt := r.clock.Now()
@@ -197,7 +199,7 @@ func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCl
 		return true, time.Minute
 	}
 
-	return true, time.Duration(0.5 * float64(expiresIn))
+	return false, time.Duration(0.5 * float64(expiresIn))
 }
 
 func (r *simGardenerCluster) getShootKubeconfig(ctx context.Context, shoot *gardenertypes.Shoot) ([]byte, error) {

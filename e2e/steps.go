@@ -16,24 +16,25 @@ func thereIsSKRWithProviderAndDefaultIpRange(ctx context.Context, provider strin
 	}
 
 	clusterAlias := SharedSkrClusterAlias(pt)
-	skr := world.SKR().Get(clusterAlias)
+	skr := world.SKR().GetByAlias(clusterAlias)
 	if skr == nil {
 		return ctx, fmt.Errorf("could not find precreated cluster %q", clusterAlias)
 	}
 
-	GetScenarioSession(ctx).SetCurrentCluster(skr.Cluster, skr.Alias)
+	GetScenarioSession(ctx).SetCurrentCluster(skr, skr.Alias())
 
 	return ctx, nil
 }
 
 func moduleIsAdded(ctx context.Context, moduleName string) (context.Context, error) {
-	session, err := GetScenarioSessionEnsureCluster(ctx)
-	if err != nil {
-		return ctx, err
-	}
+	return ctx, fmt.Errorf("not implemented")
+	//session, err := GetScenarioSessionEnsureCluster(ctx)
+	//if err != nil {
+	//	return ctx, err
+	//}
 
 	// TODO: continue here
-	session.CurrentCluster().
+	//session.CurrentCluster().
 
 	return ctx, nil
 }

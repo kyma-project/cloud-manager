@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -44,7 +45,8 @@ type SkrCreator interface {
 	Has(alias string) bool
 	AllAliases() []string
 	AllClusters() []SkrCluster
-	Get(alias string) SkrCluster
+	GetByAlias(alias string) SkrCluster
+	GetByRuntimeId(runtimeId string) SkrCluster
 
 	ImportShared(ctx context.Context, runtimeId string) (SkrCluster, error)
 
@@ -128,13 +130,25 @@ func (c *skrCreator) Has(alias string) bool {
 	return false
 }
 
-func (c *skrCreator) Get(alias string) SkrCluster {
+func (c *skrCreator) GetByAlias(alias string) SkrCluster {
 	c.m.Lock()
 	defer c.m.Unlock()
 
 	result := c.skrClusters[alias]
 	if result != nil {
 		return result
+	}
+	return nil
+}
+
+func (c *skrCreator) GetByRuntimeId(runtimeId string) SkrCluster {
+	c.m.Lock()
+	defer c.m.Unlock()
+
+	for _, skr := range c.skrClusters {
+		if skr.RuntimeID() == runtimeId {
+			return skr
+		}
 	}
 	return nil
 }
@@ -166,7 +180,7 @@ func (c *skrCreator) CreateSkr(ctx context.Context, alias string, in CreatorSkrI
 
 	GetScenarioSession(ctx).RegisterCluster(alias)
 
-	existing := c.Get(alias)
+	existing := c.GetByAlias(alias)
 	if existing != nil {
 		return existing, false, nil
 	}
@@ -192,7 +206,6 @@ func (c *skrCreator) CreateSkr(ctx context.Context, alias string, in CreatorSkrI
 	// kcp runtime
 
 	runtimeBuilder := NewRuntimeBuilder().
-		WithAlias(alias).
 		WithProvider(in.Subscription.Provider, in.Region).
 		WithSecretBindingName(secretBinding.Name)
 	if err := runtimeBuilder.Validate(); err != nil {
@@ -206,7 +219,7 @@ func (c *skrCreator) CreateSkr(ctx context.Context, alias string, in CreatorSkrI
 	in.Logger.Info("Runtime created")
 	// garden shoot
 
-	shootBuilder := NewShootBuilder().
+	shootBuilder := sim.NewShootBuilder().
 		WithRuntime(rt)
 	if err := shootBuilder.Validate(); err != nil {
 		return nil, true, fmt.Errorf("invalid shoot: %w", err)
@@ -363,7 +376,7 @@ func (c *skrCreator) CreateSkr(ctx context.Context, alias string, in CreatorSkrI
 
 	ns := gcSummary.Namespace
 	if ns == "" {
-		ns = Config.KcpNamespace
+		ns = e2econfig.Config.KcpNamespace
 	}
 
 	skrManagerFactory := skrmanager.NewFactory(c.kcp.GetAPIReader(), ns, bootstrap.SkrScheme)
@@ -416,7 +429,7 @@ func (c *skrCreator) ImportShared(ctx context.Context, runtimeId string) (SkrClu
 
 	rt := &infrastructuremanagerv1.Runtime{}
 	err := c.kcp.GetClient().Get(ctx, client.ObjectKey{
-		Namespace: Config.KcpNamespace,
+		Namespace: e2econfig.Config.KcpNamespace,
 		Name:      runtimeId,
 	}, rt)
 	if err != nil {
@@ -450,7 +463,7 @@ func (c *skrCreator) ImportShared(ctx context.Context, runtimeId string) (SkrClu
 
 	shoot := &gardenertypes.Shoot{}
 	err = c.garden.GetClient().Get(ctx, types.NamespacedName{
-		Namespace: Config.GardenNamespace,
+		Namespace: e2econfig.Config.GardenNamespace,
 		Name:      rt.Spec.Shoot.Name,
 	}, shoot)
 	if err != nil {
@@ -542,7 +555,7 @@ func (c *skrCreator) ImportShared(ctx context.Context, runtimeId string) (SkrClu
 
 	ns := gcSummary.Namespace
 	if ns == "" {
-		ns = Config.KcpNamespace
+		ns = e2econfig.Config.KcpNamespace
 	}
 
 	skrManagerFactory := skrmanager.NewFactory(c.kcp.GetAPIReader(), ns, bootstrap.SkrScheme)
