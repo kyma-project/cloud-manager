@@ -75,7 +75,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"capacityCheckInterval",
-			config.DefaultScalar(1*time.Hour),
+			config.DefaultScalar("1h"),
 			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
 		),
 		config.SourceFile("gcpclient.GcpConfig.yaml"),
@@ -89,6 +89,9 @@ func GetDuration(value string, defaultValue time.Duration) time.Duration {
 	duration, err := time.ParseDuration(value)
 	if err != nil {
 		return defaultValue
+	}
+	if duration <= 0 {
+		return GcpApiTimeout
 	}
 	return duration
 }

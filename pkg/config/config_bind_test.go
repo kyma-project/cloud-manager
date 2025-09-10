@@ -1,11 +1,13 @@
 package config
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/stretchr/testify/assert"
 )
 
 type fileStruct struct {
@@ -13,8 +15,9 @@ type fileStruct struct {
 }
 
 type fileStructDefaults struct {
-	IpRanges      int `mapstructure:"ipranges"`
-	AwsNfsVolumes int `mapstructure:"awsnfsvolumes"`
+	IpRanges      int           `mapstructure:"ipranges"`
+	AwsNfsVolumes int           `mapstructure:"awsnfsvolumes"`
+	Duration      time.Duration `mapstructure:"duration"`
 }
 
 func TestConfigBind(t *testing.T) {
@@ -39,6 +42,7 @@ func TestConfigBind(t *testing.T) {
 	assert.NotNilf(t, obj.Defaults, "expected obj.defaults not to be nil")
 	assert.Equal(t, 1, obj.Defaults.IpRanges)
 	assert.Equal(t, 3, obj.Defaults.AwsNfsVolumes)
+	assert.Equal(t, 30*time.Second, obj.Defaults.Duration)
 
 	// When file content changes
 	err = copyFile("testdata/file-v2.yaml", filepath.Join(dir, "file.yaml"))
