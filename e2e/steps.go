@@ -5,25 +5,25 @@ import (
 	"fmt"
 
 	"github.com/cucumber/godog"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
 func thereIsSKRWithProviderAndDefaultIpRange(ctx context.Context, provider string) (context.Context, error) {
-	world := GetWorld()
-	pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
-	if err != nil {
-		return ctx, err
-	}
+	return ctx, fmt.Errorf("not implemented")
+	//world := GetWorld()
+	//pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
+	//if err != nil {
+	//	return ctx, err
+	//}
 
-	clusterAlias := SharedSkrClusterAlias(pt)
-	skr := world.SKR().GetByAlias(clusterAlias)
-	if skr == nil {
-		return ctx, fmt.Errorf("could not find precreated cluster %q", clusterAlias)
-	}
-
-	GetScenarioSession(ctx).SetCurrentCluster(skr, skr.Alias())
-
-	return ctx, nil
+	//clusterAlias := SharedSkrClusterAlias(pt)
+	//skr := world.SKR().GetByAlias(clusterAlias)
+	//if skr == nil {
+	//	return ctx, fmt.Errorf("could not find precreated cluster %q", clusterAlias)
+	//}
+	//
+	//GetScenarioSession(ctx).SetCurrentCluster(skr, skr.Alias())
+	//
+	//return ctx, nil
 }
 
 func moduleIsAdded(ctx context.Context, moduleName string) (context.Context, error) {

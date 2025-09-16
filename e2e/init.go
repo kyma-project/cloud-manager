@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"path"
 
 	"github.com/cucumber/godog"
 	"github.com/hashicorp/go-multierror"
@@ -12,19 +11,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {
+func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
+	gdCtx.BeforeSuite(func() {
 		opts := zap.Options{}
 		opts.Development = true
 		logger := zap.New(zap.UseFlagOptions(&opts))
 		ctrl.SetLogger(logger)
 
-		cfg := e2econfig.LoadConfig()
-		sharedStateFile := path.Join(cfg.GetBaseDir(), ".runtimes.yaml")
-		sharedState, err := LoadSharedState(sharedStateFile)
-		if err != nil {
-			panic(fmt.Errorf("failed loading shared runtimes state: %w", err))
-		}
+		_ = e2econfig.LoadConfig()
 
 		f := NewWorldFactory()
 		w, err := f.Create(context.Background())
@@ -33,24 +27,24 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 		}
 		world = w
 
-		ctx := context.Background()
-		for _, runtimeId := range sharedState.Runtimes {
-			logger.WithValues("runtimeID", runtimeId).Info("Importing runtime...")
-			skr, err := w.SKR().ImportShared(ctx, runtimeId)
-			if err != nil {
-				panic(fmt.Errorf("failed importing shared runtime %s: %w", runtimeId, err))
-			}
-
-			logger.WithValues(
-				"runtimeID", runtimeId,
-				"shoot", skr.ShootName,
-				"provider", skr.Provider,
-				"alias", skr.Alias,
-			).Info("Shared runtime imported")
-		}
+		//ctx := context.Background()
+		//for _, runtimeId := range sharedState.Runtimes {
+		//	logger.WithValues("runtimeID", runtimeId).Info("Importing runtime...")
+		//	skr, err := w.SKR().ImportShared(ctx, runtimeId)
+		//	if err != nil {
+		//		panic(fmt.Errorf("failed importing shared runtime %s: %w", runtimeId, err))
+		//	}
+		//
+		//	logger.WithValues(
+		//		"runtimeID", runtimeId,
+		//		"shoot", skr.ShootName,
+		//		"provider", skr.Provider,
+		//		"alias", skr.Alias,
+		//	).Info("Shared runtime imported")
+		//}
 	})
 
-	ctx.AfterSuite(func() {
+	gdCtx.AfterSuite(func() {
 		if world != nil {
 			err := world.Stop(context.Background())
 			if err != nil {
@@ -82,17 +76,17 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
-		if GetWorld() == nil {
-			result = multierror.Append(result, fmt.Errorf("world does not exist"))
-			return ctx, result
-		}
-
-		for _, alias := range GetScenarioSession(ctx).AllRegisteredClusters() {
-			err = GetWorld().DeleteSKR(ctx, GetWorld().SKR().GetByAlias(alias))
-			if err != nil {
-				result = multierror.Append(result, fmt.Errorf("failed to stop transient SKR %q: %w", alias, err))
-			}
-		}
+		//if GetWorld() == nil {
+		//	result = multierror.Append(result, fmt.Errorf("world does not exist"))
+		//	return ctx, result
+		//}
+		//
+		//for _, alias := range GetScenarioSession(ctx).AllRegisteredClusters() {
+		//	err = GetWorld().DeleteSKR(ctx, GetWorld().SKR().GetByAlias(alias))
+		//	if err != nil {
+		//		result = multierror.Append(result, fmt.Errorf("failed to stop transient SKR %q: %w", alias, err))
+		//	}
+		//}
 
 		return ctx, result
 	})

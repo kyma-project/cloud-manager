@@ -1,4 +1,4 @@
-package e2e
+package sim
 
 import (
 	"errors"
@@ -16,6 +16,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 )
+
+func NewRandomShootName() string {
+	length := 9
+	id := uuid.New()
+	result := strings.ReplaceAll(id.String(), "-", "")
+	result = "p-" + result
+	f := fmt.Sprintf("%%.%ds", length)
+	result = fmt.Sprintf(f, result)
+	return result
+}
 
 const gardenLinuxVersion = "1592.8.0"
 
@@ -113,6 +123,21 @@ func (b *RuntimeBuilder) WithNamespace(ns string) *RuntimeBuilder {
 	return b
 }
 
+func (b *RuntimeBuilder) WithGlobalAccount(val string) *RuntimeBuilder {
+	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId] = val
+	return b
+}
+
+func (b *RuntimeBuilder) WithSubAccount(val string) *RuntimeBuilder {
+	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId] = val
+	return b
+}
+
+func (b *RuntimeBuilder) WithAlias(val string) *RuntimeBuilder {
+	b.Obj.Labels[aliasLabel] = val
+	return b
+}
+
 func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType, region string) *RuntimeBuilder {
 	b.errProvider = nil
 	lProvider := strings.ToLower(string(provider))
@@ -206,6 +231,9 @@ func (b *RuntimeBuilder) Validate() error {
 	}
 	if b.Obj.Namespace == "" {
 		err = multierror.Append(err, errors.New("namespace is required"))
+	}
+	if b.Obj.Labels[aliasLabel] == "" {
+		err = multierror.Append(err, errors.New("alias is required"))
 	}
 	if b.Obj.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName] == "" {
 		err = multierror.Append(err, fmt.Errorf("label %s is required, maybe WithProvider was not called", cloudcontrolv1beta1.LabelScopeBrokerPlanName))

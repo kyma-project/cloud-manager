@@ -23,7 +23,7 @@ func NewWorldFactory() *WorldFactory {
 }
 
 func (f *WorldFactory) Create(ctx context.Context) (World, error) {
-	clusterProvider := newClusterProvider()
+	clusterProvider := NewClusterProvider()
 	kcp, err := clusterProvider.KCP(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error creating kcp cluster: %w", err)
@@ -44,9 +44,14 @@ func (f *WorldFactory) Create(ctx context.Context) (World, error) {
 		return nil, fmt.Errorf("error creating garden cluster: %w", err)
 	}
 
-	skr := NewSkrCreator(kcp, garden)
+	if garden != nil {
+		return nil, fmt.Errorf("not implemented")
+	}
+	return nil, fmt.Errorf("not implemented")
 
-	return NewWorld(clusterProvider, skr), nil
+	//skr := NewSkrCreator(kcp, garden)
+	//
+	//return NewWorld(clusterProvider, skr), nil
 }
 
 func (f *WorldFactory) setGardenNamespaceInConfig(gardenKubeBytes []byte) error {

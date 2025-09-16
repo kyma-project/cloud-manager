@@ -5,34 +5,34 @@ import (
 	"fmt"
 	"time"
 
-	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewSimRuntime(mgr ctrl.Manager, kcp client.Client, garden client.Client) error {
-	rec := &simRuntime{
+func newSimRuntime(kcp client.Client, garden client.Client) *simRuntime {
+	return &simRuntime{
 		kcp:    kcp,
 		garden: garden,
 		clock:  clock.RealClock{},
 	}
-	return rec.SetupWithManager(mgr)
 }
+
+var _ reconcile.Reconciler = &simRuntime{}
 
 type simRuntime struct {
 	kcp    client.Client
@@ -190,35 +190,6 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if gc == nil {
 
-		expiresIn := 6 * time.Hour
-
-		adminKubeconfigRequest := &authenticationv1alpha1.AdminKubeconfigRequest{
-			Spec: authenticationv1alpha1.AdminKubeconfigRequestSpec{
-				ExpirationSeconds: ptr.To(int64(expiresIn.Seconds())),
-			},
-		}
-		logger.Info("Creating AdminKubeconfigRequest")
-		err = r.garden.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error creating admin kubeconfig: %w", err)
-		}
-		kubeConfigBytes := adminKubeconfigRequest.Status.Kubeconfig
-
-		kubeSecret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: gc.Spec.Kubeconfig.Secret.Namespace,
-				Name:      gc.Spec.Kubeconfig.Secret.Name,
-			},
-			StringData: map[string]string{
-				"config": string(kubeConfigBytes),
-			},
-		}
-		logger.Info("Creating Kubeconfig Secret")
-		err = r.kcp.Create(ctx, kubeSecret)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error creating kubeconfig secret: %w", err)
-		}
-
 		gc = &infrastructuremanagerv1.GardenerCluster{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: rt.Namespace,
@@ -231,7 +202,6 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  rt.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName],
 					cloudcontrolv1beta1.LabelScopeProvider:        rt.Labels[cloudcontrolv1beta1.LabelScopeProvider],
 					cloudcontrolv1beta1.LabelRuntimeId:            rt.Name,
-					expiresAtAnnotation:                           r.clock.Now().Add(expiresIn).Format(time.RFC3339),
 				},
 			},
 			Spec: infrastructuremanagerv1.GardenerClusterSpec{
@@ -254,12 +224,20 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
+	if gc.Status.State != infrastructuremanagerv1.ReadyState {
+		logger.Info("Waiting for GardenCluster to become ready")
+		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+	}
+
 	if kyma == nil {
 		kyma = &operatorv1beta2.Kyma{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: rt.Namespace,
 				Name:      rt.Name,
 				Labels:    rt.Labels,
+				Finalizers: []string{
+					api.CommonFinalizerDeletionHook,
+				},
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,
@@ -273,8 +251,13 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
+	if kyma.Status.State != operatorshared.StateReady {
+		logger.Info("Waiting for Kyma to become ready")
+		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+	}
+
 	statusChanged := false
-	if rt.Status.ProvisioningCompleted != true {
+	if !rt.Status.ProvisioningCompleted {
 		rt.Status.ProvisioningCompleted = true
 		statusChanged = true
 	}

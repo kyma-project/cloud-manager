@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path"
 
 	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -20,48 +18,40 @@ func main() {
 	logger := zap.New(zap.UseFlagOptions(&opts))
 	ctrl.SetLogger(logger)
 
-	cfg := e2econfig.LoadConfig()
-	sharedStateFile := path.Join(cfg.GetBaseDir(), ".runtimes.yaml")
-	sharedState, err := e2e.LoadSharedState(sharedStateFile)
-	if err != nil {
-		panic(fmt.Errorf("failed loading shared runtimes state: %w", err))
-	}
+	_ = e2econfig.LoadConfig()
 
-	f := e2e.NewWorldFactory()
-	world, err := f.Create(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, runtimeId := range sharedState.Runtimes {
-		logger.WithValues("runtimeID", runtimeId).Info("Importing runtime...")
-		skr, err := world.SKR().ImportShared(ctx, runtimeId)
-		if err != nil {
-			panic(fmt.Errorf("failed importing shared runtime %s: %w", runtimeId, err))
+	cp := e2e.NewClusterProvider()
+	defer func() {
+		if err := cp.Stop(); err != nil {
+			logger.Error(err, "error stopping clusterProvider")
 		}
+	}()
 
-		logger.WithValues(
-			"runtimeID", runtimeId,
-			"shoot", skr.ShootName,
-			"provider", skr.Provider,
-			"alias", skr.Alias,
-		).Info("Shared runtime imported")
+	if err := cp.Init(ctx); err != nil {
+		logger.Error(err, "error initializing clusterProvider")
+		os.Exit(1)
 	}
 
-	kcp, err := world.ClusterProvider().KCP(ctx)
+	kcp, err := cp.KCP(ctx)
 	if err != nil {
 		logger.Error(err, "Failed to get KCP provider")
 		os.Exit(1)
 		return
 	}
-	garden, err := world.ClusterProvider().Garden(ctx)
+	garden, err := cp.Garden(ctx)
 	if err != nil {
 		logger.Error(err, "Failed to get Gardener provider")
 		os.Exit(1)
 		return
 	}
-	skrProvider := e2e.NewSkrProvider(kcp.GetClient(), world.SKR())
-	if err := sim.Start(ctx, kcp, garden, skrProvider, logger); err != nil {
+
+	simu, err := sim.New(kcp, garden, logger)
+	if err != nil {
+		logger.Error(err, "Failed to create sim")
+		os.Exit(1)
+		return
+	}
+	if err := simu.Start(ctx); err != nil {
 		logger.Error(err, "Failed running sim")
 		os.Exit(1)
 	}

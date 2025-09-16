@@ -3,9 +3,11 @@ package sim
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/go-logr/logr"
+	"github.com/hashicorp/go-multierror"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -33,6 +35,7 @@ type simManager struct {
 
 func (m *simManager) Start(ctx context.Context) error {
 	var wg sync.WaitGroup
+	var result error
 	for _, r := range m.controllers {
 		rr := r
 		wg.Add(1)
@@ -40,6 +43,7 @@ func (m *simManager) Start(ctx context.Context) error {
 			defer wg.Done()
 			err := rr.Start(ctx)
 			if err != nil {
+				result = multierror.Append(result, err)
 				logger := m.logger
 				if ctrl, ok := rr.(controller.Controller); ok {
 					logger = ctrl.GetLogger()
@@ -50,10 +54,21 @@ func (m *simManager) Start(ctx context.Context) error {
 		}()
 	}
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := m.Cluster.Start(ctx); err != nil {
+			if !strings.Contains(err.Error(), "already started") {
+				result = multierror.Append(result, err)
+				m.logger.Error(err, "error starting cluster")
+			}
+		}
+	}()
+
 	<-ctx.Done()
 	wg.Wait()
 
-	return nil
+	return result
 }
 
 func (m *simManager) Add(runnable manager.Runnable) error {

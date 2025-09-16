@@ -50,6 +50,17 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	./config/patchAfterMakeManifests.sh
 
+.PHONY: mod-download
+mod-download:
+	go mod download
+
+.PHONY: garden-manifests
+garden-manifests: mod-download
+	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/core/v1beta1/..." output:crd:artifacts:config=config/crd/g1
+	cp config/crd/g1/core.gardener.cloud_shoots.yaml config/crd/gardener/core.gardener.cloud_shoots.yaml
+	cp config/crd/g1/core.gardener.cloud_secretbindings.yaml config/crd/gardener/core.gardener.cloud_secretbindings.yaml
+	rm -r config/crd/g1
+
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."

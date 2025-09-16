@@ -3,9 +3,11 @@ package sim
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/elliotchance/pie/v2"
+	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
@@ -15,16 +17,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewSimKymaSkr(mngr manager.Manager, kcp client.Client, skr client.Client) error {
-	r := &simKymaSkr{
+func NewSimKymaSkr(kcp client.Client, skr client.Client) *simKymaSkr {
+	return &simKymaSkr{
 		kcp: kcp,
 		skr: skr,
 	}
-	return r.SetupWithManager(mngr)
 }
 
 type simKymaSkr struct {
@@ -37,6 +37,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
+	logger := composed.LoggerFromCtx(ctx)
+
 	skrKyma := &operatorv1beta2.Kyma{}
 	err := r.skr.Get(ctx, request.NamespacedName, skrKyma)
 	if client.IgnoreNotFound(err) != nil {
@@ -45,6 +47,46 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 	if err != nil {
 		return reconcile.Result{}, nil
 	}
+
+	// delete ================================================================
+
+	if skrKyma.DeletionTimestamp != nil {
+		cm := &cloudresourcesv1beta1.CloudResources{}
+		err = r.skr.Get(ctx, types.NamespacedName{
+			Namespace: "kyma-system",
+			Name:      "default",
+		}, cm)
+		if client.IgnoreNotFound(err) != nil {
+			return reconcile.Result{}, fmt.Errorf("error getting default CloudResources: %w", err)
+		}
+		if err != nil {
+			cm = nil
+		}
+
+		if cm != nil && cm.DeletionTimestamp == nil {
+			logger.Info("Deleting default CloudResources")
+			err = r.skr.Delete(ctx, cm)
+			if client.IgnoreNotFound(err) != nil {
+				return reconcile.Result{}, fmt.Errorf("error deleting default CloudResources: %w", err)
+			}
+			return reconcile.Result{RequeueAfter: time.Second}, nil
+		}
+
+		if cm != nil {
+			logger.Info("Waiting CloudResources are deleted...")
+			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		}
+
+		logger.Info("Removing SKR Kyma finalizer")
+		_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, skrKyma, r.skr)
+		if client.IgnoreNotFound(err) != nil {
+			return reconcile.Result{}, fmt.Errorf("error removing SKR Kyma finalizer: %w", err)
+		}
+
+		return reconcile.Result{}, nil
+	}
+
+	// create & update ========================================================
 
 	runtimeId := skrKyma.Labels[cloudcontrolv1beta1.LabelRuntimeId]
 	if runtimeId == "" {
@@ -65,6 +107,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			statusChanged = true
 		}
 		if statusChanged {
+			logger.Info("Missing runtimeID label in SKR KCP")
 			err = composed.PatchObjStatus(ctx, skrKyma, r.skr)
 			if err != nil {
 				return reconcile.Result{}, fmt.Errorf("error updating Kyma status for missing runtime id label: %w", err)
@@ -82,68 +125,53 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, fmt.Errorf("error getting KCP Kyma %q: %w", runtimeId, err)
 	}
 
-	// TODO: continue here - make two kymas wrapper that knows to sync modules in spec and status so it can be tested
-	kcpKymaChanged := false
-	modulesToAdd := r.moduleDifference(skrKyma.Spec.Modules, kcpKyma.Spec.Modules)
-	if len(modulesToAdd) > 0 {
-		kcpKymaChanged = true
-		for _, m := range modulesToAdd {
-			kcpKyma.Spec.Modules = append(kcpKyma.Spec.Modules, m)
-			kcpKyma.Status.Modules = append(kcpKyma.Status.Modules, operatorv1beta2.ModuleStatus{
-				Name:   m.Name,
-				State:  operatorshared.StateReady,
-			})
+	outcome := (KymaSync{SKR: skrKyma, KCP: kcpKyma}).Sync()
+	if outcome.SKR.StatusChanged {
+		logger.Info("Patching SKR Kyma status.modules")
+		if err := composed.PatchObjStatus(ctx, skrKyma, r.skr); err != nil {
+			return reconcile.Result{}, fmt.Errorf("error patching SKR Kyma status: %w", err)
+		}
+	}
+	if outcome.KCP.SpecChanged {
+		logger.Info("Updating KCP Kyma spec.modules")
+		if err := r.kcp.Update(ctx, kcpKyma); err != nil {
+			return reconcile.Result{}, fmt.Errorf("error updating KCP Kyma spec: %w", err)
+		}
+	}
+	if outcome.KCP.StatusChanged {
+		logger.Info("Patching KCP Kyma status.modules")
+		if err := composed.PatchObjStatus(ctx, kcpKyma, r.kcp); err != nil {
+			return reconcile.Result{}, fmt.Errorf("error updating KCP Kyma status: %w", err)
 		}
 	}
 
-	modulesToRemove := r.moduleDifference(kcpKyma.Spec.Modules, skrKyma.Spec.Modules)
-	if len(modulesToRemove) > 0 {
-		kcpKymaChanged = true
-		removeIndex := make(map[string]struct{}, len(modulesToRemove))
-		for _, m := range modulesToRemove {
-			removeIndex[m.Name] = struct{}{}
-		}
-		kcpKyma.Spec.Modules = pie.FilterNot(kcpKyma.Spec.Modules, func(m operatorv1beta2.Module) bool {
-			_, ok := removeIndex[m.Name]
-			return ok
-		})
-		kcpKyma.Status.Modules = pie.FilterNot(kcpKyma.Status.Modules, func(m operatorv1beta2.ModuleStatus) bool {
-			_, ok := removeIndex[m.Name]
-			return ok
-		})
+	cm := &cloudresourcesv1beta1.CloudResources{}
+	err = r.skr.Get(ctx, types.NamespacedName{
+		Namespace: "kyma-system",
+		Name:      "default",
+	}, cm)
+	if client.IgnoreNotFound(err) != nil {
+		return reconcile.Result{}, fmt.Errorf("error getting default CloudResources: %w", err)
+	}
+	if err != nil {
+		cm = nil
 	}
 
-
-
-	return reconcile.Result{}, err
-}
-
-func (r *simKymaSkr) syncKymaStatusModules(kyma *operatorv1beta2.Kyma) (bool) {
-	changed := false
-	index := make(map[string]struct{}, len(kyma.Spec.Modules))
-	for _, m := range kyma.Spec.Modules {
-		index[m.Name] = struct{}{}
-	}
-	kyma.Status.Modules
-	for
-}
-
-func (r *simKymaSkr) moduleDifference(a []operatorv1beta2.Module, b []operatorv1beta2.Module) []operatorv1beta2.Module {
-	var result []operatorv1beta2.Module
-	for _, modA := range a {
-		found := false
-		for _, modB := range b {
-			if modA.Name == modB.Name {
-				// modA exists in b
-				found = true
-				break
-			}
+	if cm == nil {
+		logger.Info("Creating default CloudResources")
+		cm = &cloudresourcesv1beta1.CloudResources{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "kyma-system",
+				Name:      "default",
+			},
 		}
-		if !found {
-			result = append(result, modA)
+		err = r.skr.Create(ctx, cm)
+		if client.IgnoreAlreadyExists(err) != nil {
+			return reconcile.Result{}, fmt.Errorf("error creating CloudResources: %w", err)
 		}
 	}
-	return result
+
+	return reconcile.Result{}, nil
 }
 
 func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {

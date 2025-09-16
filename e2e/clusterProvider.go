@@ -3,13 +3,19 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/config/crd"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -23,6 +29,7 @@ type ProviderSkrInput struct {
 }
 
 type ClusterProvider interface {
+	Init(ctx context.Context) error
 	Stop() error
 	KCP(ctx context.Context) (Cluster, error)
 	Garden(ctx context.Context) (Cluster, error)
@@ -30,7 +37,7 @@ type ClusterProvider interface {
 
 var _ ClusterProvider = &defaultClusterProvider{}
 
-func newClusterProvider() ClusterProvider {
+func NewClusterProvider() ClusterProvider {
 	return &defaultClusterProvider{}
 }
 
@@ -43,6 +50,97 @@ type defaultClusterProvider struct {
 
 	kcp    Cluster
 	garden Cluster
+}
+
+func (p *defaultClusterProvider) Init(ctx context.Context) error {
+	kcp, err := p.KCP(ctx)
+	if err != nil {
+		return fmt.Errorf("error initializing KCP: %w", err)
+	}
+
+	// install crds
+	arr, err := crd.KCP_All()
+	if err != nil {
+		return fmt.Errorf("error reading CRDs: %w", err)
+	}
+	err = util.Apply(ctx, kcp.GetClient(), arr)
+	if err != nil {
+		return fmt.Errorf("error installing CRDs: %w", err)
+	}
+
+	// gardener credentials
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: e2econfig.Config.KcpNamespace,
+			Name:      "gardener-credentials",
+		},
+	}
+
+	err = kcp.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(secret), secret)
+	if err == nil {
+		// already exists
+		err = p.setGardenNamespaceInConfig(secret.Data["kubeconfig"])
+		if err != nil {
+			return fmt.Errorf("failed to set garden kubeconfig: %w", err)
+		}
+
+		garden, err := p.Garden(ctx)
+		if err != nil {
+			return fmt.Errorf("error initializing Garden: %w", err)
+		}
+
+		shootList := &gardenertypes.ShootList{}
+		err = garden.GetClient().List(ctx, shootList, client.InNamespace(e2econfig.Config.GardenNamespace))
+		if err != nil {
+			return fmt.Errorf("error connecting to garden: %w", err)
+		}
+
+		return nil
+	}
+
+	if e2econfig.Config.GardenKubeconfig == "" {
+		return fmt.Errorf("garden kubeconfig is not set in config")
+	}
+	kubeBytes, err := os.ReadFile(e2econfig.Config.GardenKubeconfig)
+	if err != nil {
+		return fmt.Errorf("failed to read garden kubeconfig from %q: %w", e2econfig.Config.GardenKubeconfig, err)
+	}
+
+	err = p.setGardenNamespaceInConfig(kubeBytes)
+	if err != nil {
+		return fmt.Errorf("failed to set garden kubeconfig: %w", err)
+	}
+
+	secret = &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: e2econfig.Config.KcpNamespace,
+			Name:      "gardener-credentials",
+		},
+		Data: map[string][]byte{
+			"kubeconfig": kubeBytes,
+		},
+	}
+	err = kcp.GetClient().Create(ctx, secret)
+	if apierrors.IsAlreadyExists(err) {
+		// some race condition, let's assume the secret correctly created
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error creating gardener credentials: %w", err)
+	}
+
+	garden, err := p.Garden(ctx)
+	if err != nil {
+		return fmt.Errorf("error initializing Garden: %w", err)
+	}
+
+	shootList := &gardenertypes.ShootList{}
+	err = garden.GetClient().List(ctx, shootList, client.InNamespace(e2econfig.Config.KcpNamespace))
+	if err != nil {
+		return fmt.Errorf("error connecting to garden: %w", err)
+	}
+
+	return nil
 }
 
 func (p *defaultClusterProvider) Stop() error {
@@ -156,4 +254,22 @@ func (p *defaultClusterProvider) Garden(ctx context.Context) (Cluster, error) {
 	err = p.garden.Start(ctx)
 
 	return p.garden, err
+}
+
+func (p *defaultClusterProvider) setGardenNamespaceInConfig(gardenKubeBytes []byte) error {
+	config, err := clientcmd.NewClientConfigFromBytes(gardenKubeBytes)
+	if err != nil {
+		return fmt.Errorf("error creating gardener client config: %w", err)
+	}
+
+	rawConfig, err := config.RawConfig()
+	if err != nil {
+		return fmt.Errorf("error getting gardener raw client config: %w", err)
+	}
+
+	if len(rawConfig.CurrentContext) > 0 {
+		e2econfig.Config.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+	}
+
+	return nil
 }

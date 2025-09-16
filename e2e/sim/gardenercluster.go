@@ -28,14 +28,15 @@ const (
 	forceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
 )
 
-func NewSimGardenerCluster(mgr ctrl.Manager, kcp client.Client, garden client.Client) error {
-	rec := &simGardenerCluster{
+func newSimGardenerCluster(kcp client.Client, garden client.Client) *simGardenerCluster {
+	return &simGardenerCluster{
 		kcp:    kcp,
 		garden: garden,
 		clock:  clock.RealClock{},
 	}
-	return rec.SetupWithManager(mgr)
 }
+
+var _ reconcile.Reconciler = &simGardenerCluster{}
 
 type simGardenerCluster struct {
 	kcp    client.Client
@@ -179,6 +180,9 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 }
 
 func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCluster) (bool, time.Duration) {
+	if gc.Status.State != infrastructuremanagerv1.ReadyState {
+		return true, time.Minute
+	}
 	if gc.Annotations == nil {
 		return true, time.Minute
 	}
