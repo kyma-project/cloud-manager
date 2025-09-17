@@ -15,12 +15,12 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 
 	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		logger.Info("Skipping route deletion")
-		return nil, nil
+		return nil, ctx
 	}
 
-	if state.remoteVpcPeering == nil {
-		logger.Info("VpcPeering deleted before AWS peering is created")
-		return nil, nil
+	if len(state.ObjAsVpcPeering().Status.RemoteId) == 0 {
+		logger.Info("Skip deleting remote routes since VpcPeering.Status.RemoteId is empty")
+		return nil, ctx
 	}
 
 	for _, t := range state.remoteRouteTables {
@@ -35,7 +35,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 
 		for _, r := range t.Routes {
 
-			if ptr.Equal(r.VpcPeeringConnectionId, state.remoteVpcPeering.VpcPeeringConnectionId) {
+			if ptr.Equal(r.VpcPeeringConnectionId, &state.ObjAsVpcPeering().Status.RemoteId) {
 				err := state.remoteClient.DeleteRoute(ctx, t.RouteTableId, r.DestinationCidrBlock)
 
 				lll := logger.WithValues(
@@ -45,11 +45,11 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 
 				if err != nil {
 					if awsmeta.IsErrorRetryable(err) {
-						return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+						return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 					}
 
 					lll.Error(err, "Error deleting remote route")
-					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 				}
 
 				lll.Info("Remote route deleted")
@@ -57,5 +57,5 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }
