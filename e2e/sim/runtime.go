@@ -40,6 +40,13 @@ type simRuntime struct {
 	clock  clock.Clock
 }
 
+var GardenerConditionTypes = []gardenertypes.ConditionType{
+	gardenertypes.ShootControlPlaneHealthy,
+	gardenertypes.ShootAPIServerAvailable,
+	gardenertypes.ShootEveryNodeReady,
+	gardenertypes.ShootSystemComponentsHealthy,
+}
+
 func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
@@ -170,13 +177,7 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	if len(shoot.Status.Conditions) == 0 {
 		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 	}
-	ctList := []gardenertypes.ConditionType{
-		gardenertypes.ShootControlPlaneHealthy,
-		gardenertypes.ShootAPIServerAvailable,
-		gardenertypes.ShootEveryNodeReady,
-		gardenertypes.ShootSystemComponentsHealthy,
-	}
-	for _, ct := range ctList {
+	for _, ct := range GardenerConditionTypes {
 		cond := gardenerhelper.GetCondition(shoot.Status.Conditions, ct)
 		if cond == nil {
 			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil

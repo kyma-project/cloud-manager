@@ -3,8 +3,10 @@ package sim
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/hashicorp/go-multierror"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -19,24 +21,54 @@ type Sim interface {
 	Keb() Keb
 }
 
-func New(kcp cluster.Cluster, garden cluster.Cluster, logger logr.Logger) (Sim, error) {
-	mngr := NewManager(kcp, logger)
+type CreateOptions struct {
+	KCP    cluster.Cluster
+	Garden cluster.Cluster
+	Logger logr.Logger
 
-	factory := NewClientClusterFactory(kcp.GetClient())
+	KubeconfigProvider KubeconfigProvider
+}
 
-	keb := NewKeb(kcp.GetClient())
+func (o CreateOptions) Validate() error {
+	var result error
+	if o.KCP == nil {
+		result = multierror.Append(fmt.Errorf("missing KCP cluster"))
+	}
+	if o.Garden == nil {
+		result = multierror.Append(fmt.Errorf("missing Garden cluster"))
+	}
+	if o.Logger.GetSink() == nil {
+		result = multierror.Append(fmt.Errorf("missing Logger cluster"))
+	}
+	return result
+}
 
-	simRt := newSimRuntime(kcp.GetClient(), garden.GetClient())
+func New(opts CreateOptions) (Sim, error) {
+	if err := opts.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid new sim options: %w", err)
+	}
+
+	if opts.KubeconfigProvider == nil {
+		opts.KubeconfigProvider = NewKubeconfigProvider(opts.Garden.GetClient(), 10*time.Hour)
+	}
+
+	mngr := NewManager(opts.KCP, opts.Logger)
+
+	factory := NewClientClusterFactory(opts.KCP.GetClient())
+
+	keb := NewKeb(opts.KCP.GetClient())
+
+	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden.GetClient())
 	if err := simRt.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create runtime manager: %w", err)
 	}
 
-	simGC := newSimGardenerCluster(kcp.GetClient(), garden.GetClient())
+	simGC := newSimGardenerCluster(opts.KCP.GetClient(), opts.KubeconfigProvider)
 	if err := simGC.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create gardener cluster manager: %w", err)
 	}
 
-	simKK := newSimKymaKcp(kcp.GetClient(), factory)
+	simKK := newSimKymaKcp(opts.KCP.GetClient(), factory)
 	if err := simKK.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create Kyma KCP manager: %w", err)
 	}

@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
-	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	corev1 "k8s.io/api/core/v1"
@@ -17,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -28,20 +24,20 @@ const (
 	forceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
 )
 
-func newSimGardenerCluster(kcp client.Client, garden client.Client) *simGardenerCluster {
+func newSimGardenerCluster(kcp client.Client, kubeconfigProvider KubeconfigProvider) *simGardenerCluster {
 	return &simGardenerCluster{
-		kcp:    kcp,
-		garden: garden,
-		clock:  clock.RealClock{},
+		kcp:                kcp,
+		kubeconfigProvider: kubeconfigProvider,
+		clock:              clock.RealClock{},
 	}
 }
 
 var _ reconcile.Reconciler = &simGardenerCluster{}
 
 type simGardenerCluster struct {
-	kcp    client.Client
-	garden client.Client
-	clock  clock.Clock
+	kcp                client.Client
+	kubeconfigProvider KubeconfigProvider
+	clock              clock.Clock
 }
 
 func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -81,39 +77,10 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	shoot := &gardenertypes.Shoot{}
-	err = r.garden.Get(ctx, types.NamespacedName{
-		Namespace: e2econfig.Config.GardenNamespace,
-		Name:      shootName,
-	}, shoot)
+	kubeConfigBytes, err := r.kubeconfigProvider.CreateNewKubeconfig(ctx, shootName)
 	if err != nil {
-		gc.Status.State = infrastructuremanagerv1.ErrorState
-		meta.SetStatusCondition(&gc.Status.Conditions, metav1.Condition{
-			Type:               string(infrastructuremanagerv1.ConditionTypeRuntimeKubeconfigReady),
-			Status:             metav1.ConditionFalse,
-			ObservedGeneration: gc.Generation,
-			Reason:             string(infrastructuremanagerv1.ConditionReasonGardenerError),
-			Message:            fmt.Sprintf("Error getting shoot %s: %s", shootName, err.Error()),
-		})
-		err = composed.PatchObjStatus(ctx, gc, r.kcp)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error patching GardenerCluster status with error getting shoot condition: %w", err)
-		}
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, fmt.Errorf("error creating kubeconfig: %w", err)
 	}
-
-	expiresIn := 6 * time.Hour
-
-	adminKubeconfigRequest := &authenticationv1alpha1.AdminKubeconfigRequest{
-		Spec: authenticationv1alpha1.AdminKubeconfigRequestSpec{
-			ExpirationSeconds: ptr.To(int64(expiresIn.Seconds())),
-		},
-	}
-	err = r.garden.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("error creating admin kubeconfig: %w", err)
-	}
-	kubeConfigBytes := adminKubeconfigRequest.Status.Kubeconfig
 
 	kubeSecret := &corev1.Secret{}
 	err = r.kcp.Get(ctx, types.NamespacedName{
@@ -152,7 +119,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	if gc.Annotations == nil {
 		gc.Annotations = map[string]string{}
 	}
-	gc.Annotations[expiresAtAnnotation] = r.clock.Now().Add(expiresIn).Format(time.RFC3339)
+	gc.Annotations[expiresAtAnnotation] = r.clock.Now().Add(r.kubeconfigProvider.ExpiresIn()).Format(time.RFC3339)
 	delete(gc.Annotations, forceKubeconfigRotationAnnotation)
 
 	err = r.kcp.Update(ctx, gc)
@@ -204,19 +171,6 @@ func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCl
 	}
 
 	return false, time.Duration(0.5 * float64(expiresIn))
-}
-
-func (r *simGardenerCluster) getShootKubeconfig(ctx context.Context, shoot *gardenertypes.Shoot) ([]byte, error) {
-	adminKubeconfigRequest := &authenticationv1alpha1.AdminKubeconfigRequest{
-		Spec: authenticationv1alpha1.AdminKubeconfigRequestSpec{
-			ExpirationSeconds: ptr.To(int64(3600 * 6)), // 6 hours
-		},
-	}
-	err := r.garden.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
-	if err != nil {
-		return nil, fmt.Errorf("error creating admin kubeconfig: %w", err)
-	}
-	return adminKubeconfigRequest.Status.Kubeconfig, nil
 }
 
 func (r *simGardenerCluster) SetupWithManager(mgr ctrl.Manager) error {
