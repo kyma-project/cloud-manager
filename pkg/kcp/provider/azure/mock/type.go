@@ -49,6 +49,10 @@ type PrivateDnsZoneClient interface {
 	azureclient.PrivateDnsZoneClient
 }
 
+type DnsResolverVNetLinkClient interface {
+	azureclient.DnsResolverVNetLinkClient
+}
+
 type VpcPeeringClient interface {
 	azureclient.VirtualNetworkPeeringClient
 }
