@@ -10,7 +10,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shareaccessrules"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 
@@ -285,18 +284,6 @@ type ShareAccess struct {
 	AccessLevel string
 }
 
-func newShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAccess) *ShareAccess {
-	return &ShareAccess{
-		ID:          o.ID,
-		ShareID:     o.ShareID,
-		AccessType:  o.AccessType,
-		AccessTo:    o.AccessTo,
-		AccessKey:   o.AccessKey,
-		State:       o.State,
-		AccessLevel: o.AccessLevel,
-	}
-}
-
 func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
 	return &ShareAccess{
 		ID:          o.ID,
@@ -310,16 +297,13 @@ func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
 }
 
 func (c *client) ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error) {
-	arr, err := shareaccessrules.List(ctx, c.shareSvc, shareId).Extract()
-	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
-		return nil, nil
-	}
+	arr, err := shares.ListAccessRights(ctx, c.shareSvc, shareId).Extract()
 	if err != nil {
 		return nil, fmt.Errorf("error listing access rights: %w", err)
 	}
-	return pie.Map(arr, func(x shareaccessrules.ShareAccess) ShareAccess {
+	return pie.Map(arr, func(x shares.AccessRight) ShareAccess {
 		x.ShareID = shareId
-		return *newShareAccessFromShareAccessRulesShareAccess(&x)
+		return *newShareAccessFromSharesAccessRight(&x)
 	}), nil
 }
 
