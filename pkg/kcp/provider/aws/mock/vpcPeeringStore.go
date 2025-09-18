@@ -87,7 +87,7 @@ func (s *vpcPeeringStore) findVpcPeeringConnection(vpcId, remoteVpcId *string) (
 	}
 
 	return nil, &smithy.GenericAPIError{
-		Code:    "404",
+		Code:    "InvalidVpcPeeringConnectionID.NotFound",
 		Message: fmt.Sprintf("vpc peering connection between %s and %s does not exist", ptr.Deref(vpcId, ""), ptr.Deref(remoteVpcId, "")),
 	}
 }
@@ -123,7 +123,7 @@ func (s *vpcPeeringStore) getVpcPeeringConnection(vpcPeeringConnectionId string)
 	}
 
 	return nil, &smithy.GenericAPIError{
-		Code:    "404",
+		Code:    "InvalidVpcPeeringConnectionID.NotFound",
 		Message: fmt.Sprintf("vpc peering connection %s does not exist", vpcPeeringConnectionId),
 	}
 }
