@@ -63,6 +63,9 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create shared file system v2 client: %v", err)
 		}
+		// max microversion in xena is 2.65
+		// https://docs.openstack.org/manila/latest/contributor/index.html
+		// https://documentation.global.cloud.sap/docs/customer/support/faq-current-versions/
 		shareSvc.Microversion = "2.65"
 		return &client{
 			netSvc:   netSvc,
@@ -320,8 +323,25 @@ func (c *client) ListShareAccessRules(ctx context.Context, shareId string) ([]Sh
 	}), nil
 }
 
+// GrantAccessOpts is a temporary fix until CCloud upgrades above xena manilla release
+// when this is called `allow_access` and is supported in gophercloud as microversion 2.7
+// Once CCloud upgrades to yoga we can start using microversion 2.7 and regular gophercloud
+// argument type `shares.GrantAccessOpts`
+// https://documentation.global.cloud.sap/docs/customer/support/faq-current-versions/
+// https://docs.openstack.org/api-ref/shared-file-system/#grant-access
+// https://docs.openstack.org/manila/latest/contributor/index.html
+// https://github.com/gophercloud/gophercloud/issues/488
+// https://github.com/gophercloud/gophercloud/issues/441
+type GrantAccessOpts shares.GrantAccessOpts
+
+// ToGrantAccessMap overrides the shares.GrantAccessOpts method so it can rename the parent to `os-allow_access`
+// that is in microversions <2.7 as currently used by CCloud in the xena release
+func (opts GrantAccessOpts) ToGrantAccessMap() (map[string]any, error) {
+	return gophercloud.BuildRequestBody(opts, "os-allow_access")
+}
+
 func (c *client) GrantShareAccess(ctx context.Context, shareId string, cidr string) (*ShareAccess, error) {
-	ar, err := shares.GrantAccess(ctx, c.shareSvc, shareId, shares.GrantAccessOpts{
+	ar, err := shares.GrantAccess(ctx, c.shareSvc, shareId, GrantAccessOpts{
 		AccessType:  "ip",
 		AccessTo:    cidr,
 		AccessLevel: "rw",
