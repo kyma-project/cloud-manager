@@ -1,4 +1,4 @@
-package vnetlink
+package dnszone
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 )
 
 type State struct {

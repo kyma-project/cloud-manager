@@ -19,6 +19,8 @@ package cloudcontrol
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
+	vnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -29,8 +31,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	vnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
-
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink"
 )
 
@@ -46,7 +46,7 @@ func SetupAzureVNetLinkReconciler(
 		vnetlink.NewAzureVNetLinkReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			vnetlink.NewStateFactory(azureProvider),
+			dnszone.NewStateFactory(azureProvider),
 		),
 	).SetupWithManager(kcpManager)
 

@@ -3,9 +3,9 @@ package vnetlink
 import (
 	"context"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -20,22 +20,22 @@ type AzureVNetLinkReconciler interface {
 type azureVNetLinkReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
-	stateFactory         StateFactory
+	dnsZoneStateFactory  dnszone.StateFactory
 }
 
 func NewAzureVNetLinkReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	stateFactory StateFactory) AzureVNetLinkReconciler {
+	dnsZoneStateFactory dnszone.StateFactory) AzureVNetLinkReconciler {
 	return &azureVNetLinkReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
-		stateFactory:         stateFactory,
+		dnsZoneStateFactory:  dnsZoneStateFactory,
 	}
 }
 
 func (r *azureVNetLinkReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
-	if Ignore != nil && Ignore.ShouldIgnoreKey(request) {
+	if dnszone.Ignore != nil && dnszone.Ignore.ShouldIgnoreKey(request) {
 		return ctrl.Result{}, nil
 	}
 
@@ -51,47 +51,8 @@ func (r *azureVNetLinkReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
 		focal.New(),
-		r.newFlow(),
+		dnszone.New(r.dnsZoneStateFactory),
 	)
-}
-
-func (r *azureVNetLinkReconciler) newFlow() composed.Action {
-	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		state, err := r.stateFactory.NewState(ctx, st.(focal.State))
-
-		if err != nil {
-			return composed.LogErrorAndReturn(err, "Failed to bootstrap AzureVNetLink state", composed.StopAndForget, ctx)
-		}
-
-		return composed.ComposeActions(
-			"azureVNetLink",
-			initState,
-			initRemoteClient,
-			statusInProgress,
-			loadVNetLink,
-			composed.IfElse(
-				composed.MarkedForDeletionPredicate,
-				composed.ComposeActions(
-					"azureVNetLink-delete",
-					deleteVNetLink,
-					actions.PatchRemoveCommonFinalizer(),
-				),
-				composed.ComposeActions(
-					"azureVNetLink-non-delete",
-					actions.AddCommonFinalizer(),
-					composed.If(
-						predicateRequireVNetShootTag,
-						loadPrivateDnsZone,
-						waitPrivateDnsZoneTag,
-					),
-					createVNetLink,
-					waitVNetLinkCompleted,
-					updateStatus,
-				),
-			),
-			composed.StopAndForgetAction,
-		)(ctx, state)
-	}
 }
 
 func (r *azureVNetLinkReconciler) newFocalState(name types.NamespacedName) focal.State {
