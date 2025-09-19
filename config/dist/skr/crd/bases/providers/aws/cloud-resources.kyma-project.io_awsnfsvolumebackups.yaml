@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.5
+    cloud-resources.kyma-project.io/version: v0.0.6
   name: awsnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -60,7 +60,9 @@ spec:
                       type: integer
                   type: object
                 location:
-                  description: Location specifies the AWS region where to copy over the backup.
+                  description: |-
+                    AWS Region Code (as specified in https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html#available-regions) where this backup should be created.
+                    If not specified, region of the AwsNfsVolume is used for the backup.
                   type: string
                   x-kubernetes-validations:
                     - message: Location is immutable.

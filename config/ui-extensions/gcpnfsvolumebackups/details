@@ -21,6 +21,9 @@ body:
           source: location
           name: status.location
         - widget: Labels
+          source: capacity
+          name: status.capacity
+        - widget: Labels
           source: state
           name: status.state
         - widget: Labels

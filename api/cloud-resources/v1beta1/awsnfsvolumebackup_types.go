@@ -34,7 +34,8 @@ type AwsNfsVolumeBackupSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
-	// Location specifies the AWS region where to copy over the backup.
+	// AWS Region Code (as specified in https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html#available-regions) where this backup should be created.
+	// If not specified, region of the AwsNfsVolume is used for the backup.
 	Location string `json:"location"`
 }
 

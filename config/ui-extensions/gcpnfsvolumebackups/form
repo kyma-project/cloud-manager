@@ -2,7 +2,6 @@
   name: spec.location
   widget: Text
   disableOnEdit: true
-  description: Immutable once set.
 - path: spec.source.volume
   name: spec.source.volume
   required: true
@@ -13,10 +12,8 @@
       required: true
       widget: Text
       disableOnEdit: true
-      description: Immutable once set.
     - path: namespace
       name: spec.source.volume.namespace
       required: false
       widget: Text
       disableOnEdit: true
-      description: Immutable once set.

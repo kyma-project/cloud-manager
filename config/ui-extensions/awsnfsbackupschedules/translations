@@ -17,3 +17,4 @@ en:
   spec.nfsVolumeRef.kind: Kind
   spec.nfsVolumeRef.name: Name
   spec.nfsVolumeRef.namespace: Namespace
+  spec.location: Location

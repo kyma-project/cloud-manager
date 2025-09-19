@@ -50,6 +50,9 @@ data:
           - widget: Labels
             source: suspend
             name: spec.suspend
+          - widget: Labels
+            source: location
+            name: spec.location
 
 
       - name: status
@@ -81,6 +84,9 @@ data:
 
     - path: spec.schedule
       name: spec.schedule
+      required: false
+    - path: spec.location
+      name: spec.location
       required: false
     - path: spec.startTime
       name: spec.startTime
@@ -122,6 +128,9 @@ data:
     - source: spec.schedule
       name: spec.schedule
       sort: true
+    - source: spec.location
+      name: spec.location
+      sort: true
     - source: status.lastCreateRun
       name: status.lastCreateRun
       sort: true
@@ -148,10 +157,11 @@ data:
       spec.nfsVolumeRef.kind: Kind
       spec.nfsVolumeRef.name: Name
       spec.nfsVolumeRef.namespace: Namespace
+      spec.location: Location
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"
