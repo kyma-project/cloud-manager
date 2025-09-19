@@ -7,7 +7,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
@@ -22,7 +21,7 @@ type State struct {
 	network      *networks.Network
 	subnet       *subnets.Subnet
 	shareNetwork *sharenetworks.ShareNetwork
-	share        *shares.Share
+	share        *sapnfsinstanceclient.Share
 	accessRight  *sapnfsinstanceclient.ShareAccess
 }
 

@@ -3,8 +3,8 @@ package cloudcontrol
 import (
 	"fmt"
 
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -64,7 +64,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 				Should(Succeed(), "failed creating NfsInstance")
 		})
 
-		var theShare *shares.Share
+		var theShare *sapnfsinstanceclient.Share
 
 		By("Then SAP share is created", func() {
 			Eventually(LoadAndCheck).
