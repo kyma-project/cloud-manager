@@ -96,6 +96,7 @@ func IsRouteNotSupported(err error) bool {
 	return false
 }
 
+// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
 var notFoundErrorCodes = map[string]struct{}{
 	(&efstypes.FileSystemNotFound{}).ErrorCode():                    {},
 	(&efstypes.AccessPointNotFound{}).ErrorCode():                   {},
@@ -106,28 +107,37 @@ var notFoundErrorCodes = map[string]struct{}{
 	(&secretsmanagertypes.ResourceNotFoundException{}).ErrorCode():  {},
 	"InvalidVpcPeeringConnectionID.NotFound":                        {},
 	"InvalidVpcID.NotFound":                                         {},
+	"InvalidRoute.NotFound":                                         {},
 }
 
 func IsNotFound(err error) bool {
 	if err != nil {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
-			var smithyhttpErr *smithyhttp.ResponseError
-
 			_, listed := notFoundErrorCodes[apiErr.ErrorCode()]
 			if listed {
 				return true
 			}
+		}
 
-			if errors.As(err, &smithyhttpErr) {
-				return smithyhttpErr.HTTPStatusCode() == http.StatusNotFound
-			}
-
+		var respErr *smithyhttp.ResponseError
+		if errors.As(err, &respErr) {
+			return respErr.HTTPStatusCode() == http.StatusNotFound
 		}
 	}
 	return false
 }
 
+func NewHttpNotFoundError(err error) error {
+	return &smithyhttp.ResponseError{
+		Err: err,
+		Response: &smithyhttp.Response{
+			Response: &http.Response{
+				StatusCode: 404,
+			},
+		},
+	}
+}
 func RetryableErrorToRequeueResponse(err error) error {
 	if IsErrorRetryable(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
