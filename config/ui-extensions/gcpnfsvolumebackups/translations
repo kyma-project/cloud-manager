@@ -1,6 +1,7 @@
 en:
   spec.location: Requested Location
   status.location: Allocated Location
+  status.capacity: Capacity
   spec.source.volume: Volume
   spec.source.volume.name: Volume Name
   spec.source.volume.namespace: Namespace

@@ -33,7 +33,8 @@ type GcpNfsBackupScheduleSpec struct {
 	// +kubebuilder:validation:Required
 	NfsVolumeRef corev1.ObjectReference `json:"nfsVolumeRef"`
 
-	// Location specifies the location where the backup has to be stored.
+	// GCP Region Name (as specified in https://cloud.google.com/filestore/docs/regions) where this backup should be created.
+	// If not specified, region of the GcpNfsVolume is used for the backup.
 	// +optional
 	Location string `json:"location"`
 

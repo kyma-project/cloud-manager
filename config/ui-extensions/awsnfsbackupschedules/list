@@ -1,6 +1,9 @@
 - source: spec.schedule
   name: spec.schedule
   sort: true
+- source: spec.location
+  name: spec.location
+  sort: true
 - source: status.lastCreateRun
   name: status.lastCreateRun
   sort: true
