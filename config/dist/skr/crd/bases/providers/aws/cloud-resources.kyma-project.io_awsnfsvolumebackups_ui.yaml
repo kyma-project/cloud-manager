@@ -1,34 +1,17 @@
 apiVersion: v1
 data:
-  details: |-
-    body:
-      - name: spec.lifecycle
-        widget: Panel
-        source: spec.lifecycle
-        children:
-          - name: spec.lifecycle.deleteAfterDays
-            source: deleteAfterDays
-            widget: Labels
-          - name: spec.lifecycle.moveToColdStorageAfterDays
-            source: moveToColdStorageAfterDays
-            widget: Labels
-      - name: spec.source.volume
-        widget: Panel
-        source: spec.source.volume
-        children:
-          - name: spec.source.volume.name
-            source: name
-            widget: Labels
-          - name: spec.source.volume.namespace
-            source: namespace
-            widget: Labels
-      - name: status
-        widget: Panel
-        source: status
-        children:
-          - widget: Labels
-            source: state
-            name: status.state
+  details: "body:\n  - name: spec.lifecycle\n    widget: Panel\n    source: spec.lifecycle\n
+    \   children:\n      - name: spec.lifecycle.deleteAfterDays\n        source: deleteAfterDays\n
+    \       widget: Labels\n      - name: spec.lifecycle.moveToColdStorageAfterDays\n
+    \       source: moveToColdStorageAfterDays\n        widget: Labels\n  - name:
+    configuration\n    widget: Panel\n    source: spec\n    children:\n      - name:
+    spec.location\n        source: location\n        widget: Labels  \n      - name:
+    spec.source.volume.name\n        source: name\n        widget: Labels\n      -
+    name: spec.source.volume.namespace\n        source: namespace\n        widget:
+    Labels\n  - name: status\n    widget: Panel\n    source: status\n    children:\n
+    \     - widget: Labels\n        source: state\n        name: status.state\n      -
+    widget: Labels\n        source: locations\n        name: status.locations\n      -
+    widget: Labels\n        source: capacity\n        name: status.capacity"
   form: |-
     - path: spec.lifecycle
       name: spec.lifecycle
@@ -55,6 +38,15 @@ data:
           name: spec.source.volume.namespace
           required: false
           widget: Text
+
+    - path: spec.location
+      name: spec.location
+      widget: FormGroup
+      children:
+        - path: spec.location
+          name: spec.location
+          required: false
+          widget: Text
   general: |-
     resource:
         kind: AwsNfsVolumeBackup
@@ -68,6 +60,15 @@ data:
     description: >-
         AWS NFS Volume Backup description here
   list: |-
+    - source: status.locations
+      name: status.locations
+      sort: true
+    - source: status.capacity
+      name: status.capacity
+      sort: true
+    - source: spec.source.volume.name
+      name: spec.source.volume.name
+      sort: true
     - source: status.state
       name: status.state
       sort: true
@@ -76,16 +77,19 @@ data:
       configuration: Configuration
       status: Status
       status.state: State
+      status.locations: Allocated Locations
+      status.capacity: Capacity
       spec.lifecycle: Lifecycle
       spec.lifecycle.deleteAfterDays: Delete After Days
       spec.lifecycle.moveToColdStorageAfterDays: Move to Cold Storage After Days
       spec.source.volume: Source Volume
       spec.source.volume.name: Name
       spec.source.volume.namespace: Namespace
+      spec.location: Requested Location
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

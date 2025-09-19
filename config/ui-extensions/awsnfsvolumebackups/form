@@ -23,3 +23,12 @@
       name: spec.source.volume.namespace
       required: false
       widget: Text
+
+- path: spec.location
+  name: spec.location
+  widget: FormGroup
+  children:
+    - path: spec.location
+      name: spec.location
+      required: false
+      widget: Text

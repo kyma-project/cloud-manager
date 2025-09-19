@@ -24,6 +24,9 @@ data:
               source: location
               name: status.location
             - widget: Labels
+              source: capacity
+              name: status.capacity
+            - widget: Labels
               source: state
               name: status.state
             - widget: Labels
@@ -34,7 +37,6 @@ data:
       name: spec.location
       widget: Text
       disableOnEdit: true
-      description: Immutable once set.
     - path: spec.source.volume
       name: spec.source.volume
       required: true
@@ -45,13 +47,11 @@ data:
           required: true
           widget: Text
           disableOnEdit: true
-          description: Immutable once set.
         - path: namespace
           name: spec.source.volume.namespace
           required: false
           widget: Text
           disableOnEdit: true
-          description: Immutable once set.
   general: |-
     resource:
         kind: GcpNfsVolumeBackup
@@ -65,8 +65,11 @@ data:
     description: >-
         GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
   list: |-
-    - source: spec.location
-      name: spec.location
+    - source: status.location
+      name: status.location
+      sort: true
+    - source: status.capacity
+      name: status.capacity
       sort: true
     - source: spec.source.volume.name
       name: spec.source.volume.name
@@ -78,6 +81,7 @@ data:
     en:
       spec.location: Requested Location
       status.location: Allocated Location
+      status.capacity: Capacity
       spec.source.volume: Volume
       spec.source.volume.name: Volume Name
       spec.source.volume.namespace: Namespace
@@ -88,7 +92,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

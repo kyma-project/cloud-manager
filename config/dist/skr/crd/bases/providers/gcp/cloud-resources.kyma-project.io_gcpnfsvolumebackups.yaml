@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.5
+    cloud-resources.kyma-project.io/version: v0.0.6
   name: gcpnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -56,6 +56,9 @@ spec:
               description: GcpNfsVolumeBackupSpec defines the desired state of GcpNfsVolumeBackup
               properties:
                 location:
+                  description: |-
+                    GCP Region Name (as specified in https://cloud.google.com/filestore/docs/regions) where this backup should be created.
+                    If not specified, region of the GcpNfsVolume is used for the backup.
                   type: string
                   x-kubernetes-validations:
                     - message: Location is immutable.

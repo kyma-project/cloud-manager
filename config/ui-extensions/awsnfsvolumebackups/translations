@@ -2,9 +2,12 @@ en:
   configuration: Configuration
   status: Status
   status.state: State
+  status.locations: Allocated Locations
+  status.capacity: Capacity
   spec.lifecycle: Lifecycle
   spec.lifecycle.deleteAfterDays: Delete After Days
   spec.lifecycle.moveToColdStorageAfterDays: Move to Cold Storage After Days
   spec.source.volume: Source Volume
   spec.source.volume.name: Name
   spec.source.volume.namespace: Namespace
+  spec.location: Requested Location
