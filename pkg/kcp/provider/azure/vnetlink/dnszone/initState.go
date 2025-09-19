@@ -1,11 +1,10 @@
-package vnetlink
+package dnszone
 
 import (
 	"context"
-	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

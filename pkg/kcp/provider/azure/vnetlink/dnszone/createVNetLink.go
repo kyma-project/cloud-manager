@@ -1,4 +1,4 @@
-package vnetlink
+package dnszone
 
 import (
 	"context"
