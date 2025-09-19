@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shareaccessrules"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
+	"github.com/gophercloud/gophercloud/v2/pagination"
 
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 )
@@ -27,11 +30,10 @@ type Client interface {
 	CreateShareNetwork(ctx context.Context, networkId, subnetId, name string) (*sharenetworks.ShareNetwork, error)
 	DeleteShareNetwork(ctx context.Context, id string) error
 
-	ListShares(ctx context.Context, shareNetworkId string) ([]shares.Share, error)
-	GetShare(ctx context.Context, id string) (*shares.Share, error)
-	CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error)
+	ListShares(ctx context.Context, shareNetworkId string) ([]Share, error)
+	GetShare(ctx context.Context, id string) (*Share, error)
+	CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*Share, error)
 	DeleteShare(ctx context.Context, id string) error
-	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
 	ShareShrink(ctx context.Context, shareId string, newSize int) error
 	ShareExtend(ctx context.Context, shareId string, newSize int) error
 
@@ -181,6 +183,73 @@ func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
 
 // shares ----------------------------------------------------------------------------------
 
+type Share struct {
+	// The availability zone of the share
+	AvailabilityZone string `json:"availability_zone"`
+	// A description of the share
+	Description string `json:"description,omitempty"`
+	// DisplayDescription is inherited from BlockStorage API.
+	// Both Description and DisplayDescription can be used
+	DisplayDescription string `json:"display_description,omitempty"`
+	// DisplayName is inherited from BlockStorage API
+	// Both DisplayName and Name can be used
+	DisplayName string `json:"display_name,omitempty"`
+	// Indicates whether a share has replicas or not.
+	HasReplicas bool `json:"has_replicas"`
+	// The host name of the share
+	Host string `json:"host"`
+	// The UUID of the share
+	ID string `json:"id"`
+	// Indicates the visibility of the share
+	IsPublic bool `json:"is_public,omitempty"`
+	// Share links for pagination
+	Links []map[string]string `json:"links"`
+	// Key, value -pairs of custom metadata
+	Metadata map[string]string `json:"metadata,omitempty"`
+	// The name of the share
+	Name string `json:"name,omitempty"`
+	// The UUID of the project to which this share belongs to
+	ProjectID string `json:"project_id"`
+	// The share replication type
+	ReplicationType string `json:"replication_type,omitempty"`
+	// The UUID of the share network
+	ShareNetworkID string `json:"share_network_id"`
+	// The shared file system protocol
+	ShareProto string `json:"share_proto"`
+	// The UUID of the share server
+	ShareServerID string `json:"share_server_id"`
+	// The UUID of the share type.
+	ShareType string `json:"share_type"`
+	// The name of the share type.
+	ShareTypeName string `json:"share_type_name"`
+	// The UUID of the share group. Available starting from the microversion 2.31
+	ShareGroupID string `json:"share_group_id"`
+	// Size of the share in GB
+	Size int `json:"size"`
+	// UUID of the snapshot from which to create the share
+	SnapshotID string `json:"snapshot_id"`
+	// The share status
+	Status string `json:"status"`
+	// The task state, used for share migration
+	TaskState string `json:"task_state"`
+	// The type of the volume
+	VolumeType string `json:"volume_type,omitempty"`
+	// The UUID of the consistency group this share belongs to
+	ConsistencyGroupID string `json:"consistency_group_id"`
+	// Used for filtering backends which either support or do not support share snapshots
+	SnapshotSupport          bool   `json:"snapshot_support"`
+	SourceCgsnapshotMemberID string `json:"source_cgsnapshot_member_id"`
+	// Used for filtering backends which either support or do not support creating shares from snapshots
+	CreateShareFromSnapshotSupport bool `json:"create_share_from_snapshot_support"`
+	// Timestamp when the share was created
+	CreatedAt time.Time `json:"-"`
+	// Timestamp when the share was updated
+	UpdatedAt time.Time `json:"-"`
+
+	ExportLocation  string   `json:"export_location"`
+	ExportLocations []string `json:"export_locations"`
+}
+
 // share.status possible values https://docs.openstack.org/manila/latest/user/create-and-manage-shares.html
 // These “-ing” states end in a “available” state if everything goes well. They may end up in an “error” state in case there is an issue.
 // * available
@@ -190,7 +259,7 @@ func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
 // * shrinking
 // * migrating
 
-func (c *client) ListShares(ctx context.Context, shareNetworkId string) ([]shares.Share, error) {
+func (c *client) ListShares(ctx context.Context, shareNetworkId string) ([]Share, error) {
 	pg, err := shares.ListDetail(c.shareSvc, shares.ListOpts{
 		ShareNetworkID: shareNetworkId,
 	}).AllPages(ctx)
@@ -200,25 +269,75 @@ func (c *client) ListShares(ctx context.Context, shareNetworkId string) ([]share
 	if err != nil {
 		return nil, fmt.Errorf("error listing shares: %w", err)
 	}
-	arr, err := shares.ExtractShares(pg)
+	arr, err := extractShares(pg)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting shares: %w", err)
 	}
 	return arr, nil
 }
 
-func (c *client) GetShare(ctx context.Context, id string) (*shares.Share, error) {
-	sh, err := shares.Get(ctx, c.shareSvc, id).Extract()
+func extractShares(r pagination.Page) ([]Share, error) {
+	var s struct {
+		Shares []Share `json:"shares"`
+	}
+
+	err := (r.(shares.SharePage)).ExtractInto(&s)
+
+	return s.Shares, err
+}
+
+func newShareFromGopherShare(s *shares.Share) *Share {
+	return &Share{
+		AvailabilityZone:               s.AvailabilityZone,
+		Description:                    s.Description,
+		DisplayDescription:             s.DisplayDescription,
+		DisplayName:                    s.DisplayName,
+		HasReplicas:                    s.HasReplicas,
+		Host:                           s.Host,
+		ID:                             s.ID,
+		IsPublic:                       s.IsPublic,
+		Links:                          s.Links,
+		Metadata:                       s.Metadata,
+		Name:                           s.Name,
+		ProjectID:                      s.ProjectID,
+		ReplicationType:                s.ReplicationType,
+		ShareNetworkID:                 s.ShareNetworkID,
+		ShareProto:                     s.ShareProto,
+		ShareServerID:                  s.ShareServerID,
+		ShareType:                      s.ShareType,
+		ShareTypeName:                  s.ShareType,
+		ShareGroupID:                   s.ShareGroupID,
+		Size:                           s.Size,
+		SnapshotID:                     s.SnapshotID,
+		Status:                         s.Status,
+		TaskState:                      s.TaskState,
+		VolumeType:                     s.VolumeType,
+		ConsistencyGroupID:             s.ConsistencyGroupID,
+		SnapshotSupport:                s.SnapshotSupport,
+		SourceCgsnapshotMemberID:       s.SourceCgsnapshotMemberID,
+		CreateShareFromSnapshotSupport: s.CreateShareFromSnapshotSupport,
+		CreatedAt:                      s.CreatedAt,
+		UpdatedAt:                      s.UpdatedAt,
+		ExportLocation:                 "",
+		ExportLocations:                nil,
+	}
+}
+func (c *client) GetShare(ctx context.Context, id string) (*Share, error) {
+	var s struct {
+		Share *Share `json:"share"`
+	}
+	//sh := &Share{}
+	err := shares.Get(ctx, c.shareSvc, id).ExtractInto(&s)
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error getting share: %w", err)
 	}
-	return sh, nil
+	return s.Share, nil
 }
 
-func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error) {
+func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*Share, error) {
 	sh, err := shares.Create(ctx, c.shareSvc, shares.CreateOpts{
 		ShareProto:     "NFS",
 		Size:           size,
@@ -228,9 +347,9 @@ func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, s
 		Metadata:       metadata,
 	}).Extract()
 	if err != nil {
-		return sh, fmt.Errorf("error creating share: %w", err)
+		return nil, fmt.Errorf("error creating share: %w", err)
 	}
-	return sh, nil
+	return newShareFromGopherShare(sh), nil
 }
 
 func (c *client) DeleteShare(ctx context.Context, id string) error {
@@ -244,12 +363,11 @@ func (c *client) DeleteShare(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
-	arr, err := shares.ListExportLocations(ctx, c.shareSvc, id).Extract()
-	if err != nil {
-		return nil, fmt.Errorf("error listing export locations: %w", err)
-	}
-	return arr, nil
+type ExportLocation struct {
+	ShareInstanceID string
+	Path            string
+	Preferred       bool
+	ID              string
 }
 
 func (c *client) ShareShrink(ctx context.Context, shareId string, newSize int) error {
@@ -296,14 +414,29 @@ func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
 	}
 }
 
+func newShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAccess) *ShareAccess {
+	return &ShareAccess{
+		ID:          o.ID,
+		ShareID:     o.ShareID,
+		AccessType:  o.AccessType,
+		AccessTo:    o.AccessTo,
+		AccessKey:   o.AccessKey,
+		State:       o.State,
+		AccessLevel: o.AccessLevel,
+	}
+}
+
 func (c *client) ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error) {
-	arr, err := shares.ListAccessRights(ctx, c.shareSvc, shareId).Extract()
+	arr, err := shareaccessrules.List(ctx, c.shareSvc, shareId).Extract()
+	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error listing access rights: %w", err)
 	}
-	return pie.Map(arr, func(x shares.AccessRight) ShareAccess {
+	return pie.Map(arr, func(x shareaccessrules.ShareAccess) ShareAccess {
 		x.ShareID = shareId
-		return *newShareAccessFromSharesAccessRight(&x)
+		return *newShareAccessFromShareAccessRulesShareAccess(&x)
 	}), nil
 }
 

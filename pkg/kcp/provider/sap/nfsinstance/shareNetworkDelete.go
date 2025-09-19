@@ -7,9 +7,9 @@ import (
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,7 +28,7 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 		return composed.LogErrorAndReturn(err, "Error listing shares for delete share network", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 	if len(arr) > 1 {
-		ids := pie.Map(arr, func(sh shares.Share) string {
+		ids := pie.Map(arr, func(sh sapnfsinstanceclient.Share) string {
 			return fmt.Sprintf("%s-%s", sh.ID, sh.Name)
 		})
 		logger.

@@ -15,7 +15,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 )
 
@@ -38,7 +37,7 @@ type nfsStore struct {
 	routers       []*routers.Router
 	subnets       map[string][]*subnets.Subnet
 	shareNetworks map[string][]*sharenetworks.ShareNetwork
-	shares        map[string][]*shares.Share
+	shares        map[string][]*sapnfsinstanceclient.Share
 	access        map[string][]*sapnfsinstanceclient.ShareAccess
 }
 
@@ -293,7 +292,7 @@ func (s *nfsStore) DeleteShareNetwork(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *nfsStore) ListShares(ctx context.Context, shareNetworkId string) ([]shares.Share, error) {
+func (s *nfsStore) ListShares(ctx context.Context, shareNetworkId string) ([]sapnfsinstanceclient.Share, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -301,7 +300,7 @@ func (s *nfsStore) ListShares(ctx context.Context, shareNetworkId string) ([]sha
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.shares == nil {
-		s.shares = map[string][]*shares.Share{}
+		s.shares = map[string][]*sapnfsinstanceclient.Share{}
 	}
 	arr, ok := s.shares[shareNetworkId]
 	if !ok {
@@ -310,7 +309,7 @@ func (s *nfsStore) ListShares(ctx context.Context, shareNetworkId string) ([]sha
 	return deptrSlice(arr), nil
 }
 
-func (s *nfsStore) GetShare(ctx context.Context, id string) (*shares.Share, error) {
+func (s *nfsStore) GetShare(ctx context.Context, id string) (*sapnfsinstanceclient.Share, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -318,7 +317,7 @@ func (s *nfsStore) GetShare(ctx context.Context, id string) (*shares.Share, erro
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.shares == nil {
-		s.shares = map[string][]*shares.Share{}
+		s.shares = map[string][]*sapnfsinstanceclient.Share{}
 	}
 	for _, arr := range s.shares {
 		for _, share := range arr {
@@ -330,7 +329,7 @@ func (s *nfsStore) GetShare(ctx context.Context, id string) (*shares.Share, erro
 	return nil, nil
 }
 
-func (s *nfsStore) CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error) {
+func (s *nfsStore) CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*sapnfsinstanceclient.Share, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -338,16 +337,22 @@ func (s *nfsStore) CreateShare(ctx context.Context, shareNetworkId, name string,
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.shares == nil {
-		s.shares = map[string][]*shares.Share{}
+		s.shares = map[string][]*sapnfsinstanceclient.Share{}
 	}
-	sh := &shares.Share{
-		ID:             uuid.NewString(),
+	id := uuid.NewString()
+	sh := &sapnfsinstanceclient.Share{
+		ID:             id,
 		ShareNetworkID: shareNetworkId,
 		Name:           name,
 		Size:           size,
 		SnapshotID:     snapshotID,
 		Metadata:       metadata,
 		Status:         "creating",
+		ExportLocation: fmt.Sprintf("10.100.0.10:/%s-1", id),
+		ExportLocations: []string{
+			fmt.Sprintf("10.100.0.10:/%s-1", id),
+			fmt.Sprintf("10.100.0.10:/%s-2", id),
+		},
 	}
 	s.shares[shareNetworkId] = append(s.shares[shareNetworkId], sh)
 	return sh, nil
@@ -361,31 +366,14 @@ func (s *nfsStore) DeleteShare(ctx context.Context, id string) error {
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
 	if s.shares == nil {
-		s.shares = map[string][]*shares.Share{}
+		s.shares = map[string][]*sapnfsinstanceclient.Share{}
 	}
 	for netId, arr := range s.shares {
-		s.shares[netId] = pie.Filter(arr, func(x *shares.Share) bool {
+		s.shares[netId] = pie.Filter(arr, func(x *sapnfsinstanceclient.Share) bool {
 			return x.ID != id
 		})
 	}
 	return nil
-}
-
-func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
-	if isContextCanceled(ctx) {
-		return nil, context.Canceled
-	}
-	time.Sleep(time.Millisecond)
-	return []shares.ExportLocation{
-		{
-			Path:      fmt.Sprintf("10.100.0.10:/%s-1", id),
-			Preferred: true,
-		},
-		{
-			Path:      fmt.Sprintf("10.200.0.20:/%s-2", id),
-			Preferred: false,
-		},
-	}, nil
 }
 
 func (s *nfsStore) ShareShrink(ctx context.Context, shareId string, newSize int) error {
@@ -399,7 +387,7 @@ func (s *nfsStore) ShareExtend(ctx context.Context, shareId string, newSize int)
 func (s *nfsStore) shareChangeSize(ctx context.Context, shareId string, newSize int) error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	var theShare *shares.Share
+	var theShare *sapnfsinstanceclient.Share
 	for _, arr := range s.shares {
 		for _, sh := range arr {
 			if sh.ID == shareId {

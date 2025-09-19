@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -16,23 +15,11 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	list, err := state.sapClient.ListShareExportLocations(ctx, state.share.ID)
-	if err != nil {
-		logger.Error(err, "error listing SAP share export locations")
-		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
-		return composed.PatchStatus(state.ObjAsNfsInstance()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ConditionTypeError,
-				Message: "Error listing SAP share export locations",
-			}).
-			ErrorLogMessage("Error patching SAP NfsInstance status after list export locations failure").
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
-			Run(ctx, state)
+	if state.share == nil {
+		return nil, ctx
 	}
 
-	if len(list) == 0 {
+	if state.share.ExportLocation == "" {
 		logger.Info("SAP share with no export locations")
 		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
@@ -47,22 +34,11 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	var el *shares.ExportLocation
-	for _, x := range list {
-		if x.Preferred {
-			el = &x
-			break
-		}
-	}
-	if el == nil {
-		el = &list[0]
-	}
-
-	logger = logger.WithValues("exportPath", el.Path)
+	logger = logger.WithValues("exportPath", state.share.ExportLocation)
 
 	logger.Info("SAP share export path")
 
-	h, p, err := parseExportUrl(el.Path)
+	h, p, err := parseExportUrl(state.share.ExportLocation)
 	if err != nil {
 		logger.Error(err, "error parsing SAP share export path")
 		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
