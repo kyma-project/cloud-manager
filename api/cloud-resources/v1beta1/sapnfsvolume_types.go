@@ -68,6 +68,8 @@ type SapNfsVolumeStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories={kyma-cloud-manager}
+// +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".status.capacity"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // SapNfsVolume is the Schema for the sapnfsvolumes API
 type SapNfsVolume struct {
