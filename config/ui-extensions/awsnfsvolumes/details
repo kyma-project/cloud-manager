@@ -35,6 +35,19 @@ body:
       - name: annotations
         source: annotations
         widget: Labels
+  - name: volumeClaim
+    source: spec.volumeClaim
+    widget: Panel
+    children:
+      - source: volumeClaim.name
+        name: spec.volumeClaim.name
+        widget: Labels
+      - source: volumeClaim.labels
+        name: spec.volumeClaim.labels
+        widget: Labels
+      - source: volumeClaim.annotations
+        name: spec.volumeClaim.annotations
+        widget: Labels
   - name: status
     widget: Panel
     source: status
