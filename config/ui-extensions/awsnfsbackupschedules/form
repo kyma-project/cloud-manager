@@ -19,6 +19,9 @@
 - path: spec.schedule
   name: spec.schedule
   required: false
+- path: spec.location
+  name: spec.location
+  required: false
 - path: spec.startTime
   name: spec.startTime
   required: false
