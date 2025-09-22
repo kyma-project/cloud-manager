@@ -19,8 +19,10 @@ package cloudcontrol
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver"
+	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
-	vnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
+	dnszoneclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -36,7 +38,8 @@ import (
 
 func SetupAzureVNetLinkReconciler(
 	kcpManager manager.Manager,
-	azureProvider azureclient.ClientProvider[vnetlinkclient.Client],
+	dnsZoneClientProvider azureclient.ClientProvider[dnszoneclient.Client],
+	dnsResolverClientProvider azureclient.ClientProvider[dnsresolverclient.Client],
 	env abstractions.Environment) error {
 
 	if env == nil {
@@ -46,7 +49,8 @@ func SetupAzureVNetLinkReconciler(
 		vnetlink.NewAzureVNetLinkReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
-			dnszone.NewStateFactory(azureProvider),
+			dnszone.NewStateFactory(dnsZoneClientProvider),
+			dnsresolver.NewStateFactory(dnsResolverClientProvider),
 		),
 	).SetupWithManager(kcpManager)
 

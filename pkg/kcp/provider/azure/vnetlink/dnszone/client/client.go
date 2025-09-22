@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
@@ -14,9 +13,6 @@ type Client interface {
 	CreateVirtualNetworkLink(ctx context.Context, resourceGroupName, privateZoneName, virtualNetworkLinkName, vnetId string) error
 	DeleteVirtualNetworkLink(ctx context.Context, resourceGroupName, privateZoneName, virtualNetworkLinkName string) error
 	GetPrivateDnsZone(ctx context.Context, resourceGroupName, privateDnsZoneName string) (*armprivatedns.PrivateZone, error)
-	CreateDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName, vnetId string) error
-	GetDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName string) (*armdnsresolver.VirtualNetworkLink, error)
-	DeleteDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName string) error
 }
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
@@ -40,21 +36,12 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
-		dnsResolverClientFactory, err := armdnsresolver.NewClientFactory(subscriptionId, cred, options)
-
-		if err != nil {
-			return nil, err
-		}
-
 		return newClient(
 			azureclient.NewVirtualNetworkLinkClient(
 				privateDnsClientFactory.NewVirtualNetworkLinksClient(),
 			),
 			azureclient.NewPrivateDnsZoneClient(
 				privateDnsClientFactory.NewPrivateZonesClient(),
-			),
-			azureclient.NewDnsResolverVNetLinkClient(
-				dnsResolverClientFactory.NewVirtualNetworkLinksClient(),
 			),
 		), nil
 	}
@@ -63,16 +50,13 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 type client struct {
 	azureclient.VirtualNetworkLinkClient
 	azureclient.PrivateDnsZoneClient
-	azureclient.DnsResolverVNetLinkClient
 }
 
 func newClient(
 	virtualNetworkLinkClient azureclient.VirtualNetworkLinkClient,
-	privateDnzZoneClient azureclient.PrivateDnsZoneClient,
-	dnsResolverVNetLinkClient azureclient.DnsResolverVNetLinkClient) Client {
+	privateDnzZoneClient azureclient.PrivateDnsZoneClient) Client {
 	return &client{
-		VirtualNetworkLinkClient:  virtualNetworkLinkClient,
-		PrivateDnsZoneClient:      privateDnzZoneClient,
-		DnsResolverVNetLinkClient: dnsResolverVNetLinkClient,
+		VirtualNetworkLinkClient: virtualNetworkLinkClient,
+		PrivateDnsZoneClient:     privateDnzZoneClient,
 	}
 }

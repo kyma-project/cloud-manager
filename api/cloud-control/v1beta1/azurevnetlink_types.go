@@ -30,6 +30,7 @@ const (
 const (
 	VirtualNetworkLinkStateInProgress = "InProgress"
 	VirtualNetworkLinkStateCompleted  = "Completed"
+	VirtualNetworkLinkStateCreating   = "Creating"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

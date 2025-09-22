@@ -1,13 +1,13 @@
-package dnszone
+package dnsresolver
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 )
 
 type State struct {
@@ -16,9 +16,9 @@ type State struct {
 	clientProvider azureclient.ClientProvider[client.Client]
 	remoteClient   client.Client
 
-	vnetLink               *armprivatedns.VirtualNetworkLink
-	privateDnzZone         *armprivatedns.PrivateZone
-	remotePrivateDnsZoneId azureutil.ResourceDetails
+	vnetLink  *armdnsresolver.VirtualNetworkLink
+	ruleset   *armdnsresolver.DNSForwardingRuleset
+	rulesetId azureutil.ResourceDetails
 }
 
 type StateFactory interface {
@@ -35,14 +35,14 @@ func NewStateFactory(clientProvider azureclient.ClientProvider[client.Client]) S
 	}
 }
 
-func (f *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
-	return newState(focalState, f.clientProvider), nil
+func (s *stateFactory) NewState(_ context.Context, focalState focal.State) (*State, error) {
+	return newState(focalState, s.clientProvider), nil
 }
 
-func newState(focalState focal.State, provider azureclient.ClientProvider[client.Client]) *State {
+func newState(focalState focal.State, clientProvider azureclient.ClientProvider[client.Client]) *State {
 	return &State{
 		State:          focalState,
-		clientProvider: provider,
+		clientProvider: clientProvider,
 	}
 }
 

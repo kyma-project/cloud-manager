@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	dnsresplverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 	"sync"
 
@@ -80,8 +81,14 @@ func (s *server) FileShareProvider() azureclient.ClientProvider[azurerwxvolumeba
 	}
 }
 
-func (s *server) VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client] {
+func (s *server) DnsZoneVNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurevnetlinkclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) DnsResolverVNetLinkProvider() azureclient.ClientProvider[dnsresplverclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (dnsresplverclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

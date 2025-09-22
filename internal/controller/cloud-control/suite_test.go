@@ -168,7 +168,8 @@ var _ = BeforeSuite(func() {
 	//AzureVNetLink
 	Expect(SetupAzureVNetLinkReconciler(
 		infra.KcpManager(),
-		infra.AzureMock().VNetLinkProvider(),
+		infra.AzureMock().DnsZoneVNetLinkProvider(),
+		infra.AzureMock().DnsResolverVNetLinkProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Subscription

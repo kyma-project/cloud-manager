@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -20,19 +21,22 @@ type AzureVNetLinkReconciler interface {
 }
 
 type azureVNetLinkReconciler struct {
-	composedStateFactory composed.StateFactory
-	focalStateFactory    focal.StateFactory
-	dnsZoneStateFactory  dnszone.StateFactory
+	composedStateFactory    composed.StateFactory
+	focalStateFactory       focal.StateFactory
+	dnsZoneStateFactory     dnszone.StateFactory
+	dnsResolverStateFactory dnsresolver.StateFactory
 }
 
 func NewAzureVNetLinkReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
-	dnsZoneStateFactory dnszone.StateFactory) AzureVNetLinkReconciler {
+	dnsZoneStateFactory dnszone.StateFactory,
+	dnsResolverStateFactory dnsresolver.StateFactory) AzureVNetLinkReconciler {
 	return &azureVNetLinkReconciler{
-		composedStateFactory: composedStateFactory,
-		focalStateFactory:    focalStateFactory,
-		dnsZoneStateFactory:  dnsZoneStateFactory,
+		composedStateFactory:    composedStateFactory,
+		focalStateFactory:       focalStateFactory,
+		dnsZoneStateFactory:     dnsZoneStateFactory,
+		dnsResolverStateFactory: dnsResolverStateFactory,
 	}
 }
 
@@ -61,6 +65,7 @@ func (r *azureVNetLinkReconciler) newAction() composed.Action {
 					"zoneResolverSwitch",
 					nil,
 					composed.NewCase(dnsZonePredicate, dnszone.New(r.dnsZoneStateFactory)),
+					composed.NewCase(dnsResolverPredicate, dnsresolver.New(r.dnsResolverStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
