@@ -54,6 +54,10 @@ type DnsResolverVNetLinkClient interface {
 	azureclient.DnsResolverVNetLinkClient
 }
 
+type DnsForwardingRulesetClient interface {
+	azureclient.DnsForwardingRulesetsClient
+}
+
 type VpcPeeringClient interface {
 	azureclient.VirtualNetworkPeeringClient
 }
@@ -83,6 +87,8 @@ type Clients interface {
 	PrivateDnsZoneGroupClient
 	NatGatewayClient
 	PublicIpAddressesClient
+	DnsResolverVNetLinkClient
+	DnsForwardingRulesetClient
 }
 
 type Providers interface {
@@ -106,6 +112,10 @@ type NetworkConfig interface {
 	AddRemoteSubscription(ctx context.Context, remoteSubscription *TenantSubscription)
 }
 
+type DnsForwardingRulesetConfig interface {
+	CreateDnsForwardingRuleset(ctx context.Context, resourceGroup, dnsForwardingRulesetName string, tags map[string]string) error
+}
+
 type RedisConfig interface {
 	AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
@@ -114,6 +124,7 @@ type RedisConfig interface {
 type Configs interface {
 	NetworkConfig
 	RedisConfig
+	DnsForwardingRulesetConfig
 }
 
 type TenantSubscription interface {

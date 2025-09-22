@@ -10,44 +10,25 @@ import (
 	"sync"
 )
 
-var _ DnsResolverVNetLinkClient = &dnsResolverVNetLinkStore{}
+var _ DnsForwardingRulesetClient = &dnsForwardingRulesetStore{}
+var _ DnsForwardingRulesetConfig = &dnsForwardingRulesetStore{}
 
-type dnsResolverVNetLinkStore struct {
+type dnsForwardingRulesetStore struct {
 	m            sync.Mutex
 	subscription string
 
-	// items are resourceGroupName => dnsForwardingRulesetName => virtualNetworkLinkName
-	items map[string]map[string]map[string]*armdnsresolver.VirtualNetworkLink
+	// items are resourceGroupName => dnsForwardingRulesetName
+	items map[string]map[string]*armdnsresolver.DNSForwardingRuleset
 }
 
-func (s *dnsResolverVNetLinkStore) CreateDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName, vnetId string) error {
-	if isContextCanceled(ctx) {
-		return context.Canceled
+func newDnsForwardingRulesetStore(subscription string) *dnsForwardingRulesetStore {
+	return &dnsForwardingRulesetStore{
+		subscription: subscription,
+		items:        make(map[string]map[string]*armdnsresolver.DNSForwardingRuleset),
 	}
-
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	if _, ok := s.items[resourceGroupName]; !ok {
-		s.items[resourceGroupName] = map[string]map[string]*armdnsresolver.VirtualNetworkLink{}
-	}
-
-	if _, ok := s.items[resourceGroupName][dnsForwardingRulesetName]; !ok {
-		s.items[resourceGroupName][dnsForwardingRulesetName] = map[string]*armdnsresolver.VirtualNetworkLink{}
-	}
-
-	item := &armdnsresolver.VirtualNetworkLink{
-		ID: ptr.To(azureutil.NewDnsResolverVirtualNetworkLinkResourceId(s.subscription, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName).String()),
-		Properties: &armdnsresolver.VirtualNetworkLinkProperties{
-			VirtualNetwork: &armdnsresolver.SubResource{ID: ptr.To(vnetId)},
-		},
-		Name: ptr.To(virtualNetworkLinkName),
-	}
-
-	s.items[resourceGroupName][dnsForwardingRulesetName][virtualNetworkLinkName] = item
-	return nil
 }
-func (s *dnsResolverVNetLinkStore) GetDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName string) (*armdnsresolver.VirtualNetworkLink, error) {
+
+func (s *dnsForwardingRulesetStore) Get(ctx context.Context, resourceGroupName string, dnsForwardingRulesetName string) (*armdnsresolver.DNSForwardingRuleset, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -55,44 +36,30 @@ func (s *dnsResolverVNetLinkStore) GetDnsResolverVNetLink(ctx context.Context, r
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	link, err := s.getVirtualNetworkLinkNonLocking(resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName)
-
-	if err != nil {
-		return nil, err
+	if ruleset, ok := s.items[resourceGroupName][dnsForwardingRulesetName]; ok {
+		return util.JsonClone(ruleset)
 	}
 
-	res, err := util.JsonClone(link)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return nil, azuremeta.NewAzureNotFoundError()
 }
-func (s *dnsResolverVNetLinkStore) DeleteDnsResolverVNetLink(ctx context.Context, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName string) error {
+
+func (s *dnsForwardingRulesetStore) CreateDnsForwardingRuleset(ctx context.Context, resourceGroup, dnsForwardingRulesetName string, tags map[string]string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if _, ok := s.items[resourceGroup]; !ok {
+		s.items[resourceGroup] = make(map[string]*armdnsresolver.DNSForwardingRuleset)
+	}
+
+	item := &armdnsresolver.DNSForwardingRuleset{
+		Name: ptr.To(dnsForwardingRulesetName),
+		Tags: azureutil.AzureTags(tags),
+	}
+
+	s.items[resourceGroup][dnsForwardingRulesetName] = item
 	return nil
-}
-
-func (s *dnsResolverVNetLinkStore) getVirtualNetworkLinkNonLocking(resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName string) (*armdnsresolver.VirtualNetworkLink, error) {
-	group, ok := s.items[resourceGroupName]
-	if !ok {
-		return nil, azuremeta.NewAzureNotFoundError()
-	}
-	ruleset, ok := group[dnsForwardingRulesetName]
-	if !ok {
-		return nil, azuremeta.NewAzureNotFoundError()
-	}
-	virtualNetworkLink, ok := ruleset[virtualNetworkLinkName]
-	if !ok {
-		return nil, azuremeta.NewAzureNotFoundError()
-	}
-	if virtualNetworkLink == nil {
-		return nil, azuremeta.NewAzureNotFoundError()
-	}
-
-	return virtualNetworkLink, nil
-}
-
-func (s *dnsResolverVNetLinkStore) Get(ctx context.Context, resourceGroupName string, dnsForwardingRulesetName string) (*armdnsresolver.DNSForwardingRuleset, error) {
-	return nil, nil
 }
