@@ -92,3 +92,7 @@ func (s *dnsResolverVNetLinkStore) getVirtualNetworkLinkNonLocking(resourceGroup
 
 	return virtualNetworkLink, nil
 }
+
+func (s *dnsResolverVNetLinkStore) Get(ctx context.Context, resourceGroupName string, dnsForwardingRulesetName string) (*armdnsresolver.DNSForwardingRuleset, error) {
+	return nil, nil
+}

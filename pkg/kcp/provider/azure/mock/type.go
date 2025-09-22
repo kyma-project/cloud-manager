@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
@@ -93,7 +94,8 @@ type Providers interface {
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
 	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
-	VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
+	DnsZoneVNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
+	DnsResolverVNetLinkProvider() azureclient.ClientProvider[dnsresolverclient.Client]
 }
 
 type NetworkConfig interface {
