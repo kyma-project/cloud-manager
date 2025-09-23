@@ -1,0 +1,16 @@
+- source: spec.capacityGb
+  name: spec.capacityGb
+  widget: Text
+  sorted: true
+- source: spec.volume
+  name: spec.volume
+  widget: Text
+  sorted: true
+- source: spec.volumeClaim
+  name: spec.volumeClaim
+  widget: Text
+  sorted: true
+- source: status.state
+  name: status.state
+  widget: Text
+  sorted: true

@@ -1,0 +1,9 @@
+group: cloud-resources.kyma-project.io
+kind: SapNfsVolume
+version: v1beta1
+urlPath: sapnfsvolumes
+name: SapNfsVolume
+scope: Namespaced
+category: ""
+icon: ""
+description: SapNfsVolume description here
