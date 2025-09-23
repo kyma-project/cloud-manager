@@ -17,26 +17,30 @@ type tenantSubscriptionStore struct {
 	*natGatewayStore
 	*publicIpAddressStore
 	*fileShareStore
+	*dnsResolverVNetLinkStore
+	*dnsForwardingRulesetStore
 	tenant       string
 	subscription string
 }
 
 func newTenantSubscriptionStore(tenant, subscription string) *tenantSubscriptionStore {
 	return &tenantSubscriptionStore{
-		resourceStore:            newResourceStore(subscription),
-		networkStore:             newNetworkStore(subscription),
-		securityGroupsStore:      newSecurityGroupsStore(subscription),
-		redisStore:               newRedisStore(subscription),
-		privateEndPointsStore:    newPrivateEndPointsStore(subscription),
-		privateDnsZoneStore:      newPrivateDnsZoneStore(subscription),
-		virtualNetworkLinkStore:  newVirtualNetworkLinkStore(subscription),
-		privateDnsZoneGroupStore: newPrivateDnsZoneGroupStore(subscription),
-		storageStore:             newStorageStore(subscription),
-		natGatewayStore:          newNatGatewayStore(subscription),
-		publicIpAddressStore:     newPublicIpAddressStore(subscription),
-		fileShareStore:           newFileShareStore(subscription),
-		tenant:                   tenant,
-		subscription:             subscription,
+		resourceStore:             newResourceStore(subscription),
+		networkStore:              newNetworkStore(subscription),
+		securityGroupsStore:       newSecurityGroupsStore(subscription),
+		redisStore:                newRedisStore(subscription),
+		privateEndPointsStore:     newPrivateEndPointsStore(subscription),
+		privateDnsZoneStore:       newPrivateDnsZoneStore(subscription),
+		virtualNetworkLinkStore:   newVirtualNetworkLinkStore(subscription),
+		privateDnsZoneGroupStore:  newPrivateDnsZoneGroupStore(subscription),
+		storageStore:              newStorageStore(subscription),
+		natGatewayStore:           newNatGatewayStore(subscription),
+		publicIpAddressStore:      newPublicIpAddressStore(subscription),
+		fileShareStore:            newFileShareStore(subscription),
+		dnsForwardingRulesetStore: newDnsForwardingRulesetStore(subscription),
+		dnsResolverVNetLinkStore:  newDnsResolverVNetLinkStore(subscription),
+		tenant:                    tenant,
+		subscription:              subscription,
 	}
 }
 

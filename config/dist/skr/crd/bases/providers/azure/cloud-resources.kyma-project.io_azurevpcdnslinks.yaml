@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   name: azurevpcdnslinks.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -40,6 +40,11 @@ spec:
             spec:
               description: AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
               properties:
+                remoteDnsForwardingRuleset:
+                  type: string
+                  x-kubernetes-validations:
+                    - message: RemoteDnsForwardingRuleset is immutable.
+                      rule: (self == oldSelf)
                 remoteLinkName:
                   type: string
                   x-kubernetes-validations:
@@ -61,8 +66,10 @@ spec:
                       rule: (self == oldSelf)
               required:
                 - remoteLinkName
-                - remotePrivateDnsZone
               type: object
+              x-kubernetes-validations:
+                - message: Exactly one of RemotePrivateDnsZone or RemoteDnsForwardingRuleset must be specified
+                  rule: has(self.remotePrivateDnsZone) != has(self.remoteDnsForwardingRuleset)
             status:
               description: AzureVpcDnsLinkStatus defines the observed state of AzureVpcDnsLink
               properties:

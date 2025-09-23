@@ -25,6 +25,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
+// +kubebuilder:validation:XValidation:rule="has(self.remotePrivateDnsZone) != has(self.remoteDnsForwardingRuleset)", message="Exactly one of RemotePrivateDnsZone or RemoteDnsForwardingRuleset must be specified"
 type AzureVpcDnsLinkSpec struct {
 
 	// +kubebuilder:validation:Required
@@ -33,10 +34,11 @@ type AzureVpcDnsLinkSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self.find('^[a-z0-9][a-z0-9-]*[a-z0-9]$') != ''), message="RemoteLinkName must begin with a word character, and it must end with a word character. RemoteLinkName may contain word characters or '-'."
 	RemoteLinkName string `json:"remoteLinkName,omitempty"`
 
-	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemotePrivateDnsZone is immutable."
 	RemotePrivateDnsZone string `json:"remotePrivateDnsZone,omitempty"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteDnsForwardingRuleset is immutable."
+	RemoteDnsForwardingRuleset string `json:"remoteDnsForwardingRuleset,omitempty"`
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteTenant is immutable."
 	RemoteTenant string `json:"remoteTenant,omitempty"`
 }

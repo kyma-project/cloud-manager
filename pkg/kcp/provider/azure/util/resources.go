@@ -278,3 +278,26 @@ func NewVirtualNetworkLinkResourceId(subscription, resourceGroup, privateDnsZone
 		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(privateDnsZoneName) > 0,
 	}
 }
+func NewDnsForwardingRulesetVNetLinkResourceId(subscription, resourceGroup, dnsForwardingRulesetName, virtualNetworkLinkName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:    subscription,
+		ResourceGroup:   resourceGroup,
+		Provider:        "Microsoft.Network",
+		ResourceType:    "dnsForwardingRulesets",
+		ResourceName:    dnsForwardingRulesetName,
+		SubResourceType: "virtualNetworkLinks",
+		SubResourceName: virtualNetworkLinkName,
+		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(dnsForwardingRulesetName) > 0,
+	}
+}
+
+func NewDnsForwardingRulesetResourceId(subscription, resourceGroup, dnsForwardingRulesetName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "dnsForwardingRulesets",
+		ResourceName:  dnsForwardingRulesetName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(dnsForwardingRulesetName) > 0,
+	}
+}
