@@ -1,15 +1,41 @@
-- source: spec.volume
+- path: spec.volume
   name: spec.volume
-  widget: Text
-  disableOnEdit: false
+  widget: FormGroup
   required: false
-- source: spec.volumeClaim
+  children:
+    - path: name
+      name: spec.volume.name
+      widget: Text
+      required: true
+    - path: labels
+      name: spec.volume.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volume.annotations
+      required: false
+      widget: KeyValuePair
+- path: spec.volumeClaim
   name: spec.volumeClaim
-  widget: Text
-  disableOnEdit: false
+  widget: FormGroup
   required: false
-- source: spec.capacityGb
+  children:
+    - path: name
+      name: spec.volumeClaim.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: labels
+      name: spec.volumeClaim.labels
+      required: false
+      widget: KeyValuePair
+    - path: annotations
+      name: spec.volumeClaim.annotations
+      required: false
+      widget: KeyValuePair
+- path: spec.capacityGb
   name: spec.capacityGb
-  widget: Text
+  widget: Number
   disableOnEdit: false
   required: true
