@@ -44,7 +44,7 @@ func (s *dnsResolverVNetLinkStore) CreateDnsResolverVNetLink(ctx context.Context
 	}
 
 	item := &armdnsresolver.VirtualNetworkLink{
-		ID: ptr.To(azureutil.NewDnsResolverVirtualNetworkLinkResourceId(s.subscription, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName).String()),
+		ID: ptr.To(azureutil.NewDnsForwardingRulesetVNetLinkResourceId(s.subscription, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName).String()),
 		Properties: &armdnsresolver.VirtualNetworkLinkProperties{
 			VirtualNetwork: &armdnsresolver.SubResource{ID: ptr.To(vnetId)},
 		},
@@ -94,11 +94,28 @@ func (s *dnsResolverVNetLinkStore) getDnsResolverVNetLinkNonLocking(resourceGrou
 	if group, ok := s.items[resourceGroupName]; ok {
 		if ruleset, ok := group[dnsForwardingRulesetName]; ok {
 			if link, ok := ruleset[virtualNetworkLinkName]; ok {
-				result, err := util.JsonClone(link)
-				return result, err
+				return link, nil
 			}
 		}
 	}
 
 	return nil, azuremeta.NewAzureNotFoundError()
+}
+
+func (s *dnsResolverVNetLinkStore) SetDnsResolverVNetLinkProvisioned(ctx context.Context, resourceGroup, dnsForwardingRulesetName, vNetLinkName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	link, err := s.getDnsResolverVNetLinkNonLocking(resourceGroup, dnsForwardingRulesetName, vNetLinkName)
+
+	if err != nil {
+		return err
+	}
+
+	link.Properties.ProvisioningState = ptr.To(armdnsresolver.ProvisioningStateSucceeded)
+	return nil
 }

@@ -56,6 +56,7 @@ func (s *dnsForwardingRulesetStore) CreateDnsForwardingRuleset(ctx context.Conte
 	}
 
 	item := &armdnsresolver.DNSForwardingRuleset{
+		ID:   ptr.To(azureutil.NewDnsForwardingRulesetResourceId(s.subscription, resourceGroup, dnsForwardingRulesetName).String()),
 		Name: ptr.To(dnsForwardingRulesetName),
 		Tags: azureutil.AzureTags(tags),
 	}
