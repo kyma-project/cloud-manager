@@ -1,0 +1,15 @@
+- source: spec.capacityGb
+  name: spec.capacityGb
+  widget: Text
+  disableOnEdit: false
+  required: true
+- source: spec.volume
+  name: spec.volume
+  widget: Text
+  disableOnEdit: false
+  required: false
+- source: spec.volumeClaim
+  name: spec.volumeClaim
+  widget: Text
+  disableOnEdit: false
+  required: false

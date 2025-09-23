@@ -1,0 +1,85 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+    - source: spec
+      name: configuration
+      widget: Panel
+      children:
+      - source: capacityGb
+        name: spec.capacityGb
+        widget: Labels
+      - source: volume
+        name: spec.volume
+        widget: Labels
+      - source: volumeClaim
+        name: spec.volumeClaim
+        widget: Labels
+    - source: status
+      name: status
+      widget: Panel
+      children:
+      - source: state
+        name: status.state
+        widget: Labels
+  form: |
+    - source: spec.capacityGb
+      name: spec.capacityGb
+      widget: Text
+      disableOnEdit: false
+      required: true
+    - source: spec.volume
+      name: spec.volume
+      widget: Text
+      disableOnEdit: false
+      required: false
+    - source: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: Text
+      disableOnEdit: false
+      required: false
+  general: |
+    group: cloud-resources.kyma-project.io
+    kind: SapNfsVolume
+    version: v1beta1
+    urlPath: sapnfsvolumes
+    name: SapNfsVolume
+    scope: Namespaced
+    category: ""
+    icon: ""
+    description: SapNfsVolume description here
+  list: |
+    - source: spec.capacityGb
+      name: spec.capacityGb
+      widget: Text
+      sorted: true
+    - source: spec.volume
+      name: spec.volume
+      widget: Text
+      sorted: true
+    - source: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: Text
+      sorted: true
+    - source: status.state
+      name: status.state
+      widget: Text
+      sorted: true
+  translations: |
+    en:
+      configuration: Configuration
+      spec.capacityGb: Capacity Gb
+      spec.volume: Volume
+      spec.volumeClaim: Volume Claim
+      status: Status
+      status.state: State
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: sapnfsvolumes-ui.operator.kyma-project.io
+  namespace: kyma-system
