@@ -1,0 +1,21 @@
+body:
+- source: spec
+  name: configuration
+  widget: Panel
+  children:
+  - source: capacityGb
+    name: spec.capacityGb
+    widget: Labels
+  - source: volume
+    name: spec.volume
+    widget: Labels
+  - source: volumeClaim
+    name: spec.volumeClaim
+    widget: Labels
+- source: status
+  name: status
+  widget: Panel
+  children:
+  - source: state
+    name: status.state
+    widget: Labels

@@ -86,6 +86,8 @@ cp $SCRIPT_DIR/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_az
 # OpenStack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumes.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
+# OpenStack UI
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 echo "CRD resources are copied to ./dist kcp and skr dirs"
 echo "Note that no files are removed - you must remove them manually"

@@ -117,6 +117,8 @@ func TestInstaller(t *testing.T) {
 	t.Run("openstack", func(t *testing.T) {
 		run(context.Background(), t, cloudcontrolv1beta1.ProviderOpenStack, []SkrStatusTestCase{
 			{"sapnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+
+			{"sapnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 		})
 	})
 }
