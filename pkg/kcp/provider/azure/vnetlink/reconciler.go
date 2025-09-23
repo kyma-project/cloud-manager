@@ -3,7 +3,6 @@ package vnetlink
 import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -56,7 +55,7 @@ func (r *azureVNetLinkReconciler) Reconcile(ctx context.Context, request ctrl.Re
 func (r *azureVNetLinkReconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"main",
-		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.AzureVNetLink{}),
+		feature.LoadFeatureContextFromObj(&v1beta1.AzureVNetLink{}),
 		focal.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
@@ -74,7 +73,7 @@ func (r *azureVNetLinkReconciler) newAction() composed.Action {
 
 func (r *azureVNetLinkReconciler) newFocalState(name types.NamespacedName) focal.State {
 	return r.focalStateFactory.NewState(
-		r.composedStateFactory.NewState(name, &cloudcontrolv1beta1.AzureVNetLink{}),
+		r.composedStateFactory.NewState(name, &v1beta1.AzureVNetLink{}),
 	)
 }
 
