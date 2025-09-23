@@ -12,6 +12,9 @@ body:
         - widget: Labels
           source: useRemoteGateway
           name: spec.useRemoteGateway
+        - widget: Labels
+          source: spec.remoteTenant
+          name: spec.remoteTenant
     - name: status
       widget: Panel
       source: status

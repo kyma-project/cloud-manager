@@ -12,5 +12,8 @@
   widget: Text
   disableOnEdit: true
   description: Immutable once set.
-
-
+- path: spec.remoteTenant
+  name: spec.remoteTenant
+  widget: Text
+  disableOnEdit: true
+  description: Immutable once set.
