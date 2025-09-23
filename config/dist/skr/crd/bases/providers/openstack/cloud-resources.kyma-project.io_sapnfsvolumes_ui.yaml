@@ -23,11 +23,6 @@ data:
         name: status.state
         widget: Labels
   form: |
-    - source: spec.capacityGb
-      name: spec.capacityGb
-      widget: Text
-      disableOnEdit: false
-      required: true
     - source: spec.volume
       name: spec.volume
       widget: Text
@@ -38,15 +33,21 @@ data:
       widget: Text
       disableOnEdit: false
       required: false
+    - source: spec.capacityGb
+      name: spec.capacityGb
+      widget: Text
+      disableOnEdit: false
+      required: true
   general: |
-    group: cloud-resources.kyma-project.io
-    kind: SapNfsVolume
-    version: v1beta1
+    resource:
+      group: cloud-resources.kyma-project.io
+      kind: SapNfsVolume
+      version: v1beta1
     urlPath: sapnfsvolumes
     name: SapNfsVolume
-    scope: Namespaced
-    category: ""
-    icon: ""
+    scope: namespace
+    category: Storage
+    icon: shelf
     description: SapNfsVolume description here
   list: |
     - source: spec.capacityGb
