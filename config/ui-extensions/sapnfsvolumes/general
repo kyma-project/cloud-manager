@@ -3,7 +3,7 @@ resource:
   kind: SapNfsVolume
   version: v1beta1
 urlPath: sapnfsvolumes
-name: SapNfsVolume
+name: SAP NFS Volume
 scope: namespace
 category: Storage
 icon: shelf
