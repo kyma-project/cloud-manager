@@ -116,6 +116,10 @@ type DnsForwardingRulesetConfig interface {
 	CreateDnsForwardingRuleset(ctx context.Context, resourceGroup, dnsForwardingRulesetName string, tags map[string]string) error
 }
 
+type DnsResolverVNetLinkConfig interface {
+	SetDnsResolverVNetLinkProvisioned(ctx context.Context, resourceGroup, dnsForwardingRulesetName, vNetLinkName string) error
+}
+
 type RedisConfig interface {
 	AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
@@ -125,6 +129,7 @@ type Configs interface {
 	NetworkConfig
 	RedisConfig
 	DnsForwardingRulesetConfig
+	DnsResolverVNetLinkConfig
 }
 
 type TenantSubscription interface {
