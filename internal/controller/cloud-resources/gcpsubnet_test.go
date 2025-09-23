@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = SkipDescribe("Feature: SKR GcpSubnet", func() {
+var _ = Describe("Feature: SKR GcpSubnet", func() {
 
 	It("Scenario: SKR GcpSubnet is created with specified CIDR", func() {
 
