@@ -61,10 +61,10 @@ func (r *reconciler) newAction() composed.Action {
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"gcpSubnet-create",
+				actions.AddCommonFinalizer(),
 				createKcpGcpSubnet,
 				waitKcpStatusUpdate,
 				updateStatus,
-				actions.AddCommonFinalizer(),
 			),
 			composed.ComposeActions(
 				"gcpSubnet-delete",
