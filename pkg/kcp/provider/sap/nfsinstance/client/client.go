@@ -19,9 +19,9 @@ import (
 
 type Client interface {
 	ListInternalNetworks(ctx context.Context, name string) ([]networks.Network, error)
-	GetNetwork(ctx context.Context, id string) (*networks.Network, error)
+	GetNetworkById(ctx context.Context, id string) (*networks.Network, error)
 	ListSubnets(ctx context.Context, networkId string) ([]subnets.Subnet, error)
-	GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error)
+	GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error)
 
 	ListShareNetworks(ctx context.Context, networkId string) ([]sharenetworks.ShareNetwork, error)
 	GetShareNetwork(ctx context.Context, id string) (*sharenetworks.ShareNetwork, error)
@@ -55,7 +55,7 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
 	return func(ctx context.Context, pp sapclient.ProviderParams) (Client, error) {
 		pi, err := sapclient.NewProviderClient(ctx, pp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create new sap provider client: %v", err)
+			return nil, fmt.Errorf("failed to create new sap provider client for nfs: %v", err)
 		}
 		netSvc, err := openstack.NewNetworkV2(pi.ProviderClient, pi.EndpointOptions)
 		if err != nil {
@@ -95,7 +95,7 @@ func (c *client) ListInternalNetworks(ctx context.Context, name string) ([]netwo
 	return arr, nil
 }
 
-func (c *client) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
+func (c *client) GetNetworkById(ctx context.Context, id string) (*networks.Network, error) {
 	n, err := networks.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
@@ -121,7 +121,7 @@ func (c *client) ListSubnets(ctx context.Context, networkId string) ([]subnets.S
 	return arr, nil
 }
 
-func (c *client) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
+func (c *client) GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error) {
 	subnet, err := subnets.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil

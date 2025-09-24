@@ -9,6 +9,7 @@ import (
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
+	sapiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -30,6 +31,7 @@ type ipRangeReconciler struct {
 	awsStateFactory   awsiprange.StateFactory
 	azureStateFactory azureiprange.StateFactory
 	gcpStateFactory   gcpiprange.StateFactory
+	sapStateFactory   sapiprange.StateFactory
 }
 
 func NewIPRangeReconciler(
@@ -38,6 +40,7 @@ func NewIPRangeReconciler(
 	awsStateFactory awsiprange.StateFactory,
 	azureStateFactory azureiprange.StateFactory,
 	gcpStateFactory gcpiprange.StateFactory,
+	sapStateFactory sapiprange.StateFactory,
 ) IPRangeReconciler {
 	return &ipRangeReconciler{
 		composedStateFactory: composedStateFactory,
@@ -45,6 +48,7 @@ func NewIPRangeReconciler(
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
+		sapStateFactory:      sapStateFactory,
 	}
 }
 
@@ -79,6 +83,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.NewAllocateIpRangeAction(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpStateFactory)),
+						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.NewAllocateIpRangeAction(r.sapStateFactory)),
 					),
 					allocateIpRange,
 				),
@@ -109,7 +114,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					// dependency on the KCP IpRange's Network
 					// due to kcpNetworkDeleteWait() the requeue will happen when provider
 					// finished the deprovisioning and KCP Network is deleted and then
-					// waited for (requeued) to not exist any more
+					// waited for (requeued) to not exist anymore
 					shouldCallProviderFlow,
 					composed.BuildSwitchAction(
 						"providerSwitch",
@@ -117,6 +122,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpStateFactory)),
+						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.New(r.sapStateFactory)),
 					),
 				),
 				// delete

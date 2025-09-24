@@ -91,6 +91,8 @@ spec:
                         - PRIVATE_SERVICE_CONNECT
                         type: string
                     type: object
+                  openStack:
+                    type: object
                 type: object
               remoteRef:
                 properties:
@@ -203,12 +205,15 @@ spec:
                   properties:
                     id:
                       type: string
+                    name:
+                      type: string
                     range:
                       type: string
                     zone:
                       type: string
                   required:
                   - id
+                  - name
                   - range
                   - zone
                   type: object

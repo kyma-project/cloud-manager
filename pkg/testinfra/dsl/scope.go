@@ -242,7 +242,7 @@ func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *clo
 				DomainName: "kyma",
 				TenantName: "kyma-dev-02",
 				Network: cloudcontrolv1beta1.OpenStackNetwork{
-					Nodes:    "10.250.0.0/22",
+					Nodes:    "10.250.0.0/16",
 					Pods:     "10.96.0.0/13",
 					Services: "10.104.0.0/13",
 					Zones:    []string{"eu-de-1d", "eu-de-1a", "eu-de-1b"},

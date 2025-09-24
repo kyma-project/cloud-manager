@@ -27,7 +27,6 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 		})
 
 		networkId := "273c6391-b934-4d14-9ebc-2da48c364bf4"
-		subnetId := "031a4b51-146b-455f-9243-770b791b1b28"
 
 		By("And Given SAP network exists", func() {
 			infra.SapMock().AddNetwork(
@@ -43,12 +42,13 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 				"wrong2",
 			)
 
-			infra.SapMock().AddSubnet(
-				subnetId,
+			_, err := infra.SapMock().CreateSubnet(
+				infra.Ctx(),
 				networkId,
 				scope.Spec.Scope.OpenStack.VpcNetwork,
 				"10.250.0.0/22",
 			)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}

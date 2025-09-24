@@ -28,7 +28,6 @@ func deptrSlice[T any](arr []*T) []T {
 type NfsConfig interface {
 	AddNetwork(id, name string) *networks.Network
 	AddRouter(id, name string, ipAddresses ...string) *routers.Router
-	AddSubnet(id, networkId, name, cidr string) *subnets.Subnet
 	SetShareStatus(id, status string)
 }
 
@@ -77,38 +76,6 @@ func (s *nfsStore) AddRouter(id, name string, ipAddresses ...string) *routers.Ro
 	return r
 }
 
-func (s *nfsStore) AddSubnet(id, networkId, name, cidr string) *subnets.Subnet {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	var network *networks.Network
-	for _, n := range s.networks {
-		if n.ID == networkId {
-			network = n
-			break
-		}
-	}
-	if network != nil {
-		network.Subnets = pie.Unique(append(network.Subnets, id))
-	}
-
-	if s.subnets == nil {
-		s.subnets = map[string][]*subnets.Subnet{}
-	}
-
-	subnet := &subnets.Subnet{
-		ID:        id,
-		NetworkID: networkId,
-		Name:      name,
-		IPVersion: 4,
-		CIDR:      cidr,
-	}
-
-	s.subnets[networkId] = append(s.subnets[networkId], subnet)
-
-	return subnet
-}
-
 func (s *nfsStore) SetShareStatus(id, status string) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -141,7 +108,7 @@ func (s *nfsStore) ListInternalNetworks(ctx context.Context, name string) ([]net
 	return result, nil
 }
 
-func (s *nfsStore) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
+func (s *nfsStore) GetNetworkById(ctx context.Context, id string) (*networks.Network, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -154,6 +121,106 @@ func (s *nfsStore) GetNetwork(ctx context.Context, id string) (*networks.Network
 		}
 	}
 	return nil, nil
+}
+
+func (s *nfsStore) GetNetworkByName(ctx context.Context, networkName string) (*networks.Network, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+	for _, network := range s.networks {
+		if network.Name == networkName {
+			return network, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *nfsStore) CreateSubnet(ctx context.Context, networkId, cidr, subnetName string) (*subnets.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	subnetId := uuid.NewString()
+
+	var network *networks.Network
+	for _, n := range s.networks {
+		if n.ID == networkId {
+			network = n
+			break
+		}
+	}
+	if network == nil {
+		return nil, fmt.Errorf("network %q not found", networkId)
+	}
+
+	network.Subnets = pie.Unique(append(network.Subnets, subnetId))
+
+	if s.subnets == nil {
+		s.subnets = map[string][]*subnets.Subnet{}
+	}
+
+	subnet := &subnets.Subnet{
+		ID:        subnetId,
+		NetworkID: networkId,
+		Name:      subnetName,
+		IPVersion: 4,
+		CIDR:      cidr,
+	}
+
+	s.subnets[networkId] = append(s.subnets[networkId], subnet)
+
+	return subnet, nil
+}
+
+func (s *nfsStore) DeleteSubnet(ctx context.Context, subnetId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	foundInNetworkId := ""
+
+	for networkId, arrSubnets := range s.subnets {
+		for _, subnet := range arrSubnets {
+			if subnet.ID == subnetId {
+				foundInNetworkId = networkId
+				break
+			}
+		}
+	}
+
+	if foundInNetworkId == "" {
+		return &gophercloud.ErrUnexpectedResponseCode{
+			BaseError: gophercloud.BaseError{
+				Info: fmt.Sprintf("subnet %q not found", subnetId),
+			},
+			Expected: []int{http.StatusOK},
+			Actual:   http.StatusNotFound,
+		}
+	}
+
+	for _, net := range s.networks {
+		if net.ID == foundInNetworkId {
+			net.Subnets = pie.FilterNot(net.Subnets, func(x string) bool {
+				return x == subnetId
+			})
+			break
+		}
+	}
+
+	s.subnets[foundInNetworkId] = pie.FilterNot(s.subnets[foundInNetworkId], func(subnet *subnets.Subnet) bool {
+		return subnet.ID == subnetId
+	})
+
+	return nil
 }
 
 func (s *nfsStore) GetRouterByName(ctx context.Context, routerName string) (*routers.Router, error) {
@@ -189,7 +256,7 @@ func (s *nfsStore) ListSubnets(ctx context.Context, networkId string) ([]subnets
 	return deptrSlice(arr), nil
 }
 
-func (s *nfsStore) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
+func (s *nfsStore) GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -202,6 +269,26 @@ func (s *nfsStore) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, e
 	for _, arr := range s.subnets {
 		for _, subnet := range arr {
 			if subnet.ID == id {
+				return subnet, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (s *nfsStore) GetSubnetByName(ctx context.Context, networkId string, subnetName string) (*subnets.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+	if s.subnets == nil {
+		s.subnets = map[string][]*subnets.Subnet{}
+	}
+	for _, arr := range s.subnets {
+		for _, subnet := range arr {
+			if subnet.NetworkID == networkId && subnet.Name == subnetName {
 				return subnet, nil
 			}
 		}

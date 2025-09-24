@@ -84,6 +84,7 @@ cp $SCRIPT_DIR/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_az
 # ============= OpenStack ================
 
 # OpenStack
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumes.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 
