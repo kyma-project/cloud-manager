@@ -1,0 +1,65 @@
+apiVersion: v1
+data:
+  details: |-
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: cidr
+              name: spec.cidr
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: cidr
+              name: status.cidr
+  form: |
+    - path: spec.cidr
+      name: spec.cidr
+      widget: Text
+      required: false
+      inputInfo: Leave blank for Auto-CIDR
+  general: |
+    resource:
+        kind: IpRange
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: ipranges
+    name: Ip Ranges
+    scope: cluster
+    category: Discovery and Network
+    icon: tnt/network
+    description: >-
+        IpRange description here
+  list: |-
+    - source: status.cidr
+      name: status.cidr
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |-
+    en:
+      spec.cidr: Requested CIDR
+      metadata.namespace: Namespace
+      status.cidr: Reserved CIDR
+      status.state: State
+      configuration: Configuration
+      status: Status
+      status.state: State
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.3
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: ipranges-ui.operator.kyma-project.io
+  namespace: kyma-system
