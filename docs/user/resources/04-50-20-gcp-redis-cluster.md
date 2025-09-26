@@ -19,8 +19,13 @@ When creating GcpRedisCluster, `redisTier`, and `shardCount` fields are mandator
 
 Optionally, you can specify the `replicasPerShard` field.
 
-As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+## In-transit Encryption
 
+In-transit encryption is always enabled. Communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+
+## Persistence
+
+Persistence is not supported. Data is not written to durable storage (i.e., data at rest).
 
 ## Redis Tiers
 
