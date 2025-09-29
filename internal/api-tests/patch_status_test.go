@@ -6,7 +6,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -18,12 +17,6 @@ var _ = Describe("Feature: Patch status", func() {
 		name := "46ae569e-5e28-4cf5-b888-1d973e6bf4cb"
 
 		By("When GcpNfsVolumeRestore is created", func() {
-			Expect(CreateNamespace(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: DefaultSkrNamespace,
-				},
-			})).
-				To(Succeed())
 			Expect(CreateGcpNfsVolumeRestore(
 				infra.Ctx(), infra.SKR().Client(), obj,
 				WithName(name),

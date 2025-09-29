@@ -35,6 +35,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
+const (
+	DefaultSkrNamespace    = "test"
+	DefaultKcpNamespace    = "kcp-system"
+	DefaultGardenNamespace = "garden-kyma"
+)
+
 func Start() (Infra, error) {
 	projectRoot := os.Getenv("PROJECTROOT")
 	if len(projectRoot) == 0 {
@@ -106,11 +112,11 @@ func Start() (Infra, error) {
 		ce := &clusterEnv{}
 		switch name {
 		case infraTypes.ClusterTypeKcp:
-			ce.namespace = "kcp-system"
+			ce.namespace = DefaultKcpNamespace
 		case infraTypes.ClusterTypeSkr:
-			ce.namespace = "kyma-system"
+			ce.namespace = DefaultSkrNamespace
 		case infraTypes.ClusterTypeGarden:
-			ce.namespace = "garden-kyma"
+			ce.namespace = DefaultGardenNamespace
 		}
 		cluster.ClusterEnv = ce
 	}

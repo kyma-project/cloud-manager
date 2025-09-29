@@ -2,8 +2,10 @@ package mock
 
 import (
 	"context"
+
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
+	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 )
 
@@ -15,6 +17,12 @@ func New() Server {
 
 type server struct {
 	*nfsStore
+}
+
+func (s *server) IpRangeProvider() sapclient.SapClientProvider[sapiprangeclient.Client] {
+	return func(ctx context.Context, pp sapclient.ProviderParams) (sapiprangeclient.Client, error) {
+		return s, nil
+	}
 }
 
 func (s *server) NfsInstanceProvider() sapclient.SapClientProvider[sapnfsinstanceclient.Client] {

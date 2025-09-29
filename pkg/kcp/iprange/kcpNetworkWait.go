@@ -19,7 +19,7 @@ func kcpNetworkWait(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	if meta.IsStatusConditionTrue(state.network.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
-		logger.Info("KCP VpcPeering network is Ready")
+		logger.Info("KCP IpRange network is Ready")
 		return nil, ctx
 	}
 

@@ -21,7 +21,7 @@ func waitScopeReady(ctx context.Context, st composed.State) (error, context.Cont
 		// * continue (return nil error)
 
 		if state.ObjWithConditionsAndState().State() != cloudresourcesv1beta1.StateWaitingScopeReady {
-			return nil, nil
+			return nil, ctx
 		}
 
 		state.ObjWithConditionsAndState().SetState("")

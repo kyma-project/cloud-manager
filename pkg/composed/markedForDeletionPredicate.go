@@ -3,6 +3,7 @@ package composed
 import (
 	"context"
 	"reflect"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -25,4 +26,8 @@ func IsMarkedForDeletion(obj client.Object) bool {
 
 func MarkedForDeletionPredicate(_ context.Context, state State) bool {
 	return IsMarkedForDeletion(state.Obj())
+}
+
+func NotMarkedForDeletionPredicate(_ context.Context, state State) bool {
+	return !IsMarkedForDeletion(state.Obj())
 }

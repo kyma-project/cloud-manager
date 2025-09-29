@@ -14,7 +14,7 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(State)
 
 	if state.Scope() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	scope := &cloudcontrolv1beta1.Scope{}
@@ -40,5 +40,5 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 	}
 
 	state.SetScope(scope)
-	return nil, nil
+	return nil, ctx
 }
