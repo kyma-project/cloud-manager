@@ -54,6 +54,13 @@ spec:
                   x-kubernetes-validations:
                     - message: The field capacityGb must be greater than zero
                       rule: (self > 0)
+                ipRange:
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+                  type: object
                 volume:
                   properties:
                     annotations:

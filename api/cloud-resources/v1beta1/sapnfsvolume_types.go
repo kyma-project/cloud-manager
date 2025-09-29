@@ -26,6 +26,10 @@ import (
 
 // SapNfsVolumeSpec defines the desired state of SapNfsVolume
 type SapNfsVolumeSpec struct {
+
+	// +optional
+	IpRange IpRangeRef `json:"ipRange"`
+
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
 	CapacityGb int `json:"capacityGb"`
@@ -195,6 +199,10 @@ func (in *SapNfsVolume) DeriveStateFromConditions() (changed bool) {
 		in.Status.State = StateError
 	}
 	return in.Status.State != oldState
+}
+
+func (in *SapNfsVolume) GetIpRangeRef() IpRangeRef {
+	return in.Spec.IpRange
 }
 
 // +kubebuilder:object:root=true

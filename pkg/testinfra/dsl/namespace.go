@@ -2,6 +2,8 @@ package dsl
 
 import (
 	"context"
+
+	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	corev1 "k8s.io/api/core/v1"
@@ -9,8 +11,9 @@ import (
 )
 
 const (
-	DefaultSkrNamespace = "test"
-	DefaultKcpNamespace = "kcp-system"
+	DefaultSkrNamespace    = testinfra.DefaultSkrNamespace
+	DefaultKcpNamespace    = testinfra.DefaultKcpNamespace
+	DefaultGardenNamespace = testinfra.DefaultGardenNamespace
 )
 
 func SetDefaultNamespace(obj client.Object) {
@@ -25,6 +28,9 @@ func SetDefaultNamespace(obj client.Object) {
 }
 
 func CreateNamespace(ctx context.Context, clnt client.Client, obj *corev1.Namespace, opts ...ObjAction) error {
+	if true {
+		return nil
+	}
 	if obj == nil {
 		obj = &corev1.Namespace{}
 	}

@@ -16,6 +16,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 )
 
@@ -35,6 +37,7 @@ type nfsStore struct {
 	m             sync.Mutex
 	networks      []*networks.Network
 	routers       []*routers.Router
+	routerSubnets map[string][]sapiprangeclient.RouterSubnetInterfaceInfo
 	subnets       map[string][]*subnets.Subnet
 	shareNetworks map[string][]*sharenetworks.ShareNetwork
 	shares        map[string][]*shares.Share
@@ -239,6 +242,78 @@ func (s *nfsStore) GetRouterByName(ctx context.Context, routerName string) (*rou
 	return nil, nil
 }
 
+func (s *nfsStore) ListRouterSubnetInterfaces(ctx context.Context, routerId string) ([]sapiprangeclient.RouterSubnetInterfaceInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	arr, ok := s.routerSubnets[routerId]
+	if !ok {
+		return nil, nil
+	}
+	result := append([]sapiprangeclient.RouterSubnetInterfaceInfo{}, arr...)
+	return result, nil
+}
+
+func (s *nfsStore) AddSubnetToRouter(ctx context.Context, routerId string, subnetId string) (*routers.InterfaceInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	if s.routerSubnets == nil {
+		s.routerSubnets = map[string][]sapiprangeclient.RouterSubnetInterfaceInfo{}
+	}
+	arr := s.routerSubnets[routerId]
+
+	subnet, _ := s.getSubnetByIdNoLock(subnetId)
+	if subnet == nil {
+		return nil, sapclient.NewNotFoundError(fmt.Sprintf("subnet %q not found", subnetId))
+	}
+
+	result := sapiprangeclient.RouterSubnetInterfaceInfo{
+		PortID:    uuid.NewString(),
+		IpAddress: subnet.CIDR, // not really an IP address, but just put something it's not used anyway
+		SubnetID:  subnetId,
+	}
+
+	arr = append(arr, result)
+
+	s.routerSubnets[routerId] = arr
+
+	return &routers.InterfaceInfo{
+		SubnetID: subnetId,
+		PortID:   result.PortID,
+		ID:       uuid.NewString(),
+		TenantID: uuid.NewString(),
+	}, nil
+}
+
+func (s *nfsStore) RemoveSubnetFromRouter(ctx context.Context, routerId string, subnetId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	if s.routerSubnets == nil {
+		s.routerSubnets = map[string][]sapiprangeclient.RouterSubnetInterfaceInfo{}
+	}
+	arr := s.routerSubnets[routerId]
+	arr = pie.FilterNot(arr, func(x sapiprangeclient.RouterSubnetInterfaceInfo) bool {
+		return x.SubnetID == subnetId
+	})
+	s.routerSubnets[routerId] = arr
+
+	return nil
+}
+
 func (s *nfsStore) ListSubnets(ctx context.Context, networkId string) ([]subnets.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
@@ -263,6 +338,11 @@ func (s *nfsStore) GetSubnetById(ctx context.Context, id string) (*subnets.Subne
 	s.m.Lock()
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
+
+	return s.getSubnetByIdNoLock(id)
+}
+
+func (s *nfsStore) getSubnetByIdNoLock(id string) (*subnets.Subnet, error) {
 	if s.subnets == nil {
 		s.subnets = map[string][]*subnets.Subnet{}
 	}

@@ -47,29 +47,22 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 
 		sapMock := infra.SapMock()
 
-		networkId := "eb9cc44d-50a6-4405-84f8-acebb4182ef6"
+		var sapGardenInfra *SapGardenerInfra
 
-		By("And Given SAP network exists", func() {
+		By("And Given SAP infra exists", func() {
 			sapMock.AddNetwork(
-				"wrong1",
-				"wrong1",
-			)
-			sapMock.AddNetwork(
-				networkId,
-				scope.Spec.Scope.OpenStack.VpcNetwork,
-			)
-			sapMock.AddNetwork(
-				"wrong2",
-				"wrong2",
+				"wrong1-"+name,
+				"wrong1-"+name,
 			)
 
-			_, err := infra.SapMock().CreateSubnet(
-				infra.Ctx(),
-				networkId,
-				scope.Spec.Scope.OpenStack.Network.Nodes, // 10.250.0.0/16
-				scope.Spec.Scope.OpenStack.VpcNetwork,
-			)
+			sgi, err := CreateSapGardenerResources(infra.Ctx(), sapMock, infra.Garden().Namespace(), scope.Spec.ShootName, "10.250.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
+			sapGardenInfra = sgi
+
+			sapMock.AddNetwork(
+				"wrong2-"+name,
+				"wrong2-"+name,
+			)
 		})
 
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
@@ -105,7 +98,7 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 		var osSubnet *subnets.Subnet
 
 		By("And Then KCP IpRange Openstack Subnet is created", func() {
-			subnet, err := sapMock.GetSubnetByName(infra.Ctx(), networkId, kcpIpRange.Status.Subnets[0].Name)
+			subnet, err := sapMock.GetSubnetByName(infra.Ctx(), sapGardenInfra.VPC.ID, kcpIpRange.Status.Subnets[0].Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(subnet).ToNot(BeNil())
 			osSubnet = subnet
@@ -114,6 +107,20 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 		By("And Then KCP IpRange Openstack Subnet range equals to IpRange cidr", func() {
 			Expect(osSubnet.CIDR).To(Equal(kcpIpRange.Status.Cidr))
 			Expect(osSubnet.CIDR).To(Equal(kcpIpRange.Status.Subnets[0].Range))
+		})
+
+		By("And Then KCP IpRange Openstack Subnet is added to router", func() {
+			arr, err := sapMock.ListRouterSubnetInterfaces(infra.Ctx(), sapGardenInfra.Router.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			found := false
+			for _, ii := range arr {
+				if ii.SubnetID == osSubnet.ID {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeTrue())
 		})
 
 		// DELETE ==========================================================================
@@ -130,9 +137,31 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 		})
 
 		By("And Then KCP IpRange Openstack Subnet does not exist", func() {
-			subnet, err := sapMock.GetSubnetByName(infra.Ctx(), networkId, kcpIpRange.Status.Subnets[0].Name)
+			subnet, err := sapMock.GetSubnetByName(infra.Ctx(), sapGardenInfra.VPC.ID, kcpIpRange.Status.Subnets[0].Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(subnet).To(BeNil())
+		})
+
+		By("And Then KCP IpRange Openstack Subnet is removed from the router", func() {
+			arr, err := sapMock.ListRouterSubnetInterfaces(infra.Ctx(), sapGardenInfra.Router.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			found := false
+			for _, ii := range arr {
+				if ii.SubnetID == osSubnet.ID {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeFalse())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 	})
 })

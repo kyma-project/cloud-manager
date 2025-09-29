@@ -33,6 +33,10 @@ func CreateSapGardenerResources(
 	if err != nil {
 		return nil, err
 	}
+	_, err = sapMock.AddSubnetToRouter(ctx, result.Router.ID, subnet.ID)
+	if err != nil {
+		return nil, err
+	}
 	result.Subnets = []*subnets.Subnet{
 		subnet,
 	}

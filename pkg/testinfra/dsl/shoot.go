@@ -21,10 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	DefaultGardenNamespace = "garden-kyma" // must be same as infra.Garden().Namespace()
-)
-
 func CreateGardenerCredentials(ctx context.Context, infra testinfra.Infra) error {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

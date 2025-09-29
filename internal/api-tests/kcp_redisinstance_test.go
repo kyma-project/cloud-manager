@@ -11,7 +11,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -58,12 +57,6 @@ var _ = Describe("Feature: KCP RedisInstance .status patch", Ordered, func() {
 		name := "eac4ab45-6c9e-4aff-a457-9d6da06d93af"
 
 		By("When RedisInstance is created", func() {
-
-			Expect(CreateNamespace(infra.Ctx(), infra.KCP().Client(), &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: DefaultSkrNamespace,
-				},
-			})).To(Succeed())
 
 			Expect(CreateRedisInstance(
 				infra.Ctx(), infra.KCP().Client(), obj,

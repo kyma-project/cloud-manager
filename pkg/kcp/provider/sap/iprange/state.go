@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
@@ -16,8 +17,10 @@ type State struct {
 	iprangetypes.State
 	sapClient sapiprangeclient.Client
 
-	net    *networks.Network
-	subnet *subnets.Subnet
+	net          *networks.Network
+	subnet       *subnets.Subnet
+	router       *routers.Router
+	routerSubnet *sapiprangeclient.RouterSubnetInterfaceInfo
 }
 
 type StateFactory interface {

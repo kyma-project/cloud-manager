@@ -2,6 +2,7 @@ package defaultiprange
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,11 +13,11 @@ func createDefaultSkrIpRange(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.GetSkrIpRange() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{
@@ -41,5 +42,5 @@ func createDefaultSkrIpRange(ctx context.Context, st composed.State) (error, con
 	logger.Info("Created default SKR IpRange")
 	state.SetSkrIpRange(skrIpRange)
 
-	return nil, nil
+	return nil, ctx
 }

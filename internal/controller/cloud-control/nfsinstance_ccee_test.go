@@ -5,6 +5,8 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -21,34 +23,69 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 			// Tell Scope reconciler to ignore this Scope
 			kcpscope.Ignore.AddName(name)
 
-			Eventually(CreateScopeOpenStack).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
-				Should(Succeed(), "failed creating Scope")
+			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, WithName(name))).
+				To(Succeed(), "failed creating Scope")
 		})
 
-		networkId := "273c6391-b934-4d14-9ebc-2da48c364bf4"
+		sapMock := infra.SapMock()
 
-		By("And Given SAP network exists", func() {
-			infra.SapMock().AddNetwork(
-				"wrong1",
-				"wrong1",
-			)
-			infra.SapMock().AddNetwork(
-				networkId,
-				scope.Spec.Scope.OpenStack.VpcNetwork,
-			)
-			infra.SapMock().AddNetwork(
-				"wrong2",
-				"wrong2",
+		//var sapGardenInfra *SapGardenerInfra
+
+		By("And Given SAP infra exists", func() {
+			sapMock.AddNetwork(
+				"wrong1-"+name,
+				"wrong1-"+name,
 			)
 
-			_, err := infra.SapMock().CreateSubnet(
-				infra.Ctx(),
-				networkId,
-				scope.Spec.Scope.OpenStack.VpcNetwork,
-				"10.250.0.0/22",
-			)
+			_, err := CreateSapGardenerResources(infra.Ctx(), sapMock, infra.Garden().Namespace(), scope.Spec.ShootName, "10.250.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
+			//sapGardenInfra = sgi
+
+			sapMock.AddNetwork(
+				"wrong2-"+name,
+				"wrong2-"+name,
+			)
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(name).
+				WithName(common.KcpNetworkKymaCommonName(name)).
+				WithOpenStackRef(scope.Spec.Scope.OpenStack.DomainName, scope.Spec.Scope.OpenStack.TenantName, "", scope.Spec.Scope.OpenStack.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma)).
+				To(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		iprangeCidr := "10.251.0.0/16"
+
+		By("And Given KCP IpRange exists in Ready state", func() {
+			kcpiprange.Ignore.AddName(name)
+
+			Expect(CreateKcpIpRange(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+				WithName(name),
+				WithKcpIpRangeRemoteRef("some-remote-ref"),
+				WithKcpIpRangeNetwork(kcpNetworkKyma.Name),
+				WithKcpIpRangeSpecCidr(iprangeCidr),
+				WithScope(name),
+			)).
+				To(Succeed())
+
+			Expect(UpdateStatus(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+				WithKcpIpRangeStatusCidr(iprangeCidr),
+				WithConditions(KcpReadyCondition()),
+			)).
+				To(Succeed())
 		})
 
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -59,6 +96,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 					WithName(name),
 					WithRemoteRef("foo"),
 					WithScope(name),
+					WithIpRange(kcpIpRange.Name),
 					WithNfsInstanceSap(10),
 				).
 				Should(Succeed(), "failed creating NfsInstance")
@@ -139,6 +177,22 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 			x, err := infra.SapMock().GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).To(BeNil())
+		})
+
+		By("// cleanup: delete KCP IpRange", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kcpIpRange)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 	})
 

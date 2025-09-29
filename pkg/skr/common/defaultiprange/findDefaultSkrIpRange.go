@@ -2,6 +2,7 @@ package defaultiprange
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -13,7 +14,7 @@ func findDefaultSkrIpRange(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.GetSkrIpRange() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -22,14 +23,13 @@ func findDefaultSkrIpRange(ctx context.Context, st composed.State) (error, conte
 	}, skrIpRange)
 	if apierrors.IsNotFound(err) {
 		logger.Info("Default SKR IpRange does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error getting default SKR IpRange", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("Loaded default SKR IpRange")
 	state.SetSkrIpRange(skrIpRange)
 
-	return nil, nil
+	return nil, ctx
 }

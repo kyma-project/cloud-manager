@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -229,8 +230,6 @@ func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *clo
 		).
 		ApplyOnObject(scope)
 
-	project := strings.TrimPrefix(scope.Namespace, "garden-")
-
 	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
 		KymaName:  scope.Name,
 		ShootName: scope.Name,
@@ -238,7 +237,7 @@ func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *clo
 		Provider:  cloudcontrolv1beta1.ProviderOpenStack,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			OpenStack: &cloudcontrolv1beta1.OpenStackScope{
-				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+				VpcNetwork: common.GardenerVpcName(infra.Garden().Namespace(), scope.Name),
 				DomainName: "kyma",
 				TenantName: "kyma-dev-02",
 				Network: cloudcontrolv1beta1.OpenStackNetwork{
