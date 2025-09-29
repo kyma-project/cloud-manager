@@ -26,8 +26,8 @@ cloud.google.com/go/storage v1.56.2 h1:DzxQ4ppJe4OSTtZLtCqscC3knyW919eNl0zLLpojn
 cloud.google.com/go/storage v1.56.2/go.mod h1:C9xuCZgFl3buo2HZU/1FncgvvOgTAs/rnh4gF4lMg0s=
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
 dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
-github.com/3th1nk/cidr v0.2.0 h1:81jjEknszD8SHPLVTPPk+BZjNVqq1ND2YXLSChl6Lrs=
-github.com/3th1nk/cidr v0.2.0/go.mod h1:XsSQnS4rEYyB2veDfnIGgViulFpIITPKtp3f0VxpiLw=
+github.com/3th1nk/cidr v0.3.0 h1:I6zyZXenmdnlbvioikvVNDbaUPoFd4d6wQ4reSJkcjY=
+github.com/3th1nk/cidr v0.3.0/go.mod h1:XsSQnS4rEYyB2veDfnIGgViulFpIITPKtp3f0VxpiLw=
 github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1 h1:5YTBM8QDVIBN3sxBil89WfdAAqDZbyJTgh688DSxX5w=
 github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1/go.mod h1:YD5h/ldMsG0XiIw7PdyNhLxaM317eFh5yNLccNfGdyw=
 github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.12.0 h1:wL5IEG5zb7BVv1Kv0Xm92orq+5hB5Nipn3B5tn4Rqfk=
