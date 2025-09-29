@@ -32,7 +32,7 @@ func kcpNfsInstanceCreate(ctx context.Context, st composed.State) (error, contex
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 			IpRange: cloudcontrolv1beta1.IpRangeRef{
-				Name: state.SkrIpRange.Name,
+				Name: state.SkrIpRange.Status.Id,
 			},
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{
 				Namespace: state.ObjAsSapNfsVolume().Name,
