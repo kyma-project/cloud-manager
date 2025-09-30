@@ -2,6 +2,7 @@ package meta
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -9,6 +10,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"io"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
@@ -53,7 +55,11 @@ func NewAzureNotFoundError() error {
 		StatusCode: http.StatusNotFound,
 	}
 }
-
+func NewAzureTooManyRequestsError() error {
+	return &azcore.ResponseError{
+		StatusCode: http.StatusTooManyRequests,
+	}
+}
 func NewAzureAuthorizationFailedError() error {
 	return &azcore.ResponseError{
 		ErrorCode:  AuthorizationFailed,
@@ -61,6 +67,16 @@ func NewAzureAuthorizationFailedError() error {
 	}
 }
 
+func NewAzureAuthenticationFailedError() error {
+	return &azidentity.AuthenticationFailedError{}
+}
+
+func NewAzureConflictError() error {
+	return &azcore.ResponseError{
+		ErrorCode:  Conflict,
+		StatusCode: http.StatusConflict,
+	}
+}
 func IgnoreNotFoundError(err error) error {
 	if IsNotFound(err) {
 		return nil
@@ -134,6 +150,11 @@ func GetErrorMessage(err error, def string) (string, bool) {
 			return InvalidAuthenticationTokenTenantMessage, true
 		case Conflict:
 			return ConflictMessage, true
+		default:
+			msg := extractAzureErrorMessage(respErr)
+			if msg != "" {
+				return msg, true
+			}
 		}
 	}
 
@@ -147,11 +168,18 @@ func GetErrorMessage(err error, def string) (string, bool) {
 type ErrorHandlerBuilder struct {
 	err                    error
 	obj                    composed.ObjWithConditionsAndState
+	condition              metav1.Condition
+	statusState            cloudcontrolv1beta1.StatusState
+	message                string
+	successError           error
 	defaultReason          string
 	defaultMessage         string
+	tooManyRequests        bool
+	notFound               bool
 	tooManyRequestsMessage string
 	updateStatusMessage    string
 	notFoundMessage        string
+	conflictMessage        string
 	unauthorizedError      error
 	unauthenticatedError   error
 	conflictError          error
@@ -179,6 +207,11 @@ func (b *ErrorHandlerBuilder) WithTooManyRequestsMessage(message string) *ErrorH
 	return b
 }
 
+func (b *ErrorHandlerBuilder) WithConflictMessage(message string) *ErrorHandlerBuilder {
+	b.conflictMessage = message
+	return b
+}
+
 func (b *ErrorHandlerBuilder) WithUpdateStatusMessage(message string) *ErrorHandlerBuilder {
 	b.updateStatusMessage = message
 	return b
@@ -193,19 +226,23 @@ func (b *ErrorHandlerBuilder) setDefaults() {
 	b.unauthenticatedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
 	b.unauthorizedError = composed.StopWithRequeueDelay(util.Timing.T300000ms())
 	b.conflictError = composed.StopWithRequeueDelay(util.Timing.T60000ms())
+
+	if b.conflictMessage == "" {
+		b.conflictMessage = ConflictMessage
+	}
 }
 
 func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (error, context.Context) {
-	b.setDefaults()
-
 	logger := composed.LoggerFromCtx(ctx)
 
-	if IsNotFound(b.err) {
+	b.calculate()
+
+	if b.notFound {
 		logger.Info(b.notFoundMessage)
 		return nil, ctx
 	}
 
-	if IsTooManyRequests(b.err) {
+	if b.tooManyRequests {
 		return composed.LogErrorAndReturn(b.err,
 			b.tooManyRequestsMessage,
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
@@ -213,55 +250,97 @@ func (b *ErrorHandlerBuilder) Run(ctx context.Context, state composed.State) (er
 		)
 	}
 
-	message, isWarning := GetErrorMessage(b.err, b.defaultMessage)
-
 	if b.err != nil {
-		logger.Error(b.err, message)
+		logger.Error(b.err, b.message)
 	}
 
-	statusState := string(cloudcontrolv1beta1.StateError)
+	changed := meta.SetStatusCondition(b.obj.Conditions(), b.condition)
 
-	if isWarning {
-		statusState = string(cloudcontrolv1beta1.StateWarning)
-	}
-
-	condition := metav1.Condition{
-		Type:    cloudcontrolv1beta1.ConditionTypeError,
-		Status:  metav1.ConditionTrue,
-		Reason:  b.defaultReason,
-		Message: message,
-	}
-
-	successError := composed.StopAndForget
-	if IsUnauthorized(b.err) {
-		condition.Reason = cloudcontrolv1beta1.ReasonUnauthorized
-		successError = b.unauthorizedError
-	}
-
-	if IsUnauthenticated(b.err) {
-		condition.Reason = cloudcontrolv1beta1.ReasonUnauthenticated
-		successError = b.unauthenticatedError
-	}
-
-	if IsConflictError(b.err) {
-		condition.Reason = cloudcontrolv1beta1.ReasonConflict
-		successError = b.conflictError
-	}
-
-	changed := meta.SetStatusCondition(b.obj.Conditions(), condition)
-
-	if b.obj.State() != statusState {
-		b.obj.SetState(statusState)
+	if b.obj.State() != string(b.statusState) {
+		b.obj.SetState(string(b.statusState))
 		changed = true
 	}
 
 	if changed {
 		return composed.UpdateStatus(b.obj).
 			ErrorLogMessage(b.updateStatusMessage).
-			SuccessLogMsg(fmt.Sprintf("Status successfully updated with status '%s' and message '%s'", statusState, message)).
-			SuccessError(successError).
+			SuccessLogMsg(fmt.Sprintf("Status successfully updated with status '%s' and message '%s'", b.statusState, b.message)).
+			SuccessError(b.successError).
 			Run(ctx, state)
 	}
 
-	return successError, ctx
+	return b.successError, ctx
+}
+
+func (b *ErrorHandlerBuilder) calculate() {
+	b.setDefaults()
+
+	if IsNotFound(b.err) {
+		b.notFound = true
+		return
+	}
+
+	if IsTooManyRequests(b.err) {
+		b.tooManyRequests = true
+		return
+	}
+
+	var isWarning bool
+	b.message, isWarning = GetErrorMessage(b.err, b.defaultMessage)
+
+	b.condition = metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
+		Status:  metav1.ConditionTrue,
+		Reason:  b.defaultReason,
+		Message: b.message,
+	}
+
+	b.successError = composed.StopAndForget
+	if IsUnauthorized(b.err) {
+		b.condition.Reason = cloudcontrolv1beta1.ReasonUnauthorized
+		b.successError = b.unauthorizedError
+	}
+
+	if IsUnauthenticated(b.err) {
+		b.condition.Reason = cloudcontrolv1beta1.ReasonUnauthenticated
+		b.successError = b.unauthenticatedError
+	}
+
+	if IsConflictError(b.err) {
+		b.condition.Message = b.conflictMessage
+		b.message = b.conflictMessage
+		b.condition.Reason = cloudcontrolv1beta1.ReasonConflict
+		b.successError = b.conflictError
+	}
+
+	if isWarning {
+		b.statusState = cloudcontrolv1beta1.StateWarning
+	} else {
+		b.statusState = cloudcontrolv1beta1.StateError
+	}
+}
+
+type azureErrorBody struct {
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+func extractAzureErrorMessage(respErr *azcore.ResponseError) string {
+
+	if respErr == nil || respErr.RawResponse.Body == nil {
+		return ""
+	}
+
+	defer respErr.RawResponse.Body.Close()
+
+	body, _ := io.ReadAll(respErr.RawResponse.Body)
+
+	var azErr azureErrorBody
+	if json.Unmarshal(body, &azErr) != nil {
+		return ""
+	}
+
+	return azErr.Error.Message
 }

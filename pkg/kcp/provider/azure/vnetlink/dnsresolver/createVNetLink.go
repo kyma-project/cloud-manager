@@ -39,6 +39,7 @@ func createVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 		WithDefaultMessage("Failed creating DNS resolver VirtualNetworkLink").
 		WithTooManyRequestsMessage("Too many requests on creating DNS resolver VirtualNetworkLink").
 		WithUpdateStatusMessage("Error updating KCP AzureVNetLink status on failed creating of DNS resolver VirtualNetworkLink").
+		WithConflictMessage("Failed to create virtual network link because the virtual network is already linked to another DNS forwarding ruleset.").
 		Run(ctx, state)
 
 }

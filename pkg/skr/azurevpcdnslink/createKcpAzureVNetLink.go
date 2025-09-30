@@ -25,6 +25,7 @@ func createKcpAzureVNetLink(ctx context.Context, st composed.State) (error, cont
 		WithScope(state.KymaRef.Name).
 		WithRemoteVirtualPrivateLinkName(state.ObjAsVNetLink().Spec.RemoteLinkName).
 		WithRemotePrivateDnsZone(state.ObjAsVNetLink().Spec.RemotePrivateDnsZone).
+		WithRemoteDnsForwardingRuleset(state.ObjAsVNetLink().Spec.RemoteDnsForwardingRuleset).
 		WithRemoteTenant(state.ObjAsVNetLink().Spec.RemoteTenant).
 		Build()
 
