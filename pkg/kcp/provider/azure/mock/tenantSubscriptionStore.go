@@ -17,6 +17,7 @@ type tenantSubscriptionStore struct {
 	*natGatewayStore
 	*publicIpAddressStore
 	*fileShareStore
+	*dnsResolverVNetLinkStore
 	tenant       string
 	subscription string
 }
