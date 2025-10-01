@@ -149,7 +149,7 @@ var _ = Describe("Feature: KCP AzureVNetLink", func() {
 				Should(Succeed())
 		})
 
-		By("and When DNS resolver VNetLink is provisioned", func() {
+		By("And When DNS resolver VNetLink is provisioned", func() {
 			Eventually(azureMockRemote.SetDnsResolverVNetLinkProvisioned).
 				WithArguments(infra.Ctx(), remoteResourceGroup, remoteDnsForwardingRuleset, remoteVirtualPrivateLinkName).
 				Should(Succeed())
