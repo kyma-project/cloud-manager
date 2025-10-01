@@ -1,8 +1,8 @@
-package vnetlink
+package dnsresolver
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -13,15 +13,15 @@ func waitVNetLinkCompleted(ctx context.Context, st composed.State) (error, conte
 
 	if state.vnetLink == nil ||
 		state.vnetLink.Properties == nil ||
-		state.vnetLink.Properties.VirtualNetworkLinkState == nil ||
-		*state.vnetLink.Properties.VirtualNetworkLinkState != armprivatedns.VirtualNetworkLinkStateCompleted {
+		state.vnetLink.Properties.ProvisioningState == nil ||
+		*state.vnetLink.Properties.ProvisioningState != armdnsresolver.ProvisioningStateSucceeded {
 
-		logger.Info("Waiting for VirtualNetworkLink state Completed")
+		logger.Info("Waiting for DNS resolver VirtualNetworkLink state Succeeded")
 
 		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 
 	}
 
-	logger.Info("VirtualNetworkLink state Completed")
+	logger.Info("DNS resolver VirtualNetworkLink state Succeeded")
 	return nil, ctx
 }

@@ -1,4 +1,4 @@
-package vnetlink
+package dnsresolver
 
 import (
 	"context"
@@ -15,12 +15,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if state.vnetLink == nil ||
 		state.vnetLink.Properties == nil ||
-		state.vnetLink.Properties.VirtualNetworkLinkState == nil {
+		state.vnetLink.Properties.ProvisioningState == nil {
 		return nil, ctx
 	}
 
-	if state.ObjAsAzureVNetLink().Status.State != string(*state.vnetLink.Properties.VirtualNetworkLinkState) {
-		state.ObjAsAzureVNetLink().Status.State = string(*state.vnetLink.Properties.VirtualNetworkLinkState)
+	if state.ObjAsAzureVNetLink().Status.State != string(*state.vnetLink.Properties.ProvisioningState) {
+		state.ObjAsAzureVNetLink().Status.State = string(*state.vnetLink.Properties.ProvisioningState)
 		changed = true
 	}
 

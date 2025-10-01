@@ -26,9 +26,11 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
-		clientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, &arm.ClientOptions{
+		options := &arm.ClientOptions{
 			AuxiliaryTenants: auxiliaryTenants,
-		})
+		}
+
+		privateDnsClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, options)
 
 		if err != nil {
 			return nil, err
@@ -36,10 +38,10 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 
 		return newClient(
 			azureclient.NewVirtualNetworkLinkClient(
-				clientFactory.NewVirtualNetworkLinksClient(),
+				privateDnsClientFactory.NewVirtualNetworkLinksClient(),
 			),
 			azureclient.NewPrivateDnsZoneClient(
-				clientFactory.NewPrivateZonesClient(),
+				privateDnsClientFactory.NewPrivateZonesClient(),
 			),
 		), nil
 	}

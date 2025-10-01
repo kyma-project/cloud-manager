@@ -1,4 +1,4 @@
-package vnetlink
+package dnsresolver
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func deleteVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.vnetLink == nil {
-		logger.Info("AzureVNetLink deleted before VirtualNetworkLink is created")
+		logger.Info("DNS resolver VirtualNetworkLink not found while deleting AzureVNetLink, skipping")
 		return nil, ctx
 	}
 
@@ -25,9 +25,7 @@ func deleteVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 		return azuremeta.LogErrorAndReturn(err, "Failed parsing vnetLink.ID while deleting AzureVNetLink", ctx)
 	}
 
-	logger.Info("Deleting VirtualNetworkLink")
-
-	err = state.remoteClient.DeleteVirtualNetworkLink(
+	err = state.remoteClient.DeleteDnsResolverVNetLink(
 		ctx,
 		resourceId.ResourceGroup,
 		resourceId.ResourceName,
@@ -35,18 +33,18 @@ func deleteVNetLink(ctx context.Context, st composed.State) (error, context.Cont
 	)
 
 	if err == nil {
-		logger.Info("VirtualNetworkLink deleted")
+		logger.Info("DNS resolver VirtualNetworkLink deleted")
 		return nil, ctx
 	}
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
-			"Too many requests on loading VirtualNetworkLink",
+			"Too many requests on deleting DNS resolver VirtualNetworkLink",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 			ctx,
 		)
 	}
 
-	return azuremeta.LogErrorAndReturn(err, "Error deleting VirtualNetworkLink", ctx)
+	return azuremeta.LogErrorAndReturn(err, "Error deleting DNS resolver VirtualNetworkLink", ctx)
 
 }
