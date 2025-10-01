@@ -13,12 +13,21 @@ func gardenerCredentialsLoad(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
-	out, err := commongardener.LoadGardenerCloudProviderCredentials(ctx, commongardener.LoadGardenerCloudProviderCredentialsInput{
+	in := commongardener.LoadGardenerCloudProviderCredentialsInput{
 		GardenerClient:  state.gardenerClient,
 		GardenK8sClient: state.gardenK8sClient,
 		Namespace:       state.shootNamespace,
-		BindingName:     ptr.Deref(state.shoot.Spec.SecretBindingName, ""),
-	})
+		//BindingName:     ptr.Deref(state.shoot.Spec.SecretBindingName, ""),
+	}
+	if x := ptr.Deref(state.shoot.Spec.CredentialsBindingName, ""); x != "" {
+		in.BindingName = x
+	}
+	if in.BindingName == "" {
+		//lint:ignore SA1019 we keep support for secretBinding until all landscapes are migrated
+		x := ptr.Deref(state.shoot.Spec.SecretBindingName, "")
+		in.BindingName = x
+	}
+	out, err := commongardener.LoadGardenerCloudProviderCredentials(ctx, in)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading gardener cloud credentials", composed.StopWithRequeue, ctx)
 	}

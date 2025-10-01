@@ -6,16 +6,14 @@ import (
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -55,9 +53,7 @@ func TestValidatePVC(t *testing.T) {
 				},
 			}
 
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(scheme).
 				WithObjects(pvc).
@@ -88,9 +84,7 @@ func TestValidatePVC(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(scheme).
 				Build()
@@ -118,9 +112,7 @@ func TestValidatePVC(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName] = "another-owner-name"
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(scheme).
 				WithObjects(pvc).

@@ -2,16 +2,15 @@ package feature
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func TestApiDisabled(t *testing.T) {
@@ -21,10 +20,7 @@ func TestApiDisabled(t *testing.T) {
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)
 
-	sch := runtime.NewScheme()
-	utilruntime.Must(scheme.AddToScheme(sch))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(sch))
-	utilruntime.Must(apiextensions.AddToScheme(sch))
+	sch := bootstrap.SkrScheme
 
 	cases := []struct {
 		t string

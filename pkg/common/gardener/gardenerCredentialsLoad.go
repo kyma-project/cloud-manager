@@ -37,6 +37,8 @@ func (in LoadGardenerCloudProviderCredentialsInput) Validate() error {
 
 type LoadGardenerCloudProviderCredentialsOutput struct {
 	Provider        string
+	SecretName      string
+	SecretNamespace string
 	CredentialsData map[string]string
 }
 
@@ -45,23 +47,24 @@ func LoadGardenerCloudProviderCredentials(ctx context.Context, in LoadGardenerCl
 		return nil, err
 	}
 
+	out := &LoadGardenerCloudProviderCredentialsOutput{
+		CredentialsData: map[string]string{},
+	}
+
 	secretBinding, err := in.GardenerClient.SecretBindings(in.Namespace).Get(ctx, in.BindingName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error loading secret binding: %w", err)
 	}
-
-	out := &LoadGardenerCloudProviderCredentialsOutput{
-		Provider:        secretBinding.Provider.Type,
-		CredentialsData: map[string]string{},
-	}
-
+	out.Provider = secretBinding.Provider.Type
+	out.SecretName = secretBinding.SecretRef.Name
 	ns := secretBinding.SecretRef.Namespace
 	if ns == "" {
 		ns = in.Namespace
 	}
+	out.SecretNamespace = ns
 
-	secret, err := in.GardenK8sClient.CoreV1().Secrets(ns).
-		Get(ctx, secretBinding.SecretRef.Name, metav1.GetOptions{})
+	secret, err := in.GardenK8sClient.CoreV1().Secrets(out.SecretNamespace).
+		Get(ctx, out.SecretName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("error loading shoot secret: %w", err)
 	}
