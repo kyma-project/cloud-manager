@@ -128,7 +128,7 @@ var _ = Describe("Feature: KCP AzureVNetLink", func() {
 
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
 
-		By("And Given that remote private DNS zone exists", func() {
+		By("And Given that remote private DNS resolver exists", func() {
 			err := azureMockRemote.CreateDnsForwardingRuleset(infra.Ctx(), remoteResourceGroup, remoteDnsForwardingRuleset, map[string]string{kymaName: kymaName})
 			Expect(err).NotTo(HaveOccurred())
 		})
