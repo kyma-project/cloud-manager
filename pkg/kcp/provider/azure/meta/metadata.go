@@ -1,6 +1,7 @@
 package meta
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -329,13 +330,13 @@ type azureErrorBody struct {
 
 func extractAzureErrorMessage(respErr *azcore.ResponseError) string {
 
-	if respErr == nil || respErr.RawResponse.Body == nil {
+	if respErr == nil || respErr.RawResponse == nil || respErr.RawResponse.Body == nil {
 		return ""
 	}
 
-	defer respErr.RawResponse.Body.Close()
-
 	body, _ := io.ReadAll(respErr.RawResponse.Body)
+
+	respErr.RawResponse.Body = io.NopCloser(bytes.NewReader(body))
 
 	var azErr azureErrorBody
 	if json.Unmarshal(body, &azErr) != nil {
