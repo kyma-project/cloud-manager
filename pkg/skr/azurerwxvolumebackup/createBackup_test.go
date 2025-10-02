@@ -2,22 +2,22 @@ package azurerwxvolumebackup
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
+
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func setupDefaultBackup() *cloudresourcesv1beta1.AzureRwxVolumeBackup {
@@ -39,7 +39,7 @@ func setupDefaultBackup() *cloudresourcesv1beta1.AzureRwxVolumeBackup {
 
 func setupDefaultCluster() composed.StateCluster {
 
-	scheme := runtime.NewScheme()
+	scheme := bootstrap.SkrScheme
 	fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
 	k8sClient := spy.NewClientSpy(fakeClient)
 	cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
@@ -52,9 +52,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 
 	cluster := setupDefaultCluster()
 
-	kcpScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+	kcpScheme := bootstrap.KcpScheme
 
 	scope := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{

@@ -1,0 +1,10 @@
+resource:
+  group: cloud-resources.kyma-project.io
+  kind: SapNfsVolume
+  version: v1beta1
+urlPath: sapnfsvolumes
+name: SAP NFS Volume
+scope: namespace
+category: Storage
+icon: shelf
+description: SapNfsVolume description here

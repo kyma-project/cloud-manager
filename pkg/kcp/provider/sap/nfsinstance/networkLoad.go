@@ -21,7 +21,7 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 			state.network = &arr[0]
 		}
 	} else {
-		n, err := state.sapClient.GetNetwork(ctx, networkId)
+		n, err := state.sapClient.GetNetworkById(ctx, networkId)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error getting SAP network", composed.StopWithRequeue, ctx)
 		}

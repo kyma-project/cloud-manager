@@ -6,6 +6,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,16 +23,15 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 	}
 
 	// can't continue if VPC peering connection is in one of these statuses
-	if code == ec2types.VpcPeeringConnectionStateReasonCodeFailed ||
-		code == ec2types.VpcPeeringConnectionStateReasonCodeExpired ||
-		code == ec2types.VpcPeeringConnectionStateReasonCodeRejected ||
-		code == ec2types.VpcPeeringConnectionStateReasonCodeDeleted ||
-		code == ec2types.VpcPeeringConnectionStateReasonCodeDeleting {
-
+	if awsutil.IsTerminatedOrDeleting(state.vpcPeering) {
 		changed := false
 
 		if state.ObjAsVpcPeering().Status.State != string(code) {
 			state.ObjAsVpcPeering().Status.State = string(code)
+			changed = true
+		}
+
+		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 			changed = true
 		}
 
@@ -52,8 +52,8 @@ func waitPendingAcceptance(ctx context.Context, st composed.State) (error, conte
 				Run(ctx, state)
 		}
 
-		return composed.StopAndForget, nil
+		return composed.StopAndForget, ctx
 	}
 
-	return nil, nil
+	return nil, ctx
 }

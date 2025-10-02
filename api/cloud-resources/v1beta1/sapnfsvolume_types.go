@@ -26,6 +26,10 @@ import (
 
 // SapNfsVolumeSpec defines the desired state of SapNfsVolume
 type SapNfsVolumeSpec struct {
+
+	// +optional
+	IpRange IpRangeRef `json:"ipRange"`
+
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
 	CapacityGb int `json:"capacityGb"`
@@ -68,6 +72,8 @@ type SapNfsVolumeStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories={kyma-cloud-manager}
+// +kubebuilder:printcolumn:name="Capacity",type="string",JSONPath=".status.capacity"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // SapNfsVolume is the Schema for the sapnfsvolumes API
 type SapNfsVolume struct {
@@ -193,6 +199,10 @@ func (in *SapNfsVolume) DeriveStateFromConditions() (changed bool) {
 		in.Status.State = StateError
 	}
 	return in.Status.State != oldState
+}
+
+func (in *SapNfsVolume) GetIpRangeRef() IpRangeRef {
+	return in.Spec.IpRange
 }
 
 // +kubebuilder:object:root=true

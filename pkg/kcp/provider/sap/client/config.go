@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/config"
 )
@@ -12,7 +13,7 @@ type ProvidedInfo struct {
 	EndpointOptions gophercloud.EndpointOpts
 }
 
-func NewProviderClient(_ context.Context, pp ProviderParams) (*ProvidedInfo, error) {
+func NewProviderClient(ctx context.Context, pp ProviderParams) (*ProvidedInfo, error) {
 	authUrl := fmt.Sprintf("https://identity-3.%s.cloud.sap/v3/", pp.RegionName)
 	authOptions := gophercloud.AuthOptions{
 		IdentityEndpoint: authUrl,
@@ -31,7 +32,7 @@ func NewProviderClient(_ context.Context, pp ProviderParams) (*ProvidedInfo, err
 	var providerClient *gophercloud.ProviderClient
 	var err error
 	httpClient := monitoredHttpClient()
-	providerClient, err = config.NewProviderClient(context.Background(), authOptions, config.WithHTTPClient(*httpClient))
+	providerClient, err = config.NewProviderClient(ctx, authOptions, config.WithHTTPClient(*httpClient))
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cloud client: %v", err)

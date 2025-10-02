@@ -33,12 +33,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 	kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
 	BeforeEach(func() {
-		By("And Given SKR namespace exists", func() {
-			//Create namespace if it doesn't exist.
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
 
 		By("And Given SKR IPRange exists", func() {
 			// tell skriprange reconciler to ignore this SKR IpRange

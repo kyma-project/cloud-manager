@@ -20,8 +20,7 @@ func gardenerClientCreate(ctx context.Context, st composed.State) (error, contex
 	}
 
 	state.gardenNamespace = out.Namespace
-	state.gardenerClient = out.GardenerClient
-	state.gardenK8sClient = out.GardenK8sClient
+	state.gardenerClient = out.Client
 
 	return nil, ctx
 }

@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -60,7 +61,7 @@ func statusSaveOnDelete(ctx context.Context, st composed.State) (error, context.
 		SuccessLogMsg("Subscription being deleted while still used").
 		ErrorLogMessage("Error patching subscription status with warning state while still used").
 		SuccessError(composed.StopWithRequeue).
-		FailedError(composed.StopWithRequeue).
+		FailedError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
 		Run(ctx, state)
 
 }

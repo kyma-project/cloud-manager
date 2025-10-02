@@ -50,15 +50,16 @@ This table lists the parameters of the given resource together with their descri
 
 **Status:**
 
-| Parameter                         | Type       | Description                                                                                                                        |
-|-----------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required)              | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
-| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                               |
-| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                              |
-| **conditions.message**            | string     | Provides more details about the condition status change.                                                                           |
-| **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                |
-| **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                         |
-| **conditions.type**               | string     | Provides a short description of the condition.                                                                                     |
+| Parameter                         | Type       | Description                                                                                                                                                                         |
+|-----------------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **state** (required)              | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`.                                                  |
+| **capacity**                      | quantity   | Provides the combined size of all data on the underlying EFS. This is a dynamic value that changes as volume is used and, therefore, gets updated frequently to reflect the changes. |
+| **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                                                                                |
+| **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                                                                               |
+| **conditions.message**            | string     | Provides more details about the condition status change.                                                                                                                            |
+| **conditions.reason**             | string     | Defines the reason for the condition status change.                                                                                                                                 |
+| **conditions.status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                                                                                          |
+| **conditions.type**               | string     | Provides a short description of the condition.                                                                                                                                      |
 
 ## Sample Custom Resource <!-- {docsify-ignore} -->
 

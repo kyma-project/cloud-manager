@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	"sync"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -17,10 +19,7 @@ import (
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -188,9 +187,7 @@ func TestLoadAddress(t *testing.T) {
 				},
 			}
 
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudcontrolv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.KcpScheme
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(scheme).
 				Build()

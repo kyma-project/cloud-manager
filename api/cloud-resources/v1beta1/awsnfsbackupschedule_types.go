@@ -33,7 +33,8 @@ type AwsNfsBackupScheduleSpec struct {
 	// +kubebuilder:validation:Required
 	NfsVolumeRef corev1.ObjectReference `json:"nfsVolumeRef"`
 
-	// Location specifies the AWS region to which the backup has to be copied over.
+	// AWS Region Code (as specified in https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html#available-regions) where this backup should be created.
+	// If not specified, region of the AwsNfsVolume is used for the backup.
 	// +optional
 	Location string `json:"location"`
 

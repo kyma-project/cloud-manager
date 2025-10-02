@@ -2,13 +2,13 @@ package cr
 
 import (
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -32,13 +32,8 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		cr := &cloudresourcesv1beta1.CloudResources{}
 
 		By("When CloudResources is created", func() {
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}, WithName("kyma-system")).
-				Should(Succeed(), "failed creating kyma-system namespace")
-
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), cr,
-					WithNamespace("kyma-system"),
 					WithName(crName),
 				).
 				Should(Succeed(), "failed creating CloudResources CR")

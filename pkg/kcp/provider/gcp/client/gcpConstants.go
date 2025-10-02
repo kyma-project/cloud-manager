@@ -36,23 +36,10 @@ const (
 )
 
 type GcpConfigStruct struct {
-	GcpRetryWaitTime         time.Duration
-	GcpOperationWaitTime     time.Duration
-	GcpApiTimeout            time.Duration
-	GcpCapacityCheckInterval time.Duration
-
-	//Config from files...
-	RetryWaitTime         string `yaml:"retryWaitTime,omitempty" json:"retryWaitTime,omitempty"`
-	OperationWaitTime     string `yaml:"operationWaitTime,omitempty" json:"operationWaitTime,omitempty"`
-	ApiTimeout            string `yaml:"apiTimeout,omitempty" json:"apiTimeout,omitempty"`
-	CapacityCheckInterval string `yaml:"capacityCheckInterval,omitempty" json:"capacityCheckInterval,omitempty"`
-}
-
-func (c *GcpConfigStruct) AfterConfigLoaded() {
-	c.GcpRetryWaitTime = GetDuration(c.RetryWaitTime, GcpRetryWaitTime)
-	c.GcpOperationWaitTime = GetDuration(c.OperationWaitTime, GcpOperationWaitTime)
-	c.GcpApiTimeout = GetDuration(c.ApiTimeout, GcpApiTimeout)
-	c.GcpCapacityCheckInterval = GetDuration(c.CapacityCheckInterval, GcpCapacityCheckInterval)
+	GcpRetryWaitTime         time.Duration `mapstructure:"retryWaitTime,omitempty"`
+	GcpOperationWaitTime     time.Duration `mapstructure:"operationWaitTime,omitempty"`
+	GcpApiTimeout            time.Duration `mapstructure:"apiTimeout,omitempty"`
+	GcpCapacityCheckInterval time.Duration `mapstructure:"capacityCheckInterval,omitempty"`
 }
 
 func InitConfig(cfg config.Config) {
@@ -75,7 +62,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"capacityCheckInterval",
-			config.DefaultScalar(1*time.Hour),
+			config.DefaultScalar("1h"),
 			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
 		),
 		config.SourceFile("gcpclient.GcpConfig.yaml"),
@@ -84,14 +71,6 @@ func InitConfig(cfg config.Config) {
 }
 
 var GcpConfig = &GcpConfigStruct{}
-
-func GetDuration(value string, defaultValue time.Duration) time.Duration {
-	duration, err := time.ParseDuration(value)
-	if err != nil {
-		return defaultValue
-	}
-	return duration
-}
 
 func GetVPCPath(projectId, vpcId string) string {
 	return fmt.Sprintf(vPCPathPattern, projectId, vpcId)

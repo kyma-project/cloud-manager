@@ -3,6 +3,7 @@ package allocate
 import (
 	"errors"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/common"
 )
 
@@ -40,9 +41,12 @@ func AllocateCidr(maskOnes int, existingRanges []string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to parse existing ranges: %w", err)
 	}
-	current.nextWithOnes(maskOnes)
+	current = current.nextWithOnes(maskOnes)
+	if current == nil {
+		return "", errors.New("unable to find vacant cidr slot for the first time")
+	}
 	for occupied.overlaps(current) {
-		current = current.next()
+		current = current.nextWithOnes(maskOnes)
 		if current == nil {
 			return "", errors.New("unable to find vacant cidr slot")
 		}

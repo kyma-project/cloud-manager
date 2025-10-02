@@ -28,7 +28,7 @@ func subnetLoad(ctx context.Context, st composed.State) (error, context.Context)
 		if id == "" {
 			id = state.network.Subnets[0]
 		}
-		subnet, err := state.sapClient.GetSubnet(ctx, id)
+		subnet, err := state.sapClient.GetSubnetById(ctx, id)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error getting SAP subnet", composed.StopWithRequeue, ctx)
 		}

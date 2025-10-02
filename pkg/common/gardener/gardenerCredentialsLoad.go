@@ -5,17 +5,19 @@ import (
 	"errors"
 	"fmt"
 
-	gardenerclient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
+	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	"github.com/hashicorp/go-multierror"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kubernetesclient "k8s.io/client-go/kubernetes"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type LoadGardenerCloudProviderCredentialsInput struct {
-	GardenerClient  gardenerclient.CoreV1beta1Interface
-	GardenK8sClient kubernetesclient.Interface
-	Namespace       string
-	BindingName     string
+	Client      client.Client
+	Namespace   string
+	BindingName string
 }
 
 func (in LoadGardenerCloudProviderCredentialsInput) Validate() error {
@@ -26,17 +28,16 @@ func (in LoadGardenerCloudProviderCredentialsInput) Validate() error {
 	if len(in.Namespace) == 0 {
 		result = multierror.Append(result, errors.New("namespace is required"))
 	}
-	if in.GardenK8sClient == nil {
-		result = multierror.Append(result, errors.New("gardenK8sClient is required"))
-	}
-	if in.GardenK8sClient == nil {
-		result = multierror.Append(result, errors.New("gardenK8sClient is required"))
+	if in.Client == nil {
+		result = multierror.Append(result, errors.New("garden client is required"))
 	}
 	return result
 }
 
 type LoadGardenerCloudProviderCredentialsOutput struct {
 	Provider        string
+	SecretName      string
+	SecretNamespace string
 	CredentialsData map[string]string
 }
 
@@ -45,23 +46,44 @@ func LoadGardenerCloudProviderCredentials(ctx context.Context, in LoadGardenerCl
 		return nil, err
 	}
 
-	secretBinding, err := in.GardenerClient.SecretBindings(in.Namespace).Get(ctx, in.BindingName, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("error loading secret binding: %w", err)
-	}
-
 	out := &LoadGardenerCloudProviderCredentialsOutput{
-		Provider:        secretBinding.Provider.Type,
 		CredentialsData: map[string]string{},
 	}
 
-	ns := secretBinding.SecretRef.Namespace
-	if ns == "" {
-		ns = in.Namespace
+	credentialBinding := &gardenerapisecurity.CredentialsBinding{}
+	err := in.Client.Get(ctx, types.NamespacedName{Namespace: in.Namespace, Name: in.BindingName}, credentialBinding)
+	if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
+		return nil, fmt.Errorf("error loading credential binding: %w", err)
+	}
+	if err == nil {
+		if credentialBinding.CredentialsRef.Kind != "Secret" {
+			return nil, fmt.Errorf("unsupported CredentialsBinding credentialsRef kind: %s/%s", credentialBinding.CredentialsRef.APIVersion, credentialBinding.CredentialsRef.Kind)
+		}
+		out.Provider = credentialBinding.Provider.Type
+		out.SecretName = credentialBinding.CredentialsRef.Name
+		out.SecretNamespace = credentialBinding.CredentialsRef.Namespace
 	}
 
-	secret, err := in.GardenK8sClient.CoreV1().Secrets(ns).
-		Get(ctx, secretBinding.SecretRef.Name, metav1.GetOptions{})
+	if out.SecretName == "" {
+		// Fallback to SecretBinding
+		// SA1019 support until SecretBinding is migrated to CredentialsBinding
+		// nolint:staticcheck
+		secretBinding := &gardenerapicore.SecretBinding{}
+		err = in.Client.Get(ctx, types.NamespacedName{Namespace: in.Namespace, Name: in.BindingName}, secretBinding)
+		if err != nil {
+			return nil, fmt.Errorf("error loading secret binding: %w", err)
+		}
+		out.Provider = secretBinding.Provider.Type
+		out.SecretName = secretBinding.SecretRef.Name
+		out.SecretNamespace = secretBinding.SecretRef.Namespace
+	}
+
+	if out.SecretNamespace == "" {
+		out.SecretNamespace = in.Namespace
+	}
+
+	secret := &corev1.Secret{}
+	err = in.Client.Get(ctx, types.NamespacedName{Namespace: out.SecretNamespace, Name: out.SecretName}, secret)
 	if err != nil {
 		return nil, fmt.Errorf("error loading shoot secret: %w", err)
 	}

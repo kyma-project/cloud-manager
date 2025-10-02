@@ -1,15 +1,15 @@
 package cloudresources
 
 import (
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"time"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -41,12 +41,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 				return exists, client.IgnoreNotFound(err)
 			}, timeout, interval).
 				Should(BeTrue(), "expected Scope to get created")
-		})
-		By("And Given SKR namespace exists", func() {
-			//Create namespace if it doesn't exist.
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
 		})
 
 		By("And Given SKR GcpNfsVolume exists", func() {

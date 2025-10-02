@@ -71,6 +71,8 @@ type IpRangeOptions struct {
 
 	// +optional
 	Aws *IpRangeAws `json:"aws,omitempty"`
+
+	OpenStack *IpRangeOpenStack `json:"openStack,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=VPC_PEERING;GCE_ENDPOINT;DNS_RESOLVER;NAT_AUTO;IPSEC_INTERCONNECT;SHARED_LOADBALANCER_VIP;PRIVATE_SERVICE_CONNECT
@@ -98,6 +100,9 @@ type IpRangeAzure struct {
 }
 
 type IpRangeAws struct {
+}
+
+type IpRangeOpenStack struct {
 }
 
 // IpRangeStatus defines the observed state of IpRange
@@ -140,6 +145,7 @@ type IpRangeSubnet struct {
 	Id    string `json:"id"`
 	Zone  string `json:"zone"`
 	Range string `json:"range"`
+	Name  string `json:"name"`
 }
 
 func (in IpRangeSubnets) Equals(other IpRangeSubnets) bool {

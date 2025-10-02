@@ -19,6 +19,10 @@ func IsTerminated(peering *ec2types.VpcPeeringConnection) bool {
 	return false
 }
 
+func IsTerminatedOrDeleting(peering *ec2types.VpcPeeringConnection) bool {
+	return IsTerminated(peering) || peering.Status.Code == ec2types.VpcPeeringConnectionStateReasonCodeDeleting
+}
+
 func ShouldUpdateRouteTable(tags []ec2types.Tag, mode cloudcontrolv1beta1.AwsRouteTableUpdateStrategy, tag string) bool {
 	return mode == cloudcontrolv1beta1.AwsRouteTableUpdateStrategyAuto ||
 		mode == cloudcontrolv1beta1.AwsRouteTableUpdateStrategyMatched && HasEc2Tag(tags, tag) ||

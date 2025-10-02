@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/api"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -16,9 +17,6 @@ import (
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -164,9 +162,7 @@ type testStateFactory struct {
 
 func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVolumeRestore) (*testStateFactory, error) {
 
-	kcpScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+	kcpScheme := bootstrap.KcpScheme
 
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).
@@ -175,9 +171,7 @@ func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVol
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
-	skrScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
+	skrScheme := bootstrap.SkrScheme
 
 	skrClient := fake.NewClientBuilder().
 		WithScheme(skrScheme).

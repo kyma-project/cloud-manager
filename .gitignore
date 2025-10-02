@@ -26,6 +26,9 @@ Dockerfile.cross
 *.swo
 *~
 
+# macOS
+.DS_Store
+
 # Local featureToggles file
 
 config/featureToggles/featureToggles.local.yaml

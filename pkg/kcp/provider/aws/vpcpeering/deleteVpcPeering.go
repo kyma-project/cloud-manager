@@ -14,15 +14,15 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.vpcPeering == nil {
-		logger.Info("VpcPeering deleted before AWS peering is created")
-		return nil, nil
+		logger.Info("Local AWS VPC peering not loaded on deleting VpcPeering")
+		return nil, ctx
 	}
 
 	if awsutil.IsTerminated(state.vpcPeering) {
 		logger.Info("VpcPeering can't be deleted at this stage",
 			"peeringStatusCode", string(state.vpcPeering.Status.Code),
 			"peeringStatusMessage", ptr.Deref(state.vpcPeering.Status.Message, ""))
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting VpcPeering")
@@ -30,10 +30,14 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	err := state.client.DeleteVpcPeeringConnection(ctx, state.vpcPeering.VpcPeeringConnectionId)
 
 	if awsmeta.IsErrorRetryable(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+	}
+
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Failed to delete local peering", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
 	logger.Info("VpcPeering deleted")
 
-	return nil, nil
+	return nil, ctx
 }

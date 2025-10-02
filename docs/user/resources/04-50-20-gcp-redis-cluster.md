@@ -19,8 +19,13 @@ When creating GcpRedisCluster, `redisTier`, and `shardCount` fields are mandator
 
 Optionally, you can specify the `replicasPerShard` field.
 
-As in-transit encryption is always enabled, communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+## In-transit Encryption
 
+In-transit encryption is always enabled. Communication with the Redis instance requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+
+## Persistence
+
+Persistence is not supported. Data is not written to durable storage (i.e., data at rest).
 
 ## Redis Tiers
 
@@ -62,7 +67,7 @@ The following table list the meaningful parameters of the auth Secret:
 | **.metadata.annotations**   | object | Specified custom annotations (if any)                                                                       |
 | **.data.host**              | string | Primary connection host.                                                                                    |
 | **.data.port**              | string | Primary connection port.                                                                                    |
-| **.data.primaryEndpoint**   | string | Primary connection endpoint. Provided in <host>:<port> format.                                              |
+| **.data.primaryEndpoint**   | string | Primary connection endpoint. Provided in `<host>:<port>` format.                                              |
 | **.data.authString**        | string | Auth string. Provided if authEnabled is set to true.                                                        |
 | **.data.CaCert.pem**        | string | CA Certificate that must be used for TLS. Provided if transit encryption is set to server authentication.   |
 

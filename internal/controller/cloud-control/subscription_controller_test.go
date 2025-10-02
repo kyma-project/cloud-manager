@@ -41,15 +41,18 @@ var _ = (client.Client)(nil)
 
 var _ = Describe("Feature: KCP Subscription", func() {
 
+	// nolint:staticcheck
 	commonInit := func(provider cloudcontrolv1beta1.ProviderType, subscriptionName string, secretData map[string][]byte) (*corev1.Secret, *gardenertypes.SecretBinding, *cloudcontrolv1beta1.Subscription) {
 		secret := &corev1.Secret{}
 		secret.Name = subscriptionName
 		secret.Namespace = DefaultGardenNamespace
 		secret.Data = secretData
 
+		// nolint:staticcheck
 		secretBinding := &gardenertypes.SecretBinding{}
 		secretBinding.Name = subscriptionName
 		secretBinding.Namespace = DefaultGardenNamespace
+		// nolint:staticcheck
 		secretBinding.Provider = &gardenertypes.SecretBindingProvider{Type: string(provider)}
 		secretBinding.SecretRef.Name = subscriptionName
 		secretBinding.SecretRef.Namespace = DefaultGardenNamespace
