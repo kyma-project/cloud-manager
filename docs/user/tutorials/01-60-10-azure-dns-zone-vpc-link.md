@@ -3,7 +3,7 @@
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
 
-This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote private DNS zone in Microsoft Azure. Learn how to create a new resource group, private DNS zone, and record-set, and assign required roles to the provided Kyma service principal in your Microsoft Azure subscription.
+This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote DNS private zone in Microsoft Azure. Learn how to create a new resource group, DNS private zone, and record-set, and assign required roles to the provided Kyma service principal in your Microsoft Azure subscription.
 
 ## Prerequisites
 
@@ -59,14 +59,14 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    az group create --name $RESOURCE_GROUP_NAME --location $REGION
    ```
 
-3. Create a private DNS zone:
+3. Create a DNS private zone:
 
    ```shell
    export ZONE_NAME="example.com"
    az network private-dns zone create --resource-group $RESOURCE_GROUP_NAME --name $ZONE_NAME
    ```
 
-4. Create a private DNS A record:
+4. Add an A record:
 
    ```shell
    export RECORD_SET_NAME=test
@@ -74,9 +74,9 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    az network private-dns record-set a add-record --resource-group $RESOURCE_GROUP_NAME --zone-name $ZONE_NAME --record-set-name $RECORD_SET_NAME --ipv4-address $IP_ADDRESS
    ```
 
-### Allow SAP BTP, Kyma Runtime to link with your Private DNS zone
+### Allow SAP BTP, Kyma Runtime to link with your DNS private zone
 
-Tag the private DNS zone with the Kyma shoot name:
+Tag the DNS private zone with the Kyma shoot name:
 
    ```shell
    export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
@@ -119,7 +119,7 @@ Tag the private DNS zone with the Kyma shoot name:
    kubectl create ns $NAMESPACE
    ```
 
-4. Create a workload that queries previously created private DNS A record:
+4. Create a workload that queries previously created DNS A record:
 
    ```shell
    kubectl apply -n $NAMESPACE -f - <<EOF
@@ -155,7 +155,7 @@ Tag the private DNS zone with the Kyma shoot name:
    EOF
    ```
 
-   This workload should print the resolved IP address of the private DNS A record to stdout.
+   This workload should print the resolved IP address of the DNS A record to stdout.
 
 5. To print the logs of one of the workloads, run:
 
