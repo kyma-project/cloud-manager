@@ -1,0 +1,166 @@
+name: Update Module Manifest
+on:
+  release:
+    types: [published]
+
+jobs:
+  fetch-vars:
+    name: Fetch variables
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} # for github.com
+      TOOLS_TOKEN: ${{secrets.TOOLS_TOKEN}} # for github.tools.sap TODO: figure out which token to use
+      MODULE_MANIFEST_REPO: ${{vars.MODULE_MANIFEST_REPO}} # github.tools.sap
+      CLOUD_MANAGER_REPO: ${{vars.CLOUD_MANAGER_REPO}} # github.com
+    outputs:
+      MAIN_SHA: ${{steps.main_sha.outputs.main_sha}}
+      RELEASE_TAG: ${{steps.get_release_tag.outputs.tag}}
+      MODULE_RELEASE_SHA: ${{steps.get_sha_content.outputs.sha}}
+      MODULE_RELEASE_CONTENT: ${{steps.get_sha_content.outputs.content}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get Main Sha
+        id: main_sha
+        run: |
+          RES=$(curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/branches/main)
+          SHA=$(echo $RES | yq -e ".commit.sha")
+          echo "main_sha=$SHA" >> $GITHUB_OUTPUT
+      - name: Get Release Tag
+        id: get_release_tag
+        run: |
+          RES=$(curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${CLOUD_MANAGER_REPO}/releases/latest)
+
+          TAG=$(echo $RES | yq -e .tag_name)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Get SHA and Content of current module-release
+        id: get_sha_content
+        run: |
+          RES=$(curl -L \
+            -H "Accept: application/vnd.github.object" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/contents/modules/cloud-manager/module-releases.yaml)
+
+          SHA=$(echo $RES | yq -e .sha)
+          CONTENT=$(echo $RES | yq -e .content)
+          CONTENT=$(echo $CONTENT | tr -d ' ')
+
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          echo "content=$CONTENT" >> $GITHUB_OUTPUT
+
+  create-branch:
+    name: Create branch
+    needs: fetch-vars
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} # for github.com
+      TOOLS_TOKEN: ${{secrets.TOOLS_TOKEN}} # for github.tools.sap TODO: figure out which token to use
+      MODULE_MANIFEST_REPO: ${{vars.MODULE_MANIFEST_REPO}} # github.tools.sap
+      CLOUD_MANAGER_REPO: ${{vars.CLOUD_MANAGER_REPO}} # github.com
+    outputs:
+      BRANCH_NAME: ${{steps.create_branch.outputs.BRANCH_NAME}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: create branch # TODO: fix branch name
+        id: create_branch
+        run: |
+          MAIN_SHA=${{needs.fetch-vars.outputs.MAIN_SHA}}
+
+          BRANCH_NAME=$(echo "cloud-manager-${{needs.fetch-vars.outputs.RELEASE_TAG}}-module-config")
+          REF=$(echo "refs/heads/$BRANCH_NAME")
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/git/refs \
+            -d '{"ref":"'"$REF"'","sha":"'"$MAIN_SHA"'"}'
+
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+  create-module-config:
+    name: Create Module Config
+    runs-on: ubuntu-latest
+    needs: [fetch-vars, create-branch]
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} # for github.com
+      TOOLS_TOKEN: ${{secrets.TOOLS_TOKEN}} # for github.tools.sap TODO: figure out which token to use
+      MODULE_MANIFEST_REPO: ${{vars.MODULE_MANIFEST_REPO}} # github.tools.sap
+      CLOUD_MANAGER_REPO: ${{vars.CLOUD_MANAGER_REPO}} # github.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: create module-config.yaml # TODO: fix JSON body
+        run: |
+          MODULE_CONFIG_BASE=$(./tools/scripts/release/create_module_config.sh | base64)
+          MODULE_CONFIG_BASE=$(echo $MODULE_CONFIG_BASE | tr -d ' ')
+          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME}}
+
+          curl -L \
+            -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/contents/modules/cloud-manager/1.4.2/module-config.yaml \
+            -d '{"message":"'"$BRANCH_NAME"'","branch":"'"$BRANCH_NAME"'","content":"'"$MODULE_CONFIG_BASE"'"}'
+
+  update-module-release:
+    name: Update Module Release
+    runs-on: ubuntu-latest
+    needs: [fetch-vars, create-branch, create-module-config]
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}} # for github.com
+      TOOLS_TOKEN: ${{secrets.TOOLS_TOKEN}} # for github.tools.sap TODO: figure out which token to use
+      MODULE_MANIFEST_REPO: ${{vars.MODULE_MANIFEST_REPO}} # github.tools.sap
+      CLOUD_MANAGER_REPO: ${{vars.CLOUD_MANAGER_REPO}} # github.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate module-release.yaml # TODO: fix JSON body
+        run: |
+          SHA=${{needs.fetch-vars.outputs.MODULE_RELEASE_SHA}}
+          CONTENT=${{needs.fetch-vars.outputs.MODULE_RELEASE_CONTENT}}
+          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME}}
+
+          DEV_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "dev") | .version' )
+          EXPERIMENTAL_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "experimental") | .version' )
+          FAST_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "fast") | .version' )
+          REGULAR_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "regular") | .version' )
+
+          # update dev version & keep others the same
+          NEW_DEV_VER=${{needs.fetch-vars.outputs.RELEASE_TAG}}
+
+          MODULE_RELEASE=$(./tools/scripts/release/create_module_release.sh $NEW_DEV_VER $EXPERIMENTAL_VER $FAST_VER $REGULAR_VER | base64)
+          MODULE_RELEASE=$(echo $MODULE_RELEASE | tr -d ' ')
+
+          curl -L \
+            -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/contents/modules/cloud-manager/module-releases.yaml \
+            -d '{"message":"updated cloud-manager module-releases.yaml","branch":"'"$BRANCH_NAME"'","content":"'"$MODULE_RELEASE"'","sha":"'"$SHA"'"}'
