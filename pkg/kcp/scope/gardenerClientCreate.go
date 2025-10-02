@@ -27,8 +27,7 @@ func gardenerClientCreate(ctx context.Context, st composed.State) (error, contex
 	logger = logger.WithValues("shootNamespace", state.shootNamespace)
 	logger.Info("Detected shoot namespace")
 
-	state.gardenerClient = out.GardenerClient
-	state.gardenK8sClient = out.GardenK8sClient
+	state.gardenerClient = out.Client
 
 	logger.Info("Gardener clients created")
 

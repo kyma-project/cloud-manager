@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	gardenerclient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	kubernetesclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -30,10 +29,9 @@ func (in CreateGardenerClientInput) Validate() error {
 }
 
 type CreateGardenerClientOutput struct {
-	Namespace       string
-	RestConfig      *rest.Config
-	GardenerClient  gardenerclient.CoreV1beta1Interface
-	GardenK8sClient kubernetesclient.Interface
+	Namespace  string
+	RestConfig *rest.Config
+	Client     client.Client
 }
 
 func CreateGardenerClient(ctx context.Context, in CreateGardenerClientInput) (*CreateGardenerClientOutput, error) {
@@ -88,17 +86,13 @@ func CreateGardenerClient(ctx context.Context, in CreateGardenerClientInput) (*C
 	}
 	out.RestConfig = restConfig
 
-	gClient, err := gardenerclient.NewForConfig(restConfig)
+	clnt, err := client.New(restConfig, client.Options{
+		Scheme: bootstrap.GardenScheme,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating gardener client: %w", err)
 	}
-	out.GardenerClient = gClient
-
-	k8sClient, err := kubernetesclient.NewForConfig(restConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error creating gardener k8s client: %w", err)
-	}
-	out.GardenK8sClient = k8sClient
+	out.Client = clnt
 
 	return out, nil
 }

@@ -14,10 +14,8 @@ func gardenerCredentialsLoad(ctx context.Context, st composed.State) (error, con
 	state := st.(*State)
 
 	in := commongardener.LoadGardenerCloudProviderCredentialsInput{
-		GardenerClient:  state.gardenerClient,
-		GardenK8sClient: state.gardenK8sClient,
-		Namespace:       state.shootNamespace,
-		//BindingName:     ptr.Deref(state.shoot.Spec.SecretBindingName, ""),
+		Client:    state.gardenerClient,
+		Namespace: state.shootNamespace,
 	}
 	if x := ptr.Deref(state.shoot.Spec.CredentialsBindingName, ""); x != "" {
 		in.BindingName = x
