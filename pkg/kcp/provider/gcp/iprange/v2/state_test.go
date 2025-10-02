@@ -3,7 +3,10 @@ package v2
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+
 	"net/http/httptest"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -18,10 +21,7 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -64,9 +64,7 @@ type testStateFactory struct {
 
 func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
 
-	kcpScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+	kcpScheme := bootstrap.KcpScheme
 
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).

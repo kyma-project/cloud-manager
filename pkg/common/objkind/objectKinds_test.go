@@ -1,18 +1,16 @@
 package objkind
 
 import (
+	"regexp"
+	"testing"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 var schemeIgnoreRegex *regexp.Regexp
@@ -22,10 +20,7 @@ func init() {
 }
 
 func TestCloudResourcesObjectsImplementFeatureAwareObject(t *testing.T) {
-	skrScheme := runtime.NewScheme()
-	utilruntime.Must(scheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+	skrScheme := bootstrap.SkrScheme
 
 	for gvk := range skrScheme.AllKnownTypes() {
 		if gvk.Group == cloudresourcesv1beta1.GroupVersion.Group {
@@ -43,10 +38,7 @@ func TestCloudResourcesObjectsImplementFeatureAwareObject(t *testing.T) {
 }
 
 func TestCloudResourcesObjectsImplementProviderAwareObject(t *testing.T) {
-	skrScheme := runtime.NewScheme()
-	utilruntime.Must(scheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+	skrScheme := bootstrap.SkrScheme
 
 	for gvk := range skrScheme.AllKnownTypes() {
 		if gvk.Group == cloudresourcesv1beta1.GroupVersion.Group {
@@ -64,10 +56,7 @@ func TestCloudResourcesObjectsImplementProviderAwareObject(t *testing.T) {
 }
 
 func TestObjectGroupVersionInfo(t *testing.T) {
-	skrScheme := runtime.NewScheme()
-	utilruntime.Must(scheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+	skrScheme := bootstrap.SkrScheme
 
 	gCrd := "apiextensions.k8s.io"
 	kCrd := "CustomResourceDefinition"

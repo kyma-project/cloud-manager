@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	config2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/stretchr/testify/suite"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -32,7 +32,7 @@ func (s *leaseSuite) SetupTest() {
 func (s *leaseSuite) TestAcquireAndRelease() {
 	// arrange
 	fakeClient := fake.NewClientBuilder().Build()
-	skrScheme := runtime.NewScheme()
+	skrScheme := bootstrap.SkrScheme
 	client := composed.NewStateCluster(fakeClient, fakeClient, nil, skrScheme)
 	leaseName := "test-lease"
 	leaseNamespace := "test-namespace"

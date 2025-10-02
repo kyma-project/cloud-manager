@@ -2,14 +2,12 @@ package feature
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"testing"
@@ -47,10 +45,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 	})
 
 	t.Run("ObjectToFeature from Unstructured", func(t *testing.T) {
-		skrScheme := runtime.NewScheme()
-		utilruntime.Must(scheme.AddToScheme(skrScheme))
-		utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-		utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+		skrScheme := bootstrap.SkrScheme
 
 		g := cloudresourcesv1beta1.GroupVersion.Group
 		v := cloudresourcesv1beta1.GroupVersion.Version
@@ -83,10 +78,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 	})
 
 	t.Run("ObjectToFeature from CRD Unstructured", func(t *testing.T) {
-		skrScheme := runtime.NewScheme()
-		utilruntime.Must(scheme.AddToScheme(skrScheme))
-		utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-		utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+		skrScheme := bootstrap.SkrScheme
 
 		g := cloudresourcesv1beta1.GroupVersion.Group
 
@@ -122,10 +114,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 	})
 
 	t.Run("ObjectToFeature from Busola CM Unstructured", func(t *testing.T) {
-		skrScheme := runtime.NewScheme()
-		utilruntime.Must(scheme.AddToScheme(skrScheme))
-		utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-		utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+		skrScheme := bootstrap.SkrScheme
 
 		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
 		baseCrdUnstructured.SetAPIVersion("apiextensions.k8s.io/v1")
