@@ -21,7 +21,8 @@ func gardenerCredentialsLoad(ctx context.Context, st composed.State) (error, con
 		in.BindingName = x
 	}
 	if in.BindingName == "" {
-		//lint:ignore SA1019 we keep support for secretBinding until all landscapes are migrated
+		// SA1019 we keep support for secretBinding until all landscapes are migrated
+		// nolint:staticcheck
 		x := ptr.Deref(state.shoot.Spec.SecretBindingName, "")
 		in.BindingName = x
 	}

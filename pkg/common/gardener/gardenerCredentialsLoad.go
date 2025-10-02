@@ -66,7 +66,8 @@ func LoadGardenerCloudProviderCredentials(ctx context.Context, in LoadGardenerCl
 
 	if out.SecretName == "" {
 		// Fallback to SecretBinding
-		//lint:ignore SA1019 support until SecretBinding is migrated to CredentialsBinding
+		// SA1019 support until SecretBinding is migrated to CredentialsBinding
+		// nolint:staticcheck
 		secretBinding := &gardenerapicore.SecretBinding{}
 		err = in.Client.Get(ctx, types.NamespacedName{Namespace: in.Namespace, Name: in.BindingName}, secretBinding)
 		if err != nil {

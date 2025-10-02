@@ -3,6 +3,8 @@ package testinfra
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -16,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 var _ InfraDSL = &infraDSL{}
@@ -138,6 +139,8 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 				Provider: gardenertypes.Provider{
 					Type: "gcp",
 				},
+				// SA1019 keep using SecretBinding until migrated to CredentialsBinding
+				// nolint:staticcheck
 				SecretBindingName: ptr.To(name),
 			},
 		}
@@ -149,11 +152,15 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 
 	// SecretBinding
 	{
+		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
+		// nolint:staticcheck
 		secretBinding := &gardenertypes.SecretBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: dsl.i.Garden().Namespace(),
 				Name:      name,
 			},
+			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
+			// nolint:staticcheck
 			Provider: &gardenertypes.SecretBindingProvider{
 				Type: "aws",
 			},
