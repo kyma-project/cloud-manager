@@ -19,9 +19,9 @@ import (
 
 type Client interface {
 	ListInternalNetworks(ctx context.Context, name string) ([]networks.Network, error)
-	GetNetwork(ctx context.Context, id string) (*networks.Network, error)
+	GetNetworkById(ctx context.Context, id string) (*networks.Network, error)
 	ListSubnets(ctx context.Context, networkId string) ([]subnets.Subnet, error)
-	GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error)
+	GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error)
 
 	ListShareNetworks(ctx context.Context, networkId string) ([]sharenetworks.ShareNetwork, error)
 	GetShareNetwork(ctx context.Context, id string) (*sharenetworks.ShareNetwork, error)
@@ -32,9 +32,11 @@ type Client interface {
 	GetShare(ctx context.Context, id string) (*shares.Share, error)
 	CreateShare(ctx context.Context, shareNetworkId, name string, size int, snapshotID string, metadata map[string]string) (*shares.Share, error)
 	DeleteShare(ctx context.Context, id string) error
-	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
+
 	ShareShrink(ctx context.Context, shareId string, newSize int) error
 	ShareExtend(ctx context.Context, shareId string, newSize int) error
+
+	ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error)
 
 	ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error)
 	GrantShareAccess(ctx context.Context, shareId string, cidr string) (*ShareAccess, error)
@@ -53,17 +55,22 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
 	return func(ctx context.Context, pp sapclient.ProviderParams) (Client, error) {
 		pi, err := sapclient.NewProviderClient(ctx, pp)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create new sap provider client: %v", err)
+			return nil, fmt.Errorf("failed to create new sap provider client for nfs: %v", err)
 		}
 		netSvc, err := openstack.NewNetworkV2(pi.ProviderClient, pi.EndpointOptions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create network v2 client: %v", err)
 		}
+		// IMPORTANT to be able to choose manila api v2 - otherwise since CC is advertising both v1 and v2, it will pick first - v1
+		gophercloud.ServiceTypeAliases["shared-file-system"] = []string{"sharev2"}
 		shareSvc, err := openstack.NewSharedFileSystemV2(pi.ProviderClient, pi.EndpointOptions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create shared file system v2 client: %v", err)
 		}
-		shareSvc.Microversion = "2.65"
+		// openstack versions show --service share
+		// https://docs.openstack.org/manila/latest/contributor/index.html
+		// https://documentation.global.cloud.sap/docs/customer/support/faq-current-versions/
+		shareSvc.Microversion = "2.81" // 2.7 for grant access, 2.9 for share export locations (but works with 2.81 as well???)
 		return &client{
 			netSvc:   netSvc,
 			shareSvc: shareSvc,
@@ -88,7 +95,7 @@ func (c *client) ListInternalNetworks(ctx context.Context, name string) ([]netwo
 	return arr, nil
 }
 
-func (c *client) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
+func (c *client) GetNetworkById(ctx context.Context, id string) (*networks.Network, error) {
 	n, err := networks.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
@@ -114,7 +121,7 @@ func (c *client) ListSubnets(ctx context.Context, networkId string) ([]subnets.S
 	return arr, nil
 }
 
-func (c *client) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
+func (c *client) GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error) {
 	subnet, err := subnets.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
@@ -180,7 +187,7 @@ func (c *client) DeleteShareNetwork(ctx context.Context, id string) error {
 // shares ----------------------------------------------------------------------------------
 
 // share.status possible values https://docs.openstack.org/manila/latest/user/create-and-manage-shares.html
-// These “-ing” states end in a “available” state if everything goes well. They may end up in an “error” state in case there is an issue.
+// These “-ing” states end in an “available” state if everything goes well. They may end up in an “error” state in case there is an issue.
 // * available
 // * error
 // * creating
@@ -226,7 +233,7 @@ func (c *client) CreateShare(ctx context.Context, shareNetworkId, name string, s
 		Metadata:       metadata,
 	}).Extract()
 	if err != nil {
-		return sh, fmt.Errorf("error creating share: %w", err)
+		return nil, fmt.Errorf("error creating share: %w", err)
 	}
 	return sh, nil
 }
@@ -240,14 +247,6 @@ func (c *client) DeleteShare(ctx context.Context, id string) error {
 		return fmt.Errorf("error deleting share: %w", err)
 	}
 	return nil
-}
-
-func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
-	arr, err := shares.ListExportLocations(ctx, c.shareSvc, id).Extract()
-	if err != nil {
-		return nil, fmt.Errorf("error listing export locations: %w", err)
-	}
-	return arr, nil
 }
 
 func (c *client) ShareShrink(ctx context.Context, shareId string, newSize int) error {
@@ -270,6 +269,14 @@ func (c *client) ShareExtend(ctx context.Context, shareId string, newSize int) e
 	return nil
 }
 
+func (c *client) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
+	arr, err := shares.ListExportLocations(ctx, c.shareSvc, id).Extract()
+	if err != nil {
+		return nil, fmt.Errorf("error listing export locations: %w", err)
+	}
+	return arr, nil
+}
+
 // share access -------------------------------------------------------------------
 
 type ShareAccess struct {
@@ -280,18 +287,6 @@ type ShareAccess struct {
 	AccessKey   string
 	State       string
 	AccessLevel string
-}
-
-func newShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAccess) *ShareAccess {
-	return &ShareAccess{
-		ID:          o.ID,
-		ShareID:     o.ShareID,
-		AccessType:  o.AccessType,
-		AccessTo:    o.AccessTo,
-		AccessKey:   o.AccessKey,
-		State:       o.State,
-		AccessLevel: o.AccessLevel,
-	}
 }
 
 func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
@@ -306,7 +301,21 @@ func newShareAccessFromSharesAccessRight(o *shares.AccessRight) *ShareAccess {
 	}
 }
 
+func newShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAccess) *ShareAccess {
+	return &ShareAccess{
+		ID:          o.ID,
+		ShareID:     o.ShareID,
+		AccessType:  o.AccessType,
+		AccessTo:    o.AccessTo,
+		AccessKey:   o.AccessKey,
+		State:       o.State,
+		AccessLevel: o.AccessLevel,
+	}
+}
+
 func (c *client) ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error) {
+	// https://dashboard.eu-de-1.cloud.sap/kyma/kyma-dev-02/shared-filesystem-storage/shares/d6b9995f-4c6a-4d95-8b51-6ca88c753f0f/rules
+
 	arr, err := shareaccessrules.List(ctx, c.shareSvc, shareId).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil

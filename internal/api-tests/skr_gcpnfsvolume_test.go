@@ -4,10 +4,7 @@ import (
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type testGcpNfsVolumeBuilder struct {
@@ -47,12 +44,6 @@ func (b *testGcpNfsVolumeBuilder) WithValidFileShareName() *testGcpNfsVolumeBuil
 }
 
 var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
-
-	It("Given SKR default namespace exists", func() {
-		Eventually(CreateNamespace).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-			Should(Succeed())
-	})
 
 	fileShareName17char := "bwjfjlecorewsakjikpj"
 	fileShareName65char := "tcteafkhhfhxkocrtvbvgrzqvysxpfxeeauvgwqnbassacgejobhcuvjvdlrgbkypkuxteaztzjxrdfipqfxdpercpogqdslhm"

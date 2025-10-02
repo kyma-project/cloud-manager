@@ -16,6 +16,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 )
 
@@ -28,7 +30,6 @@ func deptrSlice[T any](arr []*T) []T {
 type NfsConfig interface {
 	AddNetwork(id, name string) *networks.Network
 	AddRouter(id, name string, ipAddresses ...string) *routers.Router
-	AddSubnet(id, networkId, name, cidr string) *subnets.Subnet
 	SetShareStatus(id, status string)
 }
 
@@ -36,6 +37,7 @@ type nfsStore struct {
 	m             sync.Mutex
 	networks      []*networks.Network
 	routers       []*routers.Router
+	routerSubnets map[string][]sapiprangeclient.RouterSubnetInterfaceInfo
 	subnets       map[string][]*subnets.Subnet
 	shareNetworks map[string][]*sharenetworks.ShareNetwork
 	shares        map[string][]*shares.Share
@@ -77,38 +79,6 @@ func (s *nfsStore) AddRouter(id, name string, ipAddresses ...string) *routers.Ro
 	return r
 }
 
-func (s *nfsStore) AddSubnet(id, networkId, name, cidr string) *subnets.Subnet {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	var network *networks.Network
-	for _, n := range s.networks {
-		if n.ID == networkId {
-			network = n
-			break
-		}
-	}
-	if network != nil {
-		network.Subnets = pie.Unique(append(network.Subnets, id))
-	}
-
-	if s.subnets == nil {
-		s.subnets = map[string][]*subnets.Subnet{}
-	}
-
-	subnet := &subnets.Subnet{
-		ID:        id,
-		NetworkID: networkId,
-		Name:      name,
-		IPVersion: 4,
-		CIDR:      cidr,
-	}
-
-	s.subnets[networkId] = append(s.subnets[networkId], subnet)
-
-	return subnet
-}
-
 func (s *nfsStore) SetShareStatus(id, status string) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -141,7 +111,7 @@ func (s *nfsStore) ListInternalNetworks(ctx context.Context, name string) ([]net
 	return result, nil
 }
 
-func (s *nfsStore) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
+func (s *nfsStore) GetNetworkById(ctx context.Context, id string) (*networks.Network, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -154,6 +124,106 @@ func (s *nfsStore) GetNetwork(ctx context.Context, id string) (*networks.Network
 		}
 	}
 	return nil, nil
+}
+
+func (s *nfsStore) GetNetworkByName(ctx context.Context, networkName string) (*networks.Network, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+	for _, network := range s.networks {
+		if network.Name == networkName {
+			return network, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *nfsStore) CreateSubnet(ctx context.Context, networkId, cidr, subnetName string) (*subnets.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	subnetId := uuid.NewString()
+
+	var network *networks.Network
+	for _, n := range s.networks {
+		if n.ID == networkId {
+			network = n
+			break
+		}
+	}
+	if network == nil {
+		return nil, fmt.Errorf("network %q not found", networkId)
+	}
+
+	network.Subnets = pie.Unique(append(network.Subnets, subnetId))
+
+	if s.subnets == nil {
+		s.subnets = map[string][]*subnets.Subnet{}
+	}
+
+	subnet := &subnets.Subnet{
+		ID:        subnetId,
+		NetworkID: networkId,
+		Name:      subnetName,
+		IPVersion: 4,
+		CIDR:      cidr,
+	}
+
+	s.subnets[networkId] = append(s.subnets[networkId], subnet)
+
+	return subnet, nil
+}
+
+func (s *nfsStore) DeleteSubnet(ctx context.Context, subnetId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	foundInNetworkId := ""
+
+	for networkId, arrSubnets := range s.subnets {
+		for _, subnet := range arrSubnets {
+			if subnet.ID == subnetId {
+				foundInNetworkId = networkId
+				break
+			}
+		}
+	}
+
+	if foundInNetworkId == "" {
+		return &gophercloud.ErrUnexpectedResponseCode{
+			BaseError: gophercloud.BaseError{
+				Info: fmt.Sprintf("subnet %q not found", subnetId),
+			},
+			Expected: []int{http.StatusOK},
+			Actual:   http.StatusNotFound,
+		}
+	}
+
+	for _, net := range s.networks {
+		if net.ID == foundInNetworkId {
+			net.Subnets = pie.FilterNot(net.Subnets, func(x string) bool {
+				return x == subnetId
+			})
+			break
+		}
+	}
+
+	s.subnets[foundInNetworkId] = pie.FilterNot(s.subnets[foundInNetworkId], func(subnet *subnets.Subnet) bool {
+		return subnet.ID == subnetId
+	})
+
+	return nil
 }
 
 func (s *nfsStore) GetRouterByName(ctx context.Context, routerName string) (*routers.Router, error) {
@@ -170,6 +240,78 @@ func (s *nfsStore) GetRouterByName(ctx context.Context, routerName string) (*rou
 		}
 	}
 	return nil, nil
+}
+
+func (s *nfsStore) ListRouterSubnetInterfaces(ctx context.Context, routerId string) ([]sapiprangeclient.RouterSubnetInterfaceInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	arr, ok := s.routerSubnets[routerId]
+	if !ok {
+		return nil, nil
+	}
+	result := append([]sapiprangeclient.RouterSubnetInterfaceInfo{}, arr...)
+	return result, nil
+}
+
+func (s *nfsStore) AddSubnetToRouter(ctx context.Context, routerId string, subnetId string) (*routers.InterfaceInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	if s.routerSubnets == nil {
+		s.routerSubnets = map[string][]sapiprangeclient.RouterSubnetInterfaceInfo{}
+	}
+	arr := s.routerSubnets[routerId]
+
+	subnet, _ := s.getSubnetByIdNoLock(subnetId)
+	if subnet == nil {
+		return nil, sapclient.NewNotFoundError(fmt.Sprintf("subnet %q not found", subnetId))
+	}
+
+	result := sapiprangeclient.RouterSubnetInterfaceInfo{
+		PortID:    uuid.NewString(),
+		IpAddress: subnet.CIDR, // not really an IP address, but just put something it's not used anyway
+		SubnetID:  subnetId,
+	}
+
+	arr = append(arr, result)
+
+	s.routerSubnets[routerId] = arr
+
+	return &routers.InterfaceInfo{
+		SubnetID: subnetId,
+		PortID:   result.PortID,
+		ID:       uuid.NewString(),
+		TenantID: uuid.NewString(),
+	}, nil
+}
+
+func (s *nfsStore) RemoveSubnetFromRouter(ctx context.Context, routerId string, subnetId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	if s.routerSubnets == nil {
+		s.routerSubnets = map[string][]sapiprangeclient.RouterSubnetInterfaceInfo{}
+	}
+	arr := s.routerSubnets[routerId]
+	arr = pie.FilterNot(arr, func(x sapiprangeclient.RouterSubnetInterfaceInfo) bool {
+		return x.SubnetID == subnetId
+	})
+	s.routerSubnets[routerId] = arr
+
+	return nil
 }
 
 func (s *nfsStore) ListSubnets(ctx context.Context, networkId string) ([]subnets.Subnet, error) {
@@ -189,7 +331,32 @@ func (s *nfsStore) ListSubnets(ctx context.Context, networkId string) ([]subnets
 	return deptrSlice(arr), nil
 }
 
-func (s *nfsStore) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, error) {
+func (s *nfsStore) GetSubnetById(ctx context.Context, id string) (*subnets.Subnet, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	return s.getSubnetByIdNoLock(id)
+}
+
+func (s *nfsStore) getSubnetByIdNoLock(id string) (*subnets.Subnet, error) {
+	if s.subnets == nil {
+		s.subnets = map[string][]*subnets.Subnet{}
+	}
+	for _, arr := range s.subnets {
+		for _, subnet := range arr {
+			if subnet.ID == id {
+				return subnet, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (s *nfsStore) GetSubnetByName(ctx context.Context, networkId string, subnetName string) (*subnets.Subnet, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -201,7 +368,7 @@ func (s *nfsStore) GetSubnet(ctx context.Context, id string) (*subnets.Subnet, e
 	}
 	for _, arr := range s.subnets {
 		for _, subnet := range arr {
-			if subnet.ID == id {
+			if subnet.NetworkID == networkId && subnet.Name == subnetName {
 				return subnet, nil
 			}
 		}
@@ -227,6 +394,9 @@ func (s *nfsStore) ListShareNetworks(ctx context.Context, networkId string) ([]s
 }
 
 func (s *nfsStore) GetShareNetwork(ctx context.Context, id string) (*sharenetworks.ShareNetwork, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 	time.Sleep(time.Millisecond)
@@ -340,8 +510,9 @@ func (s *nfsStore) CreateShare(ctx context.Context, shareNetworkId, name string,
 	if s.shares == nil {
 		s.shares = map[string][]*shares.Share{}
 	}
+	id := uuid.NewString()
 	sh := &shares.Share{
-		ID:             uuid.NewString(),
+		ID:             id,
 		ShareNetworkID: shareNetworkId,
 		Name:           name,
 		Size:           size,
@@ -371,23 +542,6 @@ func (s *nfsStore) DeleteShare(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
-	if isContextCanceled(ctx) {
-		return nil, context.Canceled
-	}
-	time.Sleep(time.Millisecond)
-	return []shares.ExportLocation{
-		{
-			Path:      fmt.Sprintf("10.100.0.10:/%s-1", id),
-			Preferred: true,
-		},
-		{
-			Path:      fmt.Sprintf("10.200.0.20:/%s-2", id),
-			Preferred: false,
-		},
-	}, nil
-}
-
 func (s *nfsStore) ShareShrink(ctx context.Context, shareId string, newSize int) error {
 	return s.shareChangeSize(ctx, shareId, newSize)
 }
@@ -397,6 +551,9 @@ func (s *nfsStore) ShareExtend(ctx context.Context, shareId string, newSize int)
 }
 
 func (s *nfsStore) shareChangeSize(ctx context.Context, shareId string, newSize int) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
 	s.m.Lock()
 	defer s.m.Unlock()
 	var theShare *shares.Share
@@ -417,6 +574,23 @@ func (s *nfsStore) shareChangeSize(ctx context.Context, shareId string, newSize 
 	}
 	theShare.Size = newSize
 	return nil
+}
+
+func (s *nfsStore) ListShareExportLocations(ctx context.Context, id string) ([]shares.ExportLocation, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	time.Sleep(time.Millisecond)
+	return []shares.ExportLocation{
+		{
+			Path:      fmt.Sprintf("10.100.0.10:/%s-1", id),
+			Preferred: true,
+		},
+		{
+			Path:      fmt.Sprintf("10.200.0.20:/%s-2", id),
+			Preferred: false,
+		},
+	}, nil
 }
 
 func (s *nfsStore) ListShareAccessRules(ctx context.Context, id string) ([]sapnfsinstanceclient.ShareAccess, error) {

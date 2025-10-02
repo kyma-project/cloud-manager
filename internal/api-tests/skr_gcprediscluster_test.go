@@ -5,10 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type testGcpRedisClusterBuilder struct {
@@ -52,12 +49,6 @@ func (b *testGcpRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32
 }
 
 var _ = Describe("Feature: SKR GcpRedisCluster", Ordered, func() {
-
-	It("Given SKR default namespace exists", func() {
-		Eventually(CreateNamespace).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-			Should(Succeed())
-	})
 
 	canChangeSkr(
 		"GcpRedisCluster shardCount can be increased",

@@ -3,20 +3,19 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"time"
 )
 
 var kymaRef = klog.ObjectRef{
@@ -307,9 +306,7 @@ type testStateFactory struct {
 }
 
 func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup, volumes ...*cloudresourcesv1beta1.GcpNfsVolume) (*testStateFactory, error) {
-	kcpScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+	kcpScheme := bootstrap.KcpScheme
 
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(kcpScheme).
@@ -322,9 +319,7 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
 
-	skrScheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
+	skrScheme := bootstrap.SkrScheme
 
 	clientBuilder := fake.NewClientBuilder().
 		WithScheme(skrScheme)

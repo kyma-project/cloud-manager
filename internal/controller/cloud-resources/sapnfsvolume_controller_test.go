@@ -23,11 +23,13 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -54,7 +56,19 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 		pvcLabels := newRandomMapStringString()
 		pvcAnnotations := newRandomMapStringString()
 
-		By("When SapNfsVolume is created", func() {
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		skrIpRangeId := "3c9d6740-d374-4b9e-9667-d48290ac4abe"
+
+		skriprange.Ignore.AddName("default")
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("When SapNfsVolume is created with empty IpRange", func() {
 			Eventually(CreateSapNfsVolume).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
@@ -64,6 +78,31 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 					WithSapNfsVolumePvAnnotations(pvAnnotations),
 					WithSapNfsVolumePvcLabels(pvcLabels),
 					WithSapNfsVolumePvcAnnotations(pvcAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("And Then SapNfsVolume is not ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume, NewObjActions()).
+				Should(Succeed())
+			Expect(meta.IsStatusConditionTrue(sapNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)).
+				To(BeFalse(), "expected SapNfsVolume not to have Ready condition, but it has")
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
 				).
 				Should(Succeed())
 		})
@@ -262,6 +301,15 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
 				Should(Succeed(), "expected SapNfsVolume not to exist")
+		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
 		})
 
 	})

@@ -3,6 +3,10 @@ package looper
 import (
 	"context"
 	"errors"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -16,13 +20,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sync"
-	"time"
 )
 
 type ActiveSkrCollection interface {
@@ -155,12 +155,12 @@ type SkrLooper interface {
 	ActiveSkrCollection
 }
 
-func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluster, skrScheme *runtime.Scheme, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
+func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluster, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
 	return &skrLooper{
 		ActiveSkrCollectionAdmin: activeSkrCollection,
 		logger:                   logger,
 		kcpCluster:               kcpCluster,
-		managerFactory:           skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system", skrScheme),
+		managerFactory:           skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system"),
 		skrStatusSaver:           NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
 		registry:                 reg,
 		concurrency:              config.SkrRuntimeConfig.Concurrency,

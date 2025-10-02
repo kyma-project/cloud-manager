@@ -204,6 +204,7 @@ rules:
   verbs:
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -211,6 +212,7 @@ rules:
   resources:
   - kymas/finalizers
   verbs:
+  - patch
   - update
 - apiGroups:
   - operator.kyma-project.io

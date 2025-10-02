@@ -15,7 +15,7 @@ func loadSpecifiedIpRange(ctx context.Context, st composed.State) (error, contex
 
 	ipRangeRef := state.ObjAsObjWithIpRangeRef().GetIpRangeRef()
 	if len(ipRangeRef.Name) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -40,5 +40,5 @@ func loadSpecifiedIpRange(ctx context.Context, st composed.State) (error, contex
 
 	state.SetSkrIpRange(skrIpRange)
 
-	return nil, nil
+	return nil, ctx
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
@@ -93,7 +94,7 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 	})
 	if idx == -1 {
 		err := &smithy.GenericAPIError{
-			Code:    "404",
+			Code:    "InvalidVpcID.NotFound",
 			Message: fmt.Sprintf("vpc with id %s does not exist", vpcId),
 		}
 		return nil, err
@@ -274,10 +275,7 @@ func (s *vpcStore) DisassociateVpcCidrBlockInput(ctx context.Context, associatio
 		}
 	}
 	if theItem == nil || theIndex == -1 {
-		return &smithy.GenericAPIError{
-			Code:    "404",
-			Message: "Not found",
-		}
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("not found"))
 	}
 
 	theItem.vpc.CidrBlockAssociationSet = pie.Delete(theItem.vpc.CidrBlockAssociationSet, theIndex)
@@ -358,10 +356,7 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 			return nil
 		}
 	}
-	return &smithy.GenericAPIError{
-		Code:    "404",
-		Message: fmt.Sprintf("subnet %s does not exist", subnetId),
-	}
+	return awsmeta.NewHttpNotFoundError(fmt.Errorf("subnet %s does not exist", subnetId))
 }
 
 func (s *vpcStore) DescribeNatGateways(ctx context.Context, vpcId string) ([]ec2types.NatGateway, error) {

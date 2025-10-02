@@ -2,21 +2,20 @@ package azurerwxvolumerestore
 
 import (
 	"context"
+	"testing"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 func TestLoadPersistentVolume(t *testing.T) {
@@ -28,9 +27,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 		var k8sClient client.WithWatch
 		var pv *corev1.PersistentVolume
 
-		kcpScheme := runtime.NewScheme()
-		utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-		utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
+		kcpScheme := bootstrap.KcpScheme
 
 		scope := &cloudcontrolv1beta1.Scope{
 			ObjectMeta: metav1.ObjectMeta{
@@ -82,9 +79,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 				},
 			}
 
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.SkrScheme
 			var fakeClient client.WithWatch
 			if withPv {
 				pv = &corev1.PersistentVolume{

@@ -21,17 +21,16 @@ import (
 	"flag"
 	"os"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
+	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/fsnotify/fsnotify"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -57,7 +56,8 @@ import (
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
+	azurevnetlinkdnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
+	azurevnetlinkdnszoneclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
@@ -93,19 +93,13 @@ import (
 )
 
 var (
-	kcpScheme = runtime.NewScheme()
-	skrScheme = runtime.NewScheme()
+	kcpScheme = bootstrap.KcpScheme
+	skrScheme = bootstrap.SkrScheme
 	setupLog  = ctrl.Log.WithName("setup")
 )
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(kcpScheme))
-	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(kcpScheme))
-	utilruntime.Must(apiextensions.AddToScheme(kcpScheme))
-
-	utilruntime.Must(clientgoscheme.AddToScheme(skrScheme))
-	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(skrScheme))
-	utilruntime.Must(apiextensions.AddToScheme(skrScheme))
+	// if any added here by kubeconfig, sync them with the github.com/kyma-project/cloud-manager/pkg/common/bootstrap package
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -208,7 +202,7 @@ func main() {
 		Plane(featuretypes.PlaneKcp).
 		Build(ctx)
 
-	skrLoop := skrruntime.NewLooper(activeSkrCollection, mgr, skrScheme, skrRegistry, mgr.GetLogger())
+	skrLoop := skrruntime.NewLooper(activeSkrCollection, mgr, skrRegistry, mgr.GetLogger())
 
 	//Get env
 	env := abstractions.NewOSEnvironment()
@@ -396,6 +390,7 @@ func main() {
 		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
 		gcpiprangeclient.NewComputeClient(),
+		sapiprangeclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
@@ -461,7 +456,8 @@ func main() {
 
 	if err = cloudcontrolcontroller.SetupAzureVNetLinkReconciler(
 		mgr,
-		azurevnetlinkclient.NewClientProvider(),
+		azurevnetlinkdnszoneclient.NewClientProvider(),
+		azurevnetlinkdnsresolverclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")

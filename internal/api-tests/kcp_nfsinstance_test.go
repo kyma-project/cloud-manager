@@ -1,176 +1,260 @@
 package api_tests
 
 import (
-	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Feature: KCP NfsInstance", func() {
 
-	// OpenStack ============================================
+	nb := func() *cloudcontrolv1beta1.NfsInstanceBuilder {
+		return cloudcontrolv1beta1.NewNfsInstanceBuilder()
+	}
+	bb := func(b Builder[*cloudcontrolv1beta1.NfsInstance]) *cloudcontrolv1beta1.NfsInstanceBuilder {
+		return b.(*cloudcontrolv1beta1.NfsInstanceBuilder)
+	}
 
-	It("Scenario: KCP NfsInstance SAP without IpRange can be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					OpenStack: &cloudcontrolv1beta1.NfsInstanceOpenStack{
-						SizeGb: 10,
-					},
-				},
-			},
-		}
+	// CREATE =============================================================================
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).NotTo(HaveOccurred())
+	// All Specified Can Create ======================================
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	canCreateKcp(
+		"Can create AWS NfsInstance",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+	)
 
-	It("Scenario: KCP NfsInstance SAP with IpRange can not be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				IpRange: cloudcontrolv1beta1.IpRangeRef{
-					Name: "foo",
-				},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					OpenStack: &cloudcontrolv1beta1.NfsInstanceOpenStack{
-						SizeGb: 10,
-					},
-				},
-			},
-		}
+	canCreateKcp(
+		"Can create GCP NfsInstance",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+	)
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+	canCreateKcp(
+		"Can create OpenStack NfsInstance",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+	)
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	// w/out scope can not create =================================
 
-	// AWS ============================================
+	canNotCreateKcp(
+		"Can not create AWS NfsInstance without Scope",
+		nb().
+			WithIpRange("iprange").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+		"Scope is required",
+	)
 
-	It("Scenario: KCP NfsInstance AWS without IpRange can not be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					Aws: &cloudcontrolv1beta1.NfsInstanceAws{},
-				},
-			},
-		}
+	canNotCreateKcp(
+		"Can not create GCP NfsInstance without Scope",
+		nb().
+			WithIpRange("iprange").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+		"Scope is required",
+	)
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+	canNotCreateKcp(
+		"Can not create OpenStack NfsInstance without Scope",
+		nb().
+			WithIpRange("iprange").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+		"Scope is required",
+	)
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	// w/out remoteRef can not create  ======================================
 
-	It("Scenario: KCP NfsInstance AWS with IpRange can be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				IpRange: cloudcontrolv1beta1.IpRangeRef{
-					Name: "foo",
-				},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					Aws: &cloudcontrolv1beta1.NfsInstanceAws{},
-				},
-			},
-		}
+	canNotCreateKcp(
+		"Can not create AWS NfsInstance without RemoteRef",
+		nb().
+			WithScope("scope").
+			WithIpRange("iprange").
+			WithAwsDummyDefaults(),
+		"RemoteRef is required",
+	)
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).NotTo(HaveOccurred())
+	canNotCreateKcp(
+		"Can not create GCP NfsInstance without RemoteRef",
+		nb().
+			WithScope("scope").
+			WithIpRange("iprange").
+			WithGcpDummyDefaults(),
+		"RemoteRef is required",
+	)
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	canNotCreateKcp(
+		"Can not create OpenStack NfsInstance without RemoteRef",
+		nb().
+			WithScope("scope").
+			WithIpRange("iprange").
+			WithOpenStackDummyDefaults(),
+		"RemoteRef is required",
+	)
 
-	// GCP ============================================
+	// w/out iprange can not create ======================================
 
-	It("Scenario: KCP NfsInstance GCP without IpRange can not be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
-						Location:      "us-east-1",
-						ConnectMode:   cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS,
-						FileShareName: "vol1",
-						Tier:          "BASIC_SSD",
-					},
-				},
-			},
-		}
+	canNotCreateKcp(
+		"Can not create AWS NfsInstance without IpRange",
+		nb().
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+		"IpRange is required",
+	)
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("IpRange can not be specified for openstack, and is mandatory for gcp and aws"))
+	canNotCreateKcp(
+		"Can not create GCP NfsInstance without IpRange",
+		nb().
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+		"IpRange is required",
+	)
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	canNotCreateKcp(
+		"Can not create OpenStack NfsInstance without IpRange",
+		nb().
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+		"IpRange is required",
+	)
 
-	It("Scenario: KCP NfsInstance GCP with IpRange can be created", func() {
-		name := uuid.NewString()
-		var err error
-		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: infra.KCP().Namespace(),
-			},
-			Spec: cloudcontrolv1beta1.NfsInstanceSpec{
-				Scope: cloudcontrolv1beta1.ScopeRef{Name: "s"},
-				IpRange: cloudcontrolv1beta1.IpRangeRef{
-					Name: "foo",
-				},
-				Instance: cloudcontrolv1beta1.NfsInstanceInfo{
-					Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
-						Location:      "us-east-1",
-						ConnectMode:   cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS,
-						FileShareName: "vol1",
-						Tier:          "BASIC_SSD",
-					},
-				},
-			},
-		}
+	// UPDATE =============================================================================
 
-		err = infra.KCP().Client().Create(infra.Ctx(), obj)
-		Expect(err).NotTo(HaveOccurred())
+	// can not change iprange ======================================
 
-		_ = infra.KCP().Client().Delete(infra.Ctx(), obj)
-	})
+	canNotChangeKcp(
+		"Can not change AWS NfsInstance IpRange",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithIpRange("other")
+		},
+		"IpRange is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change GCP NfsInstance IpRange",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithIpRange("other")
+		},
+		"IpRange is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change OpenStack NfsInstance IpRange",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithIpRange("other")
+		},
+		"IpRange is immutable",
+	)
+
+	// can not change scope ======================================
+
+	canNotChangeKcp(
+		"Can not change AWS NfsInstance Scope",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithScope("other")
+		},
+		"Scope is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change GCP NfsInstance Scope",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithScope("other")
+		},
+		"Scope is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change OpenStack NfsInstance Scope",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithScope("other")
+		},
+		"Scope is immutable",
+	)
+
+	// can not change remoteRef ======================================
+
+	canNotChangeKcp(
+		"Can not change AWS NfsInstance RemoteRef",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithAwsDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithRemoteRef("other", "other")
+		},
+		"RemoteRef is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change GCP NfsInstance RemoteRef",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithGcpDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithRemoteRef("other", "other")
+		},
+		"RemoteRef is immutable",
+	)
+
+	canNotChangeKcp(
+		"Can not change OpenStack NfsInstance RemoteRef",
+		nb().
+			WithIpRange("iprange").
+			WithScope("scope").
+			WithRemoteRef("ns", "n").
+			WithOpenStackDummyDefaults(),
+		func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
+			bb(b).WithRemoteRef("other", "other")
+		},
+		"RemoteRef is immutable",
+	)
+
 })

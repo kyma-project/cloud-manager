@@ -82,6 +82,8 @@ type GcpNfsVolumeBackupSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="source is immutable."
 	Source GcpNfsVolumeBackupSource `json:"source"`
 
+	// GCP Region Name (as specified in https://cloud.google.com/filestore/docs/regions) where this backup should be created.
+	// If not specified, region of the GcpNfsVolume is used for the backup.
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
 	Location string `json:"location"`

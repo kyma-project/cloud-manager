@@ -3,6 +3,8 @@ package mock
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
+	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -11,7 +13,6 @@ import (
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
-	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/client"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
@@ -49,6 +50,14 @@ type PrivateDnsZoneClient interface {
 	azureclient.PrivateDnsZoneClient
 }
 
+type DnsResolverVNetLinkClient interface {
+	azureclient.DnsResolverVNetLinkClient
+}
+
+type DnsForwardingRulesetClient interface {
+	azureclient.DnsForwardingRulesetsClient
+}
+
 type VpcPeeringClient interface {
 	azureclient.VirtualNetworkPeeringClient
 }
@@ -78,6 +87,8 @@ type Clients interface {
 	PrivateDnsZoneGroupClient
 	NatGatewayClient
 	PublicIpAddressesClient
+	DnsResolverVNetLinkClient
+	DnsForwardingRulesetClient
 }
 
 type Providers interface {
@@ -89,7 +100,8 @@ type Providers interface {
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
 	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
-	VNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
+	DnsZoneVNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
+	DnsResolverVNetLinkProvider() azureclient.ClientProvider[dnsresolverclient.Client]
 }
 
 type NetworkConfig interface {
@@ -100,6 +112,14 @@ type NetworkConfig interface {
 	AddRemoteSubscription(ctx context.Context, remoteSubscription *TenantSubscription)
 }
 
+type DnsForwardingRulesetConfig interface {
+	CreateDnsForwardingRuleset(ctx context.Context, resourceGroup, dnsForwardingRulesetName string, tags map[string]string) error
+}
+
+type DnsResolverVNetLinkConfig interface {
+	SetDnsResolverVNetLinkProvisioned(ctx context.Context, resourceGroup, dnsForwardingRulesetName, vNetLinkName string) error
+}
+
 type RedisConfig interface {
 	AzureRemoveRedisInstance(ctx context.Context, resourceGroupName, redisInstanceName string) error
 	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
@@ -108,6 +128,8 @@ type RedisConfig interface {
 type Configs interface {
 	NetworkConfig
 	RedisConfig
+	DnsForwardingRulesetConfig
+	DnsResolverVNetLinkConfig
 }
 
 type TenantSubscription interface {

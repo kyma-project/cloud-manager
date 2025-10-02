@@ -1,5 +1,8 @@
-- source: spec.location
-  name: spec.location
+- source: status.location
+  name: status.location
+  sort: true
+- source: status.capacity
+  name: status.capacity
   sort: true
 - source: spec.source.volume.name
   name: spec.source.volume.name

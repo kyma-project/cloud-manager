@@ -14,19 +14,19 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.remoteVpcPeering == nil {
-		logger.Info("VpcPeering deleted before AWS peering is created")
-		return nil, nil
+		logger.Info("Remote AWS VPC peering not loaded on deleting VpcPeering")
+		return nil, ctx
 	}
 
 	if awsutil.IsTerminated(state.remoteVpcPeering) {
 		logger.Info("Remote VpcPeering can't be deleted at this stage",
 			"peeringStatusCode", string(state.remoteVpcPeering.Status.Code),
 			"peeringStatusMessage", ptr.Deref(state.remoteVpcPeering.Status.Message, ""))
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting remote VpcPeering")
@@ -37,7 +37,11 @@ func remotePeeringDelete(ctx context.Context, st composed.State) (error, context
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
 
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error deleting remote peering", nil, ctx)
+	}
+
 	logger.Info("Remote VpcPeering deleted")
 
-	return nil, nil
+	return nil, ctx
 }
