@@ -2,7 +2,6 @@ package scope
 
 import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerclient "github.com/gardener/gardener/pkg/client/core/clientset/versioned/typed/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -12,8 +11,8 @@ import (
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	kubernetesclient "k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type StateFactory interface {
@@ -82,8 +81,7 @@ type State struct {
 	shootName      string
 	shootNamespace string
 
-	gardenerClient  gardenerclient.CoreV1beta1Interface
-	gardenK8sClient kubernetesclient.Interface
+	gardenerClient client.Client
 
 	provider       cloudcontrolv1beta1.ProviderType
 	shoot          *gardenertypes.Shoot

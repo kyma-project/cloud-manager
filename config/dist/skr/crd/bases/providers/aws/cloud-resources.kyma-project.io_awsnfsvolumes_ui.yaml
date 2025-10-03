@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  details: |-
+  details: |
     body:
       - name: configuration
         widget: Panel
@@ -37,6 +37,19 @@ data:
             widget: Labels
           - name: annotations
             source: annotations
+            widget: Labels
+      - name: volumeClaim
+        source: spec.volumeClaim
+        widget: Panel
+        children:
+          - source: volumeClaim.name
+            name: spec.volumeClaim.name
+            widget: Labels
+          - source: volumeClaim.labels
+            name: spec.volumeClaim.labels
+            widget: Labels
+          - source: volumeClaim.annotations
+            name: spec.volumeClaim.annotations
             widget: Labels
       - name: status
         widget: Panel
@@ -89,6 +102,25 @@ data:
           name: annotations
           required: false
           widget: KeyValuePair
+    - path: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volumeClaim.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: labels
+          name: spec.volumeClaim.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volumeClaim.annotations
+          required: false
+          widget: KeyValuePair
   general: |-
     resource:
         kind: AwsNfsVolume
@@ -117,7 +149,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       spec.capacity: Capacity
       spec.performanceMode: Performance Mode
@@ -134,10 +166,14 @@ data:
       labels: Labels
       annotations: Annotations
       spec.ipRange: IP Range
+      spec.volumeClaim: Volume Claim
+      spec.volumeClaim.name: Name
+      spec.volumeClaim.labels: Labels
+      spec.volumeClaim.annotations: Annotations
 kind: ConfigMap
 metadata:
   annotations:
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.4
   labels:
     busola.io/extension: resource
     busola.io/extension-version: "0.5"

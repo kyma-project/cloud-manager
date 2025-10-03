@@ -1322,7 +1322,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
 				WithScope(kymaName).
 				WithRemoteRef("skr-namespace", "skr-aws-ip-range").
-				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, false).
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), "", false, true).
 				WithRemoteRouteTableUpdateStrategy(cloudcontrolv1beta1.AwsRouteTableUpdateStrategyMatched).
 				Build()
 
@@ -1462,6 +1462,14 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// DELETE
 
+		//
+		By("When remote peering connection is deleted", func() {
+			// The VPC peering connection remains visible to the party that deleted it for 2 hours
+			Expect(awsMockRemote.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.RemoteId)).To(Succeed())
+			//  and visible to the other party for 2 days
+			Expect(awsMockLocal.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.Id)).To(Succeed())
+		})
+
 		By("When KCP VpcPeering is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
@@ -1479,14 +1487,28 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Expect(localPeering).To(BeNil())
 		})
 
-		By("And Then remote VpcPeeringConnection is not deleted", func() {
-			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
-			Expect(remotePeering).NotTo(BeNil())
+		By("And Then local route tables have no peering routes to remote VPC CIDR", func() {
+			Expect(awsMockLocal.GetRoute(localVpcId, localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr)).
+				To(BeNil(), fmt.Sprintf("Local main route table should not have peering route to %s", remoteVpcCidr))
+
+			Expect(awsMockLocal.GetRoute(localVpcId, localRouteTable, kcpPeering.Status.Id, remoteVpcCidr)).
+				To(BeNil(), fmt.Sprintf("Local route table should not have peering route to %s", remoteVpcCidr))
+
+			Expect(awsMockLocal.GetRoute(localVpcId, localMainRouteTable, kcpPeering.Status.Id, remoteVpcCidr3)).
+				To(BeNil(), fmt.Sprintf("Local main route table should not have peering route to %s", remoteVpcCidr3))
+
+			Expect(awsMockLocal.GetRoute(localVpcId, localRouteTable, kcpPeering.Status.Id, remoteVpcCidr3)).
+				To(BeNil(), fmt.Sprintf("Local route table should not have peering route to %s", remoteVpcCidr3))
 		})
 
-		By("And Then remote route tables have peering route to local VPC CIDR", func() {
+		By("And Then remote VpcPeeringConnection is deleted", func() {
+			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(remotePeering).To(BeNil())
+		})
+
+		By("And Then remote route tables have no peering route to local VPC CIDR", func() {
 			Expect(awsMockRemote.GetRoute(remoteVpcId, remoteRouteTableTagged, kcpPeering.Status.Id, localVpcCidr)).
-				NotTo(BeNil())
+				To(BeNil())
 		})
 
 	})

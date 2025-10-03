@@ -1,7 +1,8 @@
 package bootstrap
 
 import (
-	gardenapi "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -19,7 +20,8 @@ var (
 )
 
 func init() {
-	utilruntime.Must(gardenapi.AddToScheme(GardenScheme))
+	utilruntime.Must(gardenerapicore.AddToScheme(GardenScheme))
+	utilruntime.Must(gardenerapisecurity.AddToScheme(GardenScheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(GardenScheme))
 
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(KcpScheme))

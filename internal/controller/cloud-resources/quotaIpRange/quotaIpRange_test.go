@@ -2,18 +2,18 @@ package quotaIpRange
 
 import (
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
@@ -127,12 +127,6 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 			).
 			Should(Succeed(), "expected first SKR IpRange to has Ready condition, but it does not")
 	}
-
-	BeforeEach(func() {
-		Eventually(CreateNamespace).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-			Should(Succeed())
-	})
 
 	It("Scenario: Quota and IpRange CIDR overlap", func() {
 

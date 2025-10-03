@@ -41,12 +41,6 @@ var _ = Describe("Feature: SKR AzureRwxBackupSchedule", func() {
 				).
 				Should(Succeed())
 		})
-		By("And Given SKR namespace exists", func() {
-			//Create namespace if it doesn't exist.
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-				Should(Succeed())
-		})
 
 		By("And Given SKR PV exists", func() {
 			//skrazurerwxvol.Ignore.AddName(skrRwxVolumeName)

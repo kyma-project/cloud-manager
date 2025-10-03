@@ -18,7 +18,13 @@ Read on for more details.
 
 Optionally, you can specify the `engineVersion`, `authEnabled`, `parameters`, and `preferredMaintenanceWindow` fields.
 
-As in-transit encryption is always enabled, communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
+## In-transit Encryption
+
+In-transit encryption is always enabled. Communication with the Redis instance requires a trusted Certificate Authority (CA). You must install it on the container (e.g., using `apt-get install -y ca-certificates && update-ca-certificate`).
+
+## Persistence
+
+Persistence is not supported. Data is not written to durable storage (i.e., data at rest).
 
 ## Redis Tiers
 

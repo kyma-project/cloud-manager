@@ -2,11 +2,12 @@ package quotaIpRange
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
-	"os"
-	"testing"
 
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
@@ -46,6 +47,8 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())
 	Expect(infra.SKR().GivenNamespaceExists(infra.SKR().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
+	Expect(infra.SKR().GivenNamespaceExists("kyma-system")).
+		NotTo(HaveOccurred(), "failed creating namespace kyma-system in SKR")
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 

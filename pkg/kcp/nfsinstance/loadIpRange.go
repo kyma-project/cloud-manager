@@ -19,10 +19,6 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(nfsinstancetypes.State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.Scope().Spec.Provider == cloudcontrolv1beta1.ProviderOpenStack {
-		return nil, nil
-	}
-
 	ipRange := &cloudcontrolv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),

@@ -66,6 +66,8 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())
 	Expect(infra.SKR().GivenNamespaceExists(infra.SKR().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
+	Expect(infra.SKR().GivenNamespaceExists("kyma-system")).
+		NotTo(HaveOccurred(), "failed creating namespace kyma-system in SKR")
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
@@ -100,6 +102,7 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock().ServiceNetworkingClientProvider(),
 		infra.GcpMock().ComputeClientProvider(),
+		infra.SapMock().IpRangeProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
@@ -165,7 +168,8 @@ var _ = BeforeSuite(func() {
 	//AzureVNetLink
 	Expect(SetupAzureVNetLinkReconciler(
 		infra.KcpManager(),
-		infra.AzureMock().VNetLinkProvider(),
+		infra.AzureMock().DnsZoneVNetLinkProvider(),
+		infra.AzureMock().DnsResolverVNetLinkProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Subscription

@@ -1,17 +1,17 @@
 package quota
 
 import (
+	"testing"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/runtime"
-	"testing"
 )
 
 func TestSkrConfig(t *testing.T) {
-	skrScheme := runtime.NewScheme()
-	_ = cloudresourcesv1beta1.AddToScheme(skrScheme)
+	skrScheme := bootstrap.SkrScheme
 
 	cfg := config.NewConfig(abstractions.NewMockedEnvironment(nil))
 	cfg.Path("resourceQuota.skr",

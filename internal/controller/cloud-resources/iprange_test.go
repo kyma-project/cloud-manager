@@ -22,7 +22,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
@@ -30,12 +29,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 	const (
 		consistentlyDuration = 500 * time.Millisecond
 	)
-
-	BeforeEach(func() {
-		Eventually(CreateNamespace).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
-			Should(Succeed())
-	})
 
 	runSkrIpRangeCreateScenario := func(shouldSkip func() string, titleSuffix, skrIpRangeName string, cidrAction ObjAction) {
 

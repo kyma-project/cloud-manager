@@ -14,7 +14,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
@@ -42,12 +41,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 					infra.Ctx(), infra, scope,
 					WithName(infra.SkrKymaRef().Name),
 				).
-				Should(Succeed())
-		})
-		By("And Given SKR namespace exists", func() {
-			//Create namespace if it doesn't exist.
-			Eventually(CreateNamespace).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), &corev1.Namespace{}).
 				Should(Succeed())
 		})
 

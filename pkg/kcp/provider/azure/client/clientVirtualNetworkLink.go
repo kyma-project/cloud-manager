@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"k8s.io/utils/ptr"
+	"time"
 )
 
 type VirtualNetworkLinkClient interface {
@@ -33,17 +34,19 @@ func (c *virtualNetworkLinkClient) CreateVirtualNetworkLink(ctx context.Context,
 			RegistrationEnabled: ptr.To(false),
 		},
 	}
-	_, err := c.svc.BeginCreateOrUpdate(
-		ctx,
-		resourceGroupName,
-		privateZoneName,
-		virtualNetworkLinkName,
-		parameters,
-		nil)
+	poller, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, privateZoneName, virtualNetworkLinkName, parameters, nil)
+
 	if err != nil {
 		return err
 	}
-	return nil
+
+	// operation usually takes around 5 seconds but a minute is given
+	pollerCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	_, err = poller.PollUntilDone(pollerCtx, nil)
+
+	return err
 }
 func (c *virtualNetworkLinkClient) GetVirtualNetworkLink(ctx context.Context, resourceGroupName, privateZoneName, virtualNetworkLinkName string) (*armprivatedns.VirtualNetworkLink, error) {
 	virtualNetworkLinkClientGetResponse, err := c.svc.Get(

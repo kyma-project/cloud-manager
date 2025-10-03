@@ -23,5 +23,5 @@ func waitGcpSubnetReady(ctx context.Context, st composed.State) (error, context.
 		WithValues("GcpSubnet", fmt.Sprintf("%s/%s", state.GetSkrGcpSubnet().Namespace, state.GetSkrGcpSubnet().Name)).
 		Info("GcpSubnet is not ready, requeue delayed")
 
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }

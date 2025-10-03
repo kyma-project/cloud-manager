@@ -92,7 +92,7 @@ func (in *IpRange) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *IpRange) SpecificToProviders() []string {
-	return []string{"aws", "gcp", "azure"}
+	return nil
 }
 
 //+kubebuilder:object:root=true

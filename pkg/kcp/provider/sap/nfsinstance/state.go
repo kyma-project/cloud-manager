@@ -47,7 +47,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 		WithRegion(nfsInstanceState.Scope().Spec.Region)
 	sapClient, err := f.provider(ctx, pp)
 	if err != nil {
-		return nil, fmt.Errorf("error creating sap client: %w", err)
+		return nil, fmt.Errorf("error creating sap client for nfs: %w", err)
 	}
 
 	return &State{

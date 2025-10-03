@@ -129,6 +129,9 @@ spec:
                   name:
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: IpRange is immutable.
+                  rule: (self == oldSelf)
               remoteRef:
                 properties:
                   name:
@@ -160,11 +163,10 @@ spec:
             - scope
             type: object
             x-kubernetes-validations:
-            - message: IpRange can not be specified for openstack, and is mandatory
-                for gcp and aws.
-              rule: (has(self.instance.openStack) || false) && self.ipRange.name ==
-                "" || (has(self.instance.aws) || has(self.instance.gcp) || false)
-                && self.ipRange.name != ""
+            - message: IpRange is required.
+              rule: self.ipRange.name != ""
+            - message: RemoteRef is required.
+              rule: self.remoteRef.name != ""
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:

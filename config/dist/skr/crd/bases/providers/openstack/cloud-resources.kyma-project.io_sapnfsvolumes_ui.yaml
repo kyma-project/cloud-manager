@@ -1,0 +1,118 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+    - source: spec
+      name: configuration
+      widget: Panel
+      children:
+      - source: capacityGb
+        name: spec.capacityGb
+        widget: Labels
+      - source: volume
+        name: spec.volume
+        widget: Labels
+      - source: volumeClaim
+        name: spec.volumeClaim
+        widget: Labels
+    - source: status
+      name: status
+      widget: Panel
+      children:
+      - source: state
+        name: status.state
+        widget: Labels
+  form: |
+    - path: spec.volume
+      name: spec.volume
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volume.name
+          widget: Text
+          required: true
+        - path: labels
+          name: spec.volume.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volume.annotations
+          required: false
+          widget: KeyValuePair
+    - path: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.volumeClaim.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: labels
+          name: spec.volumeClaim.labels
+          required: false
+          widget: KeyValuePair
+        - path: annotations
+          name: spec.volumeClaim.annotations
+          required: false
+          widget: KeyValuePair
+    - path: spec.capacityGb
+      name: spec.capacityGb
+      widget: Number
+      disableOnEdit: false
+      required: true
+  general: |
+    resource:
+      group: cloud-resources.kyma-project.io
+      kind: SapNfsVolume
+      version: v1beta1
+    urlPath: sapnfsvolumes
+    name: SAP NFS Volume
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: SapNfsVolume description here
+  list: |
+    - source: spec.capacityGb
+      name: spec.capacityGb
+      widget: Text
+      sorted: true
+    - source: spec.volume
+      name: spec.volume
+      widget: Text
+      sorted: true
+    - source: spec.volumeClaim
+      name: spec.volumeClaim
+      widget: Text
+      sorted: true
+    - source: status.state
+      name: status.state
+      widget: Text
+      sorted: true
+  translations: |
+    en:
+      configuration: Configuration
+      spec.capacityGb: Capacity Gb
+      spec.volume: Volume
+      spec.volume.name: Name
+      spec.volume.labels: Labels
+      spec.volume.annotations: Annotations
+      spec.volumeClaim: Volume Claim
+      spec.volumeClaim.name: Name
+      spec.volumeClaim.labels: Labels
+      spec.volumeClaim.annotations: Annotations
+      status: Status
+      status.state: State
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: sapnfsvolumes-ui.operator.kyma-project.io
+  namespace: kyma-system

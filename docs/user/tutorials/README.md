@@ -14,7 +14,7 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
 * VPC Peering
   * [Creating VPC Peering in Amazon Web Services](./01-30-10-aws-vpc-peering.md)
   * [Creating VPC Peering in Google Cloud](./01-30-20-gcp-vpc-peering.md)
-  * [Creating VPC Peering in Microsoft Azure](./01-30-30-azure-vpc-peering.md) [**SAP-internal feature**]<!-- VPC peering for Microsoft Azure is visible only in the Internal DRAFT version of Help Portal docs and it is not part of the Cloud Production version of Help Portal docs -->
+  * [Creating VPC Peering in Microsoft Azure](./01-30-30-azure-vpc-peering.md)
 * Redis
   * [Using AwsRedisInstance Custom Resources](./01-40-10-aws-redis-instance.md)
   * [Using GcpRedisInstance Custom Resources](./01-40-20-gcp-redis-instance.md)

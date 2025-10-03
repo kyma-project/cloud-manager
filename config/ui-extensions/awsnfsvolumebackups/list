@@ -1,3 +1,12 @@
+- source: status.locations
+  name: status.locations
+  sort: true
+- source: status.capacity
+  name: status.capacity
+  sort: true
+- source: spec.source.volume.name
+  name: spec.source.volume.name
+  sort: true
 - source: status.state
   name: status.state
   sort: true

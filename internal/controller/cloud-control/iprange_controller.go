@@ -35,6 +35,9 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
+	sapiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange"
+	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -47,6 +50,7 @@ func SetupIpRangeReconciler(
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
 	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -59,6 +63,7 @@ func SetupIpRangeReconciler(
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
 			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
+			sapiprange.NewStateFactory(sapProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

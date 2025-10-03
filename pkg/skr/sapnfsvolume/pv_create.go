@@ -3,6 +3,8 @@ package sapnfsvolume
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,7 +12,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,6 +22,9 @@ func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	if state.PV != nil {
+		return nil, ctx
+	}
+	if state.KcpNfsInstance.Status.Host == "" {
 		return nil, ctx
 	}
 

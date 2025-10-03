@@ -2,7 +2,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.32.0
+ENVTEST_K8S_VERSION = 1.33.0
 JV_VERSION = v0.5.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -56,10 +56,15 @@ mod-download:
 
 .PHONY: garden-manifests
 garden-manifests: mod-download
-	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/core/v1beta1/..." output:crd:artifacts:config=config/crd/g1
-	cp config/crd/g1/core.gardener.cloud_shoots.yaml config/crd/gardener/core.gardener.cloud_shoots.yaml
-	cp config/crd/g1/core.gardener.cloud_secretbindings.yaml config/crd/gardener/core.gardener.cloud_secretbindings.yaml
-	rm -r config/crd/g1
+	rm -r config/crd/gardener-core-tmp || true
+	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/core/v1beta1/..." output:crd:artifacts:config=config/crd/gardener-core-tmp
+	cp config/crd/gardener-core-tmp/core.gardener.cloud_shoots.yaml config/crd/gardener/core.gardener.cloud_shoots.yaml
+	cp config/crd/gardener-core-tmp/core.gardener.cloud_secretbindings.yaml config/crd/gardener/core.gardener.cloud_secretbindings.yaml
+	rm -r config/crd/gardener-core-tmp
+	rm -r config/crd/gardener-security-tmp || true
+	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/security/v1alpha1/..." output:crd:artifacts:config=config/crd/gardener-security-tmp
+	cp config/crd/gardener-security-tmp/security.gardener.cloud_credentialsbindings.yaml config/crd/gardener/security.gardener.cloud_credentialsbindings.yaml
+	rm -r config/crd/gardener-security-tmp
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -172,6 +177,8 @@ build_ui: manifests kustomize # Build CRDS test
 	$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
 	$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
+	$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
+
 
 
 .PHONY: uninstall

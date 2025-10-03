@@ -2,22 +2,21 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"testing"
-	"time"
 )
 
 func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
@@ -59,9 +58,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 				},
 			}
 
-			scheme := runtime.NewScheme()
-			utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-			utilruntime.Must(cloudresourcesv1beta1.AddToScheme(scheme))
+			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(scheme).
 				WithObjects(gcpNfsVolume).
