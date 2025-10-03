@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"time"
 
@@ -212,4 +213,11 @@ func (f *testStateFactory) newStateWith(nfsRestore *cloudresourcesv1beta1.GcpNfs
 // Fake client doesn't support type "apply" for patching so falling back on update for unit tests.
 func (s *State) PatchObjStatus(ctx context.Context) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
+}
+
+func gcpNfsVolumeBackupToUrl(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup) string {
+	if backup.Status.Id == "" || backup.Status.Location == "" {
+		return ""
+	}
+	return fmt.Sprintf("projects/%s/locations/%s/backups/%s", scope.Spec.Scope.Gcp.Project, backup.Status.Location, fmt.Sprintf("cm-%.60s", backup.Status.Id))
 }

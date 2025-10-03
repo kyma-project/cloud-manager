@@ -2,6 +2,8 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -92,4 +94,11 @@ func StopAndRequeueForCapacityAction() composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		return stopAndRequeueForCapacity(), nil
 	}
+}
+
+func (s *State) specCommaSeparatedAccessibleFrom() string {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+	//sort backup.Spec.AccessibleFrom to have a consistent label value
+	sort.Strings(backup.Spec.AccessibleFrom)
+	return strings.Join(backup.Spec.AccessibleFrom, ",")
 }

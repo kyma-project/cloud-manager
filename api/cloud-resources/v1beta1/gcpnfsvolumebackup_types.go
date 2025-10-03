@@ -87,6 +87,15 @@ type GcpNfsVolumeBackupSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
 	Location string `json:"location"`
+
+	// AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backup for restore.
+	// "ALL" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "ALL" cannot be used in combination with other values.
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=10
+	// +kubebuilder:validation:XValidation:rule="(self.all(x, x == 'ALL') || self.all(x, x != 'ALL'))", message="The value 'ALL' cannot be combined with other values."
+	AccessibleFrom []string `json:"accessibleFrom,omitempty"`
 }
 
 // GcpNfsVolumeBackupStatus defines the observed state of GcpNfsVolumeBackup
@@ -116,6 +125,9 @@ type GcpNfsVolumeBackupStatus struct {
 	// LastCapacityUpdate specifies the time when the last time backup size got updated
 	// +optional
 	LastCapacityUpdate *metav1.Time `json:"lastCapacityUpdate,omitempty"`
+
+	// Comma separated list that reflects the AccessibleFrom field in spec upon the last successful reconciliation
+	AccessibleFrom string `json:"accessibleFrom,omitempty"`
 }
 
 // +kubebuilder:object:root=true

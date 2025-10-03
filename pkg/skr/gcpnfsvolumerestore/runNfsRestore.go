@@ -37,16 +37,13 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	//Get GCP details.
 	gcpScope := state.Scope.Spec.Scope.Gcp
 	project := gcpScope.Project
-	srcLocation := state.GcpNfsVolumeBackup.Status.Location
 	dstLocation := state.GcpNfsVolume.Status.Location
-	backupName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolumeBackup.Status.Id)
 
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
 	dstFullPath := gcpclient.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
-	srcFullPath := gcpclient.GetFileBackupPath(project, srcLocation, backupName)
 
-	operation, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, srcFullPath)
+	operation, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, state.SrcBackupFullPath)
 
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError

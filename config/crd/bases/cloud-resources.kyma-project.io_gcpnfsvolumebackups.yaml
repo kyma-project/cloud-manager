@@ -55,6 +55,19 @@ spec:
             spec:
               description: GcpNfsVolumeBackupSpec defines the desired state of GcpNfsVolumeBackup
               properties:
+                accessibleFrom:
+                  description: |-
+                    AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backup for restore.
+                    "ALL" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "ALL" cannot be used in combination with other values.
+                  items:
+                    type: string
+                  maxItems: 10
+                  minItems: 1
+                  type: array
+                  x-kubernetes-list-type: set
+                  x-kubernetes-validations:
+                    - message: The value 'ALL' cannot be combined with other values.
+                      rule: (self.all(x, x == 'ALL') || self.all(x, x != 'ALL'))
                 location:
                   description: |-
                     GCP Region Name (as specified in https://cloud.google.com/filestore/docs/regions) where this backup should be created.
@@ -91,6 +104,9 @@ spec:
             status:
               description: GcpNfsVolumeBackupStatus defines the observed state of GcpNfsVolumeBackup
               properties:
+                accessibleFrom:
+                  description: Comma separated list that reflects the AccessibleFrom field in spec upon the last successful reconciliation
+                  type: string
                 capacity:
                   anyOf:
                     - type: integer
