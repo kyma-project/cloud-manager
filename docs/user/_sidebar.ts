@@ -1,10 +1,11 @@
 export default [
   { text: 'Cloud Manager Module', link: './README' },
   { text: 'NFS', link: './00-20-nfs' },
-  { text: 'VPC Peering', link: './00-30-vpc-peering' },
-    { text: 'Authorizing Cloud Manager in the Remote Cloud Provider', link: './00-31-vpc-peering-authorization' },
+  { text: 'VPC Peering', link: './00-30-vpc-peering', collapsed: true, items: [
+    { text: 'Authorizing Cloud Manager in the Remote Cloud Provider', link: './00-31-vpc-peering-authorization' }
+    ] },
   { text: 'Redis', link: './00-40-redis' },
-  { text: 'Resources', link: './resources/README' },
+  { text: 'Resources', link: './resources/README', collapsed: true, items: [
     { text: 'IpRange Custom Resource', link: './resources/04-10-iprange' },
     { text: 'AwsNfsVolume Custom Resource', link: './resources/04-20-10-aws-nfs-volume' },
     { text: 'AwsNfsVolumeBackup Custom Resource', link: './resources/04-20-11-aws-nfs-volume-backup' },
