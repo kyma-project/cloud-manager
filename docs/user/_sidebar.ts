@@ -34,6 +34,8 @@ export default [
     { text: 'Using AwsRedisInstance Custom Resources', link: './tutorials/01-40-10-aws-redis-instance' },
     { text: 'Using GcpRedisInstance Custom Resources', link: './tutorials/01-40-20-gcp-redis-instance' },
     { text: 'Using AzureRedisInstance Custom Resources', link: './tutorials/01-40-30-azure-redis-instance' },
+    { text: 'Using AwsRedisCluster Custom Resources', link: './tutorials/01-50-10-aws-redis-cluster' },
+    { text: 'Using GcpRedisCluster Custom Resources', link: './tutorials/01-50-20-gcp-redis-cluster' },
     { text: 'Using AzureRedisCluster Custom Resources', link: './tutorials/01-50-30-azure-redis-cluster' }
     ] },
   { text: 'Glossary', link: './00-10-glossary' }
