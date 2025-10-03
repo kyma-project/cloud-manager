@@ -1,4 +1,5 @@
 export default [
+  { text: 'Cloud Manager Module', link: './README' },
   { text: 'NFS', link: './00-20-nfs' },
   { text: 'VPC Peering', link: './00-30-vpc-peering' },
   { text: 'Authorizing Cloud Manager in the Remote Cloud Provider', link: './00-31-vpc-peering-authorization' },
