@@ -40,10 +40,10 @@ spec:
             spec:
               description: AzureVpcDnsLinkSpec defines the desired state of AzureVpcDnsLink
               properties:
-                remoteDnsForwardingRuleset:
+                remoteDnsResolverRuleset:
                   type: string
                   x-kubernetes-validations:
-                    - message: RemoteDnsForwardingRuleset is immutable.
+                    - message: RemoteDnsResolverRuleset is immutable.
                       rule: (self == oldSelf)
                 remoteLinkName:
                   type: string
@@ -68,8 +68,8 @@ spec:
                 - remoteLinkName
               type: object
               x-kubernetes-validations:
-                - message: Exactly one of RemotePrivateDnsZone or RemoteDnsForwardingRuleset must be specified
-                  rule: has(self.remotePrivateDnsZone) != has(self.remoteDnsForwardingRuleset)
+                - message: Exactly one of RemotePrivateDnsZone or RemoteDnsResolverRuleset must be specified
+                  rule: has(self.remotePrivateDnsZone) != has(self.remoteDnsResolverRuleset)
             status:
               description: AzureVpcDnsLinkStatus defines the observed state of AzureVpcDnsLink
               properties:
