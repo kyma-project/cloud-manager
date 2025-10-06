@@ -86,7 +86,7 @@ func dnsZonePredicate(_ context.Context, st composed.State) bool {
 
 func dnsResolverPredicate(_ context.Context, st composed.State) bool {
 	if link, ok := st.Obj().(*v1beta1.AzureVNetLink); ok {
-		return len(link.Spec.RemoteDnsForwardingRuleset) > 0
+		return len(link.Spec.RemoteDnsResolverRuleset) > 0
 	}
 	return false
 
