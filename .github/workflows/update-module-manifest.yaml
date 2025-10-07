@@ -70,7 +70,8 @@ jobs:
       MODULE_MANIFEST_REPO: ${{vars.MODULE_MANIFEST_REPO}} # github.tools.sap
       CLOUD_MANAGER_REPO: ${{vars.CLOUD_MANAGER_REPO}} # github.com
     outputs:
-      BRANCH_NAME: ${{steps.create_branch.outputs.BRANCH_NAME}}
+      BRANCH_NAME_MODULE_CONFIG: ${{steps.create_branch_module_config.outputs.BRANCH_NAME_MODULE_CONFIG}}
+      BRANCH_NAME_MODULE_RELEASE: ${{steps.create_branch_module_release.outputs.BRANCH_NAME_MODULE_RELEASE}}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -78,7 +79,7 @@ jobs:
           fetch-depth: 0
 
       - name: create branch # TODO: fix branch name
-        id: create_branch
+        id: create_branch_module_config
         run: |
           MAIN_SHA=${{needs.fetch-vars.outputs.MAIN_SHA}}
 
@@ -92,7 +93,24 @@ jobs:
             https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/git/refs \
             -d '{"ref":"'"$REF"'","sha":"'"$MAIN_SHA"'"}'
 
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME_MODULE_CONFIG=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: create branch module-release
+        id: create_branch_module_release
+        run: |
+          MAIN_SHA=${{needs.fetch-vars.outputs.MAIN_SHA}}
+          BRANCH_NAME=$(echo "cloud-manager-${{needs.fetch-vars.outputs.RELEASE_TAG}}-module-release")
+          REF=$(echo "refs/heads/$BRANCH_NAME")
+
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${TOOLS_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://github.tools.sap/api/v3/repos/${MODULE_MANIFEST_REPO}/git/refs \
+            -d '{"ref":"'"$REF"'","sha":"'"$MAIN_SHA"'"}'
+
+          echo "BRANCH_NAME_MODULE_RELEASE=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
   create-module-config:
     name: Create Module Config
@@ -114,7 +132,7 @@ jobs:
         run: |
           MODULE_CONFIG_BASE=$(./tools/scripts/release/create_module_config.sh | base64)
           MODULE_CONFIG_BASE=$(echo $MODULE_CONFIG_BASE | tr -d ' ')
-          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME}}
+          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME_MODULE_CONFIG}}
 
           curl -L \
             -X PUT \
@@ -144,7 +162,7 @@ jobs:
         run: |
           SHA=${{needs.fetch-vars.outputs.MODULE_RELEASE_SHA}}
           CONTENT=${{needs.fetch-vars.outputs.MODULE_RELEASE_CONTENT}}
-          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME}}
+          BRANCH_NAME=${{needs.create-branch.outputs.BRANCH_NAME_MODULE_RELEASE}}
 
           DEV_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "dev") | .version' )
           EXPERIMENTAL_VER=$(echo $CONTENT | base64 -d | yq '.channels[] | select(.channel == "experimental") | .version' )
