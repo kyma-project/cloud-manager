@@ -6,6 +6,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +36,7 @@ func createAwsDestBackup(ctx context.Context, st composed.State) (error, context
 		SourceBackupVaultName:     state.GetVaultName(),
 		DestinationBackupVaultArn: state.GetDestinationBackupVaultArn(),
 		RecoveryPointArn:          state.GetRecoveryPointArn(),
-		IamRoleArn:                state.GetBackupRoleArn(),
+		IamRoleArn:                awsutil.RoleArnBackup(state.Scope().Spec.Scope.Aws.AccountId),
 		IdempotencyToken:          ptr.To(backup.Status.IdempotencyToken),
 	})
 	if err != nil {

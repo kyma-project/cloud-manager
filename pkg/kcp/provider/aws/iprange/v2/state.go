@@ -2,13 +2,14 @@ package v2
 
 import (
 	"context"
-	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 )
 
 type State struct {
@@ -37,7 +38,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", ipRangeState.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+	roleName := awsutil.RoleArnDefault(ipRangeState.Scope().Spec.Scope.Aws.AccountId)
 
 	logger.
 		WithValues(

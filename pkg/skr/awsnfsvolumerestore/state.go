@@ -2,11 +2,12 @@ package awsnfsvolumerestore
 
 import (
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	restoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -63,15 +64,13 @@ func (s *State) GetRecoveryPointArn() string {
 	if id == "" {
 		return ""
 	}
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s",
-		s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, id)
-	return arn
+	arnTxt := awsutil.BackupRecoveryPointArn(s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, id)
+	return arnTxt
 }
 
 func (s *State) GetBackupRoleArn() string {
-	arn := fmt.Sprintf("arn:aws:iam::%s:role/%s",
-		s.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.BackupRoleName)
-	return arn
+	arnTxt := awsutil.RoleArnBackup(s.Scope().Spec.Scope.Aws.AccountId)
+	return arnTxt
 }
 
 func (s *State) GetVaultName() string {

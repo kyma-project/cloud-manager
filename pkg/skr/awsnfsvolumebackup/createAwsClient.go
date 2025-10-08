@@ -8,6 +8,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,11 +17,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 	backup := state.ObjAsAwsNfsVolumeBackup()
 
-	roleName := fmt.Sprintf(
-		"arn:aws:iam::%s:role/%s",
-		state.Scope().Spec.Scope.Aws.AccountId,
-		awsconfig.AwsConfig.Default.AssumeRoleName,
-	)
+	roleName := awsutil.RoleArnDefault(state.Scope().Spec.Scope.Aws.AccountId)
 
 	logger.
 		WithValues(

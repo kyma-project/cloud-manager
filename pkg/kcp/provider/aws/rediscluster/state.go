@@ -2,7 +2,6 @@ package rediscluster
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -12,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
 	"k8s.io/utils/ptr"
 )
@@ -54,7 +54,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, redisInstace types.State) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", redisInstace.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+	roleName := awsutil.RoleArnDefault(redisInstace.Scope().Spec.Scope.Aws.AccountId)
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger.
