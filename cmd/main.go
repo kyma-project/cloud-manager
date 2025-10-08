@@ -24,6 +24,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
+	config2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -71,7 +72,6 @@ import (
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
@@ -543,7 +543,7 @@ func loadConfig() config.Config {
 	sapconfig.InitConfig(cfg)
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
-	scope.InitConfig(cfg)
+	config2.InitConfig(cfg)
 	gcpclient.InitConfig(cfg)
 	vpcpeeringconfig.InitConfig(cfg)
 

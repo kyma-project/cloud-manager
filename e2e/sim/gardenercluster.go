@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	corev1 "k8s.io/api/core/v1"
@@ -41,6 +42,7 @@ type simGardenerCluster struct {
 }
 
 func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	gc := &infrastructuremanagerv1.GardenerCluster{}
 	err := r.kcp.Get(ctx, request.NamespacedName, gc)
 	if apierrors.IsNotFound(err) {
@@ -57,6 +59,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	shootName := gc.Labels[cloudcontrolv1beta1.LabelScopeShootName]
 
 	if shootName == "" {
+		logger.Error(common.ErrLogical, "Missing shoot name label on GardenerCluster")
 		gc.Status.State = infrastructuremanagerv1.ErrorState
 		meta.SetStatusCondition(&gc.Status.Conditions, metav1.Condition{
 			Type:               string(infrastructuremanagerv1.ConditionTypeRuntimeKubeconfigReady),
@@ -72,11 +75,15 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		return reconcile.Result{}, nil
 	}
 
-	syncNeeded, requeueAfter := r.isSyncNeeded(gc)
+	logger = logger.WithValues("shoot", shootName)
+
+	syncNeeded, expiresIn := IsGardenerClusterSyncNeeded(gc, r.clock)
+	requeueAfter := expiresIn - 10*time.Second
 	if !syncNeeded {
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
+	logger.Info("Creating admin kubeconfig for shoot")
 	kubeConfigBytes, err := r.kubeconfigProvider.CreateNewKubeconfig(ctx, shootName)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("error creating kubeconfig: %w", err)
@@ -101,6 +108,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 				"config": string(kubeConfigBytes),
 			},
 		}
+		logger.Info("Creating kubeconfig secret")
 		err = r.kcp.Create(ctx, kubeSecret)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error creating kubeconfig secret: %w", err)
@@ -110,6 +118,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		kubeSecret.StringData = map[string]string{
 			"config": string(kubeConfigBytes),
 		}
+		logger.Info("Updating kubeconfig secret")
 		err = r.kcp.Update(ctx, kubeSecret)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error updating kubeconfig secret: %w", err)
@@ -146,7 +155,9 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	return reconcile.Result{RequeueAfter: 10 * time.Minute}, nil
 }
 
-func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCluster) (bool, time.Duration) {
+// IsGardenerClusterSyncNeeded checks if the given GardenerCluster credentials are expired or about to expire.
+// It returns true if the credentials are expired or will expire soon, along with the expiration time.
+func IsGardenerClusterSyncNeeded(gc *infrastructuremanagerv1.GardenerCluster, clck clock.Clock) (bool, time.Duration) {
 	if gc.Status.State != infrastructuremanagerv1.ReadyState {
 		return true, time.Minute
 	}
@@ -156,7 +167,7 @@ func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCl
 	if _, ok := gc.Annotations[forceKubeconfigRotationAnnotation]; ok {
 		return true, time.Minute
 	}
-	expiresAt := r.clock.Now()
+	expiresAt := clck.Now()
 	val, ok := gc.Annotations[expiresAtAnnotation]
 	if ok {
 		ea, err := time.Parse(time.RFC3339, val)
@@ -165,12 +176,12 @@ func (r *simGardenerCluster) isSyncNeeded(gc *infrastructuremanagerv1.GardenerCl
 		}
 	}
 
-	expiresIn := time.Until(expiresAt)
-	if expiresIn < time.Hour {
+	expiresIn := expiresAt.Sub(clck.Now())
+	if expiresIn < time.Minute {
 		return true, time.Minute
 	}
 
-	return false, time.Duration(0.5 * float64(expiresIn))
+	return false, expiresIn - time.Second
 }
 
 func (r *simGardenerCluster) SetupWithManager(mgr ctrl.Manager) error {

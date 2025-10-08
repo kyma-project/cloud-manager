@@ -104,7 +104,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred(), "failed to add Garden cluster to KCP manager")
 
 	// Setup controllers
-	simInstance, err = New(infra.KcpManager(), gardenCluster, infra.KcpManager().GetLogger())
+	simInstance, err = New(CreateOptions{
+		KCP:                infra.KcpManager(),
+		Garden:             gardenCluster,
+		Logger:             infra.KcpManager().GetLogger(),
+	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
 	err = infra.KcpManager().Add(simInstance)
 	Expect(err).NotTo(HaveOccurred(), "failed to add simInstance to KCP manager")

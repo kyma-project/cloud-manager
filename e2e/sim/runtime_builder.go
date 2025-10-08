@@ -27,22 +27,23 @@ func NewRandomShootName() string {
 	return result
 }
 
-const gardenLinuxVersion = "1592.8.0"
-
 const aliasLabel = "e2e.kyma-project.io/alias"
 
 type RuntimeBuilder struct {
 	Obj infrastructuremanagerv1.Runtime
 
+	cpr CloudProfileRegistry
+
 	errProvider error
 }
 
-func NewRuntimeBuilder() *RuntimeBuilder {
+func NewRuntimeBuilder(cpr CloudProfileRegistry) *RuntimeBuilder {
 	globalAccountId := uuid.NewString()
 	subAccountId := uuid.NewString()
 	name := uuid.NewString()
 	shootName := NewRandomShootName()
 	return &RuntimeBuilder{
+		cpr: cpr,
 		Obj: infrastructuremanagerv1.Runtime{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: infrastructuremanagerv1.GroupVersion.String(),
@@ -76,7 +77,7 @@ func NewRuntimeBuilder() *RuntimeBuilder {
 				},
 				Shoot: infrastructuremanagerv1.RuntimeShoot{
 					Kubernetes: infrastructuremanagerv1.Kubernetes{
-						Version: ptr.To("1.32"),
+						Version: ptr.To("1.33"),
 						KubeAPIServer: infrastructuremanagerv1.APIServer{
 							AdditionalOidcConfig: &[]infrastructuremanagerv1.OIDCConfig{
 								{
@@ -146,6 +147,29 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeProvider] = uProvider
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeRegion] = region
 
+	cloudProfileName, ok := e2econfig.Config.CloudProfiles[string(provider)]
+	if !ok {
+		b.errProvider = multierror.Append(b.errProvider, fmt.Errorf("cloud profile for provider %q not found", provider))
+		return b
+	}
+	profile := b.cpr.Get(cloudProfileName)
+	if profile == nil {
+		b.errProvider = multierror.Append(b.errProvider, fmt.Errorf("cloud profile %q not found", cloudProfileName))
+		return b
+	}
+	kv := profile.GetKubernetesVersion()
+	if kv == "" {
+		b.errProvider = multierror.Append(b.errProvider, fmt.Errorf("no kubernetes version found in cloud profile %q", cloudProfileName))
+		return b
+	}
+	glv := profile.GetGardenLinuxVersion()
+	if glv == "" {
+		b.errProvider = multierror.Append(b.errProvider, fmt.Errorf("no gardenlinux version found in cloud profile %q", cloudProfileName))
+		return b
+	}
+
+	b.Obj.Spec.Shoot.Kubernetes.Version = ptr.To(kv)
+
 	zones, ok := providerRegions[provider][region]
 	if !ok {
 		b.errProvider = fmt.Errorf("unsupported region %q for provider %q", region, provider)
@@ -176,7 +200,7 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 			Machine: gardenertypes.Machine{
 				Image: &gardenertypes.ShootMachineImage{
 					Name:    "gardenlinux",
-					Version: ptr.To(gardenLinuxVersion),
+					Version: ptr.To(glv),
 				},
 				Type: machineTypes[provider][0],
 			},

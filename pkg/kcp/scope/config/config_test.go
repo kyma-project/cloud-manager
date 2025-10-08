@@ -1,12 +1,13 @@
-package scope
+package config
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/config"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConfigFromEnv(t *testing.T) {

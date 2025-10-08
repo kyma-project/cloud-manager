@@ -24,10 +24,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func newSimRuntime(kcp client.Client, garden client.Client) *simRuntime {
+func newSimRuntime(kcp client.Client, garden client.Client, cpr CloudProfileRegistry) *simRuntime {
 	return &simRuntime{
 		kcp:    kcp,
 		garden: garden,
+		cpr:    cpr,
 		clock:  clock.RealClock{},
 	}
 }
@@ -37,6 +38,7 @@ var _ reconcile.Reconciler = &simRuntime{}
 type simRuntime struct {
 	kcp    client.Client
 	garden client.Client
+	cpr    CloudProfileRegistry
 	clock  clock.Clock
 }
 
@@ -147,7 +149,7 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	// create ====================================================
 
 	if shoot == nil {
-		shootBuilder := NewShootBuilder().
+		shootBuilder := NewShootBuilder(r.cpr).
 			WithRuntime(rt)
 		if errShoot := shootBuilder.Validate(); errShoot != nil {
 			rt.Status.State = infrastructuremanagerv1.ErrorState

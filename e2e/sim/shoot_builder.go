@@ -22,11 +22,14 @@ import (
 type ShootBuilder struct {
 	Obj gardenertypes.Shoot
 
+	cpr CloudProfileRegistry
+
 	errWithRuntime []error
 }
 
-func NewShootBuilder() *ShootBuilder {
+func NewShootBuilder(cpr CloudProfileRegistry) *ShootBuilder {
 	return &ShootBuilder{
+		cpr: cpr,
 		Obj: gardenertypes.Shoot{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: gardenertypes.SchemeGroupVersion.String(),
@@ -42,9 +45,19 @@ func NewShootBuilder() *ShootBuilder {
 
 func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBuilder {
 	b.errWithRuntime = nil
-	cloudProfile, ok := e2econfig.Config.CloudProfiles[rt.Spec.Shoot.Provider.Type]
+	cloudProfileName, ok := e2econfig.Config.CloudProfiles[rt.Spec.Shoot.Provider.Type]
 	if !ok {
 		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("cloud profile for provider %q not found", rt.Spec.Shoot.Provider.Type))
+		return b
+	}
+	profile := b.cpr.Get(cloudProfileName)
+	if profile == nil {
+		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("cloud profile %q not found in the cluster", cloudProfileName))
+		return b
+	}
+	kv := profile.GetKubernetesVersion()
+	if kv == "" {
+		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no kubernetes version found in cloud profile %q", cloudProfileName))
 		return b
 	}
 
@@ -57,9 +70,11 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		"operatingsystemconfig.extensions.gardener.cloud/gardenlinux":                    "true",
 	}
 
+	//nolint:staticcheck
+	b.Obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
 	b.Obj.Spec.CloudProfile = &gardenertypes.CloudProfileReference{
 		Kind: "CloudProfile",
-		Name: cloudProfile,
+		Name: cloudProfileName,
 	}
 
 	b.Obj.Spec.Extensions = []gardenertypes.Extension{
@@ -68,7 +83,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		},
 	}
 
-	b.Obj.Spec.Kubernetes.Version = ptr.Deref(rt.Spec.Shoot.Kubernetes.Version, "1.32.6")
+	b.Obj.Spec.Kubernetes.Version = ptr.Deref(rt.Spec.Shoot.Kubernetes.Version, kv)
 	b.Obj.Spec.Kubernetes.KubeAPIServer = &gardenertypes.KubeAPIServerConfig{
 		Requests: &gardenertypes.APIServerRequests{
 			MaxNonMutatingInflight: ptr.To(int32(800)),

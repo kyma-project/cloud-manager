@@ -13,6 +13,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	roleName := fmt.Sprintf(
+		// "arn:aws-us-gov:iam::%s:role/%s",
 		"arn:aws:iam::%s:role/%s",
 		state.Scope().Spec.Scope.Aws.AccountId,
 		awsconfig.AwsConfig.Default.AssumeRoleName,

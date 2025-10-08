@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/sim"
 )
 
 type World interface {
@@ -17,13 +18,13 @@ type World interface {
 
 type defaultWorld struct {
 	clusterProvider ClusterProvider
-	//skr             SkrCreator
+	simu sim.Sim
 }
 
-func NewWorld(clusterProvider ClusterProvider) World {
+func NewWorld(clusterProvider ClusterProvider, simu sim.Sim) World {
 	return &defaultWorld{
 		clusterProvider: clusterProvider,
-		//skr:             skr,
+		simu: simu,
 	}
 }
 
@@ -31,17 +32,9 @@ func (w *defaultWorld) ClusterProvider() ClusterProvider {
 	return w.clusterProvider
 }
 
-//func (w *defaultWorld) SKR() SkrCreator {
-//	return w.skr
-//}
 
 func (w *defaultWorld) Stop(ctx context.Context) error {
 	var result error
-	//for _, skr := range w.SKR().AllClusters() {
-	//	if err := w.SKR().Remove(skr.Alias()); err != nil {
-	//		result = multierror.Append(result, fmt.Errorf("failed to remove skr cluster %s: %w", skr.Alias, err))
-	//	}
-	//}
 
 	if err := w.ClusterProvider().Stop(); err != nil {
 		result = multierror.Append(result, fmt.Errorf("could not stop kcp or garden cluster: %w", err))

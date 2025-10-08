@@ -1,4 +1,4 @@
-package scope
+package config
 
 import "github.com/kyma-project/cloud-manager/pkg/config"
 

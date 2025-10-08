@@ -14,7 +14,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
@@ -78,24 +77,10 @@ func (p *defaultClusterProvider) Init(ctx context.Context) error {
 
 	err = kcp.GetAPIReader().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 	if err == nil {
-		// already exists
-		err = p.setGardenNamespaceInConfig(secret.Data["kubeconfig"])
+		err = kcp.GetClient().Delete(ctx, secret)
 		if err != nil {
-			return fmt.Errorf("failed to set garden kubeconfig: %w", err)
+			return fmt.Errorf("error deleting existing garden secret: %w", err)
 		}
-
-		garden, err := p.Garden(ctx)
-		if err != nil {
-			return fmt.Errorf("error initializing Garden: %w", err)
-		}
-
-		shootList := &gardenertypes.ShootList{}
-		err = garden.GetClient().List(ctx, shootList, client.InNamespace(e2econfig.Config.GardenNamespace))
-		if err != nil {
-			return fmt.Errorf("error connecting to garden: %w", err)
-		}
-
-		return nil
 	}
 
 	if e2econfig.Config.GardenKubeconfig == "" {
@@ -121,10 +106,6 @@ func (p *defaultClusterProvider) Init(ctx context.Context) error {
 		},
 	}
 	err = kcp.GetClient().Create(ctx, secret)
-	if apierrors.IsAlreadyExists(err) {
-		// some race condition, let's assume the secret correctly created
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error creating gardener credentials: %w", err)
 	}
@@ -135,7 +116,7 @@ func (p *defaultClusterProvider) Init(ctx context.Context) error {
 	}
 
 	shootList := &gardenertypes.ShootList{}
-	err = garden.GetClient().List(ctx, shootList, client.InNamespace(e2econfig.Config.KcpNamespace))
+	err = garden.GetClient().List(ctx, shootList, client.InNamespace(e2econfig.Config.GardenNamespace))
 	if err != nil {
 		return fmt.Errorf("error connecting to garden: %w", err)
 	}

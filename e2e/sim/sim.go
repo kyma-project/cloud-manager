@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -17,19 +18,21 @@ const (
 
 type Sim interface {
 	ClientClusterFactory
+	// Start starts Runtime, GardenerCluster and KymaKcp managers and blocks until the context is done.
 	Start(ctx context.Context) error
 	Keb() Keb
 }
 
 type CreateOptions struct {
-	KCP    cluster.Cluster
-	Garden cluster.Cluster
-	Logger logr.Logger
+	KCP                cluster.Cluster
+	Garden             cluster.Cluster
+	CloudProfileLoader CloudProfileLoader
+	Logger             logr.Logger
 
 	KubeconfigProvider KubeconfigProvider
 }
 
-func (o CreateOptions) Validate() error {
+func (o *CreateOptions) Validate() error {
 	var result error
 	if o.KCP == nil {
 		result = multierror.Append(fmt.Errorf("missing KCP cluster"))
@@ -40,10 +43,16 @@ func (o CreateOptions) Validate() error {
 	if o.Logger.GetSink() == nil {
 		result = multierror.Append(fmt.Errorf("missing Logger cluster"))
 	}
+	if o.CloudProfileLoader == nil && o.Garden != nil {
+		o.CloudProfileLoader = NewGardenCloudProfileLoader(o.Garden.GetClient())
+	}
+	if o.CloudProfileLoader == nil {
+		result = multierror.Append(fmt.Errorf("missing CloudProfileLoader"))
+	}
 	return result
 }
 
-func New(opts CreateOptions) (Sim, error) {
+func New(ctx context.Context, opts CreateOptions) (Sim, error) {
 	if err := opts.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid new sim options: %w", err)
 	}
@@ -54,11 +63,16 @@ func New(opts CreateOptions) (Sim, error) {
 
 	mngr := NewManager(opts.KCP, opts.Logger)
 
-	factory := NewClientClusterFactory(opts.KCP.GetClient())
+	factory := NewClientClusterFactory(opts.KCP.GetClient(), clock.RealClock{})
 
-	keb := NewKeb(opts.KCP.GetClient())
+	cpr, err := opts.CloudProfileLoader.Load(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load cloud profiles: %w", err)
+	}
 
-	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden.GetClient())
+	keb := NewKeb(opts.KCP.GetClient(), cpr)
+
+	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden.GetClient(), cpr)
 	if err := simRt.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create runtime manager: %w", err)
 	}
@@ -99,6 +113,7 @@ func (s *defaultSim) Keb() Keb {
 
 // Start starts Runtime, GardenerCluster and KymaKcp managers and blocks until the context is done.
 func (s *defaultSim) Start(ctx context.Context) error {
+	s.simKK.mainCtx = ctx
 	if err := s.mngr.Start(ctx); err != nil {
 		return fmt.Errorf("error running sim manager: %w", err)
 	}

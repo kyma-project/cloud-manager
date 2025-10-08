@@ -17,7 +17,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	config2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
 	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -200,7 +200,7 @@ func Start() (Infra, error) {
 	awsconfig.InitConfig(infra.Config())
 	quota.InitConfig(infra.Config())
 	skrruntimeconfig.InitConfig(infra.Config())
-	scope.InitConfig(infra.Config())
+	config2.InitConfig(infra.Config())
 	gcpclient.InitConfig(infra.Config())
 	peeringconfig.InitConfig(infra.Config())
 	infra.Config().Read()
