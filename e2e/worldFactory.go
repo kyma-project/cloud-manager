@@ -63,7 +63,8 @@ func (f *WorldFactory) Create(ctx context.Context) (World, error) {
 
 	return &defaultWorld{
 		clusterProvider: clusterProvider,
-	}, nil}
+		simu:            simu,
+	}, nil
 }
 
 func (f *WorldFactory) setGardenNamespaceInConfig(gardenKubeBytes []byte) error {

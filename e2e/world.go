@@ -10,6 +10,7 @@ import (
 
 type World interface {
 	ClusterProvider() ClusterProvider
+	Sim() sim.Sim
 
 	// Stop all clusters - kcp, garden and all skr clusters in the registry but does not
 	// delete any skr or shoot
@@ -18,13 +19,13 @@ type World interface {
 
 type defaultWorld struct {
 	clusterProvider ClusterProvider
-	simu sim.Sim
+	simu            sim.Sim
 }
 
 func NewWorld(clusterProvider ClusterProvider, simu sim.Sim) World {
 	return &defaultWorld{
 		clusterProvider: clusterProvider,
-		simu: simu,
+		simu:            simu,
 	}
 }
 
@@ -32,6 +33,9 @@ func (w *defaultWorld) ClusterProvider() ClusterProvider {
 	return w.clusterProvider
 }
 
+func (w *defaultWorld) Sim() sim.Sim {
+	return w.simu
+}
 
 func (w *defaultWorld) Stop(ctx context.Context) error {
 	var result error
