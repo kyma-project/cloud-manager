@@ -458,7 +458,6 @@ func main() {
 		mgr,
 		azurevnetlinkdnszoneclient.NewClientProvider(),
 		azurevnetlinkdnsresolverclient.NewClientProvider(),
-		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
 		os.Exit(1)

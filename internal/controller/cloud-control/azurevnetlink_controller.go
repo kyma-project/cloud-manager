@@ -24,7 +24,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
 	dnszoneclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -39,12 +38,7 @@ import (
 func SetupAzureVNetLinkReconciler(
 	kcpManager manager.Manager,
 	dnsZoneClientProvider azureclient.ClientProvider[dnszoneclient.Client],
-	dnsResolverClientProvider azureclient.ClientProvider[dnsresolverclient.Client],
-	env abstractions.Environment) error {
-
-	if env == nil {
-		abstractions.NewOSEnvironment()
-	}
+	dnsResolverClientProvider azureclient.ClientProvider[dnsresolverclient.Client]) error {
 	return NewAzureVNetLinkReconciler(
 		vnetlink.NewAzureVNetLinkReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
