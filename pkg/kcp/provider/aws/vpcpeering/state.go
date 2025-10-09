@@ -2,12 +2,13 @@ package vpcpeering
 
 import (
 	"context"
-	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	vpcpeeringtypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
@@ -21,7 +22,6 @@ type State struct {
 
 	awsAccessKeyid     string
 	awsSecretAccessKey string
-	roleName           string
 
 	vpc              *ec2types.Vpc
 	vpcPeering       *ec2types.VpcPeeringConnection
@@ -50,11 +50,10 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringtypes.State, logger logr.Logger) (*State, error) {
-	roleName := awsconfig.AwsConfig.Peering.AssumeRoleName
 	awsAccessKeyId := awsconfig.AwsConfig.Peering.AccessKeyId
 	awsSecretAccessKey := awsconfig.AwsConfig.Peering.SecretAccessKey
 
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", vpcPeeringState.Scope().Spec.Scope.Aws.AccountId, roleName)
+	roleArn := awsutil.RoleArnPeering(vpcPeeringState.Scope().Spec.Scope.Aws.AccountId)
 
 	logger.WithValues(
 		"awsRegion", vpcPeeringState.Scope().Spec.Region,
@@ -74,7 +73,7 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 		return nil, err
 	}
 
-	return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey, roleName), nil
+	return newState(vpcPeeringState, c, f.skrProvider, awsAccessKeyId, awsSecretAccessKey), nil
 }
 
 func newState(vpcPeeringState vpcpeeringtypes.State,
@@ -82,13 +81,12 @@ func newState(vpcPeeringState vpcpeeringtypes.State,
 	provider awsclient.SkrClientProvider[awsvpcpeeringclient.Client],
 	key string,
 	secret string,
-	roleName string) *State {
+) *State {
 	return &State{
 		State:              vpcPeeringState,
 		client:             client,
 		provider:           provider,
 		awsAccessKeyid:     key,
 		awsSecretAccessKey: secret,
-		roleName:           roleName,
 	}
 }

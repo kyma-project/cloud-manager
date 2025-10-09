@@ -1,13 +1,26 @@
 package config
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/config"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestConfigDefaultValues(t *testing.T) {
+	env := abstractions.NewMockedEnvironment(map[string]string{})
+	cfg := config.NewConfig(env)
+	InitConfig(cfg)
+	cfg.Read()
+
+	assert.Equal(t, "aws", AwsConfig.ArnPartition)
+	assert.Equal(t, "CloudManagerBackupServiceRole", AwsConfig.BackupRoleName)
+	assert.Equal(t, time.Hour, AwsConfig.EfsCapacityCheckInterval)
+}
 
 func TestConfigAllFromEnv(t *testing.T) {
 	env := abstractions.NewMockedEnvironment(map[string]string{

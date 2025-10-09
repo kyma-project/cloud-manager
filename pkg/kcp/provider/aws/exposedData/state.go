@@ -2,12 +2,13 @@ package exposedData
 
 import (
 	"context"
-	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 )
 
@@ -28,7 +29,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState scopetypes.State) (context.Context, composed.State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", baseState.ObjAsScope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+	roleName := awsutil.RoleArnDefault(baseState.ObjAsScope().Spec.Scope.Aws.AccountId)
 
 	logger := composed.LoggerFromCtx(ctx)
 	logger = logger.WithValues("awsAssumeRoleName", roleName)

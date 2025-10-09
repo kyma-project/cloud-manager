@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 	remoteAccountId := state.remoteNetwork.Status.Network.Aws.AwsAccountId
 	remoteRegion := state.remoteNetwork.Status.Network.Aws.Region
 
-	roleArn := fmt.Sprintf("arn:aws:iam::%s:role/%s", remoteAccountId, state.roleName)
+	roleArn := awsutil.RoleArnPeering(remoteAccountId)
 
 	composed.LoggerIntoCtx(ctx, logger.WithValues(
 		"remoteAwsRegion", remoteRegion,
