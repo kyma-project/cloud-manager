@@ -2,7 +2,7 @@ package nfsinstance
 
 import (
 	"context"
-	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,6 +10,7 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 )
 
 type State struct {
@@ -39,7 +40,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstancetypes.State) (*State, error) {
-	roleName := fmt.Sprintf("arn:aws:iam::%s:role/%s", nfsInstanceState.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.Default.AssumeRoleName)
+	roleName := awsutil.RoleArnDefault(nfsInstanceState.Scope().Spec.Scope.Aws.AccountId)
 
 	c, err := f.skrProvider(
 		ctx,

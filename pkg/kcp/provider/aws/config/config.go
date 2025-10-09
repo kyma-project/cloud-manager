@@ -7,6 +7,7 @@ import (
 )
 
 type AwsConfigStruct struct {
+	ArnPartition             string        `json:"arnPartition" yaml:"arnPartition"`
 	Default                  AwsCreds      `json:"default" yaml:"default"`
 	Peering                  AwsCreds      `json:"peering" yaml:"peering"`
 	BackupRoleName           string        `json:"backupRoleName" yaml:"backupRoleName"`
@@ -25,6 +26,12 @@ func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"aws.config",
 		config.Bind(AwsConfig),
+		config.Path(
+			"arnPartition",
+			config.SourceEnv("AWS_PARTITION"),
+			config.SourceFile("AWS_PARTITION"),
+			config.DefaultScalar("aws"),
+		),
 		config.Path(
 			"default.accessKeyId",
 			config.SourceEnv("AWS_ACCESS_KEY_ID"),

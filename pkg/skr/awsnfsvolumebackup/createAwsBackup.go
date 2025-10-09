@@ -6,6 +6,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
@@ -32,7 +33,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 	//Create a Backup Job
 	res, err := state.awsClient.StartBackupJob(ctx, &client.StartBackupJobInput{
 		BackupVaultName:   state.GetVaultName(),
-		IamRoleArn:        state.GetBackupRoleArn(),
+		IamRoleArn:        awsutil.RoleArnBackup(state.Scope().Spec.Scope.Aws.AccountId),
 		ResourceArn:       state.GetFileSystemArn(),
 		RecoveryPointTags: state.GetTags(),
 		IdempotencyToken:  ptr.To(backup.Status.IdempotencyToken),
@@ -43,7 +44,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	//Update the status with details.
 	backup.Status.JobId = ptr.Deref(res.BackupJobId, "")
-	backup.Status.Id = state.awsClient.ParseRecoveryPointId(ptr.Deref(res.RecoveryPointArn, ""))
+	backup.Status.Id = awsutil.ParseArnResourceId(ptr.Deref(res.RecoveryPointArn, ""))
 	backup.Status.State = cloudresourcesv1beta1.StateCreating
 	backup.Status.Locations = append(backup.Status.Locations, state.Scope().Spec.Region)
 	return composed.PatchStatus(backup).

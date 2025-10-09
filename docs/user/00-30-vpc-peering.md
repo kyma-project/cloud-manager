@@ -12,13 +12,13 @@ The Cloud Manager module supports the VPC Peering feature of the following cloud
 
 * Amazon Web Services [VPC peering](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html)
 * Google Cloud [VPC Network Peering](https://cloud.google.com/vpc/docs/vpc-peering)
-* Microsoft Azure [Virtual network peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview) <!-- VPC peering for Microsoft Azure is not part of external Help Portal docs-->
+* Microsoft Azure [Virtual network peering](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
 
 You can configure Cloud Manager's VPC peering using a dedicated custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely:
 
 * AwsVpcPeering CR
 * GcpVpcPeering CR
-* AzureVpcPeering CR <!-- VPC peering for Microsoft Azure is not part of external Help Portal docs-->
+* AzureVpcPeering CR
 
 For more information, see [VPC Peering Resources](./resources/README.md#vpc-peering-resources).
 
@@ -42,7 +42,7 @@ When you delete a VPC peering CR, the VPC peering connection in the Kyma cloud p
 
 The limit on the number of VPC peering CRs per Kyma cluster depends on the quotas for each cloud provider.
 
-For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, routes are out of sync. In this case, you must delete the existing AzureVpcPeering CR and create a new one. <!-- VPC peering for Microsoft Azure is not part of external Help Portal docs-->
+For Microsoft Azure, changes to the address space are not synced between the Kyma and remote VPC networks. If you resize the remote VPC network address space, routes are out of sync. In this case, you must delete the existing AzureVpcPeering CR and create a new one.
 
 ## Related Information
 
