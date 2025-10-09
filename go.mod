@@ -1,6 +1,6 @@
 module github.com/kyma-project/cloud-manager
 
-go 1.25.1
+go 1.25.2
 
 require (
 	cloud.google.com/go/auth v0.17.0
