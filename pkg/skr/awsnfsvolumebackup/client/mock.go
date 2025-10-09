@@ -6,11 +6,13 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -93,15 +95,15 @@ func (s *mockClient) DescribeBackupVault(ctx context.Context, backupVaultName st
 }
 func (s *mockClient) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s", s.location, s.account, name)
+	arnTxt := awsutil.BackupVaultArn(s.location, s.account, name)
 	vault := backup.DescribeBackupVaultOutput{
-		BackupVaultArn:         ptr.To(arn),
+		BackupVaultArn:         ptr.To(arnTxt),
 		BackupVaultName:        ptr.To(name),
 		CreationDate:           ptr.To(time.Now()),
 		NumberOfRecoveryPoints: 0,
 	}
 	s.vaults = append(s.vaults, vault)
-	s.tags[arn] = tags
+	s.tags[arnTxt] = tags
 	logger.WithName("CreateBackupVault - mock").Info(fmt.Sprintf("Length :: %d", len(s.vaults)))
 	return ptr.Deref(vault.BackupVaultArn, ""), nil
 }
@@ -126,14 +128,14 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	rPointId := uuid.NewString()
 	jobId := uuid.NewString()
 
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", s.location, s.account, rPointId)
+	arnTxt := awsutil.BackupRecoveryPointArn(s.location, s.account, rPointId)
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:    vault.BackupVaultArn,
 		BackupVaultName:   vault.BackupVaultName,
 		CreationDate:      ptr.To(time.Now()),
 		IamRoleArn:        ptr.To(params.IamRoleArn),
 		IsEncrypted:       false,
-		RecoveryPointArn:  ptr.To(arn),
+		RecoveryPointArn:  ptr.To(arnTxt),
 		ResourceArn:       ptr.To(params.ResourceArn),
 		ResourceType:      nil,
 		Status:            backuptypes.RecoveryPointStatusCompleted,
@@ -154,7 +156,7 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	s.backupJobs = append(s.backupJobs, job)
 	s.recoveryPoints = append(s.recoveryPoints, rPoint)
 	logger.WithName("StartBackupJob - mock").Info(
-		fmt.Sprintf("Backup ID :: %s, RecoveryPointArn :: %s", jobId, arn))
+		fmt.Sprintf("Backup ID :: %s, RecoveryPointArn :: %s", jobId, arnTxt))
 
 	return &backup.StartBackupJobOutput{
 		BackupJobId:      job.BackupJobId,
@@ -221,7 +223,11 @@ func (s *mockClient) DeleteRecoveryPoint(ctx context.Context, backupVaultName, r
 
 func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	dstRegion, dstAccount, vaultName := s.ParseBackupVaultArn(params.DestinationBackupVaultArn)
+	dstArnObj, err := arn.Parse(params.DestinationBackupVaultArn)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing DestinationBackupVaultArn: %w", err)
+	}
+	vaultName := awsutil.StripArnResourceType(dstArnObj.Resource)
 
 	srcVault, err := s.DescribeBackupVault(ctx, params.SourceBackupVaultName)
 	if err != nil {
@@ -229,13 +235,13 @@ func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput
 	}
 
 	//Source RecoveryPoint
-	srcRecoveryPoint, err := s.DescribeRecoveryPoint(ctx, dstAccount, vaultName, params.RecoveryPointArn)
+	srcRecoveryPoint, err := s.DescribeRecoveryPoint(ctx, dstArnObj.AccountID, vaultName, params.RecoveryPointArn)
 	if err != nil {
 		return nil, err
 	}
 
 	//Destination client
-	dstClient, err := getMockClient(dstAccount, dstRegion)
+	dstClient, err := getMockClient(dstArnObj.AccountID, dstArnObj.Region)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +254,7 @@ func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput
 	rPointId := uuid.NewString()
 	jobId := uuid.NewString()
 
-	dstArn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s", dstRegion, dstAccount, rPointId)
+	dstArn := awsutil.BackupRecoveryPointArn(dstArnObj.Region, dstArnObj.AccountID, rPointId)
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:         dstVault.BackupVaultArn,
 		BackupVaultName:        dstVault.BackupVaultName,

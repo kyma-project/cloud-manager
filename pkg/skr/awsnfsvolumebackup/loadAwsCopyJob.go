@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func loadAwsCopyJob(ctx context.Context, st composed.State) (error, context.Context) {
@@ -68,7 +70,7 @@ func loadAwsCopyJob(ctx context.Context, st composed.State) (error, context.Cont
 
 	//Update the remoteId with the value from CopyJob.
 	logger.Info("Updating the Status with remote RestorePoint details")
-	remoteId := state.awsClient.ParseRecoveryPointId(*copyJob.CopyJob.DestinationRecoveryPointArn)
+	remoteId := awsutil.ParseArnResourceId(ptr.Deref(copyJob.CopyJob.DestinationRecoveryPointArn, ""))
 	backup.Status.RemoteId = remoteId
 	backup.Status.Locations = append(backup.Status.Locations, backup.Spec.Location)
 	return composed.PatchStatus(backup).

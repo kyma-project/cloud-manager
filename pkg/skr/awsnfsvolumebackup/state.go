@@ -14,6 +14,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -83,8 +84,7 @@ func (s *State) GetFileSystemArn() string {
 	if s.kcpAwsNfsInstance == nil || s.Scope() == nil {
 		return ""
 	}
-	arn := fmt.Sprintf("arn:aws:elasticfilesystem:%s:%s:file-system/%s",
-		s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, s.kcpAwsNfsInstance.Status.Id)
+	arn := awsutil.EfsArn(s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, s.kcpAwsNfsInstance.Status.Id)
 	return arn
 }
 
@@ -93,17 +93,7 @@ func (s *State) GetRecoveryPointArn() string {
 	if len(id) == 0 || s.Scope() == nil {
 		return ""
 	}
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s",
-		s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, id)
-	return arn
-}
-
-func (s *State) GetBackupRoleArn() string {
-	if s.Scope() == nil {
-		return ""
-	}
-	arn := fmt.Sprintf("arn:aws:iam::%s:role/%s",
-		s.Scope().Spec.Scope.Aws.AccountId, awsconfig.AwsConfig.BackupRoleName)
+	arn := awsutil.BackupRecoveryPointArn(s.Scope().Spec.Region, s.Scope().Spec.Scope.Aws.AccountId, id)
 	return arn
 }
 
@@ -137,8 +127,7 @@ func (s *State) GetDestinationBackupVaultArn() string {
 	if len(s.ObjAsAwsNfsVolumeBackup().Spec.Location) == 0 || s.Scope() == nil {
 		return ""
 	}
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:backup-vault:%s",
-		s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, s.GetVaultName())
+	arn := awsutil.BackupVaultArn(s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, s.GetVaultName())
 	return arn
 }
 
@@ -148,8 +137,7 @@ func (s *State) GetDestinationRecoveryPointArn() string {
 		return ""
 	}
 
-	arn := fmt.Sprintf("arn:aws:backup:%s:%s:recovery-point:%s",
-		s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, id)
+	arn := awsutil.BackupRecoveryPointArn(s.ObjAsAwsNfsVolumeBackup().Spec.Location, s.Scope().Spec.Scope.Aws.AccountId, id)
 	return arn
 }
 

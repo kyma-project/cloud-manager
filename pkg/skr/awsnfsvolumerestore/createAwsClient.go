@@ -2,9 +2,11 @@ package awsnfsvolumerestore
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+
 	"time"
 )
 
@@ -12,11 +14,7 @@ func createAwsClient(ctx context.Context, st composed.State) (error, context.Con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	roleName := fmt.Sprintf(
-		"arn:aws:iam::%s:role/%s",
-		state.Scope().Spec.Scope.Aws.AccountId,
-		awsconfig.AwsConfig.Default.AssumeRoleName,
-	)
+	roleName := awsutil.RoleArnDefault(state.Scope().Spec.Scope.Aws.AccountId)
 
 	logger.
 		WithValues(

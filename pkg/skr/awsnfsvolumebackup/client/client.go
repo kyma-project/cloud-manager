@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"errors"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -14,8 +13,6 @@ import (
 type LocalClient interface {
 	IsNotFound(err error) bool
 	IsAlreadyExists(err error) bool
-	ParseBackupVaultArn(backupVaultArn string) (string, string, string)
-	ParseRecoveryPointId(recoveryPointArn string) string
 }
 
 type Client interface {
@@ -70,10 +67,7 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 }
 
 func newLocalClient() *localClient {
-	return &localClient{
-		backupVaultRe:   regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):backup-vault:(?P<VaultName>[^:\n]*)$`),
-		recoveryPointRe: regexp.MustCompile(`^arn:aws:backup:(?P<Region>[^:\n]*):(?P<AccountID>[^:\n]*):recovery-point:(?P<RecoveryPointID>[^:\n]*)$`),
-	}
+	return &localClient{}
 }
 
 func NewClient(svc *backup.Client) Client {
@@ -84,8 +78,6 @@ func NewClient(svc *backup.Client) Client {
 }
 
 type localClient struct {
-	backupVaultRe   *regexp.Regexp
-	recoveryPointRe *regexp.Regexp
 }
 
 type client struct {
@@ -107,16 +99,6 @@ func (c *localClient) IsAlreadyExists(err error) bool {
 	}
 	var alreadyExistsException *backuptypes.AlreadyExistsException
 	return errors.As(err, &alreadyExistsException)
-}
-
-func (c *localClient) ParseBackupVaultArn(backupVaultArn string) (string, string, string) {
-	match := c.backupVaultRe.FindStringSubmatch(backupVaultArn)
-	return match[1], match[2], match[3]
-}
-
-func (c *localClient) ParseRecoveryPointId(recoveryPointArn string) string {
-	match := c.recoveryPointRe.FindStringSubmatch(recoveryPointArn)
-	return match[c.recoveryPointRe.SubexpIndex("RecoveryPointID")]
 }
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
