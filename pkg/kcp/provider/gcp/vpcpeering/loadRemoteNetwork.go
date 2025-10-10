@@ -39,7 +39,6 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 			return nil, nil
 		}
 
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -61,7 +60,6 @@ func loadRemoteNetwork(ctx context.Context, st composed.State) (error, context.C
 		}
 
 		logger.Info("[KCP GCP VPCPeering loadRemoteNetwork] GCP KCP VpcPeering Remote Network didn't reach ready state after 10 minutes, setting error state")
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,

@@ -36,7 +36,6 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 		if composed.IsMarkedForDeletion(state.Obj()) {
 			return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion but, local KCP Network not found", nil, ctx)
 		}
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -51,7 +50,6 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 	}
 
 	if net.Status.Network == nil {
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
