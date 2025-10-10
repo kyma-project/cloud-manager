@@ -11,16 +11,16 @@ import (
 
 type State struct {
 	composed.State
-	KymaRef            klog.ObjectRef
-	KcpCluster         composed.StateCluster
-	KcpNfsInstance     *cloudcontrolv1beta1.NfsInstance
-	KcpIpRange         *cloudcontrolv1beta1.IpRange
-	SkrIpRange         *cloudresourcesv1beta1.IpRange
-	SkrCluster         composed.StateCluster
-	PV                 *corev1.PersistentVolume
-	PVC                *corev1.PersistentVolumeClaim
-	Scope              *cloudcontrolv1beta1.Scope
-	GcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup
+	KymaRef           klog.ObjectRef
+	KcpCluster        composed.StateCluster
+	KcpNfsInstance    *cloudcontrolv1beta1.NfsInstance
+	KcpIpRange        *cloudcontrolv1beta1.IpRange
+	SkrIpRange        *cloudresourcesv1beta1.IpRange
+	SkrCluster        composed.StateCluster
+	PV                *corev1.PersistentVolume
+	PVC               *corev1.PersistentVolumeClaim
+	Scope             *cloudcontrolv1beta1.Scope
+	SrcBackupFullPath string
 }
 
 type StateFactory interface {

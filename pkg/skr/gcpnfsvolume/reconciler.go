@@ -60,7 +60,7 @@ func (r *Reconciler) newAction() composed.Action {
 			composed.ComposeActions(
 				"restoreFromSourceBackup",
 				loadScope,
-				loadGcpNfsVolumeBackup),
+				populateBackupUrl),
 			nil,
 		),
 		loadPersistenceVolume,
@@ -102,7 +102,7 @@ func EmptyLocationPredicate() composed.Predicate {
 
 func SourceBackupPredicate() composed.Predicate {
 	return func(ctx context.Context, state composed.State) bool {
-		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.SourceBackup.Name) > 0
+		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.SourceBackup.Name) > 0 || len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.SourceBackupUrl) > 0
 	}
 }
 

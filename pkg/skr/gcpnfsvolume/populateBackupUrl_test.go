@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,7 +42,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
 	state := factory.newStateWith(objDiffName)
-	err, _ctx := loadGcpNfsVolumeBackup(ctx, state)
+	err, _ctx := populateBackupUrl(ctx, state)
 
 	//validate expected return values
 	s.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
@@ -65,7 +66,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, backup)
 	s.Nil(err)
 
-	err, _ = loadGcpNfsVolumeBackup(ctx, state)
+	err, _ = populateBackupUrl(ctx, state)
 
 	//validate expected return values
 	s.Equal(composed.StopWithRequeueDelay(3*util.Timing.T1000ms()), err)
@@ -90,7 +91,24 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state := factory.newStateWith(obj)
-	err, ctx = loadGcpNfsVolumeBackup(ctx, state)
+	state.Scope = kcpScope.DeepCopy()
+	err, ctx = populateBackupUrl(ctx, state)
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), ctx)
+}
+
+func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupUrl() {
+	obj := gcpNfsVolume.DeepCopy()
+	obj.Spec.SourceBackupUrl = fmt.Sprintf("projects/%s/locations/%s/backups/%s", kcpScope.Spec.Scope.Gcp.Project, gcpNfsVolumeBackup.Status.Location, fmt.Sprintf("cm-%.60s", gcpNfsVolumeBackup.Status.Id))
+	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj)
+	s.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	//Get state object with GcpNfsVolume
+	state := factory.newStateWith(obj)
+	state.Scope = kcpScope.DeepCopy()
+	err, ctx = populateBackupUrl(ctx, state)
 	assert.Nil(s.T(), err)
 	assert.Nil(s.T(), ctx)
 }

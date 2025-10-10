@@ -1,6 +1,8 @@
 package util
 
-import "regexp"
+import (
+	"regexp"
+)
 
 const (
 	WellKnownK8sLabelName      = "app.kubernetes.io/name"
@@ -21,10 +23,13 @@ const (
 // All characters must use UTF-8 encoding, and international characters are allowed. Keys must start with a lowercase letter or international character.
 // https://cloud.google.com/bigtable/docs/creating-managing-labels
 const (
-	GcpLabelKcpName   = "kyma-project__cloud-manager__kcp-name"
-	GcpLabelSkrName   = "kyma-project__cloud-manager__skr-name"
-	GcpLabelScopeName = "kyma-project__cloud-manager__scope-name"
-	GcpLabelShootName = "kyma-project__cloud-manager__shoot-name"
+	GcpLabelKcpName              = "kyma-project__cloud-manager__kcp-name"
+	GcpLabelSkrName              = "kyma-project__cloud-manager__skr-name"
+	GcpLabelScopeName            = "kyma-project__cloud-manager__scope-name"
+	GcpLabelShootName            = "kyma-project__cloud-manager__shoot-name"
+	GcpLabelBackupAccessibleFrom = "kyma-project__cloud-manager__accessible-from"
+	GcpLabelSkrVolumeName        = "kyma-project__cloud-manager__skr-volume-name"
+	GcpLabelSkrBackupName        = "kyma-project__cloud-manager__skr-backup-name"
 )
 
 var _ LabelBuilder = &labelBuilder{}

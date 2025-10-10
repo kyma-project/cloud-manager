@@ -78,6 +78,9 @@ spec:
                     - message: Destination is immutable.
                       rule: (self == oldSelf)
                 source:
+                  description: Ensure that exactly one of BackupUrl or Backup is set.
+                  maxProperties: 1
+                  minProperties: 1
                   properties:
                     backup:
                       description: GcpNfsVolumeBackupRef specifies the GcpNfsVolumeBackup resource that would be restored
@@ -92,6 +95,10 @@ spec:
                         - name
                         - namespace
                       type: object
+                    backupUrl:
+                      description: BackupUrl is the fully qualified resource name of the backup, in the format "locations/{location}/backups/{backup}".
+                      pattern: ^locations/(.+)/backups/(.+)$
+                      type: string
                   required:
                     - backup
                   type: object
