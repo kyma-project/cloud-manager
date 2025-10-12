@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"sync"
 
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -26,6 +27,32 @@ type CloudProfileInfo interface {
 	Name() string
 	GetGardenLinuxVersion() string
 	GetKubernetesVersion() string
+}
+
+// cachingCloudProfileLoader
+
+func NewCachingCloudProfileLoader(inner CloudProfileLoader) CloudProfileLoader {
+	return &cachingCloudProfileLoader{
+		inner: inner,
+	}
+}
+
+type cachingCloudProfileLoader struct {
+	m        sync.Mutex
+	inner    CloudProfileLoader
+	loaded   bool
+	registry CloudProfileRegistry
+	err      error
+}
+
+func (l *cachingCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+	if !l.loaded {
+		l.registry, l.err = l.inner.Load(ctx)
+		l.loaded = true
+	}
+	return l.registry, l.err
 }
 
 // fileCloudProfileLoader
@@ -75,12 +102,16 @@ func (l *fileCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry
 
 // gardenCloudProfileLoader
 
-func NewGardenCloudProfileLoader(gardenClient client.Client) CloudProfileLoader {
-	return &gardenCloudProfileLoader{gardenClient: gardenClient}
+func NewGardenCloudProfileLoader(gardenClient client.Client, namespace string) CloudProfileLoader {
+	return &gardenCloudProfileLoader{
+		gardenClient: gardenClient,
+		namespace:    namespace,
+	}
 }
 
 type gardenCloudProfileLoader struct {
 	gardenClient client.Client
+	namespace    string
 }
 
 var _ CloudProfileLoader = &gardenCloudProfileLoader{}
@@ -88,7 +119,7 @@ var _ CloudProfileLoader = &gardenCloudProfileLoader{}
 func (l *gardenCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry, error) {
 	var result []CloudProfileInfo
 	cpList := &gardenerapicore.CloudProfileList{}
-	if err := l.gardenClient.List(ctx, cpList); err != nil {
+	if err := l.gardenClient.List(ctx, cpList, client.InNamespace(l.namespace)); err != nil {
 		return nil, fmt.Errorf("failed to list CloudProfiles: %w", err)
 	}
 	for _, cp := range cpList.Items {

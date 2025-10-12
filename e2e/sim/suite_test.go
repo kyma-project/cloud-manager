@@ -6,16 +6,15 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -83,31 +82,19 @@ var _ = BeforeSuite(func() {
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
-	// Garden cluster.Cluster
-	gardenCluster, err := cluster.New(infra.Garden().Cfg(), func(clusterOptions *cluster.Options) {
-		// restrict to single namespace
-		// https://book.kubebuilder.io/cronjob-tutorial/empty-main.html
-		// https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/cache#MultiNamespacedCacheBuilder
-		clusterOptions.Cache.DefaultNamespaces = map[string]cache.Config{
-			e2econfig.Config.GardenNamespace: {},
-		}
-		clusterOptions.Scheme = bootstrap.GardenScheme
-		clusterOptions.Client = client.Options{
-			Cache: &client.CacheOptions{
-				Unstructured: true,
-			},
-		}
-	})
-	Expect(err).NotTo(HaveOccurred(), "failed to create Garden cluster")
+	By("installing cloud profiles")
+	cloudProfilesArr, err := fixtures.CloudProfiles(infra.Garden().Namespace())
+	Expect(err).NotTo(HaveOccurred(), "failed to load cloud profiles fixtures")
+	err = util.Apply(infra.Ctx(), infra.Garden().Client(), cloudProfilesArr)
+	Expect(err).NotTo(HaveOccurred(), "failed to apply cloud profiles fixtures")
 
-	err = infra.KcpManager().Add(gardenCluster)
-	Expect(err).NotTo(HaveOccurred(), "failed to add Garden cluster to KCP manager")
-
+	By("starting controllers")
 	// Setup controllers
-	simInstance, err = New(CreateOptions{
+	simInstance, err = New(infra.Ctx(), CreateOptions{
 		KCP:                infra.KcpManager(),
-		Garden:             gardenCluster,
+		Garden:             infra.Garden().Client(),
 		Logger:             infra.KcpManager().GetLogger(),
+		CloudProfileLoader: NewCachingCloudProfileLoader(NewGardenCloudProfileLoader(infra.Garden().Client(), infra.Garden().Namespace())),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
 	err = infra.KcpManager().Add(simInstance)
@@ -118,8 +105,9 @@ var _ = BeforeSuite(func() {
 
 	infra.KcpManager().GetCache().WaitForCacheSync(infra.Ctx())
 
+	By("creating garden namespace")
 	// create garden namespace
-	err = gardenCluster.GetClient().Create(infra.Ctx(), &corev1.Namespace{
+	err = infra.Garden().Client().Create(infra.Ctx(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: e2econfig.Config.GardenNamespace,
 		},

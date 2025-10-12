@@ -164,10 +164,10 @@ type Keb interface {
 	DeleteInstance(ctx context.Context, runtimeID string) error
 }
 
-func NewKeb(kcp client.Client, cpr CloudProfileRegistry) Keb {
+func NewKeb(kcp client.Client, cpl CloudProfileLoader) Keb {
 	return &defaultKeb{
 		kcp: kcp,
-		cpr: cpr,
+		cpl: cpl,
 	}
 }
 
@@ -177,7 +177,7 @@ var _ Keb = &defaultKeb{}
 
 type defaultKeb struct {
 	kcp client.Client
-	cpr CloudProfileRegistry
+	cpl CloudProfileLoader
 }
 
 func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetails {
@@ -248,7 +248,11 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, in CreateInstanceInput)
 	if subscription == nil {
 		return InstanceDetails{}, fmt.Errorf("subscription not found for provider %q", in.Provider)
 	}
-	rtBuilder := NewRuntimeBuilder(k.cpr).
+	cpr, err := k.cpl.Load(ctx)
+	if err != nil {
+		return InstanceDetails{}, fmt.Errorf("error loading cloud profiles: %w", err)
+	}
+	rtBuilder := NewRuntimeBuilder(cpr).
 		WithAlias(in.Alias).
 		WithProvider(in.Provider, in.Region).
 		WithSecretBindingName(subscription.Name).
@@ -259,7 +263,7 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, in CreateInstanceInput)
 	}
 	rt := rtBuilder.Build()
 
-	err := k.kcp.Create(ctx, rt)
+	err = k.kcp.Create(ctx, rt)
 	if err != nil {
 		return InstanceDetails{}, fmt.Errorf("error creating runtime: %w", err)
 	}

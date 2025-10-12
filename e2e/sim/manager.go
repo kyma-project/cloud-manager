@@ -2,13 +2,17 @@ package sim
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -17,9 +21,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-var _ manager.Manager = &simManager{}
+var _ Manager = &simManager{}
 
-func NewManager(clsrt cluster.Cluster, logger logr.Logger) manager.Manager {
+type Manager interface {
+	manager.Manager
+	Start(ctx context.Context) error
+}
+
+func NewManager(clsrt cluster.Cluster, logger logr.Logger) Manager {
 	return &simManager{
 		Cluster: clsrt,
 		logger:  logger,
@@ -31,9 +40,23 @@ type simManager struct {
 
 	logger      logr.Logger
 	controllers []manager.Runnable
+
+	started bool
+	stopped bool
+}
+
+func (m *simManager) IsStarted() bool {
+	return m.started
+}
+
+func (m *simManager) IsStopped() bool {
+	return m.stopped
 }
 
 func (m *simManager) Start(ctx context.Context) error {
+	if m.started {
+		return errors.New("manager already started")
+	}
 	var wg sync.WaitGroup
 	var result error
 	for _, r := range m.controllers {
@@ -54,19 +77,27 @@ func (m *simManager) Start(ctx context.Context) error {
 		}()
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := m.Cluster.Start(ctx); err != nil {
-			if !strings.Contains(err.Error(), "already started") {
-				result = multierror.Append(result, err)
-				m.logger.Error(err, "error starting cluster")
+	// start cluster only if not started - ie it returned cache.ErrCacheNotStarted
+	// * manager that runs the whole sim is started with already started kcp cluster
+	// * manager that runs one skr is started with not started skr cluster
+
+	err := m.Cluster.GetCache().Get(ctx, types.NamespacedName{Namespace: "foo", Name: "foo"}, &corev1.ConfigMap{})
+	if errors.Is(err, &cache.ErrCacheNotStarted{}) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := m.Cluster.Start(ctx); err != nil {
+				if !strings.Contains(err.Error(), "already started") {
+					result = multierror.Append(result, err)
+					m.logger.Error(err, "error starting cluster")
+				}
 			}
-		}
-	}()
+		}()
+	}
 
 	<-ctx.Done()
 	wg.Wait()
+	m.stopped = true
 
 	return result
 }

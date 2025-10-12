@@ -8,6 +8,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"k8s.io/utils/clock"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -25,7 +26,7 @@ type Sim interface {
 
 type CreateOptions struct {
 	KCP                cluster.Cluster
-	Garden             cluster.Cluster
+	Garden             client.Client
 	CloudProfileLoader CloudProfileLoader
 	Logger             logr.Logger
 
@@ -43,9 +44,6 @@ func (o *CreateOptions) Validate() error {
 	if o.Logger.GetSink() == nil {
 		result = multierror.Append(fmt.Errorf("missing Logger cluster"))
 	}
-	if o.CloudProfileLoader == nil && o.Garden != nil {
-		o.CloudProfileLoader = NewGardenCloudProfileLoader(o.Garden.GetClient())
-	}
 	if o.CloudProfileLoader == nil {
 		result = multierror.Append(fmt.Errorf("missing CloudProfileLoader"))
 	}
@@ -58,21 +56,16 @@ func New(ctx context.Context, opts CreateOptions) (Sim, error) {
 	}
 
 	if opts.KubeconfigProvider == nil {
-		opts.KubeconfigProvider = NewKubeconfigProvider(opts.Garden.GetClient(), 10*time.Hour)
+		opts.KubeconfigProvider = NewKubeconfigProvider(opts.Garden, 10*time.Hour)
 	}
 
 	mngr := NewManager(opts.KCP, opts.Logger)
 
 	factory := NewClientClusterFactory(opts.KCP.GetClient(), clock.RealClock{})
 
-	cpr, err := opts.CloudProfileLoader.Load(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load cloud profiles: %w", err)
-	}
+	keb := NewKeb(opts.KCP.GetClient(), opts.CloudProfileLoader)
 
-	keb := NewKeb(opts.KCP.GetClient(), cpr)
-
-	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden.GetClient(), cpr)
+	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden, opts.CloudProfileLoader)
 	if err := simRt.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create runtime manager: %w", err)
 	}

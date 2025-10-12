@@ -58,7 +58,7 @@ func (f *WorldFactory) Create(ctx context.Context) (World, error) {
 	}
 
 	go func() {
-
+		simu.Start(ctx)
 	}()
 
 	return &defaultWorld{

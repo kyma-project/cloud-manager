@@ -60,6 +60,7 @@ garden-manifests: mod-download
 	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/core/v1beta1/..." output:crd:artifacts:config=config/crd/gardener-core-tmp
 	cp config/crd/gardener-core-tmp/core.gardener.cloud_shoots.yaml config/crd/gardener/core.gardener.cloud_shoots.yaml
 	cp config/crd/gardener-core-tmp/core.gardener.cloud_secretbindings.yaml config/crd/gardener/core.gardener.cloud_secretbindings.yaml
+	cp config/crd/gardener-core-tmp/core.gardener.cloud_cloudprofiles.yaml config/crd/gardener/core.gardener.cloud_cloudprofiles.yaml
 	rm -r config/crd/gardener-core-tmp
 	rm -r config/crd/gardener-security-tmp || true
 	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/security/v1alpha1/..." output:crd:artifacts:config=config/crd/gardener-security-tmp

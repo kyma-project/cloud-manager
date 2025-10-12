@@ -5,7 +5,6 @@ import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -54,14 +53,17 @@ var _ = Describe("Feature: KCP SIM", func() {
 		By("When Shoot is ready", func() {
 			shoot.Status.Conditions = pie.Map(GardenerConditionTypes, func(x gardenertypes.ConditionType) gardenertypes.Condition {
 				return gardenertypes.Condition{
-					Type: x,
+					Type:   x,
 					Status: gardenertypes.ConditionTrue,
 				}
 			})
-			Expect(composed.PatchObjStatus(infra.Ctx(), shoot, infra.Garden().Client())).
+			// shoot doesn't have status subresources
+			Expect(Update(infra.Ctx(), infra.Garden().Client(), shoot)).
 				To(Succeed())
 		})
 
-		By("Then GardenerC")
+		By("Then TODO", func() {
+			Expect(false).To(BeTrue())
+		})
 	})
 })

@@ -20,14 +20,17 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 
 		_ = e2econfig.LoadConfig()
 
+		ctx := context.Background()
+
 		f := NewWorldFactory()
-		w, err := f.Create(context.Background())
+		w, err := f.Create(ctx)
 		if err != nil {
 			panic(err)
 		}
 		world = w
 
-		//ctx := context.Background()
+		//world.Sim().Keb().List()
+
 		//for _, runtimeId := range sharedState.Runtimes {
 		//	logger.WithValues("runtimeID", runtimeId).Info("Importing runtime...")
 		//	skr, err := w.SKR().ImportShared(ctx, runtimeId)

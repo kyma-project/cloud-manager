@@ -24,11 +24,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func newSimRuntime(kcp client.Client, garden client.Client, cpr CloudProfileRegistry) *simRuntime {
+func newSimRuntime(kcp client.Client, garden client.Client, cpl CloudProfileLoader) *simRuntime {
 	return &simRuntime{
 		kcp:    kcp,
 		garden: garden,
-		cpr:    cpr,
+		cpl:    cpl,
 		clock:  clock.RealClock{},
 	}
 }
@@ -38,7 +38,7 @@ var _ reconcile.Reconciler = &simRuntime{}
 type simRuntime struct {
 	kcp    client.Client
 	garden client.Client
-	cpr    CloudProfileRegistry
+	cpl    CloudProfileLoader
 	clock  clock.Clock
 }
 
@@ -149,7 +149,12 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	// create ====================================================
 
 	if shoot == nil {
-		shootBuilder := NewShootBuilder(r.cpr).
+		cpr, err := r.cpl.Load(ctx)
+		if err != nil {
+			logger.Error(err, "Error loading CloudProfiles")
+			return reconcile.Result{}, err
+		}
+		shootBuilder := NewShootBuilder(cpr).
 			WithRuntime(rt)
 		if errShoot := shootBuilder.Validate(); errShoot != nil {
 			rt.Status.State = infrastructuremanagerv1.ErrorState
