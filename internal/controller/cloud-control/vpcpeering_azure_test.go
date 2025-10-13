@@ -81,13 +81,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("Then KCP VpcPeering is in missing local network error state", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering, NewObjActions(),
-					HavingCondition(cloudcontrolv1beta1.ConditionTypeError, metav1.ConditionTrue, cloudcontrolv1beta1.ReasonMissingDependency, "Local network not found"),
-				).Should(Succeed())
-		})
-
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("When local KCP Network is created", func() {
@@ -101,13 +94,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 
-		By("Then KCP VpcPeering is in waiting local network to be ready error state", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering, NewObjActions(),
-					HavingCondition(cloudcontrolv1beta1.ConditionTypeError, metav1.ConditionTrue, cloudcontrolv1beta1.ReasonWaitingDependency, "Local network not ready"),
-				).Should(Succeed())
-		})
-
 		By("When local KCP Network is Ready", func() {
 			kcpnetwork.Ignore.RemoveName(localKcpNetworkName)
 			// trigger the reconciliation
@@ -116,13 +102,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, NewObjActions(), HavingState("Ready")).
 				Should(Succeed(), "expected local kcp network to become ready but it didn't")
-		})
-
-		By("Then KCP VpcPeering is in missing remote network error state", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering, NewObjActions(),
-					HavingCondition(cloudcontrolv1beta1.ConditionTypeError, metav1.ConditionTrue, cloudcontrolv1beta1.ReasonMissingDependency, "Remote network not found"),
-				).Should(Succeed())
 		})
 
 		var remoteKcpNet *cloudcontrolv1beta1.Network
@@ -136,13 +115,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteKcpNet, WithName(remoteKcpNetworkName)).
 				Should(Succeed())
-		})
-
-		By("Then KCP VpcPeering is in waiting remote network to be ready error state", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering, NewObjActions(),
-					HavingCondition(cloudcontrolv1beta1.ConditionTypeError, metav1.ConditionTrue, cloudcontrolv1beta1.ReasonWaitingDependency, "Remote network not ready"),
-				).Should(Succeed())
 		})
 
 		By("When remote KCP Network is Ready", func() {

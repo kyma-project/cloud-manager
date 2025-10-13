@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -36,36 +37,48 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 		if composed.IsMarkedForDeletion(state.Obj()) {
 			return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion but, local KCP Network not found", nil, ctx)
 		}
-		return composed.PatchStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonMissingDependency,
-				Message: "Local network not found",
-			}).
-			ErrorLogMessage("Error patching KCP VpcPeering status with missing local network dependency").
-			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-			SuccessLogMsg("KCP VpcPeering local KCP Network not found").
-			Run(ctx, state)
-	}
 
-	if net.Status.Network == nil {
-		return composed.PatchStatus(state.ObjAsVpcPeering()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
-				Message: "Local network not ready",
-			}).
-			ErrorLogMessage("Error patching KCP VpcPeering status with local network not ready").
-			SuccessError(composed.StopWithRequeue).
-			SuccessLogMsg("KCP VpcPeering local KCP Network not ready").
-			Run(ctx, state)
+		// Patch status was triggered reconciliation immediately. Changing delay to 1 second to reduce wait time.
+		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 	}
 
 	state.localNetwork = net
 
-	logger.Info("KCP VpcPeering local network loaded")
+	// Ignore state check if marked for deletion
+	if composed.IsMarkedForDeletion(state.Obj()) {
+		return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion, continue", nil, ctx)
+	}
 
-	return nil, composed.LoggerIntoCtx(ctx, logger)
+	if net.Status.State == string(cloudcontrolv1beta1.StateError) {
+		changed := false
+
+		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+			changed = true
+		}
+
+		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
+			Message: "Local network not ready",
+		}) {
+			changed = true
+		}
+
+		if !changed {
+			return composed.StopAndForget, ctx
+		}
+
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			ErrorLogMessage("Error patching KCP VpcPeering status with local network not ready").
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("KCP VpcPeering local KCP Network not ready").
+			Run(ctx, state)
+	}
+
+	if net.Status.State != string(cloudcontrolv1beta1.StateReady) {
+		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
+	}
+
+	return nil, ctx
 }
