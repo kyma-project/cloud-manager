@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.39.2
 	github.com/aws/aws-sdk-go-v2/config v1.31.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.16
-	github.com/aws/aws-sdk-go-v2/service/backup v1.47.7
+	github.com/aws/aws-sdk-go-v2/service/backup v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.254.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.40.8
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.50.5
