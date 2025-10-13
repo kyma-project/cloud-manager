@@ -19,7 +19,7 @@ func loadKymaVpcPeering(ctx context.Context, st composed.State) (error, context.
 
 	logger.Info("[KCP GCP VpcPeering loadKymaVpcPeering] Loading Kyma VPC Peering")
 
-	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.localNetwork.Status.Network.Gcp.GcpProject, state.localNetwork.Status.Network.Gcp.NetworkName)
+	kymaVpcPeering, err := state.client.GetVpcPeering(ctx, state.getKymaVpcPeeringName(), state.LocalNetwork().Status.Network.Gcp.GcpProject, state.LocalNetwork().Status.Network.Gcp.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading Kyma Vpc Peering")
 		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected

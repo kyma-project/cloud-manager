@@ -22,7 +22,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Loading Remote VPC Peering")
 
-	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName)
+	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName)
 	if err != nil {
 		if composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
 			logger.Info("[KCP GCP VPCPeering loadRemoteVPCPeering] GCP KCP VpcPeering Error fetching Remote Network, proceeding with deletion")
@@ -35,7 +35,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 				Type:    v1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  v1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Remote VPC Network %s/%s not found.", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+				Message: fmt.Sprintf("Remote VPC Network %s/%s not found.", state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName),
 			})
 			err = state.UpdateObjStatus(ctx)
 			if err != nil {
@@ -53,7 +53,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 				Type:    v1beta1.ConditionTypeError,
 				Status:  "True",
 				Reason:  v1beta1.ReasonFailedCreatingVpcPeeringConnection,
-				Message: fmt.Sprintf("Unable to fetch remote VPC network %s/%s due to insufficient permissions.", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+				Message: fmt.Sprintf("Unable to fetch remote VPC network %s/%s due to insufficient permissions.", state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName),
 			})
 			err = state.UpdateObjStatus(ctx)
 			if err != nil {

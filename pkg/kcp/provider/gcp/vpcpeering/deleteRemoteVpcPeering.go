@@ -37,8 +37,8 @@ func deleteRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	err := state.client.DeleteVpcPeering(
 		ctx,
 		obj.Spec.Details.PeeringName,
-		state.remoteNetwork.Status.Network.Gcp.GcpProject,
-		state.remoteNetwork.Status.Network.Gcp.NetworkName,
+		state.RemoteNetwork().Status.Network.Gcp.GcpProject,
+		state.RemoteNetwork().Status.Network.Gcp.NetworkName,
 	)
 
 	if err != nil {

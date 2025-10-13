@@ -14,10 +14,10 @@ func predicateRequireVNetShootTag(ctx context.Context, st composed.State) bool {
 		return false
 	}
 
-	if state.remoteNetwork.Status.NetworkType == cloudcontrolv1beta1.NetworkTypeKyma {
+	if state.RemoteNetwork().Status.NetworkType == cloudcontrolv1beta1.NetworkTypeKyma {
 		return false
 	}
-	if state.remoteNetwork.Status.NetworkType == cloudcontrolv1beta1.NetworkTypeCloudResources {
+	if state.RemoteNetwork().Status.NetworkType == cloudcontrolv1beta1.NetworkTypeCloudResources {
 		return false
 	}
 

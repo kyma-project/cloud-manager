@@ -21,8 +21,8 @@ func New(stateFactory StateFactory) composed.Action {
 
 		return composed.ComposeActions(
 			"azureVpcPeering",
-			kcpNetworkLocalLoad,
-			kcpNetworkRemoteLoad,
+			initLocalNetworkId,
+			initRemoteNetworkId,
 			statusInitiated,
 			initLocalClient,
 			peeringLocalLoad,
