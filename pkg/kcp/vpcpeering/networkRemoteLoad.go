@@ -26,6 +26,8 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	logger = logger.
 		WithValues("remoteKcpNetwork", fmt.Sprintf("%s/%s", namespace, state.ObjAsVpcPeering().Spec.Details.LocalNetwork.Name))
 
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+
 	err := state.Cluster().K8sClient().Get(ctx, client.ObjectKey{
 		Namespace: namespace,
 		Name:      state.ObjAsVpcPeering().Spec.Details.RemoteNetwork.Name,
@@ -36,12 +38,7 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if apierrors.IsNotFound(err) {
-		if composed.IsMarkedForDeletion(state.Obj()) {
-			return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion but, remote KCP Network not found", nil, ctx)
-		}
-
-		// Patch status was triggered reconciliation immediately. Changing delay to 1 second to reduce wait time.
-		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	state.remoteNetwork = net
