@@ -8,4 +8,6 @@ import (
 type State interface {
 	focal.State
 	ObjAsVpcPeering() *v1beta1.VpcPeering
+	LocalNetwork() *v1beta1.Network
+	RemoteNetwork() *v1beta1.Network
 }

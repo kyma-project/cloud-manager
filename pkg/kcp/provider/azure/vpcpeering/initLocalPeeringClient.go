@@ -16,8 +16,8 @@ func initLocalPeeringClient(ctx context.Context, st composed.State) (error, cont
 
 	var auxiliaryTenants []string
 
-	if state.remoteNetwork != nil && state.remoteNetwork.Status.Network.Azure.TenantId != "" {
-		auxiliaryTenants = append(auxiliaryTenants, state.remoteNetwork.Status.Network.Azure.TenantId)
+	if state.RemoteNetwork() != nil && state.RemoteNetwork().Status.Network.Azure.TenantId != "" {
+		auxiliaryTenants = append(auxiliaryTenants, state.RemoteNetwork().Status.Network.Azure.TenantId)
 	}
 
 	// This client uses auxiliary tenant to authenticate in remote tenant and fails if SPN does not exist

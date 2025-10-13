@@ -72,6 +72,8 @@ func (r *vpcPeeringReconciler) newAction() composed.Action {
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActions(
 				"vpcPeeringCommon",
+				kcpNetworkLocalLoad,
+				kcpNetworkRemoteLoad,
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
