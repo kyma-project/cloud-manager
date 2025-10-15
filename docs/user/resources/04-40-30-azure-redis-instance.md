@@ -83,7 +83,7 @@ The following table list the meaningful parameters of the auth Secret:
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AzureRedisInstance
 metadata:
-  name: azureRedisInstanceExample
+  name: example-azure-redis-instance
 spec:
   redisConfiguration:
     maxclients: "8"
