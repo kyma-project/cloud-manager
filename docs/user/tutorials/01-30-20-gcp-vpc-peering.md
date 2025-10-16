@@ -30,7 +30,7 @@ The recommended approach is creating a role and assigning it to the Cloud Manage
    gcloud iam roles create $ROLE_NAME --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID --quiet
    ```
 
-3. Check on [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment. The example below shows how to assign the role in a production environment.
+3. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment. The following example shows how to assign the role in a production environment.
 
    ```shell
     gcloud projects add-iam-policy-binding $YOUR_REMOTE_PROJECT_ID --member=serviceAccount:cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com --role=projects/$YOUR_REMOTE_PROJECT_ID/roles/$ROLE_NAME
@@ -98,7 +98,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
 ### Create VPC Peering
 
-1. Create a GcpVpcPeering resource manifest file similar with the example bellow, replacing my-project-to-kyma-dev, remote-project-id, and remote-vpc-network with your desired peering name, remote project ID, and remote VPC network respectively. And save it as `vpc-peering.yaml`.
+1. Create a GcpVpcPeering resource manifest file similar to the following example, replacing `my-project-to-kyma-dev`, `remote-project-id`, and `remote-vpc-network` with your desired peering name, remote project ID, and remote VPC network, respectively. And save it as `vpc-peering.yaml`.
 
    ```shell
    apiVersion: cloud-resources.kyma-project.io/v1beta1
