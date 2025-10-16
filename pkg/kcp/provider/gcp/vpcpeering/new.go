@@ -23,8 +23,6 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpVpcPeering",
 			actions.AddCommonFinalizer(),
-			loadKymaNetwork,
-			loadRemoteNetwork,
 			loadRemoteVpcPeering,
 			loadKymaVpcPeering,
 			setPeeringStatusIds,

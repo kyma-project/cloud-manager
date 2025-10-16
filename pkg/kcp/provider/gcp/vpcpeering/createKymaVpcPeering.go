@@ -31,11 +31,11 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 	err := state.client.CreateKymaVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.remoteNetwork.Status.Network.Gcp.NetworkName,
-		state.remoteNetwork.Status.Network.Gcp.GcpProject,
+		state.RemoteNetwork().Status.Network.Gcp.NetworkName,
+		state.RemoteNetwork().Status.Network.Gcp.GcpProject,
 		state.importCustomRoutes,
-		state.localNetwork.Status.Network.Gcp.GcpProject,
-		state.localNetwork.Status.Network.Gcp.NetworkName)
+		state.LocalNetwork().Status.Network.Gcp.GcpProject,
+		state.LocalNetwork().Status.Network.Gcp.NetworkName)
 
 	if err != nil {
 		state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected

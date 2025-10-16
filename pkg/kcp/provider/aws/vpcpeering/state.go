@@ -5,7 +5,6 @@ import (
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/go-logr/logr"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -30,9 +29,6 @@ type State struct {
 
 	routeTables       []ec2types.RouteTable
 	remoteRouteTables []ec2types.RouteTable
-
-	localNetwork  *cloudcontrolv1beta1.Network
-	remoteNetwork *cloudcontrolv1beta1.Network
 }
 
 type StateFactory interface {
