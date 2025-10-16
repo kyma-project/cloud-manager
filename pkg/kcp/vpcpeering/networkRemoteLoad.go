@@ -38,13 +38,72 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if apierrors.IsNotFound(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+		changed := false
+		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+			changed = true
+		}
+		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
+			Message: "Remote network not found",
+		}) {
+			changed = true
+		}
+
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateError) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
+			changed = true
+		}
+
+		if !changed {
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+		}
+
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			ErrorLogMessage("Error patching KCP VpcPeering status with remote network not found").
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
+			SuccessLogMsg("KCP VpcPeering remote KCP Network not found").
+			Run(ctx, state)
 	}
 
 	state.remoteNetwork = net
 
 	if composed.IsMarkedForDeletion(state.Obj()) {
-		return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion, continue", nil, ctx)
+
+		if net.Status.Network != nil {
+			return nil, ctx
+		}
+
+		changed := false
+
+		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+			changed = true
+		}
+
+		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonMissingDependency,
+			Message: "Remote network reference missing",
+		}) {
+			changed = true
+		}
+
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateError) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
+			changed = true
+		}
+
+		if !changed {
+			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
+		}
+
+		return composed.PatchStatus(state.ObjAsVpcPeering()).
+			ErrorLogMessage("Error patching KCP VpcPeering status with remote network reference missing").
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
+			SuccessLogMsg("KCP VpcPeering remote network reference missing").
+			Run(ctx, state)
 	}
 
 	if net.Status.State == string(cloudcontrolv1beta1.StateError) {
@@ -58,6 +117,11 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 			Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
 			Message: "Remote network not ready",
 		}) {
+			changed = true
+		}
+
+		if state.ObjAsVpcPeering().Status.State != string(cloudcontrolv1beta1.StateError) {
+			state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 			changed = true
 		}
 

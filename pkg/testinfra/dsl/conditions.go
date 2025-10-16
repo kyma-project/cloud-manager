@@ -40,6 +40,15 @@ func KcpWarningCondition() metav1.Condition {
 	}
 }
 
+func KcpErrorCondition() metav1.Condition {
+	return metav1.Condition{
+		Type:    cloudcontrolv1beta1.ConditionTypeError,
+		Status:  metav1.ConditionTrue,
+		Reason:  cloudcontrolv1beta1.ConditionTypeError,
+		Message: "Error",
+	}
+}
+
 func WithoutConditions(removeConds ...string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
