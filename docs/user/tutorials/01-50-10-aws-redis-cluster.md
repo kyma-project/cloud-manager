@@ -67,7 +67,7 @@ To instantiate Redis and connect the Pod with only the required fields, use the 
    ```bash
    apt-get update && \
      apt-get install -y ca-certificates && \
-     update-ca-c
+     update-ca-certificates
 
 5. Run a PING command:
 
@@ -146,7 +146,7 @@ To specify advanced features, such as Redis version, configuration, and maintena
    ```bash
    apt-get update && \
      apt-get install -y ca-certificates && \
-     update-ca-certificate
+     update-ca-certificates
    ```
 
 5. Run a PING command.
