@@ -25,12 +25,11 @@ type Sim interface {
 }
 
 type CreateOptions struct {
-	KCP                cluster.Cluster
-	Garden             client.Client
-	CloudProfileLoader CloudProfileLoader
-	Logger             logr.Logger
-
-	KubeconfigProvider KubeconfigProvider
+	KCP                   cluster.Cluster
+	Garden                client.Client
+	CloudProfileLoader    CloudProfileLoader
+	Logger                logr.Logger
+	SkrKubeconfigProvider SkrKubeconfigProvider
 }
 
 func (o *CreateOptions) Validate() error {
@@ -47,16 +46,19 @@ func (o *CreateOptions) Validate() error {
 	if o.CloudProfileLoader == nil {
 		result = multierror.Append(fmt.Errorf("missing CloudProfileLoader"))
 	}
+	if o.SkrKubeconfigProvider == nil {
+		result = multierror.Append(fmt.Errorf("missing SkrKubeconfigProvider"))
+	}
 	return result
 }
 
-func New(ctx context.Context, opts CreateOptions) (Sim, error) {
+func New(opts CreateOptions) (Sim, error) {
 	if err := opts.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid new sim options: %w", err)
 	}
 
-	if opts.KubeconfigProvider == nil {
-		opts.KubeconfigProvider = NewKubeconfigProvider(opts.Garden, 10*time.Hour)
+	if opts.SkrKubeconfigProvider == nil {
+		opts.SkrKubeconfigProvider = NewGardenSkrKubeconfigProvider(opts.Garden, 10*time.Hour)
 	}
 
 	mngr := NewManager(opts.KCP, opts.Logger)
@@ -70,7 +72,7 @@ func New(ctx context.Context, opts CreateOptions) (Sim, error) {
 		return nil, fmt.Errorf("could not create runtime manager: %w", err)
 	}
 
-	simGC := newSimGardenerCluster(opts.KCP.GetClient(), opts.KubeconfigProvider)
+	simGC := newSimGardenerCluster(opts.KCP.GetClient(), opts.SkrKubeconfigProvider)
 	if err := simGC.SetupWithManager(mngr); err != nil {
 		return nil, fmt.Errorf("could not create gardener cluster manager: %w", err)
 	}

@@ -50,10 +50,12 @@ func main() {
 		return
 	}
 
-	simu, err := sim.New(ctx, sim.CreateOptions{
-		KCP:    kcp,
-		Garden: garden,
-		Logger: logger,
+	simu, err := sim.New(sim.CreateOptions{
+		KCP:                   kcp,
+		Garden:                garden,
+		Logger:                logger,
+		SkrKubeconfigProvider: sim.NewGardenSkrKubeconfigProvider(garden, 10*time.Hour),
+		CloudProfileLoader:    sim.NewCachingCloudProfileLoader(sim.NewGardenCloudProfileLoader(garden)),
 	})
 	if err != nil {
 		logger.Error(err, "Failed to create sim")

@@ -2,6 +2,7 @@ package testinfra
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
@@ -37,6 +38,8 @@ type ClusterInfo interface {
 	Scheme() *runtime.Scheme
 	Client() ctrlclient.Client
 	Cfg() *rest.Config
+	Kubeconfig() []byte
+	KubeconfigFilePath() string
 	EnsureCrds(ctx context.Context) error
 }
 

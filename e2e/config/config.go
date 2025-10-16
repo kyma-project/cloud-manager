@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var Config = &ConfigType{}
@@ -33,6 +36,25 @@ type ConfigType struct {
 
 	CloudProfiles map[string]string `yaml:"cloudProfiles"`
 }
+
+func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {
+	oc, err := clientcmd.NewClientConfigFromBytes(gardenKubeBytes)
+	if err != nil {
+		return fmt.Errorf("error creating gardener client config: %w", err)
+	}
+
+	rawConfig, err := oc.RawConfig()
+	if err != nil {
+		return fmt.Errorf("error getting gardener raw client config: %w", err)
+	}
+
+	if len(rawConfig.CurrentContext) > 0 {
+		c.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+	}
+
+	return nil
+}
+
 
 type Subscriptions []SubscriptionInfo
 

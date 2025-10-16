@@ -106,6 +106,8 @@ func Start() (Infra, error) {
 
 		cluster.env = env
 		cluster.cfg = cfg
+		cluster.kubeconfig = b
+		cluster.kubeconfigFilePath = kubeconfigFilePath
 		cluster.scheme = sch
 		cluster.client = k8sClient
 

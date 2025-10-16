@@ -14,6 +14,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -104,14 +105,14 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 			if err != nil {
 				return reconcile.Result{}, fmt.Errorf("error deleting KCP Kyma: %w", err)
 			}
-			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 		}
 		if kyma != nil && kyma.DeletionTimestamp != nil {
 			// waiting for kyma to get deleted
 			diff := r.clock.Now().Sub(kyma.DeletionTimestamp.Time)
 			if diff < time.Minute {
 				logger.Info("Waiting KCP Kyma gets deleted")
-				return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
 			logger.Info("Giving up on waiting KCP Kyma gets deleted after 1 minute")
 		}
@@ -133,7 +134,7 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 
 		if shoot != nil || gc != nil {
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 		}
 
 		logger.Info("Removing Runtime finalizer")
@@ -178,19 +179,19 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, fmt.Errorf("error creating Shoot: %w", err)
 		}
 
-		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
 
 	if len(shoot.Status.Conditions) == 0 {
-		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 	}
 	for _, ct := range GardenerConditionTypes {
 		cond := gardenerhelper.GetCondition(shoot.Status.Conditions, ct)
 		if cond == nil {
-			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 		if cond.Status != gardenertypes.ConditionTrue {
-			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 	}
 
@@ -234,7 +235,7 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if gc.Status.State != infrastructuremanagerv1.ReadyState {
 		logger.Info("Waiting for GardenCluster to become ready")
-		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
 
 	if kyma == nil {
@@ -260,8 +261,14 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if kyma.Status.State != operatorshared.StateReady {
-		logger.Info("Waiting for Kyma to become ready")
-		return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+		logger.Info("Waiting for KCP Kyma to become ready")
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+	}
+
+	_, err = composed.PatchObjAddFinalizer(ctx, infrastructuremanagerv1.Finalizer, rt, r.kcp)
+	if err != nil {
+		logger.Error(err, "Failed to add finalizer to Runtime")
+		return reconcile.Result{}, fmt.Errorf("failed to add finalizer to Runtime: %w", err)
 	}
 
 	statusChanged := false

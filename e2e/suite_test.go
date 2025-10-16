@@ -1,4 +1,4 @@
-package sim
+package e2e
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
@@ -23,9 +24,6 @@ import (
 )
 
 var infra testinfra.Infra
-
-var simInstance Sim
-var skrKubeconfigProviderInstance *fixedKubeconfigProvider
 
 func TestSimControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -83,31 +81,7 @@ var _ = BeforeSuite(func() {
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
 
-	By("installing cloud profiles")
-	cloudProfilesArr, err := fixtures.CloudProfiles(infra.Garden().Namespace())
-	Expect(err).NotTo(HaveOccurred(), "failed to load cloud profiles fixtures")
-	err = util.Apply(infra.Ctx(), infra.Garden().Client(), cloudProfilesArr)
-	Expect(err).NotTo(HaveOccurred(), "failed to apply cloud profiles fixtures")
-
-	By("starting controllers")
-	// Setup controllers
-	skrKubeconfigProviderInstance = NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()).(*fixedKubeconfigProvider)
-	simInstance, err = New(CreateOptions{
-		KCP:                   infra.KcpManager(),
-		Garden:                infra.Garden().Client(),
-		Logger:                infra.KcpManager().GetLogger(),
-		CloudProfileLoader:    NewFileCloudProfileLoader("fixtures/cloudprofiles.yaml"),
-		SkrKubeconfigProvider: skrKubeconfigProviderInstance,
-		//CloudProfileLoader: NewCachingCloudProfileLoader(NewGardenCloudProfileLoader(infra.Garden().Client(), infra.Garden().Namespace())),
-	})
-	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
-	err = infra.KcpManager().Add(simInstance)
-	Expect(err).NotTo(HaveOccurred(), "failed to add simInstance to KCP manager")
-
-	// Start controllers
-	infra.StartKcpControllers(infra.Ctx())
-
-	infra.KcpManager().GetCache().WaitForCacheSync(infra.Ctx())
+	e2econfig.Config.GardenKubeconfig = infra.Garden().KubeconfigFilePath()
 
 	By("creating garden namespace")
 	// create garden namespace
@@ -117,6 +91,25 @@ var _ = BeforeSuite(func() {
 		},
 	})
 	Expect(client.IgnoreAlreadyExists(err)).NotTo(HaveOccurred(), "failed to create garden namespace")
+
+	By("installing cloud profiles")
+	cloudProfilesArr, err := fixtures.CloudProfiles(infra.Garden().Namespace())
+	Expect(err).NotTo(HaveOccurred(), "failed to load cloud profiles fixtures")
+	err = util.Apply(infra.Ctx(), infra.Garden().Client(), cloudProfilesArr)
+	Expect(err).NotTo(HaveOccurred(), "failed to apply cloud profiles fixtures")
+
+	By("starting world")
+
+	wf := NewWorldFactory()
+	w, err := wf.Create(infra.Ctx(), WorldCreateOptions{
+		KcpRestConfig:         infra.KCP().Cfg(),
+		CloudProfileLoader:    sim.NewFileCloudProfileLoader("sim/fixtures/cloudprofiles.yaml"),
+		SkrKubeconfigProvider: sim.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
+	})
+	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
+	world = w
+
+	// there's no need to start infra KCP, Garden and SKR clusters, since world has its own clusters
 })
 
 var _ = AfterSuite(func() {
@@ -125,7 +118,9 @@ var _ = AfterSuite(func() {
 	err := testinfra.PrintMetrics()
 	Expect(err).NotTo(HaveOccurred())
 
-	err = infra.Stop()
+	world.Cancel()
+	world.StopWaitGroup().Wait()
+	err = world.RunError()
 	Expect(err).NotTo(HaveOccurred())
 })
 

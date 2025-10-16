@@ -23,7 +23,7 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 		ctx := context.Background()
 
 		f := NewWorldFactory()
-		w, err := f.Create(ctx)
+		w, err := f.Create(ctx, WorldCreateOptions{})
 		if err != nil {
 			panic(err)
 		}
@@ -49,9 +49,10 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 
 	gdCtx.AfterSuite(func() {
 		if world != nil {
-			err := world.Stop(context.Background())
-			if err != nil {
-				panic(err)
+			world.Cancel()
+			world.StopWaitGroup().Wait()
+			if world.RunError() != nil {
+				panic(world.RunError())
 			}
 		}
 	})

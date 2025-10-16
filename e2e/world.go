@@ -2,48 +2,54 @@ package e2e
 
 import (
 	"context"
-	"fmt"
+	"sync"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 )
 
 type World interface {
-	ClusterProvider() ClusterProvider
-	Sim() sim.Sim
+	Cancel()
+	StopWaitGroup() *sync.WaitGroup
+	RunError() error
 
-	// Stop all clusters - kcp, garden and all skr clusters in the registry but does not
-	// delete any skr or shoot
-	Stop(ctx context.Context) error
+	Kcp() Cluster
+	Garden() Cluster
+	Sim() sim.Sim
 }
 
 type defaultWorld struct {
-	clusterProvider ClusterProvider
-	simu            sim.Sim
+	mCtx     context.Context
+	wg       *sync.WaitGroup
+	cancel   context.CancelFunc
+	runError error
+
+	kcp    Cluster
+	garden Cluster
+	simu   sim.Sim
 }
 
-func NewWorld(clusterProvider ClusterProvider, simu sim.Sim) World {
-	return &defaultWorld{
-		clusterProvider: clusterProvider,
-		simu:            simu,
-	}
+func (w *defaultWorld) Cancel() {
+	w.cancel()
 }
 
-func (w *defaultWorld) ClusterProvider() ClusterProvider {
-	return w.clusterProvider
+func (w *defaultWorld) StopWaitGroup() *sync.WaitGroup {
+	return w.wg
+}
+
+func (w *defaultWorld) RunError() error {
+	return w.runError
+}
+
+func (w *defaultWorld) Kcp() Cluster {
+	return w.kcp
+}
+
+func (w *defaultWorld) Garden() Cluster {
+	return w.garden
 }
 
 func (w *defaultWorld) Sim() sim.Sim {
 	return w.simu
-}
-
-func (w *defaultWorld) Stop(ctx context.Context) error {
-	var result error
-
-	if err := w.ClusterProvider().Stop(); err != nil {
-		result = multierror.Append(result, fmt.Errorf("could not stop kcp or garden cluster: %w", err))
-	}
-	return result
 }
 
 //func (w *defaultWorld) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {

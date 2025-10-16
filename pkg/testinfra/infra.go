@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"regexp"
+
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/onsi/ginkgo/v2"
-	"io"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
-	"os"
-	"path"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
@@ -67,11 +68,13 @@ type clusterInfo struct {
 	ClusterEnv
 	ClusterDSL
 
-	crdDirs []string
-	env     *envtest.Environment
-	cfg     *rest.Config
-	scheme  *runtime.Scheme
-	client  client.Client
+	crdDirs            []string
+	env                *envtest.Environment
+	cfg                *rest.Config
+	kubeconfig         []byte
+	kubeconfigFilePath string
+	scheme             *runtime.Scheme
+	client             client.Client
 }
 
 func (c *clusterInfo) Scheme() *runtime.Scheme {
@@ -84,6 +87,14 @@ func (c *clusterInfo) Client() client.Client {
 
 func (c *clusterInfo) Cfg() *rest.Config {
 	return c.cfg
+}
+
+func (c *clusterInfo) Kubeconfig() []byte {
+	return c.kubeconfig
+}
+
+func (c *clusterInfo) KubeconfigFilePath() string {
+	return c.kubeconfigFilePath
 }
 
 func (c *clusterInfo) EnsureCrds(ctx context.Context) error {

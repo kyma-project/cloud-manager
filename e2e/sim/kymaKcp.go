@@ -16,6 +16,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -27,26 +28,28 @@ import (
 )
 
 type skrManagerInfo struct {
-	mngr   manager.Manager
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     *sync.WaitGroup
-	err    error
+	runtimeId string
+	alias     string
+	mngr      manager.Manager
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        *sync.WaitGroup
+	err       error
 }
 
 func newSimKymaKcp(kcp client.Client, clientFactory ClientClusterFactory) *simKymaKcp {
 	return &simKymaKcp{
-		kcp:           kcp,
-		clientFactory: clientFactory,
-		managers:      map[string]*skrManagerInfo{},
+		kcp:                 kcp,
+		clientFactory:       clientFactory,
+		managersByRuntimeId: map[string]*skrManagerInfo{},
 	}
 }
 
 type simKymaKcp struct {
-	m             sync.Mutex
-	kcp           client.Client
-	clientFactory ClientClusterFactory
-	managers      map[string]*skrManagerInfo
+	m                   sync.Mutex
+	kcp                 client.Client
+	clientFactory       ClientClusterFactory
+	managersByRuntimeId map[string]*skrManagerInfo
 
 	// mainCtx must be set to the same context that's used to start the sim and its main manager that is
 	// running runtime, gardenerCluster and kcpKyma controllers, so also all skrKyma managers are stopped
@@ -74,7 +77,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		// GardenerCluster credentials are invalid (non-existing or expired),
 		// have to let the GardenerCluster reconciler create it first, giving it some time to do it
 		logger.Info("Out of sync GardenerCluster credentials (expired or not found), waiting for it to be recreated...")
-		return reconcile.Result{RequeueAfter: 3 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 	}
 
 	if err != nil {
@@ -89,13 +92,13 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		})
 		kcpKyma.Status.State = operatorshared.StateError
 		_ = composed.PatchObjStatus(ctx, kcpKyma, r.kcp)
-		return reconcile.Result{RequeueAfter: time.Minute}, err
+		return reconcile.Result{RequeueAfter: util.Timing.T300000ms()}, err
 	}
 
 	skrKyma := &operatorv1beta2.Kyma{}
 	err = skrClient.Get(ctx, types.NamespacedName{
 		Namespace: "kyma-system",
-		Name:      "kyma",
+		Name:      "default",
 	}, skrKyma)
 	if client.IgnoreNotFound(err) != nil && !meta.IsNoMatchError(err) {
 		return reconcile.Result{}, fmt.Errorf("error loading SKR Kyma: %w", err)
@@ -122,13 +125,13 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		if skrKyma != nil {
 			logger.Info("Waiting SKR Kyma is deleted...")
-			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 		}
 
 		// stop manager
 
 		r.m.Lock()
-		mi, ok := r.managers[request.Name]
+		mi, ok := r.managersByRuntimeId[request.Name]
 		if ok {
 			logger.Info("Stopping SKR manager")
 			mi.cancel()
@@ -138,7 +141,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 			} else {
 				logger.Info("SKR manager stopped")
 			}
-			r.m.Unlock()
+			delete(r.managersByRuntimeId, request.Name)
 		}
 		r.m.Unlock()
 
@@ -177,7 +180,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		ns = nil
 	}
 	if ns == nil {
-		ns := &corev1.Namespace{
+		ns = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "kyma-system",
 			},
@@ -219,13 +222,51 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
+	if ns.Status.Phase != corev1.NamespaceActive {
+		logger.Info("Waiting for kyma-system namespace to be active")
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+	}
+
+	var ise bool
+	isCrdEstablished := func(name string) (bool, error) {
+		crdObj := &apiextensionsv1.CustomResourceDefinition{}
+		err = skrClient.Get(ctx, client.ObjectKey{Name: name}, crdObj)
+		if err != nil {
+			return false, err
+		}
+		for _, cond := range crdObj.Status.Conditions {
+			if cond.Type == apiextensionsv1.Established && cond.Status == apiextensionsv1.ConditionTrue {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	ise, err = isCrdEstablished("kymas.operator.kyma-project.io")
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("error checking if kyma CRD is Established: %w", err)
+	}
+	if !ise {
+		logger.Info("Waiting for kyma CRD to be established")
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+	}
+
+	ise, err = isCrdEstablished("cloudresources.cloud-resources.kyma-project.io")
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("error checking if cloudresources CRD is Established: %w", err)
+	}
+	if !ise {
+		logger.Info("Waiting for cloudresources CRD to be established")
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+	}
+
 	// Kyma CR
 
 	if skrKyma == nil {
 		skrKyma = &operatorv1beta2.Kyma{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "kyma-system",
-				Name:      "kyma",
+				Name:      "default",
 				Labels:    kcpKyma.Labels,
 				Finalizers: []string{
 					api.CommonFinalizerDeletionHook,
@@ -242,7 +283,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
-	_, err = r.ensureManagerIsRunning(ctx, request.Name, logger)
+	_, err = r.ensureManagerIsRunning(ctx, request.Name, kcpKyma.Labels[aliasLabel], logger)
 	if err != nil {
 		kcpKyma.Status.State = operatorshared.StateError
 		kcpKyma.Status.Conditions = nil
@@ -254,7 +295,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 			Message:            err.Error(),
 		})
 		_ = composed.PatchObjStatus(ctx, kcpKyma, r.kcp)
-		return reconcile.Result{RequeueAfter: time.Minute}, err
+		return reconcile.Result{RequeueAfter: util.Timing.T300000ms()}, err
 	}
 
 	statusChanged := false
@@ -267,6 +308,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		statusChanged = true
 	}
 	if statusChanged {
+		logger.Info("Patching KCP Kyma status to Ready")
 		err = composed.PatchObjStatus(ctx, kcpKyma, r.kcp)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error patching KCP Kyma status: %w", err)
@@ -280,7 +322,7 @@ func (r *simKymaKcp) createSkrClient(ctx context.Context, runtimeID string) (cli
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	mi, ok := r.managers[runtimeID]
+	mi, ok := r.managersByRuntimeId[runtimeID]
 	if ok {
 		return mi.mngr.GetClient(), nil
 	}
@@ -293,11 +335,11 @@ func (r *simKymaKcp) createSkrClient(ctx context.Context, runtimeID string) (cli
 	return clnt, nil
 }
 
-func (r *simKymaKcp) ensureManagerIsRunning(ctx context.Context, runtimeID string, logger logr.Logger) (*skrManagerInfo, error) {
+func (r *simKymaKcp) ensureManagerIsRunning(ctx context.Context, runtimeID, alias string, logger logr.Logger) (*skrManagerInfo, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	mi, ok := r.managers[runtimeID]
+	mi, ok := r.managersByRuntimeId[runtimeID]
 	if ok {
 		return mi, nil
 	}
@@ -312,6 +354,7 @@ func (r *simKymaKcp) ensureManagerIsRunning(ctx context.Context, runtimeID strin
 	// skr managers. Making additional canceling context over it so only this skr manager
 	// can be stopped when its Kyma CR is deleted
 	mCtx, cancel := context.WithCancel(r.mainCtx)
+	mCtx = ctrl.LoggerInto(mCtx, ctrl.Log) // clear the logging values
 	logger.Info("Starting SKR manager and cluster")
 
 	mngr := NewManager(skrCluster, logger)
@@ -321,10 +364,12 @@ func (r *simKymaKcp) ensureManagerIsRunning(ctx context.Context, runtimeID strin
 		return nil, fmt.Errorf("error creating SKR manager: %w", err)
 	}
 	mi = &skrManagerInfo{
-		mngr:   mngr,
-		ctx:    mCtx,
-		cancel: cancel,
-		wg:     &sync.WaitGroup{},
+		runtimeId: runtimeID,
+		alias:     alias,
+		mngr:      mngr,
+		ctx:       mCtx,
+		cancel:    cancel,
+		wg:        &sync.WaitGroup{},
 	}
 	mi.wg.Add(1)
 
@@ -345,7 +390,7 @@ func (r *simKymaKcp) ensureManagerIsRunning(ctx context.Context, runtimeID strin
 		return nil, fmt.Errorf("error waiting for cache to sync: %w", cacheCtx.Err())
 	}
 
-	r.managers[runtimeID] = mi
+	r.managersByRuntimeId[runtimeID] = mi
 
 	return mi, nil
 }

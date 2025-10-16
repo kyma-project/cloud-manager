@@ -3,7 +3,6 @@ package sim
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -12,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -33,7 +33,7 @@ type simKymaSkr struct {
 }
 
 func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	if request.String() != "kyma-system/kyma" {
+	if request.String() != "kyma-system/default" {
 		return reconcile.Result{}, nil
 	}
 
@@ -69,12 +69,12 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			if client.IgnoreNotFound(err) != nil {
 				return reconcile.Result{}, fmt.Errorf("error deleting default CloudResources: %w", err)
 			}
-			return reconcile.Result{RequeueAfter: time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 
 		if cm != nil {
 			logger.Info("Waiting CloudResources are deleted...")
-			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 
 		logger.Info("Removing SKR Kyma finalizer")
@@ -168,6 +168,23 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		err = r.skr.Create(ctx, cm)
 		if client.IgnoreAlreadyExists(err) != nil {
 			return reconcile.Result{}, fmt.Errorf("error creating CloudResources: %w", err)
+		}
+	}
+
+	statusChanged := false
+	if skrKyma.Status.State != operatorshared.StateReady {
+		skrKyma.Status.State = operatorshared.StateReady
+		statusChanged = true
+	}
+	if len(skrKyma.Status.Conditions) > 0 {
+		skrKyma.Status.Conditions = []metav1.Condition{}
+		statusChanged = true
+	}
+	if statusChanged {
+		logger.Info("Patching SKR Kyma status state to Ready")
+		err = composed.PatchObjStatus(ctx, skrKyma, r.skr)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error patching SKR Kyma status: %w", err)
 		}
 	}
 

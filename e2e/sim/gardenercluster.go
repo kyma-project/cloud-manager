@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -25,7 +26,7 @@ const (
 	forceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
 )
 
-func newSimGardenerCluster(kcp client.Client, kubeconfigProvider KubeconfigProvider) *simGardenerCluster {
+func newSimGardenerCluster(kcp client.Client, kubeconfigProvider SkrKubeconfigProvider) *simGardenerCluster {
 	return &simGardenerCluster{
 		kcp:                kcp,
 		kubeconfigProvider: kubeconfigProvider,
@@ -37,7 +38,7 @@ var _ reconcile.Reconciler = &simGardenerCluster{}
 
 type simGardenerCluster struct {
 	kcp                client.Client
-	kubeconfigProvider KubeconfigProvider
+	kubeconfigProvider SkrKubeconfigProvider
 	clock              clock.Clock
 }
 
@@ -152,7 +153,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		}
 	}
 
-	return reconcile.Result{RequeueAfter: 10 * time.Minute}, nil
+	return reconcile.Result{RequeueAfter: util.Timing.T300000ms()}, nil
 }
 
 // IsGardenerClusterSyncNeeded checks if the given GardenerCluster credentials are expired or about to expire.

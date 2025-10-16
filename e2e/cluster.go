@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,12 +20,18 @@ type Cluster interface {
 
 	Alias() string
 
-	IsStarted() bool
-	Start(ctx context.Context) error
-	Stop() error
+	// AddResources declares k8s objects that are watched and can be got from the cache
 	AddResources(ctx context.Context, arr ...*ResourceDeclaration) error
+
+	// Has returns true if resource by given alias is declared
 	Has(alias string) bool
+
+	// Get returns resource declarede with the given alias from the cache. If resource does not exist, nil object
+	// and not error are returned. Also, if kind is not registered, nil resource and no error are returned.
+	// Error is returned only if it's some other than NotFound and NoMatch
 	Get(ctx context.Context, alias string) (client.Object, error)
+
+	// EvaluationContext returns map of all declared resources
 	EvaluationContext(ctx context.Context) (map[string]interface{}, error)
 }
 
@@ -41,68 +49,25 @@ type defaultCluster struct {
 
 	alias string
 
-	runCtx     context.Context
-	cancelRun  context.CancelFunc
-	started    bool
-	stoppingCh chan error
+	runCtx context.Context
 
 	resources map[string]*ResourceInfo
 	sources   map[schema.GroupVersionKind]source.SyncingSource
+}
+
+func (c *defaultCluster) Start(ctx context.Context) error {
+	c.runCtx = ctx
+	return c.Cluster.Start(ctx)
 }
 
 func (c *defaultCluster) Alias() string {
 	return c.alias
 }
 
-func (c *defaultCluster) IsStarted() bool {
-	return c.started
-}
-
-func (c *defaultCluster) Start(ctx context.Context) error {
-	if c.started {
-		return fmt.Errorf("cluster already started")
-	}
-
-	c.runCtx, c.cancelRun = context.WithCancel(ctx)
-	c.stoppingCh = make(chan error)
-
-	var err error
-	go func() {
-		err = c.Cluster.Start(c.runCtx)
-		c.stoppingCh <- err
-		close(c.stoppingCh)
-	}()
-
-	// Wait for the cluster to be started... and as a side effect informers synced
-	ok := c.Cluster.GetCache().WaitForCacheSync(c.runCtx)
-
-	if err != nil {
-		err = multierror.Append(err, fmt.Errorf("failed to start cluster: %w", err))
-	}
-	if !ok {
-		err = multierror.Append(err, fmt.Errorf("failed to wait for cache sync"))
-	}
-
-	c.started = true
-
-	return err
-}
-
-func (c *defaultCluster) Stop() error {
-	if !c.started {
-		return fmt.Errorf("cluster not started")
-	}
-	c.cancelRun()
-	err := <-c.stoppingCh
-	c.started = false
-	return err
-}
-
 func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
-	if !c.started {
-		return fmt.Errorf("cluster not started")
+	if c.runCtx == nil {
+		return fmt.Errorf("runCtx is nil, check if the cluster is started: %w", common.ErrLogical)
 	}
-
 	addedSources := map[schema.GroupVersionKind]source.SyncingSource{}
 
 	for _, decl := range arr {
@@ -192,10 +157,13 @@ func (c *defaultCluster) Get(ctx context.Context, alias string) (client.Object, 
 		Namespace: ri.Namespace,
 		Name:      ri.Name,
 	}, obj)
+	if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error loading resource %q", alias)
 	}
-	return obj, err
+	return obj, nil
 }
 
 func (c *defaultCluster) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {

@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -133,7 +134,7 @@ func (m *simManager) GetWebhookServer() webhook.Server {
 }
 
 func (m *simManager) GetLogger() logr.Logger {
-	return m.logger
+	return ctrl.Log
 }
 
 func (m *simManager) GetControllerOptions() config.Controller {

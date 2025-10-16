@@ -13,24 +13,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type KubeconfigProvider interface {
+type SkrKubeconfigProvider interface {
 	CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error)
 	ExpiresIn() time.Duration
 }
 
-func NewKubeconfigProvider(garden client.Client, expiresIn time.Duration) KubeconfigProvider {
-	return &defaultKubeconfigProvider{
+// GARDEN SkrKubeconfigProvider =================================================
+
+func NewGardenSkrKubeconfigProvider(garden client.Client, expiresIn time.Duration) SkrKubeconfigProvider {
+	return &gardenKubeconfigProvider{
 		garden:    garden,
 		expiresIn: expiresIn,
 	}
 }
 
-type defaultKubeconfigProvider struct {
+type gardenKubeconfigProvider struct {
 	garden    client.Client
 	expiresIn time.Duration
 }
 
-func (p *defaultKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error) {
+func (p *gardenKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error) {
 	shoot := &gardenertypes.Shoot{}
 	err := p.garden.Get(ctx, types.NamespacedName{
 		Namespace: e2econfig.Config.GardenNamespace,
@@ -52,6 +54,33 @@ func (p *defaultKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, sho
 	return adminKubeconfigRequest.Status.Kubeconfig, nil
 }
 
-func (p *defaultKubeconfigProvider) ExpiresIn() time.Duration {
+func (p *gardenKubeconfigProvider) ExpiresIn() time.Duration {
 	return p.expiresIn
+}
+
+// FIXED SkrKubeconfigProvider =================================================
+
+func NewFixedSkrKubeconfigProvider(kubeconfig []byte) SkrKubeconfigProvider {
+	return &fixedKubeconfigProvider{
+		kubeconfig: kubeconfig,
+		callCount: make(map[string]int),
+	}
+}
+
+type fixedKubeconfigProvider struct {
+	kubeconfig []byte
+	callCount map[string]int
+}
+
+func (p *fixedKubeconfigProvider) GetCallCount(shootName string) int {
+	return p.callCount[shootName]
+}
+
+func (p *fixedKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error) {
+	p.callCount[shootName] = p.callCount[shootName] + 1
+	return p.kubeconfig, nil
+}
+
+func (p *fixedKubeconfigProvider) ExpiresIn() time.Duration {
+	return 10 * time.Hour
 }

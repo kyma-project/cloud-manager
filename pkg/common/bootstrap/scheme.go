@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -26,12 +27,14 @@ func init() {
 
 	utilruntime.Must(cloudcontrolv1beta1.AddToScheme(KcpScheme))
 	utilruntime.Must(apiextensions.AddToScheme(KcpScheme))
+	utilruntime.Must(apiextensionsv1.AddToScheme(KcpScheme))
 	utilruntime.Must(infrastructuremanagerv1.AddToScheme(KcpScheme))
 	utilruntime.Must(operatorv1beta2.AddToScheme(KcpScheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(KcpScheme))
 
 	utilruntime.Must(cloudresourcesv1beta1.AddToScheme(SkrScheme))
 	utilruntime.Must(apiextensions.AddToScheme(SkrScheme))
+	utilruntime.Must(apiextensionsv1.AddToScheme(SkrScheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(SkrScheme))
 	utilruntime.Must(operatorv1beta2.AddToScheme(SkrScheme))
 }
