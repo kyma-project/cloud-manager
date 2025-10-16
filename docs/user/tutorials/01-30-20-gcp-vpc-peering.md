@@ -27,10 +27,10 @@ The recommended approach is creating a role and assigning it to the Cloud Manage
 2. Create a custom role with the required permissions.
 
    ```shell
-   gcloud iam roles create $ROLE_NAME --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID
+   gcloud iam roles create $ROLE_NAME --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID --quiet
    ```
 
-3. Check on [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment.
+3. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment. The following example shows how to assign the role in a production environment.
 
    ```shell
     gcloud projects add-iam-policy-binding $YOUR_REMOTE_PROJECT_ID --member=serviceAccount:cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com --role=projects/$YOUR_REMOTE_PROJECT_ID/roles/$ROLE_NAME
@@ -46,24 +46,23 @@ Due to security reasons, the VPC network in the remote project, which receives t
    export KYMA_SHOOT_ID=`kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}'`
    ```
 
-2. Export your project ID and VPC network as environment variables.
+2. Export your VPC network name to an environment variable.
 
     ```shell
-     export REMOTE_PROJECT_ID={YOUR_REMOTE_PROJECT_ID}
      export REMOTE_VPC_NETWORK={REMOTE_VPC_NETWORK}
      ```
 
 3. Create a tag key with the Kyma shoot name in the remote project.
 
    ```shell
-   gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$REMOTE_PROJECT_ID
+   gcloud resource-manager tags keys create $KYMA_SHOOT_ID --parent=projects/$YOUR_REMOTE_PROJECT_ID
    ```
 
 4. Create a tag value in the remote project.
 
    ```shell
    export TAG_VALUE=None
-   gcloud resource-manager tags values create $TAG_VALUE --parent=$REMOTE_PROJECT_ID/$KYMA_SHOOT_ID
+   gcloud resource-manager tags values create $TAG_VALUE --parent=$YOUR_REMOTE_PROJECT_ID/$KYMA_SHOOT_ID
    ```
 
 5. Fetch the network `selfLinkWithId` from the remote VPC network.
@@ -94,25 +93,23 @@ Due to security reasons, the VPC network in the remote project, which receives t
 7. Add the tag to the VPC network.
 
     ```shell
-    gcloud resource-manager tags bindings create --tag-value=$TAG_VALUE --parent=$RESOURCE_ID
+    gcloud resource-manager tags bindings create --tag-value=$YOUR_REMOTE_PROJECT_ID/$KYMA_SHOOT_ID/$TAG_VALUE --parent=$RESOURCE_ID
     ```
 
 ### Create VPC Peering
 
-1. Create a GcpVpcPeering resource manifest file.
+1. Create a GcpVpcPeering resource manifest file similar to the following example, replacing `my-project-to-kyma-dev`, `remote-project-id`, and `remote-vpc-network` with your desired peering name, remote project ID, and remote VPC network, respectively. And save it as `vpc-peering.yaml`.
 
    ```shell
-   cat <<EOF > vpc-peering.yaml
    apiVersion: cloud-resources.kyma-project.io/v1beta1
-   ckind: GcpVpcPeering
-    metadata:
-        name: "vpcpeering-dev"
-    spec:
-        remotePeeringName: "my-project-to-kyma-dev"
-        remoteProject: "remote-project-id"
-        remoteVpc: "remote-vpc-network"
-        importCustomRoutes: false
-    EOF
+   kind: GcpVpcPeering
+   metadata:
+     name: "vpcpeering-dev"
+   spec:
+     remotePeeringName: "my-project-to-kyma-dev"
+     remoteProject: "remote-project-id"
+     remoteVpc: "remote-vpc-network"
+     importCustomRoutes: false
     ```
 
 2. Apply the manifest file.
@@ -157,7 +154,7 @@ Due to security reasons, the VPC network in the remote project, which receives t
 
 When the VPC peering is not needed anymore, you can remove it.
 
-1. Delete the GcpVpcPeering resource from your Kyma cluster.
+1. Delete the GcpVpcPeering resource from your Kyma cluster. This operation can take a few minutes to complete.
 
    ```shell
    kubectl delete gcpvpcpeering vpcpeering-dev
