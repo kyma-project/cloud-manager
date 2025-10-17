@@ -17,9 +17,9 @@ type State struct {
 	KcpCluster composed.StateCluster
 	SkrCluster composed.StateCluster
 
-	Scope              *cloudcontrolv1beta1.Scope
-	GcpNfsVolume       *cloudresourcesv1beta1.GcpNfsVolume
-	GcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup
+	Scope             *cloudcontrolv1beta1.Scope
+	GcpNfsVolume      *cloudresourcesv1beta1.GcpNfsVolume
+	SrcBackupFullPath string
 
 	fileRestoreClient client.FileRestoreClient
 }
