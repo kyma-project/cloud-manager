@@ -3,11 +3,10 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -30,11 +29,7 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	if state.fileBackup.Labels != nil &&
-		state.fileBackup.Labels[gcpclient.ManagedByKey] == gcpclient.ManagedByValue &&
-		state.fileBackup.Labels[gcpclient.ScopeNameKey] == state.Scope.Name &&
-		state.fileBackup.Labels[util.GcpLabelBackupAccessibleFrom] == state.specCommaSeparatedAccessibleFrom() {
-		// Labels have been already set, return
+	if state.HasProperLabels() {
 		if backup.Status.AccessibleFrom != state.specCommaSeparatedAccessibleFrom() {
 			backup.Status.AccessibleFrom = state.specCommaSeparatedAccessibleFrom()
 			return composed.PatchStatus(backup).
@@ -51,15 +46,7 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 	location := backup.Status.Location
 	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
-	if state.fileBackup.Labels == nil {
-		state.fileBackup.Labels = make(map[string]string)
-	}
-	state.fileBackup.Labels[gcpclient.ManagedByKey] = gcpclient.ManagedByValue
-	state.fileBackup.Labels[gcpclient.ScopeNameKey] = state.Scope.Name
-	state.fileBackup.Labels[util.GcpLabelBackupAccessibleFrom] = state.specCommaSeparatedAccessibleFrom()
-	state.fileBackup.Labels[util.GcpLabelSkrVolumeName] = backup.Spec.Source.Volume.ToNamespacedName(backup.Namespace).String()
-	state.fileBackup.Labels[util.GcpLabelSkrBackupName] = types.NamespacedName{Namespace: backup.Namespace, Name: backup.Name}.String()
-	state.fileBackup.Labels[util.GcpLabelShootName] = state.Scope.Spec.ShootName
+	state.SetFilestoreLabels()
 
 	_, err := state.fileBackupClient.PatchFileBackup(ctx, project, location, name, "Labels", state.fileBackup)
 

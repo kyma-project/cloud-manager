@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/file/v1"
 	"k8s.io/klog/v2"
 )
@@ -101,4 +103,89 @@ func (s *State) specCommaSeparatedAccessibleFrom() string {
 	//sort backup.Spec.AccessibleFrom to have a consistent label value
 	sort.Strings(backup.Spec.AccessibleFrom)
 	return strings.Join(backup.Spec.AccessibleFrom, ",")
+}
+
+func (s *State) HasProperLabels() bool {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+
+	if s.fileBackup.Labels == nil {
+		return false
+	}
+
+	if s.fileBackup.Labels[gcpclient.ManagedByKey] != gcpclient.ManagedByValue {
+		return false
+	}
+
+	if s.fileBackup.Labels[gcpclient.ScopeNameKey] != s.Scope.Name {
+		return false
+	}
+
+	if s.fileBackup.Labels[util.GcpLabelSkrVolumeName] != backup.Spec.Source.Volume.Name {
+		return false
+	}
+	if s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] != backup.Spec.Source.Volume.Namespace {
+		return false
+	}
+
+	if s.fileBackup.Labels[util.GcpLabelSkrBackupName] != backup.Name {
+		return false
+	}
+	if s.fileBackup.Labels[util.GcpLabelSkrBackupNamespace] != backup.Namespace {
+		return false
+	}
+
+	if s.fileBackup.Labels[util.GcpLabelShootName] != s.Scope.Spec.ShootName {
+		return false
+	}
+
+	for _, shoot := range backup.Spec.AccessibleFrom {
+		if s.fileBackup.Labels[shoot] != util.GcpLabelBackupAccessibleFrom {
+			return false
+		}
+	}
+
+	for key, fixedLabelValue := range s.fileBackup.Labels {
+		if fixedLabelValue != util.GcpLabelBackupAccessibleFrom {
+			continue
+		}
+
+		if slices.Contains(backup.Spec.AccessibleFrom, key) {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
+func (s *State) SetFilestoreLabels() {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+
+	if s.fileBackup.Labels == nil {
+		s.fileBackup.Labels = make(map[string]string)
+	}
+	s.fileBackup.Labels[gcpclient.ManagedByKey] = gcpclient.ManagedByValue
+	s.fileBackup.Labels[gcpclient.ScopeNameKey] = s.Scope.Name
+	s.fileBackup.Labels[util.GcpLabelSkrVolumeName] = backup.Spec.Source.Volume.Name
+	s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] = backup.Spec.Source.Volume.Namespace
+	s.fileBackup.Labels[util.GcpLabelSkrBackupName] = backup.Name
+	s.fileBackup.Labels[util.GcpLabelSkrBackupNamespace] = backup.Namespace
+	s.fileBackup.Labels[util.GcpLabelShootName] = s.Scope.Spec.ShootName
+	for _, shoot := range backup.Spec.AccessibleFrom {
+		s.fileBackup.Labels[shoot] = util.GcpLabelBackupAccessibleFrom
+	}
+
+	// delete any stale accessibleFrom labels
+	for key, fixedLabelValue := range s.fileBackup.Labels {
+		if fixedLabelValue != util.GcpLabelBackupAccessibleFrom {
+			continue
+		}
+
+		if slices.Contains(backup.Spec.AccessibleFrom, key) {
+			continue
+		}
+
+		delete(s.fileBackup.Labels, key)
+	}
 }

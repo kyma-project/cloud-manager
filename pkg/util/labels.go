@@ -29,7 +29,9 @@ const (
 	GcpLabelShootName            = "kyma-project__cloud-manager__shoot-name"
 	GcpLabelBackupAccessibleFrom = "kyma-project__cloud-manager__accessible-from"
 	GcpLabelSkrVolumeName        = "kyma-project__cloud-manager__skr-volume-name"
+	GcpLabelSkrVolumeNamespace   = "kyma-project__cloud-manager__skr-volume-namespace"
 	GcpLabelSkrBackupName        = "kyma-project__cloud-manager__skr-backup-name"
+	GcpLabelSkrBackupNamespace   = "kyma-project__cloud-manager__skr-backup-namespace"
 )
 
 var _ LabelBuilder = &labelBuilder{}
