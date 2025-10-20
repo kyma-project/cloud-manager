@@ -51,6 +51,7 @@ func (impl *backupImplGcpNfs) getBackupObject(state *State, objectMeta *metav1.O
 					Namespace: schedule.GetSourceRef().Namespace,
 				},
 			},
+			AccessibleFrom: state.ObjAsGcpNfsBackupSchedule().Spec.AccessibleFrom,
 		},
 	}, nil
 }

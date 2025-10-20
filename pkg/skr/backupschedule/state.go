@@ -2,13 +2,15 @@ package backupschedule
 
 import (
 	"context"
+	"time"
+
 	"github.com/gorhill/cronexpr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 type State struct {
@@ -65,4 +67,8 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 
 func (s *State) ObjAsBackupSchedule() BackupSchedule {
 	return s.Obj().(BackupSchedule)
+}
+
+func (s *State) ObjAsGcpNfsBackupSchedule() *cloudresourcesv1beta1.GcpNfsBackupSchedule {
+	return s.Obj().(*cloudresourcesv1beta1.GcpNfsBackupSchedule)
 }
