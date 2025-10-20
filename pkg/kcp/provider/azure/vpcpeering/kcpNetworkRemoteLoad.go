@@ -35,7 +35,6 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 			return composed.LogErrorAndReturn(err, "KCP VpcPeering marked for deletion but, remote KCP Network not found", nil, ctx)
 		}
 
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -50,7 +49,6 @@ func kcpNetworkRemoteLoad(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if net.Status.Network == nil {
-		state.ObjAsVpcPeering().Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
