@@ -160,3 +160,30 @@ func HaveLastCreateRun(expected time.Time) ObjAssertion {
 		return nil
 	}
 }
+
+func WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom []string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
+				x.Spec.AccessibleFrom = accessibleFrom
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsBackupScheduleAccessibleFrom", obj))
+		},
+	}
+}
+
+func HavingStatusActive() ObjAssertion {
+	return func(obj client.Object) error {
+		if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
+			if x.Status.State != cloudresourcesv1beta1.JobStateActive {
+				return fmt.Errorf(
+					"expected object %T %s/%s to have status.state: %s, but found %s",
+					obj, obj.GetNamespace(), obj.GetName(),
+					cloudresourcesv1beta1.JobStateActive, x.Status.State,
+				)
+			}
+		}
+		return nil
+	}
+}
