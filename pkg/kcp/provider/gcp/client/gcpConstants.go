@@ -2,9 +2,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"regexp"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/config"
 
@@ -29,8 +30,9 @@ const GcpCapacityCheckInterval = time.Hour * 1
 const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
 
 const sharedBackupsFilter = "labels.managed-by=\"%s\" AND " +
-	"( labels." + util.GcpLabelBackupAccessibleFrom + " HAS \"%s\" OR labels." + util.GcpLabelBackupAccessibleFrom + " HAS \"%s\" OR " +
-	"labels." + util.GcpLabelBackupAccessibleFrom + "=\"ALL\")"
+	"( labels.%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
+	" OR labels.%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
+	" OR labels.ALL=\"" + util.GcpLabelBackupAccessibleFrom + "\")"
 
 const GcpNfsStateDataProtocol = "gcpNfsProtocol"
 
