@@ -13,13 +13,13 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
-func pupulateBackupUrl(ctx context.Context, st composed.State) (error, context.Context) {
+func populateBackupUrl(ctx context.Context, st composed.State) (error, context.Context) {
 	//If deleting, continue with next steps.
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		return nil, nil
 	}
 	// implement similar to loadGcpNfsVolume
-	// pupulateBackupUrl loads the GcpNfsVolumeBackup object from the restore.Spec.Source.Backup value.
+	// populateBackupUrl loads the GcpNfsVolumeBackup object from the restore.Spec.Source.Backup value.
 	// If the object is not found, the function returns an error.
 	// If the object is found but is not ready, the function returns an error.
 	// If the object is found and is ready, the function stores the object in the state.
