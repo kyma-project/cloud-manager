@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"sort"
 	"strings"
@@ -139,7 +140,7 @@ func (s *State) HasProperLabels() bool {
 	}
 
 	for _, shoot := range backup.Spec.AccessibleFrom {
-		if s.fileBackup.Labels[shoot] != util.GcpLabelBackupAccessibleFrom {
+		if s.fileBackup.Labels[ConvertToAccessibleFromKey(shoot)] != util.GcpLabelBackupAccessibleFrom {
 			return false
 		}
 	}
@@ -149,7 +150,11 @@ func (s *State) HasProperLabels() bool {
 			continue
 		}
 
-		if slices.Contains(backup.Spec.AccessibleFrom, key) {
+		if !IsAccessibleFromKey(key) {
+			continue
+		}
+
+		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFrompPrefix(key)) {
 			continue
 		}
 
@@ -173,7 +178,7 @@ func (s *State) SetFilestoreLabels() {
 	s.fileBackup.Labels[util.GcpLabelSkrBackupNamespace] = backup.Namespace
 	s.fileBackup.Labels[util.GcpLabelShootName] = s.Scope.Spec.ShootName
 	for _, shoot := range backup.Spec.AccessibleFrom {
-		s.fileBackup.Labels[shoot] = util.GcpLabelBackupAccessibleFrom
+		s.fileBackup.Labels[ConvertToAccessibleFromKey(shoot)] = util.GcpLabelBackupAccessibleFrom
 	}
 
 	// delete any stale accessibleFrom labels
@@ -182,10 +187,26 @@ func (s *State) SetFilestoreLabels() {
 			continue
 		}
 
-		if slices.Contains(backup.Spec.AccessibleFrom, key) {
+		if !IsAccessibleFromKey(key) {
+			continue
+		}
+
+		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFrompPrefix(key)) {
 			continue
 		}
 
 		delete(s.fileBackup.Labels, key)
 	}
+}
+
+func ConvertToAccessibleFromKey(name string) string {
+	return fmt.Sprintf("cm-allow-%s", name)
+}
+
+func IsAccessibleFromKey(key string) bool {
+	return strings.HasPrefix(key, "cm-allow-")
+}
+
+func StripAccessibleFrompPrefix(key string) string {
+	return strings.TrimPrefix(key, "cm-allow-")
 }
