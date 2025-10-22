@@ -75,6 +75,8 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			return nil, ctx
 		}
 
+		logger.Error(fmt.Errorf("local network reference is nil"), "Local network reference missing")
+
 		changed := false
 
 		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
@@ -137,7 +139,6 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			SuccessLogMsg("KCP VpcPeering local KCP Network not ready").
 			Run(ctx, state)
 	}
-
 
 	return nil, ctx
 }
