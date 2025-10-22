@@ -106,7 +106,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	if net.Status.State == string(cloudcontrolv1beta1.StateError) {
+	if net.Status.State != string(cloudcontrolv1beta1.StateReady) {
 		changed := false
 
 		if meta.RemoveStatusCondition(state.ObjAsVpcPeering().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
