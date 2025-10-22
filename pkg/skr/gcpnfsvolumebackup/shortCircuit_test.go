@@ -11,6 +11,8 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,6 +92,15 @@ func (s *shortCircuitSuite) TestWhenBackupIsReadyAndNotCapacityUpdate() {
 	obj := gcpNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.GcpNfsBackupReady
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now()}
+	obj.Status.FileStoreBackupLabels = map[string]string{
+		gcpclient.ManagedByKey:          gcpclient.ManagedByValue,
+		gcpclient.ScopeNameKey:          scope.Name,
+		util.GcpLabelSkrVolumeName:      obj.Spec.Source.Volume.Name,
+		util.GcpLabelSkrVolumeNamespace: obj.Spec.Source.Volume.Namespace,
+		util.GcpLabelSkrBackupName:      obj.Name,
+		util.GcpLabelSkrBackupNamespace: obj.Namespace,
+		util.GcpLabelShootName:          scope.Spec.ShootName,
+	}
 	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
 	s.Nil(err)
 
@@ -97,6 +108,7 @@ func (s *shortCircuitSuite) TestWhenBackupIsReadyAndNotCapacityUpdate() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
+	state.Scope = &scope
 	s.Nil(err)
 
 	client.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1

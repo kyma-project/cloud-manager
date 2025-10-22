@@ -9,6 +9,7 @@ import (
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -106,6 +107,15 @@ func (s *State) specCommaSeparatedAccessibleFrom() string {
 	return strings.Join(backup.Spec.AccessibleFrom, ",")
 }
 
+func (s *State) ShouldShortCircuit() bool {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+	backupState := backup.Status.State
+	return backupState == v1beta1.GcpNfsBackupReady &&
+		backup.Status.AccessibleFrom == s.specCommaSeparatedAccessibleFrom() &&
+		!s.isTimeForCapacityUpdate() &&
+		s.HasAllStatusLabels()
+}
+
 func (s *State) HasProperLabels() bool {
 	backup := s.ObjAsGcpNfsVolumeBackup()
 
@@ -146,6 +156,64 @@ func (s *State) HasProperLabels() bool {
 	}
 
 	for key, fixedLabelValue := range s.fileBackup.Labels {
+		if fixedLabelValue != util.GcpLabelBackupAccessibleFrom {
+			continue
+		}
+
+		if !IsAccessibleFromKey(key) {
+			continue
+		}
+
+		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFrompPrefix(key)) {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
+func (s *State) HasAllStatusLabels() bool {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+
+	if backup.Status.FileStoreBackupLabels == nil {
+		return false
+	}
+
+	if backup.Status.FileStoreBackupLabels[gcpclient.ManagedByKey] != gcpclient.ManagedByValue {
+		return false
+	}
+
+	if backup.Status.FileStoreBackupLabels[gcpclient.ScopeNameKey] != s.Scope.Name {
+		return false
+	}
+
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrVolumeName] != backup.Spec.Source.Volume.Name {
+		return false
+	}
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrVolumeNamespace] != backup.Spec.Source.Volume.Namespace {
+		return false
+	}
+
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrBackupName] != backup.Name {
+		return false
+	}
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrBackupNamespace] != backup.Namespace {
+		return false
+	}
+
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelShootName] != s.Scope.Spec.ShootName {
+		return false
+	}
+
+	for _, shoot := range backup.Spec.AccessibleFrom {
+		if backup.Status.FileStoreBackupLabels[ConvertToAccessibleFromKey(shoot)] != util.GcpLabelBackupAccessibleFrom {
+			return false
+		}
+	}
+
+	for key, fixedLabelValue := range backup.Status.FileStoreBackupLabels {
 		if fixedLabelValue != util.GcpLabelBackupAccessibleFrom {
 			continue
 		}

@@ -128,6 +128,9 @@ type GcpNfsVolumeBackupStatus struct {
 
 	// Comma separated list that reflects the AccessibleFrom field in spec upon the last successful reconciliation
 	AccessibleFrom string `json:"accessibleFrom,omitempty"`
+
+	// +optional
+	FileStoreBackupLabels map[string]string `json:"fileStoreBackupLabels,omitempty"`
 }
 
 // +kubebuilder:object:root=true
