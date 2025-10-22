@@ -128,7 +128,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 		}
 
 		if !changed {
-			return composed.StopAndForget, ctx
+			return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 		}
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
