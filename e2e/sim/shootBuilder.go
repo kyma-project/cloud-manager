@@ -273,6 +273,12 @@ func (b *ShootBuilder) Validate() error {
 	if b.errWithRuntime != nil {
 		result = multierror.Append(result, b.errWithRuntime...)
 	}
+	if b.Obj.Namespace == "" {
+		result = multierror.Append(result, fmt.Errorf("namespace must be set"))
+	}
+	if b.Obj.Name == "" {
+		result = multierror.Append(result, fmt.Errorf("name must be set"))
+	}
 	return result
 }
 

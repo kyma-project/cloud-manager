@@ -8,6 +8,7 @@ import (
 )
 
 type World interface {
+	Ctx() context.Context
 	Cancel()
 	StopWaitGroup() *sync.WaitGroup
 	RunError() error
@@ -26,6 +27,10 @@ type defaultWorld struct {
 	kcp    Cluster
 	garden Cluster
 	simu   sim.Sim
+}
+
+func (w *defaultWorld)  Ctx() context.Context {
+	return w.mCtx
 }
 
 func (w *defaultWorld) Cancel() {

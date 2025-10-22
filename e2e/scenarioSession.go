@@ -3,15 +3,64 @@ package e2e
 import (
 	"context"
 	"errors"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/sim"
 )
 
 type ScenarioSession interface {
-	RegisterCluster(alias string)
-	AllRegisteredClusters() []string
+	// AddExistingCluster creates new cluster.Cluster on the already created k8s cluster for the given alias.
+	// Alias is "kcp", "garden", or the alias an SKR was created with. The created cluster.Cluster is started
+	// and stopped when Terminate() is called
+	AddExistingCluster(ctx context.Context, alias string) (ClusterInSession, error)
 
-	CurrentCluster() SkrCluster
-	CurrentClusterAlias() string
-	SetCurrentCluster(c SkrCluster, alias string)
+	// CreateNewSkrCluster calls KEB to create new SKR instance and once provisioned it creates new cluster.Cluster
+	// that is started. When Terminate() is called the cluster.Cluster is stopped and SKR instance deleted.
+	CreateNewSkrCluster(ctx context.Context, opts sim.CreateInstanceInput) (ClusterInSession, error)
+
+	// AllClusters returns slice of aliases for all clusters, both added and created
+	AllClusters() []ClusterInSession
+
+	CurrentCluster() ClusterInSession
+
+	SetCurrentCluster(alias string)
+
+	Terminate(ctx context.Context) error
+}
+
+type ClusterInSession interface {
+	Cluster
+	IsCreatedInSession() bool
+	IsCurrent() bool
+	RuntimeID() string
+	ShootName() string
+}
+
+type defaultClusterInSession struct {
+	Cluster
+	isCreatedInSession bool
+	isCurrent          bool
+	runtimeID          string
+	shootName          string
+}
+
+func (c *defaultClusterInSession) IsCreatedInSession() bool {
+	return c.isCreatedInSession
+}
+
+func (c *defaultClusterInSession) IsCurrent() bool {
+	return c.isCurrent
+}
+
+func (c *defaultClusterInSession) RuntimeID() string {
+	return c.runtimeID
+}
+
+func (c *defaultClusterInSession) ShootName() string {
+	return c.shootName
 }
 
 // CTX ==========================================
@@ -20,11 +69,17 @@ type scenarioSessionKeyType struct{}
 
 var scenarioSessionKey = &scenarioSessionKeyType{}
 
-func NewScenarioSession(ctx context.Context) context.Context {
-	return context.WithValue(ctx, scenarioSessionKey, &scenarioSession{})
+func NewScenarioSession() ScenarioSession {
+	return &scenarioSession{
+		world: world,
+	}
 }
 
-func GetScenarioSession(ctx context.Context) ScenarioSession {
+func StartNewScenarioSession(ctx context.Context) context.Context {
+	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession())
+}
+
+func GetCurrentScenarioSession(ctx context.Context) ScenarioSession {
 	val := ctx.Value(scenarioSessionKey)
 	if val == nil {
 		return nil
@@ -32,44 +87,197 @@ func GetScenarioSession(ctx context.Context) ScenarioSession {
 	return val.(ScenarioSession)
 }
 
-func GetScenarioSessionEnsureCluster(ctx context.Context) (ScenarioSession, error) {
-	session := GetScenarioSession(ctx)
-	if session == nil {
-		return nil, errors.New("scenario session not started")
-	}
-	if session.CurrentCluster() == nil {
-		return nil, errors.New("scenario session does not have cluster set")
-	}
-	return session, nil
-}
-
 // IMPL ========================================
 
 var _ ScenarioSession = &scenarioSession{}
 
 type scenarioSession struct {
-	transientClusters   []string
-	currentCluster      SkrCluster
-	currentClusterAlias string
+	m sync.Mutex
+
+	wg     sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
+	runErr error
+
+	world    World
+	clusters []*defaultClusterInSession
+
+	terminated bool
 }
 
-func (s *scenarioSession) RegisterCluster(alias string) {
-	s.transientClusters = append(s.transientClusters, alias)
+func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) (ClusterInSession, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if s.terminated {
+		return nil, errors.New("can not add cluster to terminated session")
+	}
+
+	for _, c := range s.clusters {
+		if c.Alias() == alias {
+			return nil, fmt.Errorf("cluster %s already added to scenario", alias)
+		}
+	}
+
+	if alias == s.world.Kcp().Alias() {
+		cc := &defaultClusterInSession{
+			Cluster:            s.world.Kcp(),
+			isCreatedInSession: false,
+		}
+		s.clusters = append(s.clusters, cc)
+		s.SetCurrentCluster(alias)
+		return cc, nil
+	}
+
+	if alias == s.world.Garden().Alias() {
+		cc := &defaultClusterInSession{
+			Cluster:            s.world.Garden(),
+			isCreatedInSession: false,
+		}
+		s.clusters = append(s.clusters, cc)
+		s.SetCurrentCluster(alias)
+		return cc, nil
+	}
+
+	arr, err := s.world.Sim().Keb().List(ctx, sim.WithAlias(alias))
+	if err != nil {
+		return nil, fmt.Errorf("error listing runtimes from KEB: %w", err)
+	}
+	if len(arr) == 0 {
+		return nil, fmt.Errorf("runtimes with alias %q not found", alias)
+	}
+	if len(arr) > 1 {
+		return nil, fmt.Errorf("found more then one runtime with alias %q", alias)
+	}
+
+	id := arr[0]
+
+	clstr, err := s.world.Sim().CreateClientCluster(ctx, id.RuntimeID)
+	if err != nil {
+		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
+	}
+
+	cc := &defaultClusterInSession{
+		Cluster:            NewCluster(alias, clstr),
+		isCreatedInSession: false,
+		runtimeID:          id.RuntimeID,
+		shootName:          id.ShootName,
+	}
+	s.clusters = append(s.clusters, cc)
+	s.SetCurrentCluster(alias)
+
+	s.wg.Add(1)
+	if s.ctx == nil {
+		s.ctx, s.cancel = context.WithCancel(ctx)
+	}
+	go func() {
+		defer s.wg.Done()
+		if err := cc.Start(s.ctx); err != nil {
+			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", alias, err))
+		}
+	}()
+
+	return cc, nil
 }
 
-func (s *scenarioSession) AllRegisteredClusters() []string {
-	return append(make([]string, 0, len(s.transientClusters)), s.transientClusters...)
+func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts sim.CreateInstanceInput) (ClusterInSession, error) {
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
+
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if s.terminated {
+		return nil, errors.New("can not add cluster to terminated session")
+	}
+
+	for _, c := range s.clusters {
+		if c.Alias() == opts.Alias {
+			return nil, fmt.Errorf("cluster %s already added to scenario", opts.Alias)
+		}
+	}
+
+	id, err := s.world.Sim().Keb().CreateInstance(ctx, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error creating runtime in KEB: %w", err)
+	}
+
+	err = s.world.Sim().Keb().WaitProvisioningCompleted(ctx, sim.WithRuntime(id.RuntimeID), sim.WithTimeout(15*time.Minute))
+	if err != nil {
+		return nil, err
+	}
+
+	clstr, err := s.world.Sim().CreateClientCluster(ctx, id.RuntimeID)
+	if err != nil {
+		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
+	}
+
+	cc := &defaultClusterInSession{
+		Cluster:            NewCluster(opts.Alias, clstr),
+		isCreatedInSession: true,
+		runtimeID:          id.RuntimeID,
+		shootName:          id.ShootName,
+	}
+	s.clusters = append(s.clusters, cc)
+	s.SetCurrentCluster(opts.Alias)
+
+	s.wg.Add(1)
+	if s.ctx == nil {
+		s.ctx, s.cancel = context.WithCancel(ctx)
+	}
+	go func() {
+		defer s.wg.Done()
+		if err := cc.Start(s.ctx); err != nil {
+			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", opts.Alias, err))
+		}
+	}()
+
+	return cc, nil
 }
 
-func (s *scenarioSession) CurrentCluster() SkrCluster {
-	return s.currentCluster
+func (s *scenarioSession) AllClusters() []ClusterInSession {
+	result := make([]ClusterInSession, len(s.clusters))
+	for i, v := range s.clusters {
+		result[i] = ClusterInSession(v)
+	}
+	return result
 }
 
-func (s *scenarioSession) CurrentClusterAlias() string {
-	return s.currentClusterAlias
+func (s *scenarioSession) CurrentCluster() ClusterInSession {
+	for _, c := range s.clusters {
+		if c.IsCurrent() {
+			return c
+		}
+	}
+	return nil
 }
 
-func (s *scenarioSession) SetCurrentCluster(c SkrCluster, alias string) {
-	s.currentCluster = c
-	s.currentClusterAlias = alias
+func (s *scenarioSession) SetCurrentCluster(alias string) {
+	for _, c := range s.clusters {
+		c.isCurrent = c.Alias() == alias
+	}
+}
+
+func (s *scenarioSession) Terminate(ctx context.Context) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if s.terminated {
+		return fmt.Errorf("already terminated")
+	}
+	s.terminated = true
+
+	s.cancel()
+	s.wg.Wait()
+
+	for _, c := range s.clusters {
+		if c.IsCreatedInSession() {
+			if err := s.world.Sim().Keb().DeleteInstance(ctx, c.RuntimeID()); err != nil {
+				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.Alias(), err))
+			}
+		}
+	}
+
+	return s.runErr
 }

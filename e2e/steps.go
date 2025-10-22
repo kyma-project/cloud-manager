@@ -45,11 +45,11 @@ func resourceDeclaration(ctx context.Context, tbl *godog.Table) (context.Context
 		return ctx, fmt.Errorf("failed to parse resource declaration: %w", err)
 	}
 
-	if GetScenarioSession(ctx).CurrentCluster() == nil {
+	if GetCurrentScenarioSession(ctx).CurrentCluster() == nil {
 		return ctx, fmt.Errorf("current cluster is not defined")
 	}
 
-	err = GetScenarioSession(ctx).CurrentCluster().AddResources(ctx, rd...)
+	err = GetCurrentScenarioSession(ctx).CurrentCluster().AddResources(ctx, rd...)
 	if err != nil {
 		return ctx, fmt.Errorf("error adding resource declaration: %w", err)
 	}

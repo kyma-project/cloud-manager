@@ -70,7 +70,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 			return ctx, fmt.Errorf("world does not exist")
 		}
 
-		ctx = NewScenarioSession(ctx)
+		ctx = StartNewScenarioSession(ctx)
 
 		return ctx, nil
 	})

@@ -142,6 +142,12 @@ func (o WithRuntimes) ApplyOnWait(opt *waitOptions) {
 	opt.runtimeIds = append(opt.runtimeIds, []string(o)...)
 }
 
+type WithRuntime string
+
+func (o WithRuntime) ApplyOnWait(opt *waitOptions) {
+	opt.runtimeIds = append(opt.runtimeIds, string(o))
+}
+
 type WithTimeout time.Duration
 
 func (o WithTimeout) ApplyOnWait(opt *waitOptions) {
@@ -243,6 +249,12 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 func (k *defaultKeb) CreateInstance(ctx context.Context, in CreateInstanceInput) (InstanceDetails, error) {
 	if err := in.Validate(); err != nil {
 		return InstanceDetails{}, err
+	}
+	if e2econfig.Config.GardenNamespace == "" {
+		return InstanceDetails{}, fmt.Errorf("config garden namespace not set")
+	}
+	if e2econfig.Config.KcpNamespace == "" {
+		return InstanceDetails{}, fmt.Errorf("config kcp namespace not set")
 	}
 	subscription := e2econfig.Config.Subscriptions.GetDefaultForProvider(in.Provider)
 	if subscription == nil {

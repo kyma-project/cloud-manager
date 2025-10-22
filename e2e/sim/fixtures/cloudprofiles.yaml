@@ -4,8 +4,6 @@ items:
   kind: CloudProfile
   metadata:
     creationTimestamp: "2019-02-15T10:57:17Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/alicloud: "true"
     name: alicloud
@@ -11403,8 +11401,6 @@ items:
   kind: CloudProfile
   metadata:
     creationTimestamp: "2018-03-23T12:12:44Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/aws: "true"
     name: aws
@@ -23962,8 +23958,6 @@ items:
   kind: CloudProfile
   metadata:
     creationTimestamp: "2018-03-23T12:12:50Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/azure: "true"
     name: az
@@ -34758,8 +34752,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - MONSOON3 domain
     creationTimestamp: "2019-12-16T14:51:21Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud
@@ -38616,8 +38608,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - BS domain
     creationTimestamp: "2020-09-16T20:26:56Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-bs
@@ -42579,8 +42569,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - BTP_FP domain
     creationTimestamp: "2024-05-23T06:57:08Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-btp-fp
@@ -46542,8 +46530,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - CCADMIN domain
     creationTimestamp: "2022-02-17T11:06:50Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-ccadmin
@@ -50505,8 +50491,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - CIS domain
     creationTimestamp: "2021-06-10T15:12:47Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-cis
@@ -54557,8 +54541,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - CP domain
     creationTimestamp: "2020-09-16T20:26:56Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-cp
@@ -58520,8 +58502,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - HCM domain
     creationTimestamp: "2021-09-30T08:52:32Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-hcm
@@ -62483,8 +62463,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - HCP03 domain
     creationTimestamp: "2020-09-16T20:26:56Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-hcp03
@@ -66446,8 +66424,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - HDA domain
     creationTimestamp: "2022-12-14T14:07:56Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-hda
@@ -70409,8 +70385,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - HEC domain
     creationTimestamp: "2024-11-19T14:36:34Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-hec
@@ -74372,8 +74346,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - IAAS-EC5A3E domain
     creationTimestamp: "2025-02-24T09:26:28Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-iaas-ec5a3e
@@ -78207,8 +78179,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - KYMA domain
     creationTimestamp: "2023-12-05T08:31:50Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-kyma
@@ -82133,8 +82103,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - NEO domain
     creationTimestamp: "2021-12-02T07:55:06Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-neo
@@ -86315,8 +86283,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - ORA_FP domain
     creationTimestamp: "2024-05-23T06:57:11Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-ora-fp
@@ -90149,8 +90115,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - S4 domain
     creationTimestamp: "2020-12-09T12:05:19Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-s4
@@ -94112,8 +94076,6 @@ items:
     annotations:
       garden.sapcloud.io/displayName: Converged Cloud - WBS domain
     creationTimestamp: "2025-02-24T09:26:25Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/openstack: "true"
     name: converged-cloud-wbs
@@ -98073,8 +98035,6 @@ items:
   kind: CloudProfile
   metadata:
     creationTimestamp: "2018-03-23T12:12:56Z"
-    finalizers:
-    - gardener
     labels:
       provider.extensions.gardener.cloud/gcp: "true"
     name: gcp

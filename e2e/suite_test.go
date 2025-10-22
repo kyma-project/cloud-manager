@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -100,11 +101,17 @@ var _ = BeforeSuite(func() {
 
 	By("starting world")
 
+	// add shoot ready controller that makes each shoot ready!!!
+	gardenManager, err := sim.NewGardenManager(infra.Garden().Cfg(), infra.Garden().Scheme(), infra.KcpManager().GetLogger())
+	Expect(err).NotTo(HaveOccurred(), "failed creating garden manager")
+	Expect(sim.SetupShootReadyController(gardenManager)).To(Succeed())
+
 	wf := NewWorldFactory()
 	w, err := wf.Create(infra.Ctx(), WorldCreateOptions{
 		KcpRestConfig:         infra.KCP().Cfg(),
 		CloudProfileLoader:    sim.NewFileCloudProfileLoader("sim/fixtures/cloudprofiles.yaml"),
 		SkrKubeconfigProvider: sim.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
+		ExtraRunnables:        []manager.Runnable{gardenManager},
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
 	world = w

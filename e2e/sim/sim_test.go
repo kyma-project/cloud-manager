@@ -3,7 +3,6 @@ package sim
 import (
 	"fmt"
 
-	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -15,7 +14,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,7 +30,8 @@ var _ = Describe("Feature: KCP SIM", func() {
 		var instanceDetails InstanceDetails
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
-		//var gardenerCluster *infrastructuremanagerv1.GardenerCluster
+
+		kubeconfigCallCount := skrKubeconfigProviderInstance.GetCallCount(shoot.Name)
 
 		By("When instance is created", func() {
 			id, err := simInstance.Keb().CreateInstance(infra.Ctx(), CreateInstanceInput{
@@ -58,39 +57,34 @@ var _ = Describe("Feature: KCP SIM", func() {
 				Should(Succeed())
 		})
 
-		kubeconfigCallCount := skrKubeconfigProviderInstance.GetCallCount(shoot.Name)
-
-		By("When Shoot is ready", func() {
-			shoot.Status.Conditions = pie.Map(GardenerConditionTypes, func(x gardenertypes.ConditionType) gardenertypes.Condition {
-				return gardenertypes.Condition{
-					Type:               x,
-					Status:             gardenertypes.ConditionTrue,
-					LastTransitionTime: metav1.Now(),
-					LastUpdateTime:     metav1.Now(),
-					Reason:             string(x),
-					Message:            string(x),
-				}
-			})
-			// shoot doesn't have status subresources so it must whole be updated
-			err := infra.Garden().Client().Update(infra.Ctx(), shoot)
-			Expect(err).To(Succeed())
-
-			err = LoadAndCheck(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions())
-			Expect(err).To(Succeed())
+		By("And Then eventually Shoot is ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions(), HavingShootReady).
+				Should(Succeed())
 		})
+
+		//By("When Shoot is ready", func() {
+		//	shoot.Status.Conditions = pie.Map(GardenerConditionTypes, func(x gardenertypes.ConditionType) gardenertypes.Condition {
+		//		return gardenertypes.Condition{
+		//			Type:               x,
+		//			Status:             gardenertypes.ConditionTrue,
+		//			LastTransitionTime: metav1.Now(),
+		//			LastUpdateTime:     metav1.Now(),
+		//			Reason:             string(x),
+		//			Message:            string(x),
+		//		}
+		//	})
+		//	// shoot doesn't have status subresources so it must whole be updated
+		//	err := infra.Garden().Client().Update(infra.Ctx(), shoot)
+		//	Expect(err).To(Succeed())
+		//
+		//	err = LoadAndCheck(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions())
+		//	Expect(err).To(Succeed())
+		//})
 
 		By("Then Runtime has ProvisioningCompleted true", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), rt, NewObjActions(), func(obj client.Object) error {
-					x, ok := obj.(*infrastructuremanagerv1.Runtime)
-					if !ok {
-						return fmt.Errorf("expected runtime object but got %T", obj)
-					}
-					if !x.Status.ProvisioningCompleted {
-						return fmt.Errorf("expected provisioning completed to be true")
-					}
-					return nil
-				}).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), rt, NewObjActions(), HavingRuntimeProvisioningCompleted).
 				Should(Succeed())
 		})
 
@@ -103,7 +97,7 @@ var _ = Describe("Feature: KCP SIM", func() {
 		})
 
 		By("And Then GardenerCluster has spec.shoot.name set", func() {
-			Expect(gc.Spec.Shoot.Name).To(Equal(shoot.Name))
+			Expect(gc.Spec.Shoot.Name).To(Equal(rt.Spec.Shoot.Name))
 		})
 
 		By("And Then GardenerCluster status state is Ready", func() {
@@ -111,7 +105,7 @@ var _ = Describe("Feature: KCP SIM", func() {
 		})
 
 		By("And Then Garden kubeconfig is generated", func() {
-			Expect(skrKubeconfigProviderInstance.GetCallCount(shoot.Name) > kubeconfigCallCount).To(BeTrue())
+			Expect(skrKubeconfigProviderInstance.GetCallCount(rt.Spec.Shoot.Name) > kubeconfigCallCount).To(BeTrue())
 		})
 
 		By("And Then SKR kubeconfig secret is created", func() {

@@ -49,7 +49,12 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 	}
 
 	if len(rawConfig.CurrentContext) > 0 {
-		c.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+		if rawConfig.Contexts[rawConfig.CurrentContext].Namespace != "" {
+			c.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+		}
+	}
+	if c.GardenNamespace == "" {
+		c.GardenNamespace = "garden"
 	}
 
 	return nil

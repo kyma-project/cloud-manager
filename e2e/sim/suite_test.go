@@ -1,8 +1,10 @@
 package sim
 
 import (
+	"context"
 	"os"
 	"testing"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -104,10 +106,21 @@ var _ = BeforeSuite(func() {
 	err = infra.KcpManager().Add(simInstance)
 	Expect(err).NotTo(HaveOccurred(), "failed to add simInstance to KCP manager")
 
+	// add shoot ready controller that makes each shoot ready!!!
+	gardenManager, err := NewGardenManager(infra.Garden().Cfg(), infra.Garden().Scheme(), infra.KcpManager().GetLogger())
+	Expect(err).NotTo(HaveOccurred(), "failed creating garden manager")
+	Expect(SetupShootReadyController(gardenManager)).To(Succeed())
+	Expect(infra.KcpManager().Add(gardenManager)).To(Succeed())
+
 	// Start controllers
 	infra.StartKcpControllers(infra.Ctx())
+	Expect(infra.KcpWaitForCacheSync(infra.Ctx())).To(Succeed())
 
-	infra.KcpManager().GetCache().WaitForCacheSync(infra.Ctx())
+	toCtx, toCancel := context.WithTimeout(infra.Ctx(), time.Second*10)
+	defer toCancel()
+	ok := gardenManager.GetCache().WaitForCacheSync(toCtx)
+	Expect(toCtx.Err()).ToNot(HaveOccurred())
+	Expect(ok).To(BeTrue())
 
 	By("creating garden namespace")
 	// create garden namespace

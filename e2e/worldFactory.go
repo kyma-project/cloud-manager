@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type WorldFactory struct {
@@ -25,6 +26,7 @@ type WorldCreateOptions struct {
 	KcpRestConfig         *rest.Config
 	CloudProfileLoader    sim.CloudProfileLoader
 	SkrKubeconfigProvider sim.SkrKubeconfigProvider
+	ExtraRunnables        []manager.Runnable
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (World, error) {
@@ -71,6 +73,8 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("error initializing KCP cluster: %w", err)
 	}
 
+	time.Sleep(time.Second)
+
 	// Garden Cluster ------------------------
 
 	factoryGarden := NewGardenClusterFactory(kcpCluster.GetClient())
@@ -116,6 +120,16 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 			result.runError = multierror.Append(result.runError, fmt.Errorf("error running sim instance: %w", err))
 		}
 	}()
+
+	for _, r := range opts.ExtraRunnables {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := r.Start(ctx); err != nil {
+				result.runError = multierror.Append(result.runError, fmt.Errorf("error running extra runnable %T: %w", r, err))
+			}
+		}()
+	}
 
 	result.kcp = kcpCluster
 	result.garden = gardenCluster

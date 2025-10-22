@@ -6,7 +6,6 @@ import (
 	"time"
 
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -182,17 +181,8 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
 
-	if len(shoot.Status.Conditions) == 0 {
+	if !IsShootReady(shoot) {
 		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
-	}
-	for _, ct := range GardenerConditionTypes {
-		cond := gardenerhelper.GetCondition(shoot.Status.Conditions, ct)
-		if cond == nil {
-			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
-		}
-		if cond.Status != gardenertypes.ConditionTrue {
-			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
-		}
 	}
 
 	// shoot is ready

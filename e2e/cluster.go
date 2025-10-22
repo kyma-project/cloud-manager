@@ -5,13 +5,16 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -29,7 +32,7 @@ type Cluster interface {
 	// Get returns resource declarede with the given alias from the cache. If resource does not exist, nil object
 	// and not error are returned. Also, if kind is not registered, nil resource and no error are returned.
 	// Error is returned only if it's some other than NotFound and NoMatch
-	Get(ctx context.Context, alias string) (client.Object, error)
+	Get(ctx context.Context, alias string) (*unstructured.Unstructured, error)
 
 	// EvaluationContext returns map of all declared resources
 	EvaluationContext(ctx context.Context) (map[string]interface{}, error)
@@ -88,18 +91,16 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 		}
 		c.resources[decl.Alias] = ri
 
-		rObj, err := c.Cluster.GetScheme().New(gvk)
-		if err != nil {
-			return fmt.Errorf("failed to create object for alias %q GVK %s: %w", decl.Alias, gvk.String(), err)
-		}
-
 		src, sourceExists := c.sources[gvk]
 		if sourceExists {
 			ri.Source = src
 			continue
 		}
 
-		src = source.Kind(c.Cluster.GetCache(), rObj.(client.Object), handler.Funcs{})
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(gvk)
+
+		src = source.Kind(c.Cluster.GetCache(), u, handler.TypedFuncs[*unstructured.Unstructured, reconcile.Request]{})
 		err = src.Start(c.runCtx, nil)
 		if err != nil {
 			return fmt.Errorf("failed to start source for alias %q GVK %s: %w", decl.Alias, gvk.String(), err)
@@ -125,64 +126,51 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 	return nil
 }
 
-func (c *defaultCluster) new(alias string) (client.Object, error) {
-	ri, exists := c.resources[alias]
-	if !exists {
-		return nil, fmt.Errorf("alias %s not found", alias)
-	}
-
-	rObj, err := c.Cluster.GetScheme().New(ri.GVK)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create object for alias %q GVK %s: %w", alias, ri.GVK.String(), err)
-	}
-
-	return rObj.(client.Object), nil
-}
-
 func (c *defaultCluster) Has(alias string) bool {
 	_, ok := c.resources[alias]
 	return ok
 }
 
-func (c *defaultCluster) Get(ctx context.Context, alias string) (client.Object, error) {
+func (c *defaultCluster) Get(ctx context.Context, alias string) (*unstructured.Unstructured, error) {
 	ri, ok := c.resources[alias]
 	if !ok {
 		return nil, fmt.Errorf("alias %s not found", alias)
 	}
-	obj, err := c.new(alias)
-	if err != nil {
-		return nil, err
-	}
-	err = c.GetClient().Get(ctx, types.NamespacedName{
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(ri.GVK)
+
+	err := c.GetClient().Get(ctx, types.NamespacedName{
 		Namespace: ri.Namespace,
 		Name:      ri.Name,
-	}, obj)
+	}, u)
 	if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error loading resource %q", alias)
 	}
-	return obj, nil
+	return u, nil
 }
 
 func (c *defaultCluster) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {
 	result := make(map[string]interface{}, len(c.resources))
 	for _, ri := range c.resources {
-		obj, err := c.new(ri.Alias)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create object for alias %q: %w", ri.Alias, err)
-		}
+		u := &unstructured.Unstructured{}
+		u.SetGroupVersionKind(ri.GVK)
 
-		err = c.Cluster.GetClient().Get(ctx, types.NamespacedName{
+		err := c.Cluster.GetClient().Get(ctx, types.NamespacedName{
 			Namespace: ri.Namespace,
 			Name:      ri.Name,
-		}, obj)
-		if err != nil {
+		}, u)
+		if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
 			return nil, fmt.Errorf("failed to load object for alias %q: %w", ri.Alias, err)
 		}
-
-		result[ri.Alias] = obj
+		if err != nil {
+			result[ri.Alias] = nil
+		} else {
+			result[ri.Alias] = u.Object
+		}
 	}
 
 	return result, nil

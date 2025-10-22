@@ -56,6 +56,7 @@ type InfraEnv interface {
 	Config() config.Config
 
 	StartKcpControllers(ctx context.Context)
+	KcpWaitForCacheSync(ctx context.Context) error
 	StartSkrControllers(ctx context.Context)
 	Ctx() context.Context
 	stopControllers()
