@@ -133,7 +133,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 
 		return composed.PatchStatus(state.ObjAsVpcPeering()).
 			ErrorLogMessage("Error patching KCP VpcPeering status with local network not ready").
-			SuccessError(composed.StopAndForget).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
 			SuccessLogMsg("KCP VpcPeering local KCP Network not ready").
 			Run(ctx, state)
 	}
