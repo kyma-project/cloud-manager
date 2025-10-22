@@ -138,9 +138,6 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	if net.Status.State != string(cloudcontrolv1beta1.StateReady) {
-		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
-	}
 
 	return nil, ctx
 }
