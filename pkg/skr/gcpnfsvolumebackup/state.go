@@ -9,7 +9,6 @@ import (
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -110,7 +109,7 @@ func (s *State) specCommaSeparatedAccessibleFrom() string {
 func (s *State) ShouldShortCircuit() bool {
 	backup := s.ObjAsGcpNfsVolumeBackup()
 	backupState := backup.Status.State
-	return backupState == v1beta1.GcpNfsBackupReady &&
+	return backupState == cloudresourcesv1beta1.GcpNfsBackupReady &&
 		backup.Status.AccessibleFrom == s.specCommaSeparatedAccessibleFrom() &&
 		!s.isTimeForCapacityUpdate() &&
 		s.HasAllStatusLabels()

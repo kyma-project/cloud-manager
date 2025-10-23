@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -93,8 +92,8 @@ func (s *shortCircuitSuite) TestWhenBackupIsReadyAndNotCapacityUpdate() {
 	obj.Status.State = v1beta1.GcpNfsBackupReady
 	obj.Status.LastCapacityUpdate = &metav1.Time{Time: time.Now()}
 	obj.Status.FileStoreBackupLabels = map[string]string{
-		gcpclient.ManagedByKey:          gcpclient.ManagedByValue,
-		gcpclient.ScopeNameKey:          scope.Name,
+		client.ManagedByKey:             client.ManagedByValue,
+		client.ScopeNameKey:             scope.Name,
 		util.GcpLabelSkrVolumeName:      obj.Spec.Source.Volume.Name,
 		util.GcpLabelSkrVolumeNamespace: obj.Spec.Source.Volume.Namespace,
 		util.GcpLabelSkrBackupName:      obj.Name,
