@@ -16,7 +16,7 @@ func initLocalPeeringClient(ctx context.Context, st composed.State) (error, cont
 
 	var auxiliaryTenants []string
 
-	if state.RemoteNetwork() != nil && state.RemoteNetwork().Status.Network.Azure.TenantId != "" {
+	if state.RemoteNetwork().Status.Network.Azure.TenantId != "" {
 		auxiliaryTenants = append(auxiliaryTenants, state.RemoteNetwork().Status.Network.Azure.TenantId)
 	}
 
