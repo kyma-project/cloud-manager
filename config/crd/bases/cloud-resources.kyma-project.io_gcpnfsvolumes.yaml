@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.10
+    cloud-resources.kyma-project.io/version: v0.0.11
   name: gcpnfsvolumes.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -94,6 +94,12 @@ spec:
                   type: object
                   x-kubernetes-validations:
                     - message: SourceBackup is immutable.
+                      rule: (self == oldSelf)
+                sourceBackupUrl:
+                  pattern: ^locations/(.+)/backups/(.+)$
+                  type: string
+                  x-kubernetes-validations:
+                    - message: SourceBackupUrl is immutable.
                       rule: (self == oldSelf)
                 tier:
                   default: BASIC_HDD

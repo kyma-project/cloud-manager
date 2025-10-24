@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.6
+    cloud-resources.kyma-project.io/version: v0.0.7
   name: gcpnfsbackupschedules.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -52,6 +52,19 @@ spec:
             spec:
               description: GcpNfsBackupScheduleSpec defines the desired state of GcpNfsBackupSchedule
               properties:
+                accessibleFrom:
+                  description: |-
+                    AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backups created by this schedule for restore.
+                    "ALL" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "ALL" cannot be used in combination with other values.
+                  items:
+                    type: string
+                  maxItems: 10
+                  minItems: 1
+                  type: array
+                  x-kubernetes-list-type: set
+                  x-kubernetes-validations:
+                    - message: The value 'ALL' cannot be combined with other values.
+                      rule: (self.all(x, x == 'ALL') || self.all(x, x != 'ALL'))
                 deleteCascade:
                   default: false
                   description: |-

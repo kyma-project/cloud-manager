@@ -40,7 +40,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	//Get state object with GcpNfsVolumeBackup
 	state, err := factory.newStateWith(objDiffName)
 	s.Nil(err)
-	err, _ctx := loadGcpNfsVolumeBackup(ctx, state)
+	err, _ctx := populateBackupUrl(ctx, state)
 
 	//validate expected return values
 	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
@@ -66,7 +66,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	notReadyVolumeBackup.Status.Conditions = []metav1.Condition{}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, notReadyVolumeBackup)
 	s.Nil(err)
-	err, _ = loadGcpNfsVolumeBackup(ctx, state)
+	err, _ = populateBackupUrl(ctx, state)
 
 	//validate expected return values
 	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
@@ -94,8 +94,9 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	state, err := factory.newStateWith(obj)
+	state.Scope = scope.DeepCopy()
 	s.Nil(err)
-	err, ctx = loadGcpNfsVolumeBackup(ctx, state)
+	err, ctx = populateBackupUrl(ctx, state)
 	assert.Nil(s.T(), err)
 	assert.Nil(s.T(), ctx)
 }

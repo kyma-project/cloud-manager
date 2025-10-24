@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
@@ -106,5 +107,30 @@ func WithGcpNfsVolumeBackupLocation(location string) ObjAction {
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupLocation", obj))
 		},
+	}
+}
+
+func WithGcpNfsVolumeBackupAccessibleFrom(accessibleFrom []string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
+				x.Spec.AccessibleFrom = accessibleFrom
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupAccessibleFrom", obj))
+		},
+	}
+}
+
+func HavingGcpNfsVolumeBackupAccessibleFromStatus(accessibleFrom string) ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
+		if !ok {
+			return fmt.Errorf("the object %T is not GcpNfsVolumeBackup", obj)
+		}
+		if x.Status.AccessibleFrom != accessibleFrom {
+			return fmt.Errorf("the GcpNfsVolumeBackup AccessibleFrom status is %s, expected %s", x.Status.AccessibleFrom, accessibleFrom)
+		}
+		return nil
 	}
 }
