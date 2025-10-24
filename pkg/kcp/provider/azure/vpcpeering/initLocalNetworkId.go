@@ -10,10 +10,6 @@ import (
 func initLocalNetworkId(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if state.LocalNetwork() == nil {
-		return nil, ctx
-	}
-
 	state.localNetworkId = azureutil.NewVirtualNetworkResourceIdFromNetworkReference(state.LocalNetwork().Status.Network)
 
 	logger := composed.LoggerFromCtx(ctx)
