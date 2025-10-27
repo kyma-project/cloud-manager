@@ -96,6 +96,7 @@ rules:
   - azurevpcpeerings
   - cloudresources
   - gcpnfsbackupschedules
+  - gcpnfsvolumebackupdiscoveries
   - gcpnfsvolumebackups
   - gcpnfsvolumerestores
   - gcpnfsvolumes
@@ -132,6 +133,7 @@ rules:
   - azurevpcpeerings/finalizers
   - cloudresources/finalizers
   - gcpnfsbackupschedules/finalizers
+  - gcpnfsvolumebackupdiscoveries/finalizers
   - gcpnfsvolumebackups/finalizers
   - gcpnfsvolumerestores/finalizers
   - gcpnfsvolumes/finalizers
@@ -162,6 +164,7 @@ rules:
   - azurevpcpeerings/status
   - cloudresources/status
   - gcpnfsbackupschedules/status
+  - gcpnfsvolumebackupdiscoveries/status
   - gcpnfsvolumebackups/status
   - gcpnfsvolumerestores/status
   - gcpnfsvolumes/status

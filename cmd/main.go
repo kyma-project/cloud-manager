@@ -239,6 +239,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupDiscoveryReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env, setupLog); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackupDiscovery")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(skrRegistry, gcpnfsrestoreclient.NewFileRestoreClientProvider(), env, setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
 		os.Exit(1)

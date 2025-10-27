@@ -20,6 +20,8 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the Project itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- cloud-resources_gcpnfsvolumebackupdiscovery_editor_role.yaml
+- cloud-resources_gcpnfsvolumebackupdiscovery_viewer_role.yaml
 - cloud-resources_gcprediscluster_editor_role.yaml
 - cloud-resources_gcprediscluster_viewer_role.yaml
 - cloud-control_azurevnetlink_editor_role.yaml
