@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	gcpnfsvolumebackupdiscovery "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackupdiscovery"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackupdiscovery"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 )
