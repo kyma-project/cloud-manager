@@ -148,6 +148,16 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// create ====================================================
 
+	finalizerAdded, err := composed.PatchObjAddFinalizer(ctx, infrastructuremanagerv1.Finalizer, rt, r.kcp)
+	if err != nil {
+		logger.Error(err, "Error adding finalizer")
+		return reconcile.Result{}, fmt.Errorf("error adding Runtime finalizer: %w", err)
+	}
+	if finalizerAdded {
+		logger.Info("Added finalizer to Runtime")
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+	}
+
 	if shoot == nil {
 		cpr, err := r.cpl.Load(ctx)
 		if err != nil {
@@ -179,6 +189,59 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 
 		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+	}
+
+	if len(shoot.Status.LastErrors) > 0 {
+		statusChanged := false
+		if rt.Status.ProvisioningCompleted {
+			rt.Status.ProvisioningCompleted = false
+			statusChanged = true
+		}
+		if len(rt.Status.Conditions) != 1 {
+			rt.Status.Conditions = []metav1.Condition{
+				{
+					Type:               cloudcontrolv1beta1.ConditionTypeError,
+					Status:             metav1.ConditionTrue,
+					ObservedGeneration: rt.Generation,
+					LastTransitionTime: metav1.Time{Time: r.clock.Now()},
+					Reason:             "ShootError",
+					Message:            shoot.Status.LastErrors[0].Description,
+				},
+			}
+			statusChanged = true
+		}
+		if rt.Status.State != infrastructuremanagerv1.RuntimeStateFailed {
+			rt.Status.State = infrastructuremanagerv1.RuntimeStateFailed
+			statusChanged = true
+		}
+
+		if statusChanged {
+			logger.Info("Updating Runtime Status with shoot error state")
+			err = composed.PatchObjStatus(ctx, rt, r.kcp)
+			if err != nil {
+				return reconcile.Result{}, fmt.Errorf("error patching Runtime status with shoot error state: %w", err)
+			}
+		}
+
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+	} else {
+		statusChanged := false
+		if len(rt.Status.Conditions) != 0 {
+			rt.Status.Conditions = []metav1.Condition{}
+			statusChanged = true
+		}
+		if rt.Status.State == infrastructuremanagerv1.RuntimeStateFailed || rt.Status.State == "" {
+			rt.Status.State = infrastructuremanagerv1.RuntimeStatePending
+			statusChanged = true
+		}
+		if statusChanged {
+			logger.Info("Updating Runtime Status with pending state")
+			err = composed.PatchObjStatus(ctx, rt, r.kcp)
+			if err != nil {
+				return reconcile.Result{}, fmt.Errorf("error patching Runtime status with pending state: %w", err)
+			}
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+		}
 	}
 
 	if !IsShootReady(shoot) {
@@ -276,7 +339,7 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if statusChanged {
-		logger.Info("Updating Runtime Status")
+		logger.Info("Updating Runtime Status with ready state")
 		err = composed.PatchObjStatus(ctx, rt, r.kcp)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error patching Runtime status with ready state: %w", err)

@@ -71,7 +71,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	}
 
 	//nolint:staticcheck
-	b.Obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
+	//b.Obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
 	b.Obj.Spec.CloudProfile = &gardenertypes.CloudProfileReference{
 		Kind: "CloudProfile",
 		Name: cloudProfileName,

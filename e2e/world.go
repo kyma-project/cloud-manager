@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 )
 
-type World interface {
+type WorldIntf interface {
 	Ctx() context.Context
 	Cancel()
 	StopWaitGroup() *sync.WaitGroup
@@ -56,33 +56,3 @@ func (w *defaultWorld) Garden() Cluster {
 func (w *defaultWorld) Sim() sim.Sim {
 	return w.simu
 }
-
-//func (w *defaultWorld) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {
-//	result := make(map[string]interface{})
-//
-//	merge := func(c Cluster, err error) error {
-//		if err != nil {
-//			return nil
-//		}
-//		data, err := c.EvaluationContext(ctx)
-//		if err != nil {
-//			return err
-//		}
-//		maps.Copy(result, data)
-//		return nil
-//	}
-//
-//	if err := merge(w.clusterProvider.KCP(ctx)); err != nil {
-//		return nil, fmt.Errorf("failed to evaluate KCP cluster: %w", err)
-//	}
-//	for id, skr := range w.clusterProvider.KnownSkrClusters() {
-//		if err := merge(skr, nil); err != nil {
-//			return nil, fmt.Errorf("failed to evaluate SKR cluster %q: %w", id, err)
-//		}
-//	}
-//	if err := merge(w.clusterProvider.Garden(ctx)); err != nil {
-//		return nil, fmt.Errorf("failed to evaluate Garden cluster: %w", err)
-//	}
-//
-//	return result, nil
-//}

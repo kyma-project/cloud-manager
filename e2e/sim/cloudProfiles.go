@@ -119,7 +119,7 @@ var _ CloudProfileLoader = &gardenCloudProfileLoader{}
 func (l *gardenCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry, error) {
 	var result []CloudProfileInfo
 	cpList := &gardenerapicore.CloudProfileList{}
-	if err := l.gardenClient.List(ctx, cpList, client.InNamespace(l.namespace)); err != nil {
+	if err := l.gardenClient.List(ctx, cpList); err != nil {
 		return nil, fmt.Errorf("failed to list CloudProfiles: %w", err)
 	}
 	for _, cp := range cpList.Items {

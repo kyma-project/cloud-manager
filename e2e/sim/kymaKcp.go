@@ -81,18 +81,18 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if err != nil {
-		logger.Error(err, "Failed to create SKR cluster")
+		logger.Error(err, "Failed to create SKR cluster client")
 		kcpKyma.Status.Conditions = nil
 		meta.SetStatusCondition(&kcpKyma.Status.Conditions, metav1.Condition{
 			Type:               cloudresourcesv1beta1.ConditionTypeError,
 			Status:             metav1.ConditionTrue,
 			ObservedGeneration: kcpKyma.Generation,
-			Reason:             "ClusterCreationError",
+			Reason:             "ClusterClientCreationError",
 			Message:            err.Error(),
 		})
 		kcpKyma.Status.State = operatorshared.StateError
 		_ = composed.PatchObjStatus(ctx, kcpKyma, r.kcp)
-		return reconcile.Result{RequeueAfter: util.Timing.T300000ms()}, err
+		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, err
 	}
 
 	skrKyma := &operatorv1beta2.Kyma{}

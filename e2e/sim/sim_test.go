@@ -34,13 +34,12 @@ var _ = Describe("Feature: KCP SIM", func() {
 		kubeconfigCallCount := skrKubeconfigProviderInstance.GetCallCount(shoot.Name)
 
 		By("When instance is created", func() {
-			id, err := simInstance.Keb().CreateInstance(infra.Ctx(), CreateInstanceInput{
-				Alias:         alias,
-				GlobalAccount: globalAccount,
-				SubAccount:    subAccount,
-				Provider:      provider,
-				Region:        "",
-			})
+			id, err := simInstance.Keb().CreateInstance(infra.Ctx(),
+				WithAlias(alias),
+				WithGlobalAccount(globalAccount),
+				WithSubAccount(subAccount),
+				WithProvider(provider),
+			)
 			Expect(err).NotTo(HaveOccurred())
 			instanceDetails = id
 		})

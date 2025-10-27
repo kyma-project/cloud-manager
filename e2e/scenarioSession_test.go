@@ -21,12 +21,12 @@ var _ = Describe("Feature: Scenario Session", func() {
 		shoot := &gardenertypes.Shoot{}
 
 		By("Given an SKR instance exists", func() {
-			id, err := world.Sim().Keb().CreateInstance(infra.Ctx(), sim.CreateInstanceInput{
-				Alias:         alias,
-				GlobalAccount: "5e9123a1-6c0d-4e2d-a058-24b5e6629b2e",
-				SubAccount:    "b5921ea0-9283-451b-b407-4f940fb7ecf2",
-				Provider:      "gcp",
-			})
+			id, err := world.Sim().Keb().CreateInstance(infra.Ctx(),
+				sim.WithAlias(alias),
+				sim.WithGlobalAccount("5e9123a1-6c0d-4e2d-a058-24b5e6629b2e"),
+				sim.WithSubAccount("b5921ea0-9283-451b-b407-4f940fb7ecf2"),
+				sim.WithProvider("gcp"),
+			)
 			Expect(err).NotTo(HaveOccurred())
 			instanceDetails = id
 
@@ -98,12 +98,12 @@ var _ = Describe("Feature: Scenario Session", func() {
 		var clusterInSession ClusterInSession
 
 		By("When Scenario session CreateNewSkrCluster() is called", func() {
-			cis, err := session.CreateNewSkrCluster(infra.Ctx(), sim.CreateInstanceInput{
-				Alias:         alias,
-				GlobalAccount: "038bad72-d2a3-4659-9d9c-49e2de840162",
-				SubAccount:    "064ed161-6034-4905-a243-d994c392b683",
-				Provider:      "gcp",
-			})
+			cis, err := session.CreateNewSkrCluster(infra.Ctx(),
+				sim.WithAlias(alias),
+				sim.WithGlobalAccount("038bad72-d2a3-4659-9d9c-49e2de840162"),
+				sim.WithSubAccount("064ed161-6034-4905-a243-d994c392b683"),
+				sim.WithProvider("gcp"),
+			)
 			Expect(err).NotTo(HaveOccurred())
 			clusterInSession = cis
 		})

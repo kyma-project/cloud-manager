@@ -124,6 +124,27 @@ func (b *RuntimeBuilder) WithNamespace(ns string) *RuntimeBuilder {
 	return b
 }
 
+func (b *RuntimeBuilder) WithNodesRange(cidr string) *RuntimeBuilder {
+	if cidr != "" {
+		b.Obj.Spec.Shoot.Networking.Nodes = cidr
+	}
+	return b
+}
+
+func (b *RuntimeBuilder) WithPodsRange(cidr string) *RuntimeBuilder {
+	if cidr != "" {
+		b.Obj.Spec.Shoot.Networking.Pods = cidr
+	}
+	return b
+}
+
+func (b *RuntimeBuilder) WithServicesRange(cidr string) *RuntimeBuilder {
+	if cidr != "" {
+		b.Obj.Spec.Shoot.Networking.Services = cidr
+	}
+	return b
+}
+
 func (b *RuntimeBuilder) WithGlobalAccount(val string) *RuntimeBuilder {
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId] = val
 	return b

@@ -19,22 +19,22 @@ const (
 )
 
 type ConfigType struct {
-	GardenKubeconfig string `yaml:"gardenKubeconfig"`
+	GardenKubeconfig string `yaml:"gardenKubeconfig" json:"gardenKubeconfig"`
 
-	KcpNamespace    string `yaml:"kcpNamespace"`
-	GardenNamespace string `yaml:"gardenNamespace"`
-	SkrNamespace    string `yaml:"skrNamespace"`
+	KcpNamespace    string `yaml:"kcpNamespace" json:"kcpNamespace"`
+	GardenNamespace string `yaml:"gardenNamespace" json:"gardenNamespace"`
+	SkrNamespace    string `yaml:"skrNamespace" json:"skrNamespace"`
 
-	Subscriptions Subscriptions `yaml:"subscriptions"`
+	Subscriptions Subscriptions `yaml:"subscriptions" json:"subscriptions"`
 
-	NetworkOwner NetworkOwner `yaml:"networkOwner"`
+	NetworkOwner NetworkOwner `yaml:"networkOwner" json:"networkOwner"`
 
-	OidcClientId  string `yaml:"oidcClientId"`
-	OidcIssuerUrl string `yaml:"oidcIssuerUrl"`
+	OidcClientId  string `yaml:"oidcClientId" json:"oidcClientId"`
+	OidcIssuerUrl string `yaml:"oidcIssuerUrl" json:"oidcIssuerUrl"`
 
-	Administrators []string `yaml:"administrators"`
+	Administrators []string `yaml:"administrators" json:"administrators"`
 
-	CloudProfiles map[string]string `yaml:"cloudProfiles"`
+	CloudProfiles map[string]string `yaml:"cloudProfiles" json:"cloudProfiles"`
 }
 
 func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {
@@ -64,9 +64,9 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 type Subscriptions []SubscriptionInfo
 
 type SubscriptionInfo struct {
-	Name      string                           `yaml:"name"`
-	Provider  cloudcontrolv1beta1.ProviderType `yaml:"provider"`
-	IsDefault bool                             `yaml:"isDefault"`
+	Name      string                           `yaml:"name" json:"name"`
+	Provider  cloudcontrolv1beta1.ProviderType `yaml:"provider" json:"provider"`
+	IsDefault bool                             `yaml:"isDefault" json:"isDefault"`
 }
 
 func (s Subscriptions) FindFirst(cb func(s SubscriptionInfo) bool) *SubscriptionInfo {

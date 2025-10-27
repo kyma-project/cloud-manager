@@ -37,6 +37,7 @@ type kcpClusterFactory struct{
 
 func (f *kcpClusterFactory) CreateCluster(ctx context.Context) (Cluster, error) {
 	clstr, err := cluster.New(f.kcpRestConfig, func(clusterOptions *cluster.Options) {
+		clusterOptions.Logger = ctrl.Log
 		clusterOptions.Scheme = bootstrap.KcpScheme
 		clusterOptions.Client = client.Options{
 			Cache: &client.CacheOptions{

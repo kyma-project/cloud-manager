@@ -69,8 +69,8 @@ func (m *simManager) Start(ctx context.Context) error {
 			if err != nil {
 				result = multierror.Append(result, err)
 				logger := m.logger
-				if ctrl, ok := rr.(controller.Controller); ok {
-					logger = ctrl.GetLogger()
+				if cc, ok := rr.(controller.Controller); ok {
+					logger = cc.GetLogger()
 				}
 				logger.Error(err, "error starting controller")
 				return

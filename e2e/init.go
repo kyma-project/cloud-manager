@@ -28,23 +28,6 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 			panic(err)
 		}
 		world = w
-
-		//world.Sim().Keb().List()
-
-		//for _, runtimeId := range sharedState.Runtimes {
-		//	logger.WithValues("runtimeID", runtimeId).Info("Importing runtime...")
-		//	skr, err := w.SKR().ImportShared(ctx, runtimeId)
-		//	if err != nil {
-		//		panic(fmt.Errorf("failed importing shared runtime %s: %w", runtimeId, err))
-		//	}
-		//
-		//	logger.WithValues(
-		//		"runtimeID", runtimeId,
-		//		"shoot", skr.ShootName,
-		//		"provider", skr.Provider,
-		//		"alias", skr.Alias,
-		//	).Info("Shared runtime imported")
-		//}
 	})
 
 	gdCtx.AfterSuite(func() {
@@ -58,9 +41,9 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 	})
 }
 
-var world World
+var world WorldIntf
 
-func GetWorld() World {
+func GetWorld() WorldIntf {
 	return world
 }
 

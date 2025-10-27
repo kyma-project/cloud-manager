@@ -65,7 +65,7 @@ func New(opts CreateOptions) (Sim, error) {
 
 	factory := NewClientClusterFactory(opts.KCP.GetClient(), clock.RealClock{})
 
-	keb := NewKeb(opts.KCP.GetClient(), opts.CloudProfileLoader)
+	keb := NewKeb(opts.KCP.GetClient(), opts.Garden, opts.CloudProfileLoader)
 
 	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden, opts.CloudProfileLoader)
 	if err := simRt.SetupWithManager(mngr); err != nil {

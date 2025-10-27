@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hashicorp/go-multierror"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
@@ -29,7 +30,7 @@ type WorldCreateOptions struct {
 	ExtraRunnables        []manager.Runnable
 }
 
-func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (World, error) {
+func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
 	factoryKcp := NewKcpClusterFactory(opts.KcpRestConfig)
 	kcpCluster, err := factoryKcp.CreateCluster(rootCtx)
 	if err != nil {
@@ -39,7 +40,7 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	waitClusterStarts := func(ctx context.Context, c cluster.Cluster) bool {
 		toCtx, toCancel := context.WithTimeout(ctx, 10*time.Second)
 		defer toCancel()
-		if ok := kcpCluster.GetCache().WaitForCacheSync(toCtx); !ok {
+		if ok := c.GetCache().WaitForCacheSync(toCtx); !ok {
 			return false
 		}
 		return true
@@ -92,7 +93,25 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		}
 	}()
 
+	if !waitClusterStarts(ctx, gardenCluster) {
+		cancel()
+		return nil, fmt.Errorf("garden cache did not sync")
+	}
+
+	err = gardenCluster.AddResources(ctx, &ResourceDeclaration{
+		Alias:      "dummy-foo-just-starting-shoot-watch",
+		Kind:       "Shoot",
+		ApiVersion: gardenerapicore.SchemeGroupVersion.String(),
+		Name:       "none",
+		Namespace:  e2econfig.Config.GardenNamespace,
+	})
+	if err != nil {
+		return result, fmt.Errorf("error adding dummy Shoot resource declaration: %w", err)
+	}
+
 	// SIM -----------------------------------
+
+	time.Sleep(time.Second)
 
 	if opts.CloudProfileLoader == nil {
 		opts.CloudProfileLoader = sim.NewGardenCloudProfileLoader(gardenCluster.GetClient(), e2econfig.Config.GardenNamespace)
@@ -134,6 +153,8 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.kcp = kcpCluster
 	result.garden = gardenCluster
 	result.simu = simInstance
+
+	time.Sleep(time.Second)
 
 	return result, nil
 }
