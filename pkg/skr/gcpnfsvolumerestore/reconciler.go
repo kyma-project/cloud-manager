@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -55,8 +56,8 @@ func (r *Reconciler) newAction() composed.Action {
 				setProcessing,
 				addFinalizer,
 				loadGcpNfsVolume,
-				loadGcpNfsVolumeBackup,
 				loadScope,
+				populateBackupUrl,
 				acquireLease,
 				findRestoreOperation,
 				runNfsRestore,

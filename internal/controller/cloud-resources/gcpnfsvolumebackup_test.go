@@ -1,6 +1,7 @@
 package cloudresources
 
 import (
+	"strings"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -247,6 +248,63 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 					).
 					Should(Succeed())
 			})
+		})
+	})
+
+	Describe("Scenario: SKR GcpNfsVolumeBackup is set to be available from multiple shoots", func() {
+		//Define variables.
+		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+		gcpNfsVolumeBackupName := "8fb2aaaa-cf54-4ee0-b5d9-065ed69ef2f9"
+
+		additionalShoots := []string{
+			"shoot-eu-1",
+			"shoot-eu-2",
+		}
+
+		It("When GcpNfsVolumeBackup Create is called", func() {
+			Eventually(CreateGcpNfsVolumeBackup).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+					WithName(gcpNfsVolumeBackupName),
+					WithGcpNfsVolume(skrGcpNfsVolumeName),
+					WithGcpNfsVolumeBackupAccessibleFrom(additionalShoots),
+				).
+				Should(Succeed())
+			By("Then GcpNfsVolumeBackup is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+					).
+					Should(Succeed())
+			})
+			By("And Then GcpNfsVolumeBackup will get Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed())
+			})
+			By("And Then GcpNfsVolumeBackup has Ready state", func() {
+				Expect(gcpNfsVolumeBackup.Status.State).To(Equal(cloudresourcesv1beta1.GcpNfsBackupReady))
+			})
+
+			By("And Then GcpNfsVolumeBackup has proper AccessibleFrom field in status", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
+						NewObjActions(),
+						HavingGcpNfsVolumeBackupAccessibleFromStatus(strings.Join(additionalShoots, ",")),
+					).
+					Should(Succeed())
+			})
+
+			// CleanUp
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup).
+				Should(Succeed())
 		})
 	})
 })

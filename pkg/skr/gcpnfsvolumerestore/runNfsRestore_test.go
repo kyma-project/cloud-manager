@@ -110,7 +110,7 @@ func (s *runNfsRestoreSuite) TestRunNfsRestoreSubmitFailed() {
 
 	state, err := factory.newStateWith(obj)
 	state.Scope = scope.DeepCopy()
-	state.GcpNfsVolumeBackup = gcpNfsVolumeBackup.DeepCopy()
+	state.SrcBackupFullPath = gcpNfsVolumeBackupToUrl(gcpNfsVolumeBackup.DeepCopy())
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	assert.Nil(s.T(), err)
 	err, _ctx := runNfsRestore(ctx, state)
@@ -151,7 +151,7 @@ func (s *runNfsRestoreSuite) TestRunNfsRestoreSubmitted() {
 
 	state, err := factory.newStateWith(obj)
 	state.Scope = scope.DeepCopy()
-	state.GcpNfsVolumeBackup = gcpNfsVolumeBackup.DeepCopy()
+	state.SrcBackupFullPath = gcpNfsVolumeBackupToUrl(gcpNfsVolumeBackup.DeepCopy())
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	assert.Nil(s.T(), err)
 	err, _ctx := runNfsRestore(ctx, state)

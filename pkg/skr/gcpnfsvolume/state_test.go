@@ -297,6 +297,13 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	},
 }
 
+func gcpNfsVolumeBackupToUrl(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup) string {
+	if backup.Status.Id == "" || backup.Status.Location == "" {
+		return ""
+	}
+	return fmt.Sprintf("projects/%s/locations/%s/backups/%s", kcpScope.Spec.Scope.Gcp.Project, backup.Status.Location, fmt.Sprintf("cm-%.60s", backup.Status.Id))
+}
+
 type testStateFactory struct {
 	factory             StateFactory
 	skrCluster          composed.StateCluster

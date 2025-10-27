@@ -3,6 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -28,8 +29,13 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	if state.fileBackup.Labels != nil && state.fileBackup.Labels[gcpclient.ManagedByKey] == gcpclient.ManagedByValue && state.fileBackup.Labels[gcpclient.ScopeNameKey] == state.Scope.Name {
-		// Labels have been already set, return
+	if state.HasProperLabels() {
+		if backup.Status.AccessibleFrom != state.specCommaSeparatedAccessibleFrom() {
+			backup.Status.AccessibleFrom = state.specCommaSeparatedAccessibleFrom()
+			return composed.PatchStatus(backup).
+				SuccessLogMsg("Updated accessibleFrom in status of GcpNfsVolumeBackup").
+				Run(ctx, state)
+		}
 		return nil, nil
 	}
 
@@ -40,11 +46,7 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 	location := backup.Status.Location
 	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
-	if state.fileBackup.Labels == nil {
-		state.fileBackup.Labels = make(map[string]string)
-	}
-	state.fileBackup.Labels[gcpclient.ManagedByKey] = gcpclient.ManagedByValue
-	state.fileBackup.Labels[gcpclient.ScopeNameKey] = state.Scope.Name
+	state.SetFilestoreLabels()
 
 	_, err := state.fileBackupClient.PatchFileBackup(ctx, project, location, name, "Labels", state.fileBackup)
 
@@ -54,5 +56,8 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 		logger.Error(err, "Error adding missing labels to File backup object in GCP")
 	}
 
-	return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), nil
+	return composed.PatchStatus(backup).
+		SuccessLogMsg("Updated accessibleFrom in status of GcpNfsVolumeBackup").
+		SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+		Run(ctx, state)
 }
