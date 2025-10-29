@@ -54,7 +54,7 @@ type GcpNfsVolumeBackupDiscoveryStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:categories={kyma-cloud-manager}
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="AvailableBackupsCount",type="integer",JSONPath=".status.availableBackupsCount"
 // +kubebuilder:printcolumn:name="DiscoverySnapshotTime",type="date",JSONPath=".status.discoverySnapshotTime"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"

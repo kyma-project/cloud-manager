@@ -15,7 +15,7 @@ spec:
     listKind: GcpNfsVolumeBackupDiscoveryList
     plural: gcpnfsvolumebackupdiscoveries
     singular: gcpnfsvolumebackupdiscovery
-  scope: Namespaced
+  scope: Cluster
   versions:
     - additionalPrinterColumns:
         - jsonPath: .status.availableBackupsCount
