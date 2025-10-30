@@ -115,7 +115,7 @@ func HavingGcpNfsVolumeBackupDiscoveryBackupUris() ObjAssertion {
 		if !ok {
 			return fmt.Errorf("the object %T is not GcpNfsVolumeBackupDiscovery", obj)
 		}
-		if x.Status.AvailableBackupUris == nil || len(x.Status.AvailableBackupUris) == 0 {
+		if len(x.Status.AvailableBackupUris) == 0 {
 			return fmt.Errorf("expected AvailableBackupUris to contain backup URIs")
 		}
 		return nil
