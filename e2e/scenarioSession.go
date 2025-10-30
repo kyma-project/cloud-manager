@@ -53,8 +53,8 @@ type defaultClusterInSession struct {
 func (c *defaultClusterInSession) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
 	for _, clstr := range c.session.AllClusters() {
 		for _, rd := range arr {
-			if clstr.Has(rd.Alias) {
-				return fmt.Errorf("resource %q already defined in cluster %q", rd.Alias, clstr.Alias())
+			if clstr.GetResource(rd.Alias) != nil {
+				return fmt.Errorf("resource %q already defined", rd.Alias)
 			}
 		}
 	}
@@ -83,14 +83,14 @@ type scenarioSessionKeyType struct{}
 
 var scenarioSessionKey = &scenarioSessionKeyType{}
 
-func NewScenarioSession() ScenarioSession {
+func NewScenarioSession(world WorldIntf) ScenarioSession {
 	return &scenarioSession{
 		world: world,
 	}
 }
 
 func StartNewScenarioSession(ctx context.Context) context.Context {
-	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession())
+	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession(GetWorld()))
 }
 
 func GetCurrentScenarioSession(ctx context.Context) ScenarioSession {
@@ -128,12 +128,12 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 	}
 
 	for _, c := range s.clusters {
-		if c.Alias() == alias {
+		if c.ClusterAlias() == alias {
 			return nil, fmt.Errorf("cluster %s already added to scenario", alias)
 		}
 	}
 
-	if alias == s.world.Kcp().Alias() {
+	if alias == s.world.Kcp().ClusterAlias() {
 		cc := &defaultClusterInSession{
 			Cluster:            s.world.Kcp(),
 			isCreatedInSession: false,
@@ -144,7 +144,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 		return cc, nil
 	}
 
-	if alias == s.world.Garden().Alias() {
+	if alias == s.world.Garden().ClusterAlias() {
 		cc := &defaultClusterInSession{
 			Cluster:            s.world.Garden(),
 			isCreatedInSession: false,
@@ -223,8 +223,8 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.C
 	}
 
 	for _, c := range s.clusters {
-		if c.Alias() == alias {
-			return nil, fmt.Errorf("cluster %s already added to scenario", alias)
+		if c.ClusterAlias() == alias {
+			return nil, fmt.Errorf("cluster %q already added to scenario", alias)
 		}
 	}
 
@@ -286,7 +286,7 @@ func (s *scenarioSession) CurrentCluster() ClusterInSession {
 
 func (s *scenarioSession) SetCurrentCluster(alias string) {
 	for _, c := range s.clusters {
-		c.isCurrent = c.Alias() == alias
+		c.isCurrent = c.ClusterAlias() == alias
 	}
 }
 
@@ -305,7 +305,7 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 	for _, c := range s.clusters {
 		if c.IsCreatedInSession() {
 			if err := s.world.Sim().Keb().DeleteInstance(ctx, sim.WithRuntime(c.RuntimeID())); err != nil {
-				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.Alias(), err))
+				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.ClusterAlias(), err))
 			}
 		}
 	}

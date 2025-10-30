@@ -1,10 +1,13 @@
-package e2e
+package ctrltest
 
 import (
+	"fmt"
 	"os"
+	"path"
 	"testing"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
@@ -13,9 +16,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -25,6 +25,8 @@ import (
 )
 
 var infra testinfra.Infra
+
+var world e2e.WorldIntf
 
 func TestSimControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -65,6 +67,8 @@ var _ = BeforeSuite(func() {
 		},
 	}
 
+	fmt.Printf("e2econfig:\n%s\n", cfg.PrintJson())
+
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true), zap.ConsoleEncoder(func(config *zapcore.EncoderConfig) {
 		config.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 	})))
@@ -81,17 +85,10 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
+	Expect(infra.Garden().GivenNamespaceExists(e2econfig.Config.GardenNamespace)).
+		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", e2econfig.Config.GardenNamespace)
 
 	e2econfig.Config.GardenKubeconfig = infra.Garden().KubeconfigFilePath()
-
-	By("creating garden namespace")
-	// create garden namespace
-	err = infra.Garden().Client().Create(infra.Ctx(), &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: e2econfig.Config.GardenNamespace,
-		},
-	})
-	Expect(client.IgnoreAlreadyExists(err)).NotTo(HaveOccurred(), "failed to create garden namespace")
 
 	By("installing cloud profiles")
 	cloudProfilesArr, err := fixtures.CloudProfiles(infra.Garden().Namespace())
@@ -106,10 +103,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred(), "failed creating garden manager")
 	Expect(sim.SetupShootReadyController(gardenManager)).To(Succeed())
 
-	wf := NewWorldFactory()
-	w, err := wf.Create(infra.Ctx(), WorldCreateOptions{
+	wf := e2e.NewWorldFactory()
+	w, err := wf.Create(infra.Ctx(), e2e.WorldCreateOptions{
 		KcpRestConfig:         infra.KCP().Cfg(),
-		CloudProfileLoader:    sim.NewFileCloudProfileLoader("sim/fixtures/cloudprofiles.yaml"),
+		CloudProfileLoader:    sim.NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml")),
 		SkrKubeconfigProvider: sim.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
 		ExtraRunnables:        []manager.Runnable{gardenManager},
 	})
@@ -120,7 +117,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	By("tearing down the test environment")
+	By("stopping world")
 
 	err := testinfra.PrintMetrics()
 	Expect(err).NotTo(HaveOccurred())
@@ -128,6 +125,10 @@ var _ = AfterSuite(func() {
 	world.Cancel()
 	world.StopWaitGroup().Wait()
 	err = world.RunError()
+	Expect(err).NotTo(HaveOccurred())
+
+	By("tearing down the test environment")
+	err = infra.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
 

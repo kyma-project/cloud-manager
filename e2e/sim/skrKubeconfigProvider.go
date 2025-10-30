@@ -63,13 +63,13 @@ func (p *gardenKubeconfigProvider) ExpiresIn() time.Duration {
 func NewFixedSkrKubeconfigProvider(kubeconfig []byte) SkrKubeconfigProvider {
 	return &fixedKubeconfigProvider{
 		kubeconfig: kubeconfig,
-		callCount: make(map[string]int),
+		callCount:  make(map[string]int),
 	}
 }
 
 type fixedKubeconfigProvider struct {
 	kubeconfig []byte
-	callCount map[string]int
+	callCount  map[string]int
 }
 
 func (p *fixedKubeconfigProvider) GetCallCount(shootName string) int {

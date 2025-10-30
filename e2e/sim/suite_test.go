@@ -3,6 +3,7 @@ package sim
 import (
 	"context"
 	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -98,9 +99,8 @@ var _ = BeforeSuite(func() {
 		KCP:                   infra.KcpManager(),
 		Garden:                infra.Garden().Client(),
 		Logger:                infra.KcpManager().GetLogger(),
-		CloudProfileLoader:    NewFileCloudProfileLoader("fixtures/cloudprofiles.yaml"),
+		CloudProfileLoader:    NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml")),
 		SkrKubeconfigProvider: skrKubeconfigProviderInstance,
-		//CloudProfileLoader: NewCachingCloudProfileLoader(NewGardenCloudProfileLoader(infra.Garden().Client(), infra.Garden().Namespace())),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
 	err = infra.KcpManager().Add(simInstance)

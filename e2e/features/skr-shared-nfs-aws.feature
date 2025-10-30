@@ -3,7 +3,7 @@ Feature: AWS NfsVolume feature
   @skr @aws @nfs
   Scenario: AwsNfsVolume scenario
 
-    Given there is SKR with "AWS" provider and default IpRange
+    Given there is shared SKR with "AWS" provider
 
     Given resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |

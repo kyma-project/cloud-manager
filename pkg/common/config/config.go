@@ -1,4 +1,4 @@
-package bootstrap
+package config
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -13,7 +13,7 @@ import (
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 )
 
-func LoadConfig() config.Config {
+func CreateNewConfigAndLoad() config.Config {
 	env := abstractions.NewOSEnvironment()
 	configDir := env.Get("CONFIG_DIR")
 	if len(configDir) < 1 {
@@ -22,6 +22,12 @@ func LoadConfig() config.Config {
 	cfg := config.NewConfig(env)
 	cfg.BaseDir(configDir)
 
+	LoadConfigInstance(cfg)
+
+	return cfg
+}
+
+func LoadConfigInstance(cfg config.Config) {
 	awsconfig.InitConfig(cfg)
 	azureconfig.InitConfig(cfg)
 	sapconfig.InitConfig(cfg)
@@ -32,6 +38,4 @@ func LoadConfig() config.Config {
 	vpcpeeringconfig.InitConfig(cfg)
 
 	cfg.Read()
-
-	return cfg
 }

@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func cleanSkrNoWait(ctx context.Context, c client.Client) error {
-	knownTypes := bootstrap.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
+	knownTypes := commonscheme.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
 	for kind, tp := range knownTypes {
 		if !strings.HasSuffix(kind, "List") {
 			continue

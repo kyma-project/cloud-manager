@@ -417,7 +417,7 @@ type InstanceDetails struct {
 	ShootName string
 
 	// State has value of the runtime.status.state
-	State   string
+	State string
 	// Message has value of message of the Condition type Error
 	Message string
 

@@ -5,38 +5,18 @@ import (
 	"fmt"
 
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func thereIsSKRWithProviderAndDefaultIpRange(ctx context.Context, provider string) (context.Context, error) {
-	return ctx, fmt.Errorf("not implemented")
-	//world := GetWorld()
-	//pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
-	//if err != nil {
-	//	return ctx, err
-	//}
-
-	//clusterAlias := SharedSkrClusterAlias(pt)
-	//skr := world.SKR().GetByAlias(clusterAlias)
-	//if skr == nil {
-	//	return ctx, fmt.Errorf("could not find precreated cluster %q", clusterAlias)
-	//}
-	//
-	//GetScenarioSession(ctx).SetCurrentCluster(skr, skr.Alias())
-	//
-	//return ctx, nil
+func thereIsSharedSKRWithProvider(ctx context.Context, provider string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	alias := fmt.Sprintf("shared-%s", provider)
+	_, err := session.AddExistingCluster(ctx, alias)
+	return ctx, err
 }
 
 func moduleIsAdded(ctx context.Context, moduleName string) (context.Context, error) {
 	return ctx, fmt.Errorf("not implemented")
-	//session, err := GetScenarioSessionEnsureCluster(ctx)
-	//if err != nil {
-	//	return ctx, err
-	//}
-
-	// TODO: continue here
-	//session.CurrentCluster().
-
-	return ctx, nil
 }
 
 func resourceDeclaration(ctx context.Context, tbl *godog.Table) (context.Context, error) {
@@ -58,7 +38,18 @@ func resourceDeclaration(ctx context.Context, tbl *godog.Table) (context.Context
 }
 
 func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) (context.Context, error) {
-	return ctx, nil
+	arr, err := util.YamlMultiDecodeToUnstructured([]byte(doc.Content))
+	if err != nil {
+		return ctx, fmt.Errorf("failed to parse resource yaml: %w", err)
+	}
+	if len(arr) != 1 {
+		return ctx, fmt.Errorf("expected one resource in yaml but got %d", len(arr))
+	}
+	obj := arr[0]
+
+	err = GetCurrentScenarioSession(ctx).CurrentCluster().GetClient().Create(ctx, obj)
+
+	return ctx, err
 }
 
 func resourceIsDeleted(ctx context.Context, alias string) (context.Context, error) {

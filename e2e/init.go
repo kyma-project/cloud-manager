@@ -63,22 +63,17 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
-		//if GetWorld() == nil {
-		//	result = multierror.Append(result, fmt.Errorf("world does not exist"))
-		//	return ctx, result
-		//}
-		//
-		//for _, alias := range GetScenarioSession(ctx).AllRegisteredClusters() {
-		//	err = GetWorld().DeleteSKR(ctx, GetWorld().SKR().GetByAlias(alias))
-		//	if err != nil {
-		//		result = multierror.Append(result, fmt.Errorf("failed to stop transient SKR %q: %w", alias, err))
-		//	}
-		//}
+		session := GetCurrentScenarioSession(ctx)
+		if session != nil {
+			if err := session.Terminate(ctx); err != nil {
+				result = multierror.Append(result, fmt.Errorf("failed to terminate session: %w", err))
+			}
+		}
 
 		return ctx, result
 	})
 
-	ctx.Step(`^there is SKR with "(AWS|Azure|GCP|OpenStack")" provider and default IpRange$`, thereIsSKRWithProviderAndDefaultIpRange)
+	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack")" provider$`, thereIsSharedSKRWithProvider)
 
 	ctx.Step(`^module "([^"]*)" is added$`, moduleIsAdded)
 

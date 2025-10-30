@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -46,7 +46,7 @@ func (f *defaultClientClusterFactory) CreateClient(ctx context.Context, runtimeI
 	}
 
 	clnt, err := client.New(restConfig, client.Options{
-		Scheme: bootstrap.SkrScheme,
+		Scheme: commonscheme.SkrScheme,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating client: %w", err)
@@ -62,7 +62,7 @@ func (f *defaultClientClusterFactory) CreateClientCluster(ctx context.Context, r
 	}
 
 	clstr, err := cluster.New(restConfig, func(clusterOptions *cluster.Options) {
-		clusterOptions.Scheme = bootstrap.SkrScheme
+		clusterOptions.Scheme = commonscheme.SkrScheme
 		clusterOptions.Client = client.Options{
 			Cache: &client.CacheOptions{
 				Unstructured: true,

@@ -29,7 +29,7 @@ type defaultWorld struct {
 	simu   sim.Sim
 }
 
-func (w *defaultWorld)  Ctx() context.Context {
+func (w *defaultWorld) Ctx() context.Context {
 	return w.mCtx
 }
 

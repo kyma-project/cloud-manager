@@ -1,4 +1,4 @@
-package bootstrap
+package scheme
 
 import (
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"

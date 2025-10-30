@@ -4,7 +4,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
-
 )
 
 var (

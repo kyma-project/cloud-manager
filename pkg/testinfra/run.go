@@ -1,6 +1,7 @@
 package testinfra
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,30 +10,28 @@ import (
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
-	config2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
-	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
-	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 const (
@@ -64,6 +63,7 @@ func Start() (Infra, error) {
 	}
 
 	infra := &infra{
+		projectRootDir: projectRoot,
 		clusters: map[infraTypes.ClusterType]*clusterInfo{
 			infraTypes.ClusterTypeKcp: &clusterInfo{
 				crdDirs: []string{dirKcp},
@@ -123,6 +123,31 @@ func Start() (Infra, error) {
 		cluster.ClusterEnv = ce
 	}
 
+	skip := 0
+	pc, _, _, ok := goruntime.Caller(skip + 1)
+	if ok {
+		details := goruntime.FuncForPC(pc)
+		if details != nil {
+			fullName := details.Name()
+			for name, clsrt := range infra.clusters {
+				c := clsrt.Client()
+				cctx := context.Background()
+				err := c.Create(cctx, &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "default",
+						Name:      "cm-info",
+					},
+					Data: map[string]string{
+						"caller": fullName,
+					},
+				})
+				if err != nil {
+					return nil, fmt.Errorf("error creating cm-info configmap in testinfra cluster %q: %w", name, err)
+				}
+			}
+		}
+	}
+
 	ginkgo.By("All started")
 
 	// Create ENV
@@ -133,6 +158,11 @@ func Start() (Infra, error) {
 				Unstructured: true,
 			},
 		},
+		LeaderElection: false,
+		Metrics: metricsserver.Options{
+			BindAddress: "0", // disabled
+		},
+		HealthProbeBindAddress: "0", // disable
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating KCP manager: %w", err)
@@ -199,13 +229,7 @@ func Start() (Infra, error) {
 	_ = os.Setenv("GCP_CAPACITY_CHECK_INTERVAL", "1s")
 
 	// init config
-	awsconfig.InitConfig(infra.Config())
-	quota.InitConfig(infra.Config())
-	skrruntimeconfig.InitConfig(infra.Config())
-	config2.InitConfig(infra.Config())
-	gcpclient.InitConfig(infra.Config())
-	peeringconfig.InitConfig(infra.Config())
-	infra.Config().Read()
+	commonconfig.LoadConfigInstance(infra.Config())
 	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
 
 	util.SetSpeedyTimingForTests()
@@ -221,6 +245,7 @@ func startCluster(crdsDirs []string, projectRoot, envtestK8sVersion string) (*en
 		ErrorIfCRDPathMissing: true,
 		BinaryAssetsDirectory: filepath.Join(projectRoot, "bin", "k8s",
 			fmt.Sprintf("%s-%s-%s", envtestK8sVersion, goruntime.GOOS, goruntime.GOARCH)),
+		ControlPlaneStartTimeout: 30 * time.Second,
 	}
 
 	cfg, err := env.Start()

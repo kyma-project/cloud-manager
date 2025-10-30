@@ -13,8 +13,8 @@ import (
 var opts = godog.Options{
 	Output:      colors.Colored(os.Stdout),
 	Concurrency: 10,
-	FS: e2e.Features,
-	Tags: "@skr && @test",
+	FS:          e2e.Features,
+	Tags:        "@skr && @test",
 }
 
 func init() {
@@ -22,6 +22,7 @@ func init() {
 }
 
 func TestFeatures(t *testing.T) {
+	e2e.SkipE2eTests(t)
 	o := opts
 	o.TestingT = t
 

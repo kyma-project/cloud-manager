@@ -21,11 +21,10 @@ import (
 	"flag"
 	"os"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
-	config2 "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -40,17 +39,14 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
-	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
@@ -70,19 +66,15 @@ import (
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
-	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
-	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
-	"github.com/kyma-project/cloud-manager/pkg/quota"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -93,8 +85,8 @@ import (
 )
 
 var (
-	kcpScheme = bootstrap.KcpScheme
-	skrScheme = bootstrap.SkrScheme
+	kcpScheme = commonscheme.KcpScheme
+	skrScheme = commonscheme.SkrScheme
 	setupLog  = ctrl.Log.WithName("setup")
 )
 
@@ -116,7 +108,7 @@ func main() {
 	flag.BoolVar(&gcpStructuredLogging, "gcp-structured-logging", false, "Enable GCP structured logging")
 	flag.Parse()
 
-	cfg := loadConfig()
+	cfg := commonconfig.CreateNewConfigAndLoad()
 	cfg.Read()
 
 	opts := zap.Options{}
@@ -526,27 +518,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-func loadConfig() config.Config {
-	env := abstractions.NewOSEnvironment()
-	configDir := env.Get("CONFIG_DIR")
-	if len(configDir) < 1 {
-		configDir = "./config/config"
-	}
-	cfg := config.NewConfig(env)
-	cfg.BaseDir(configDir)
-
-	awsconfig.InitConfig(cfg)
-	azureconfig.InitConfig(cfg)
-	sapconfig.InitConfig(cfg)
-	quota.InitConfig(cfg)
-	skrruntimeconfig.InitConfig(cfg)
-	config2.InitConfig(cfg)
-	gcpclient.InitConfig(cfg)
-	vpcpeeringconfig.InitConfig(cfg)
-
-	cfg.Read()
-
-	return cfg
 }

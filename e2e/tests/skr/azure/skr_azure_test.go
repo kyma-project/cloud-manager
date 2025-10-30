@@ -22,6 +22,7 @@ func init() {
 }
 
 func TestFeatures(t *testing.T) {
+	e2e.SkipE2eTests(t)
 	o := opts
 	o.TestingT = t
 

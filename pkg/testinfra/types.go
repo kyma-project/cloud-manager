@@ -24,6 +24,8 @@ type Infra interface {
 	InfraEnv
 	InfraDSL
 
+	ProjectRootDir() string
+
 	KCP() ClusterInfo
 	SKR() ClusterInfo
 	Garden() ClusterInfo

@@ -14,7 +14,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
-	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -163,7 +163,7 @@ func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluste
 		managerFactory:           skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system"),
 		skrStatusSaver:           NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
 		registry:                 reg,
-		concurrency:              config.SkrRuntimeConfig.Concurrency,
+		concurrency:              skrruntimeconfig.SkrRuntimeConfig.Concurrency,
 	}
 }
 

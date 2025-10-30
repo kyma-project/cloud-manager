@@ -33,7 +33,7 @@ func moduleNames(k *operatorv1beta2.Kyma) []string {
 	return pie.Unique(pie.Map(k.Spec.Modules, mapModuleNameToString))
 }
 
-func moduleStatusNames(k *operatorv1beta2.Kyma) []string  {
+func moduleStatusNames(k *operatorv1beta2.Kyma) []string {
 	return pie.Unique(pie.Map(k.Status.Modules, mapModuleStatusNameToString))
 }
 

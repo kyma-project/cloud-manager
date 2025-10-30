@@ -5,7 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/common/leases"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -23,7 +23,7 @@ func acquireLease(ctx context.Context, st composed.State) (error, context.Contex
 	leaseName := getLeaseName(volumeNamespacedName.Name, "restore")
 	leaseNamespace := volumeNamespacedName.Namespace
 	holderName := getHolderName(types.NamespacedName{Name: restore.Name, Namespace: restore.Namespace})
-	leaseDuration := int32(config.SkrRuntimeConfig.SkrLockingLeaseDuration.Seconds())
+	leaseDuration := int32(skrruntimeconfig.SkrRuntimeConfig.SkrLockingLeaseDuration.Seconds())
 
 	res, err := leases.Acquire(
 		ctx,

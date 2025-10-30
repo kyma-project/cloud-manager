@@ -25,8 +25,8 @@ func NewGardenManager(gardenRestConfig *rest.Config, scheme *runtime.Scheme, log
 		Metrics: metricsserver.Options{
 			BindAddress: "0", // disable
 		},
-		LeaderElection: false, // disable
-		HealthProbeBindAddress: "0", // disable
+		LeaderElection:         false, // disable
+		HealthProbeBindAddress: "0",   // disable
 		Client: client.Options{
 			Cache: &client.CacheOptions{
 				Unstructured: true,

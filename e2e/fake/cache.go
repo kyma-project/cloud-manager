@@ -14,7 +14,7 @@ var ErrNotImplemented = fmt.Errorf("not implemented")
 type Cache struct {
 	Runnable
 	// Wait if provided will be used to block WaitForCacheSync until it is closed.
-	Wait <-chan struct{}
+	Wait    <-chan struct{}
 	Started bool
 	Synced  bool
 }

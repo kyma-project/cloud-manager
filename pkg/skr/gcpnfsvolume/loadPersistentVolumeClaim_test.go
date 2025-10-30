@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
@@ -51,9 +51,8 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				WithObjects(pvc).
 				WithStatusSubresource(pvc).
 				Build()
@@ -82,9 +81,8 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				Build()
 			k8sClient.(spy.ClientSpy).SetClient(fakeClient)
 

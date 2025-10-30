@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
@@ -28,8 +28,6 @@ func TestCheckRestoreJob(t *testing.T) {
 		var state *State
 		var k8sClient client.WithWatch
 
-		kcpScheme := bootstrap.KcpScheme
-
 		scope := &cloudcontrolv1beta1.Scope{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-scope",
@@ -45,10 +43,10 @@ func TestCheckRestoreJob(t *testing.T) {
 		}
 
 		kcpClient := fake.NewClientBuilder().
-			WithScheme(kcpScheme).
+			WithScheme(commonscheme.KcpScheme).
 			WithObjects(scope).
 			Build()
-		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
@@ -98,15 +96,14 @@ func TestCheckRestoreJob(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.SkrScheme
 			var fakeClient client.WithWatch
 			if withObj {
-				fakeClient = fake.NewClientBuilder().WithScheme(scheme).
+				fakeClient = fake.NewClientBuilder().WithScheme(commonscheme.SkrScheme).
 					WithObjects(azureRwxVolumeRestore).
 					WithStatusSubresource(azureRwxVolumeRestore).
 					Build()
 			} else {
-				fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
+				fakeClient = fake.NewClientBuilder().WithScheme(commonscheme.SkrScheme).Build()
 			}
 			k8sClient = spy.NewClientSpy(fakeClient)
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)

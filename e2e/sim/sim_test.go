@@ -62,25 +62,6 @@ var _ = Describe("Feature: KCP SIM", func() {
 				Should(Succeed())
 		})
 
-		//By("When Shoot is ready", func() {
-		//	shoot.Status.Conditions = pie.Map(GardenerConditionTypes, func(x gardenertypes.ConditionType) gardenertypes.Condition {
-		//		return gardenertypes.Condition{
-		//			Type:               x,
-		//			Status:             gardenertypes.ConditionTrue,
-		//			LastTransitionTime: metav1.Now(),
-		//			LastUpdateTime:     metav1.Now(),
-		//			Reason:             string(x),
-		//			Message:            string(x),
-		//		}
-		//	})
-		//	// shoot doesn't have status subresources so it must whole be updated
-		//	err := infra.Garden().Client().Update(infra.Ctx(), shoot)
-		//	Expect(err).To(Succeed())
-		//
-		//	err = LoadAndCheck(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions())
-		//	Expect(err).To(Succeed())
-		//})
-
 		By("Then Runtime has ProvisioningCompleted true", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), rt, NewObjActions(), HavingRuntimeProvisioningCompleted).

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -87,7 +87,7 @@ func CreateGardenerClient(ctx context.Context, in CreateGardenerClientInput) (*C
 	out.RestConfig = restConfig
 
 	clnt, err := client.New(restConfig, client.Options{
-		Scheme: bootstrap.GardenScheme,
+		Scheme: commonscheme.GardenScheme,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating gardener client: %w", err)

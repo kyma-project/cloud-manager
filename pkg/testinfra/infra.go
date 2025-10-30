@@ -26,7 +26,13 @@ type infra struct {
 	InfraEnv
 	InfraDSL
 
+	projectRootDir string
+
 	clusters map[infraTypes.ClusterType]*clusterInfo
+}
+
+func (i *infra) ProjectRootDir() string {
+	return i.projectRootDir
 }
 
 func (i *infra) KCP() ClusterInfo {

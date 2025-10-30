@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	gardenerawsapi "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/v1alpha1"
+	gardenerazureapi "github.com/gardener/gardener-extension-provider-azure/pkg/apis/azure/v1alpha1"
+	gardeneropenstackapi "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/v1alpha1"
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
-	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
-	sapgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -95,16 +95,16 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAws),
 				InfrastructureConfig: &runtime.RawExtension{
-					Object: &awsgardener.InfrastructureConfig{
+					Object: &gardenerawsapi.InfrastructureConfig{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "InfrastructureConfig",
 							APIVersion: "aws.provider.extensions.gardener.cloud/v1alpha1",
 						},
-						Networks: awsgardener.Networks{
-							VPC: awsgardener.VPC{
+						Networks: gardenerawsapi.Networks{
+							VPC: gardenerawsapi.VPC{
 								CIDR: ptr.To("10.180.0.0/16"),
 							},
-							Zones: []awsgardener.Zone{
+							Zones: []gardenerawsapi.Zone{
 								{
 									Name:     "eu-west-1a",
 									Internal: "10.180.48.0/20",
@@ -413,20 +413,20 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAzure),
 				InfrastructureConfig: &runtime.RawExtension{
-					Object: &azuregardener.InfrastructureConfig{
+					Object: &gardenerazureapi.InfrastructureConfig{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "InfrastructureConfig",
 							APIVersion: "azure.provider.extensions.gardener.cloud/v1alpha1",
 						},
-						Networks: azuregardener.NetworkConfig{
-							VNet: azuregardener.VNet{
+						Networks: gardenerazureapi.NetworkConfig{
+							VNet: gardenerazureapi.VNet{
 								CIDR: ptr.To("10.250.0.0/22"),
 							},
-							Zones: []azuregardener.Zone{
+							Zones: []gardenerazureapi.Zone{
 								{
 									Name: 2,
 									CIDR: "10.250.0.0/25",
-									NatGateway: &azuregardener.ZonedNatGatewayConfig{
+									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
 										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
 									},
@@ -434,7 +434,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 								{
 									Name: 3,
 									CIDR: "10.250.0.128/25",
-									NatGateway: &azuregardener.ZonedNatGatewayConfig{
+									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
 										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
 									},
@@ -442,7 +442,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 								{
 									Name: 1,
 									CIDR: "10.250.1.0/25",
-									NatGateway: &azuregardener.ZonedNatGatewayConfig{
+									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
 										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
 									},
@@ -557,13 +557,13 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderOpenStack),
 				InfrastructureConfig: &runtime.RawExtension{
-					Object: &sapgardener.InfrastructureConfig{
+					Object: &gardeneropenstackapi.InfrastructureConfig{
 						TypeMeta: metav1.TypeMeta{
 							Kind:       "InfrastructureConfig",
 							APIVersion: "openstack.provider.extensions.gardener.cloud/v1alpha1",
 						},
 						FloatingPoolName: "FloatingIP-external-kyma-01",
-						Networks: sapgardener.Networks{
+						Networks: gardeneropenstackapi.Networks{
 							Workers: "10.250.0.0/16",
 						},
 					},

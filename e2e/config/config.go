@@ -60,7 +60,6 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 	return nil
 }
 
-
 type Subscriptions []SubscriptionInfo
 
 type SubscriptionInfo struct {
@@ -112,7 +111,7 @@ func InitConfig(cfg config.Config) {
 		),
 		config.Path(
 			"skrNamespace",
-			config.DefaultScalar("skr"),
+			config.DefaultScalar("default"),
 		),
 
 		config.Path(

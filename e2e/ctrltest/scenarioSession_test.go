@@ -1,7 +1,8 @@
-package e2e
+package ctrltest
 
 import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -10,21 +11,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: Scenario Session", func() {
+var _ = Describe("Feature: New and existing clusters added to Scenario Session", func() {
 
-	It("Scenario: Add existing runtime", func() {
+	It("Scenario: Add existing runtime does not delete SKR instance on session terminate", func() {
 
 		alias := "91e3ca4e-2204-4c57-a582-118c6b26840e"
 
 		var instanceDetails sim.InstanceDetails
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
+		var session e2e.ScenarioSession
+		var clusterInSession e2e.ClusterInSession
 
 		By("Given an SKR instance exists", func() {
 			id, err := world.Sim().Keb().CreateInstance(infra.Ctx(),
 				sim.WithAlias(alias),
-				sim.WithGlobalAccount("5e9123a1-6c0d-4e2d-a058-24b5e6629b2e"),
-				sim.WithSubAccount("b5921ea0-9283-451b-b407-4f940fb7ecf2"),
 				sim.WithProvider("gcp"),
 			)
 			Expect(err).NotTo(HaveOccurred())
@@ -47,8 +48,9 @@ var _ = Describe("Feature: Scenario Session", func() {
 				Should(Succeed())
 		})
 
-		session := NewScenarioSession()
-		var clusterInSession ClusterInSession
+		By("And Given Scenario Session is created", func() {
+			session = e2e.NewScenarioSession(world)
+		})
 
 		By("When Scenario session AddExistingCluster is called for existing SKR instance", func() {
 			cis, err := session.AddExistingCluster(infra.Ctx(), alias)
@@ -71,7 +73,7 @@ var _ = Describe("Feature: Scenario Session", func() {
 		By("And Then session has current cluster", func() {
 			c := session.CurrentCluster()
 			Expect(c).NotTo(BeNil())
-			Expect(c.Alias()).To(Equal(alias))
+			Expect(c.ClusterAlias()).To(Equal(alias))
 		})
 
 		By("When session is terminated", func() {
@@ -85,17 +87,26 @@ var _ = Describe("Feature: Scenario Session", func() {
 			Expect(arr).To(HaveLen(1))
 			Expect(arr[0].Alias).To(Equal(alias))
 		})
+
+		By("// cleanup: delete SKR instance", func() {
+			err := world.Sim().Keb().DeleteInstance(infra.Ctx(), sim.WithRuntime(rt.Name))
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), rt).
+				Should(Succeed())
+		})
 	})
 
-	It("Scenario: Add new runtime", func() {
+	It("Scenario: Add new runtime deletes SKR instances on session terminate", func() {
 
 		alias := "d5c23067-6d8c-4538-a52a-f76dda4cdafb"
 
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
 
-		session := NewScenarioSession()
-		var clusterInSession ClusterInSession
+		session := e2e.NewScenarioSession(world)
+		var clusterInSession e2e.ClusterInSession
 
 		By("When Scenario session CreateNewSkrCluster() is called", func() {
 			cis, err := session.CreateNewSkrCluster(infra.Ctx(),
@@ -149,7 +160,7 @@ var _ = Describe("Feature: Scenario Session", func() {
 		By("And Then session has current cluster", func() {
 			c := session.CurrentCluster()
 			Expect(c).NotTo(BeNil())
-			Expect(c.Alias()).To(Equal(alias))
+			Expect(c.ClusterAlias()).To(Equal(alias))
 		})
 
 		By("When session is terminated", func() {

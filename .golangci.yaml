@@ -47,6 +47,12 @@ linters:
         - pkg: github.com/kyma-project/cloud-manager/pkg/skr/common/scope
           alias: commonscope
 
+        - pkg: github.com/kyma-project/cloud-manager/pkg/common/config
+          alias: commonconfig
+
+        - pkg: github.com/kyma-project/cloud-manager/pkg/common/scheme
+          alias: commonscheme
+
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/iprange
           alias: kcpiprange
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/scope

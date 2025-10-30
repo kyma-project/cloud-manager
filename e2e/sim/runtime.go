@@ -184,6 +184,9 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		shoot = shootBuilder.Build()
 		logger.Info("Creating Shoot")
 		err = r.garden.Create(ctx, shoot)
+		if apierrors.IsAlreadyExists(err) {
+			return reconcile.Result{RequeueAfter: util.Timing.T100ms()}, nil
+		}
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error creating Shoot: %w", err)
 		}

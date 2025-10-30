@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -31,14 +31,14 @@ func NewKcpClusterFactory(kcpRestConfig *rest.Config) ClusterFactory {
 	}
 }
 
-type kcpClusterFactory struct{
+type kcpClusterFactory struct {
 	kcpRestConfig *rest.Config
 }
 
 func (f *kcpClusterFactory) CreateCluster(ctx context.Context) (Cluster, error) {
 	clstr, err := cluster.New(f.kcpRestConfig, func(clusterOptions *cluster.Options) {
 		clusterOptions.Logger = ctrl.Log
-		clusterOptions.Scheme = bootstrap.KcpScheme
+		clusterOptions.Scheme = commonscheme.KcpScheme
 		clusterOptions.Client = client.Options{
 			Cache: &client.CacheOptions{
 				Unstructured: true,
@@ -91,7 +91,7 @@ func (f *gardenClusterFactory) CreateCluster(ctx context.Context) (Cluster, erro
 		clusterOptions.Cache.DefaultNamespaces = map[string]cache.Config{
 			e2econfig.Config.GardenNamespace: {},
 		}
-		clusterOptions.Scheme = bootstrap.GardenScheme
+		clusterOptions.Scheme = commonscheme.GardenScheme
 		clusterOptions.Client = client.Options{
 			Cache: &client.CacheOptions{
 				Unstructured: true,

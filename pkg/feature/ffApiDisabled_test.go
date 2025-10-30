@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 
 	"testing"
 
@@ -20,7 +20,7 @@ func TestApiDisabled(t *testing.T) {
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)
 
-	sch := bootstrap.SkrScheme
+	sch := commonscheme.SkrScheme
 
 	cases := []struct {
 		t string

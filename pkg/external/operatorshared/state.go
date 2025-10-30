@@ -45,4 +45,3 @@ func AllMandatoryModuleStates() []State {
 func AllModuleStates() []State {
 	return []State{StateReady, StateProcessing, StateError, StateDeleting, StateWarning, StateUnmanaged}
 }
-

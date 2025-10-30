@@ -7,8 +7,8 @@ import (
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/stretchr/testify/assert"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -23,7 +23,6 @@ func TestObjSupportsProvider(t *testing.T) {
 		GCP       = cloudcontrolv1beta1.ProviderGCP
 		OPENSTACK = cloudcontrolv1beta1.ProviderOpenStack
 	)
-	scheme := bootstrap.SkrScheme
 
 	g := cloudresourcesv1beta1.GroupVersion.Group
 	v := cloudresourcesv1beta1.GroupVersion.Version
@@ -67,7 +66,7 @@ func TestObjSupportsProvider(t *testing.T) {
 		for _, provider := range allProviders {
 			t.Run(fmt.Sprintf("%s %s", data.title, provider), func(t *testing.T) {
 				isSupported := pie.Contains(data.supportedProviders, provider)
-				actual := ObjSupportsProvider(data.obj, scheme, string(provider))
+				actual := ObjSupportsProvider(data.obj, commonscheme.SkrScheme, string(provider))
 				assert.Equal(t, isSupported, actual, data.title)
 			})
 		}
