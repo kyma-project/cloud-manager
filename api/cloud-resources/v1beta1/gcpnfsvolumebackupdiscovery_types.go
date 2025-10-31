@@ -85,7 +85,7 @@ func (in *GcpNfsVolumeBackupDiscovery) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *GcpNfsVolumeBackupDiscovery) SpecificToFeature() featuretypes.FeatureName {
-	return featuretypes.FeatureNfsBackupDiscovery
+	return featuretypes.FeatureNfsBackup
 }
 
 func (in *GcpNfsVolumeBackupDiscovery) SpecificToProviders() []string {

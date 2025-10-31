@@ -90,22 +90,6 @@ func TestApiDisabled(t *testing.T) {
 			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfsBackup).Build(ctx),
 			v: true,
 		},
-		// NFS BACKUP DISCOVERY ====================================================
-		{
-			t: "nfsBackupDiscovery feature is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureNfsBackupDiscovery).Build(ctx),
-			v: false,
-		},
-		{
-			t: "nfsBackupDiscovery feature is disabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureNfsBackupDiscovery).Build(ctx),
-			v: true,
-		},
-		{
-			t: "nfsBackupDiscovery feature is disabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfsBackupDiscovery).Build(ctx),
-			v: true,
-		},
 		// PEERING ====================================================
 		{
 			t: "peering feature is enabled on dev",
