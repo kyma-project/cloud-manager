@@ -78,15 +78,15 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 		state.SrcBackupFullPath = gcpclient.GetFileBackupPath(project, srcLocation, backupName)
 
 		return nil, nil
-	} else if restore.Spec.Source.BackupUrl != "" {
-		// Use the provided backup URL directly
-		srcLocation, backupName := gcpclient.GetLocationNameFromFileBackupUrl(restore.Spec.Source.BackupUrl)
-		state.SrcBackupFullPath = gcpclient.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, srcLocation, backupName)
-		return nil, nil
-	} else {
-		err := fmt.Errorf("either Spec.Source.Backup.Name or Spec.Source.BackupUrl must be set")
-		logger.Error(err, "Invalid GcpNfsVolumeRestore specification")
-		return composed.LogErrorAndReturn(err, "Invalid GcpNfsVolumeRestore specification", composed.StopWithRequeue, ctx)
 	}
 
+	if restore.Spec.Source.BackupUrl != "" {
+		// Use the provided backup URL directly
+		state.SrcBackupFullPath = restore.Spec.Source.BackupUrl
+		return nil, nil
+	}
+
+	err := fmt.Errorf("either Spec.Source.Backup.Name or Spec.Source.BackupUrl must be set")
+	logger.Error(err, "Invalid GcpNfsVolumeRestore specification")
+	return composed.LogErrorAndReturn(err, "Invalid GcpNfsVolumeRestore specification", composed.StopWithRequeue, ctx)
 }
