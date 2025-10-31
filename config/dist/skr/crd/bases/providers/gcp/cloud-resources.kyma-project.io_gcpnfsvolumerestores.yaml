@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: gcpnfsvolumerestores.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -97,10 +97,7 @@ spec:
                       type: object
                     backupUrl:
                       description: BackupUrl is the fully qualified resource name of the backup, in the format "locations/{location}/backups/{backup}".
-                      pattern: ^locations/(.+)/backups/(.+)$
                       type: string
-                  required:
-                    - backup
                   type: object
                   x-kubernetes-validations:
                     - message: Source is immutable.
