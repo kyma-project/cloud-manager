@@ -4,36 +4,33 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.5
-  name: gcpnfsvolumerestores.cloud-resources.kyma-project.io
+    cloud-resources.kyma-project.io/version: v0.0.2
+  name: gcpnfsvolumebackupdiscoveries.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
     categories:
       - kyma-cloud-manager
-    kind: GcpNfsVolumeRestore
-    listKind: GcpNfsVolumeRestoreList
-    plural: gcpnfsvolumerestores
-    singular: gcpnfsvolumerestore
-  scope: Namespaced
+    kind: GcpNfsVolumeBackupDiscovery
+    listKind: GcpNfsVolumeBackupDiscoveryList
+    plural: gcpnfsvolumebackupdiscoveries
+    singular: gcpnfsvolumebackupdiscovery
+  scope: Cluster
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .metadata.creationTimestamp
-          name: Age
+        - jsonPath: .status.availableBackupsCount
+          name: AvailableBackupsCount
+          type: integer
+        - jsonPath: .status.discoverySnapshotTime
+          name: DiscoverySnapshotTime
           type: date
-        - jsonPath: .spec.source.backup.name
-          name: Source
-          type: string
-        - jsonPath: .spec.destination.volume.name
-          name: Destination
-          type: string
         - jsonPath: .status.state
           name: State
           type: string
       name: v1beta1
       schema:
         openAPIV3Schema:
-          description: GcpNfsVolumeRestore is the Schema for the gcpnfsvolumerestores API
+          description: GcpNfsVolumeBackupDiscovery is the Schema for the gcpnfsvolumebackupdiscoveries API
           properties:
             apiVersion:
               description: |-
@@ -53,62 +50,17 @@ spec:
             metadata:
               type: object
             spec:
-              description: GcpNfsVolumeRestoreSpec defines the desired spec of GcpNfsVolumeRestore
-              properties:
-                destination:
-                  properties:
-                    volume:
-                      description: GcpNfsVolumeRef specifies the GcpNfsVolume resource that a backup is restored on.
-                      properties:
-                        name:
-                          description: Name specifies the name of the GcpNfsVolume resource that a backup has to be made of.
-                          type: string
-                        namespace:
-                          description: |-
-                            Namespace specified the namespace of the GcpNfsVolume resource that a backup has to be made of.
-                            If not specified then namespace of the GcpNfsVolumeBackup is used.
-                          type: string
-                      required:
-                        - name
-                      type: object
-                  required:
-                    - volume
-                  type: object
-                  x-kubernetes-validations:
-                    - message: Destination is immutable.
-                      rule: (self == oldSelf)
-                source:
-                  description: Ensure that exactly one of BackupUrl or Backup is set.
-                  maxProperties: 1
-                  minProperties: 1
-                  properties:
-                    backup:
-                      description: GcpNfsVolumeBackupRef specifies the GcpNfsVolumeBackup resource that would be restored
-                      properties:
-                        name:
-                          description: Name specifies the name of the GcpNfsVolumeBackup resource that would be restored.
-                          type: string
-                        namespace:
-                          description: Namespace specifies the namespace of the GcpNfsVolumeBackup resource that would be restored.
-                          type: string
-                      required:
-                        - name
-                        - namespace
-                      type: object
-                    backupUrl:
-                      description: BackupUrl is the fully qualified resource name of the backup, in the format "locations/{location}/backups/{backup}".
-                      type: string
-                  type: object
-                  x-kubernetes-validations:
-                    - message: Source is immutable.
-                      rule: (self == oldSelf)
-              required:
-                - destination
-                - source
+              description: GcpNfsVolumeBackupDiscoverySpec defines the desired state of GcpNfsVolumeBackupDiscovery
               type: object
             status:
-              description: GcpNfsVolumeRestoreStatus defines the observed state of GcpNfsVolumeRestore
+              description: GcpNfsVolumeBackupDiscoveryStatus defines the observed state of GcpNfsVolumeBackupDiscovery
               properties:
+                availableBackupUris:
+                  items:
+                    type: string
+                  type: array
+                availableBackupsCount:
+                  type: integer
                 conditions:
                   description: List of status conditions
                   items:
@@ -168,16 +120,10 @@ spec:
                   x-kubernetes-list-map-keys:
                     - type
                   x-kubernetes-list-type: map
-                opIdentifier:
-                  description: Operation Identifier to track the Hyperscaler Restore Operation
+                discoverySnapshotTime:
+                  format: date-time
                   type: string
                 state:
-                  enum:
-                    - Processing
-                    - InProgress
-                    - Done
-                    - Failed
-                    - Error
                   type: string
               type: object
           type: object

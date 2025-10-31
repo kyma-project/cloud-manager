@@ -3,16 +3,30 @@ package mock
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/googleapi"
-	"regexp"
 )
+
+type FileBackupClientFakeUtils interface {
+	CreateFakeBackup(backup *file.Backup)
+	ClearAllBackups()
+}
 
 type nfsBackupStore struct {
 	backups              []*file.Backup
 	backupOperationError *googleapi.Error
+}
+
+func (s *nfsBackupStore) CreateFakeBackup(backup *file.Backup) {
+	s.backups = append(s.backups, backup)
+}
+
+func (s *nfsBackupStore) ClearAllBackups() {
+	s.backups = []*file.Backup{}
 }
 
 func (s *nfsBackupStore) GetFileBackup(ctx context.Context, projectId, location, name string) (*file.Backup, error) {
@@ -43,6 +57,9 @@ func (s *nfsBackupStore) ListFilesBackups(ctx context.Context, project, filter s
 	matches := re.FindStringSubmatch(filter)
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
+	}
+	if len(matches) == 0 {
+		return s.backups, nil
 	}
 	result := make([]*file.Backup, 0)
 	for _, backup := range s.backups {

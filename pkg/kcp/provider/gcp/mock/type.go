@@ -71,4 +71,6 @@ type Server interface {
 	VpcPeeringMockClientUtils
 
 	ExposedDataConfig
+
+	FileBackupClientFakeUtils
 }

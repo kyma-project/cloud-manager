@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -71,15 +72,15 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 		srcBackupFullPath := gcpclient.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, nfsVolumeBackup.Status.Location, backupName)
 		state.SrcBackupFullPath = srcBackupFullPath
 		return nil, nil
+	}
 
-	} else if len(volume.Spec.SourceBackupUrl) > 0 {
+	if len(volume.Spec.SourceBackupUrl) > 0 {
 		// If the SourceBackupUrl is set, use it
-		location, name := gcpclient.GetLocationNameFromFileBackupUrl(volume.Spec.SourceBackupUrl)
-		state.SrcBackupFullPath = gcpclient.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, location, name)
-		return nil, nil
-	} else {
-		// Neither SourceBackup nor SourceBackupUrl is set, nothing to do
-		logger.Info("No SourceBackup or SourceBackupUrl specified, skipping populateBackupUrl")
+		state.SrcBackupFullPath = volume.Spec.SourceBackupUrl
 		return nil, nil
 	}
+
+	// Neither SourceBackup nor SourceBackupUrl is set, nothing to do
+	logger.Info("No SourceBackup or SourceBackupUrl specified, skipping populateBackupUrl")
+	return nil, nil
 }
