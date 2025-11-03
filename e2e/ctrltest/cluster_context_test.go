@@ -46,7 +46,7 @@ var _ = Describe("Feature: Cluster context", func() {
 		var evaluator e2e.Evaluator
 
 		By("When Evaluation context is created", func() {
-			e, err := e2e.NewEvaluatorBuilder().
+			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
 				Add(world.Kcp()).
 				Build(infra.Ctx())
 			Expect(err).NotTo(HaveOccurred())
@@ -94,7 +94,7 @@ var _ = Describe("Feature: Cluster context", func() {
 		By("When Evaluation context is created", func() {
 			// give time to cache to refresh
 			time.Sleep(2 * time.Second)
-			e, err := e2e.NewEvaluatorBuilder().
+			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
 				Add(world.Kcp()).
 				Build(infra.Ctx())
 			Expect(err).NotTo(HaveOccurred())

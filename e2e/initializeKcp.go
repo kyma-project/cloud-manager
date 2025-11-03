@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func InitializeKcp(ctx context.Context, kcpClient client.Client) error {
+func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econfig.ConfigType) error {
 	// install crds
 	arr, err := crd.KCP_All()
 	if err != nil {
@@ -43,35 +43,36 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client) error {
 	// gardener credentials
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: e2econfig.Config.KcpNamespace,
+			Namespace: config.KcpNamespace,
 			Name:      "gardener-credentials",
 		},
 	}
 
 	err = kcpClient.Get(ctx, client.ObjectKeyFromObject(secret), secret)
 	if err == nil {
-		err = kcpClient.Delete(ctx, secret)
-		if err != nil {
-			return fmt.Errorf("error deleting existing garden secret: %w", err)
-		}
+		return fmt.Errorf("secret %s already exists", secret.Name)
+		//err = kcpClient.Delete(ctx, secret)
+		//if err != nil {
+		//	return fmt.Errorf("error deleting existing garden secret: %w", err)
+		//}
 	}
 
-	if e2econfig.Config.GardenKubeconfig == "" {
+	if config.GardenKubeconfig == "" {
 		return fmt.Errorf("garden kubeconfig is not set in config")
 	}
-	kubeBytes, err := os.ReadFile(e2econfig.Config.GardenKubeconfig)
+	kubeBytes, err := os.ReadFile(config.GardenKubeconfig)
 	if err != nil {
-		return fmt.Errorf("failed to read garden kubeconfig from %q: %w", e2econfig.Config.GardenKubeconfig, err)
+		return fmt.Errorf("failed to read garden kubeconfig from %q: %w", config.GardenKubeconfig, err)
 	}
 
-	err = e2econfig.Config.SetGardenNamespaceFromKubeconfigBytes(kubeBytes)
+	err = config.SetGardenNamespaceFromKubeconfigBytes(kubeBytes)
 	if err != nil {
 		return fmt.Errorf("failed to set garden kubeconfig: %w", err)
 	}
 
 	secret = &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: e2econfig.Config.KcpNamespace,
+			Namespace: config.KcpNamespace,
 			Name:      "gardener-credentials",
 		},
 		Data: map[string][]byte{

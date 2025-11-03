@@ -6,7 +6,6 @@ import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -46,13 +45,13 @@ var _ = Describe("Feature: KCP SIM", func() {
 
 		By("Then Runtime is created", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), rt, NewObjActions(WithName(instanceDetails.RuntimeID), WithNamespace(e2econfig.Config.KcpNamespace))).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), rt, NewObjActions(WithName(instanceDetails.RuntimeID), WithNamespace(config.KcpNamespace))).
 				Should(Succeed())
 		})
 
 		By("And Then Shoot is created", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions(WithName(instanceDetails.ShootName), WithNamespace(e2econfig.Config.GardenNamespace))).
+				WithArguments(infra.Ctx(), infra.Garden().Client(), shoot, NewObjActions(WithName(instanceDetails.ShootName), WithNamespace(config.GardenNamespace))).
 				Should(Succeed())
 		})
 

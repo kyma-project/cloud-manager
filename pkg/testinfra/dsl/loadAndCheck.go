@@ -9,9 +9,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,7 +31,7 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 	actions.ApplyOnObject(obj)
 
 	if obj.GetName() == "" {
-		panic("the LoadAndCheck object must have a name")
+		return errors.New("the LoadAndCheck object must have a name")
 	}
 
 	if err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {

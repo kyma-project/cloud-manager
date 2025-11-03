@@ -12,7 +12,8 @@ var cmdConfigDump = &cobra.Command{
 	Use:   "dump",
 	Short: "Prints the loaded config",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		x, err := yaml.Marshal(e2econfig.Config)
+		cfg := e2econfig.LoadConfig()
+		x, err := yaml.Marshal(cfg)
 		if err != nil {
 			return err
 		}

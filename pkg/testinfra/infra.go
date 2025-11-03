@@ -61,6 +61,8 @@ func (i *infra) Stop() error {
 				lastErr = fmt.Errorf("; %w", err)
 			}
 		}
+
+		_ = os.Remove(cluster.kubeconfigFilePath)
 	}
 
 	return lastErr

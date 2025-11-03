@@ -8,7 +8,6 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/google/uuid"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
@@ -18,7 +17,7 @@ type EvaluatorBuilder struct {
 	evalData  evalData
 }
 
-func NewEvaluatorBuilder() *EvaluatorBuilder {
+func NewEvaluatorBuilder(skrNamespace string) *EvaluatorBuilder {
 	vm := goja.New()
 	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
 	util.MustVoid(vm.GlobalObject().Set("id", func(fc goja.FunctionCall, r *goja.Runtime) goja.Value {
@@ -47,7 +46,8 @@ function findConditionTrue(obj, tp) {
 
 	return &EvaluatorBuilder{
 		evaluator: &defaultEvaluatorImpl{
-			vm: vm,
+			vm:           vm,
+			skrNamespace: skrNamespace,
 		},
 	}
 }
@@ -178,7 +178,8 @@ type Evaluator interface {
 }
 
 type defaultEvaluatorImpl struct {
-	vm *goja.Runtime
+	vm           *goja.Runtime
+	skrNamespace string
 }
 
 func (e *defaultEvaluatorImpl) Eval(txt string) (interface{}, error) {
@@ -226,8 +227,8 @@ func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) error {
 			return fmt.Errorf("error evaluating %q namespace %q: %w", ri.Alias, ri.Namespace, err)
 		}
 		ri.Namespace = namespace
-	} else if e2econfig.Config.SkrNamespace != "" {
-		ri.Namespace = e2econfig.Config.SkrNamespace
+	} else if e.skrNamespace != "" {
+		ri.Namespace = e.skrNamespace
 	} else {
 		ri.Namespace = "default"
 	}

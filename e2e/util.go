@@ -11,7 +11,7 @@ import (
 
 func SkipE2eTests(t *testing.T) {
 	if os.Getenv("RUN_E2E_TESTS") == "" {
-		t.Skip("Skipping E2E tests because $RUN_E2E_TESTS is not set")
+		t.Skip("Skipping E2E tests because $RUN_E2E_TESTS is not set. This is OK if you're running normal unit tests for CI.")
 	}
 }
 

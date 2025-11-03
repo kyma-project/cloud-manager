@@ -6,14 +6,15 @@ import (
 	"sync"
 	"time"
 
-	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/hashicorp/go-multierror"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type WorldFactory struct {
@@ -24,17 +25,20 @@ func NewWorldFactory() *WorldFactory {
 }
 
 type WorldCreateOptions struct {
+	Config                *e2econfig.ConfigType
 	KcpRestConfig         *rest.Config
 	CloudProfileLoader    sim.CloudProfileLoader
 	SkrKubeconfigProvider sim.SkrKubeconfigProvider
-	ExtraRunnables        []manager.Runnable
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
-	factoryKcp := NewKcpClusterFactory(opts.KcpRestConfig)
-	kcpCluster, err := factoryKcp.CreateCluster(rootCtx)
+	if opts.Config == nil {
+		return nil, fmt.Errorf("config is required: %w", common.ErrLogical)
+	}
+	factoryKcp := NewKcpClusterManagerFactory(opts.KcpRestConfig)
+	kcpManager, err := factoryKcp.CreateClusterManager(rootCtx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create kcp cluster: %w", err)
+		return nil, fmt.Errorf("failed to create kcp cluster manager: %w", err)
 	}
 
 	waitClusterStarts := func(ctx context.Context, c cluster.Cluster) bool {
@@ -59,17 +63,28 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := kcpCluster.Start(ctx); err != nil {
-			result.runError = multierror.Append(result.runError, fmt.Errorf("error running KCP cluster: %w", err))
+		if err := kcpManager.Start(ctx); err != nil {
+			result.runError = multierror.Append(result.runError, fmt.Errorf("error running KCP cluster manager: %w", err))
 		}
 	}()
 
-	if !waitClusterStarts(ctx, kcpCluster) {
+	if !waitClusterStarts(ctx, kcpManager) {
 		cancel()
 		return nil, fmt.Errorf("kcp cache did not sync")
 	}
 
-	if err := InitializeKcp(ctx, kcpCluster.GetClient()); err != nil {
+	cmInfo := &corev1.ConfigMap{}
+	err = kcpManager.GetAPIReader().Get(ctx, types.NamespacedName{
+		Namespace: "default",
+		Name:      "cm-info",
+	}, cmInfo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configmap info: %w", err)
+	}
+	fmt.Println("WorldFactory cm-info for KCP ==================================")
+	fmt.Printf("%+v\n", cmInfo.Data)
+
+	if err := InitializeKcp(ctx, kcpManager.GetClient(), opts.Config); err != nil {
 		cancel()
 		return nil, fmt.Errorf("error initializing KCP cluster: %w", err)
 	}
@@ -78,51 +93,54 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 
 	// Garden Cluster ------------------------
 
-	factoryGarden := NewGardenClusterFactory(kcpCluster.GetClient())
-	gardenCluster, err := factoryGarden.CreateCluster(ctx)
+	factoryGarden := NewGardenClusterManagerFactory(kcpManager.GetClient(), opts.Config.GardenNamespace)
+	gardenManager, err := factoryGarden.CreateClusterManager(ctx)
 	if err != nil {
 		cancel()
-		return nil, fmt.Errorf("error creating garden cluster: %w", err)
+		return nil, fmt.Errorf("error creating garden cluster manager: %w", err)
 	}
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := gardenCluster.Start(ctx); err != nil {
+		if err := gardenManager.Start(ctx); err != nil {
 			result.runError = multierror.Append(result.runError, fmt.Errorf("error running Garden cluster: %w", err))
 		}
 	}()
 
-	if !waitClusterStarts(ctx, gardenCluster) {
+	if !waitClusterStarts(ctx, gardenManager) {
 		cancel()
 		return nil, fmt.Errorf("garden cache did not sync")
 	}
 
-	err = gardenCluster.AddResources(ctx, &ResourceDeclaration{
-		Alias:      "dummy-foo-just-starting-shoot-watch",
-		Kind:       "Shoot",
-		ApiVersion: gardenerapicore.SchemeGroupVersion.String(),
-		Name:       "none",
-		Namespace:  e2econfig.Config.GardenNamespace,
-	})
+	cmInfo = &corev1.ConfigMap{}
+	err = gardenManager.GetAPIReader().Get(ctx, types.NamespacedName{
+		Namespace: "default",
+		Name:      "cm-info",
+	}, cmInfo)
 	if err != nil {
-		return result, fmt.Errorf("error adding dummy Shoot resource declaration: %w", err)
+		return nil, fmt.Errorf("failed to get configmap info: %w", err)
 	}
+	fmt.Println("WorldFactory cm-info for Garden ==================================")
+	fmt.Printf("%+v\n", cmInfo.Data)
 
 	// SIM -----------------------------------
 
 	time.Sleep(time.Second)
 
 	if opts.CloudProfileLoader == nil {
-		opts.CloudProfileLoader = sim.NewGardenCloudProfileLoader(gardenCluster.GetClient(), e2econfig.Config.GardenNamespace)
+		opts.CloudProfileLoader = sim.NewGardenCloudProfileLoader(gardenManager.GetClient(), opts.Config)
 	}
 	if opts.SkrKubeconfigProvider == nil {
-		opts.SkrKubeconfigProvider = sim.NewGardenSkrKubeconfigProvider(gardenCluster.GetClient(), 10*time.Hour)
+		opts.SkrKubeconfigProvider = sim.NewGardenSkrKubeconfigProvider(gardenManager.GetClient(), 10*time.Hour, opts.Config.GardenNamespace)
 	}
 
 	simInstance, err := sim.New(sim.CreateOptions{
-		KCP:                   kcpCluster,
-		Garden:                gardenCluster.GetClient(),
+		Config:                opts.Config,
+		StartCtx:              ctx,
+		KcpManager:            kcpManager,
+		Garden:                gardenManager.GetClient(),
+		GardenApiReader:       gardenManager.GetAPIReader(),
 		CloudProfileLoader:    opts.CloudProfileLoader,
 		Logger:                ctrl.Log,
 		SkrKubeconfigProvider: opts.SkrKubeconfigProvider,
@@ -132,29 +150,12 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("error creating sim instance: %w", err)
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := simInstance.Start(ctx); err != nil {
-			result.runError = multierror.Append(result.runError, fmt.Errorf("error running sim instance: %w", err))
-		}
-	}()
-
-	for _, r := range opts.ExtraRunnables {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := r.Start(ctx); err != nil {
-				result.runError = multierror.Append(result.runError, fmt.Errorf("error running extra runnable %T: %w", r, err))
-			}
-		}()
-	}
-
-	result.kcp = kcpCluster
-	result.garden = gardenCluster
+	result.config = opts.Config
+	result.kcpManager = kcpManager
+	result.gardenManager = gardenManager
 	result.simu = simInstance
-
-	time.Sleep(time.Second)
+	result.kcp = NewCluster(ctx, "kcp", kcpManager)
+	result.garden = NewCluster(ctx, "garden", gardenManager)
 
 	return result, nil
 }

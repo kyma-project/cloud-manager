@@ -57,12 +57,16 @@ func (l *cachingCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegis
 
 // fileCloudProfileLoader
 
-func NewFileCloudProfileLoader(fn string) CloudProfileLoader {
-	return &fileCloudProfileLoader{fn: fn}
+func NewFileCloudProfileLoader(fn string, config *e2econfig.ConfigType) CloudProfileLoader {
+	return &fileCloudProfileLoader{
+		fn:     fn,
+		config: config,
+	}
 }
 
 type fileCloudProfileLoader struct {
-	fn string
+	fn     string
+	config *e2econfig.ConfigType
 }
 
 func (l *fileCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry, error) {
@@ -79,9 +83,9 @@ func (l *fileCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry
 
 	var result []CloudProfileInfo
 	for _, cp := range cpList.Items {
-		if len(e2econfig.Config.CloudProfiles) > 0 {
+		if len(l.config.CloudProfiles) > 0 {
 			specified := false
-			for _, name := range e2econfig.Config.CloudProfiles {
+			for _, name := range l.config.CloudProfiles {
 				if cp.Name == name {
 					specified = true
 					break
@@ -102,16 +106,16 @@ func (l *fileCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry
 
 // gardenCloudProfileLoader
 
-func NewGardenCloudProfileLoader(gardenClient client.Client, namespace string) CloudProfileLoader {
+func NewGardenCloudProfileLoader(gardenClient client.Client, config *e2econfig.ConfigType) CloudProfileLoader {
 	return &gardenCloudProfileLoader{
 		gardenClient: gardenClient,
-		namespace:    namespace,
+		config:       config,
 	}
 }
 
 type gardenCloudProfileLoader struct {
 	gardenClient client.Client
-	namespace    string
+	config       *e2econfig.ConfigType
 }
 
 var _ CloudProfileLoader = &gardenCloudProfileLoader{}
@@ -124,7 +128,7 @@ func (l *gardenCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegist
 	}
 	for _, cp := range cpList.Items {
 		specified := false
-		for _, name := range e2econfig.Config.CloudProfiles {
+		for _, name := range l.config.CloudProfiles {
 			if cp.Name == name {
 				specified = true
 				break

@@ -32,18 +32,20 @@ const aliasLabel = "e2e.kyma-project.io/alias"
 type RuntimeBuilder struct {
 	Obj infrastructuremanagerv1.Runtime
 
-	cpr CloudProfileRegistry
+	cpr    CloudProfileRegistry
+	config *e2econfig.ConfigType
 
 	errProvider error
 }
 
-func NewRuntimeBuilder(cpr CloudProfileRegistry) *RuntimeBuilder {
+func NewRuntimeBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *RuntimeBuilder {
 	globalAccountId := uuid.NewString()
 	subAccountId := uuid.NewString()
 	name := uuid.NewString()
 	shootName := NewRandomShootName()
 	return &RuntimeBuilder{
-		cpr: cpr,
+		cpr:    cpr,
+		config: config,
 		Obj: infrastructuremanagerv1.Runtime{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: infrastructuremanagerv1.GroupVersion.String(),
@@ -51,7 +53,7 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry) *RuntimeBuilder {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
-				Namespace: e2econfig.Config.KcpNamespace,
+				Namespace: config.KcpNamespace,
 				Labels: map[string]string{
 					cloudcontrolv1beta1.LabelRuntimeId:            name,
 					cloudcontrolv1beta1.LabelScopeGlobalAccountId: globalAccountId,
@@ -63,7 +65,7 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry) *RuntimeBuilder {
 			},
 			Spec: infrastructuremanagerv1.RuntimeSpec{
 				Security: infrastructuremanagerv1.Security{
-					Administrators: e2econfig.Config.Administrators,
+					Administrators: config.Administrators,
 					Networking: infrastructuremanagerv1.NetworkingSecurity{
 						Filter: infrastructuremanagerv1.Filter{
 							Egress: infrastructuremanagerv1.Egress{
@@ -82,8 +84,8 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry) *RuntimeBuilder {
 							AdditionalOidcConfig: &[]infrastructuremanagerv1.OIDCConfig{
 								{
 									OIDCConfig: gardenertypes.OIDCConfig{
-										ClientID:       ptr.To(e2econfig.Config.OidcClientId),
-										IssuerURL:      ptr.To(e2econfig.Config.OidcIssuerUrl),
+										ClientID:       ptr.To(config.OidcClientId),
+										IssuerURL:      ptr.To(config.OidcIssuerUrl),
 										GroupsClaim:    ptr.To("groups"),
 										GroupsPrefix:   ptr.To("-"),
 										UsernameClaim:  ptr.To("sub"),
@@ -168,7 +170,7 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeProvider] = uProvider
 	b.Obj.Labels[cloudcontrolv1beta1.LabelScopeRegion] = region
 
-	cloudProfileName, ok := e2econfig.Config.CloudProfiles[string(provider)]
+	cloudProfileName, ok := b.config.CloudProfiles[string(provider)]
 	if !ok {
 		b.errProvider = multierror.Append(b.errProvider, fmt.Errorf("cloud profile for provider %q not found", provider))
 		return b

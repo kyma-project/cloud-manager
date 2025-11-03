@@ -31,6 +31,8 @@ type Infra interface {
 	Garden() ClusterInfo
 
 	Stop() error
+
+	FinalizerReport()
 }
 
 type ClusterInfo interface {

@@ -47,8 +47,9 @@ type Cluster interface {
 	//EvaluationContext(ctx context.Context) (map[string]interface{}, error)
 }
 
-func NewCluster(alias string, clstr cluster.Cluster) Cluster {
+func NewCluster(startCtx context.Context, alias string, clstr cluster.Cluster) Cluster {
 	return &defaultCluster{
+		startCtx:     startCtx,
 		Cluster:      clstr,
 		clusterAlias: alias,
 		resources:    make(map[string]*ResourceInfo),
@@ -64,17 +65,12 @@ type defaultCluster struct {
 
 	clusterAlias string
 
-	runCtx context.Context
+	startCtx context.Context
 
 	resources map[string]*ResourceInfo
 	sources   map[schema.GroupVersionKind]source.SyncingSource
 
 	mappingCache map[string]*meta.RESTMapping
-}
-
-func (c *defaultCluster) Start(ctx context.Context) error {
-	c.runCtx = ctx
-	return c.Cluster.Start(ctx)
 }
 
 func (c *defaultCluster) ClusterAlias() string {
@@ -86,8 +82,8 @@ func (c *defaultCluster) AllResources() []*ResourceInfo {
 }
 
 func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
-	if c.runCtx == nil {
-		return fmt.Errorf("runCtx is nil, check if the cluster is started: %w", common.ErrLogical)
+	if c.startCtx == nil {
+		return fmt.Errorf("startCtx is nil, check if the cluster is started: %w", common.ErrLogical)
 	}
 	addedSources := map[schema.GroupVersionKind]source.SyncingSource{}
 
@@ -119,16 +115,15 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 		u.SetGroupVersionKind(gvk)
 
 		src = source.Kind(c.Cluster.GetCache(), u, handler.TypedFuncs[*unstructured.Unstructured, reconcile.Request]{})
-		err = src.Start(c.runCtx, nil)
+		err = src.Start(c.startCtx, nil)
 		if err != nil {
 			return fmt.Errorf("failed to start source for alias %q GVK %s: %w", decl.Alias, gvk.String(), err)
 		}
 		addedSources[gvk] = src
-
 	}
 
 	for gvk, src := range addedSources {
-		err := src.WaitForSync(c.runCtx)
+		err := src.WaitForSync(c.startCtx)
 		if err != nil {
 			return fmt.Errorf("failed to wait for source sync for GVK %s: %w", gvk.String(), err)
 		}
@@ -191,77 +186,3 @@ func (c *defaultCluster) Get(ctx context.Context, alias string) (map[string]inte
 	}
 	return u.Object, nil
 }
-
-//func (c *defaultCluster) EvaluationContext(ctx context.Context) (map[string]interface{}, error) {
-//	data, err := c.evaluationContextWithAlreadyEvaluated(ctx)
-//	if err != nil {
-//		return data, err
-//	}
-//	eval := NewEvaluator()
-//	if err := eval.SetGlobalVars(data); err != nil {
-//		return nil, fmt.Errorf("failed to set global vars: %w", err)
-//	}
-//
-//	var newlyEvaluated []string
-//	for _, ri := range c.resources {
-//		if ri.Evaluated {
-//			continue
-//		}
-//		err = eval.EvalResource(ri)
-//		if err == nil && ri.Evaluated {
-//			newlyEvaluated = append(newlyEvaluated, ri.Name)
-//		}
-//	}
-//
-//	return data, err
-//}
-//
-//func (c *defaultCluster) recursiveEval(ctx context.Context, eval Evaluator, result map[string]interface{}) (map[string]interface{}, error) {
-//	if err := eval.SetGlobalVars(result); err != nil {
-//		return nil, fmt.Errorf("failed to set global vars: %w", err)
-//	}
-//	// load already evaluated resources
-//	for _, ri := range c.resources {
-//		if !ri.Evaluated {
-//			// try to evaluate it
-//			err := eval.EvalResource(ri)
-//			if err == nil && ri.Evaluated {
-//				// successfully evaluated
-//				// try to load it
-//				data, err := c.Get(ctx, ri.Name)
-//				if err != nil {
-//					return nil, err
-//				}
-//				result[ri.Name] = data
-//				if err := eval.SetGlobalVar(ri.Name, data); err != nil {
-//					return nil, fmt.Errorf("failed to set global var %q: %w", ri.Name, err)
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//func (c *defaultCluster) evaluationContextWithAlreadyEvaluated(ctx context.Context) (map[string]interface{}, error) {
-//	result := make(map[string]interface{}, len(c.resources))
-//	for _, ri := range c.resources {
-//		var data map[string]interface{}
-//		if ri.Evaluated {
-//			u := &unstructured.Unstructured{}
-//			u.SetGroupVersionKind(ri.GVK)
-//
-//			err := c.Cluster.GetClient().Get(ctx, types.NamespacedName{
-//				Namespace: ri.Namespace,
-//				Name:      ri.Name,
-//			}, u)
-//			if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
-//				return nil, fmt.Errorf("failed to load object for alias %q: %w", ri.Alias, err)
-//			}
-//			if err == nil {
-//				data = u.Object
-//			}
-//		}
-//		result[ri.Alias] = data
-//	}
-//
-//	return result, nil
-//}

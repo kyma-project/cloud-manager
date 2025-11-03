@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -20,16 +19,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewSimKymaSkr(kcp client.Client, skr client.Client) *simKymaSkr {
+func newSimKymaSkr(kcp client.Client, skr client.Client, runtimeID, kcpNamespace string) *simKymaSkr {
 	return &simKymaSkr{
-		kcp: kcp,
-		skr: skr,
+		kcp:          kcp,
+		skr:          skr,
+		runtimeID:    runtimeID,
+		kcpNamespace: kcpNamespace,
 	}
 }
 
 type simKymaSkr struct {
-	kcp client.Client
-	skr client.Client
+	kcp          client.Client
+	skr          client.Client
+	runtimeID    string
+	kcpNamespace string
 }
 
 func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -118,7 +121,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	kcpKyma := &operatorv1beta2.Kyma{}
 	err = r.kcp.Get(ctx, types.NamespacedName{
-		Namespace: e2econfig.Config.KcpNamespace,
+		Namespace: r.kcpNamespace,
 		Name:      runtimeId,
 	}, kcpKyma)
 	if err != nil {
@@ -193,7 +196,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		Named("kyma-skr").
+		Named(fmt.Sprintf("kyma-skr-%s", r.runtimeID)).
 		For(&operatorv1beta2.Kyma{}).
 		Complete(r)
 }

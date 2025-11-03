@@ -7,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	goruntime "runtime"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	"github.com/kyma-project/cloud-manager/pkg/config"
@@ -40,7 +42,31 @@ const (
 	DefaultGardenNamespace = "garden-kyma"
 )
 
+type StartOptions struct {
+	CallerId string
+}
+
 func Start() (Infra, error) {
+	pc, _, _, ok := goruntime.Caller(1)
+	if !ok {
+		return nil, errors.New("could not determine caller")
+	}
+	details := goruntime.FuncForPC(pc)
+	if details == nil {
+		return nil, errors.New("could not determine runtime caller Func")
+	}
+	callerName := details.Name()
+	callerName = strings.TrimPrefix(callerName, "github.com/kyma-project/cloud-manager/")
+	callerName = strings.TrimSuffix(callerName, ".init.func3")
+
+	opts := StartOptions{
+		CallerId: callerName,
+	}
+
+	return StartEx(opts)
+}
+
+func StartEx(opts StartOptions) (Infra, error) {
 	projectRoot := os.Getenv("PROJECTROOT")
 	if len(projectRoot) == 0 {
 		return nil, errors.New("the env var PROJECTROOT must be specified and point to the dir where Makefile is")
@@ -48,6 +74,11 @@ func Start() (Infra, error) {
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
 		panic(errors.New("unable to resolve envtest version. Use env var ENVTEST_K8S_VERSION to specify it"))
+	}
+
+	if opts.CallerId == "" {
+		opts.CallerId = fmt.Sprintf("%.8s", strings.ReplaceAll(uuid.NewString(), "-", ""))
+		fmt.Printf("No caller id specified, generated id: %s\n", opts.CallerId)
 	}
 
 	ginkgo.By("Preparing CRDs")
@@ -65,13 +96,13 @@ func Start() (Infra, error) {
 	infra := &infra{
 		projectRootDir: projectRoot,
 		clusters: map[infraTypes.ClusterType]*clusterInfo{
-			infraTypes.ClusterTypeKcp: &clusterInfo{
+			infraTypes.ClusterTypeKcp: {
 				crdDirs: []string{dirKcp},
 			},
-			infraTypes.ClusterTypeSkr: &clusterInfo{
+			infraTypes.ClusterTypeSkr: {
 				crdDirs: []string{dirSkr},
 			},
-			infraTypes.ClusterTypeGarden: &clusterInfo{
+			infraTypes.ClusterTypeGarden: {
 				crdDirs: []string{dirGarden},
 			},
 		},
@@ -89,7 +120,8 @@ func Start() (Infra, error) {
 			return nil, fmt.Errorf("error starting cluster %s: %w", name, err)
 		}
 
-		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s", name))
+		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s-%s", strings.ReplaceAll(opts.CallerId, "/", "-"), name))
+		fmt.Printf("%s kubeconfigFilePath: %s\n", name, kubeconfigFilePath)
 		b, err := kubeconfigToBytes(restConfigToKubeconfig(cfg))
 		if err != nil {
 			return nil, fmt.Errorf("error getting %s kubeconfig bytes: %w", name, err)
@@ -121,30 +153,19 @@ func Start() (Infra, error) {
 			ce.namespace = DefaultGardenNamespace
 		}
 		cluster.ClusterEnv = ce
-	}
 
-	skip := 0
-	pc, _, _, ok := goruntime.Caller(skip + 1)
-	if ok {
-		details := goruntime.FuncForPC(pc)
-		if details != nil {
-			fullName := details.Name()
-			for name, clsrt := range infra.clusters {
-				c := clsrt.Client()
-				cctx := context.Background()
-				err := c.Create(cctx, &corev1.ConfigMap{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: "default",
-						Name:      "cm-info",
-					},
-					Data: map[string]string{
-						"caller": fullName,
-					},
-				})
-				if err != nil {
-					return nil, fmt.Errorf("error creating cm-info configmap in testinfra cluster %q: %w", name, err)
-				}
-			}
+		err = cluster.client.Create(context.Background(), &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "cm-info",
+			},
+			Data: map[string]string{
+				"caller":      opts.CallerId,
+				"clusterType": string(name),
+			},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error creating cm-info configmap in testinfra cluster %q: %w", name, err)
 		}
 	}
 

@@ -9,8 +9,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var Config = &ConfigType{}
-
 type NetworkOwner string
 
 const (
@@ -89,10 +87,10 @@ func (s Subscriptions) GetDefaultForProvider(provider cloudcontrolv1beta1.Provid
 	})
 }
 
-func InitConfig(cfg config.Config) {
+func initConfig(cfg config.Config, obj *ConfigType) {
 	cfg.Path(
 		"e2e.config",
-		config.Bind(Config),
+		config.Bind(obj),
 		// intention is to load the whole config from a file
 		config.SourceFile("e2e-config.yaml"),
 
@@ -131,7 +129,17 @@ func InitConfig(cfg config.Config) {
 	)
 }
 
-func LoadConfig() config.Config {
+func DefaultConfig() *ConfigType {
+	env := abstractions.NewMockedEnvironment(nil)
+	cfg := config.NewConfig(env)
+	result := &ConfigType{}
+	initConfig(cfg, result)
+	cfg.Read()
+
+	return result
+}
+
+func LoadConfig() *ConfigType {
 	env := abstractions.NewOSEnvironment()
 	cfg := config.NewConfig(env)
 	configDir := env.Get("CONFIG_DIR")
@@ -141,9 +149,36 @@ func LoadConfig() config.Config {
 	if configDir == "" {
 		configDir = "../../../../"
 	}
+	result := &ConfigType{}
 	cfg.BaseDir(configDir)
-	InitConfig(cfg)
+	initConfig(cfg, result)
 	cfg.Read()
 
-	return cfg
+	return result
+}
+
+func Stub() *ConfigType {
+	result := DefaultConfig()
+	result.OidcClientId = "79221501-5dcc-4285-9af6-d023f313918e"
+	result.OidcIssuerUrl = "https://oidc.e2e.cloud-manager.kyma.local"
+	result.Administrators = []string{"admin@e2e.cloud-manager.kyma.local"}
+	result.Subscriptions = Subscriptions{
+		{
+			Name:     "aws",
+			Provider: cloudcontrolv1beta1.ProviderAws,
+		},
+		{
+			Name:     "gcp",
+			Provider: cloudcontrolv1beta1.ProviderGCP,
+		},
+		{
+			Name:     "azure",
+			Provider: cloudcontrolv1beta1.ProviderAzure,
+		},
+		{
+			Name:     "openstack",
+			Provider: cloudcontrolv1beta1.ProviderOpenStack,
+		},
+	}
+	return result
 }

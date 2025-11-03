@@ -7,7 +7,6 @@ import (
 
 	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,22 +19,24 @@ type SkrKubeconfigProvider interface {
 
 // GARDEN SkrKubeconfigProvider =================================================
 
-func NewGardenSkrKubeconfigProvider(garden client.Client, expiresIn time.Duration) SkrKubeconfigProvider {
+func NewGardenSkrKubeconfigProvider(garden client.Client, expiresIn time.Duration, gardenNamespace string) SkrKubeconfigProvider {
 	return &gardenKubeconfigProvider{
-		garden:    garden,
-		expiresIn: expiresIn,
+		garden:          garden,
+		expiresIn:       expiresIn,
+		gardenNamespace: gardenNamespace,
 	}
 }
 
 type gardenKubeconfigProvider struct {
-	garden    client.Client
-	expiresIn time.Duration
+	garden          client.Client
+	expiresIn       time.Duration
+	gardenNamespace string
 }
 
 func (p *gardenKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error) {
 	shoot := &gardenertypes.Shoot{}
 	err := p.garden.Get(ctx, types.NamespacedName{
-		Namespace: e2econfig.Config.GardenNamespace,
+		Namespace: p.gardenNamespace,
 		Name:      shootName,
 	}, shoot)
 	if err != nil {

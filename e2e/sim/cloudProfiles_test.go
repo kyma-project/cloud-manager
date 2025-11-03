@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCloudProfiles(t *testing.T) {
-	loader := NewFileCloudProfileLoader("fixtures/cloudprofiles.yaml")
+	cfg := e2econfig.Stub()
+	loader := NewFileCloudProfileLoader("fixtures/cloudprofiles.yaml", cfg)
 	reg, err := loader.Load(context.Background())
 	assert.NoError(t, err)
 

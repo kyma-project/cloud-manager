@@ -39,11 +39,12 @@ type Keb interface {
 	DeleteInstance(ctx context.Context, opts ...DeleteOption) error
 }
 
-func NewKeb(kcpClient client.Client, gardenClient client.Client, cpl CloudProfileLoader) Keb {
+func NewKeb(kcpClient client.Client, gardenClient client.Client, cpl CloudProfileLoader, config *e2econfig.ConfigType) Keb {
 	return &defaultKeb{
 		kcpClient:    kcpClient,
 		gardenClient: gardenClient,
 		cpl:          cpl,
+		config:       config,
 	}
 }
 
@@ -444,6 +445,7 @@ type defaultKeb struct {
 	kcpClient    client.Client
 	gardenClient client.Client
 	cpl          CloudProfileLoader
+	config       *e2econfig.ConfigType
 }
 
 func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetails {
@@ -600,7 +602,7 @@ func (k *defaultKeb) WaitDeleted(ctx context.Context, opts ...WaitOption) error 
 
 func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error) {
 	rt := &infrastructuremanagerv1.Runtime{}
-	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: e2econfig.Config.KcpNamespace, Name: runtimeID}, rt)
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: runtimeID}, rt)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, fmt.Errorf("error getting runtime %q: %w", runtimeID, err)
 	}
@@ -627,13 +629,13 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 		return InstanceDetails{}, fmt.Errorf("instance with alias %q already exists", options.alias)
 	}
 
-	if e2econfig.Config.GardenNamespace == "" {
+	if k.config.GardenNamespace == "" {
 		return InstanceDetails{}, fmt.Errorf("config garden namespace not set")
 	}
-	if e2econfig.Config.KcpNamespace == "" {
+	if k.config.KcpNamespace == "" {
 		return InstanceDetails{}, fmt.Errorf("config kcp namespace not set")
 	}
-	subscription := e2econfig.Config.Subscriptions.GetDefaultForProvider(options.provider)
+	subscription := k.config.Subscriptions.GetDefaultForProvider(options.provider)
 	if subscription == nil {
 		return InstanceDetails{}, fmt.Errorf("subscription not found for provider %q", options.provider)
 	}
@@ -644,7 +646,7 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 	if options.region == "" {
 		options.region = defaultRegions[options.provider]
 	}
-	rtBuilder := NewRuntimeBuilder(cpr).
+	rtBuilder := NewRuntimeBuilder(cpr, k.config).
 		WithAlias(options.alias).
 		WithProvider(options.provider, options.region).
 		WithSecretBindingName(subscription.Name).
@@ -681,13 +683,13 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 			WithValues(
 				"shoot", rt.Spec.Shoot.Name,
 				"runtimeID", rt.Name,
-				"gardenNamespace", e2econfig.Config.GardenNamespace,
+				"gardenNamespace", k.config.GardenNamespace,
 			).
 			Info("Waiting for shoot to get created")
 		err = wait.PollUntilContextTimeout(ctx, options.shootCreatedInterval, options.shootCreatedTimeout, false, func(ctx context.Context) (bool, error) {
 			shoot := &gardenerapicore.Shoot{}
 			err := k.gardenClient.Get(ctx, types.NamespacedName{
-				Namespace: e2econfig.Config.GardenNamespace,
+				Namespace: k.config.GardenNamespace,
 				Name:      rt.Spec.Shoot.Name,
 			}, shoot)
 			if err == nil {
@@ -739,7 +741,7 @@ func (k *defaultKeb) DeleteInstance(ctx context.Context, opts ...DeleteOption) e
 	}
 
 	rt := &infrastructuremanagerv1.Runtime{}
-	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: e2econfig.Config.KcpNamespace, Name: options.runtimeId}, rt)
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: options.runtimeId}, rt)
 	if client.IgnoreNotFound(err) != nil {
 		return fmt.Errorf("error getting runtime %q: %w", options.runtimeId, err)
 	}
@@ -756,7 +758,7 @@ func (k *defaultKeb) DeleteInstance(ctx context.Context, opts ...DeleteOption) e
 		err := wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, false, func(ctx context.Context) (bool, error) {
 			shoot := &gardenerapicore.Shoot{}
 			err := k.gardenClient.Get(ctx, types.NamespacedName{
-				Namespace: e2econfig.Config.GardenNamespace,
+				Namespace: k.config.GardenNamespace,
 				Name:      rt.Spec.Shoot.Name,
 			}, shoot)
 			if client.IgnoreNotFound(err) != nil {

@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -18,15 +18,16 @@ const (
 )
 
 type Sim interface {
-	ClientClusterFactory
-	// Start starts Runtime, GardenerCluster and KymaKcp managers and blocks until the context is done.
-	Start(ctx context.Context) error
+	SkrManagerFactory
 	Keb() Keb
 }
 
 type CreateOptions struct {
-	KCP                   cluster.Cluster
+	Config                *e2econfig.ConfigType
+	StartCtx              context.Context
+	KcpManager            manager.Manager
 	Garden                client.Client
+	GardenApiReader       client.Reader
 	CloudProfileLoader    CloudProfileLoader
 	Logger                logr.Logger
 	SkrKubeconfigProvider SkrKubeconfigProvider
@@ -34,7 +35,13 @@ type CreateOptions struct {
 
 func (o *CreateOptions) Validate() error {
 	var result error
-	if o.KCP == nil {
+	if o.Config == nil {
+		result = multierror.Append(fmt.Errorf("missing Config"))
+	}
+	if o.StartCtx == nil {
+		result = multierror.Append(fmt.Errorf("missing StartCtx"))
+	}
+	if o.KcpManager == nil {
 		result = multierror.Append(fmt.Errorf("missing KCP cluster"))
 	}
 	if o.Garden == nil {
@@ -58,44 +65,40 @@ func New(opts CreateOptions) (Sim, error) {
 	}
 
 	if opts.SkrKubeconfigProvider == nil {
-		opts.SkrKubeconfigProvider = NewGardenSkrKubeconfigProvider(opts.Garden, 10*time.Hour)
+		opts.SkrKubeconfigProvider = NewGardenSkrKubeconfigProvider(opts.Garden, 10*time.Hour, opts.Config.GardenNamespace)
 	}
 
-	mngr := NewManager(opts.KCP, opts.Logger)
+	factory := NewClientClusterFactory(opts.KcpManager.GetClient(), clock.RealClock{}, opts.Config.KcpNamespace)
 
-	factory := NewClientClusterFactory(opts.KCP.GetClient(), clock.RealClock{})
+	keb := NewKeb(opts.KcpManager.GetClient(), opts.Garden, opts.CloudProfileLoader, opts.Config)
 
-	keb := NewKeb(opts.KCP.GetClient(), opts.Garden, opts.CloudProfileLoader)
-
-	simRt := newSimRuntime(opts.KCP.GetClient(), opts.Garden, opts.CloudProfileLoader)
-	if err := simRt.SetupWithManager(mngr); err != nil {
+	simRt := newSimRuntime(opts.KcpManager.GetClient(), opts.Garden, opts.CloudProfileLoader, opts.GardenApiReader, opts.Config)
+	if err := simRt.SetupWithManager(opts.KcpManager); err != nil {
 		return nil, fmt.Errorf("could not create runtime manager: %w", err)
 	}
 
-	simGC := newSimGardenerCluster(opts.KCP.GetClient(), opts.SkrKubeconfigProvider)
-	if err := simGC.SetupWithManager(mngr); err != nil {
+	simGC := newSimGardenerCluster(opts.KcpManager.GetClient(), opts.SkrKubeconfigProvider)
+	if err := simGC.SetupWithManager(opts.KcpManager); err != nil {
 		return nil, fmt.Errorf("could not create gardener cluster manager: %w", err)
 	}
 
-	simKK := newSimKymaKcp(opts.KCP.GetClient(), factory)
-	if err := simKK.SetupWithManager(mngr); err != nil {
+	simKK := newSimKymaKcp(opts.StartCtx, opts.KcpManager.GetClient(), factory, opts.Config.KcpNamespace)
+	if err := simKK.SetupWithManager(opts.KcpManager); err != nil {
 		return nil, fmt.Errorf("could not create Kyma KCP manager: %w", err)
 	}
 
 	return &defaultSim{
-		ClientClusterFactory: factory,
-		mngr:                 mngr,
-		keb:                  keb,
-		simRT:                simRt,
-		simGC:                simGC,
-		simKK:                simKK,
+		SkrManagerFactory: factory,
+		keb:               keb,
+		simRT:             simRt,
+		simGC:             simGC,
+		simKK:             simKK,
 	}, nil
 }
 
 type defaultSim struct {
-	ClientClusterFactory
+	SkrManagerFactory
 
-	mngr  manager.Manager
 	keb   Keb
 	simRT *simRuntime
 	simGC *simGardenerCluster
@@ -104,13 +107,4 @@ type defaultSim struct {
 
 func (s *defaultSim) Keb() Keb {
 	return s.keb
-}
-
-// Start starts Runtime, GardenerCluster and KymaKcp managers and blocks until the context is done.
-func (s *defaultSim) Start(ctx context.Context) error {
-	s.simKK.mainCtx = ctx
-	if err := s.mngr.Start(ctx); err != nil {
-		return fmt.Errorf("error running sim manager: %w", err)
-	}
-	return nil
 }

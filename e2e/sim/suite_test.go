@@ -7,11 +7,8 @@ import (
 	"testing"
 	"time"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
@@ -29,6 +26,7 @@ var infra testinfra.Infra
 
 var simInstance Sim
 var skrKubeconfigProviderInstance *fixedKubeconfigProvider
+var config *e2econfig.ConfigType
 
 func TestSimControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -43,31 +41,7 @@ func TestSimControllers(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 
-	cfg := config.NewConfig(abstractions.NewMockedEnvironment(map[string]string{}))
-	e2econfig.InitConfig(cfg)
-	cfg.Read()
-
-	e2econfig.Config.OidcClientId = "79221501-5dcc-4285-9af6-d023f313918e"
-	e2econfig.Config.OidcIssuerUrl = "https://oidc.e2e.cloud-manager.kyma.local"
-	e2econfig.Config.Administrators = []string{"admin@e2e.cloud-manager.kyma.local"}
-	e2econfig.Config.Subscriptions = e2econfig.Subscriptions{
-		{
-			Name:     "aws",
-			Provider: cloudcontrolv1beta1.ProviderAws,
-		},
-		{
-			Name:     "gcp",
-			Provider: cloudcontrolv1beta1.ProviderGCP,
-		},
-		{
-			Name:     "azure",
-			Provider: cloudcontrolv1beta1.ProviderAzure,
-		},
-		{
-			Name:     "openstack",
-			Provider: cloudcontrolv1beta1.ProviderOpenStack,
-		},
-	}
+	config = e2econfig.Stub()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true), zap.ConsoleEncoder(func(config *zapcore.EncoderConfig) {
 		config.EncodeTime = zapcore.RFC3339NanoTimeEncoder
@@ -96,15 +70,16 @@ var _ = BeforeSuite(func() {
 	// Setup controllers
 	skrKubeconfigProviderInstance = NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()).(*fixedKubeconfigProvider)
 	simInstance, err = New(CreateOptions{
-		KCP:                   infra.KcpManager(),
+		Config:                config,
+		StartCtx:              infra.Ctx(),
+		KcpManager:            infra.KcpManager(),
 		Garden:                infra.Garden().Client(),
+		GardenApiReader:       infra.Garden().Client(),
 		Logger:                infra.KcpManager().GetLogger(),
-		CloudProfileLoader:    NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml")),
+		CloudProfileLoader:    NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml"), config),
 		SkrKubeconfigProvider: skrKubeconfigProviderInstance,
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
-	err = infra.KcpManager().Add(simInstance)
-	Expect(err).NotTo(HaveOccurred(), "failed to add simInstance to KCP manager")
 
 	// add shoot ready controller that makes each shoot ready!!!
 	gardenManager, err := NewGardenManager(infra.Garden().Cfg(), infra.Garden().Scheme(), infra.KcpManager().GetLogger())
@@ -126,7 +101,7 @@ var _ = BeforeSuite(func() {
 	// create garden namespace
 	err = infra.Garden().Client().Create(infra.Ctx(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: e2econfig.Config.GardenNamespace,
+			Name: config.GardenNamespace,
 		},
 	})
 	Expect(client.IgnoreAlreadyExists(err)).NotTo(HaveOccurred(), "failed to create garden namespace")

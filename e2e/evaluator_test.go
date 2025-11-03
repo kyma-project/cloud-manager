@@ -4,12 +4,15 @@ import (
 	"context"
 	"testing"
 
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestEvaluator(t *testing.T) {
+
+	cfg := e2econfig.Stub()
 
 	t.Run("simple one resource no deps", func(t *testing.T) {
 		handleOne := newClusterEvaluationHandleFake("one")
@@ -23,7 +26,7 @@ func TestEvaluator(t *testing.T) {
 			},
 		})
 
-		evaluator, err := NewEvaluatorBuilder().
+		evaluator, err := NewEvaluatorBuilder(cfg.SkrNamespace).
 			Add(handleOne).
 			Build(context.Background())
 		assert.NoError(t, err)
@@ -51,7 +54,7 @@ func TestEvaluator(t *testing.T) {
 		var evaluator Evaluator
 		var err error
 
-		evaluator, err = NewEvaluatorBuilder().
+		evaluator, err = NewEvaluatorBuilder(cfg.SkrNamespace).
 			Add(handleOne).
 			Build(context.Background())
 		assert.NoError(t, err)
@@ -83,7 +86,7 @@ func TestEvaluator(t *testing.T) {
 
 		// then both items are evaluated
 
-		evaluator, err = NewEvaluatorBuilder().
+		evaluator, err = NewEvaluatorBuilder(cfg.SkrNamespace).
 			Add(handleOne).
 			Build(context.Background())
 		assert.NoError(t, err)

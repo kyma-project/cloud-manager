@@ -166,7 +166,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 		return nil, fmt.Errorf("found more then one runtime with alias %q", alias)
 	}
 
-	id := arr[0]
+	id := &arr[0]
 
 	if !id.ProvisioningCompleted {
 		err = s.world.Sim().Keb().WaitProvisioningCompleted(ctx, sim.WithRuntime(id.RuntimeID), sim.WithTimeout(15*time.Minute))
@@ -175,33 +175,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 		}
 	}
 
-	clstr, err := s.world.Sim().CreateClientCluster(ctx, id.RuntimeID)
-	if err != nil {
-		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
-	}
-
-	cc := &defaultClusterInSession{
-		Cluster:            NewCluster(alias, clstr),
-		isCreatedInSession: false,
-		runtimeID:          id.RuntimeID,
-		shootName:          id.ShootName,
-		session:            s,
-	}
-	s.clusters = append(s.clusters, cc)
-	s.SetCurrentCluster(alias)
-
-	s.wg.Add(1)
-	if s.ctx == nil {
-		s.ctx, s.cancel = context.WithCancel(ctx)
-	}
-	go func() {
-		defer s.wg.Done()
-		if err := cc.Start(s.ctx); err != nil {
-			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", alias, err))
-		}
-	}()
-
-	return cc, nil
+	return s.createManagerAndStartIt(ctx, id, false)
 }
 
 func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.CreateOption) (ClusterInSession, error) {
@@ -238,20 +212,24 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.C
 		return nil, err
 	}
 
-	clstr, err := s.world.Sim().CreateClientCluster(ctx, id.RuntimeID)
+	return s.createManagerAndStartIt(ctx, &id, true)
+}
+
+func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *sim.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
+	clstr, err := s.world.Sim().CreateSkrManager(ctx, id.RuntimeID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
 	}
 
 	cc := &defaultClusterInSession{
-		Cluster:            NewCluster(alias, clstr),
-		isCreatedInSession: true,
+		Cluster:            NewCluster(ctx, id.Alias, clstr),
+		isCreatedInSession: isCreatedInSession,
 		runtimeID:          id.RuntimeID,
 		shootName:          id.ShootName,
 		session:            s,
 	}
 	s.clusters = append(s.clusters, cc)
-	s.SetCurrentCluster(alias)
+	s.SetCurrentCluster(id.Alias)
 
 	s.wg.Add(1)
 	if s.ctx == nil {
@@ -260,7 +238,7 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.C
 	go func() {
 		defer s.wg.Done()
 		if err := cc.Start(s.ctx); err != nil {
-			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", alias, err))
+			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", id.Alias, err))
 		}
 	}()
 

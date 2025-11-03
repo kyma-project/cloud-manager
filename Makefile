@@ -154,31 +154,31 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 .PHONY: build_ui
 build_ui: manifests kustomize # Build CRDS test
 	# kustomize build all the ConfigMaps and output to their own file
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumerestores > config/ui-extensions/gcpnfsvolumerestores/cloud-resources.kyma-project.io_gcpnfsvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpredisclusters > config/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpsubnets > config/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumerestores > config/ui-extensions/gcpnfsvolumerestores/cloud-resources.kyma-project.io_gcpnfsvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpredisclusters > config/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpsubnets > config/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml
 
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
 
-	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
 
 
 

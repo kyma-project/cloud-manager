@@ -1,14 +1,16 @@
 package ctrltest
 
 import (
+	"time"
+
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/e2e"
-	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var _ = Describe("Feature: New and existing clusters added to Scenario Session", func() {
@@ -24,6 +26,10 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		var clusterInSession e2e.ClusterInSession
 
 		By("Given an SKR instance exists", func() {
+			nsList := &corev1.NamespaceList{}
+			err := infra.Garden().Client().List(infra.Ctx(), nsList)
+			Expect(err).NotTo(HaveOccurred())
+
 			id, err := world.Sim().Keb().CreateInstance(infra.Ctx(),
 				sim.WithAlias(alias),
 				sim.WithProvider("gcp"),
@@ -34,9 +40,10 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.Garden().Client(), shoot,
-					NewObjActions(WithName(instanceDetails.ShootName), WithNamespace(e2econfig.Config.GardenNamespace)),
+					NewObjActions(WithName(instanceDetails.ShootName), WithNamespace(config.GardenNamespace)),
 					sim.HavingShootReady,
 				).
+				WithTimeout(8 * time.Second).
 				Should(Succeed())
 
 			Eventually(LoadAndCheck).
@@ -144,9 +151,11 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("And Then Shoot is ready", func() {
+			shoot.Name = clusterInSession.ShootName()
+			shoot.Namespace = config.GardenNamespace
 			Expect(LoadAndCheck(
 				infra.Ctx(), infra.Garden().Client(), shoot,
-				NewObjActions(WithName(clusterInSession.ShootName()), WithNamespace(e2econfig.Config.GardenNamespace)),
+				NewObjActions(),
 				sim.HavingShootReady,
 			)).
 				To(Succeed())

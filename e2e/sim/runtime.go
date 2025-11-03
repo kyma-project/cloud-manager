@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -14,6 +15,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,22 +26,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func newSimRuntime(kcp client.Client, garden client.Client, cpl CloudProfileLoader) *simRuntime {
+func newSimRuntime(kcp client.Client, garden client.Client, cpl CloudProfileLoader, gardenReader client.Reader, config *e2econfig.ConfigType) *simRuntime {
 	return &simRuntime{
-		kcp:    kcp,
-		garden: garden,
-		cpl:    cpl,
-		clock:  clock.RealClock{},
+		kcp:          kcp,
+		garden:       garden,
+		gardenReader: gardenReader,
+		config:       config,
+		cpl:          cpl,
+		clock:        clock.RealClock{},
 	}
 }
 
 var _ reconcile.Reconciler = &simRuntime{}
 
 type simRuntime struct {
-	kcp    client.Client
-	garden client.Client
-	cpl    CloudProfileLoader
-	clock  clock.Clock
+	kcp          client.Client
+	garden       client.Client
+	gardenReader client.Reader
+	config       *e2econfig.ConfigType
+	cpl          CloudProfileLoader
+	clock        clock.Clock
 }
 
 var GardenerConditionTypes = []gardenertypes.ConditionType{
@@ -50,6 +56,21 @@ var GardenerConditionTypes = []gardenertypes.ConditionType{
 }
 
 func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	result, err := r.reconcileRequest(ctx, request)
+	//logger := composed.LoggerFromCtx(ctx)
+	//if err != nil {
+	//	logger.Error(err, "reconciliation failed with error")
+	//} else if result.Requeue {
+	//	logger.Info("reconciliation requeue")
+	//} else if result.RequeueAfter > 0 {
+	//	logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
+	//} else {
+	//	logger.Info("reconciliation succeeded")
+	//}
+	return result, err
+}
+
+func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	rt := &infrastructuremanagerv1.Runtime{}
@@ -65,9 +86,11 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
+	logger = logger.WithValues("shootName", rt.Spec.Shoot.Name)
+
 	shoot := &gardenertypes.Shoot{}
 	err = r.garden.Get(ctx, types.NamespacedName{
-		Namespace: e2econfig.Config.GardenNamespace,
+		Namespace: r.config.GardenNamespace,
 		Name:      rt.Spec.Shoot.Name,
 	}, shoot)
 	if client.IgnoreNotFound(err) != nil {
@@ -159,12 +182,13 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if shoot == nil {
+		//logger.Info("Shoot not found")
 		cpr, err := r.cpl.Load(ctx)
 		if err != nil {
 			logger.Error(err, "Error loading CloudProfiles")
 			return reconcile.Result{}, err
 		}
-		shootBuilder := NewShootBuilder(cpr).
+		shootBuilder := NewShootBuilder(cpr, r.config).
 			WithRuntime(rt)
 		if errShoot := shootBuilder.Validate(); errShoot != nil {
 			rt.Status.State = infrastructuremanagerv1.ErrorState
@@ -182,10 +206,36 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, nil
 		}
 		shoot = shootBuilder.Build()
-		logger.Info("Creating Shoot")
+		nsList := &corev1.NamespaceList{}
+		err = r.garden.List(ctx, nsList)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error listing namespace in Garden: %w", err)
+		}
+
+		cmInfo := &corev1.ConfigMap{}
+		if r.gardenReader != nil {
+			err = r.gardenReader.Get(ctx, types.NamespacedName{
+				Namespace: "default",
+				Name:      "cm-info",
+			}, cmInfo)
+			if err != nil {
+				return reconcile.Result{}, fmt.Errorf("error getting cm-info configmap: %w", err)
+			}
+		}
+		logger.
+			WithValues(
+				"gardenNamespaces",
+				pie.Map(nsList.Items, func(ns corev1.Namespace) string {
+					return ns.Name
+				}),
+				"shootName", shoot.Name,
+				"shootNamespace", shoot.Namespace,
+				"cmInfo", fmt.Sprintf("%#v", cmInfo.Data),
+			).
+			Info("Creating Shoot")
 		err = r.garden.Create(ctx, shoot)
 		if apierrors.IsAlreadyExists(err) {
-			return reconcile.Result{RequeueAfter: util.Timing.T100ms()}, nil
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error creating Shoot: %w", err)
@@ -193,6 +243,8 @@ func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
+
+	//logger.Info("Shoot is loaded")
 
 	if len(shoot.Status.LastErrors) > 0 {
 		statusChanged := false

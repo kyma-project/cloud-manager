@@ -1,32 +1,27 @@
 package ctrltest
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"testing"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"go.uber.org/zap/zapcore"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
 var infra testinfra.Infra
 
 var world e2e.WorldIntf
+var config *e2econfig.ConfigType
 
 func TestSimControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -41,33 +36,7 @@ func TestSimControllers(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 
-	cfg := config.NewConfig(abstractions.NewMockedEnvironment(map[string]string{}))
-	e2econfig.InitConfig(cfg)
-	cfg.Read()
-
-	e2econfig.Config.OidcClientId = "79221501-5dcc-4285-9af6-d023f313918e"
-	e2econfig.Config.OidcIssuerUrl = "https://oidc.e2e.cloud-manager.kyma.local"
-	e2econfig.Config.Administrators = []string{"admin@e2e.cloud-manager.kyma.local"}
-	e2econfig.Config.Subscriptions = e2econfig.Subscriptions{
-		{
-			Name:     "aws",
-			Provider: cloudcontrolv1beta1.ProviderAws,
-		},
-		{
-			Name:     "gcp",
-			Provider: cloudcontrolv1beta1.ProviderGCP,
-		},
-		{
-			Name:     "azure",
-			Provider: cloudcontrolv1beta1.ProviderAzure,
-		},
-		{
-			Name:     "openstack",
-			Provider: cloudcontrolv1beta1.ProviderOpenStack,
-		},
-	}
-
-	fmt.Printf("e2econfig:\n%s\n", cfg.PrintJson())
+	config = e2econfig.Stub()
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true), zap.ConsoleEncoder(func(config *zapcore.EncoderConfig) {
 		config.EncodeTime = zapcore.RFC3339NanoTimeEncoder
@@ -85,10 +54,10 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred(), "failed creating namespace %s in SKR", infra.SKR().Namespace())
 	Expect(infra.Garden().GivenNamespaceExists(infra.Garden().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", infra.Garden().Namespace())
-	Expect(infra.Garden().GivenNamespaceExists(e2econfig.Config.GardenNamespace)).
-		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", e2econfig.Config.GardenNamespace)
+	Expect(infra.Garden().GivenNamespaceExists(config.GardenNamespace)).
+		NotTo(HaveOccurred(), "failed creating namespace %s in Garden", config.GardenNamespace)
 
-	e2econfig.Config.GardenKubeconfig = infra.Garden().KubeconfigFilePath()
+	config.GardenKubeconfig = infra.Garden().KubeconfigFilePath()
 
 	By("installing cloud profiles")
 	cloudProfilesArr, err := fixtures.CloudProfiles(infra.Garden().Namespace())
@@ -98,22 +67,23 @@ var _ = BeforeSuite(func() {
 
 	By("starting world")
 
-	// add shoot ready controller that makes each shoot ready!!!
-	gardenManager, err := sim.NewGardenManager(infra.Garden().Cfg(), infra.Garden().Scheme(), infra.KcpManager().GetLogger())
-	Expect(err).NotTo(HaveOccurred(), "failed creating garden manager")
-	Expect(sim.SetupShootReadyController(gardenManager)).To(Succeed())
-
 	wf := e2e.NewWorldFactory()
 	w, err := wf.Create(infra.Ctx(), e2e.WorldCreateOptions{
+		Config:                config,
 		KcpRestConfig:         infra.KCP().Cfg(),
-		CloudProfileLoader:    sim.NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml")),
+		CloudProfileLoader:    sim.NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml"), config),
 		SkrKubeconfigProvider: sim.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
-		ExtraRunnables:        []manager.Runnable{gardenManager},
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
+
+	// add shoot ready controller that makes each shoot ready!!!
+	Expect(sim.SetupShootReadyController(w.GardenManager())).To(Succeed())
+
 	world = w
 
-	// there's no need to start infra KCP, Garden and SKR clusters, since world has its own clusters
+	// Start infra
+	infra.StartKcpControllers(infra.Ctx())
+	Expect(infra.KcpWaitForCacheSync(infra.Ctx())).To(Succeed())
 })
 
 var _ = AfterSuite(func() {

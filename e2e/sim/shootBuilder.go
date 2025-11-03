@@ -20,23 +20,25 @@ import (
 )
 
 type ShootBuilder struct {
-	Obj gardenertypes.Shoot
+	obj gardenertypes.Shoot
 
-	cpr CloudProfileRegistry
+	cpr    CloudProfileRegistry
+	config *e2econfig.ConfigType
 
 	errWithRuntime []error
 }
 
-func NewShootBuilder(cpr CloudProfileRegistry) *ShootBuilder {
+func NewShootBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *ShootBuilder {
 	return &ShootBuilder{
-		cpr: cpr,
-		Obj: gardenertypes.Shoot{
+		cpr:    cpr,
+		config: config,
+		obj: gardenertypes.Shoot{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: gardenertypes.SchemeGroupVersion.String(),
 				Kind:       "Shoot",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: e2econfig.Config.GardenNamespace,
+				Namespace: config.GardenNamespace,
 			},
 			Spec: gardenertypes.ShootSpec{},
 		},
@@ -45,7 +47,7 @@ func NewShootBuilder(cpr CloudProfileRegistry) *ShootBuilder {
 
 func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBuilder {
 	b.errWithRuntime = nil
-	cloudProfileName, ok := e2econfig.Config.CloudProfiles[rt.Spec.Shoot.Provider.Type]
+	cloudProfileName, ok := b.config.CloudProfiles[rt.Spec.Shoot.Provider.Type]
 	if !ok {
 		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("cloud profile for provider %q not found", rt.Spec.Shoot.Provider.Type))
 		return b
@@ -61,30 +63,30 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		return b
 	}
 
-	b.Obj.Name = rt.Spec.Shoot.Name
-	b.Obj.Namespace = e2econfig.Config.GardenNamespace
+	b.obj.Name = rt.Spec.Shoot.Name
+	b.obj.Namespace = b.config.GardenNamespace
 
-	b.Obj.Labels = map[string]string{
+	b.obj.Labels = map[string]string{
 		gardenerconstants.LabelExtensionProviderTypePrefix + rt.Spec.Shoot.Provider.Type: "true",
 		"extensions.extensions.gardener.cloud/shoot-oidc-service":                        "true",
 		"operatingsystemconfig.extensions.gardener.cloud/gardenlinux":                    "true",
 	}
 
 	//nolint:staticcheck
-	//b.Obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
-	b.Obj.Spec.CloudProfile = &gardenertypes.CloudProfileReference{
+	//b.obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
+	b.obj.Spec.CloudProfile = &gardenertypes.CloudProfileReference{
 		Kind: "CloudProfile",
 		Name: cloudProfileName,
 	}
 
-	b.Obj.Spec.Extensions = []gardenertypes.Extension{
+	b.obj.Spec.Extensions = []gardenertypes.Extension{
 		{
 			Type: "shoot-oidc-service",
 		},
 	}
 
-	b.Obj.Spec.Kubernetes.Version = ptr.Deref(rt.Spec.Shoot.Kubernetes.Version, kv)
-	b.Obj.Spec.Kubernetes.KubeAPIServer = &gardenertypes.KubeAPIServerConfig{
+	b.obj.Spec.Kubernetes.Version = ptr.Deref(rt.Spec.Shoot.Kubernetes.Version, kv)
+	b.obj.Spec.Kubernetes.KubeAPIServer = &gardenertypes.KubeAPIServerConfig{
 		Requests: &gardenertypes.APIServerRequests{
 			MaxNonMutatingInflight: ptr.To(int32(800)),
 			MaxMutatingInflight:    ptr.To(int32(400)),
@@ -92,7 +94,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		EventTTL: &metav1.Duration{Duration: time.Hour},
 	}
 
-	b.Obj.Spec.Networking = &gardenertypes.Networking{
+	b.obj.Spec.Networking = &gardenertypes.Networking{
 		Type:       ptr.To(ptr.Deref(rt.Spec.Shoot.Networking.Type, "calico")),
 		Nodes:      ptr.To(rt.Spec.Shoot.Networking.Nodes),
 		Pods:       ptr.To(rt.Spec.Shoot.Networking.Pods),
@@ -100,7 +102,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
 	}
 
-	b.Obj.Spec.Maintenance = &gardenertypes.Maintenance{
+	b.obj.Spec.Maintenance = &gardenertypes.Maintenance{
 		AutoUpdate: &gardenertypes.MaintenanceAutoUpdate{
 			KubernetesVersion:   true,
 			MachineImageVersion: ptr.To(false),
@@ -111,7 +113,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		},
 	}
 
-	b.Obj.Spec.Provider.Type = rt.Spec.Shoot.Provider.Type
+	b.obj.Spec.Provider.Type = rt.Spec.Shoot.Provider.Type
 
 	controlPlaneConfig := &runtime.RawExtension{}
 	infrastructureConfig := &runtime.RawExtension{}
@@ -124,10 +126,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				Kind:       "InfrastructureConfig",
 			},
 		}
-		if e2econfig.Config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			ic.Networks.Workers = rt.Spec.Shoot.Networking.Nodes
 		} else {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for GCP", e2econfig.Config.NetworkOwner))
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for GCP", b.config.NetworkOwner))
 			return b
 		}
 		infrastructureConfig.Object = ic
@@ -166,10 +168,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 			},
 		}
 
-		if e2econfig.Config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			ic.Networks.VPC.CIDR = ptr.To(rt.Spec.Shoot.Networking.Nodes)
 		} else {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for AWS", e2econfig.Config.NetworkOwner))
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for AWS", b.config.NetworkOwner))
 			return b
 		}
 
@@ -217,10 +219,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 			Zoned: true,
 		}
 
-		if e2econfig.Config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			ic.Networks.VNet.CIDR = ptr.To(rt.Spec.Shoot.Networking.Nodes)
 		} else {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for Azure", e2econfig.Config.NetworkOwner))
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for Azure", b.config.NetworkOwner))
 			return b
 		}
 
@@ -240,10 +242,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 			},
 		}
 
-		if e2econfig.Config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			ic.Networks.Workers = rt.Spec.Shoot.Networking.Nodes
 		} else {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for OpenStack", e2econfig.Config.NetworkOwner))
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for OpenStack", b.config.NetworkOwner))
 			return b
 		}
 
@@ -258,12 +260,12 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 	}
 
-	b.Obj.Spec.Provider.ControlPlaneConfig = controlPlaneConfig
-	b.Obj.Spec.Provider.InfrastructureConfig = infrastructureConfig
-	b.Obj.Spec.Provider.Workers = rt.Spec.Shoot.Provider.Workers
+	b.obj.Spec.Provider.ControlPlaneConfig = controlPlaneConfig
+	b.obj.Spec.Provider.InfrastructureConfig = infrastructureConfig
+	b.obj.Spec.Provider.Workers = rt.Spec.Shoot.Provider.Workers
 
-	b.Obj.Spec.Region = rt.Spec.Shoot.Region
-	b.Obj.Spec.SecretBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
+	b.obj.Spec.Region = rt.Spec.Shoot.Region
+	b.obj.Spec.SecretBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
 
 	return b
 }
@@ -273,15 +275,15 @@ func (b *ShootBuilder) Validate() error {
 	if b.errWithRuntime != nil {
 		result = multierror.Append(result, b.errWithRuntime...)
 	}
-	if b.Obj.Namespace == "" {
+	if b.obj.Namespace == "" {
 		result = multierror.Append(result, fmt.Errorf("namespace must be set"))
 	}
-	if b.Obj.Name == "" {
+	if b.obj.Name == "" {
 		result = multierror.Append(result, fmt.Errorf("name must be set"))
 	}
 	return result
 }
 
 func (b *ShootBuilder) Build() *gardenertypes.Shoot {
-	return &b.Obj
+	return &b.obj
 }
