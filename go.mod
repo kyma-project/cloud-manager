@@ -48,7 +48,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thomaspoignant/go-feature-flag v1.46.1
+	github.com/thomaspoignant/go-feature-flag v1.47.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.0
@@ -128,6 +128,8 @@ require (
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/thomaspoignant/go-feature-flag/modules/core v0.1.4 // indirect
+	github.com/thomaspoignant/go-feature-flag/modules/evaluation v0.1.2 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
