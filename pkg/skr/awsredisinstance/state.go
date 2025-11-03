@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -83,7 +84,7 @@ func (s *State) GetAuthSecretData() map[string][]byte {
 func (s *State) ShouldModifyKcp() bool {
 	awsRedisInstance := s.ObjAsAwsRedisInstance()
 
-	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisInstance.Spec.RedisTier)
+	cacheNodeType, err := redisTierToCacheNodeTypeConvertor(awsRedisInstance.Spec.RedisTier, awsconfig.AwsConfig.RedisInstanceTierMachineTypes)
 	if err != nil {
 		return true
 	}

@@ -88,7 +88,13 @@ var AwsRedisClusterTierToCacheNodeTypeMap = map[cloudresourcesv1beta1.AwsRedisCl
 	cloudresourcesv1beta1.AwsRedisTierC8: "cache.m7g.16xlarge",
 }
 
-func redisTierToCacheNodeTypeConvertor(AwsRedisClusterTier cloudresourcesv1beta1.AwsRedisClusterTier) (string, error) {
+func redisTierToCacheNodeTypeConvertor(AwsRedisClusterTier cloudresourcesv1beta1.AwsRedisClusterTier, fromConfigOverwrite map[cloudresourcesv1beta1.AwsRedisClusterTier]string) (string, error) {
+	if fromConfigOverwrite != nil {
+		if overrideNode, exists := fromConfigOverwrite[AwsRedisClusterTier]; exists {
+			return overrideNode, nil
+		}
+	}
+
 	cacheNode, exists := AwsRedisClusterTierToCacheNodeTypeMap[AwsRedisClusterTier]
 
 	if !exists {
