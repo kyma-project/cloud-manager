@@ -6,6 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -107,7 +108,13 @@ var awsRedisTierToCacheNodeTypeMap = map[cloudresourcesv1beta1.AwsRedisTier]stri
 	cloudresourcesv1beta1.AwsRedisTierP6: "cache.m7g.16xlarge",
 }
 
-func redisTierToCacheNodeTypeConvertor(awsRedisTier cloudresourcesv1beta1.AwsRedisTier) (string, error) {
+func redisTierToCacheNodeTypeConvertor(awsRedisTier cloudresourcesv1beta1.AwsRedisTier, fromConfigOverwrite map[cloudresourcesv1beta1.AwsRedisTier]string) (string, error) {
+	if fromConfigOverwrite != nil {
+		if overrideNode, exists := fromConfigOverwrite[awsRedisTier]; exists {
+			return overrideNode, nil
+		}
+	}
+
 	cacheNode, exists := awsRedisTierToCacheNodeTypeMap[awsRedisTier]
 
 	if !exists {

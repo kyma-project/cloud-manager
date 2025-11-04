@@ -3,15 +3,18 @@ package config
 import (
 	"time"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 )
 
 type AwsConfigStruct struct {
-	ArnPartition             string        `json:"arnPartition" yaml:"arnPartition"`
-	Default                  AwsCreds      `json:"default" yaml:"default"`
-	Peering                  AwsCreds      `json:"peering" yaml:"peering"`
-	BackupRoleName           string        `json:"backupRoleName" yaml:"backupRoleName"`
-	EfsCapacityCheckInterval time.Duration `json:"efsCapacityCheckInterval" yaml:"efsCapacityCheckInterval"`
+	ArnPartition                  string                                               `json:"arnPartition" yaml:"arnPartition"`
+	Default                       AwsCreds                                             `json:"default" yaml:"default"`
+	Peering                       AwsCreds                                             `json:"peering" yaml:"peering"`
+	BackupRoleName                string                                               `json:"backupRoleName" yaml:"backupRoleName"`
+	EfsCapacityCheckInterval      time.Duration                                        `json:"efsCapacityCheckInterval" yaml:"efsCapacityCheckInterval"`
+	RedisInstanceTierMachineTypes map[cloudresourcesv1beta1.AwsRedisTier]string        `json:"redisInstanceTierMachineTypes" yaml:"redisInstanceTierMachineTypes"`
+	RedisClusterTierMachineTypes  map[cloudresourcesv1beta1.AwsRedisClusterTier]string `json:"redisClusterTierMachineTypes" yaml:"redisClusterTierMachineTypes"`
 }
 
 var AwsConfig = &AwsConfigStruct{}
@@ -26,6 +29,7 @@ func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"aws.config",
 		config.Bind(AwsConfig),
+		config.SourceFile("aws.yaml"),
 		config.Path(
 			"arnPartition",
 			config.SourceEnv("AWS_PARTITION"),
