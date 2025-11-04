@@ -1312,4 +1312,113 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				Should(Succeed())
 		})
 	})
+
+	It("Scenario: KCP Azure VpcPeering error if Network reference missing", func() {
+		const (
+			kymaName            = "502b7622-b7ff-4cca-a07a-6de1fccfcd21"
+			kcpPeeringName      = "af14d579-a701-477e-82de-60a6fdf643e4"
+			remoteSubscription  = "c83aade1-5757-40f8-bb96-88cc29f72e3f"
+			remoteTenant        = "cbe9436e-15c8-4ef4-bb12-c8538b51ef9b"
+			remoteResourceGroup = "MyResourceGroup"
+			remoteVnetName      = "MyVnet"
+			remotePeeringName   = "my-peering"
+			localPeeringName    = "kyma-peering"
+		)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAzure).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		localResourceGroupName := scope.Spec.Scope.Azure.VpcNetwork
+		localVirtualNetworkName := scope.Spec.Scope.Azure.VpcNetwork
+
+		azureMockLocal := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
+		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
+
+		By("And Given local Azure VNET exists", func() {
+			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		By("And Given remote Azure VNet exists with Kyma tag", func() {
+			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		localKcpNetworkName := common.KcpNetworkKymaCommonName(scope.Name)
+		remoteKcpNetworkName := scope.Name + "--remote"
+
+		var localKcpNet *cloudcontrolv1beta1.Network
+
+		By("And Given local KCP Network is created", func() {
+			kcpnetwork.Ignore.AddName(localKcpNetworkName)
+			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+				WithScope(scope.Name).
+				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
+				Build()
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), localKcpNet, WithName(localKcpNetworkName)).
+				Should(Succeed())
+		})
+
+		var kcpPeering *cloudcontrolv1beta1.VpcPeering
+
+		By("And Given KCP VpcPeering is created", func() {
+			kcpPeering = (&cloudcontrolv1beta1.VpcPeeringBuilder{}).
+				WithScope(kymaName).
+				WithRemoteRef("skr-namespace", "skr-azure-vpcpeering").
+				WithDetails(localKcpNetworkName, infra.KCP().Namespace(), remoteKcpNetworkName, infra.KCP().Namespace(), remotePeeringName, true, true).
+				WithLocalPeeringName(localPeeringName).
+				WithUseRemoteGateway(true).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
+					WithName(kcpPeeringName),
+				).
+				Should(Succeed())
+		})
+
+		// DELETE
+
+		By("When KCP VpcPeering is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
+				Should(Succeed(), "failed deleting VpcPeering")
+		})
+
+		By("Then KCP VpcPeering does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering).
+				Should(Succeed(), "expected VpcPeering not to exist (be deleted), but it still exists")
+		})
+
+		By("And Then local Azure peering does not exist", func() {
+			peering, err := azureMockLocal.GetPeering(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, localPeeringName)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(peering).To(BeNil())
+		})
+
+		By("And Then remote Azure peering does not exists", func() {
+			peering, err := azureMockRemote.GetPeering(infra.Ctx(), remoteResourceGroup, remoteVnetName, remotePeeringName)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(peering).To(BeNil())
+		})
+
+		By("// cleanup: Scope", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
 })
