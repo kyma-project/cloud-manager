@@ -27,7 +27,7 @@ func WaitStatusReady() composed.Action {
 			return nil, ctx
 		}
 
-		logger.Info(fmt.Sprintf("Waiting status condition Ready"))
+		logger.Info("Waiting status condition Ready")
 
 		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 	}
