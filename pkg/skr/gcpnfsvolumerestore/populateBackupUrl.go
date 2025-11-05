@@ -79,10 +79,24 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 
 		return nil, nil
 	}
-
+	project := state.Scope.Spec.Scope.Gcp.Project
 	if restore.Spec.Source.BackupUrl != "" {
-		// Use the provided backup URL directly
-		state.SrcBackupFullPath = restore.Spec.Source.BackupUrl
+		// Convert Source.BackupUrl from {location_id}/{backup_id} to full GCP path
+		fullPath, err := convertBackupUrlToFullPath(project, restore.Spec.Source.BackupUrl)
+		if err != nil {
+			restore.Status.State = cloudresourcesv1beta1.StateError
+			return composed.PatchStatus(restore).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudresourcesv1beta1.ConditionReasonError,
+					Message: fmt.Sprintf("Invalid SourceBackupUrl format: %s", err.Error()),
+				}).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg("Error converting SourceBackupUrl format").
+				Run(ctx, state)
+		}
+		state.SrcBackupFullPath = fullPath
 		return nil, nil
 	}
 

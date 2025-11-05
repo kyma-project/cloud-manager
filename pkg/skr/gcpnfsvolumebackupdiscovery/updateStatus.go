@@ -21,7 +21,10 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	backupDiscovery.Status.AvailableBackupsCount = ptr.To(len(state.backups))
 	backupDiscovery.Status.AvailableBackupUris = make([]string, 0, len(state.backups))
 	for _, b := range state.backups {
-		backupDiscovery.Status.AvailableBackupUris = append(backupDiscovery.Status.AvailableBackupUris, b.Name)
+		// Extract location_id/backup_id from the full backup name
+		if uri := extractBackupUri(b.Name); uri != "" {
+			backupDiscovery.Status.AvailableBackupUris = append(backupDiscovery.Status.AvailableBackupUris, uri)
+		}
 	}
 
 	return composed.UpdateStatus(backupDiscovery).
