@@ -45,7 +45,7 @@ func kcpNetworkLocalLoad(ctx context.Context, st composed.State) (error, context
 		if meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
+			Reason:  cloudcontrolv1beta1.ReasonMissingDependency,
 			Message: "Local network not found",
 		}) {
 			changed = true

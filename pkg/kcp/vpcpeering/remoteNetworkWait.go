@@ -33,7 +33,7 @@ func kcpNetworkRemoteWait(ctx context.Context, st composed.State) (error, contex
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonWaitingDependency,
-			Message: "Local network not ready",
+			Message: "Remote network not ready",
 		}) {
 			changed = true
 		}
