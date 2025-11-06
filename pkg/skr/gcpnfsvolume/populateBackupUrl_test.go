@@ -99,7 +99,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 
 func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupUrl() {
 	obj := gcpNfsVolume.DeepCopy()
-	obj.Spec.SourceBackupUrl = fmt.Sprintf("projects/%s/locations/%s/backups/%s", kcpScope.Spec.Scope.Gcp.Project, gcpNfsVolumeBackup.Status.Location, fmt.Sprintf("cm-%.60s", gcpNfsVolumeBackup.Status.Id))
+	obj.Spec.SourceBackupUrl = fmt.Sprintf("%s/%s", gcpNfsVolumeBackup.Status.Location, fmt.Sprintf("cm-%.60s", gcpNfsVolumeBackup.Status.Id))
 	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj)
 	s.Nil(err)
 

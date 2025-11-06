@@ -97,6 +97,7 @@ type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SourceBackupUrl is immutable."
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern=`^(.+)/(.+)$`
 	SourceBackupUrl string `json:"sourceBackupUrl,omitempty"`
 
 	// +kubebuilder:default=2560
