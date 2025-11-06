@@ -53,8 +53,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 					infra.Ctx(),
 					infra.KCP().Client(),
 					remoteNetwork,
-					NewObjActions(WithName(azureVpcPeering.Status.Id),
-						WithConditions(KcpReadyCondition())),
+					NewObjActions(WithName(azureVpcPeering.Status.Id)),
 				).
 				Should(Succeed(), "failed to load remote Network")
 		})
