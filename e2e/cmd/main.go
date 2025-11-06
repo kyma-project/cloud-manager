@@ -17,6 +17,7 @@ var rootCtx context.Context
 var rootLogger logr.Logger
 
 var configDir string
+var config *e2econfig.ConfigType
 
 var cmdRoot = &cobra.Command{
 	Use:   "e2e",
@@ -33,7 +34,7 @@ var cmdRoot = &cobra.Command{
 		if configDir == "" && os.Getenv("CONFIG_DIR") == "" {
 			_ = os.Setenv("CONFIG_DIR", ".")
 		}
-		_ = e2econfig.LoadConfig()
+		config = e2econfig.LoadConfig()
 
 		return nil
 	},

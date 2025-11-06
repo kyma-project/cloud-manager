@@ -71,7 +71,11 @@ func TestEvaluator(t *testing.T) {
 		assert.Equal(t, "", s)
 
 		v, err = evaluator.Eval("cmOne.metadata.name")
-		assert.NoError(t, err)
+		name, ok := GojaErrorName(err)
+		assert.True(t, ok)
+		assert.Equal(t, "TypeError", name)
+		assert.False(t, IsReferenceError(err))
+		assert.True(t, IsTypeError(err))
 		assert.Nil(t, v)
 
 		// when cmOne is set

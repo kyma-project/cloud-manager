@@ -32,3 +32,9 @@ cloudProfiles:
   azure: az
   gcp: gcp
   openstack: converged-cloud-kyma
+
+# if false then the secret gardener-credentials must not exist in KCP
+# if true then the secret gardener-credentials will be overwritten in case it exists
+# in CI unit/controller tests when testinfra/controller-runtime/testenv is used it should be false
+# in local dev writing/debugging e2e test using local kind it can be true to avoid manual secret deletion before each run
+overwriteGardenerCredentials: false

@@ -212,16 +212,6 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 			return reconcile.Result{}, fmt.Errorf("error listing namespace in Garden: %w", err)
 		}
 
-		cmInfo := &corev1.ConfigMap{}
-		if r.gardenReader != nil {
-			err = r.gardenReader.Get(ctx, types.NamespacedName{
-				Namespace: "default",
-				Name:      "cm-info",
-			}, cmInfo)
-			if err != nil {
-				return reconcile.Result{}, fmt.Errorf("error getting cm-info configmap: %w", err)
-			}
-		}
 		logger.
 			WithValues(
 				"gardenNamespaces",
@@ -230,7 +220,6 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 				}),
 				"shootName", shoot.Name,
 				"shootNamespace", shoot.Namespace,
-				"cmInfo", fmt.Sprintf("%#v", cmInfo.Data),
 			).
 			Info("Creating Shoot")
 		err = r.garden.Create(ctx, shoot)

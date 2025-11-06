@@ -50,11 +50,14 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 
 	err = kcpClient.Get(ctx, client.ObjectKeyFromObject(secret), secret)
 	if err == nil {
-		return fmt.Errorf("secret %s already exists", secret.Name)
-		//err = kcpClient.Delete(ctx, secret)
-		//if err != nil {
-		//	return fmt.Errorf("error deleting existing garden secret: %w", err)
-		//}
+		if config.OverwriteGardenerCredentials {
+			err = kcpClient.Delete(ctx, secret)
+			if err != nil {
+				return fmt.Errorf("error deleting existing garden secret: %w", err)
+			}
+		} else {
+			return fmt.Errorf("secret %s already exists", secret.Name)
+		}
 	}
 
 	if config.GardenKubeconfig == "" {

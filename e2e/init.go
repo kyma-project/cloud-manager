@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/hashicorp/go-multierror"
@@ -18,16 +19,19 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 		logger := zap.New(zap.UseFlagOptions(&opts))
 		ctrl.SetLogger(logger)
 
-		_ = e2econfig.LoadConfig()
+		config := e2econfig.LoadConfig()
 
 		ctx := context.Background()
 
 		f := NewWorldFactory()
-		w, err := f.Create(ctx, WorldCreateOptions{})
+		w, err := f.Create(ctx, WorldCreateOptions{
+			Config: config,
+		})
 		if err != nil {
 			panic(err)
 		}
 		world = w
+		time.Sleep(10 * time.Second)
 	})
 
 	gdCtx.AfterSuite(func() {
@@ -75,7 +79,10 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack")" provider$`, thereIsSharedSKRWithProvider)
 
+	ctx.Step(`^module "([^"]*)" is active`, moduleIsActive)
+	ctx.Step(`^module "([^"]*)" is active`, moduleIsNotActive)
 	ctx.Step(`^module "([^"]*)" is added$`, moduleIsAdded)
+	ctx.Step(`^module "([^"]*)" is removed`, moduleIsRemoved)
 
 	ctx.Step(`^resource declaration:$`, resourceDeclaration)
 	ctx.Step(`^SKR "([^"]*)" resource declaration:$`, resourceDeclaration)

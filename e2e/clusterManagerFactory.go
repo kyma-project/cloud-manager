@@ -48,6 +48,7 @@ func (f *kcpClusterManagerFactory) CreateClusterManager(ctx context.Context) (ma
 				Unstructured: true,
 			},
 		},
+		Logger: ctrl.Log.WithName("kcp"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create KCP cluster manager: %w", err)
@@ -110,6 +111,7 @@ func (f *gardenClusterManagerFactory) CreateClusterManager(ctx context.Context) 
 				f.gardenNamespace: {},
 			},
 		},
+		Logger: ctrl.Log.WithName("garden"),
 	})
 
 	if err != nil {

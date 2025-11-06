@@ -7,6 +7,7 @@ import (
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -43,8 +44,7 @@ type Cluster interface {
 	// AddResources declares k8s objects that are watched and can be got from the cache
 	AddResources(ctx context.Context, arr ...*ResourceDeclaration) error
 
-	// EvaluationContext returns map of all declared resources
-	//EvaluationContext(ctx context.Context) (map[string]interface{}, error)
+	GetSkrKyma(ctx context.Context) (*operatorv1beta2.Kyma, error)
 }
 
 func NewCluster(startCtx context.Context, alias string, clstr cluster.Cluster) Cluster {
@@ -185,4 +185,38 @@ func (c *defaultCluster) Get(ctx context.Context, alias string) (map[string]inte
 		return nil, fmt.Errorf("error loading resource %q", alias)
 	}
 	return u.Object, nil
+}
+
+func (c *defaultCluster) GetSkrKyma(ctx context.Context) (*operatorv1beta2.Kyma, error) {
+	if c.ClusterAlias() == "kcp" {
+		return nil, fmt.Errorf("module can be added to SKR cluster only, but current cluster is KCP")
+	}
+	if c.ClusterAlias() == "garden" {
+		return nil, fmt.Errorf("module can be added to SKR cluster only, but current cluster is Garden")
+	}
+
+	kymaAlias := fmt.Sprintf("skr-kyma-%s", c.ClusterAlias())
+	ri := c.GetResource(kymaAlias)
+	if ri == nil {
+		if err := c.AddResources(ctx, &ResourceDeclaration{
+			Alias:      kymaAlias,
+			Kind:       "Kyma",
+			ApiVersion: "operator.kyma-project.io/v1beta2",
+			Name:       "default",
+			Namespace:  "kyma-system",
+		}); err != nil {
+			return nil, fmt.Errorf("failed to declare Kyma resource %q: %w", kymaAlias, err)
+		}
+	}
+
+	kyma := &operatorv1beta2.Kyma{}
+	err := c.GetClient().Get(ctx, types.NamespacedName{
+		Namespace: "kyma-system",
+		Name:      "default",
+	}, kyma)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SKR Kyma resource: %w", err)
+	}
+
+	return kyma, nil
 }

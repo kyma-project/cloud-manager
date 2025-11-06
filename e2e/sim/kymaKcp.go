@@ -290,6 +290,14 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, fmt.Errorf("error adding Kyma SKR reconciler to manager: %w", err)
 		}
 		mi.controllersAdded = true
+		time.Sleep(100 * time.Millisecond)
+
+		cacheCtx, cacheCancel := context.WithTimeout(mi.ctx, 20*time.Second)
+		defer cacheCancel()
+		ok := mi.mngr.GetCache().WaitForCacheSync(cacheCtx)
+		if !ok {
+			return reconcile.Result{}, fmt.Errorf("error waiting for SKR cache to sync after adding Kyma SKR reconciler: %w", cacheCtx.Err())
+		}
 	}
 
 	statusChanged := false
@@ -347,6 +355,8 @@ func (r *simKymaKcp) getOrCreateStartedSkrManager(ctx context.Context, runtimeID
 			logger.Error(err, "error running manager")
 		}
 	}()
+
+	time.Sleep(100 * time.Millisecond)
 
 	cacheCtx, cacheCancel := context.WithTimeout(mi.ctx, 20*time.Second)
 	defer cacheCancel()

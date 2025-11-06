@@ -3,7 +3,9 @@ package util
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
@@ -27,4 +29,12 @@ func CastInterfaceToString(x interface{}) string {
 		}
 		return fmt.Sprintf("%v", v.Interface())
 	}
+}
+
+func RandomString(length int) string {
+	id := uuid.New()
+	result := strings.ReplaceAll(id.String(), "-", "")
+	f := fmt.Sprintf("%%.%ds", length)
+	result = fmt.Sprintf(f, result)
+	return result
 }

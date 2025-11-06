@@ -26,7 +26,9 @@ var cmdInstanceCreate = &cobra.Command{
 		}
 
 		f := e2e.NewWorldFactory()
-		world, err := f.Create(rootCtx, e2e.WorldCreateOptions{})
+		world, err := f.Create(rootCtx, e2e.WorldCreateOptions{
+			Config: config,
+		})
 		if err != nil {
 			return fmt.Errorf("failed to create world: %w", err)
 		}

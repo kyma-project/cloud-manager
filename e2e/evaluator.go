@@ -59,7 +59,6 @@ type evalObj struct {
 	data   map[string]interface{}
 	getter func(ctx context.Context, alias string) (map[string]interface{}, error)
 	mapper func(alias string) (*meta.RESTMapping, error)
-	loaded bool
 }
 
 func (obj evalObj) toEvalMetadata() *evalObjMetadata {
@@ -125,7 +124,7 @@ func (b *EvaluatorBuilder) evalDeclarations() ([]string, error) {
 func (b *EvaluatorBuilder) load(ctx context.Context) ([]string, error) {
 	var result []string
 	for _, obj := range b.evalData {
-		if obj.loaded {
+		if obj.ri.Loaded {
 			continue
 		}
 		if !obj.ri.Evaluated {
@@ -139,9 +138,7 @@ func (b *EvaluatorBuilder) load(ctx context.Context) ([]string, error) {
 
 		obj.data = data
 
-		// TODO: mapper is not call so far, maybe it won't be needed at all
-
-		obj.loaded = true
+		obj.ri.Loaded = true
 		result = append(result, obj.ri.Alias)
 	}
 	return result, nil
@@ -174,6 +171,7 @@ func (b *EvaluatorBuilder) Build(ctx context.Context) (Evaluator, error) {
 
 type Evaluator interface {
 	Eval(txt string) (interface{}, error)
+	EvalTruthy(txt string) (bool, error)
 	EvalTemplate(txt string) (string, error)
 }
 
@@ -185,23 +183,7 @@ type defaultEvaluatorImpl struct {
 func (e *defaultEvaluatorImpl) Eval(txt string) (interface{}, error) {
 	v, err := e.vm.RunString(txt)
 	if err != nil {
-		// a bit hacky way to find out if it's a ReferenceError
-		// that happens if expression has some undefined variable
-		// like in the case when object is not evaluated or loaded
-		var x *goja.Exception
-		ok := errors.As(err, &x)
-		if ok {
-			obj, ok := x.Value().(*goja.Object)
-			if ok {
-				if obj.ClassName() == "Error" {
-					return nil, nil
-				}
-				// to get the error name you can do
-				// obj.Get("name")
-				// it will return string Value of "ReferenceError", "TypeError"...
-			}
-		}
-		return "", fmt.Errorf("error evaluating template %q: %v", txt, err)
+		return nil, err
 	}
 	if goja.IsUndefined(v) || goja.IsNull(v) || goja.IsNaN(v) || goja.IsInfinity(v) {
 		return nil, nil
@@ -209,10 +191,43 @@ func (e *defaultEvaluatorImpl) Eval(txt string) (interface{}, error) {
 	return v.Export(), nil
 }
 
+func (e *defaultEvaluatorImpl) EvalTruthy(txt string) (bool, error) {
+	v, err := e.Eval(txt)
+	// syntax error is a showstopper
+	if IsSyntaxError(err) {
+		return false, err
+	}
+	// any other error is falsy
+	if err != nil {
+		return false, nil
+	}
+	// nil is always falsy
+	if v == nil {
+		return false, nil
+	}
+	// recognize some common falsy values
+	switch vv := v.(type) {
+	case bool:
+		if !vv {
+			return false, nil
+		}
+	case int:
+		if vv == 0 {
+			return false, nil
+		}
+	case string:
+		if len(vv) == 0 || strings.ToLower(vv) == "false" || vv == "0" {
+			return false, nil
+		}
+	}
+	// anything else is truthy
+	return true, nil
+}
+
 func (e *defaultEvaluatorImpl) EvalTemplate(txt string) (string, error) {
 	v, err := e.Eval(fmt.Sprintf("`%s`", txt))
 	if err != nil {
-		return "", err
+		return "", nil
 	}
 	if v == nil {
 		return "", nil
@@ -244,4 +259,48 @@ func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) error {
 	}
 
 	return nil
+}
+
+func GojaErrorName(err error) (string, bool) {
+	var x *goja.Exception
+	ok := errors.As(err, &x)
+	if !ok {
+		return "", false
+	}
+
+	obj, ok := x.Value().(*goja.Object)
+	if !ok || obj == nil {
+		return "", false
+	}
+	if obj.ClassName() != "Error" {
+		return "", false
+	}
+
+	name := obj.Get("name")
+	if name != nil {
+		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+		// one of RangeError, ReferenceError, TypeError, SyntaxError, URIError, AggregateError, InternalError
+		return name.String(), true
+	}
+	return "", false
+}
+
+func IsEcmaError(err error) bool {
+	_, ok := GojaErrorName(err)
+	return ok
+}
+
+func IsReferenceError(err error) bool {
+	name, ok := GojaErrorName(err)
+	return ok && name == "ReferenceError"
+}
+
+func IsTypeError(err error) bool {
+	name, ok := GojaErrorName(err)
+	return ok && name == "TypeError"
+}
+
+func IsSyntaxError(err error) bool {
+	name, ok := GojaErrorName(err)
+	return ok && name == "SyntaxError"
 }

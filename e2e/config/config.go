@@ -33,6 +33,8 @@ type ConfigType struct {
 	Administrators []string `yaml:"administrators" json:"administrators"`
 
 	CloudProfiles map[string]string `yaml:"cloudProfiles" json:"cloudProfiles"`
+
+	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
 }
 
 func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {

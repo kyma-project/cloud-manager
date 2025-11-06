@@ -2,15 +2,19 @@ package sim
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -41,7 +45,18 @@ type defaultSkrManagerFactory struct {
 }
 
 func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtimeID string) (manager.Manager, error) {
-	restConfig, err := f.getRestConfig(ctx, runtimeID)
+	var restConfig *rest.Config
+	err := wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
+		rc, err := f.getRestConfig(ctx, runtimeID)
+		if errors.Is(err, ErrGardenerClusterCredentialsExpired) {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+		restConfig = rc
+		return true, nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error getting skr rest config for manager: %w", err)
 	}
@@ -57,6 +72,7 @@ func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtime
 				Unstructured: true,
 			},
 		},
+		Logger: ctrl.Log.WithName(fmt.Sprintf("skr-%s", runtimeID)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating SKR manager: %w", err)

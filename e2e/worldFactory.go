@@ -10,8 +10,7 @@ import (
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -42,7 +41,13 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	}
 
 	waitClusterStarts := func(ctx context.Context, c cluster.Cluster) bool {
-		toCtx, toCancel := context.WithTimeout(ctx, 10*time.Second)
+		var toCtx context.Context
+		var toCancel context.CancelFunc
+		if debugged.Debugged {
+			toCtx, toCancel = context.WithTimeout(ctx, 10*time.Minute)
+		} else {
+			toCtx, toCancel = context.WithTimeout(ctx, 10*time.Second)
+		}
 		defer toCancel()
 		if ok := c.GetCache().WaitForCacheSync(toCtx); !ok {
 			return false
@@ -73,17 +78,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("kcp cache did not sync")
 	}
 
-	cmInfo := &corev1.ConfigMap{}
-	err = kcpManager.GetAPIReader().Get(ctx, types.NamespacedName{
-		Namespace: "default",
-		Name:      "cm-info",
-	}, cmInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap info: %w", err)
-	}
-	fmt.Println("WorldFactory cm-info for KCP ==================================")
-	fmt.Printf("%+v\n", cmInfo.Data)
-
 	if err := InitializeKcp(ctx, kcpManager.GetClient(), opts.Config); err != nil {
 		cancel()
 		return nil, fmt.Errorf("error initializing KCP cluster: %w", err)
@@ -113,17 +107,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("garden cache did not sync")
 	}
 
-	cmInfo = &corev1.ConfigMap{}
-	err = gardenManager.GetAPIReader().Get(ctx, types.NamespacedName{
-		Namespace: "default",
-		Name:      "cm-info",
-	}, cmInfo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap info: %w", err)
-	}
-	fmt.Println("WorldFactory cm-info for Garden ==================================")
-	fmt.Printf("%+v\n", cmInfo.Data)
-
 	// SIM -----------------------------------
 
 	time.Sleep(time.Second)
@@ -148,6 +131,14 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("error creating sim instance: %w", err)
+	}
+
+	// give time to sim reconciler kinds to get added to cache and start syncing
+	time.Sleep(time.Second)
+
+	if !waitClusterStarts(ctx, kcpManager) {
+		cancel()
+		return nil, fmt.Errorf("kcp cache did not sync after sim creation")
 	}
 
 	result.config = opts.Config
