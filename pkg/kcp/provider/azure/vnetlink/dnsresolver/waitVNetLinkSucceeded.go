@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func waitVNetLinkCompleted(ctx context.Context, st composed.State) (error, context.Context) {
+func waitVNetLinkSucceeded(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 

@@ -37,7 +37,7 @@ func New(dnsResolverStateFactory StateFactory) composed.Action {
 						waitDnsForwardingRulesetTag,
 					),
 					createVNetLink,
-					waitVNetLinkCompleted,
+					waitVNetLinkSucceeded,
 					updateStatus,
 				),
 			),
