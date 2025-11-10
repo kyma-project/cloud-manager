@@ -33,6 +33,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		})
 
 		By("And Given shared backups exist for shoot", func() {
+			// Clear any existing backups to ensure clean test state
+			infra.GcpMock().ClearAllBackups()
+
 			infra.GcpMock().CreateFakeBackup(&file.Backup{
 				Name:               "projects/test-project/locations/us-central1-a/backups/nfs-backup-1",
 				Description:        "Test NFS volume backup 1",
