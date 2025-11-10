@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: gcpnfsvolumebackupdiscoveries.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -58,6 +58,38 @@ spec:
                 availableBackupUris:
                   items:
                     type: string
+                  type: array
+                availableBackups:
+                  description: Detailed information about available backups
+                  items:
+                    description: AvailableBackup describes a discovered backup
+                    properties:
+                      backupName:
+                        description: Name of the backup
+                        type: string
+                      backupNamespace:
+                        description: Namespace of the backup
+                        type: string
+                      creationTime:
+                        description: Creation time of the backup
+                        format: date-time
+                        type: string
+                      location:
+                        description: Location of the backup
+                        type: string
+                      shootName:
+                        description: Name of the shoot where the backup was created
+                        type: string
+                      uri:
+                        description: URI of the backup
+                        type: string
+                      volumeName:
+                        description: Name of the volume that was backed up
+                        type: string
+                      volumeNamespace:
+                        description: Namespace of the volume that was backed up
+                        type: string
+                    type: object
                   type: array
                 availableBackupsCount:
                   type: integer

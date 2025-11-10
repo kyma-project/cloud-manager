@@ -87,37 +87,53 @@ func AssertGcpNfsVolumeBackupDiscoveryStatusPopulated() ObjAssertion {
 			return fmt.Errorf("expected AvailableBackupUris to be set")
 		}
 
+		if x.Status.AvailableBackups == nil {
+			return fmt.Errorf("expected AvailableBackups to be set")
+		}
+
 		return nil
 	}
 }
 
-// HavingGcpNfsVolumeBackupDiscoveryBackupsCount asserts that the discovery has the expected number of backups
-func HavingGcpNfsVolumeBackupDiscoveryBackupsCount(count int) ObjAssertion {
+// AssertGcpNfsVolumeBackupDiscoveryAvailableBackupsPopulated asserts that AvailableBackups have expected values
+func AssertGcpNfsVolumeBackupDiscoveryAvailableBackupsPopulated() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery)
 		if !ok {
 			return fmt.Errorf("the object %T is not GcpNfsVolumeBackupDiscovery", obj)
 		}
-		if x.Status.AvailableBackupsCount == nil {
-			return fmt.Errorf("expected AvailableBackupsCount to be set")
-		}
-		if *x.Status.AvailableBackupsCount != count {
-			return fmt.Errorf("the GcpNfsVolumeBackupDiscovery has %d backups, expected %d", *x.Status.AvailableBackupsCount, count)
-		}
-		return nil
-	}
-}
 
-// HavingGcpNfsVolumeBackupDiscoveryBackupUris asserts that the discovery has backup URIs
-func HavingGcpNfsVolumeBackupDiscoveryBackupUris() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery)
-		if !ok {
-			return fmt.Errorf("the object %T is not GcpNfsVolumeBackupDiscovery", obj)
+		if len(x.Status.AvailableBackups) == 0 {
+			return fmt.Errorf("expected AvailableBackups to contain at least one backup")
 		}
-		if len(x.Status.AvailableBackupUris) == 0 {
-			return fmt.Errorf("expected AvailableBackupUris to contain backup URIs")
+
+		for i, backup := range x.Status.AvailableBackups {
+			if backup.Uri == "" {
+				return fmt.Errorf("AvailableBackups[%d].Uri should not be empty", i)
+			}
+			if backup.Location == "" {
+				return fmt.Errorf("AvailableBackups[%d].Location should not be empty", i)
+			}
+			if backup.ShootName == "" {
+				return fmt.Errorf("AvailableBackups[%d].ShootName should not be empty", i)
+			}
+			if backup.BackupName == "" {
+				return fmt.Errorf("AvailableBackups[%d].BackupName should not be empty", i)
+			}
+			if backup.BackupNamespace == "" {
+				return fmt.Errorf("AvailableBackups[%d].BackupNamespace should not be empty", i)
+			}
+			if backup.VolumeName == "" {
+				return fmt.Errorf("AvailableBackups[%d].VolumeName should not be empty", i)
+			}
+			if backup.VolumeNamespace == "" {
+				return fmt.Errorf("AvailableBackups[%d].VolumeNamespace should not be empty", i)
+			}
+			if backup.CreationTime == nil {
+				return fmt.Errorf("AvailableBackups[%d].CreationTime should not be nil", i)
+			}
 		}
+
 		return nil
 	}
 }

@@ -33,6 +33,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		})
 
 		By("And Given shared backups exist for shoot", func() {
+			// Clear any existing backups to ensure clean test state
+			infra.GcpMock().ClearAllBackups()
+
 			infra.GcpMock().CreateFakeBackup(&file.Backup{
 				Name:               "projects/test-project/locations/us-central1-a/backups/nfs-backup-1",
 				Description:        "Test NFS volume backup 1",
@@ -42,15 +45,15 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 				SourceInstance:     "projects/test-project/locations/us-central1-a/instances/nfs-instance-1",
 				SourceInstanceTier: "STANDARD",
 				Labels: map[string]string{
-					"managed-by":              "cloud-manager",
-					"scope-name":              "test-scope",
-					"cm-skr-volume-name":      "test-volume-1",
-					"cm-skr-volume-namespace": "default",
-					"cm-skr-backup-name":      "test-backup-1",
-					"cm-skr-backup-namespace": "default",
-					"cm-shoot-name":           "test-shoot",
+					"managed-by":                                     "cloud-manager",
+					"scope-name":                                     "test-scope",
+					util.GcpLabelSkrVolumeName:                       "test-volume-1",
+					util.GcpLabelSkrVolumeNamespace:                  "default",
+					util.GcpLabelSkrBackupName:                       "test-backup-1",
+					util.GcpLabelSkrBackupNamespace:                  "default",
+					util.GcpLabelShootName:                           "test-shoot",
 					fmt.Sprintf("cm-allow-%s", scope.Spec.ShootName): util.GcpLabelBackupAccessibleFrom,
-					"cm-allow-shoot2": util.GcpLabelBackupAccessibleFrom,
+					"cm-allow-shoot2":                                util.GcpLabelBackupAccessibleFrom,
 				},
 				CapacityGb:   100,
 				StorageBytes: 107374182400, // 100 GB in bytes
@@ -64,14 +67,15 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 				SourceInstance:     "projects/test-project/locations/us-central1-a/instances/nfs-instance-2",
 				SourceInstanceTier: "PREMIUM",
 				Labels: map[string]string{
-					"managed-by":              "cloud-manager",
-					"scope-name":              "test-scope",
-					"cm-skr-volume-name":      "test-volume-2",
-					"cm-skr-volume-namespace": "default",
-					"cm-skr-backup-name":      "test-backup-2",
-					"cm-skr-backup-namespace": "default",
-					fmt.Sprintf("cm-allow-%s", scope.Spec.ShootName): "test-shoot",
-					"cm-allow-shoot1": util.GcpLabelBackupAccessibleFrom,
+					"managed-by":                                     "cloud-manager",
+					"scope-name":                                     "test-scope",
+					util.GcpLabelSkrVolumeName:                       "test-volume-2",
+					util.GcpLabelSkrVolumeNamespace:                  "default",
+					util.GcpLabelSkrBackupName:                       "test-backup-2",
+					util.GcpLabelSkrBackupNamespace:                  "default",
+					util.GcpLabelShootName:                           "test-shoot",
+					fmt.Sprintf("cm-allow-%s", scope.Spec.ShootName): util.GcpLabelBackupAccessibleFrom,
+					"cm-allow-shoot1":                                util.GcpLabelBackupAccessibleFrom,
 				},
 				CapacityGb:   200,
 				StorageBytes: 214748364800, // 200 GB in bytes
@@ -125,6 +129,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
 					NewObjActions(),
 					AssertGcpNfsVolumeBackupDiscoveryStatusPopulated(),
+					AssertGcpNfsVolumeBackupDiscoveryAvailableBackupsPopulated(),
 				).
 				Should(Succeed())
 		})

@@ -15,3 +15,15 @@ func extractBackupUri(backupName string) string {
 	backupId := parts[5]
 	return locationId + "/" + backupId
 }
+
+// extractBackupLocation extracts just the location_id from the full backup name
+// in format: projects/{project_number}/locations/{location_id}/backups/{backup_id}
+// Returns the location_id or empty string if format is invalid
+func extractBackupLocation(backupName string) string {
+	parts := strings.Split(backupName, "/")
+	if len(parts) < 4 {
+		return ""
+	}
+
+	return parts[3]
+}
