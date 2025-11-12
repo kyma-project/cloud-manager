@@ -2,7 +2,6 @@ package vpcpeering
 
 import (
 	pb "cloud.google.com/go/compute/apiv1/computepb"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
@@ -13,9 +12,6 @@ type State struct {
 	vpcpeeringtypes.State
 
 	client gcpvpcpeeringclient.VpcPeeringClient
-
-	localNetwork  *cloudcontrolv1beta1.Network
-	remoteNetwork *cloudcontrolv1beta1.Network
 
 	remotePeeringName  string
 	importCustomRoutes bool

@@ -1,4 +1,4 @@
-package gcpvpcpeering
+package azurevpcpeering
 
 import (
 	"context"
@@ -10,7 +10,11 @@ import (
 func waitNetworkReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if state.KcpRemoteNetwork != nil && meta.IsStatusConditionTrue(*state.KcpRemoteNetwork.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, ctx
+	}
+
+	if state.RemoteNetwork != nil && meta.IsStatusConditionTrue(*state.RemoteNetwork.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 		return nil, ctx
 	}
 

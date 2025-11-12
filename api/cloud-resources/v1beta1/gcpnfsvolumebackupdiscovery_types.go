@@ -31,6 +31,41 @@ type GcpNfsVolumeBackupDiscoverySpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
+// AvailableBackup describes a discovered backup
+type AvailableBackup struct {
+	// URI of the backup
+	// +optional
+	Uri string `json:"uri"`
+
+	// Location of the backup
+	// +optional
+	Location string `json:"location"`
+
+	// Name of the shoot where the backup was created
+	// +optional
+	ShootName string `json:"shootName"`
+
+	// Name of the backup
+	// +optional
+	BackupName string `json:"backupName"`
+
+	// Namespace of the backup
+	// +optional
+	BackupNamespace string `json:"backupNamespace"`
+
+	// Name of the volume that was backed up
+	// +optional
+	VolumeName string `json:"volumeName"`
+
+	// Namespace of the volume that was backed up
+	// +optional
+	VolumeNamespace string `json:"volumeNamespace"`
+
+	// Creation time of the backup
+	// +optional
+	CreationTime *metav1.Time `json:"creationTime"`
+}
+
 // GcpNfsVolumeBackupDiscoveryStatus defines the observed state of GcpNfsVolumeBackupDiscovery
 type GcpNfsVolumeBackupDiscoveryStatus struct {
 	// +optional
@@ -50,6 +85,10 @@ type GcpNfsVolumeBackupDiscoveryStatus struct {
 
 	// +optional
 	AvailableBackupUris []string `json:"availableBackupUris,omitempty"`
+
+	// +optional
+	// Detailed information about available backups
+	AvailableBackups []AvailableBackup `json:"availableBackups,omitempty"`
 }
 
 // +kubebuilder:object:root=true

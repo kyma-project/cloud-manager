@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/go-logr/logr"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	azurevpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client"
@@ -24,9 +23,7 @@ type State struct {
 	// remoteClient is used for API calls in remote subscription and may require auxiliary tenants
 	remoteClient azurevpcpeeringclient.Client
 
-	localNetwork    *cloudcontrolv1beta1.Network
 	localNetworkId  *azureutil.NetworkResourceId
-	remoteNetwork   *cloudcontrolv1beta1.Network
 	remoteNetworkId *azureutil.NetworkResourceId
 
 	localPeering  *armnetwork.VirtualNetworkPeering
