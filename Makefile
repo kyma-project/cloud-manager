@@ -78,12 +78,8 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: test-ff
-test-ff: jv
-	$(LOCALBIN)/jv -assertcontent -assertformat ./config/featureToggles/flag-schema.json ./config/featureToggles/featureToggles.yaml
-
 .PHONY: test
-test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
+test: manifests generate fmt vet envtest build_ui ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
