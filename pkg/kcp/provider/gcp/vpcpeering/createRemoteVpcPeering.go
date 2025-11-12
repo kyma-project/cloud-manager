@@ -35,11 +35,11 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	err := state.client.CreateRemoteVpcPeering(
 		ctx,
 		state.remotePeeringName,
-		state.remoteNetwork.Status.Network.Gcp.NetworkName,
-		state.remoteNetwork.Status.Network.Gcp.GcpProject,
+		state.RemoteNetwork().Status.Network.Gcp.NetworkName,
+		state.RemoteNetwork().Status.Network.Gcp.GcpProject,
 		state.importCustomRoutes,
-		state.localNetwork.Status.Network.Gcp.GcpProject,
-		state.localNetwork.Status.Network.Gcp.NetworkName)
+		state.LocalNetwork().Status.Network.Gcp.GcpProject,
+		state.LocalNetwork().Status.Network.Gcp.NetworkName)
 
 	if err != nil {
 		logger.Error(err, "[KCP GCP VpcPeering createRemoteVpcPeering] Error creating Remote VpcPeering")
@@ -51,7 +51,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  "True",
 					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-					Message: fmt.Sprintf("Error creating Remote VpcPeering for network %s/%s due to insufficient permissions", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+					Message: fmt.Sprintf("Error creating Remote VpcPeering for network %s/%s due to insufficient permissions", state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName),
 				}).
 				ErrorLogMessage("Error creating Remote VpcPeering due to insufficient permissions").
 				FailedError(composed.StopWithRequeue).

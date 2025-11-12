@@ -57,6 +57,15 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 				Should(Succeed(), "failed to load remote Network")
 		})
 
+		By("And Then KCP remote Network is Ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(),
+					infra.KCP().Client(),
+					remoteNetwork,
+					WithConditions(KcpReadyCondition())).
+				Should(Succeed(), "failed to update status on KCP remote Network")
+		})
+
 		By("And Than KCP remote Network has AwsNetworkReference", func() {
 			Expect(remoteNetwork.Spec.Network.Reference.Aws.AwsAccountId).To(Equal(remoteAccountId))
 			Expect(remoteNetwork.Spec.Network.Reference.Aws.Region).To(Equal(remoteRegion))
