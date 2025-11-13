@@ -78,8 +78,12 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: test-ff
+test-ff: jv download-flag-schema
+	$(LOCALBIN)/jv -assertcontent -assertformat "$(GO_FF_SCHEMA_FILE)" ./pkg/feature/default.yaml
+
 .PHONY: test
-test: manifests generate fmt vet envtest build_ui ## Run tests.
+test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
@@ -199,6 +203,10 @@ LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
+GO_FF_VERSION := $(shell grep "github.com/thomaspoignant/go-feature-flag " ./go.mod | awk '{print $$2}')
+GO_FF_SCHEMA_URL := https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/$(GO_FF_VERSION)/.schema/flag-schema.json
+GO_FF_SCHEMA_FILE := $(LOCALBIN)/flag-schema.json
+
 ## Tool Binaries
 KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
@@ -235,3 +243,9 @@ jv:$(JV)
 $(JV): $(LOCALBIN)
 	test -s $(LOCALBIN)/jv  || \
 	GOBIN=$(LOCALBIN) go install github.com/santhosh-tekuri/jsonschema/cmd/jv@$(JV_VERSION)
+
+.PHONY: download-flag-schema
+download-flag-schema: $(GO_FF_SCHEMA_FILE)
+
+$(GO_FF_SCHEMA_FILE):
+	curl -sSL -o  $(GO_FF_SCHEMA_FILE) "$(GO_FF_SCHEMA_URL)"
