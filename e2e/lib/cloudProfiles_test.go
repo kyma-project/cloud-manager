@@ -1,4 +1,4 @@
-package sim
+package lib
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 func TestCloudProfiles(t *testing.T) {
 	cfg := e2econfig.Stub()
-	loader := NewFileCloudProfileLoader("fixtures/cloudprofiles.yaml", cfg)
+	loader := NewFileCloudProfileLoader(CloudProfilesFS, "cloudprofiles.yaml", cfg)
 	reg, err := loader.Load(context.Background())
 	assert.NoError(t, err)
 

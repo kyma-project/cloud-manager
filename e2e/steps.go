@@ -357,7 +357,7 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	}
 
 	// create the evaluation context so the resource declaration evaluation and loaded state are fresh
-	_, err = session.Eval(ctx)
+	eval, err := session.Eval(ctx)
 	if err != nil {
 		return ctx, errEvalContextBuilding(err)
 	}
@@ -369,10 +369,10 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	if ri.GVK.Kind != "PersistentVolumeClaim" {
 		return ctx, fmt.Errorf("resource with alias %s is %s but a PersistentVolumeClaim is required", alias, ri.GVK.Kind)
 	}
-	if !ri.Evaluated {
+	if !eval.IsEvaluated(alias) {
 		return ctx, fmt.Errorf("resource with alias %s is not yet evaluated", alias)
 	}
-	if !ri.Loaded {
+	if !eval.IsLoaded(alias) {
 		return ctx, fmt.Errorf("pvc resource with alias %s is not yet loaded", alias)
 	}
 
@@ -473,7 +473,7 @@ func logsOfContainerInPodContain(ctx context.Context, containerName string, alia
 	if session == nil {
 		return ctx, ErrNoSession
 	}
-	_, err := session.Eval(ctx)
+	eval, err := session.Eval(ctx)
 	if err != nil {
 		return ctx, errEvalContextBuilding(err)
 	}
@@ -485,10 +485,10 @@ func logsOfContainerInPodContain(ctx context.Context, containerName string, alia
 	if ri.GVK.Kind != "Pod" {
 		return ctx, fmt.Errorf("resource with alias %s has kind %s but a Pod is required", alias, ri.GVK.Kind)
 	}
-	if !ri.Evaluated {
+	if !eval.IsEvaluated(alias) {
 		return ctx, fmt.Errorf("resource with alias %s is not yet evaluated", alias)
 	}
-	if !ri.Loaded {
+	if !eval.IsLoaded(alias) {
 		return ctx, fmt.Errorf("resource with alias %s is not loaded/does not exist", alias)
 	}
 

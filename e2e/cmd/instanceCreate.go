@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/e2e"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var alias string
@@ -19,40 +19,40 @@ var cmdInstanceCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create an instance with given alias and provider, and optionally wait until it is provisioned",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := rootLogger.WithName("instance-create")
 		pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
 		if err != nil {
 			return err
 		}
 
-		f := e2e.NewWorldFactory()
-		world, err := f.Create(rootCtx, e2e.WorldCreateOptions{
-			Config: config,
-		})
+		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
-			return fmt.Errorf("failed to create world: %w", err)
+			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		id, err := world.Sim().Keb().CreateInstance(rootCtx,
-			sim.WithAlias(alias),
-			sim.WithGlobalAccount(uuid.NewString()),
-			sim.WithSubAccount(uuid.NewString()),
-			sim.WithProvider(pt),
+		id, err := keb.CreateInstance(rootCtx,
+			e2ekeb.WithAlias(alias),
+			e2ekeb.WithGlobalAccount(uuid.NewString()),
+			e2ekeb.WithSubAccount(uuid.NewString()),
+			e2ekeb.WithProvider(pt),
 		)
 		if err != nil {
 			return fmt.Errorf("error creating instance: %w", err)
 		}
 
-		logger = id.AddLoggerValues(logger)
-		logger.Info("Instance created")
+		b, err := yaml.Marshal(id)
+		if err != nil {
+			return fmt.Errorf("error marshalling instance details to yaml: %w", err)
+		}
+		fmt.Println("Instance created:")
+		fmt.Println(string(b))
 
 		if waitDone {
-			logger.Info("Waiting for instance to be ready")
-			err = world.Sim().Keb().WaitProvisioningCompleted(rootCtx, sim.WithRuntime(id.RuntimeID), sim.WithTimeout(time.Duration(timeoutSeconds)*time.Second))
+			fmt.Printf("Waiting for instance to be ready with timeout of %d seconds...\n", timeoutSeconds)
+			err = keb.WaitProvisioningCompleted(rootCtx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(time.Duration(timeoutSeconds)*time.Second))
 			if err != nil {
 				return fmt.Errorf("error waiting provisioning completed: %w", err)
 			}
-			logger.Info("Instance is ready")
+			fmt.Println("Instance is ready")
 		}
 
 		return nil

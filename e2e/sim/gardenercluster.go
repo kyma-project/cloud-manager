@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -21,12 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const (
-	expiresAtAnnotation               = "operator.kyma-project.io/expires-at"
-	forceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
-)
-
-func newSimGardenerCluster(kcp client.Client, kubeconfigProvider SkrKubeconfigProvider) *simGardenerCluster {
+func newSimGardenerCluster(kcp client.Client, kubeconfigProvider e2elib.SkrKubeconfigProvider) *simGardenerCluster {
 	return &simGardenerCluster{
 		kcp:                kcp,
 		kubeconfigProvider: kubeconfigProvider,
@@ -38,7 +34,7 @@ var _ reconcile.Reconciler = &simGardenerCluster{}
 
 type simGardenerCluster struct {
 	kcp                client.Client
-	kubeconfigProvider SkrKubeconfigProvider
+	kubeconfigProvider e2elib.SkrKubeconfigProvider
 	clock              clock.Clock
 }
 
@@ -78,7 +74,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 
 	logger = logger.WithValues("shoot", shootName)
 
-	syncNeeded, expiresIn := IsGardenerClusterSyncNeeded(gc, r.clock)
+	syncNeeded, expiresIn := e2elib.IsGardenerClusterSyncNeeded(gc, r.clock)
 	requeueAfter := expiresIn - 10*time.Second
 	if !syncNeeded {
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
@@ -129,8 +125,8 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	if gc.Annotations == nil {
 		gc.Annotations = map[string]string{}
 	}
-	gc.Annotations[expiresAtAnnotation] = r.clock.Now().Add(r.kubeconfigProvider.ExpiresIn()).Format(time.RFC3339)
-	delete(gc.Annotations, forceKubeconfigRotationAnnotation)
+	gc.Annotations[e2elib.ExpiresAtAnnotation] = r.clock.Now().Add(r.kubeconfigProvider.ExpiresIn()).Format(time.RFC3339)
+	delete(gc.Annotations, e2elib.ForceKubeconfigRotationAnnotation)
 
 	err = r.kcp.Update(ctx, gc)
 	if err != nil {
@@ -154,35 +150,6 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	}
 
 	return reconcile.Result{RequeueAfter: util.Timing.T300000ms()}, nil
-}
-
-// IsGardenerClusterSyncNeeded checks if the given GardenerCluster credentials are expired or about to expire.
-// It returns true if the credentials are expired or will expire soon, along with the expiration time.
-func IsGardenerClusterSyncNeeded(gc *infrastructuremanagerv1.GardenerCluster, clck clock.Clock) (bool, time.Duration) {
-	if gc.Status.State != infrastructuremanagerv1.ReadyState {
-		return true, time.Minute
-	}
-	if gc.Annotations == nil {
-		return true, time.Minute
-	}
-	if _, ok := gc.Annotations[forceKubeconfigRotationAnnotation]; ok {
-		return true, time.Minute
-	}
-	expiresAt := clck.Now()
-	val, ok := gc.Annotations[expiresAtAnnotation]
-	if ok {
-		ea, err := time.Parse(time.RFC3339, val)
-		if err == nil {
-			expiresAt = ea
-		}
-	}
-
-	expiresIn := expiresAt.Sub(clck.Now())
-	if expiresIn < time.Minute {
-		return true, time.Minute
-	}
-
-	return false, expiresIn - time.Second
 }
 
 func (r *simGardenerCluster) SetupWithManager(mgr ctrl.Manager) error {

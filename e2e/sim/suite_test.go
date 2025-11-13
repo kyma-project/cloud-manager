@@ -3,17 +3,19 @@ package sim
 import (
 	"context"
 	"os"
-	"path"
 	"testing"
 	"time"
 
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
-	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	"github.com/kyma-project/cloud-manager/e2e/lib/fixtures"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -25,7 +27,8 @@ import (
 var infra testinfra.Infra
 
 var simInstance Sim
-var skrKubeconfigProviderInstance *fixedKubeconfigProvider
+var kebInstance e2ekeb.Keb
+var skrKubeconfigProviderInstance e2elib.SkrKubeconfigProviderWithCallCount
 var config *e2econfig.ConfigType
 
 func TestSimControllers(t *testing.T) {
@@ -68,18 +71,22 @@ var _ = BeforeSuite(func() {
 
 	By("starting controllers")
 	// Setup controllers
-	skrKubeconfigProviderInstance = NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()).(*fixedKubeconfigProvider)
+	cpl := e2elib.NewFileCloudProfileLoader(e2elib.CloudProfilesFS, "cloudprofiles.yaml", config)
+	skrKubeconfigProviderInstance = e2elib.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()).(e2elib.SkrKubeconfigProviderWithCallCount)
+	skrManagerFactory := e2ekeb.NewSkrManagerFactory(infra.KcpManager().GetClient(), clock.RealClock{}, config.KcpNamespace)
 	simInstance, err = New(CreateOptions{
 		Config:                config,
 		StartCtx:              infra.Ctx(),
 		KcpManager:            infra.KcpManager(),
-		Garden:                infra.Garden().Client(),
-		GardenApiReader:       infra.Garden().Client(),
+		GardenClient:          infra.Garden().Client(),
 		Logger:                infra.KcpManager().GetLogger(),
-		CloudProfileLoader:    NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml"), config),
+		CloudProfileLoader:    cpl,
 		SkrKubeconfigProvider: skrKubeconfigProviderInstance,
+		SkrManagerFactory:     skrManagerFactory,
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
+
+	kebInstance = e2ekeb.NewKeb(infra.KCP().Client(), infra.Garden().Client(), skrManagerFactory, cpl, skrKubeconfigProviderInstance, config)
 
 	// add shoot ready controller that makes each shoot ready!!!
 	gardenManager, err := NewGardenManager(infra.Garden().Cfg(), infra.Garden().Scheme(), infra.KcpManager().GetLogger())

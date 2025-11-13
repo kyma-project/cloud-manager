@@ -1,4 +1,4 @@
-package sim
+package lib
 
 import (
 	"context"
@@ -19,23 +19,23 @@ type SkrKubeconfigProvider interface {
 
 // GARDEN SkrKubeconfigProvider =================================================
 
-func NewGardenSkrKubeconfigProvider(garden client.Client, expiresIn time.Duration, gardenNamespace string) SkrKubeconfigProvider {
+func NewGardenSkrKubeconfigProvider(gardenClient client.Client, expiresIn time.Duration, gardenNamespace string) SkrKubeconfigProvider {
 	return &gardenKubeconfigProvider{
-		garden:          garden,
+		gardenClient:    gardenClient,
 		expiresIn:       expiresIn,
 		gardenNamespace: gardenNamespace,
 	}
 }
 
 type gardenKubeconfigProvider struct {
-	garden          client.Client
-	expiresIn       time.Duration
+	gardenClient client.Client
+	expiresIn    time.Duration
 	gardenNamespace string
 }
 
 func (p *gardenKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shootName string) ([]byte, error) {
 	shoot := &gardenertypes.Shoot{}
-	err := p.garden.Get(ctx, types.NamespacedName{
+	err := p.gardenClient.Get(ctx, types.NamespacedName{
 		Namespace: p.gardenNamespace,
 		Name:      shootName,
 	}, shoot)
@@ -48,7 +48,7 @@ func (p *gardenKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shoo
 			ExpirationSeconds: ptr.To(int64(p.expiresIn.Seconds())),
 		},
 	}
-	err = p.garden.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
+	err = p.gardenClient.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
 	if err != nil {
 		return nil, fmt.Errorf("error creating admin kubeconfig: %w", err)
 	}
@@ -60,6 +60,11 @@ func (p *gardenKubeconfigProvider) ExpiresIn() time.Duration {
 }
 
 // FIXED SkrKubeconfigProvider =================================================
+
+type SkrKubeconfigProviderWithCallCount interface {
+	SkrKubeconfigProvider
+	GetCallCount(shootName string) int
+}
 
 func NewFixedSkrKubeconfigProvider(kubeconfig []byte) SkrKubeconfigProvider {
 	return &fixedKubeconfigProvider{

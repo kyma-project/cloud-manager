@@ -6,6 +6,7 @@ import (
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -26,18 +27,18 @@ var _ = Describe("Feature: KCP SIM", func() {
 			provider      = cloudcontrolv1beta1.ProviderAws
 		)
 
-		var instanceDetails InstanceDetails
+		var instanceDetails e2ekeb.InstanceDetails
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
 
 		kubeconfigCallCount := skrKubeconfigProviderInstance.GetCallCount(shoot.Name)
 
 		By("When instance is created", func() {
-			id, err := simInstance.Keb().CreateInstance(infra.Ctx(),
-				WithAlias(alias),
-				WithGlobalAccount(globalAccount),
-				WithSubAccount(subAccount),
-				WithProvider(provider),
+			id, err := kebInstance.CreateInstance(infra.Ctx(),
+				e2ekeb.WithAlias(alias),
+				e2ekeb.WithGlobalAccount(globalAccount),
+				e2ekeb.WithSubAccount(subAccount),
+				e2ekeb.WithProvider(provider),
 			)
 			Expect(err).NotTo(HaveOccurred())
 			instanceDetails = id

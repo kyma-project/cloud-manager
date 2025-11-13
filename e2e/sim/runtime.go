@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
@@ -26,26 +27,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func newSimRuntime(kcp client.Client, garden client.Client, cpl CloudProfileLoader, gardenReader client.Reader, config *e2econfig.ConfigType) *simRuntime {
+func newSimRuntime(kcp client.Client, garden client.Client, cpl e2elib.CloudProfileLoader, config *e2econfig.ConfigType) *simRuntime {
 	return &simRuntime{
-		kcp:          kcp,
-		garden:       garden,
-		gardenReader: gardenReader,
-		config:       config,
-		cpl:          cpl,
-		clock:        clock.RealClock{},
+		kcp:    kcp,
+		garden: garden,
+		config: config,
+		cpl:    cpl,
+		clock:  clock.RealClock{},
 	}
 }
 
 var _ reconcile.Reconciler = &simRuntime{}
 
 type simRuntime struct {
-	kcp          client.Client
-	garden       client.Client
-	gardenReader client.Reader
-	config       *e2econfig.ConfigType
-	cpl          CloudProfileLoader
-	clock        clock.Clock
+	kcp    client.Client
+	garden client.Client
+	config *e2econfig.ConfigType
+	cpl    e2elib.CloudProfileLoader
+	clock  clock.Clock
 }
 
 var GardenerConditionTypes = []gardenertypes.ConditionType{
@@ -57,16 +56,16 @@ var GardenerConditionTypes = []gardenertypes.ConditionType{
 
 func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	result, err := r.reconcileRequest(ctx, request)
-	//logger := composed.LoggerFromCtx(ctx)
-	//if err != nil {
-	//	logger.Error(err, "reconciliation failed with error")
-	//} else if result.Requeue {
-	//	logger.Info("reconciliation requeue")
-	//} else if result.RequeueAfter > 0 {
-	//	logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
-	//} else {
-	//	logger.Info("reconciliation succeeded")
-	//}
+	logger := composed.LoggerFromCtx(ctx)
+	if err != nil {
+		logger.Error(err, "reconciliation failed with error")
+	} else if result.Requeue {
+		logger.Info("reconciliation requeue")
+	} else if result.RequeueAfter > 0 {
+		logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
+	} else {
+		logger.Info("reconciliation succeeded")
+	}
 	return result, err
 }
 

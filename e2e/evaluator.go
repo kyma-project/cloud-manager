@@ -48,6 +48,8 @@ function findConditionTrue(obj, tp) {
 		evaluator: &defaultEvaluatorImpl{
 			vm:           vm,
 			skrNamespace: skrNamespace,
+			loaded:       map[string]struct{}{},
+			evaluated:    map[string]struct{}{},
 		},
 	}
 }
@@ -55,10 +57,12 @@ function findConditionTrue(obj, tp) {
 type evalData []*evalObj
 
 type evalObj struct {
-	ri     *ResourceInfo
-	data   map[string]interface{}
-	getter func(ctx context.Context, alias string) (map[string]interface{}, error)
-	mapper func(alias string) (*meta.RESTMapping, error)
+	ri        *ResourceInfo
+	loaded    bool
+	evaluated bool
+	data      map[string]interface{}
+	getter    func(ctx context.Context, alias string) (map[string]interface{}, error)
+	mapper    func(alias string) (*meta.RESTMapping, error)
 }
 
 func (obj evalObj) toEvalMetadata() *evalObjMetadata {
@@ -67,7 +71,7 @@ func (obj evalObj) toEvalMetadata() *evalObjMetadata {
 		Kind:       obj.ri.Kind,
 		Name:       obj.ri.Name,
 		Namespace:  obj.ri.Namespace,
-		Evaluated:  obj.ri.Evaluated,
+		Evaluated:  obj.evaluated,
 	}
 }
 
@@ -108,13 +112,15 @@ func (b *EvaluatorBuilder) setToVm() error {
 func (b *EvaluatorBuilder) evalDeclarations() ([]string, error) {
 	var result []string
 	for _, obj := range b.evalData {
-		if obj.ri.Evaluated {
+		if obj.evaluated {
 			continue
 		}
-		if err := b.evaluator.evalResource(obj.ri); err != nil {
+		isEvaluated, err := b.evaluator.evalResource(obj.ri)
+		if err != nil {
 			return nil, err
 		}
-		if obj.ri.Evaluated {
+		if isEvaluated {
+			obj.evaluated = true
 			result = append(result, obj.ri.Name)
 		}
 	}
@@ -124,10 +130,10 @@ func (b *EvaluatorBuilder) evalDeclarations() ([]string, error) {
 func (b *EvaluatorBuilder) load(ctx context.Context) ([]string, error) {
 	var result []string
 	for _, obj := range b.evalData {
-		if obj.ri.Loaded {
+		if obj.loaded {
 			continue
 		}
-		if !obj.ri.Evaluated {
+		if !obj.evaluated {
 			continue
 		}
 
@@ -138,7 +144,7 @@ func (b *EvaluatorBuilder) load(ctx context.Context) ([]string, error) {
 
 		obj.data = data
 
-		obj.ri.Loaded = true
+		obj.loaded = true
 		result = append(result, obj.ri.Alias)
 	}
 	return result, nil
@@ -164,6 +170,17 @@ func (b *EvaluatorBuilder) Build(ctx context.Context) (Evaluator, error) {
 		return b.Build(ctx)
 	}
 
+	b.evaluator.evaluated = map[string]struct{}{}
+	b.evaluator.loaded = map[string]struct{}{}
+	for _, obj := range b.evalData {
+		if obj.evaluated {
+			b.evaluator.evaluated[obj.ri.Alias] = struct{}{}
+		}
+		if obj.loaded {
+			b.evaluator.loaded[obj.ri.Alias] = struct{}{}
+		}
+	}
+
 	return b.evaluator, nil
 }
 
@@ -173,11 +190,27 @@ type Evaluator interface {
 	Eval(txt string) (interface{}, error)
 	EvalTruthy(txt string) (bool, error)
 	EvalTemplate(txt string) (string, error)
+
+	IsEvaluated(alias string) bool
+	IsLoaded(alias string) bool
 }
 
 type defaultEvaluatorImpl struct {
 	vm           *goja.Runtime
 	skrNamespace string
+
+	loaded    map[string]struct{}
+	evaluated map[string]struct{}
+}
+
+func (e *defaultEvaluatorImpl) IsEvaluated(alias string) bool {
+	_, ok := e.evaluated[alias]
+	return ok
+}
+
+func (e *defaultEvaluatorImpl) IsLoaded(alias string) bool {
+	_, ok := e.loaded[alias]
+	return ok
 }
 
 func (e *defaultEvaluatorImpl) Eval(txt string) (interface{}, error) {
@@ -235,11 +268,11 @@ func (e *defaultEvaluatorImpl) EvalTemplate(txt string) (string, error) {
 	return fmt.Sprintf("%s", v), nil
 }
 
-func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) error {
+func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) (bool, error) {
 	if ri.Namespace != "" {
 		namespace, err := e.EvalTemplate(ri.Namespace)
 		if err != nil {
-			return fmt.Errorf("error evaluating %q namespace %q: %w", ri.Alias, ri.Namespace, err)
+			return false, fmt.Errorf("error evaluating %q namespace %q: %w", ri.Alias, ri.Namespace, err)
 		}
 		ri.Namespace = namespace
 	} else if e.skrNamespace != "" {
@@ -250,15 +283,15 @@ func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) error {
 
 	name, err := e.EvalTemplate(ri.Name)
 	if err != nil {
-		return fmt.Errorf("error evaluating %q name %q: %w", ri.Alias, ri.Name, err)
+		return false, fmt.Errorf("error evaluating %q name %q: %w", ri.Alias, ri.Name, err)
 	}
 
 	if name != "" {
 		ri.Name = name
-		ri.Evaluated = true
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 func GojaErrorName(err error) (string, bool) {

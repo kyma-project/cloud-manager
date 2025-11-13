@@ -133,3 +133,10 @@ linters:
 
         - pkg: github.com/aws/aws-sdk-go-v2/service/ec2/types
           alias: ec2types
+
+        - pkg: github.com/kyma-project/cloud-manager/e2e/keb
+          alias: e2ekeb
+        - pkg: github.com/kyma-project/cloud-manager/e2e/lib
+          alias: e2elib
+        - pkg: github.com/kyma-project/cloud-manager/e2e/config
+          alias: e2econfig

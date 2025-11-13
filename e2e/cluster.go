@@ -100,7 +100,6 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 
 		ri := &ResourceInfo{
 			ResourceDeclaration: *decl,
-			Evaluated:           false,
 			GVK:                 gvk,
 		}
 		c.resources[decl.Alias] = ri

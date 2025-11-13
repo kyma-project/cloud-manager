@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,7 +28,7 @@ type ScenarioSession interface {
 
 	// CreateNewSkrCluster calls KEB to create new SKR instance and once provisioned it creates new cluster.Cluster
 	// that is started. When Terminate() is called the cluster.Cluster is stopped and SKR instance deleted.
-	CreateNewSkrCluster(ctx context.Context, opts ...sim.CreateOption) (ClusterInSession, error)
+	CreateNewSkrCluster(ctx context.Context, opts ...e2ekeb.CreateOption) (ClusterInSession, error)
 
 	// AllClusters returns slice of aliases for all clusters, both added and created
 	AllClusters() []ClusterInSession
@@ -280,7 +280,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 		return cc, nil
 	}
 
-	arr, err := s.world.Sim().Keb().List(ctx, sim.WithAlias(alias))
+	arr, err := s.world.Keb().List(ctx, e2ekeb.WithAlias(alias))
 	if err != nil {
 		return nil, fmt.Errorf("error listing runtimes from KEB: %w", err)
 	}
@@ -294,7 +294,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 	id := &arr[0]
 
 	if !id.ProvisioningCompleted {
-		err = s.world.Sim().Keb().WaitProvisioningCompleted(ctx, sim.WithRuntime(id.RuntimeID), sim.WithTimeout(15*time.Minute))
+		err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 		if err != nil {
 			return nil, err
 		}
@@ -303,10 +303,10 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 	return s.createManagerAndStartIt(ctx, id, false)
 }
 
-func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.CreateOption) (ClusterInSession, error) {
+func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2ekeb.CreateOption) (ClusterInSession, error) {
 	var alias string
 	for _, o := range opts {
-		if aa, ok := o.(sim.WithAlias); ok {
+		if aa, ok := o.(e2ekeb.WithAlias); ok {
 			alias = string(aa)
 		}
 	}
@@ -327,12 +327,12 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.C
 		}
 	}
 
-	id, err := s.world.Sim().Keb().CreateInstance(ctx, opts...)
+	id, err := s.world.Keb().CreateInstance(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating runtime in KEB: %w", err)
 	}
 
-	err = s.world.Sim().Keb().WaitProvisioningCompleted(ctx, sim.WithRuntime(id.RuntimeID), sim.WithTimeout(15*time.Minute))
+	err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 	if err != nil {
 		return nil, err
 	}
@@ -340,8 +340,8 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...sim.C
 	return s.createManagerAndStartIt(ctx, &id, true)
 }
 
-func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *sim.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
-	clstr, err := s.world.Sim().CreateSkrManager(ctx, id.RuntimeID)
+func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
+	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
 	}
@@ -439,7 +439,7 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 		}
 
 		if c.IsCreatedInSession() {
-			if err := s.world.Sim().Keb().DeleteInstance(ctx, sim.WithRuntime(c.RuntimeID())); err != nil {
+			if err := s.world.Keb().DeleteInstance(ctx, e2ekeb.WithRuntime(c.RuntimeID())); err != nil {
 				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.ClusterAlias(), err))
 			}
 		}

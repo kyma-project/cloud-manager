@@ -1,4 +1,4 @@
-package sim
+package keb
 
 import (
 	"context"
@@ -17,12 +17,18 @@ import (
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/utils/clock"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,20 +37,31 @@ import (
 // KEB =============================================
 
 type Keb interface {
+	SkrManagerFactory
+
+	KcpClient() client.Client
+
 	CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error)
 	WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error
 	WaitDeleted(ctx context.Context, opts ...WaitOption) error
 	GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error)
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
 	DeleteInstance(ctx context.Context, opts ...DeleteOption) error
+
+	GetInstanceKubeconfig(ctx context.Context, runtimeID string) ([]byte, time.Time, error)
+	CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error)
+	RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error
 }
 
-func NewKeb(kcpClient client.Client, gardenClient client.Client, cpl CloudProfileLoader, config *e2econfig.ConfigType) Keb {
+func NewKeb(kcpClient client.Client, gardenClient client.Client, managerFactory SkrManagerFactory, cpl e2elib.CloudProfileLoader, skrKubeconfigProvider e2elib.SkrKubeconfigProvider, config *e2econfig.ConfigType) Keb {
 	return &defaultKeb{
-		kcpClient:    kcpClient,
-		gardenClient: gardenClient,
-		cpl:          cpl,
-		config:       config,
+		SkrManagerFactory:     managerFactory,
+		kcpClient:             kcpClient,
+		gardenClient:          gardenClient,
+		cpl:                   cpl,
+		skrKubeconfigProvider: skrKubeconfigProvider,
+		config:                config,
+		clock:                 &clock.RealClock{},
 	}
 }
 
@@ -191,7 +208,7 @@ type listOptions struct {
 func (o listOptions) MatchingLabels() client.MatchingLabels {
 	result := client.MatchingLabels{}
 	if o.alias != "" {
-		result[aliasLabel] = o.alias
+		result[e2elib.AliasLabel] = o.alias
 	}
 	if o.globalAccount != "" {
 		result[cloudcontrolv1beta1.LabelScopeGlobalAccountId] = o.globalAccount
@@ -327,7 +344,7 @@ func (o WithProvider) ApplyOnList(opt *listOptions) {
 func (o WithProvider) ApplyOnCreate(opt *createOptions) {
 	opt.provider = cloudcontrolv1beta1.ProviderType(o)
 	if opt.region == "" {
-		opt.region = defaultRegions[opt.provider]
+		opt.region = e2elib.DefaultRegions[opt.provider]
 	}
 }
 
@@ -442,15 +459,19 @@ func (id InstanceDetails) AddLoggerValues(log logr.Logger) logr.Logger {
 var _ Keb = &defaultKeb{}
 
 type defaultKeb struct {
-	kcpClient    client.Client
-	gardenClient client.Client
-	cpl          CloudProfileLoader
-	config       *e2econfig.ConfigType
+	SkrManagerFactory
+
+	kcpClient             client.Client
+	gardenClient          client.Client
+	cpl                   e2elib.CloudProfileLoader
+	skrKubeconfigProvider e2elib.SkrKubeconfigProvider
+	config                *e2econfig.ConfigType
+	clock                 clock.Clock
 }
 
 func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetails {
 	id := InstanceDetails{
-		Alias:                 rt.Labels[aliasLabel],
+		Alias:                 rt.Labels[e2elib.AliasLabel],
 		GlobalAccount:         rt.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId],
 		SubAccount:            rt.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId],
 		Provider:              cloudcontrolv1beta1.ProviderType(rt.Spec.Shoot.Provider.Type),
@@ -466,6 +487,10 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 		id.Message = errCond.Message
 	}
 	return id
+}
+
+func (k *defaultKeb) KcpClient() client.Client {
+	return k.kcpClient
 }
 
 func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error {
@@ -644,9 +669,9 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 		return InstanceDetails{}, fmt.Errorf("error loading cloud profiles: %w", err)
 	}
 	if options.region == "" {
-		options.region = defaultRegions[options.provider]
+		options.region = e2elib.DefaultRegions[options.provider]
 	}
-	rtBuilder := NewRuntimeBuilder(cpr, k.config).
+	rtBuilder := e2elib.NewRuntimeBuilder(cpr, k.config).
 		WithAlias(options.alias).
 		WithProvider(options.provider, options.region).
 		WithSecretBindingName(subscription.Name).
@@ -675,7 +700,7 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 
 	time.Sleep(time.Second)
 
-	if options.shootCreatedTimeout > 0 {
+	if options.shootCreatedTimeout > 0 && k.gardenClient != nil {
 		// wait for shoot to get created, so afterward this func returns, even if sim is stopped the gardener will
 		// keep creating the cluster instance
 		logger := ctrl.Log.WithName("keb")
@@ -753,9 +778,9 @@ func (k *defaultKeb) DeleteInstance(ctx context.Context, opts ...DeleteOption) e
 		return fmt.Errorf("error deleting runtime %q: %w", options.runtimeId, err)
 	}
 
-	if rt.Spec.Shoot.Name != "" && options.shootMarkedForDeletionTimeout > 0 {
+	if rt.Spec.Shoot.Name != "" && options.shootMarkedForDeletionTimeout > 0 && k.gardenClient != nil {
 		// wait until shoot is marked for deletion
-		err := wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, false, func(ctx context.Context) (bool, error) {
+		err := wait.PollUntilContextTimeout(ctx, options.shootMarkedForDeletionInterval, options.shootMarkedForDeletionTimeout, false, func(ctx context.Context) (bool, error) {
 			shoot := &gardenerapicore.Shoot{}
 			err := k.gardenClient.Get(ctx, types.NamespacedName{
 				Namespace: k.config.GardenNamespace,
@@ -776,6 +801,143 @@ func (k *defaultKeb) DeleteInstance(ctx context.Context, opts ...DeleteOption) e
 		if err != nil {
 			return fmt.Errorf("error waiting for shoot to get deletion timestamp: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func (k *defaultKeb) GetInstanceKubeconfig(ctx context.Context, runtimeID string) ([]byte, time.Time, error) {
+	t := time.Unix(0, 0)
+	rt := &infrastructuremanagerv1.Runtime{}
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: runtimeID}, rt)
+	if err != nil {
+		return nil, t, fmt.Errorf("error getting Runtime %q: %w", runtimeID, err)
+	}
+
+	gc := &infrastructuremanagerv1.GardenerCluster{}
+	err = k.kcpClient.Get(ctx, client.ObjectKeyFromObject(rt), gc)
+	if err != nil {
+		return nil, t, fmt.Errorf("error getting GardenerCluster %q: %w", runtimeID, err)
+	}
+
+	hasExpired, _ := e2elib.IsGardenerClusterSyncNeeded(gc, k.clock)
+	if hasExpired {
+		return nil, t, e2elib.ErrGardenerClusterCredentialsExpired
+	}
+
+	ns := gc.Spec.Kubeconfig.Secret.Namespace
+	if ns == "" {
+		ns = rt.Namespace
+	}
+	secret := &corev1.Secret{}
+	err = k.kcpClient.Get(ctx, types.NamespacedName{
+		Namespace: ns,
+		Name:      gc.Spec.Kubeconfig.Secret.Name,
+	}, secret)
+	if err != nil {
+		return nil, t, fmt.Errorf("error getting SKR credentials secret: %w", err)
+	}
+
+	data, ok := secret.Data[gc.Spec.Kubeconfig.Secret.Key]
+	if !ok {
+		return nil, t, fmt.Errorf("skr credential secret does not have key %q as GardenerCluster defines", gc.Spec.Kubeconfig.Secret.Key)
+	}
+
+	if gc.Annotations != nil {
+		tt, err := time.Parse(time.RFC3339, gc.Annotations[e2elib.ExpiresAtAnnotation])
+		if err == nil {
+			t = tt
+		}
+	}
+
+	return data, t, nil
+}
+
+func (k *defaultKeb) CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error) {
+	b, _, err := k.GetInstanceKubeconfig(ctx, runtimeID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting instance kubeconfig: %w", err)
+	}
+
+	cc, err := clientcmd.NewClientConfigFromBytes(b)
+	if err != nil {
+		return nil, fmt.Errorf("error creating client config from kubeconfig: %w", err)
+	}
+	restConfig, err := cc.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("error getting rest config from client config: %w", err)
+	}
+	clnt, err := client.New(restConfig, client.Options{Scheme: commonscheme.SkrScheme})
+	if err != nil {
+		return nil, fmt.Errorf("error creating client: %w", err)
+	}
+
+	return clnt, nil
+}
+
+func (k *defaultKeb) RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error {
+	rt := &infrastructuremanagerv1.Runtime{}
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: runtimeID}, rt)
+	if err != nil {
+		return fmt.Errorf("error getting Runtime %q: %w", runtimeID, err)
+	}
+
+	gc := &infrastructuremanagerv1.GardenerCluster{}
+	err = k.kcpClient.Get(ctx, client.ObjectKeyFromObject(rt), gc)
+	if err != nil {
+		return fmt.Errorf("error getting GardenerCluster %q: %w", runtimeID, err)
+	}
+
+	ns := gc.Spec.Kubeconfig.Secret.Namespace
+	if ns == "" {
+		ns = rt.Namespace
+	}
+	secret := &corev1.Secret{}
+	err = k.kcpClient.Get(ctx, types.NamespacedName{
+		Namespace: ns,
+		Name:      gc.Spec.Kubeconfig.Secret.Name,
+	}, secret)
+	if apierrors.IsNotFound(err) {
+		secret = nil
+		err = nil
+	}
+	if err != nil {
+		return fmt.Errorf("error getting SKR credential secret: %w", err)
+	}
+
+	data, err := k.skrKubeconfigProvider.CreateNewKubeconfig(ctx, rt.Spec.Shoot.Name)
+	if err != nil {
+		return fmt.Errorf("error creating new kubeconfig: %w", err)
+	}
+
+	if secret != nil {
+		secret.Data[gc.Spec.Kubeconfig.Secret.Key] = data
+		if err := k.kcpClient.Update(ctx, secret); err != nil {
+			return fmt.Errorf("error updating SKR credential secret: %w", err)
+		}
+	} else {
+		secret = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: ns,
+				Name:      gc.Spec.Kubeconfig.Secret.Name,
+			},
+			Data: map[string][]byte{
+				gc.Spec.Kubeconfig.Secret.Key: data,
+			},
+		}
+		if err := k.kcpClient.Create(ctx, secret); err != nil {
+			return fmt.Errorf("error creating SKR credential secret: %w", err)
+		}
+	}
+
+	_, err = composed.PatchObjMergeAnnotation(
+		ctx,
+		e2elib.ExpiresAtAnnotation,
+		k.clock.Now().Add(k.skrKubeconfigProvider.ExpiresIn()).Format(time.RFC3339),
+		gc, k.kcpClient,
+	)
+	if err != nil {
+		return fmt.Errorf("error patching GardenerCluster expires-in annotation: %w", err)
 	}
 
 	return nil

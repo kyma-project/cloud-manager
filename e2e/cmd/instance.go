@@ -4,6 +4,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var runtimeID string
+
 var cmdInstance = &cobra.Command{
 	Use: "instance",
 }

@@ -5,6 +5,7 @@ import (
 
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/e2e"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -19,7 +20,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 
 		alias := "91e3ca4e-2204-4c57-a582-118c6b26840e"
 
-		var instanceDetails sim.InstanceDetails
+		var instanceDetails e2ekeb.InstanceDetails
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
 		var session e2e.ScenarioSession
@@ -30,9 +31,9 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 			err := infra.Garden().Client().List(infra.Ctx(), nsList)
 			Expect(err).NotTo(HaveOccurred())
 
-			id, err := world.Sim().Keb().CreateInstance(infra.Ctx(),
-				sim.WithAlias(alias),
-				sim.WithProvider("gcp"),
+			id, err := world.Keb().CreateInstance(infra.Ctx(),
+				e2ekeb.WithAlias(alias),
+				e2ekeb.WithProvider("gcp"),
 			)
 			Expect(err).NotTo(HaveOccurred())
 			instanceDetails = id
@@ -89,14 +90,14 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("Then SKR instance still exists", func() {
-			arr, err := world.Sim().Keb().List(infra.Ctx(), sim.WithAlias(alias))
+			arr, err := world.Keb().List(infra.Ctx(), e2ekeb.WithAlias(alias))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(1))
 			Expect(arr[0].Alias).To(Equal(alias))
 		})
 
 		By("// cleanup: delete SKR instance", func() {
-			err := world.Sim().Keb().DeleteInstance(infra.Ctx(), sim.WithRuntime(rt.Name))
+			err := world.Keb().DeleteInstance(infra.Ctx(), e2ekeb.WithRuntime(rt.Name))
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(IsDeleted).
@@ -117,17 +118,17 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 
 		By("When Scenario session CreateNewSkrCluster() is called", func() {
 			cis, err := session.CreateNewSkrCluster(infra.Ctx(),
-				sim.WithAlias(alias),
-				sim.WithGlobalAccount("038bad72-d2a3-4659-9d9c-49e2de840162"),
-				sim.WithSubAccount("064ed161-6034-4905-a243-d994c392b683"),
-				sim.WithProvider("gcp"),
+				e2ekeb.WithAlias(alias),
+				e2ekeb.WithGlobalAccount("038bad72-d2a3-4659-9d9c-49e2de840162"),
+				e2ekeb.WithSubAccount("064ed161-6034-4905-a243-d994c392b683"),
+				e2ekeb.WithProvider("gcp"),
 			)
 			Expect(err).NotTo(HaveOccurred())
 			clusterInSession = cis
 		})
 
 		By("Then SKR instance exists", func() {
-			id, err := world.Sim().Keb().GetInstance(infra.Ctx(), clusterInSession.RuntimeID())
+			id, err := world.Keb().GetInstance(infra.Ctx(), clusterInSession.RuntimeID())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(id).NotTo(BeNil())
 		})
@@ -184,7 +185,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("And Then SKR instance does not exists", func() {
-			arr, err := world.Sim().Keb().List(infra.Ctx(), sim.WithAlias(alias))
+			arr, err := world.Keb().List(infra.Ctx(), e2ekeb.WithAlias(alias))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(0))
 		})

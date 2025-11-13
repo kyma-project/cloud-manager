@@ -1,4 +1,4 @@
-package e2e
+package lib
 
 import (
 	"context"
@@ -16,26 +16,38 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
-type ClusterManagerFactory interface {
-	CreateClusterManager(ctx context.Context) (manager.Manager, error)
+type ClientFactory interface {
+	CreateManager(ctx context.Context) (manager.Manager, error)
+	CreateClient(ctx context.Context) (client.Client, error)
 }
 
 // KCP ==============================================
 
-func NewKcpClusterManagerFactory(kcpRestConfig *rest.Config) ClusterManagerFactory {
+func NewKcpClientFactory(kcpRestConfig *rest.Config) ClientFactory {
 	if kcpRestConfig == nil {
 		kcpRestConfig = ctrl.GetConfigOrDie()
 	}
-	return &kcpClusterManagerFactory{
+	return &kcpClientFactory{
 		kcpRestConfig: kcpRestConfig,
 	}
 }
 
-type kcpClusterManagerFactory struct {
+type kcpClientFactory struct {
 	kcpRestConfig *rest.Config
 }
 
-func (f *kcpClusterManagerFactory) CreateClusterManager(ctx context.Context) (manager.Manager, error) {
+func (f *kcpClientFactory) CreateClient(_ context.Context) (client.Client, error) {
+	c, err := client.New(f.kcpRestConfig, client.Options{
+		Scheme: commonscheme.KcpScheme,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create KCP client: %w", err)
+	}
+
+	return c, nil
+}
+
+func (f *kcpClientFactory) CreateManager(_ context.Context) (manager.Manager, error) {
 	m, err := manager.New(f.kcpRestConfig, manager.Options{
 		Scheme: commonscheme.KcpScheme,
 		Metrics: metricsserver.Options{
@@ -59,36 +71,39 @@ func (f *kcpClusterManagerFactory) CreateClusterManager(ctx context.Context) (ma
 
 // Garden ========================================
 
-func NewGardenClusterManagerFactory(kcpClient client.Client, gardenNamespace string) ClusterManagerFactory {
-	return &gardenClusterManagerFactory{
+func NewGardenClientFactory(kcpClient client.Client, gardenNamespace string) ClientFactory {
+	return &gardenClientFactory{
 		kcpClient:       kcpClient,
 		gardenNamespace: gardenNamespace,
 	}
 }
 
-type gardenClusterManagerFactory struct {
+type gardenClientFactory struct {
 	kcpClient       client.Client
 	gardenNamespace string
 }
 
-func (f *gardenClusterManagerFactory) CreateClusterManager(ctx context.Context) (manager.Manager, error) {
-	secret := &corev1.Secret{}
-	err := f.kcpClient.Get(ctx, types.NamespacedName{
-		Namespace: "kcp-system",
-		Name:      "gardener-credentials",
-	}, secret)
+func (f *gardenClientFactory) CreateClient(ctx context.Context) (client.Client, error) {
+	restConfig, err := f.getRestConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting gardener credentials: %w", err)
+		return nil, err
 	}
 
-	kubeBytes, ok := secret.Data["kubeconfig"]
-	if !ok {
-		return nil, fmt.Errorf("gardener credentials missing kubeconfig key")
+	c, err := client.New(restConfig, client.Options{
+		Scheme: commonscheme.GardenScheme,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Garden client: %w", err)
 	}
 
-	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
+	return c, nil
+}
+
+func (f *gardenClientFactory) CreateManager(ctx context.Context) (manager.Manager, error) {
+	restConfig, err := f.getRestConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error creating gardener rest client config: %w", err)
+		return nil, err
 	}
 
 	m, err := manager.New(restConfig, manager.Options{
@@ -119,4 +134,27 @@ func (f *gardenClusterManagerFactory) CreateClusterManager(ctx context.Context) 
 	}
 
 	return m, nil
+}
+
+func (f *gardenClientFactory) getRestConfig(ctx context.Context) (*rest.Config, error) {
+	secret := &corev1.Secret{}
+	err := f.kcpClient.Get(ctx, types.NamespacedName{
+		Namespace: "kcp-system",
+		Name:      "gardener-credentials",
+	}, secret)
+	if err != nil {
+		return nil, fmt.Errorf("error getting gardener credentials: %w", err)
+	}
+
+	kubeBytes, ok := secret.Data["kubeconfig"]
+	if !ok {
+		return nil, fmt.Errorf("gardener credentials missing kubeconfig key")
+	}
+
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener rest client config: %w", err)
+	}
+
+	return restConfig, nil
 }

@@ -8,10 +8,13 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
@@ -26,16 +29,17 @@ func NewWorldFactory() *WorldFactory {
 type WorldCreateOptions struct {
 	Config                *e2econfig.ConfigType
 	KcpRestConfig         *rest.Config
-	CloudProfileLoader    sim.CloudProfileLoader
-	SkrKubeconfigProvider sim.SkrKubeconfigProvider
+	CloudProfileLoader    e2elib.CloudProfileLoader
+	SkrKubeconfigProvider e2elib.SkrKubeconfigProvider
+	SkrManagerFactory     e2ekeb.SkrManagerFactory
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
 	if opts.Config == nil {
 		return nil, fmt.Errorf("config is required: %w", common.ErrLogical)
 	}
-	factoryKcp := NewKcpClusterManagerFactory(opts.KcpRestConfig)
-	kcpManager, err := factoryKcp.CreateClusterManager(rootCtx)
+	factoryKcp := e2elib.NewKcpClientFactory(opts.KcpRestConfig)
+	kcpManager, err := factoryKcp.CreateManager(rootCtx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kcp cluster manager: %w", err)
 	}
@@ -78,7 +82,7 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("kcp cache did not sync")
 	}
 
-	if err := InitializeKcp(ctx, kcpManager.GetClient(), opts.Config); err != nil {
+	if err := e2elib.InitializeKcp(ctx, kcpManager.GetClient(), opts.Config); err != nil {
 		cancel()
 		return nil, fmt.Errorf("error initializing KCP cluster: %w", err)
 	}
@@ -87,8 +91,8 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 
 	// Garden Cluster ------------------------
 
-	factoryGarden := NewGardenClusterManagerFactory(kcpManager.GetClient(), opts.Config.GardenNamespace)
-	gardenManager, err := factoryGarden.CreateClusterManager(ctx)
+	factoryGarden := e2elib.NewGardenClientFactory(kcpManager.GetClient(), opts.Config.GardenNamespace)
+	gardenManager, err := factoryGarden.CreateManager(ctx)
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("error creating garden cluster manager: %w", err)
@@ -107,23 +111,29 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("garden cache did not sync")
 	}
 
-	// SIM -----------------------------------
-
 	time.Sleep(time.Second)
 
 	if opts.CloudProfileLoader == nil {
-		opts.CloudProfileLoader = sim.NewGardenCloudProfileLoader(gardenManager.GetClient(), opts.Config)
+		opts.CloudProfileLoader = e2elib.NewGardenCloudProfileLoader(gardenManager.GetClient(), opts.Config)
 	}
 	if opts.SkrKubeconfigProvider == nil {
-		opts.SkrKubeconfigProvider = sim.NewGardenSkrKubeconfigProvider(gardenManager.GetClient(), 10*time.Hour, opts.Config.GardenNamespace)
+		opts.SkrKubeconfigProvider = e2elib.NewGardenSkrKubeconfigProvider(gardenManager.GetClient(), 10*time.Hour, opts.Config.GardenNamespace)
 	}
+	if opts.SkrManagerFactory == nil {
+		opts.SkrManagerFactory = e2ekeb.NewSkrManagerFactory(kcpManager.GetClient(), clock.RealClock{}, opts.Config.KcpNamespace)
+	}
+
+	// KEB -----------------------------------
+
+	kebi := e2ekeb.NewKeb(kcpManager.GetClient(), gardenManager.GetClient(), opts.SkrManagerFactory, opts.CloudProfileLoader, opts.SkrKubeconfigProvider, opts.Config)
+
+	// SIM -----------------------------------
 
 	simInstance, err := sim.New(sim.CreateOptions{
 		Config:                opts.Config,
 		StartCtx:              ctx,
 		KcpManager:            kcpManager,
-		Garden:                gardenManager.GetClient(),
-		GardenApiReader:       gardenManager.GetAPIReader(),
+		GardenClient:          gardenManager.GetClient(),
 		CloudProfileLoader:    opts.CloudProfileLoader,
 		Logger:                ctrl.Log,
 		SkrKubeconfigProvider: opts.SkrKubeconfigProvider,
@@ -145,6 +155,7 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
 	result.simu = simInstance
+	result.kebi = kebi
 	result.kcp = NewCluster(ctx, "kcp", kcpManager)
 	result.garden = NewCluster(ctx, "garden", gardenManager)
 

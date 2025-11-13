@@ -2,13 +2,13 @@ package ctrltest
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	"github.com/kyma-project/cloud-manager/e2e/lib/fixtures"
 	"github.com/kyma-project/cloud-manager/e2e/sim"
-	"github.com/kyma-project/cloud-manager/e2e/sim/fixtures"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -71,8 +71,8 @@ var _ = BeforeSuite(func() {
 	w, err := wf.Create(infra.Ctx(), e2e.WorldCreateOptions{
 		Config:                config,
 		KcpRestConfig:         infra.KCP().Cfg(),
-		CloudProfileLoader:    sim.NewFileCloudProfileLoader(path.Join(infra.ProjectRootDir(), "e2e/sim/fixtures/cloudprofiles.yaml"), config),
-		SkrKubeconfigProvider: sim.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
+		CloudProfileLoader:    e2elib.NewFileCloudProfileLoader(e2elib.CloudProfilesFS, "cloudprofiles.yaml", config),
+		SkrKubeconfigProvider: e2elib.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
 

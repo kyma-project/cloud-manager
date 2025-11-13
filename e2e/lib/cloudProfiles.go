@@ -1,9 +1,9 @@
-package sim
+package lib
 
 import (
 	"context"
 	"fmt"
-	"os"
+	"io/fs"
 	"slices"
 	"sync"
 
@@ -57,20 +57,22 @@ func (l *cachingCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegis
 
 // fileCloudProfileLoader
 
-func NewFileCloudProfileLoader(fn string, config *e2econfig.ConfigType) CloudProfileLoader {
+func NewFileCloudProfileLoader(fileSystem fs.ReadFileFS, fn string, config *e2econfig.ConfigType) CloudProfileLoader {
 	return &fileCloudProfileLoader{
-		fn:     fn,
-		config: config,
+		fileSystem: fileSystem,
+		fn:         fn,
+		config:     config,
 	}
 }
 
 type fileCloudProfileLoader struct {
-	fn     string
-	config *e2econfig.ConfigType
+	fileSystem fs.ReadFileFS
+	fn         string
+	config     *e2econfig.ConfigType
 }
 
 func (l *fileCloudProfileLoader) Load(ctx context.Context) (CloudProfileRegistry, error) {
-	b, err := os.ReadFile(l.fn)
+	b, err := l.fileSystem.ReadFile(l.fn)
 	if err != nil {
 		return nil, err
 	}

@@ -17,12 +17,12 @@ func CloudProfiles(namespace string) ([]*unstructured.Unstructured, error) {
 		return nil, err
 	}
 	result = util.FlattenLists(result)
+	var zerotimestamp metav1.Time
 	for _, obj := range result {
 		obj.SetNamespace(namespace)
 		obj.SetResourceVersion("")
 		obj.SetUID("")
 		obj.SetSelfLink("")
-		var zerotimestamp metav1.Time
 		obj.SetCreationTimestamp(zerotimestamp)
 		obj.SetGeneration(0)
 		obj.SetManagedFields(nil)

@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/e2e"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/spf13/cobra"
 )
@@ -19,16 +18,13 @@ var timeoutSeconds int
 var cmdInstanceWait = &cobra.Command{
 	Use: "wait",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := rootLogger.WithName("instance-wait")
-
-		f := e2e.NewWorldFactory()
-		world, err := f.Create(rootCtx, e2e.WorldCreateOptions{})
+		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
-			return fmt.Errorf("failed to create world: %w", err)
+			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
 		if all {
-			arr, err := world.Sim().Keb().List(rootCtx)
+			arr, err := keb.List(rootCtx)
 			if err != nil {
 				return fmt.Errorf("failed to list instances for wait them all: %w", err)
 			}
@@ -42,26 +38,22 @@ var cmdInstanceWait = &cobra.Command{
 		}
 
 		if len(runtimes) == 0 {
-			logger.Info("Nothing to wait for")
+			fmt.Println("No runtimes found")
 			return nil
 		}
 
-		waitOpts := []sim.WaitOption{
-			sim.WithTimeout(time.Duration(timeoutSeconds) * time.Second),
-			sim.WithProgressCallback(func(p sim.WaitProgress) {
-				logger.
-					WithValues(
-						"done", strings.Join(p.DoneAliases(), " "),
-						"pending", strings.Join(p.PendingAliases(), " "),
-					).
-					Info("Wait progress")
+		waitOpts := []e2ekeb.WaitOption{
+			e2ekeb.WithTimeout(time.Duration(timeoutSeconds) * time.Second),
+			e2ekeb.WithProgressCallback(func(p e2ekeb.WaitProgress) {
+				fmt.Printf("Done: %s\n", strings.Join(p.DoneAliases(), " "))
+				fmt.Printf("Pending: %s\n", strings.Join(p.PendingAliases(), " "))
 			}),
 		}
 		if len(runtimes) > 0 {
-			waitOpts = append(waitOpts, sim.WithRuntimes(runtimes))
+			waitOpts = append(waitOpts, e2ekeb.WithRuntimes(runtimes))
 		}
 
-		err = world.Sim().Keb().WaitProvisioningCompleted(rootCtx, waitOpts...)
+		err = keb.WaitProvisioningCompleted(rootCtx, waitOpts...)
 		if err != nil {
 			return fmt.Errorf("error waiting for instance(s) to become ready: %w", err)
 		}

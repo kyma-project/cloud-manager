@@ -1,4 +1,4 @@
-package sim
+package keb
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
@@ -26,21 +27,19 @@ type SkrManagerFactory interface {
 	CreateSkrManager(ctx context.Context, runtimeID string) (manager.Manager, error)
 }
 
-func NewClientClusterFactory(kcp client.Client, clock clock.Clock, kcpNamespace string) SkrManagerFactory {
+func NewSkrManagerFactory(kcpClient client.Client, clock clock.Clock, kcpNamespace string) SkrManagerFactory {
 	return &defaultSkrManagerFactory{
 		clock:        clock,
-		kcp:          kcp,
+		kcpClient:    kcpClient,
 		kcpNamespace: kcpNamespace,
 	}
 }
-
-var ErrGardenerClusterCredentialsExpired = fmt.Errorf("gardenercluster credentials expired")
 
 var _ SkrManagerFactory = &defaultSkrManagerFactory{}
 
 type defaultSkrManagerFactory struct {
 	clock        clock.Clock
-	kcp          client.Client
+	kcpClient    client.Client
 	kcpNamespace string
 }
 
@@ -48,7 +47,7 @@ func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtime
 	var restConfig *rest.Config
 	err := wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		rc, err := f.getRestConfig(ctx, runtimeID)
-		if errors.Is(err, ErrGardenerClusterCredentialsExpired) {
+		if errors.Is(err, e2elib.ErrGardenerClusterCredentialsExpired) {
 			return false, nil
 		}
 		if err != nil {
@@ -82,7 +81,7 @@ func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtime
 
 func (f *defaultSkrManagerFactory) getRestConfig(ctx context.Context, runtimeID string) (*rest.Config, error) {
 	gc := &infrastructuremanagerv1.GardenerCluster{}
-	err := f.kcp.Get(ctx, client.ObjectKey{Namespace: f.kcpNamespace, Name: runtimeID}, gc)
+	err := f.kcpClient.Get(ctx, client.ObjectKey{Namespace: f.kcpNamespace, Name: runtimeID}, gc)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, fmt.Errorf("error getting GardenerCluster object: %w", err)
 	}
@@ -90,9 +89,9 @@ func (f *defaultSkrManagerFactory) getRestConfig(ctx context.Context, runtimeID 
 		return nil, fmt.Errorf("GardenerCluster %q not found", runtimeID)
 	}
 
-	hasExpired, _ := IsGardenerClusterSyncNeeded(gc, f.clock)
+	hasExpired, _ := e2elib.IsGardenerClusterSyncNeeded(gc, f.clock)
 	if hasExpired {
-		return nil, ErrGardenerClusterCredentialsExpired
+		return nil, e2elib.ErrGardenerClusterCredentialsExpired
 	}
 
 	gcSummary := &util.GardenerClusterSummary{
@@ -102,7 +101,7 @@ func (f *defaultSkrManagerFactory) getRestConfig(ctx context.Context, runtimeID 
 		Shoot:     gc.Spec.Shoot.Name,
 	}
 
-	skrManagerFactory := skrmanager.NewFactory(f.kcp, gcSummary.Namespace)
+	skrManagerFactory := skrmanager.NewFactory(f.kcpClient, gcSummary.Namespace)
 	restConfig, err := skrManagerFactory.LoadRestConfig(ctx, gcSummary.Name, gcSummary.Key)
 	if err != nil {
 		return nil, fmt.Errorf("error loading skr rest config: %w", err)

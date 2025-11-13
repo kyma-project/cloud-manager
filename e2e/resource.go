@@ -44,8 +44,8 @@ func ParseResourceDeclarations(tbl *godog.Table) ([]*ResourceDeclaration, error)
 
 type ResourceInfo struct {
 	ResourceDeclaration
-	Evaluated    bool
-	Loaded       bool
+	//Evaluated    bool
+	//Loaded       bool
 	GVK          schema.GroupVersionKind
 	IsNamespaced bool
 	Source       source.Source

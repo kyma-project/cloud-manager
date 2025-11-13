@@ -1,4 +1,4 @@
-package sim
+package lib
 
 import (
 	"errors"
@@ -26,8 +26,6 @@ func NewRandomShootName() string {
 	result = fmt.Sprintf(f, result)
 	return result
 }
-
-const aliasLabel = "e2e.kyma-project.io/alias"
 
 type RuntimeBuilder struct {
 	Obj infrastructuremanagerv1.Runtime
@@ -158,7 +156,7 @@ func (b *RuntimeBuilder) WithSubAccount(val string) *RuntimeBuilder {
 }
 
 func (b *RuntimeBuilder) WithAlias(val string) *RuntimeBuilder {
-	b.Obj.Labels[aliasLabel] = val
+	b.Obj.Labels[AliasLabel] = val
 	return b
 }
 
@@ -279,7 +277,7 @@ func (b *RuntimeBuilder) Validate() error {
 	if b.Obj.Namespace == "" {
 		err = multierror.Append(err, errors.New("namespace is required"))
 	}
-	if b.Obj.Labels[aliasLabel] == "" {
+	if b.Obj.Labels[AliasLabel] == "" {
 		err = multierror.Append(err, errors.New("alias is required"))
 	}
 	if b.Obj.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName] == "" {
@@ -317,13 +315,6 @@ func (b *RuntimeBuilder) Validate() error {
 
 func (b *RuntimeBuilder) Build() *infrastructuremanagerv1.Runtime {
 	return &b.Obj
-}
-
-var defaultRegions = map[cloudcontrolv1beta1.ProviderType]string{
-	cloudcontrolv1beta1.ProviderAws:       "us-east-1",
-	cloudcontrolv1beta1.ProviderGCP:       "us-east1",
-	cloudcontrolv1beta1.ProviderAzure:     "westeurope",
-	cloudcontrolv1beta1.ProviderOpenStack: "eu-de-1",
 }
 
 var providerRegions = map[cloudcontrolv1beta1.ProviderType]map[string][]string{

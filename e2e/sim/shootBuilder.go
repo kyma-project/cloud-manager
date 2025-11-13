@@ -13,6 +13,7 @@ import (
 	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/hashicorp/go-multierror"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,13 +23,13 @@ import (
 type ShootBuilder struct {
 	obj gardenertypes.Shoot
 
-	cpr    CloudProfileRegistry
+	cpr    e2elib.CloudProfileRegistry
 	config *e2econfig.ConfigType
 
 	errWithRuntime []error
 }
 
-func NewShootBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *ShootBuilder {
+func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigType) *ShootBuilder {
 	return &ShootBuilder{
 		cpr:    cpr,
 		config: config,

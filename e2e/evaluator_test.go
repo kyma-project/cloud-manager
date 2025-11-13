@@ -32,7 +32,7 @@ func TestEvaluator(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, evaluator)
 
-		assert.True(t, handleOne.AllResources()[0].Evaluated)
+		assert.True(t, evaluator.IsEvaluated("cmOne"))
 
 		var s string
 		var v interface{}
@@ -60,8 +60,8 @@ func TestEvaluator(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, evaluator)
 
-		assert.True(t, handleOne.GetResource("cmOne").Evaluated)
-		assert.False(t, handleOne.GetResource("cmTwo").Evaluated)
+		assert.True(t, evaluator.IsEvaluated("cmOne"))
+		assert.False(t, evaluator.IsEvaluated("cmTwo"))
 
 		var s string
 		var v interface{}
@@ -96,8 +96,8 @@ func TestEvaluator(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, evaluator)
 
-		assert.True(t, handleOne.GetResource("cmOne").Evaluated)
-		assert.True(t, handleOne.GetResource("cmTwo").Evaluated)
+		assert.True(t, evaluator.IsEvaluated("cmOne"))
+		assert.True(t, evaluator.IsEvaluated("cmTwo"))
 
 		s, err = evaluator.EvalTemplate("${cmOne.metadata.name}")
 		assert.NoError(t, err)

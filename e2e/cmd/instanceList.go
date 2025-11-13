@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/kyma-project/cloud-manager/e2e"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/spf13/cobra"
 )
 
@@ -11,27 +11,45 @@ var cmdInstanceList = &cobra.Command{
 	Use:   "list",
 	Short: "List all instances",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := rootLogger.WithName("instance-list")
-
-		f := e2e.NewWorldFactory()
-		world, err := f.Create(rootCtx, e2e.WorldCreateOptions{})
+		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
-			return fmt.Errorf("failed to create world: %w", err)
+			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		arr, err := world.Sim().Keb().List(rootCtx)
+		arr, err := keb.List(rootCtx)
 		if err != nil {
 			return fmt.Errorf("error listing intances: %w", err)
 		}
 
-		for _, id := range arr {
-			logger := id.AddLoggerValues(logger)
-			logger.Info(fmt.Sprintf("Instance %s", id.Alias))
-		}
-
+		fmt.Println("")
 		if len(arr) == 0 {
-			logger.Info("No instances found")
+			fmt.Println("No instances found")
+		} else {
+			tpl := "%-17s %-37s %-9s %-10s %-10s %-37s %-37s\n"
+			fmt.Printf(
+				tpl,
+				"Alias",
+				"RuntimeID",
+				"Shoot",
+				"Provider",
+				"Region",
+				"GA",
+				"SA",
+			)
+			for _, id := range arr {
+				fmt.Printf(
+					tpl,
+					id.Alias,
+					id.RuntimeID,
+					id.ShootName,
+					id.Provider,
+					id.Region,
+					id.GlobalAccount,
+					id.SubAccount,
+				)
+			}
 		}
+		fmt.Println("")
 
 		return nil
 	},

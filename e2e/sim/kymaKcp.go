@@ -11,6 +11,8 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/config/crd"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -37,7 +39,7 @@ type skrManagerInfo struct {
 	err              error
 }
 
-func newSimKymaKcp(startCtx context.Context, kcp client.Client, clientFactory SkrManagerFactory, kcpNamespace string) *simKymaKcp {
+func newSimKymaKcp(startCtx context.Context, kcp client.Client, clientFactory e2ekeb.SkrManagerFactory, kcpNamespace string) *simKymaKcp {
 	return &simKymaKcp{
 		kcp:                 kcp,
 		clientFactory:       clientFactory,
@@ -50,7 +52,7 @@ func newSimKymaKcp(startCtx context.Context, kcp client.Client, clientFactory Sk
 type simKymaKcp struct {
 	m                   sync.Mutex
 	kcp                 client.Client
-	clientFactory       SkrManagerFactory
+	clientFactory       e2ekeb.SkrManagerFactory
 	managersByRuntimeId map[string]*skrManagerInfo
 	kcpNamespace        string
 
@@ -76,7 +78,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	mi, err := r.getOrCreateStartedSkrManager(ctx, request.Name, logger)
-	if errors.Is(err, ErrGardenerClusterCredentialsExpired) {
+	if errors.Is(err, e2elib.ErrGardenerClusterCredentialsExpired) {
 		// GardenerCluster credentials are invalid (non-existing or expired),
 		// have to let the GardenerCluster reconciler create it first, giving it some time to do it
 		logger.Info("Out of sync GardenerCluster credentials (expired or not found), waiting for it to be recreated...")
