@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -121,8 +122,10 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 		addedSources[gvk] = src
 	}
 
+	toCtx, toCancel := context.WithTimeout(c.startCtx, 30*time.Second)
+	defer toCancel()
 	for gvk, src := range addedSources {
-		err := src.WaitForSync(c.startCtx)
+		err := src.WaitForSync(toCtx)
 		if err != nil {
 			return fmt.Errorf("failed to wait for source sync for GVK %s: %w", gvk.String(), err)
 		}

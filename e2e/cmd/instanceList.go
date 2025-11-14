@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
 )
 
@@ -25,20 +26,10 @@ var cmdInstanceList = &cobra.Command{
 		if len(arr) == 0 {
 			fmt.Println("No instances found")
 		} else {
-			tpl := "%-17s %-37s %-9s %-10s %-10s %-37s %-37s\n"
-			fmt.Printf(
-				tpl,
-				"Alias",
-				"RuntimeID",
-				"Shoot",
-				"Provider",
-				"Region",
-				"GA",
-				"SA",
-			)
+			tbl := table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA")
+
 			for _, id := range arr {
-				fmt.Printf(
-					tpl,
+				tbl.AddRow(
 					id.Alias,
 					id.RuntimeID,
 					id.ShootName,
@@ -48,6 +39,7 @@ var cmdInstanceList = &cobra.Command{
 					id.SubAccount,
 				)
 			}
+			tbl.Print()
 		}
 		fmt.Println("")
 

@@ -7,8 +7,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	"sigs.k8s.io/yaml"
 )
 
 type PodBuilder interface {
@@ -17,11 +20,13 @@ type PodBuilder interface {
 	ExtraResourceObjects() []client.Object
 	AddExtraResource(extra ...ExtraResource) PodBuilder
 	Pod() *corev1.Pod
-	Create(ctx context.Context, clnt client.Client) error
+	Create(ctx context.Context, clstr ClusterInSession) error
 	Delete(ctx context.Context, clnt client.Client) error
 	WithLabel(key, value string) PodBuilder
 	WithAnnotation(key, value string) PodBuilder
 	WithPodDetails(arr ...PodDetailFunc) PodBuilder
+
+	DumpYaml(scheme *runtime.Scheme) ([]byte, error)
 }
 
 type podBuilder struct {
@@ -46,7 +51,7 @@ func NewPodBuilder(name, namespace, image string) PodBuilder {
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Command:         []string{"/bin/sh", "-c"},
 						Args: []string{
-							fmt.Sprintf("/scipt/%s/%s.sh", name, name),
+							"echo 'Noop! I am not given any script to run.'",
 						},
 					},
 				},
@@ -83,15 +88,17 @@ func (b *podBuilder) AddExtraResource(extra ...ExtraResource) PodBuilder {
 	return b
 }
 
-func (b *podBuilder) Create(ctx context.Context, clnt client.Client) error {
+func (b *podBuilder) Create(ctx context.Context, clstr ClusterInSession) error {
 	for name, res := range b.extraResources {
-		if err := clnt.Create(ctx, res); err != nil {
+		if err := clstr.GetClient().Create(ctx, res); err != nil {
 			return fmt.Errorf("failed to create extra resource %s: %w", name, err)
 		}
+		clstr.DeleteOnTerminate(res)
 	}
-	if err := clnt.Create(ctx, b.pod); err != nil {
+	if err := clstr.GetClient().Create(ctx, b.pod); err != nil {
 		return fmt.Errorf("failed to create pod: %w", err)
 	}
+	clstr.DeleteOnTerminate(b.pod)
 	return nil
 }
 
@@ -128,6 +135,41 @@ func (b *podBuilder) WithAnnotation(key, value string) PodBuilder {
 	return b
 }
 
+func (b *podBuilder) DumpYaml(scheme *runtime.Scheme) ([]byte, error) {
+	var result []byte
+
+	if b.pod.APIVersion == "" {
+		b.pod.APIVersion = "v1"
+	}
+	if b.pod.Kind == "" {
+		b.pod.Kind = "Pod"
+	}
+
+	podYaml, err := yaml.Marshal(b.pod)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal pod yaml: %w", err)
+	}
+	result = append(result, podYaml...)
+
+	for key, obj := range b.extraResources {
+		if obj.GetObjectKind().GroupVersionKind().Kind == "" || obj.GetObjectKind().GroupVersionKind().Group == "" {
+			gvk, err := apiutil.GVKForObject(obj, scheme)
+			if err != nil {
+				return nil, fmt.Errorf("failed to determine GVK for object %T with name %s: %w", obj, obj.GetName(), err)
+			}
+			obj.GetObjectKind().SetGroupVersionKind(gvk)
+		}
+		objYaml, err := yaml.Marshal(obj)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal extra resource %q yaml: %w", key, err)
+		}
+		result = append(result, []byte("\n---\n")...)
+		result = append(result, objYaml...)
+	}
+
+	return result, nil
+}
+
 type ExtraResource struct {
 	Key string
 	Obj client.Object
@@ -143,6 +185,12 @@ func (b *podBuilder) WithPodDetails(arr ...PodDetailFunc) PodBuilder {
 }
 
 // pod details ================================
+
+func PodWithImage(image string) PodDetailFunc {
+	return func(bb PodBuilder) {
+		bb.Pod().Spec.Containers[0].Image = image
+	}
+}
 
 func PodWithScript(scriptLines []string) PodDetailFunc {
 	scriptTemplate := `#!/bin/bash
@@ -161,7 +209,10 @@ set -e
 			},
 		}
 		bb.AddExtraResource(ExtraResource{Key: "script", Obj: cm})
-		bb.WithPodDetails(PodWithMountFromConfigMap(name, "", "", ptr.To(int32(0755))))
+		bb.WithPodDetails(PodWithMountFromConfigMap(name, "", "/script/"+name, ptr.To(int32(0755))))
+		bb.Pod().Spec.Containers[0].Args = []string{
+			fmt.Sprintf("/script/%s/%s.sh", name, name),
+		}
 	}
 }
 
@@ -218,12 +269,13 @@ func PodWithEnvFromConfigMap(envVarName string, configMapName string, key string
 }
 
 func PodWithMountFromConfigMap(configMapName string, volumeName string, mountPath string, defaultMode *int32) PodDetailFunc {
-	if mountPath == "" {
-		mountPath = "/mnt"
-	}
 	if volumeName == "" {
 		volumeName = configMapName
 	}
+	if mountPath == "" {
+		mountPath = "/mnt/" + volumeName
+	}
+	mountPath = strings.TrimSuffix(mountPath, "/")
 	if defaultMode == nil {
 		defaultMode = ptr.To(int32(0644))
 	}
@@ -247,11 +299,11 @@ func PodWithMountFromConfigMap(configMapName string, volumeName string, mountPat
 }
 
 func PodWithMountFromSecret(secretName string, volumeName string, mountPath string) PodDetailFunc {
-	if mountPath == "" {
-		mountPath = "/mnt"
-	}
 	if volumeName == "" {
 		volumeName = secretName
+	}
+	if mountPath == "" {
+		mountPath = "/mnt/" + volumeName
 	}
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{
@@ -270,11 +322,11 @@ func PodWithMountFromSecret(secretName string, volumeName string, mountPath stri
 }
 
 func PodWithMountFromPVC(pvcName string, volumeName string, mountPath string) PodDetailFunc {
-	if mountPath == "" {
-		mountPath = "/mnt"
-	}
 	if volumeName == "" {
 		volumeName = pvcName
+	}
+	if mountPath == "" {
+		mountPath = "/mnt" + volumeName
 	}
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{

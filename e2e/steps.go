@@ -215,6 +215,9 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 	if err != nil {
 		return ctx, errEvalContextBuilding(err)
 	}
+	if !eval.IsEvaluated(alias) {
+		return ctx, fmt.Errorf("resource with alias %q is not evaluated", alias)
+	}
 
 	txt, err := eval.EvalTemplate(doc.Content)
 	if err != nil {
@@ -231,6 +234,9 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 
 	if obj.GetNamespace() == "" {
 		obj.SetNamespace(ri.Namespace)
+	}
+	if obj.GetName() == "" {
+		obj.SetName(ri.Name)
 	}
 
 	err = session.CurrentCluster().GetClient().Create(ctx, obj)
@@ -387,12 +393,11 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 			PodWithScript(scriptLines),
 			PodWithMountFromPVC(ri.Name, "", ""),
 		)
-	err = b.Create(ctx, session.CurrentCluster().GetClient())
+	err = b.Create(ctx, session.CurrentCluster())
 	if err != nil {
-		return ctx, fmt.Errorf("error creating pvc operation resources: %w", err)
+		txt, err2 := b.DumpYaml(session.CurrentCluster().GetScheme())
+		return ctx, fmt.Errorf("error creating pvc operation resources:\n%w\n\n%s\n%s", err, string(txt), err2)
 	}
-	session.CurrentCluster().DeleteOnTerminate(b.Pod())
-	session.CurrentCluster().DeleteOnTerminate(b.ExtraResourceObjects()...)
 
 	err = session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
@@ -543,11 +548,9 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 	}); err != nil {
 		return ctx, fmt.Errorf("failed to declare http operation resources: %w", err)
 	}
-	if err := b.Create(ctx, session.CurrentCluster().GetClient()); err != nil {
+	if err := b.Create(ctx, session.CurrentCluster()); err != nil {
 		return ctx, fmt.Errorf("failed to create http operation resources: %w", err)
 	}
-
-	session.CurrentCluster().DeleteOnTerminate(b.Pod())
 
 	failed := false
 	err = session.EventuallyValueIsOK(
@@ -719,6 +722,11 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		opts.Version = "latest"
 	}
 
+	b.WithPodDetails(
+		PodWithScript(scriptLines),
+		PodWithImage("redis:"+opts.Version),
+	)
+
 	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
 		Kind:       "Pod",
@@ -729,11 +737,9 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		return ctx, fmt.Errorf("failed to declare redis operation pod: %w", err)
 	}
 
-	if err := b.Create(ctx, session.CurrentCluster().GetClient()); err != nil {
+	if err := b.Create(ctx, session.CurrentCluster()); err != nil {
 		return ctx, fmt.Errorf("failed to create redis operation pod: %w", err)
 	}
-	session.CurrentCluster().DeleteOnTerminate(b.Pod())
-	session.CurrentCluster().DeleteOnTerminate(b.ExtraResourceObjects()...)
 
 	failed := false
 	err = session.EventuallyValueIsOK(
