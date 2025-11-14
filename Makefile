@@ -205,7 +205,7 @@ $(LOCALBIN):
 
 GO_FF_VERSION := $(shell grep "github.com/thomaspoignant/go-feature-flag " ./go.mod | awk '{print $$2}')
 GO_FF_SCHEMA_URL := https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/$(GO_FF_VERSION)/.schema/flag-schema.json
-GO_FF_SCHEMA_FILE := $(LOCALBIN)/flag-schema.json
+GO_FF_SCHEMA_FILE := $(LOCALBIN)/flag-schema-$(GO_FF_VERSION).json
 
 ## Tool Binaries
 KUBECTL ?= kubectl
