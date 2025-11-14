@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 
+	"github.com/elliotchance/pie/v2"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var cmdInstanceModulesAdd = &cobra.Command{
-	Use: "add",
+var cmdInstanceModulesRemove = &cobra.Command{
+	Use: "remove",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
@@ -39,13 +40,13 @@ var cmdInstanceModulesAdd = &cobra.Command{
 			}
 		}
 
-		if isFound {
-			fmt.Println("Module is already added")
+		if !isFound {
+			fmt.Println("Module is already removed")
 			return nil
 		}
 
-		kyma.Spec.Modules = append(kyma.Spec.Modules, operatorv1beta2.Module{
-			Name: moduleName,
+		kyma.Spec.Modules = pie.FilterNot(kyma.Spec.Modules, func(m operatorv1beta2.Module) bool {
+			return m.Name == moduleName
 		})
 
 		err = clnt.Update(rootCtx, kyma)
@@ -53,16 +54,16 @@ var cmdInstanceModulesAdd = &cobra.Command{
 			return fmt.Errorf("failed to update SKR kyma: %w", err)
 		}
 
-		fmt.Println("Module is added")
+		fmt.Println("Module is removed")
 
 		return nil
 	},
 }
 
 func init() {
-	cmdInstanceModules.AddCommand(cmdInstanceModulesAdd)
-	cmdInstanceModulesAdd.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	cmdInstanceModulesAdd.Flags().StringVarP(&moduleName, "module", "m", "", "The module name")
-	_ = cmdInstanceModulesAdd.MarkFlagRequired("runtime-id")
-	_ = cmdInstanceModulesAdd.MarkFlagRequired("module")
+	cmdInstanceModules.AddCommand(cmdInstanceModulesRemove)
+	cmdInstanceModulesRemove.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceModulesRemove.Flags().StringVarP(&moduleName, "module", "m", "", "The module name")
+	_ = cmdInstanceModulesRemove.MarkFlagRequired("runtime-id")
+	_ = cmdInstanceModulesRemove.MarkFlagRequired("module")
 }
