@@ -36,6 +36,7 @@ func FileContainsOperation(path, content string) FileOperationFunc {
 		return []string{
 			``,
 			`# FileContainsOperation`,
+			fmt.Sprintf(`mkdir -p %s`, rootDir),
 			fmt.Sprintf(`FILE=%s/%s`, rootDir, path),
 			fmt.Sprintf(`DIR=%s`, rootDir),
 			fmt.Sprintf(`CONTENT="%s"`, content),
@@ -70,6 +71,7 @@ func CreateFileOperation(path, content string) FileOperationFunc {
 		return []string{
 			``,
 			`# CreateFileOperation`,
+			fmt.Sprintf(`mkdir -p %s`, rootDir),
 			fmt.Sprintf(`echo "%s" > %s/%s`, content, rootDir, path),
 			``,
 		}
@@ -82,6 +84,7 @@ func AppendFileOperation(path, content string) FileOperationFunc {
 		return []string{
 			``,
 			`# CreateFileOperation`,
+			fmt.Sprintf(`mkdir -p %s`, rootDir),
 			fmt.Sprintf(`echo "%s" >> %s/%s`, content, rootDir, path),
 			``,
 		}

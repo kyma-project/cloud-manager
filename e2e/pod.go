@@ -15,7 +15,6 @@ import (
 )
 
 type PodBuilder interface {
-	//ConfigMap() *corev1.ConfigMap
 	ExtraResources() map[string]client.Object
 	ExtraResourceObjects() []client.Object
 	AddExtraResource(extra ...ExtraResource) PodBuilder
@@ -326,7 +325,7 @@ func PodWithMountFromPVC(pvcName string, volumeName string, mountPath string) Po
 		volumeName = pvcName
 	}
 	if mountPath == "" {
-		mountPath = "/mnt" + volumeName
+		mountPath = "/mnt/" + volumeName
 	}
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{

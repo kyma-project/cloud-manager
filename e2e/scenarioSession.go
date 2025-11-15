@@ -12,7 +12,6 @@ import (
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
@@ -431,11 +430,12 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 			if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
 				ctrl.Log.Error(err, "error deleting object")
 			}
-			p := []byte(`[{"op": "remove", "path": "/metadata/finalizers}]`)
-			err = c.GetClient().Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
-			if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
-				ctrl.Log.Error(err, "error patching object to remove finalizers after delete")
-			}
+			// if finalizer is removed then CloudManager will not have time to react and delete cloud resources in the provider
+			//p := []byte(`[{"op": "remove", "path": "/metadata/finalizers"}]`)
+			//err = c.GetClient().Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
+			//if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
+			//	ctrl.Log.Error(err, "error patching object to remove finalizers after delete")
+			//}
 		}
 
 		if c.IsCreatedInSession() {

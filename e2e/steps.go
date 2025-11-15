@@ -384,8 +384,8 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 
 	allDone := "All done!"
 
-	rootDir := ri.Name
-	name := "e2e-pvc-op-" + util.RandomString(6)
+	rootDir := "/tmp/"+ri.Name
+	name := "e2e_pvc_op_" + util.RandomString(6)
 	fileOps = append(fileOps, EchoOperation(allDone))
 	scriptLines := CombineFileOperations(fileOps...)(rootDir)
 	b := NewPodBuilder(name, ri.Namespace, "ubuntu").
@@ -534,7 +534,7 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 		return ctx, err
 	}
 
-	name := "e2e-http-op-" + util.RandomString(6)
+	name := "e2e_http_op_" + util.RandomString(6)
 	b := NewPodBuilder(name, world.Config().SkrNamespace, "curlimages/curl").
 		WithPodDetails(
 			PodWithArguments(op.Args()...),
@@ -614,7 +614,7 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		}
 	}
 
-	name := "e2e-redis-op-" + util.RandomString(6)
+	name := "e2e_redis_op_" + util.RandomString(6)
 
 	b := NewPodBuilder(name, world.Config().SkrNamespace, "redis")
 
