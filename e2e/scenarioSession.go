@@ -207,7 +207,7 @@ func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, al
 			return false, err
 		}
 		if v != nil {
-			return false, fmt.Errorf("expected resource %s to not exist, but it does", alias)
+			return false, nil
 		}
 		return true, nil
 	})

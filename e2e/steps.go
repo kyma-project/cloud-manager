@@ -385,7 +385,7 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	allDone := "All done!"
 
 	rootDir := "/tmp/"+ri.Name
-	name := "e2e_pvc_op_" + util.RandomString(6)
+	name := "e2epvcop" + util.RandomString(6)
 	fileOps = append(fileOps, EchoOperation(allDone))
 	scriptLines := CombineFileOperations(fileOps...)(rootDir)
 	b := NewPodBuilder(name, ri.Namespace, "ubuntu").
@@ -393,11 +393,6 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 			PodWithScript(scriptLines),
 			PodWithMountFromPVC(ri.Name, "", ""),
 		)
-	err = b.Create(ctx, session.CurrentCluster())
-	if err != nil {
-		txt, err2 := b.DumpYaml(session.CurrentCluster().GetScheme())
-		return ctx, fmt.Errorf("error creating pvc operation resources:\n%w\n\n%s\n%s", err, string(txt), err2)
-	}
 
 	err = session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
@@ -408,6 +403,12 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	})
 	if err != nil {
 		return ctx, fmt.Errorf("failed to declare pvc pod resource: %w", err)
+	}
+
+	err = b.Create(ctx, session.CurrentCluster())
+	if err != nil {
+		txt, err2 := b.DumpYaml(session.CurrentCluster().GetScheme())
+		return ctx, fmt.Errorf("error creating pvc operation resources:\n%w\n\n%s\n%s", err, string(txt), err2)
 	}
 
 	failed := false
@@ -534,7 +535,7 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 		return ctx, err
 	}
 
-	name := "e2e_http_op_" + util.RandomString(6)
+	name := "e2ehttpop" + util.RandomString(6)
 	b := NewPodBuilder(name, world.Config().SkrNamespace, "curlimages/curl").
 		WithPodDetails(
 			PodWithArguments(op.Args()...),
@@ -614,7 +615,7 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		}
 	}
 
-	name := "e2e_redis_op_" + util.RandomString(6)
+	name := "e2eredisop" + util.RandomString(6)
 
 	b := NewPodBuilder(name, world.Config().SkrNamespace, "redis")
 

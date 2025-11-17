@@ -11,10 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var all bool
-var runtimes []string
-var timeoutSeconds int
-
 var cmdInstanceWait = &cobra.Command{
 	Use: "wait",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,7 +39,7 @@ var cmdInstanceWait = &cobra.Command{
 		}
 
 		waitOpts := []e2ekeb.WaitOption{
-			e2ekeb.WithTimeout(time.Duration(timeoutSeconds) * time.Second),
+			e2ekeb.WithTimeout(timeout),
 			e2ekeb.WithProgressCallback(func(p e2ekeb.WaitProgress) {
 				fmt.Printf("Done: %s\n", strings.Join(p.DoneAliases(), " "))
 				fmt.Printf("Pending: %s\n", strings.Join(p.PendingAliases(), " "))
@@ -65,7 +61,7 @@ var cmdInstanceWait = &cobra.Command{
 func init() {
 	cmdInstanceWait.Flags().StringSliceVarP(&runtimes, "runtime", "r", []string{}, "runtime ID to wait for")
 	cmdInstanceWait.Flags().BoolVarP(&all, "all", "a", false, "wait for all runtimes")
-	cmdInstanceWait.Flags().IntVarP(&timeoutSeconds, "timeout", "t", 900, "Timeout in seconds for waiting for instance to become ready")
+	cmdInstanceWait.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to become ready")
 	cmdInstanceWait.MarkFlagsOneRequired("runtime", "all")
 
 	cmdInstance.AddCommand(cmdInstanceWait)

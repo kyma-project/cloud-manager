@@ -11,10 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var alias string
-var provider string
-var waitDone bool
-
 var cmdInstanceCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create an instance with given alias and provider, and optionally wait until it is provisioned",
@@ -47,8 +43,8 @@ var cmdInstanceCreate = &cobra.Command{
 		fmt.Println(string(b))
 
 		if waitDone {
-			fmt.Printf("Waiting for instance to be ready with timeout of %d seconds...\n", timeoutSeconds)
-			err = keb.WaitProvisioningCompleted(rootCtx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(time.Duration(timeoutSeconds)*time.Second))
+			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", timeout)
+			err = keb.WaitProvisioningCompleted(rootCtx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout))
 			if err != nil {
 				return fmt.Errorf("error waiting provisioning completed: %w", err)
 			}
@@ -63,7 +59,7 @@ func init() {
 	cmdInstanceCreate.Flags().StringVarP(&alias, "alias", "a", "", "Alias name for the instance")
 	cmdInstanceCreate.Flags().StringVarP(&provider, "provider", "p", "", "Provider name for the instance")
 	cmdInstanceCreate.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
-	cmdInstanceCreate.Flags().IntVarP(&timeoutSeconds, "timeout", "t", 900, "Timeout in seconds for waiting for instance to become ready")
+	cmdInstanceCreate.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "Timeout in seconds for waiting for instance to become ready")
 
 	_ = cmdInstanceCreate.MarkFlagRequired("alias")
 	_ = cmdInstanceCreate.MarkFlagRequired("provider")

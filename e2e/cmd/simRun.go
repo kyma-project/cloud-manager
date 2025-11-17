@@ -9,8 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var timeout time.Duration
-
 var cmdSimRun = &cobra.Command{
 	Use: "run",
 	RunE: func(cmd *cobra.Command, args []string) error {

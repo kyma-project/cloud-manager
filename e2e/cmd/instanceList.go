@@ -26,7 +26,7 @@ var cmdInstanceList = &cobra.Command{
 		if len(arr) == 0 {
 			fmt.Println("No instances found")
 		} else {
-			tbl := table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA")
+			tbl := table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA", "Ready")
 
 			for _, id := range arr {
 				tbl.AddRow(
@@ -37,6 +37,7 @@ var cmdInstanceList = &cobra.Command{
 					id.Region,
 					id.GlobalAccount,
 					id.SubAccount,
+					id.ProvisioningCompleted,
 				)
 			}
 			tbl.Print()

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elliotchance/pie/v2"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -16,7 +16,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -140,6 +139,10 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 
 		if shoot != nil && shoot.DeletionTimestamp.IsZero() {
 			logger.Info("Deleting Shoot")
+			_, err = composed.PatchObjMergeAnnotation(ctx, gardenerconstants.ConfirmationDeletion, "True", shoot, r.garden)
+			if err != nil {
+				return reconcile.Result{}, fmt.Errorf("error addind confirmationDeletion annotation on the shoot: %w", err)
+			}
 			err = r.garden.Delete(ctx, shoot)
 			if err != nil {
 				return reconcile.Result{}, fmt.Errorf("error deleting Shoot: %w", err)
@@ -205,18 +208,14 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 			return reconcile.Result{}, nil
 		}
 		shoot = shootBuilder.Build()
-		nsList := &corev1.NamespaceList{}
-		err = r.garden.List(ctx, nsList)
+		shootList := &gardenertypes.ShootList{}
+		err = r.garden.List(ctx, shootList, client.InNamespace(r.config.GardenNamespace))
 		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error listing namespace in Garden: %w", err)
+			return reconcile.Result{}, fmt.Errorf("error listing shoots in Garden: %w", err)
 		}
 
 		logger.
 			WithValues(
-				"gardenNamespaces",
-				pie.Map(nsList.Items, func(ns corev1.Namespace) string {
-					return ns.Name
-				}),
 				"shootName", shoot.Name,
 				"shootNamespace", shoot.Namespace,
 			).
