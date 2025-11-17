@@ -103,7 +103,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
 7. Create a DNS forwarding ruleset:
 
    ```shell
-   export RULESET_NAME="MyRulest"
+   export RULESET_NAME="MyRuleset"
    az dns-resolver forwarding-ruleset create --name $RULESET_NAME --location $REGION --outbound-endpoints "[{id:$OUTBOUND_ENDPOINT_ID}]" --resource-group $RESOURCE_GROUP_NAME
    ```
    
@@ -156,7 +156,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
      name: kyma-vpc-dns-link
    spec:
      remoteLinkName: kyma-vpc-dns-link
-     remoteDnsForwardingRuleset: $RULESET_ID
+     remoteDnsResolverRuleset: $RULESET_ID
    EOF
    ```
 

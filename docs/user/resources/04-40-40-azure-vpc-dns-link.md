@@ -13,12 +13,12 @@ This table lists the parameters of the given resource together with their descri
 
 **Spec:**
 
-| Parameter                      | Type   | Description                                                                                                                               |
-|--------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| **remoteLinkName**             | string | Specifies the name of the Virtual Network Link in the remote subscription.                                                                |
-| **remotePrivateDnsZone**       | string | Specifies the ID of the private DNS zone in the remote subscription.                                                                      |
-| **remoteDnsForwardingRuleset** | string | Specifies the ID of the DNS resolver forwarding ruleset in the remote subscription.                                                       |
-| **remoteTenant**               | string | Optional. Specifies the tenant ID of the remote subscription. Defaults to the Kyma cluster underlying cloud provider subscription tenant. |
+| Parameter                    | Type   | Description                                                                                                                               |
+|------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| **remoteLinkName**           | string | Specifies the name of the Virtual Network Link in the remote subscription.                                                                |
+| **remotePrivateDnsZone**     | string | Specifies the ID of the private DNS zone in the remote subscription.                                                                      |
+| **remoteDnsResolverRuleset** | string | Specifies the ID of the DNS resolver forwarding ruleset in the remote subscription.                                                       |
+| **remoteTenant**             | string | Optional. Specifies the tenant ID of the remote subscription. Defaults to the Kyma cluster underlying cloud provider subscription tenant. |
 
 **Status:**
 
@@ -34,15 +34,26 @@ This table lists the parameters of the given resource together with their descri
 
 ## Sample Custom Resource
 
-See an exemplary AzureVpcDnsLink custom resource:
+See examples of AzureVpcDnsLink custom resource:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AzureVpcDnsLink
 metadata:
-  name: link-to-example-com
+  name: link-to-private-dns-zone
 spec:
   remoteLinkName: link-to-my-kyma
   remotePrivateDnsZone: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/privateDnsZones/example.com
+  remoteTenant: ac3ddba3-536d-4b6f-aad7-03b942e46aca
+```
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AzureVpcDnsLink
+metadata:
+  name: link-to-dns-private-resolver
+spec:
+  remoteLinkName: link-to-my-kyma
+  remoteDnsResolverRuleset: /subscriptions/afdbc79f-de19-4df4-94cd-6be2739dc0e0/resourceGroups/MyResourceGroup/providers/Microsoft.Network/dnsForwardingRulesets/example.com
   remoteTenant: ac3ddba3-536d-4b6f-aad7-03b942e46aca
 ```
