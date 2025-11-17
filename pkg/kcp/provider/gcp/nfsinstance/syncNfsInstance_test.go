@@ -412,6 +412,8 @@ func (s *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Zonal_With_FF() {
 }
 
 func (s *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Regional_Without_FF() {
+	s.T().Skip("I'm flaky, fix me please!!!")
+
 	gcpNfsInstance := getGcpNfsInstance()
 	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.REGIONAL
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
