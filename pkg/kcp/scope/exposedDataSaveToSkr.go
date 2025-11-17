@@ -31,6 +31,26 @@ func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error creating k8s skr client", composed.StopWithRequeue, ctx)
 	}
 
+	// create the kyma-system namespace if it doesn't exist
+	ns := &corev1.Namespace{}
+	err = skrClient.Get(ctx, types.NamespacedName{
+		Name: "kyma-system",
+	}, ns)
+	if ctrlclient.IgnoreNotFound(err) != nil {
+		return composed.LogErrorAndReturn(err, "Error getting kyma-system namespace", composed.StopWithRequeue, ctx)
+	}
+	if err != nil {
+		ns = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "kyma-system",
+			},
+		}
+		err = skrClient.Create(ctx, ns)
+		if ctrlclient.IgnoreAlreadyExists(err) != nil {
+			return composed.LogErrorAndReturn(err, "Error creating kyma-system namespace", composed.StopWithRequeue, ctx)
+		}
+	}
+
 	cmName := types.NamespacedName{
 		Namespace: "kyma-system",
 		Name:      "kyma-info",
