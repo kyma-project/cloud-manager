@@ -20,6 +20,7 @@ func TestConfigDefaultValues(t *testing.T) {
 	assert.Equal(t, "aws", AwsConfig.ArnPartition)
 	assert.Equal(t, "CloudManagerBackupServiceRole", AwsConfig.BackupRoleName)
 	assert.Equal(t, time.Hour, AwsConfig.EfsCapacityCheckInterval)
+	assert.Nil(t, AwsConfig.RedisInstanceTierMachineTypes)
 }
 
 func TestConfigAllFromEnv(t *testing.T) {
@@ -35,7 +36,16 @@ func TestConfigAllFromEnv(t *testing.T) {
 	assert.Equal(t, "key", AwsConfig.Default.AccessKeyId)
 	assert.Equal(t, "secret", AwsConfig.Default.SecretAccessKey)
 	assert.Equal(t, "role", AwsConfig.Default.AssumeRoleName)
+	assert.Nil(t, AwsConfig.RedisInstanceTierMachineTypes)
 }
+
+var redisTierMachineTypes = `
+redisInstanceTierMachineTypes:
+  S1: "custom.s1.medium"
+  P1: "custom.p1.large"
+redisClusterTierMachineTypes:
+  C1: "custom.c1.medium"
+`
 
 func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
 	dir, err := os.MkdirTemp("", "cloud-manager-config")
@@ -47,6 +57,8 @@ func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
 	assert.NoError(t, err, "error creating key file")
 	err = os.WriteFile(filepath.Join(dir, "AWS_SECRET_ACCESS_KEY"), []byte("secret222"), 0644)
 	assert.NoError(t, err, "error creating secret file")
+	err = os.WriteFile(filepath.Join(dir, "aws.yaml"), []byte(redisTierMachineTypes), 0644)
+	assert.NoError(t, err, "error creating aws file")
 
 	env := abstractions.NewMockedEnvironment(map[string]string{
 		"AWS_ACCESS_KEY_ID":     "key",
@@ -61,6 +73,10 @@ func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
 	assert.Equal(t, "key222", AwsConfig.Default.AccessKeyId)
 	assert.Equal(t, "secret222", AwsConfig.Default.SecretAccessKey)
 	assert.Equal(t, "role", AwsConfig.Default.AssumeRoleName)
+	assert.NotNil(t, AwsConfig.RedisInstanceTierMachineTypes)
+	assert.Equal(t, "custom.s1.medium", AwsConfig.RedisInstanceTierMachineTypes["S1"])
+	assert.Equal(t, "custom.p1.large", AwsConfig.RedisInstanceTierMachineTypes["P1"])
+	assert.Equal(t, "custom.c1.medium", AwsConfig.RedisClusterTierMachineTypes["C1"])
 }
 
 func TestAllFromFile(t *testing.T) {

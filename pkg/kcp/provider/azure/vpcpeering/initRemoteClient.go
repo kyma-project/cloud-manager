@@ -15,16 +15,11 @@ func initRemoteClient(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// remote client can't be created if remote network is not found
-	if state.remoteNetwork == nil {
-		return nil, nil
-	}
-
 	var auxiliaryTenants []string
 
 	localTenantId := state.Scope().Spec.Scope.Azure.TenantId
 
-	remoteTenantId := state.remoteNetwork.Status.Network.Azure.TenantId
+	remoteTenantId := state.RemoteNetwork().Status.Network.Azure.TenantId
 
 	// if remote tenant is not specified default it to local tenant
 	if remoteTenantId == "" {

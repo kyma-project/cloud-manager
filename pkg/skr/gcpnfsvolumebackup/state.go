@@ -106,6 +106,15 @@ func (s *State) specCommaSeparatedAccessibleFrom() string {
 	return strings.Join(backup.Spec.AccessibleFrom, ",")
 }
 
+func (s *State) GetTargetGcpNfsVolumeNamespace() string {
+	backup := s.ObjAsGcpNfsVolumeBackup()
+	if backup.Spec.Source.Volume.Namespace != "" {
+		return backup.Spec.Source.Volume.Namespace
+	}
+
+	return backup.Namespace
+}
+
 func (s *State) ShouldShortCircuit() bool {
 	backup := s.ObjAsGcpNfsVolumeBackup()
 	backupState := backup.Status.State
@@ -133,7 +142,7 @@ func (s *State) HasProperLabels() bool {
 	if s.fileBackup.Labels[util.GcpLabelSkrVolumeName] != backup.Spec.Source.Volume.Name {
 		return false
 	}
-	if s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] != backup.Spec.Source.Volume.Namespace {
+	if s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] != s.GetTargetGcpNfsVolumeNamespace() {
 		return false
 	}
 
@@ -191,7 +200,7 @@ func (s *State) HasAllStatusLabels() bool {
 	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrVolumeName] != backup.Spec.Source.Volume.Name {
 		return false
 	}
-	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrVolumeNamespace] != backup.Spec.Source.Volume.Namespace {
+	if backup.Status.FileStoreBackupLabels[util.GcpLabelSkrVolumeNamespace] != s.GetTargetGcpNfsVolumeNamespace() {
 		return false
 	}
 
@@ -240,7 +249,7 @@ func (s *State) SetFilestoreLabels() {
 	s.fileBackup.Labels[gcpclient.ManagedByKey] = gcpclient.ManagedByValue
 	s.fileBackup.Labels[gcpclient.ScopeNameKey] = s.Scope.Name
 	s.fileBackup.Labels[util.GcpLabelSkrVolumeName] = backup.Spec.Source.Volume.Name
-	s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] = backup.Spec.Source.Volume.Namespace
+	s.fileBackup.Labels[util.GcpLabelSkrVolumeNamespace] = s.GetTargetGcpNfsVolumeNamespace()
 	s.fileBackup.Labels[util.GcpLabelSkrBackupName] = backup.Name
 	s.fileBackup.Labels[util.GcpLabelSkrBackupNamespace] = backup.Namespace
 	s.fileBackup.Labels[util.GcpLabelShootName] = s.Scope.Spec.ShootName

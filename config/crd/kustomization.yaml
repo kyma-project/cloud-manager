@@ -38,6 +38,7 @@ resources:
 - bases/cloud-resources.kyma-project.io_azurevpcdnslinks.yaml
 - bases/cloud-control.kyma-project.io_vpcnetworks.yaml
 - bases/cloud-control.kyma-project.io_subscriptions.yaml
+- bases/cloud-resources.kyma-project.io_gcpnfsvolumebackupdiscoveries.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -100,6 +101,7 @@ patches:
 #- path: patches/cainjection_in_cloud-control_gcpredisclusters.yaml
 #- path: patches/cainjection_in_cloud-resources_gcpsubnets.yaml
 #- path: patches/cainjection_in_cloud-resources_azurevnetlinks.yaml
+#- path: patches/cainjection_in_cloud-resources_gcpnfsvolumebackupdiscoveries.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

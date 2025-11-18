@@ -58,6 +58,15 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 				Should(Succeed(), "failed to load remote Network")
 		})
 
+		By("And Then KCP remote Network is Ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(),
+					infra.KCP().Client(),
+					remoteNetwork,
+					WithConditions(KcpReadyCondition())).
+				Should(Succeed(), "failed to update status on KCP remote Network")
+		})
+
 		By("And Than KCP remote Network has AzureNetworkReference", func() {
 			Expect(remoteNetwork.Spec.Network.Reference.Azure.SubscriptionId).To(Equal(remoteSubscription))
 			Expect(remoteNetwork.Spec.Network.Reference.Azure.NetworkName).To(Equal(remoteVnetName))
@@ -66,7 +75,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 
 		vpcPeering := &cloudcontrolv1beta1.VpcPeering{}
 
-		By("Then KCP VpcPeering is created", func() {
+		By("And Then KCP VpcPeering is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -127,7 +136,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 				Should(Succeed(), "failed to delete KCP VpcPeering")
 		})
 
-		By("Then KCP remote Network does not exist", func() {
+		By("And Then KCP remote Network does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(azureVpcPeering.Status.Id)).
 				Should(Succeed(), "failed to delete KCP remote Network")

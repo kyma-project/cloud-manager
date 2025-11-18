@@ -58,13 +58,13 @@ type GcpNfsVolumeRestoreSpec struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type GcpNfsVolumeRestoreSource struct {
-	// BackupUrl is the fully qualified resource name of the backup, in the format "locations/{location}/backups/{backup}".
+	// BackupUrl is the backup identifier in the format "{location_id}/{backup_id}".
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Pattern="^locations/(.+)/backups/(.+)$"
+	// +kubebuilder:validation:Pattern=`^(.+)/(.+)$`
 	BackupUrl string `json:"backupUrl,omitempty"`
 
 	// GcpNfsVolumeBackupRef specifies the GcpNfsVolumeBackup resource that would be restored
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Backup GcpNfsVolumeBackupRef `json:"backup"`
 }
 

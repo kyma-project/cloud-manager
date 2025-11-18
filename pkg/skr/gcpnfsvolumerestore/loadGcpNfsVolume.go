@@ -15,6 +15,11 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// If deleting, continue with next steps.
+	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
 	restore := state.ObjAsGcpNfsVolumeRestore()
 	logger.WithValues("nfsRestoreSource", restore.Spec.Source.Backup.ToNamespacedName(state.Obj().GetNamespace()),
 		"destination", restore.Spec.Destination.Volume.ToNamespacedName(state.Obj().GetNamespace())).Info("Loading GCPNfsVolume")
