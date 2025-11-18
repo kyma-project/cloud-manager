@@ -290,10 +290,10 @@ func (b *RuntimeBuilder) Validate() error {
 		err = multierror.Append(err, errors.New("at least one OIDC config is required"))
 	} else {
 		for i, oidc := range *b.Obj.Spec.Shoot.Kubernetes.KubeAPIServer.AdditionalOidcConfig {
-			if ptr.Deref(oidc.OIDCConfig.ClientID, "") == "" {
+			if ptr.Deref(oidc.ClientID, "") == "" {
 				err = multierror.Append(err, fmt.Errorf("oidc %d: client ID is required", i))
 			}
-			if ptr.Deref(oidc.OIDCConfig.IssuerURL, "") == "" {
+			if ptr.Deref(oidc.IssuerURL, "") == "" {
 				err = multierror.Append(err, fmt.Errorf("oidc %d: issuer URL is required", i))
 			}
 		}

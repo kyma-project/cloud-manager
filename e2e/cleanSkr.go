@@ -12,7 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func cleanSkrNoWait(ctx context.Context, c client.Client) error {
+// CleanSkrNoWait is not yet used, but it should clean SKR so it deletes all SKR cloud-manager resources
+func CleanSkrNoWait(ctx context.Context, c client.Client) error {
 	knownTypes := commonscheme.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
 	for kind, tp := range knownTypes {
 		if !strings.HasSuffix(kind, "List") {

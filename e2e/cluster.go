@@ -114,7 +114,7 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
 
-		src = source.Kind(c.Cluster.GetCache(), u, handler.TypedFuncs[*unstructured.Unstructured, reconcile.Request]{})
+		src = source.Kind(c.GetCache(), u, handler.TypedFuncs[*unstructured.Unstructured, reconcile.Request]{})
 		err = src.Start(c.startCtx, nil)
 		if err != nil {
 			return fmt.Errorf("failed to start source for alias %q GVK %s: %w", decl.Alias, gvk.String(), err)
@@ -131,7 +131,7 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 		}
 	}
 	if len(addedSources) > 0 {
-		ok := c.Cluster.GetCache().WaitForCacheSync(ctx)
+		ok := c.GetCache().WaitForCacheSync(ctx)
 		if !ok {
 			return fmt.Errorf("failed to wait for cache sync after adding resources")
 		}

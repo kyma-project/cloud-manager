@@ -101,10 +101,10 @@ const (
 // lookup, or other behavioral patterns when interacting with the remote cluster.
 type SyncStrategy string
 
-func (kyma *Kyma) GetModuleStatusMap() map[string]*ModuleStatus {
+func (in *Kyma) GetModuleStatusMap() map[string]*ModuleStatus {
 	moduleStatusMap := make(map[string]*ModuleStatus)
-	for i := range kyma.Status.Modules {
-		moduleStatus := &kyma.Status.Modules[i]
+	for i := range in.Status.Modules {
+		moduleStatus := &in.Status.Modules[i]
 		moduleStatusMap[moduleStatus.Name] = moduleStatus
 	}
 	return moduleStatusMap
@@ -180,11 +180,11 @@ type ModuleStatus struct {
 	Maintenance bool `json:"maintenance,omitempty"`
 }
 
-func (m *ModuleStatus) GetManifestCR() *unstructured.Unstructured {
+func (in *ModuleStatus) GetManifestCR() *unstructured.Unstructured {
 	module := &unstructured.Unstructured{}
-	module.SetGroupVersionKind(m.Manifest.GroupVersionKind())
-	module.SetName(m.Manifest.GetName())
-	module.SetNamespace(m.Manifest.GetNamespace())
+	module.SetGroupVersionKind(in.Manifest.GroupVersionKind())
+	module.SetName(in.Manifest.GetName())
+	module.SetNamespace(in.Manifest.GetNamespace())
 	return module
 }
 
@@ -251,10 +251,10 @@ type KymaConditionMsg string
 // KymaConditionReason should always be set to `Ready`.
 type KymaConditionReason string
 
-func (kyma *Kyma) SetActiveChannel() *Kyma {
-	kyma.Status.ActiveChannel = kyma.Spec.Channel
+func (in *Kyma) SetActiveChannel() *Kyma {
+	in.Status.ActiveChannel = in.Spec.Channel
 
-	return kyma
+	return in
 }
 
 type moduleStatusExistsPair struct {
@@ -262,16 +262,16 @@ type moduleStatusExistsPair struct {
 	exists       bool
 }
 
-func (kyma *Kyma) GetNoLongerExistingModuleStatus() []*ModuleStatus {
+func (in *Kyma) GetNoLongerExistingModuleStatus() []*ModuleStatus {
 	moduleStatusMap := make(map[string]*moduleStatusExistsPair)
 
-	for i := range kyma.Status.Modules {
-		moduleStatus := &kyma.Status.Modules[i]
+	for i := range in.Status.Modules {
+		moduleStatus := &in.Status.Modules[i]
 		moduleStatusMap[moduleStatus.Name] = &moduleStatusExistsPair{exists: false, moduleStatus: moduleStatus}
 	}
 
-	for i := range kyma.Spec.Modules {
-		module := &kyma.Spec.Modules[i]
+	for i := range in.Spec.Modules {
+		module := &in.Spec.Modules[i]
 		if _, found := moduleStatusMap[module.Name]; found {
 			moduleStatusMap[module.Name].exists = true
 		}

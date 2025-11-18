@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -43,11 +42,6 @@ func SetupShootReadyController(gardenManager manager.Manager) error {
 	return ctrl.NewControllerManagedBy(gardenManager).
 		For(&gardenerapicore.Shoot{}).
 		Complete(&defaultShootReadyController{gardenClient: gardenManager.GetClient()})
-}
-
-func xxxNewShootReadyController(gardenClient client.Client) (controller.Controller, error) {
-	c, err := controller.NewTypedUnmanaged("shootReady", controller.Options{})
-	return c, err
 }
 
 type defaultShootReadyController struct {

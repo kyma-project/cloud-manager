@@ -24,7 +24,6 @@ type defaultSkrCluster struct {
 	provider         cloudcontrolv1beta1.ProviderType
 	runtimeID        string
 	shootName        string
-	kubeConfigBytes  []byte
 }
 
 func NewSkrCluster(clstr Cluster, rt *infrastructuremanagerv1.Runtime) SkrCluster {

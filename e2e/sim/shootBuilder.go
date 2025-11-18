@@ -266,6 +266,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Spec.Provider.Workers = rt.Spec.Shoot.Provider.Workers
 
 	b.obj.Spec.Region = rt.Spec.Shoot.Region
+	// SA1019 we keep support for secretBinding until all landscapes are migrated
+	// nolint:staticcheck
 	b.obj.Spec.SecretBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
 
 	return b

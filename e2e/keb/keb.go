@@ -423,7 +423,7 @@ func (o WithInterval) ApplyOnCreate(opt *createOptions) {
 // InstanceDetails =============================================
 
 type InstanceDetails struct {
-	Alias         string                           `json:"alias" json:"alias"`
+	Alias         string                           `json:"alias" yaml:"alias"`
 	GlobalAccount string                           `json:"globalAccount" yaml:"globalAccount"`
 	SubAccount    string                           `json:"subAccount" yaml:"subAccount"`
 	Provider      cloudcontrolv1beta1.ProviderType `json:"provider" yaml:"provider"`

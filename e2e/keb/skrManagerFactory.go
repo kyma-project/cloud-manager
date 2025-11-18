@@ -27,9 +27,9 @@ type SkrManagerFactory interface {
 	CreateSkrManager(ctx context.Context, runtimeID string) (manager.Manager, error)
 }
 
-func NewSkrManagerFactory(kcpClient client.Client, clock clock.Clock, kcpNamespace string) SkrManagerFactory {
+func NewSkrManagerFactory(kcpClient client.Client, c clock.Clock, kcpNamespace string) SkrManagerFactory {
 	return &defaultSkrManagerFactory{
-		clock:        clock,
+		clock:        c,
 		kcpClient:    kcpClient,
 		kcpNamespace: kcpNamespace,
 	}

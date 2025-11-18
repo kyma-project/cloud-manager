@@ -93,8 +93,8 @@ type GardenerClusterStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-func (cluster *GardenerCluster) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus) {
-	cluster.Status.State = ReadyState
+func (in *GardenerCluster) UpdateConditionForReadyState(conditionType ConditionType, reason ConditionReason, conditionStatus metav1.ConditionStatus) {
+	in.Status.State = ReadyState
 
 	condition := metav1.Condition{
 		Type:               string(conditionType),
@@ -103,22 +103,22 @@ func (cluster *GardenerCluster) UpdateConditionForReadyState(conditionType Condi
 		Reason:             string(reason),
 		Message:            getMessage(reason),
 	}
-	meta.RemoveStatusCondition(&cluster.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&cluster.Status.Conditions, condition)
+	meta.RemoveStatusCondition(&in.Status.Conditions, condition.Type)
+	meta.SetStatusCondition(&in.Status.Conditions, condition)
 }
 
-func (cluster *GardenerCluster) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, error error) {
-	cluster.Status.State = ErrorState
+func (in *GardenerCluster) UpdateConditionForErrorState(conditionType ConditionType, reason ConditionReason, err error) {
+	in.Status.State = ErrorState
 
 	condition := metav1.Condition{
 		Type:               string(conditionType),
 		Status:             metav1.ConditionFalse,
 		LastTransitionTime: metav1.Now(),
 		Reason:             string(reason),
-		Message:            fmt.Sprintf("%s Error: %s", getMessage(reason), error.Error()),
+		Message:            fmt.Sprintf("%s Error: %s", getMessage(reason), err.Error()),
 	}
-	meta.RemoveStatusCondition(&cluster.Status.Conditions, condition.Type)
-	meta.SetStatusCondition(&cluster.Status.Conditions, condition)
+	meta.RemoveStatusCondition(&in.Status.Conditions, condition.Type)
+	meta.SetStatusCondition(&in.Status.Conditions, condition)
 }
 
 func getMessage(reason ConditionReason) string {
