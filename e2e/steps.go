@@ -384,7 +384,7 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 
 	allDone := "All done!"
 
-	rootDir := "/tmp/"+ri.Name
+	rootDir := "/tmp/" + ri.Name
 	name := "e2epvcop" + util.RandomString(6)
 	fileOps = append(fileOps, EchoOperation(allDone))
 	scriptLines := CombineFileOperations(fileOps...)(rootDir)

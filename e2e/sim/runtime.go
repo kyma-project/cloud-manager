@@ -55,16 +55,16 @@ var GardenerConditionTypes = []gardenertypes.ConditionType{
 
 func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	result, err := r.reconcileRequest(ctx, request)
-	logger := composed.LoggerFromCtx(ctx)
-	if err != nil {
-		logger.Error(err, "reconciliation failed with error")
-	} else if result.Requeue {
-		logger.Info("reconciliation requeue")
-	} else if result.RequeueAfter > 0 {
-		logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
-	} else {
-		logger.Info("reconciliation succeeded")
-	}
+	//logger := composed.LoggerFromCtx(ctx)
+	//if err != nil {
+	//	logger.Error(err, "reconciliation failed with error")
+	//} else if result.Requeue {
+	//	logger.Info("reconciliation requeue")
+	//} else if result.RequeueAfter > 0 {
+	//	logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
+	//} else {
+	//	logger.Info("reconciliation succeeded")
+	//}
 	return result, err
 }
 
@@ -129,12 +129,16 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 		}
 		if kyma != nil && kyma.DeletionTimestamp != nil {
 			// waiting for kyma to get deleted
+			util.ExpiringSwitch().
+				Key("sim.runtime.wait.kcp.kyma.deleted", request.NamespacedName.String()).
+				IfNotRecently(func() {
+					logger.Info("Waiting KCP Kyma to be deleted")
+				})
 			diff := r.clock.Now().Sub(kyma.DeletionTimestamp.Time)
 			if diff < time.Minute {
-				logger.Info("Waiting KCP Kyma gets deleted")
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
-			logger.Info("Giving up on waiting KCP Kyma gets deleted after 1 minute")
+			logger.Info("Timeout on waiting KCP Kyma to be deleted after 1 minute")
 		}
 
 		if shoot != nil && shoot.DeletionTimestamp.IsZero() {
@@ -158,6 +162,11 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 		}
 
 		if shoot != nil || gc != nil {
+			util.ExpiringSwitch().
+				Key("sim.runtime.wait.shoot.deleted", request.NamespacedName.String()).
+				IfNotRecently(func() {
+					logger.Info("Waiting shoot to be deleted...")
+				})
 			return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 		}
 
@@ -287,6 +296,11 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 	}
 
 	if !IsShootReady(shoot) {
+		util.ExpiringSwitch().
+			Key("sim.runtime.wait.shoot.ready", request.NamespacedName.String()).
+			IfNotRecently(func() {
+				logger.Info("Waiting shoot to become ready...")
+			})
 		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 	}
 
@@ -329,7 +343,11 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 	}
 
 	if gc.Status.State != infrastructuremanagerv1.ReadyState {
-		logger.Info("Waiting for GardenCluster to become ready")
+		util.ExpiringSwitch().
+			Key("sim.runtime.wait.gardenerCluster.ready", request.NamespacedName.String()).
+			IfNotRecently(func() {
+				logger.Info("Waiting for GardenCluster to become ready")
+			})
 		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
 
@@ -356,7 +374,11 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 	}
 
 	if kyma.Status.State != operatorshared.StateReady {
-		logger.Info("Waiting for KCP Kyma to become ready")
+		util.ExpiringSwitch().
+			Key("sim.runtime.wait.kcp.kyma.ready", request.NamespacedName.String()).
+			IfNotRecently(func() {
+				logger.Info("Waiting for KCP Kyma to become ready")
+			})
 		return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 	}
 

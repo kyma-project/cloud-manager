@@ -423,23 +423,23 @@ func (o WithInterval) ApplyOnCreate(opt *createOptions) {
 // InstanceDetails =============================================
 
 type InstanceDetails struct {
-	Alias         string
-	GlobalAccount string
-	SubAccount    string
-	Provider      cloudcontrolv1beta1.ProviderType
-	Region        string
+	Alias         string                           `json:"alias" json:"alias"`
+	GlobalAccount string                           `json:"globalAccount" yaml:"globalAccount"`
+	SubAccount    string                           `json:"subAccount" yaml:"subAccount"`
+	Provider      cloudcontrolv1beta1.ProviderType `json:"provider" yaml:"provider"`
+	Region        string                           `json:"region" yaml:"region"`
 
-	ProvisioningCompleted bool
+	ProvisioningCompleted bool `json:"provisioningCompleted" yaml:"provisioningCompleted"`
 
-	RuntimeID string
-	ShootName string
+	RuntimeID string `json:"runtimeID" yaml:"runtimeID"`
+	ShootName string `json:"shootName" yaml:"shootName"`
 
 	// State has value of the runtime.status.state
-	State string
+	State string `json:"state" yaml:"state"`
 	// Message has value of message of the Condition type Error
-	Message string
+	Message string `json:"message" yaml:"message"`
 
-	BeingDeleted bool
+	BeingDeleted bool `json:"beingDeleted" yaml:"beingDeleted"`
 }
 
 func (id InstanceDetails) AddLoggerValues(log logr.Logger) logr.Logger {

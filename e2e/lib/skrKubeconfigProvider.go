@@ -28,8 +28,8 @@ func NewGardenSkrKubeconfigProvider(gardenClient client.Client, expiresIn time.D
 }
 
 type gardenKubeconfigProvider struct {
-	gardenClient client.Client
-	expiresIn    time.Duration
+	gardenClient    client.Client
+	expiresIn       time.Duration
 	gardenNamespace string
 }
 

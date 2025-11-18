@@ -3,12 +3,13 @@ package main
 import "time"
 
 var (
-	timeout time.Duration
-	all bool
-	runtimeID string
-	runtimes []string
-	alias string
-	provider string
-	waitDone bool
-	moduleName string
+	timeout      time.Duration
+	all          bool
+	runtimeID    string
+	runtimes     []string
+	alias        string
+	provider     string
+	waitDone     bool
+	moduleName   string
+	outputFormat string
 )

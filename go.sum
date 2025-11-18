@@ -513,6 +513,8 @@ github.com/onsi/gomega v1.38.2/go.mod h1:W2MJcYxRGV63b418Ai34Ud0hEdTVXq9NW9+Sx6u
 github.com/open-telemetry/opentelemetry-operator v0.137.0 h1:RpaTlHGXVRtclYe0kao01SDwvftAfNYV00BuaeJJGxw=
 github.com/open-telemetry/opentelemetry-operator v0.137.0/go.mod h1:RuM1oKvL0W9gNONH1mpV/1g08jGu7LugSl0BOkhuQhk=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
+github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
+github.com/patrickmn/go-cache v2.1.0+incompatible/go.mod h1:3Qf8kWWT7OJRJbdiICTKqZju1ZixQ/KpMGzzAfe6+WQ=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/perses/common v0.27.1-0.20250326140707-96e439b14e0e h1:AormqtWdtHdoQyGO90U1fRoElR0XQHmP0W9oJUsCOZY=
 github.com/perses/common v0.27.1-0.20250326140707-96e439b14e0e/go.mod h1:CMTbKu0uWCFKgo4oDVoT8GcMC0bKyDH4cNG3GVfi+rA=
