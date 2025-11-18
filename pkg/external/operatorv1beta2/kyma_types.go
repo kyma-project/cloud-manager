@@ -132,8 +132,8 @@ type KymaStatus struct {
 	operatorshared.LastOperation `json:"lastOperation,omitempty"`
 }
 
-func (status *KymaStatus) GetModuleStatus(moduleName string) *ModuleStatus {
-	for _, moduleStatus := range status.Modules {
+func (in *KymaStatus) GetModuleStatus(moduleName string) *ModuleStatus {
+	for _, moduleStatus := range in.Modules {
 		if moduleStatus.Name == moduleName {
 			return &moduleStatus
 		}

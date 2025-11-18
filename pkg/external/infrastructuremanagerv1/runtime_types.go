@@ -218,8 +218,8 @@ func init() {
 	SchemeBuilder.Register(&Runtime{}, &RuntimeList{})
 }
 
-func (k *Runtime) UpdateStateReady(c RuntimeConditionType, r RuntimeConditionReason, msg string) {
-	k.Status.State = RuntimeStateReady
+func (in *Runtime) UpdateStateReady(c RuntimeConditionType, r RuntimeConditionReason, msg string) {
+	in.Status.State = RuntimeStateReady
 	condition := metav1.Condition{
 		Type:               string(c),
 		Status:             "True",
@@ -227,14 +227,14 @@ func (k *Runtime) UpdateStateReady(c RuntimeConditionType, r RuntimeConditionRea
 		Reason:             string(r),
 		Message:            msg,
 	}
-	meta.SetStatusCondition(&k.Status.Conditions, condition)
+	meta.SetStatusCondition(&in.Status.Conditions, condition)
 }
 
-func (k *Runtime) UpdateStateDeletion(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
+func (in *Runtime) UpdateStateDeletion(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
 	if status != "False" {
-		k.Status.State = RuntimeStateTerminating
+		in.Status.State = RuntimeStateTerminating
 	} else {
-		k.Status.State = RuntimeStateFailed
+		in.Status.State = RuntimeStateFailed
 	}
 
 	condition := metav1.Condition{
@@ -244,14 +244,14 @@ func (k *Runtime) UpdateStateDeletion(c RuntimeConditionType, r RuntimeCondition
 		Reason:             string(r),
 		Message:            msg,
 	}
-	meta.SetStatusCondition(&k.Status.Conditions, condition)
+	meta.SetStatusCondition(&in.Status.Conditions, condition)
 }
 
-func (k *Runtime) UpdateStatePending(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
+func (in *Runtime) UpdateStatePending(c RuntimeConditionType, r RuntimeConditionReason, status, msg string) {
 	if status == "False" {
-		k.Status.State = RuntimeStateFailed
+		in.Status.State = RuntimeStateFailed
 	} else {
-		k.Status.State = RuntimeStatePending
+		in.Status.State = RuntimeStatePending
 	}
 
 	condition := metav1.Condition{
@@ -261,50 +261,50 @@ func (k *Runtime) UpdateStatePending(c RuntimeConditionType, r RuntimeConditionR
 		Reason:             string(r),
 		Message:            msg,
 	}
-	meta.SetStatusCondition(&k.Status.Conditions, condition)
+	meta.SetStatusCondition(&in.Status.Conditions, condition)
 }
 
-func (k *Runtime) UpdateStateProvisioningCompleted() {
-	k.Status.ProvisioningCompleted = true
+func (in *Runtime) UpdateStateProvisioningCompleted() {
+	in.Status.ProvisioningCompleted = true
 }
 
-func (k *Runtime) IsProvisioningCompletedStatusSet() bool {
-	return k.Status.ProvisioningCompleted
+func (in *Runtime) IsProvisioningCompletedStatusSet() bool {
+	return in.Status.ProvisioningCompleted
 }
 
-func (k *Runtime) IsStateWithConditionSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason) bool {
-	if k.Status.State != runtimeState {
+func (in *Runtime) IsStateWithConditionSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason) bool {
+	if in.Status.State != runtimeState {
 		return false
 	}
 
-	return k.IsConditionSet(c, r)
+	return in.IsConditionSet(c, r)
 }
 
-func (k *Runtime) IsConditionSet(c RuntimeConditionType, r RuntimeConditionReason) bool {
-	condition := meta.FindStatusCondition(k.Status.Conditions, string(c))
+func (in *Runtime) IsConditionSet(c RuntimeConditionType, r RuntimeConditionReason) bool {
+	condition := meta.FindStatusCondition(in.Status.Conditions, string(c))
 	if condition != nil && condition.Reason == string(r) {
 		return true
 	}
 	return false
 }
 
-func (k *Runtime) IsStateWithConditionAndStatusSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
-	if k.Status.State != runtimeState {
+func (in *Runtime) IsStateWithConditionAndStatusSet(runtimeState State, c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
+	if in.Status.State != runtimeState {
 		return false
 	}
 
-	return k.IsConditionSetWithStatus(c, r, s)
+	return in.IsConditionSetWithStatus(c, r, s)
 }
 
-func (k *Runtime) IsConditionSetWithStatus(c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
-	condition := meta.FindStatusCondition(k.Status.Conditions, string(c))
+func (in *Runtime) IsConditionSetWithStatus(c RuntimeConditionType, r RuntimeConditionReason, s metav1.ConditionStatus) bool {
+	condition := meta.FindStatusCondition(in.Status.Conditions, string(c))
 	if condition != nil && condition.Reason == string(r) && condition.Status == s {
 		return true
 	}
 	return false
 }
 
-func (k *Runtime) ValidateRequiredLabels() error {
+func (in *Runtime) ValidateRequiredLabels() error {
 	var requiredLabelKeys = []string{
 		LabelKymaInstanceID,
 		LabelKymaRuntimeID,
@@ -317,7 +317,7 @@ func (k *Runtime) ValidateRequiredLabels() error {
 	}
 
 	for _, key := range requiredLabelKeys {
-		if k.Labels[key] == "" {
+		if in.Labels[key] == "" {
 			return fmt.Errorf("missing required label %s", key)
 		}
 	}

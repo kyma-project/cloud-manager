@@ -49,7 +49,7 @@ func TestPodBuilder(t *testing.T) {
 		// volumes
 
 		assert.Len(t, pod.Spec.Volumes, 3)
-		assert.Equal(t, name, pod.Spec.Volumes[0].ConfigMap.LocalObjectReference.Name)
+		assert.Equal(t, name, pod.Spec.Volumes[0].ConfigMap.Name)
 		assert.Equal(t, pvcName, pod.Spec.Volumes[1].PersistentVolumeClaim.ClaimName)
 		assert.Equal(t, secretName, pod.Spec.Volumes[2].Secret.SecretName)
 
