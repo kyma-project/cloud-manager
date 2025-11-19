@@ -13,8 +13,20 @@ permissions:
 
 jobs:
   build-image:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       name: cloud-manager
       dockerfile: Dockerfile
       export-tags: true
+
+  no-build:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
+    steps:
+      -
+        name: Local Container Build
+        uses: docker/build-push-action@v6
+        with:
+          outputs: type=cacheonly
+          push: false
+          tags: user/app:latest
