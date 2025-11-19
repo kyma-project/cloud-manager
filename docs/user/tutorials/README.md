@@ -24,5 +24,5 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Using GcpRedisCluster Custom Resources](./01-50-20-gcp-redis-cluster.md) [**Beta feature**]
   * [Using AzureRedisCluster Custom Resources](./01-50-30-azure-redis-cluster.md) [**Beta feature**]
 * VPC DNS Link
-  * [Creating VPC DNS Link in Microsoft Azure](01-60-10-azure-dns-zone-vpc-link.md) [**Beta feature**]
+  * [Linking Your Kyma Network to Microsoft Azure Private DNS Zone](01-60-10-azure-dns-zone-vpc-link.md) [**Beta feature**]
   * [Creating VPC DNS Link in Microsoft Azure](01-60-20-azure-dns-resolver-vpc-link.md) [**Beta feature**]
