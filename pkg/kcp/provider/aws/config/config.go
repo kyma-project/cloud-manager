@@ -52,7 +52,6 @@ func InitConfig(cfg config.Config) {
 			config.SourceEnv("AWS_ROLE_NAME"),
 			config.SourceFile("AWS_ROLE_NAME"),
 		),
-		// AWS_ROLE_PREFIX
 		config.Path(
 			"peering.accessKeyId",
 			config.SourceEnv("AWS_PEERING_ACCESS_KEY_ID"),
