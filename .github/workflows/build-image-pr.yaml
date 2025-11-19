@@ -13,18 +13,21 @@ permissions:
 
 jobs:
   build-image:
+    name: Build Image ADO
+    runs-on: ubuntu-latest
     if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-    with:
-      name: cloud-manager
-      dockerfile: Dockerfile
-      export-tags: true
+    steps:
+      - name: Build Image ADO
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: build-image-pr-ado.yaml
 
   no-build:
+    name: Build Image Locally
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
+    runs-on: ubuntu-latest
     steps:
-      -
-        name: Local Container Build
+      - name: Build Image Locally
         uses: docker/build-push-action@v6
         with:
           outputs: type=cacheonly
