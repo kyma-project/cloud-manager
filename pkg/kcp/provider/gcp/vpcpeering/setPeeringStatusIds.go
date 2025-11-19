@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
 )
@@ -12,15 +13,19 @@ func setPeeringStatusIds(ctx context.Context, st composed.State) (error, context
 	vpcPeering := state.ObjAsVpcPeering()
 	statusChanged := false
 
-	if state.kymaVpcPeering != nil && vpcPeering.Status.Id == "" {
+	if state.remoteOperation != nil && state.remoteOperation.GetError() != nil {
+		return nil, ctx
+	}
+
+	if state.localVpcPeering != nil && vpcPeering.Status.Id == "" {
 		statusChanged = true
-		logger.Info("[KCP GCP VpcPeering setPeeringStatusIds] setting kyma connection id status")
-		vpcPeering.Status.Id = ptr.Deref(state.kymaVpcPeering.Name, "")
+		logger.Info("[KCP GCP VpcPeering setPeeringStatusIds] setting Local connection id status " + vpcPeering.Status.Id)
+		vpcPeering.Status.Id = ptr.Deref(state.localVpcPeering.Name, "")
 	}
 
 	if state.remoteVpcPeering != nil && vpcPeering.Status.RemoteId == "" {
 		statusChanged = true
-		logger.Info("[KCP GCP VpcPeering setPeeringStatusIds] setting remote connection id status")
+		logger.Info("[KCP GCP VpcPeering setPeeringStatusIds] setting remote connection id status " + vpcPeering.Status.RemoteId)
 		vpcPeering.Status.RemoteId = ptr.Deref(state.remoteVpcPeering.Name, "")
 	}
 	if statusChanged {
@@ -32,5 +37,5 @@ func setPeeringStatusIds(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

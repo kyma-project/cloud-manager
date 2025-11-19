@@ -32,6 +32,7 @@ type GcpClients struct {
 
 // The VpcPeeringClients uses a different service account than the other clients and has different permissions as well.
 type VpcPeeringClients struct {
+	ComputeGlobalOperations    *compute.GlobalOperationsClient
 	ComputeNetworks            *compute.NetworksClient
 	ResourceManagerTagBindings *resourcemanager.TagBindingsClient
 }
@@ -126,8 +127,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	if err != nil {
 		return nil, fmt.Errorf("error creating vpc peering compute networks client: %w", err)
 	}
+	vpcPeeringComputeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx, option.WithTokenSource(vpcPeeringComputeNetworksTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("error creating vpc peering compute operations client: %w", err)
+	}
 	// resource manager client for VPC peering, uses a different service account----------------
-
 	vpcPeeringResourceManagerTokenProvider, err := vpcPeeringClientBuilder.WithScopes(resourcemanager.DefaultAuthScopes()).BuildTokenProvider()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build vpc peering resource manager token provider: %w", err)
@@ -148,6 +152,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		RedisCluster:  redisCluster,
 		RedisInstance: redisInstance,
 		VpcPeeringClients: &VpcPeeringClients{
+			ComputeGlobalOperations:    vpcPeeringComputeGlobalOperations,
 			ComputeNetworks:            vpcPeeringComputeNetworks,
 			ResourceManagerTagBindings: vpcPeeringresourceManagerTagBindings,
 		},

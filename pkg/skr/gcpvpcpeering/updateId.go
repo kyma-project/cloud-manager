@@ -2,6 +2,7 @@ package gcpvpcpeering
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -31,7 +32,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering updateId] Error updating status with ID "+err.Error(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
-	logger.Info("[SKR GCP VPCPeering updateId] SKR GcpVpcPeering updated with ID status")
+	logger.Info("[SKR GCP VPCPeering updateId] SKR GcpVpcPeering updated with ID status " + id)
 
 	return composed.StopWithRequeueDelay(util.Timing.T100ms()), nil
 }

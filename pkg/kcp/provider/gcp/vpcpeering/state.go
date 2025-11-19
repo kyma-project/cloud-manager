@@ -18,7 +18,11 @@ type State struct {
 
 	//Peerings on both sides
 	remoteVpcPeering *pb.NetworkPeering
-	kymaVpcPeering   *pb.NetworkPeering
+	localVpcPeering  *pb.NetworkPeering
+
+	//Operations
+	remoteOperation *pb.Operation
+	localOperation  *pb.Operation
 }
 
 type StateFactory interface {
