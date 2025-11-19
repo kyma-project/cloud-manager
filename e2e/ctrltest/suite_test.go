@@ -86,10 +86,8 @@ var _ = BeforeSuite(func() {
 	infra.StartKcpControllers(infra.Ctx())
 	Expect(infra.KcpWaitForCacheSync(infra.Ctx())).To(Succeed())
 
+	// it takes more time for SKR manager to stop, so giving it x2 time
 	Default.SetDefaultEventuallyTimeout(8 * time.Second)
-	Default.SetDefaultEventuallyPollingInterval(200 * time.Millisecond)
-	Default.SetDefaultConsistentlyDuration(2 * time.Second)
-	Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 })
 
 var _ = AfterSuite(func() {
