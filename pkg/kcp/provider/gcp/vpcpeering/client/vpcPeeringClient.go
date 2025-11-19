@@ -39,23 +39,25 @@ func NewClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[V
 }
 
 func NewVpcPeeringClient(gcpClients *client.GcpClients) VpcPeeringClient {
-	return &gcpVpcPeeringClient{networksClient: gcpClients.VpcPeeringClients.ComputeNetworks, resourceManagerClient: gcpClients.VpcPeeringClients.ResourceManagerTagBindings}
+	return &gcpVpcPeeringClient{networksClient: gcpClients.VpcPeeringClients.ComputeNetworks, resourceManagerTagBindingsClient: gcpClients.VpcPeeringClients.ResourceManagerTagBindings, operationsClient: gcpClients.VpcPeeringClients.ComputeGlobalOperations}
 }
 
 type gcpVpcPeeringClient struct {
-	networksClient        *compute.NetworksClient
-	resourceManagerClient *resourcemanager.TagBindingsClient
+	networksClient                   *compute.NetworksClient
+	operationsClient                 *compute.GlobalOperationsClient
+	resourceManagerTagBindingsClient *resourcemanager.TagBindingsClient
 }
 
 type VpcPeeringClient interface {
 	DeleteVpcPeering(ctx context.Context, remotePeeringName string, kymaProject string, kymaVpc string) error
 	GetVpcPeering(ctx context.Context, remotePeeringName string, project string, vpc string) (*pb.NetworkPeering, error)
-	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
-	CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error
+	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error)
+	CreateLocalVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error)
 	GetRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string) ([]string, error)
+	GetOperation(context context.Context, project string, operationId string) (*pb.Operation, error)
 }
 
-func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string, networksClient *compute.NetworksClient) error {
+func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string, networksClient *compute.NetworksClient) (*pb.Operation, error) {
 
 	destinationNetworkUrl := getFullNetworkUrl(destinationProject, destinationVpc)
 
@@ -73,15 +75,15 @@ func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sour
 		},
 	}
 
-	_, err := networksClient.AddPeering(ctx, vpcPeeringRequest)
+	op, err := networksClient.AddPeering(ctx, vpcPeeringRequest)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return op.Proto(), nil
 
 }
 
-func (c *gcpVpcPeeringClient) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
+func (c *gcpVpcPeeringClient) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error) {
 	//peering from remote vpc to kyma
 	//by default exportCustomRoutes is false, but if the remote vpc wants kyma to import custom routes, the peering needs to export them :)
 	exportCustomRoutes := false
@@ -92,7 +94,7 @@ func (c *gcpVpcPeeringClient) CreateRemoteVpcPeering(ctx context.Context, remote
 	return CreateVpcPeeringRequest(ctx, remotePeeringName, remoteVpc, remoteProject, importCustomRoutes, exportCustomRoutes, kymaProject, kymaVpc, c.networksClient)
 }
 
-func (c *gcpVpcPeeringClient) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
+func (c *gcpVpcPeeringClient) CreateLocalVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error) {
 	//peering from kyma to remote vpc
 	//Kyma will not export custom routes to the remote vpc, but if the remote vpc is exporting them, we need to import them
 	exportCustomRoutes := false
@@ -122,7 +124,7 @@ func (c *gcpVpcPeeringClient) GetVpcPeering(ctx context.Context, remotePeeringNa
 
 	if len(peerings) == 0 {
 		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Vpc Peering not found")
+		logger.Info("Vpc Peering not found", "peeringName", remotePeeringName)
 		return nil, nil
 	}
 	return peerings[0], nil
@@ -141,7 +143,7 @@ func (c *gcpVpcPeeringClient) GetRemoteNetworkTags(ctx context.Context, remoteVp
 		return nil, err
 	}
 
-	tagIterator := c.resourceManagerClient.ListEffectiveTags(ctx, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
+	tagIterator := c.resourceManagerTagBindingsClient.ListEffectiveTags(ctx, &resourcemanagerpb.ListEffectiveTagsRequest{Parent: strings.Replace(ptr.Deref(remoteNetwork.SelfLinkWithId, ""), "https://www.googleapis.com/compute/v1", "//compute.googleapis.com", 1)})
 	for {
 		tag, err := tagIterator.Next()
 		if err != nil {
@@ -153,4 +155,15 @@ func (c *gcpVpcPeeringClient) GetRemoteNetworkTags(ctx context.Context, remoteVp
 		tagsArray = append(tagsArray, tag.NamespacedTagKey)
 	}
 	return tagsArray, nil
+}
+
+func (c *gcpVpcPeeringClient) GetOperation(ctx context.Context, project string, operationId string) (*pb.Operation, error) {
+	op, err := c.operationsClient.Get(ctx, &pb.GetGlobalOperationRequest{
+		Operation: operationId,
+		Project:   project,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return op, nil
 }

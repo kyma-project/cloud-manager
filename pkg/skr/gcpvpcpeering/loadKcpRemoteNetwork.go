@@ -2,6 +2,7 @@ package gcpvpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,12 +23,12 @@ func loadKcpRemoteNetwork(ctx context.Context, st composed.State) (error, contex
 
 	if apierrors.IsNotFound(err) {
 		state.KcpRemoteNetwork = nil
-		logger.Info("[SKR GCP VPCPeering loadKcpRemoteNetwork] GCP KCP Network does not exist")
+		logger.Info("[SKR GCP VPCPeering loadKcpRemoteNetwork] GCP KCP Network does not exist", "kcpNetwork", obj.Status.Id)
 		return nil, nil
 	}
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering loadKcpRemoteNetwork] Error loading GCP KCP RemoteNetwork", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering loadKcpRemoteNetwork] Error loading GCP KCP RemoteNetwork "+obj.Status.Id, composed.StopWithRequeue, ctx)
 	}
 
 	state.KcpRemoteNetwork = remoteNetwork

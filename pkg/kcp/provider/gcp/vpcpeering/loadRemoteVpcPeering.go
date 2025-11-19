@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,8 +20,6 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	if state.remoteVpcPeering != nil {
 		return nil, nil
 	}
-
-	logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Loading Remote VPC Peering")
 
 	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName)
 	if err != nil {
@@ -81,10 +80,13 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 				ctx,
 			)
 		}
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 
-	logger.Info("[KCP GCP VpcPeering createRemoteVpcPeering] Remote VPC Peering loaded")
-	state.remoteVpcPeering = remoteVpcPeering
-	return nil, nil
+	if remoteVpcPeering != nil {
+		logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Remote VPC Peering loaded", "remoteVpcPeering", ptr.Deref(remoteVpcPeering.Name, "remoteVpcPeering.Name"))
+		state.remoteVpcPeering = remoteVpcPeering
+	}
+
+	return nil, ctx
 }
