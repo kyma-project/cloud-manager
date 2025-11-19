@@ -74,7 +74,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    az network private-dns record-set a add-record --resource-group $RESOURCE_GROUP_NAME --zone-name $ZONE_NAME --record-set-name $RECORD_SET_NAME --ipv4-address $IP_ADDRESS
    ```
 
-### Allow SAP BTP, Kyma Runtime to link with your DNS private zone
+### Allow SAP BTP, Kyma Runtime to Link to Your Private DNS Zone
 
 Tag the DNS private zone with the Kyma shoot name:
 
