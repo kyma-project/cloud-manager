@@ -27,8 +27,8 @@ Before you create VPC DNS Link from a Kyma cluster, you must perform the followi
 
 * Authorize Cloud Manager in the remote cloud provider landscape. For more information, see [Authorizing Cloud Manager in the Remote Cloud Provider](00-31-vpc-peering-authorization.md).
 * Tag the remote network with the Kyma shoot name. For more information, see the following tutorials:
-    * [Allow SAP BTP, Kyma Runtime to link with Your DNS private zone](./tutorials/01-60-10-azure-dns-zone-vpc-link.md#allow-sap-btp-kyma-runtime-to-link-with-your-dns-private-zone) in Create VPC DNS Link in Microsoft Azure.
-    * [Allow SAP BTP, Kyma Runtime to link with Your DNS private resolver](./tutorials/01-60-20-azure-dns-resolver-vpc-link.md#allow-sap-btp-kyma-runtime-to-link-with-your-dns-private-resolver) in Create VPC DNS Link in Microsoft Azure.
+    * [Allow SAP BTP, Kyma Runtime to Link to Your Private DNS Zone](./tutorials/01-60-10-azure-dns-zone-vpc-link.md#allow-sap-btp-kyma-runtime-to-link-to-your-private-dns-zone) in Linking Your Kyma Network to Microsoft Azure Private DNS Zone.
+    * [Allow SAP BTP, Kyma Runtime to Link to Your DNS Private Resolver](./tutorials/01-60-20-azure-dns-resolver-vpc-link.md#allow-sap-btp-kyma-runtime-to-link-to-your-dns-private-resolver) in Linking Your Kyma Network to Microsoft Azure DNS Private Resolver.
 
 
 ## Lifecycle
