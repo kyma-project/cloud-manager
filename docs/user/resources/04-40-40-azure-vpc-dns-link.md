@@ -34,7 +34,7 @@ This table lists the parameters of the given resource together with their descri
 
 ## Sample Custom Resource
 
-See examples of AzureVpcDnsLink custom resource:
+See examples of AzureVpcDnsLink CR:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
