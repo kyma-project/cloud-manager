@@ -38,7 +38,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gardener/gardener v1.132.1
 	github.com/gardener/gardener-extension-provider-aws v1.64.0
-	github.com/gardener/gardener-extension-provider-azure v1.53.0
+	github.com/gardener/gardener-extension-provider-azure v1.55.0
 	github.com/gardener/gardener-extension-provider-gcp v1.47.0
 	github.com/gardener/gardener-extension-provider-openstack v1.49.0
 	github.com/go-logr/logr v1.4.3
@@ -125,7 +125,7 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
+	github.com/google/pprof v0.0.0-20250820193118-f64d9cf942d6 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
