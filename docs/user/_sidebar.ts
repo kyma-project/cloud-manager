@@ -37,7 +37,9 @@ export default [
     { text: 'Using AzureRedisInstance Custom Resources', link: './tutorials/01-40-30-azure-redis-instance' },
     { text: 'Using AwsRedisCluster Custom Resources', link: './tutorials/01-50-10-aws-redis-cluster' },
     { text: 'Using GcpRedisCluster Custom Resources', link: './tutorials/01-50-20-gcp-redis-cluster' },
-    { text: 'Using AzureRedisCluster Custom Resources', link: './tutorials/01-50-30-azure-redis-cluster' }
+    { text: 'Using AzureRedisCluster Custom Resources', link: './tutorials/01-50-30-azure-redis-cluster' },
+    { text: 'Linking Your Kyma Network to Microsoft Azure Private DNS Zone', link: './tutorials/01-60-10-azure-dns-zone-vpc-link'},
+    { text: 'Linking Your Kyma Network to Microsoft Azure DNS Private Resolver', link: './tutorials/01-60-20-azure-dns-resolver-vpc-link'}
     ] },
   { text: 'Glossary', link: './00-10-glossary' }
 ];
