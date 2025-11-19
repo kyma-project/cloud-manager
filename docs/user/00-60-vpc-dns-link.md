@@ -13,7 +13,7 @@ When you configure VPC DNS Link in SAP BTP, Kyma runtime, you depend on the clou
 
 The Cloud Manager module supports the VPC DNS Link feature of the following cloud providers:
 
-* Microsoft Azure [Virtual Network Link](https://learn.microsoft.com/en-us/azure/dns/private-dns-virtual-network-links) and [Ruleset links](https://learn.microsoft.com/en-us/azure/dns/private-resolver-endpoints-rulesets#ruleset-links) <!-- VPC DNS Link for Microsoft Azure is not part of external Help Portal docs-->
+* Microsoft Azure [virtual network links](https://learn.microsoft.com/en-us/azure/dns/private-dns-virtual-network-links) and [ruleset links](https://learn.microsoft.com/en-us/azure/dns/private-resolver-endpoints-rulesets#ruleset-links) <!-- VPC DNS Link for Microsoft Azure is not part of external Help Portal docs-->
 
 You can configure Cloud Manager's VPC DNS Link using a dedicated custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely:
 
