@@ -134,7 +134,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
     az network private-dns link vnet create --name $DNS_ZONE_LINK_NAME --resource-group $RESOURCE_GROUP_NAME --virtual-network $VNET_ID --zone-name $ZONE_NAME
     ```
 
-### Allow SAP BTP, Kyma Runtime to link with your DNS private resolver
+### Allow SAP BTP, Kyma Runtime to Link to Your DNS Private Resolver
 
 1. Tag the DNS forwarding ruleset with the Kyma shoot name:
 
