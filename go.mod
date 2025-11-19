@@ -39,7 +39,7 @@ require (
 	github.com/gardener/gardener v1.132.1
 	github.com/gardener/gardener-extension-provider-aws v1.63.0
 	github.com/gardener/gardener-extension-provider-azure v1.53.0
-	github.com/gardener/gardener-extension-provider-gcp v1.45.1
+	github.com/gardener/gardener-extension-provider-gcp v1.47.0
 	github.com/gardener/gardener-extension-provider-openstack v1.48.1
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.4.0
