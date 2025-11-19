@@ -9,9 +9,9 @@ import (
 )
 
 func TestContextErrors(t *testing.T) {
-	
+
 	t.Run("IgnoreContextCanceled", func(t *testing.T) {
-		
+
 		t.Run("negative", func(t *testing.T) {
 			err := errors.New("some error")
 			err = IgnoreContextCanceled(err)
