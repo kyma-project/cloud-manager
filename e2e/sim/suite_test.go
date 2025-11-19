@@ -112,6 +112,11 @@ var _ = BeforeSuite(func() {
 		},
 	})
 	Expect(client.IgnoreAlreadyExists(err)).NotTo(HaveOccurred(), "failed to create garden namespace")
+
+	Default.SetDefaultEventuallyTimeout(8 * time.Second)
+	Default.SetDefaultEventuallyPollingInterval(200 * time.Millisecond)
+	Default.SetDefaultConsistentlyDuration(2 * time.Second)
+	Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 })
 
 var _ = AfterSuite(func() {

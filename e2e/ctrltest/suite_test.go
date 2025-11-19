@@ -3,6 +3,7 @@ package ctrltest
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/e2e"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
@@ -84,6 +85,11 @@ var _ = BeforeSuite(func() {
 	// Start infra
 	infra.StartKcpControllers(infra.Ctx())
 	Expect(infra.KcpWaitForCacheSync(infra.Ctx())).To(Succeed())
+
+	Default.SetDefaultEventuallyTimeout(8 * time.Second)
+	Default.SetDefaultEventuallyPollingInterval(200 * time.Millisecond)
+	Default.SetDefaultConsistentlyDuration(2 * time.Second)
+	Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
 })
 
 var _ = AfterSuite(func() {
