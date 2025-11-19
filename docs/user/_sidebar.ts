@@ -24,7 +24,8 @@ export default [
     { text: 'AwsRedisCluster Custom Resource', link: './resources/04-50-10-aws-redis-cluster' },   
     { text: 'GcpRedisCluster Custom Resource', link: './resources/04-50-20-gcp-redis-cluster' },
     { text: 'GcpSubnet Custom Resource', link: './resources/04-50-21-gcp-subnet' },
-    { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' }
+    { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' },
+    { text: 'AzureVpcDnsLink Custom Resource', link: './resources/04-40-40-azure-vpc-dns-link' }
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Using NFS in Amazon Web Services', link: './tutorials/01-20-10-aws-nfs-volume' },
