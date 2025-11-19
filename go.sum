@@ -249,8 +249,8 @@ github.com/gardener/gardener v1.132.1 h1:RiKgBWTkdOip3PJoJmG/LQVZ1laupoWqNQAty3O
 github.com/gardener/gardener v1.132.1/go.mod h1:1ZFdXjQhI92e5xgfAdy2g1dEonzCgnucheAOZktwRV8=
 github.com/gardener/gardener-extension-provider-aws v1.64.0 h1:Zj+sXCt7cQavcBOMoFgtE2yJwQP3nK1iSs3kL4yZzIk=
 github.com/gardener/gardener-extension-provider-aws v1.64.0/go.mod h1:msCAajnFS/bWhgEFaogOiJHMgO2dSUc82Z7ldYGlV/Y=
-github.com/gardener/gardener-extension-provider-azure v1.53.0 h1:ATyM+io/DAFzRtXdVBd8949EG5HzyQ90IBFfjfGznvM=
-github.com/gardener/gardener-extension-provider-azure v1.53.0/go.mod h1:vZaxIOEL6PqNhDxjR2xF2q5J7p6QItn1v8HaxVCyz7k=
+github.com/gardener/gardener-extension-provider-azure v1.55.0 h1:N6NeGHDZBQmdsX/OsvBpUgOFo4z7t7fy7egt5Z3uJ70=
+github.com/gardener/gardener-extension-provider-azure v1.55.0/go.mod h1:sieNHz/gFjry2PNKrqSBSetrPq9bwkrAGUang94CUC0=
 github.com/gardener/gardener-extension-provider-gcp v1.47.0 h1:oxhKnxzgBuzg1gTNzHFIn/oyk0o9X/f5CY1wh4c2WOI=
 github.com/gardener/gardener-extension-provider-gcp v1.47.0/go.mod h1:3u1JG8RtwCzhW6PWXM9g0YWbmuwrYgkHFP7iZoo9xwE=
 github.com/gardener/gardener-extension-provider-openstack v1.49.0 h1:5c6ZFt/x3tGtP6bDU7+InnQPK4lFquGnMJqg0Kv4Zms=
@@ -341,8 +341,8 @@ github.com/google/gofuzz v1.2.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
 github.com/google/pprof v0.0.0-20190515194954-54271f7e092f/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
-github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 h1:xhMrHhTJ6zxu3gA4enFM9MLn9AY7613teCdFnlUVbSQ=
-github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5/go.mod h1:5hDyRhoBCxViHszMt12TnOpEI4VVi+U8Gm9iphldiMA=
+github.com/google/pprof v0.0.0-20250820193118-f64d9cf942d6 h1:EEHtgt9IwisQ2AZ4pIsMjahcegHh6rmhqxzIRQIyepY=
+github.com/google/pprof v0.0.0-20250820193118-f64d9cf942d6/go.mod h1:I6V7YzU0XDpsHqbsyrghnFZLO1gwK6NPTNvmetQIk9U=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/s2a-go v0.1.9 h1:LGD7gtMgezd8a/Xak7mEWL0PjoTQFvpRudN895yqKW0=
 github.com/google/s2a-go v0.1.9/go.mod h1:YA0Ei2ZQL3acow2O62kdp9UlnvMmU7kA6Eutn0dXayM=
