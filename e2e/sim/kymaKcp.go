@@ -137,9 +137,11 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		logger.Info("Stopping SKR manager")
 		mi.cancel()
-		mi.wg.Wait()
-		if mi.err != nil {
-			logger.Error(err, "SKR manager stopped with error")
+		if util.WaitWithTimeout(mi.wg, time.Minute) {
+			logger.Error(errors.New("timeout"), "timed out waiting for SKR manager to stop")
+		}
+		if util.IgnoreContextCanceledAndDeadlineExceeded(mi.err) != nil {
+			logger.Error(mi.err, "SKR manager stopped with error")
 		} else {
 			logger.Info("SKR manager stopped")
 		}
@@ -292,7 +294,6 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, fmt.Errorf("error adding Kyma SKR reconciler to manager: %w", err)
 		}
 		mi.controllersAdded = true
-		time.Sleep(100 * time.Millisecond)
 
 		cacheCtx, cacheCancel := context.WithTimeout(mi.ctx, 20*time.Second)
 		defer cacheCancel()
@@ -331,7 +332,7 @@ func (r *simKymaKcp) getOrCreateStartedSkrManager(ctx context.Context, runtimeID
 		return mi, nil
 	}
 
-	m, err := r.clientFactory.CreateSkrManager(ctx, runtimeID)
+	m, err := r.clientFactory.CreateSkrManager(r.startCtx, runtimeID)
 	if err != nil {
 		return nil, fmt.Errorf("error creating SKR manager: %w", err)
 	}
@@ -357,8 +358,6 @@ func (r *simKymaKcp) getOrCreateStartedSkrManager(ctx context.Context, runtimeID
 			logger.Error(err, "error running manager")
 		}
 	}()
-
-	time.Sleep(100 * time.Millisecond)
 
 	cacheCtx, cacheCancel := context.WithTimeout(mi.ctx, 20*time.Second)
 	defer cacheCancel()
