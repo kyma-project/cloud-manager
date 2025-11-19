@@ -4,6 +4,9 @@
 - source: spec.remotePrivateDnsZone
   name: spec.remotePrivateDnsZone
   sort: true
+- source: spec.remoteDnsResolverRuleset
+  name: spec.remoteDnsResolverRuleset
+  sort: true
 - source: spec.remoteTenant
   name: spec.remoteTenant
   sort: true
