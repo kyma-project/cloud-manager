@@ -8,7 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -109,17 +109,14 @@ type testStateFactory struct {
 }
 
 func newTestStateFactory(fakeHttpServer *httptest.Server, objects ...*cloudcontrolv1beta1.NfsInstance) (*testStateFactory, error) {
-
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClientBuilder := fake.NewClientBuilder().
-		WithScheme(kcpScheme)
+		WithScheme(commonscheme.KcpScheme)
 	for _, obj := range objects {
 		kcpClientBuilder = kcpClientBuilder.WithObjects(obj).WithStatusSubresource(obj)
 	}
 	kcpClient := kcpClientBuilder.
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 	fakeFileStoreClientProvider := NewFakeFilestoreClientProvider(fakeHttpServer)
 	factory := NewStateFactory(fakeFileStoreClientProvider, abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"}))
 

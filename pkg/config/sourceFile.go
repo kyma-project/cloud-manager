@@ -2,12 +2,13 @@ package config
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+
 	"github.com/peterbourgon/mergemap"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
 )
 
 type sourceFile struct {

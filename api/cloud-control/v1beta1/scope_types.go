@@ -27,6 +27,8 @@ const (
 	LabelScopeShootName       = "kyma-project.io/shoot-name"
 	LabelScopeRegion          = "kyma-project.io/region"
 	LabelScopeBrokerPlanName  = "kyma-project.io/broker-plan-name"
+	LabelScopeProvider        = "kyma-project.io/provider"
+	LabelRuntimeId            = "kyma-project.io/runtime-id"
 )
 
 var ScopeLabels = []string{

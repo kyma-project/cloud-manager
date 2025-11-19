@@ -2,6 +2,7 @@ package testinfra
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
@@ -23,11 +24,15 @@ type Infra interface {
 	InfraEnv
 	InfraDSL
 
+	ProjectRootDir() string
+
 	KCP() ClusterInfo
 	SKR() ClusterInfo
 	Garden() ClusterInfo
 
 	Stop() error
+
+	FinalizerReport()
 }
 
 type ClusterInfo interface {
@@ -37,6 +42,8 @@ type ClusterInfo interface {
 	Scheme() *runtime.Scheme
 	Client() ctrlclient.Client
 	Cfg() *rest.Config
+	Kubeconfig() []byte
+	KubeconfigFilePath() string
 	EnsureCrds(ctx context.Context) error
 }
 
@@ -53,6 +60,7 @@ type InfraEnv interface {
 	Config() config.Config
 
 	StartKcpControllers(ctx context.Context)
+	KcpWaitForCacheSync(ctx context.Context) error
 	StartSkrControllers(ctx context.Context)
 	Ctx() context.Context
 	stopControllers()

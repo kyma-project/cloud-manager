@@ -8,7 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -169,18 +169,14 @@ type testStateFactory struct {
 
 func newTestStateFactoryWithObj(object client.Object) (*testStateFactory, error) {
 
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&gcpScope).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	skrClient := fake.NewClientBuilder().
-		WithScheme(skrScheme).
+		WithScheme(commonscheme.SkrScheme).
 		WithObjects(&gcpNfsVolume).
 		WithStatusSubresource(&gcpNfsVolume).
 		WithObjects(&awsNfsVolume).
@@ -188,7 +184,7 @@ func newTestStateFactoryWithObj(object client.Object) (*testStateFactory, error)
 		WithObjects(object).
 		WithStatusSubresource(object).
 		Build()
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, env)
 
