@@ -17,7 +17,7 @@ This table lists the parameters of the given resource together with their descri
 |------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------|
 | **remoteLinkName**           | string | Specifies the name of the Virtual Network Link in the remote subscription.                                                                |
 | **remotePrivateDnsZone**     | string | Specifies the ID of the private DNS zone in the remote subscription.                                                                      |
-| **remoteDnsResolverRuleset** | string | Specifies the ID of the DNS resolver forwarding ruleset in the remote subscription.                                                       |
+| **remoteDnsResolverRuleset** | string | Specifies the ID of the DNS private resolver forwarding ruleset in the remote subscription.                                                       |
 | **remoteTenant**             | string | Optional. Specifies the tenant ID of the remote subscription. Defaults to the Kyma cluster underlying cloud provider subscription tenant. |
 
 **Status:**
