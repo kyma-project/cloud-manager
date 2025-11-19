@@ -5,27 +5,28 @@
 
 The `gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io` cluster-scoped custom resource (CR) enables discovering GCP Filestore backups that are accessible to the current cluster. This resource is part of the GcpNfsVolumeBackup family and provides a way to find backups created in other clusters that have granted access through the `AccessibleFrom` field.
 
-## How It Works <!-- {docsify-ignore} -->
+## How It Works
 
 The backup discovery mechanism works through cross-cluster accessibility:
 
-1. **Backup Creation**: A user in cluster A creates a `GcpNfsVolumeBackup` and includes the shoot ID of cluster B in the `AccessibleFrom` field
-2. **Discovery Request**: A user in cluster B applies a `GcpNfsVolumeBackupDiscovery` resource
-3. **Discovery Process**: The controller reconciles the discovery resource and searches for backups that have cluster B's shoot ID in their `AccessibleFrom` configuration
-4. **Results**: Discovered backups are listed in the `.status.availableBackups` field with detailed metadata
+1. **Backup Creation**: A user in cluster A creates a GcpNfsVolumeBackup and includes the shoot ID of cluster B in the **AccessibleFrom** field.
+2. **Discovery Request**: A user in cluster B applies a GcpNfsVolumeBackupDiscovery resource.
+3. **Discovery Process**: The controller reconciles the discovery resource and searches for backups that have cluster B's shoot ID in their **AccessibleFrom** configuration.
+4. **Results**: Discovered backups are listed in the **.status.availableBackups** field with detailed metadata.
 
-**Important**: The discovery resource is reconciled only once when created. The results represent a snapshot in time of available backups at that moment. If new backups are created later and granted access to this cluster, existing discovery resources will not automatically reflect these new backups. To discover newly available backups, you must create a new `GcpNfsVolumeBackupDiscovery` resource.
+> [!NOTE]
+> The discovery resource is reconciled only once when created. The results represent a snapshot in time of available backups at that moment. If new backups are created later and granted access to this cluster, existing discovery resources will not automatically reflect these new backups. To discover newly available backups, you must create a new GcpNfsVolumeBackupDiscovery resource.
 
 This enables secure cross-cluster backup sharing within the same global account and GCP project.
 
-## Use Cases <!-- {docsify-ignore} -->
+## Use Cases
 
 - **Disaster Recovery**: Discover backups from a failed cluster to restore data in a new cluster
 - **Data Migration**: Find backups created in one environment to restore in another
 - **Cross-Environment Access**: Share specific backups between development, staging, and production clusters
 - **Backup Inventory**: Get an overview of all accessible backups from other clusters
 
-## Specification <!-- {docsify-ignore} -->
+## Specification
 
 This table lists the parameters of the given resource together with their descriptions:
 
@@ -57,7 +58,7 @@ The GcpNfsVolumeBackupDiscovery resource currently has an empty specification. D
 | **availableBackups.volumeNamespace**          | string     | The namespace of the GcpNfsVolume that was backed up.                                                                              |
 | **availableBackups.creationTime**             | string     | The timestamp when the backup was created.                                                                                         |
 
-## Sample Custom Resource <!-- {docsify-ignore} -->
+## Sample Custom Resource
 
 See an exemplary GcpNfsVolumeBackupDiscovery custom resource:
 
@@ -106,7 +107,7 @@ status:
       message: Successfully discovered available Nfs Volume Backups from GCP
 ```
 
-## Related Resources <!-- {docsify-ignore} -->
+## Related Resources
 
 - [GcpNfsVolumeBackup](./04-20-21-gcp-nfs-volume-backup.md) - Create backups of GCP Filestore volumes
 - [GcpNfsVolumeRestore](./04-20-23-gcp-nfs-volume-restore.md) - Restore volumes from discovered backups
