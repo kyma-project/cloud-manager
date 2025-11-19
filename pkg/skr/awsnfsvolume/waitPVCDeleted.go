@@ -16,8 +16,7 @@ func waitPVCDeleted(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	if state.PVC == nil {
-		logger.Info("PersistentVolumeClaim is deleted")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Waiting for PersistentVolumeClaim to be deleted")

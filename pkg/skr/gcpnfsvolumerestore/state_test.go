@@ -10,7 +10,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -166,19 +166,14 @@ func NewFakeFileRestoreClientProvider(fakeHttpServer *httptest.Server) client.Cl
 }
 
 func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRestore *cloudresourcesv1beta1.GcpNfsVolumeRestore) (*testStateFactory, error) {
-
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&scope).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	skrClient := fake.NewClientBuilder().
-		WithScheme(skrScheme).
+		WithScheme(commonscheme.SkrScheme).
 		WithObjects(&gcpNfsVolume).
 		WithStatusSubresource(&gcpNfsVolume).
 		WithObjects(&gcpNfsVolumeBackup).
@@ -186,7 +181,7 @@ func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRes
 		WithObjects(gcpNfsVolumeRestore).
 		WithStatusSubresource(gcpNfsVolumeRestore).
 		Build()
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 	nfsRestoreClient := NewFakeFileRestoreClientProvider(fakeHttpServer)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsRestoreClient, env)

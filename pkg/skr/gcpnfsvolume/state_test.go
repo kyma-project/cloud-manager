@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -313,10 +313,8 @@ type testStateFactory struct {
 }
 
 func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup, volumes ...*cloudresourcesv1beta1.GcpNfsVolume) (*testStateFactory, error) {
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&gcpNfsInstance).
 		WithStatusSubresource(&gcpNfsInstance).
 		WithObjects(&gcpNfsInstanceToDelete).
@@ -324,12 +322,10 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 		WithObjects(&kcpScope).
 		WithStatusSubresource(&kcpScope).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	clientBuilder := fake.NewClientBuilder().
-		WithScheme(skrScheme)
+		WithScheme(commonscheme.SkrScheme)
 	for _, volume := range volumes {
 		clientBuilder = clientBuilder.WithObjects(volume).
 			WithStatusSubresource(volume)
@@ -341,7 +337,7 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 	}
 	skrClient := clientBuilder.Build()
 
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster)
 

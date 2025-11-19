@@ -7,7 +7,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
@@ -52,9 +52,8 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				WithObjects(gcpNfsVolume).
 				WithStatusSubresource(gcpNfsVolume).
 				WithObjects(pvc).

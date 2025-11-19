@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/api"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -161,20 +161,15 @@ type testStateFactory struct {
 }
 
 func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVolumeRestore) (*testStateFactory, error) {
-
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&scope).
 		//WithObjects(&awsNfsInstance).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	skrClient := fake.NewClientBuilder().
-		WithScheme(skrScheme).
+		WithScheme(commonscheme.SkrScheme).
 		WithObjects(&awsNfsVolume).
 		WithStatusSubresource(&awsNfsVolume).
 		WithObjects(&awsNfsVolumeBackup).
@@ -182,7 +177,7 @@ func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVol
 		WithObjects(awsNfsVolumeRestore).
 		WithStatusSubresource(awsNfsVolumeRestore).
 		Build()
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := newStateFactory(

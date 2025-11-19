@@ -1,0 +1,2144 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: runtimes.infrastructuremanager.kyma-project.io
+spec:
+  group: infrastructuremanager.kyma-project.io
+  names:
+    kind: Runtime
+    listKind: RuntimeList
+    plural: runtimes
+    singular: runtime
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.shoot.provider.type
+          name: Provider
+          type: string
+        - jsonPath: .spec.shoot.region
+          name: Region
+          type: string
+        - jsonPath: .status.state
+          name: STATE
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1
+      schema:
+        openAPIV3Schema:
+          description: Runtime is the Schema for the runtimes API
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: RuntimeSpec defines the desired state of Runtime
+              properties:
+                imageRegistryCache:
+                  items:
+                    properties:
+                      config:
+                        description: RegistryCacheConfigSpec defines the desired state
+                          of RegistryCacheConfig.
+                        properties:
+                          garbageCollection:
+                            description: |-
+                              GarbageCollection contains settings for the garbage collection of content from the cache.
+                              Defaults to enabled garbage collection.
+                            properties:
+                              ttl:
+                                default: 168h
+                                description: |-
+                                  TTL is the time to live of a blob in the cache.
+                                  Set to 0s to disable the garbage collection.
+                                  Defaults to 168h (7 days).
+                                type: string
+                            required:
+                              - ttl
+                            type: object
+                          http:
+                            description: HTTP contains settings for the HTTP server
+                              that hosts the registry cache.
+                            properties:
+                              tls:
+                                description: |-
+                                  TLS indicates whether TLS is enabled for the HTTP server of the registry cache.
+                                  Defaults to true.
+                                type: boolean
+                            type: object
+                          proxy:
+                            description: Proxy contains settings for a proxy used in
+                              the registry cache.
+                            properties:
+                              httpProxy:
+                                description: HTTPProxy field represents the proxy server
+                                  for HTTP connections which is used by the registry
+                                  cache.
+                                type: string
+                              httpsProxy:
+                                description: HTTPSProxy field represents the proxy server
+                                  for HTTPS connections which is used by the registry
+                                  cache.
+                                type: string
+                            type: object
+                          remoteURL:
+                            description: |-
+                              RemoteURL is the remote registry URL. The format must be `<scheme><host>[:<port>]` where
+                              `<scheme>` is `https://` or `http://` and `<host>[:<port>]` corresponds to the Upstream
+                              
+                              If defined, the value is set as `proxy.remoteurl` in the registry [configuration](https://github.com/distribution/distribution/blob/main/docs/content/recipes/mirror.md#configure-the-cache)
+                              and in containerd configuration as `server` field in [hosts.toml](https://github.com/containerd/containerd/blob/main/docs/hosts.md#server-field) file.
+                            type: string
+                          secretReferenceName:
+                            description: SecretReferenceName is the name of the reference
+                              for the Secret containing the upstream registry credentials.
+                            type: string
+                          upstream:
+                            description: Upstream is the remote registry host to cache.
+                            type: string
+                          volume:
+                            description: Volume contains settings for the registry cache
+                              volume.
+                            properties:
+                              size:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                default: 10Gi
+                                description: |-
+                                  Size is the size of the registry cache volume.
+                                  Defaults to 10Gi.
+                                  This field is immutable.
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              storageClassName:
+                                description: |-
+                                  StorageClassName is the name of the StorageClass used by the registry cache volume.
+                                  This field is immutable.
+                                type: string
+                            type: object
+                        required:
+                          - upstream
+                        type: object
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      uid:
+                        type: string
+                    required:
+                      - config
+                      - name
+                      - namespace
+                      - uid
+                    type: object
+                  type: array
+                security:
+                  properties:
+                    administrators:
+                      items:
+                        type: string
+                      type: array
+                    networking:
+                      properties:
+                        filter:
+                          properties:
+                            egress:
+                              description: Egress filtering is a default filtering mode
+                                for `shoot-networking-fitler` extension.
+                              properties:
+                                enabled:
+                                  type: boolean
+                              required:
+                                - enabled
+                              type: object
+                            ingress:
+                              description: |-
+                                Ingress filtering can be enabled for `shoot-networking-fitler` extension with
+                                the blackholing feature, see https://github.com/gardener/gardener-extension-shoot-networking-filter/blob/master/docs/usage/shoot-networking-filter.md#ingress-filtering
+                              properties:
+                                enabled:
+                                  description: It means that the blackholing filtering
+                                    is enabled on the per shoot level.
+                                  type: boolean
+                              required:
+                                - enabled
+                              type: object
+                          required:
+                            - egress
+                          type: object
+                      required:
+                        - filter
+                      type: object
+                  required:
+                    - administrators
+                    - networking
+                  type: object
+                shoot:
+                  properties:
+                    controlPlane:
+                      description: ControlPlane holds information about the general
+                        settings for the control plane of a shoot.
+                      properties:
+                        highAvailability:
+                          description: |-
+                            HighAvailability holds the configuration settings for high availability of the
+                            control plane of a shoot.
+                          properties:
+                            failureTolerance:
+                              description: FailureTolerance holds information about
+                                failure tolerance level of a highly available resource.
+                              properties:
+                                type:
+                                  description: Type specifies the type of failure that
+                                    the highly available resource can tolerate
+                                  type: string
+                              required:
+                                - type
+                              type: object
+                          required:
+                            - failureTolerance
+                          type: object
+                      type: object
+                    enforceSeedLocation:
+                      type: boolean
+                    kubernetes:
+                      properties:
+                        kubeAPIServer:
+                          properties:
+                            additionalOidcConfig:
+                              items:
+                                description: |-
+                                  OIDCConfig contains configuration settings for the OIDC provider.
+                                  Note: Descriptions were taken from the Kubernetes documentation.
+                                properties:
+                                  caBundle:
+                                    description: If set, the OpenID server's certificate
+                                      will be verified by one of the authorities in
+                                      the oidc-ca-file, otherwise the host's root CA
+                                      set will be used.
+                                    type: string
+                                  clientAuthentication:
+                                    description: |-
+                                      ClientAuthentication can optionally contain client configuration used for kubeconfig generation.
+                                      
+                                      Deprecated: This field has no implemented use and will be forbidden starting from Kubernetes 1.31.
+                                      It's use was planned for genereting OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
+                                    properties:
+                                      extraConfig:
+                                        additionalProperties:
+                                          type: string
+                                        description: |-
+                                          Extra configuration added to kubeconfig's auth-provider.
+                                          Must not be any of idp-issuer-url, client-id, client-secret, idp-certificate-authority, idp-certificate-authority-data, id-token or refresh-token
+                                        type: object
+                                      secret:
+                                        description: The client Secret for the OpenID
+                                          Connect client.
+                                        type: string
+                                    type: object
+                                  clientID:
+                                    description: The client ID for the OpenID Connect
+                                      client, must be set.
+                                    type: string
+                                  groupsClaim:
+                                    description: If provided, the name of a custom OpenID
+                                      Connect claim for specifying user groups. The
+                                      claim value is expected to be a string or array
+                                      of strings. This flag is experimental, please
+                                      see the authentication documentation for further
+                                      details.
+                                    type: string
+                                  groupsPrefix:
+                                    description: If provided, all groups will be prefixed
+                                      with this value to prevent conflicts with other
+                                      authentication strategies.
+                                    type: string
+                                  issuerURL:
+                                    description: The URL of the OpenID issuer, only
+                                      HTTPS scheme will be accepted. Used to verify
+                                      the OIDC JSON Web Token (JWT).
+                                    type: string
+                                  jwks:
+                                    format: byte
+                                    type: string
+                                  requiredClaims:
+                                    additionalProperties:
+                                      type: string
+                                    description: key=value pairs that describes a required
+                                      claim in the ID Token. If set, the claim is verified
+                                      to be present in the ID Token with a matching
+                                      value.
+                                    type: object
+                                  signingAlgs:
+                                    description: List of allowed JOSE asymmetric signing
+                                      algorithms. JWTs with a 'alg' header value not
+                                      in this list will be rejected. Values are defined
+                                      by RFC 7518 https://tools.ietf.org/html/rfc7518#section-3.1
+                                    items:
+                                      type: string
+                                    type: array
+                                  usernameClaim:
+                                    description: The OpenID claim to use as the user
+                                      name. Note that claims other than the default
+                                      ('sub') is not guaranteed to be unique and immutable.
+                                      This flag is experimental, please see the authentication
+                                      documentation for further details. (default "sub")
+                                    type: string
+                                  usernamePrefix:
+                                    description: If provided, all usernames will be
+                                      prefixed with this value. If not provided, username
+                                      claims other than 'email' are prefixed by the
+                                      issuer URL to avoid clashes. To skip any prefixing,
+                                      provide the value '-'.
+                                    type: string
+                                type: object
+                              type: array
+                            oidcConfig:
+                              description: |-
+                                OIDCConfig contains configuration settings for the OIDC provider.
+                                Note: Descriptions were taken from the Kubernetes documentation.
+                              properties:
+                                caBundle:
+                                  description: If set, the OpenID server's certificate
+                                    will be verified by one of the authorities in the
+                                    oidc-ca-file, otherwise the host's root CA set will
+                                    be used.
+                                  type: string
+                                clientAuthentication:
+                                  description: |-
+                                    ClientAuthentication can optionally contain client configuration used for kubeconfig generation.
+                                    
+                                    Deprecated: This field has no implemented use and will be forbidden starting from Kubernetes 1.31.
+                                    It's use was planned for genereting OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
+                                  properties:
+                                    extraConfig:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        Extra configuration added to kubeconfig's auth-provider.
+                                        Must not be any of idp-issuer-url, client-id, client-secret, idp-certificate-authority, idp-certificate-authority-data, id-token or refresh-token
+                                      type: object
+                                    secret:
+                                      description: The client Secret for the OpenID
+                                        Connect client.
+                                      type: string
+                                  type: object
+                                clientID:
+                                  description: The client ID for the OpenID Connect
+                                    client, must be set.
+                                  type: string
+                                groupsClaim:
+                                  description: If provided, the name of a custom OpenID
+                                    Connect claim for specifying user groups. The claim
+                                    value is expected to be a string or array of strings.
+                                    This flag is experimental, please see the authentication
+                                    documentation for further details.
+                                  type: string
+                                groupsPrefix:
+                                  description: If provided, all groups will be prefixed
+                                    with this value to prevent conflicts with other
+                                    authentication strategies.
+                                  type: string
+                                issuerURL:
+                                  description: The URL of the OpenID issuer, only HTTPS
+                                    scheme will be accepted. Used to verify the OIDC
+                                    JSON Web Token (JWT).
+                                  type: string
+                                requiredClaims:
+                                  additionalProperties:
+                                    type: string
+                                  description: key=value pairs that describes a required
+                                    claim in the ID Token. If set, the claim is verified
+                                    to be present in the ID Token with a matching value.
+                                  type: object
+                                signingAlgs:
+                                  description: List of allowed JOSE asymmetric signing
+                                    algorithms. JWTs with a 'alg' header value not in
+                                    this list will be rejected. Values are defined by
+                                    RFC 7518 https://tools.ietf.org/html/rfc7518#section-3.1
+                                  items:
+                                    type: string
+                                  type: array
+                                usernameClaim:
+                                  description: The OpenID claim to use as the user name.
+                                    Note that claims other than the default ('sub')
+                                    is not guaranteed to be unique and immutable. This
+                                    flag is experimental, please see the authentication
+                                    documentation for further details. (default "sub")
+                                  type: string
+                                usernamePrefix:
+                                  description: If provided, all usernames will be prefixed
+                                    with this value. If not provided, username claims
+                                    other than 'email' are prefixed by the issuer URL
+                                    to avoid clashes. To skip any prefixing, provide
+                                    the value '-'.
+                                  type: string
+                              type: object
+                          type: object
+                        version:
+                          type: string
+                      type: object
+                    licenceType:
+                      type: string
+                    name:
+                      type: string
+                    networking:
+                      properties:
+                        nodes:
+                          type: string
+                        pods:
+                          type: string
+                        services:
+                          type: string
+                        type:
+                          type: string
+                      required:
+                        - nodes
+                        - pods
+                        - services
+                      type: object
+                    platformRegion:
+                      type: string
+                    provider:
+                      properties:
+                        additionalWorkers:
+                          items:
+                            description: Worker is the base definition of a worker group.
+                            properties:
+                              annotations:
+                                additionalProperties:
+                                  type: string
+                                description: Annotations is a map of key/value pairs
+                                  for annotations for all the `Node` objects in this
+                                  worker pool.
+                                type: object
+                              caBundle:
+                                description: CABundle is a certificate bundle which
+                                  will be installed onto every machine of this worker
+                                  pool.
+                                type: string
+                              clusterAutoscaler:
+                                description: ClusterAutoscaler contains the cluster
+                                  autoscaler configurations for the worker pool.
+                                properties:
+                                  maxNodeProvisionTime:
+                                    description: MaxNodeProvisionTime defines how long
+                                      CA waits for node to be provisioned.
+                                    type: string
+                                  scaleDownGpuUtilizationThreshold:
+                                    description: ScaleDownGpuUtilizationThreshold defines
+                                      the threshold in fraction (0.0 - 1.0) of gpu resources
+                                      under which a node is being removed.
+                                    type: number
+                                  scaleDownUnneededTime:
+                                    description: ScaleDownUnneededTime defines how long
+                                      a node should be unneeded before it is eligible
+                                      for scale down.
+                                    type: string
+                                  scaleDownUnreadyTime:
+                                    description: ScaleDownUnreadyTime defines how long
+                                      an unready node should be unneeded before it is
+                                      eligible for scale down.
+                                    type: string
+                                  scaleDownUtilizationThreshold:
+                                    description: ScaleDownUtilizationThreshold defines
+                                      the threshold in fraction (0.0 - 1.0) under which
+                                      a node is being removed.
+                                    type: number
+                                type: object
+                              controlPlane:
+                                description: |-
+                                  ControlPlane specifies that the shoot cluster control plane components should be running in this worker pool.
+                                  This is only relevant for autonomous shoot clusters.
+                                properties:
+                                  backup:
+                                    description: |-
+                                      Backup holds the object store configuration for the backups of shoot (currently only etcd).
+                                      If it is not specified, then there won't be any backups taken.
+                                    properties:
+                                      credentialsRef:
+                                        description: |-
+                                          CredentialsRef is reference to a resource holding the credentials used for
+                                          authentication with the object store service where the backups are stored.
+                                          Supported referenced resources are v1.Secrets and
+                                          security.gardener.cloud/v1alpha1.WorkloadIdentity
+                                        properties:
+                                          apiVersion:
+                                            description: API version of the referent.
+                                            type: string
+                                          fieldPath:
+                                            description: |-
+                                              If referring to a piece of an object instead of an entire object, this string
+                                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                              the event) or if no container name is specified "spec.containers[2]" (container with
+                                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                              referencing a part of an object.
+                                            type: string
+                                          kind:
+                                            description: |-
+                                              Kind of the referent.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                            type: string
+                                          name:
+                                            description: |-
+                                              Name of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          namespace:
+                                            description: |-
+                                              Namespace of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                            type: string
+                                          resourceVersion:
+                                            description: |-
+                                              Specific resourceVersion to which this reference is made, if any.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                            type: string
+                                          uid:
+                                            description: |-
+                                              UID of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                            type: string
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      provider:
+                                        description: Provider is a provider name. This
+                                          field is immutable.
+                                        type: string
+                                      providerConfig:
+                                        description: ProviderConfig is the configuration
+                                          passed to BackupBucket resource.
+                                        type: object
+                                        x-kubernetes-preserve-unknown-fields: true
+                                      region:
+                                        description: Region is a region name. This field
+                                          is immutable.
+                                        type: string
+                                      secretRef:
+                                        description: |-
+                                          SecretRef is a reference to a Secret object containing the cloud provider credentials for
+                                          the object store where backups should be stored. It should have enough privileges to manipulate
+                                          the objects as well as buckets.
+                                          Deprecated: This field will be removed after v1.121.0 has been released. Use `CredentialsRef` instead.
+                                          Until removed, this field is synced with the `CredentialsRef` field when it refers to a secret.
+                                        properties:
+                                          name:
+                                            description: name is unique within a namespace
+                                              to reference a secret resource.
+                                            type: string
+                                          namespace:
+                                            description: namespace defines the space
+                                              within which the secret name must be unique.
+                                            type: string
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                    required:
+                                      - provider
+                                      - secretRef
+                                    type: object
+                                type: object
+                              cri:
+                                description: |-
+                                  CRI contains configurations of CRI support of every machine in the worker pool.
+                                  Defaults to a CRI with name `containerd`.
+                                properties:
+                                  containerRuntimes:
+                                    description: ContainerRuntimes is the list of the
+                                      required container runtimes supported for a worker
+                                      pool.
+                                    items:
+                                      description: ContainerRuntime contains information
+                                        about worker's available container runtime
+                                      properties:
+                                        providerConfig:
+                                          description: ProviderConfig is the configuration
+                                            passed to container runtime resource.
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                        type:
+                                          description: Type is the type of the Container
+                                            Runtime.
+                                          type: string
+                                      required:
+                                        - type
+                                      type: object
+                                    type: array
+                                  name:
+                                    description: The name of the CRI library. Supported
+                                      values are `containerd`.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              dataVolumes:
+                                description: DataVolumes contains a list of additional
+                                  worker volumes.
+                                items:
+                                  description: DataVolume contains information about
+                                    a data volume.
+                                  properties:
+                                    encrypted:
+                                      description: Encrypted determines if the volume
+                                        should be encrypted.
+                                      type: boolean
+                                    name:
+                                      description: Name of the volume to make it referenceable.
+                                      type: string
+                                    size:
+                                      description: VolumeSize is the size of the volume.
+                                      type: string
+                                    type:
+                                      description: Type is the type of the volume.
+                                      type: string
+                                  required:
+                                    - name
+                                    - size
+                                  type: object
+                                type: array
+                              kubeletDataVolumeName:
+                                description: KubeletDataVolumeName contains the name
+                                  of a dataVolume that should be used for storing kubelet
+                                  state.
+                                type: string
+                              kubernetes:
+                                description: Kubernetes contains configuration for Kubernetes
+                                  components related to this worker pool.
+                                properties:
+                                  kubelet:
+                                    description: |-
+                                      Kubelet contains configuration settings for all kubelets of this worker pool.
+                                      If set, all `spec.kubernetes.kubelet` settings will be overwritten for this worker pool (no merge of settings).
+                                    properties:
+                                      containerLogMaxFiles:
+                                        description: Maximum number of container log
+                                          files that can be present for a container.
+                                        format: int32
+                                        type: integer
+                                      containerLogMaxSize:
+                                        anyOf:
+                                          - type: integer
+                                          - type: string
+                                        description: |-
+                                          A quantity defines the maximum size of the container log file before it is rotated. For example: "5Mi" or "256Ki".
+                                          Default: 100Mi
+                                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                        x-kubernetes-int-or-string: true
+                                      cpuCFSQuota:
+                                        description: CPUCFSQuota allows you to disable/enable
+                                          CPU throttling for Pods.
+                                        type: boolean
+                                      cpuManagerPolicy:
+                                        description: 'CPUManagerPolicy allows to set
+                                        alternative CPU management policies (default:
+                                        none).'
+                                        type: string
+                                      evictionHard:
+                                        description: |-
+                                          EvictionHard describes a set of eviction thresholds (e.g. memory.available<1Gi) that if met would trigger a Pod eviction.
+                                          Default:
+                                            memory.available:   "100Mi/1Gi/5%"
+                                            nodefs.available:   "5%"
+                                            nodefs.inodesFree:  "5%"
+                                            imagefs.available:  "5%"
+                                            imagefs.inodesFree: "5%"
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the threshold
+                                              for the free disk space in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the threshold
+                                              for the available inodes in the imagefs
+                                              filesystem.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the threshold
+                                              for the free memory on the host server.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the threshold
+                                              for the free disk space in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the threshold
+                                              for the available inodes in the nodefs
+                                              filesystem.
+                                            type: string
+                                        type: object
+                                      evictionMaxPodGracePeriod:
+                                        description: |-
+                                          EvictionMaxPodGracePeriod describes the maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
+                                          Default: 90
+                                        format: int32
+                                        type: integer
+                                      evictionMinimumReclaim:
+                                        description: |-
+                                          EvictionMinimumReclaim configures the amount of resources below the configured eviction threshold that the kubelet attempts to reclaim whenever the kubelet observes resource pressure.
+                                          Default: 0 for each resource
+                                        properties:
+                                          imageFSAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: ImageFSAvailable is the threshold
+                                              for the disk space reclaim in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          imageFSInodesFree:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: ImageFSInodesFree is the threshold
+                                              for the inodes reclaim in the imagefs
+                                              filesystem.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memoryAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: MemoryAvailable is the threshold
+                                              for the memory reclaim on the host server.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          nodeFSAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: NodeFSAvailable is the threshold
+                                              for the disk space reclaim in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          nodeFSInodesFree:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: NodeFSInodesFree is the threshold
+                                              for the inodes reclaim in the nodefs filesystem.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                      evictionPressureTransitionPeriod:
+                                        description: |-
+                                          EvictionPressureTransitionPeriod is the duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
+                                          Default: 4m0s
+                                        type: string
+                                      evictionSoft:
+                                        description: |-
+                                          EvictionSoft describes a set of eviction thresholds (e.g. memory.available<1.5Gi) that if met over a corresponding grace period would trigger a Pod eviction.
+                                          Default:
+                                            memory.available:   "200Mi/1.5Gi/10%"
+                                            nodefs.available:   "10%"
+                                            nodefs.inodesFree:  "10%"
+                                            imagefs.available:  "10%"
+                                            imagefs.inodesFree: "10%"
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the threshold
+                                              for the free disk space in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the threshold
+                                              for the available inodes in the imagefs
+                                              filesystem.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the threshold
+                                              for the free memory on the host server.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the threshold
+                                              for the free disk space in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the threshold
+                                              for the available inodes in the nodefs
+                                              filesystem.
+                                            type: string
+                                        type: object
+                                      evictionSoftGracePeriod:
+                                        description: |-
+                                          EvictionSoftGracePeriod describes a set of eviction grace periods (e.g. memory.available=1m30s) that correspond to how long a soft eviction threshold must hold before triggering a Pod eviction.
+                                          Default:
+                                            memory.available:   1m30s
+                                            nodefs.available:   1m30s
+                                            nodefs.inodesFree:  1m30s
+                                            imagefs.available:  1m30s
+                                            imagefs.inodesFree: 1m30s
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the grace
+                                              period for the ImageFSAvailable eviction
+                                              threshold.
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the grace
+                                              period for the ImageFSInodesFree eviction
+                                              threshold.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the grace
+                                              period for the MemoryAvailable eviction
+                                              threshold.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the grace
+                                              period for the NodeFSAvailable eviction
+                                              threshold.
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the grace
+                                              period for the NodeFSInodesFree eviction
+                                              threshold.
+                                            type: string
+                                        type: object
+                                      failSwapOn:
+                                        description: FailSwapOn makes the Kubelet fail
+                                          to start if swap is enabled on the node. (default
+                                          true).
+                                        type: boolean
+                                      featureGates:
+                                        additionalProperties:
+                                          type: boolean
+                                        description: FeatureGates contains information
+                                          about enabled feature gates.
+                                        type: object
+                                      imageGCHighThresholdPercent:
+                                        description: |-
+                                          ImageGCHighThresholdPercent describes the percent of the disk usage which triggers image garbage collection.
+                                          Default: 50
+                                        format: int32
+                                        type: integer
+                                      imageGCLowThresholdPercent:
+                                        description: |-
+                                          ImageGCLowThresholdPercent describes the percent of the disk to which garbage collection attempts to free.
+                                          Default: 40
+                                        format: int32
+                                        type: integer
+                                      imageMaximumGCAge:
+                                        description: |-
+                                          ImageMaximumGCAge is the maximum age of an unused image before it can be garbage collected.
+                                          Default: 0s
+                                        type: string
+                                      imageMinimumGCAge:
+                                        description: |-
+                                          ImageMinimumGCAge is the minimum age of an unused image before it can be garbage collected.
+                                          Default: 2m0s
+                                        type: string
+                                      kubeReserved:
+                                        description: |-
+                                          KubeReserved is the configuration for resources reserved for kubernetes node components (mainly kubelet and container runtime).
+                                          When updating these values, be aware that cgroup resizes may not succeed on active worker nodes. Look for the NodeAllocatableEnforced event to determine if the configuration was applied.
+                                          Default: cpu=80m,memory=1Gi,pid=20k
+                                        properties:
+                                          cpu:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: CPU is the reserved cpu.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          ephemeralStorage:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: EphemeralStorage is the reserved
+                                              ephemeral-storage.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memory:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: Memory is the reserved memory.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          pid:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: PID is the reserved process-ids.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                      maxParallelImagePulls:
+                                        description: |-
+                                          MaxParallelImagePulls describes the maximum number of image pulls in parallel. The value must be a positive number.
+                                          This field cannot be set if SerializeImagePulls (pull one image at a time) is set to true.
+                                          Setting it to nil means no limit.
+                                          Default: nil
+                                        format: int32
+                                        type: integer
+                                      maxPods:
+                                        description: |-
+                                          MaxPods is the maximum number of Pods that are allowed by the Kubelet.
+                                          Default: 110
+                                        format: int32
+                                        type: integer
+                                      memorySwap:
+                                        description: MemorySwap configures swap memory
+                                          available to container workloads.
+                                        properties:
+                                          swapBehavior:
+                                            description: |-
+                                              SwapBehavior configures swap memory available to container workloads. May be one of {"LimitedSwap", "UnlimitedSwap"}
+                                              defaults to: LimitedSwap
+                                            type: string
+                                        type: object
+                                      podPidsLimit:
+                                        description: PodPIDsLimit is the maximum number
+                                          of process IDs per pod allowed by the kubelet.
+                                        format: int64
+                                        type: integer
+                                      protectKernelDefaults:
+                                        description: |-
+                                          ProtectKernelDefaults ensures that the kernel tunables are equal to the kubelet defaults.
+                                          Defaults to true.
+                                        type: boolean
+                                      registryBurst:
+                                        description: |-
+                                          RegistryBurst is the maximum size of bursty pulls, temporarily allows pulls to burst to this number,
+                                          while still not exceeding registryPullQPS. The value must not be a negative number.
+                                          Only used if registryPullQPS is greater than 0.
+                                          Default: 10
+                                        format: int32
+                                        type: integer
+                                      registryPullQPS:
+                                        description: |-
+                                          RegistryPullQPS is the limit of registry pulls per second. The value must not be a negative number.
+                                          Setting it to 0 means no limit.
+                                          Default: 5
+                                        format: int32
+                                        type: integer
+                                      seccompDefault:
+                                        description: SeccompDefault enables the use
+                                          of `RuntimeDefault` as the default seccomp
+                                          profile for all workloads.
+                                        type: boolean
+                                      serializeImagePulls:
+                                        description: |-
+                                          SerializeImagePulls describes whether the images are pulled one at a time.
+                                          Default: true
+                                        type: boolean
+                                      streamingConnectionIdleTimeout:
+                                        description: |-
+                                          StreamingConnectionIdleTimeout is the maximum time a streaming connection can be idle before the connection is automatically closed.
+                                          This field cannot be set lower than "30s" or greater than "4h".
+                                          Default: "5m".
+                                        type: string
+                                      systemReserved:
+                                        description: |-
+                                          SystemReserved is the configuration for resources reserved for system processes not managed by kubernetes (e.g. journald).
+                                          When updating these values, be aware that cgroup resizes may not succeed on active worker nodes. Look for the NodeAllocatableEnforced event to determine if the configuration was applied.
+                                          
+                                          Deprecated: Separately configuring resource reservations for system processes is deprecated in Gardener and will be forbidden starting from Kubernetes 1.31.
+                                          Please merge existing resource reservations into the kubeReserved field.
+                                        properties:
+                                          cpu:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: CPU is the reserved cpu.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          ephemeralStorage:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: EphemeralStorage is the reserved
+                                              ephemeral-storage.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memory:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: Memory is the reserved memory.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          pid:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: PID is the reserved process-ids.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                    type: object
+                                  version:
+                                    description: |-
+                                      Version is the semantic Kubernetes version to use for the Kubelet in this Worker Group.
+                                      If not specified the kubelet version is derived from the global shoot cluster kubernetes version.
+                                      version must be equal or lower than the version of the shoot kubernetes version.
+                                      Only one minor version difference to other worker groups and global kubernetes version is allowed.
+                                    type: string
+                                type: object
+                              labels:
+                                additionalProperties:
+                                  type: string
+                                description: Labels is a map of key/value pairs for
+                                  labels for all the `Node` objects in this worker pool.
+                                type: object
+                              machine:
+                                description: Machine contains information about the
+                                  machine type and image.
+                                properties:
+                                  architecture:
+                                    description: Architecture is CPU architecture of
+                                      machines in this worker pool.
+                                    type: string
+                                  image:
+                                    description: |-
+                                      Image holds information about the machine image to use for all nodes of this pool. It will default to the
+                                      latest version of the first image stated in the referenced CloudProfile if no value has been provided.
+                                    properties:
+                                      name:
+                                        description: Name is the name of the image.
+                                        type: string
+                                      providerConfig:
+                                        description: ProviderConfig is the shoot's individual
+                                          configuration passed to an extension resource.
+                                        type: object
+                                        x-kubernetes-preserve-unknown-fields: true
+                                      version:
+                                        description: |-
+                                          Version is the version of the shoot's image.
+                                          If version is not provided, it will be defaulted to the latest version from the CloudProfile.
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
+                                  type:
+                                    description: Type is the machine type of the worker
+                                      group.
+                                    type: string
+                                required:
+                                  - type
+                                type: object
+                              machineControllerManager:
+                                description: MachineControllerManagerSettings contains
+                                  configurations for different worker-pools. Eg. MachineDrainTimeout,
+                                  MachineHealthTimeout.
+                                properties:
+                                  disableHealthTimeout:
+                                    description: |-
+                                      DisableHealthTimeout if set to true, health timeout will be ignored. Leading to machine never being declared failed.
+                                      This is intended to be used only for in-place updates.
+                                    type: boolean
+                                  inPlaceUpdateTimeout:
+                                    description: MachineInPlaceUpdateTimeout is the
+                                      timeout after which in-place update is declared
+                                      failed.
+                                    type: string
+                                  machineCreationTimeout:
+                                    description: MachineCreationTimeout is the period
+                                      after which creation of the machine is declared
+                                      failed.
+                                    type: string
+                                  machineDrainTimeout:
+                                    description: MachineDrainTimeout is the period after
+                                      which machine is forcefully deleted.
+                                    type: string
+                                  machineHealthTimeout:
+                                    description: MachineHealthTimeout is the period
+                                      after which machine is declared failed.
+                                    type: string
+                                  maxEvictRetries:
+                                    description: MaxEvictRetries are the number of eviction
+                                      retries on a pod after which drain is declared
+                                      failed, and forceful deletion is triggered.
+                                    format: int32
+                                    type: integer
+                                  nodeConditions:
+                                    description: NodeConditions are the set of conditions
+                                      if set to true for the period of MachineHealthTimeout,
+                                      machine will be declared failed.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              maxSurge:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                description: |-
+                                  MaxSurge is maximum number of machines that are created during an update.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                  Defaults to 0 in case of an in-place update.
+                                  Defaults to 1 in case of a rolling update.
+                                x-kubernetes-int-or-string: true
+                              maxUnavailable:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                description: |-
+                                  MaxUnavailable is the maximum number of machines that can be unavailable during an update.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                  Defaults to 1 in case of an in-place update.
+                                  Defaults to 0 in case of a rolling update.
+                                x-kubernetes-int-or-string: true
+                              maximum:
+                                description: |-
+                                  Maximum is the maximum number of machines to create.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                format: int32
+                                type: integer
+                              minimum:
+                                description: |-
+                                  Minimum is the minimum number of machines to create.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                format: int32
+                                type: integer
+                              name:
+                                description: Name is the name of the worker group.
+                                type: string
+                              priority:
+                                description: Priority (or weight) is the importance
+                                  by which this worker group will be scaled by cluster
+                                  autoscaling.
+                                format: int32
+                                type: integer
+                              providerConfig:
+                                description: ProviderConfig is the provider-specific
+                                  configuration for this worker pool.
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              sysctls:
+                                additionalProperties:
+                                  type: string
+                                description: Sysctls is a map of kernel settings to
+                                  apply on all machines in this worker pool.
+                                type: object
+                              systemComponents:
+                                description: SystemComponents contains configuration
+                                  for system components related to this worker pool
+                                properties:
+                                  allow:
+                                    description: Allow determines whether the pool should
+                                      be allowed to host system components or not (defaults
+                                      to true)
+                                    type: boolean
+                                required:
+                                  - allow
+                                type: object
+                              taints:
+                                description: Taints is a list of taints for all the
+                                  `Node` objects in this worker pool.
+                                items:
+                                  description: |-
+                                    The node this Taint is attached to has the "effect" on
+                                    any pod that does not tolerate the Taint.
+                                  properties:
+                                    effect:
+                                      description: |-
+                                        Required. The effect of the taint on pods
+                                        that do not tolerate the taint.
+                                        Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+                                      type: string
+                                    key:
+                                      description: Required. The taint key to be applied
+                                        to a node.
+                                      type: string
+                                    timeAdded:
+                                      description: |-
+                                        TimeAdded represents the time at which the taint was added.
+                                        It is only written for NoExecute taints.
+                                      format: date-time
+                                      type: string
+                                    value:
+                                      description: The taint value corresponding to
+                                        the taint key.
+                                      type: string
+                                  required:
+                                    - effect
+                                    - key
+                                  type: object
+                                type: array
+                              updateStrategy:
+                                description: UpdateStrategy specifies the machine update
+                                  strategy for the worker pool.
+                                type: string
+                              volume:
+                                description: Volume contains information about the volume
+                                  type and size.
+                                properties:
+                                  encrypted:
+                                    description: Encrypted determines if the volume
+                                      should be encrypted.
+                                    type: boolean
+                                  name:
+                                    description: Name of the volume to make it referenceable.
+                                    type: string
+                                  size:
+                                    description: VolumeSize is the size of the volume.
+                                    type: string
+                                  type:
+                                    description: Type is the type of the volume.
+                                    type: string
+                                required:
+                                  - size
+                                type: object
+                              zones:
+                                description: |-
+                                  Zones is a list of availability zones that are used to evenly distribute this worker pool. Optional
+                                  as not every provider may support availability zones.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                              - machine
+                              - maximum
+                              - minimum
+                              - name
+                            type: object
+                          type: array
+                        controlPlaneConfig:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        infrastructureConfig:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        type:
+                          enum:
+                            - aws
+                            - azure
+                            - gcp
+                            - openstack
+                          type: string
+                        workers:
+                          items:
+                            description: Worker is the base definition of a worker group.
+                            properties:
+                              annotations:
+                                additionalProperties:
+                                  type: string
+                                description: Annotations is a map of key/value pairs
+                                  for annotations for all the `Node` objects in this
+                                  worker pool.
+                                type: object
+                              caBundle:
+                                description: CABundle is a certificate bundle which
+                                  will be installed onto every machine of this worker
+                                  pool.
+                                type: string
+                              clusterAutoscaler:
+                                description: ClusterAutoscaler contains the cluster
+                                  autoscaler configurations for the worker pool.
+                                properties:
+                                  maxNodeProvisionTime:
+                                    description: MaxNodeProvisionTime defines how long
+                                      CA waits for node to be provisioned.
+                                    type: string
+                                  scaleDownGpuUtilizationThreshold:
+                                    description: ScaleDownGpuUtilizationThreshold defines
+                                      the threshold in fraction (0.0 - 1.0) of gpu resources
+                                      under which a node is being removed.
+                                    type: number
+                                  scaleDownUnneededTime:
+                                    description: ScaleDownUnneededTime defines how long
+                                      a node should be unneeded before it is eligible
+                                      for scale down.
+                                    type: string
+                                  scaleDownUnreadyTime:
+                                    description: ScaleDownUnreadyTime defines how long
+                                      an unready node should be unneeded before it is
+                                      eligible for scale down.
+                                    type: string
+                                  scaleDownUtilizationThreshold:
+                                    description: ScaleDownUtilizationThreshold defines
+                                      the threshold in fraction (0.0 - 1.0) under which
+                                      a node is being removed.
+                                    type: number
+                                type: object
+                              controlPlane:
+                                description: |-
+                                  ControlPlane specifies that the shoot cluster control plane components should be running in this worker pool.
+                                  This is only relevant for autonomous shoot clusters.
+                                properties:
+                                  backup:
+                                    description: |-
+                                      Backup holds the object store configuration for the backups of shoot (currently only etcd).
+                                      If it is not specified, then there won't be any backups taken.
+                                    properties:
+                                      credentialsRef:
+                                        description: |-
+                                          CredentialsRef is reference to a resource holding the credentials used for
+                                          authentication with the object store service where the backups are stored.
+                                          Supported referenced resources are v1.Secrets and
+                                          security.gardener.cloud/v1alpha1.WorkloadIdentity
+                                        properties:
+                                          apiVersion:
+                                            description: API version of the referent.
+                                            type: string
+                                          fieldPath:
+                                            description: |-
+                                              If referring to a piece of an object instead of an entire object, this string
+                                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                              the event) or if no container name is specified "spec.containers[2]" (container with
+                                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                              referencing a part of an object.
+                                            type: string
+                                          kind:
+                                            description: |-
+                                              Kind of the referent.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                            type: string
+                                          name:
+                                            description: |-
+                                              Name of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          namespace:
+                                            description: |-
+                                              Namespace of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                            type: string
+                                          resourceVersion:
+                                            description: |-
+                                              Specific resourceVersion to which this reference is made, if any.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                            type: string
+                                          uid:
+                                            description: |-
+                                              UID of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                            type: string
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      provider:
+                                        description: Provider is a provider name. This
+                                          field is immutable.
+                                        type: string
+                                      providerConfig:
+                                        description: ProviderConfig is the configuration
+                                          passed to BackupBucket resource.
+                                        type: object
+                                        x-kubernetes-preserve-unknown-fields: true
+                                      region:
+                                        description: Region is a region name. This field
+                                          is immutable.
+                                        type: string
+                                      secretRef:
+                                        description: |-
+                                          SecretRef is a reference to a Secret object containing the cloud provider credentials for
+                                          the object store where backups should be stored. It should have enough privileges to manipulate
+                                          the objects as well as buckets.
+                                          Deprecated: This field will be removed after v1.121.0 has been released. Use `CredentialsRef` instead.
+                                          Until removed, this field is synced with the `CredentialsRef` field when it refers to a secret.
+                                        properties:
+                                          name:
+                                            description: name is unique within a namespace
+                                              to reference a secret resource.
+                                            type: string
+                                          namespace:
+                                            description: namespace defines the space
+                                              within which the secret name must be unique.
+                                            type: string
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                    required:
+                                      - provider
+                                      - secretRef
+                                    type: object
+                                type: object
+                              cri:
+                                description: |-
+                                  CRI contains configurations of CRI support of every machine in the worker pool.
+                                  Defaults to a CRI with name `containerd`.
+                                properties:
+                                  containerRuntimes:
+                                    description: ContainerRuntimes is the list of the
+                                      required container runtimes supported for a worker
+                                      pool.
+                                    items:
+                                      description: ContainerRuntime contains information
+                                        about worker's available container runtime
+                                      properties:
+                                        providerConfig:
+                                          description: ProviderConfig is the configuration
+                                            passed to container runtime resource.
+                                          type: object
+                                          x-kubernetes-preserve-unknown-fields: true
+                                        type:
+                                          description: Type is the type of the Container
+                                            Runtime.
+                                          type: string
+                                      required:
+                                        - type
+                                      type: object
+                                    type: array
+                                  name:
+                                    description: The name of the CRI library. Supported
+                                      values are `containerd`.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              dataVolumes:
+                                description: DataVolumes contains a list of additional
+                                  worker volumes.
+                                items:
+                                  description: DataVolume contains information about
+                                    a data volume.
+                                  properties:
+                                    encrypted:
+                                      description: Encrypted determines if the volume
+                                        should be encrypted.
+                                      type: boolean
+                                    name:
+                                      description: Name of the volume to make it referenceable.
+                                      type: string
+                                    size:
+                                      description: VolumeSize is the size of the volume.
+                                      type: string
+                                    type:
+                                      description: Type is the type of the volume.
+                                      type: string
+                                  required:
+                                    - name
+                                    - size
+                                  type: object
+                                type: array
+                              kubeletDataVolumeName:
+                                description: KubeletDataVolumeName contains the name
+                                  of a dataVolume that should be used for storing kubelet
+                                  state.
+                                type: string
+                              kubernetes:
+                                description: Kubernetes contains configuration for Kubernetes
+                                  components related to this worker pool.
+                                properties:
+                                  kubelet:
+                                    description: |-
+                                      Kubelet contains configuration settings for all kubelets of this worker pool.
+                                      If set, all `spec.kubernetes.kubelet` settings will be overwritten for this worker pool (no merge of settings).
+                                    properties:
+                                      containerLogMaxFiles:
+                                        description: Maximum number of container log
+                                          files that can be present for a container.
+                                        format: int32
+                                        type: integer
+                                      containerLogMaxSize:
+                                        anyOf:
+                                          - type: integer
+                                          - type: string
+                                        description: |-
+                                          A quantity defines the maximum size of the container log file before it is rotated. For example: "5Mi" or "256Ki".
+                                          Default: 100Mi
+                                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                        x-kubernetes-int-or-string: true
+                                      cpuCFSQuota:
+                                        description: CPUCFSQuota allows you to disable/enable
+                                          CPU throttling for Pods.
+                                        type: boolean
+                                      cpuManagerPolicy:
+                                        description: 'CPUManagerPolicy allows to set
+                                        alternative CPU management policies (default:
+                                        none).'
+                                        type: string
+                                      evictionHard:
+                                        description: |-
+                                          EvictionHard describes a set of eviction thresholds (e.g. memory.available<1Gi) that if met would trigger a Pod eviction.
+                                          Default:
+                                            memory.available:   "100Mi/1Gi/5%"
+                                            nodefs.available:   "5%"
+                                            nodefs.inodesFree:  "5%"
+                                            imagefs.available:  "5%"
+                                            imagefs.inodesFree: "5%"
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the threshold
+                                              for the free disk space in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the threshold
+                                              for the available inodes in the imagefs
+                                              filesystem.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the threshold
+                                              for the free memory on the host server.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the threshold
+                                              for the free disk space in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the threshold
+                                              for the available inodes in the nodefs
+                                              filesystem.
+                                            type: string
+                                        type: object
+                                      evictionMaxPodGracePeriod:
+                                        description: |-
+                                          EvictionMaxPodGracePeriod describes the maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
+                                          Default: 90
+                                        format: int32
+                                        type: integer
+                                      evictionMinimumReclaim:
+                                        description: |-
+                                          EvictionMinimumReclaim configures the amount of resources below the configured eviction threshold that the kubelet attempts to reclaim whenever the kubelet observes resource pressure.
+                                          Default: 0 for each resource
+                                        properties:
+                                          imageFSAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: ImageFSAvailable is the threshold
+                                              for the disk space reclaim in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          imageFSInodesFree:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: ImageFSInodesFree is the threshold
+                                              for the inodes reclaim in the imagefs
+                                              filesystem.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memoryAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: MemoryAvailable is the threshold
+                                              for the memory reclaim on the host server.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          nodeFSAvailable:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: NodeFSAvailable is the threshold
+                                              for the disk space reclaim in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          nodeFSInodesFree:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: NodeFSInodesFree is the threshold
+                                              for the inodes reclaim in the nodefs filesystem.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                      evictionPressureTransitionPeriod:
+                                        description: |-
+                                          EvictionPressureTransitionPeriod is the duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
+                                          Default: 4m0s
+                                        type: string
+                                      evictionSoft:
+                                        description: |-
+                                          EvictionSoft describes a set of eviction thresholds (e.g. memory.available<1.5Gi) that if met over a corresponding grace period would trigger a Pod eviction.
+                                          Default:
+                                            memory.available:   "200Mi/1.5Gi/10%"
+                                            nodefs.available:   "10%"
+                                            nodefs.inodesFree:  "10%"
+                                            imagefs.available:  "10%"
+                                            imagefs.inodesFree: "10%"
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the threshold
+                                              for the free disk space in the imagefs
+                                              filesystem (docker images and container
+                                              writable layers).
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the threshold
+                                              for the available inodes in the imagefs
+                                              filesystem.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the threshold
+                                              for the free memory on the host server.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the threshold
+                                              for the free disk space in the nodefs
+                                              filesystem (docker volumes, logs, etc).
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the threshold
+                                              for the available inodes in the nodefs
+                                              filesystem.
+                                            type: string
+                                        type: object
+                                      evictionSoftGracePeriod:
+                                        description: |-
+                                          EvictionSoftGracePeriod describes a set of eviction grace periods (e.g. memory.available=1m30s) that correspond to how long a soft eviction threshold must hold before triggering a Pod eviction.
+                                          Default:
+                                            memory.available:   1m30s
+                                            nodefs.available:   1m30s
+                                            nodefs.inodesFree:  1m30s
+                                            imagefs.available:  1m30s
+                                            imagefs.inodesFree: 1m30s
+                                        properties:
+                                          imageFSAvailable:
+                                            description: ImageFSAvailable is the grace
+                                              period for the ImageFSAvailable eviction
+                                              threshold.
+                                            type: string
+                                          imageFSInodesFree:
+                                            description: ImageFSInodesFree is the grace
+                                              period for the ImageFSInodesFree eviction
+                                              threshold.
+                                            type: string
+                                          memoryAvailable:
+                                            description: MemoryAvailable is the grace
+                                              period for the MemoryAvailable eviction
+                                              threshold.
+                                            type: string
+                                          nodeFSAvailable:
+                                            description: NodeFSAvailable is the grace
+                                              period for the NodeFSAvailable eviction
+                                              threshold.
+                                            type: string
+                                          nodeFSInodesFree:
+                                            description: NodeFSInodesFree is the grace
+                                              period for the NodeFSInodesFree eviction
+                                              threshold.
+                                            type: string
+                                        type: object
+                                      failSwapOn:
+                                        description: FailSwapOn makes the Kubelet fail
+                                          to start if swap is enabled on the node. (default
+                                          true).
+                                        type: boolean
+                                      featureGates:
+                                        additionalProperties:
+                                          type: boolean
+                                        description: FeatureGates contains information
+                                          about enabled feature gates.
+                                        type: object
+                                      imageGCHighThresholdPercent:
+                                        description: |-
+                                          ImageGCHighThresholdPercent describes the percent of the disk usage which triggers image garbage collection.
+                                          Default: 50
+                                        format: int32
+                                        type: integer
+                                      imageGCLowThresholdPercent:
+                                        description: |-
+                                          ImageGCLowThresholdPercent describes the percent of the disk to which garbage collection attempts to free.
+                                          Default: 40
+                                        format: int32
+                                        type: integer
+                                      imageMaximumGCAge:
+                                        description: |-
+                                          ImageMaximumGCAge is the maximum age of an unused image before it can be garbage collected.
+                                          Default: 0s
+                                        type: string
+                                      imageMinimumGCAge:
+                                        description: |-
+                                          ImageMinimumGCAge is the minimum age of an unused image before it can be garbage collected.
+                                          Default: 2m0s
+                                        type: string
+                                      kubeReserved:
+                                        description: |-
+                                          KubeReserved is the configuration for resources reserved for kubernetes node components (mainly kubelet and container runtime).
+                                          When updating these values, be aware that cgroup resizes may not succeed on active worker nodes. Look for the NodeAllocatableEnforced event to determine if the configuration was applied.
+                                          Default: cpu=80m,memory=1Gi,pid=20k
+                                        properties:
+                                          cpu:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: CPU is the reserved cpu.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          ephemeralStorage:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: EphemeralStorage is the reserved
+                                              ephemeral-storage.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memory:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: Memory is the reserved memory.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          pid:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: PID is the reserved process-ids.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                      maxParallelImagePulls:
+                                        description: |-
+                                          MaxParallelImagePulls describes the maximum number of image pulls in parallel. The value must be a positive number.
+                                          This field cannot be set if SerializeImagePulls (pull one image at a time) is set to true.
+                                          Setting it to nil means no limit.
+                                          Default: nil
+                                        format: int32
+                                        type: integer
+                                      maxPods:
+                                        description: |-
+                                          MaxPods is the maximum number of Pods that are allowed by the Kubelet.
+                                          Default: 110
+                                        format: int32
+                                        type: integer
+                                      memorySwap:
+                                        description: MemorySwap configures swap memory
+                                          available to container workloads.
+                                        properties:
+                                          swapBehavior:
+                                            description: |-
+                                              SwapBehavior configures swap memory available to container workloads. May be one of {"LimitedSwap", "UnlimitedSwap"}
+                                              defaults to: LimitedSwap
+                                            type: string
+                                        type: object
+                                      podPidsLimit:
+                                        description: PodPIDsLimit is the maximum number
+                                          of process IDs per pod allowed by the kubelet.
+                                        format: int64
+                                        type: integer
+                                      protectKernelDefaults:
+                                        description: |-
+                                          ProtectKernelDefaults ensures that the kernel tunables are equal to the kubelet defaults.
+                                          Defaults to true.
+                                        type: boolean
+                                      registryBurst:
+                                        description: |-
+                                          RegistryBurst is the maximum size of bursty pulls, temporarily allows pulls to burst to this number,
+                                          while still not exceeding registryPullQPS. The value must not be a negative number.
+                                          Only used if registryPullQPS is greater than 0.
+                                          Default: 10
+                                        format: int32
+                                        type: integer
+                                      registryPullQPS:
+                                        description: |-
+                                          RegistryPullQPS is the limit of registry pulls per second. The value must not be a negative number.
+                                          Setting it to 0 means no limit.
+                                          Default: 5
+                                        format: int32
+                                        type: integer
+                                      seccompDefault:
+                                        description: SeccompDefault enables the use
+                                          of `RuntimeDefault` as the default seccomp
+                                          profile for all workloads.
+                                        type: boolean
+                                      serializeImagePulls:
+                                        description: |-
+                                          SerializeImagePulls describes whether the images are pulled one at a time.
+                                          Default: true
+                                        type: boolean
+                                      streamingConnectionIdleTimeout:
+                                        description: |-
+                                          StreamingConnectionIdleTimeout is the maximum time a streaming connection can be idle before the connection is automatically closed.
+                                          This field cannot be set lower than "30s" or greater than "4h".
+                                          Default: "5m".
+                                        type: string
+                                      systemReserved:
+                                        description: |-
+                                          SystemReserved is the configuration for resources reserved for system processes not managed by kubernetes (e.g. journald).
+                                          When updating these values, be aware that cgroup resizes may not succeed on active worker nodes. Look for the NodeAllocatableEnforced event to determine if the configuration was applied.
+                                          
+                                          Deprecated: Separately configuring resource reservations for system processes is deprecated in Gardener and will be forbidden starting from Kubernetes 1.31.
+                                          Please merge existing resource reservations into the kubeReserved field.
+                                        properties:
+                                          cpu:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: CPU is the reserved cpu.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          ephemeralStorage:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: EphemeralStorage is the reserved
+                                              ephemeral-storage.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          memory:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: Memory is the reserved memory.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                          pid:
+                                            anyOf:
+                                              - type: integer
+                                              - type: string
+                                            description: PID is the reserved process-ids.
+                                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                            x-kubernetes-int-or-string: true
+                                        type: object
+                                    type: object
+                                  version:
+                                    description: |-
+                                      Version is the semantic Kubernetes version to use for the Kubelet in this Worker Group.
+                                      If not specified the kubelet version is derived from the global shoot cluster kubernetes version.
+                                      version must be equal or lower than the version of the shoot kubernetes version.
+                                      Only one minor version difference to other worker groups and global kubernetes version is allowed.
+                                    type: string
+                                type: object
+                              labels:
+                                additionalProperties:
+                                  type: string
+                                description: Labels is a map of key/value pairs for
+                                  labels for all the `Node` objects in this worker pool.
+                                type: object
+                              machine:
+                                description: Machine contains information about the
+                                  machine type and image.
+                                properties:
+                                  architecture:
+                                    description: Architecture is CPU architecture of
+                                      machines in this worker pool.
+                                    type: string
+                                  image:
+                                    description: |-
+                                      Image holds information about the machine image to use for all nodes of this pool. It will default to the
+                                      latest version of the first image stated in the referenced CloudProfile if no value has been provided.
+                                    properties:
+                                      name:
+                                        description: Name is the name of the image.
+                                        type: string
+                                      providerConfig:
+                                        description: ProviderConfig is the shoot's individual
+                                          configuration passed to an extension resource.
+                                        type: object
+                                        x-kubernetes-preserve-unknown-fields: true
+                                      version:
+                                        description: |-
+                                          Version is the version of the shoot's image.
+                                          If version is not provided, it will be defaulted to the latest version from the CloudProfile.
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
+                                  type:
+                                    description: Type is the machine type of the worker
+                                      group.
+                                    type: string
+                                required:
+                                  - type
+                                type: object
+                              machineControllerManager:
+                                description: MachineControllerManagerSettings contains
+                                  configurations for different worker-pools. Eg. MachineDrainTimeout,
+                                  MachineHealthTimeout.
+                                properties:
+                                  disableHealthTimeout:
+                                    description: |-
+                                      DisableHealthTimeout if set to true, health timeout will be ignored. Leading to machine never being declared failed.
+                                      This is intended to be used only for in-place updates.
+                                    type: boolean
+                                  inPlaceUpdateTimeout:
+                                    description: MachineInPlaceUpdateTimeout is the
+                                      timeout after which in-place update is declared
+                                      failed.
+                                    type: string
+                                  machineCreationTimeout:
+                                    description: MachineCreationTimeout is the period
+                                      after which creation of the machine is declared
+                                      failed.
+                                    type: string
+                                  machineDrainTimeout:
+                                    description: MachineDrainTimeout is the period after
+                                      which machine is forcefully deleted.
+                                    type: string
+                                  machineHealthTimeout:
+                                    description: MachineHealthTimeout is the period
+                                      after which machine is declared failed.
+                                    type: string
+                                  maxEvictRetries:
+                                    description: MaxEvictRetries are the number of eviction
+                                      retries on a pod after which drain is declared
+                                      failed, and forceful deletion is triggered.
+                                    format: int32
+                                    type: integer
+                                  nodeConditions:
+                                    description: NodeConditions are the set of conditions
+                                      if set to true for the period of MachineHealthTimeout,
+                                      machine will be declared failed.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              maxSurge:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                description: |-
+                                  MaxSurge is maximum number of machines that are created during an update.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                  Defaults to 0 in case of an in-place update.
+                                  Defaults to 1 in case of a rolling update.
+                                x-kubernetes-int-or-string: true
+                              maxUnavailable:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                description: |-
+                                  MaxUnavailable is the maximum number of machines that can be unavailable during an update.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                  Defaults to 1 in case of an in-place update.
+                                  Defaults to 0 in case of a rolling update.
+                                x-kubernetes-int-or-string: true
+                              maximum:
+                                description: |-
+                                  Maximum is the maximum number of machines to create.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                format: int32
+                                type: integer
+                              minimum:
+                                description: |-
+                                  Minimum is the minimum number of machines to create.
+                                  This value is divided by the number of configured zones for a fair distribution.
+                                format: int32
+                                type: integer
+                              name:
+                                description: Name is the name of the worker group.
+                                type: string
+                              priority:
+                                description: Priority (or weight) is the importance
+                                  by which this worker group will be scaled by cluster
+                                  autoscaling.
+                                format: int32
+                                type: integer
+                              providerConfig:
+                                description: ProviderConfig is the provider-specific
+                                  configuration for this worker pool.
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              sysctls:
+                                additionalProperties:
+                                  type: string
+                                description: Sysctls is a map of kernel settings to
+                                  apply on all machines in this worker pool.
+                                type: object
+                              systemComponents:
+                                description: SystemComponents contains configuration
+                                  for system components related to this worker pool
+                                properties:
+                                  allow:
+                                    description: Allow determines whether the pool should
+                                      be allowed to host system components or not (defaults
+                                      to true)
+                                    type: boolean
+                                required:
+                                  - allow
+                                type: object
+                              taints:
+                                description: Taints is a list of taints for all the
+                                  `Node` objects in this worker pool.
+                                items:
+                                  description: |-
+                                    The node this Taint is attached to has the "effect" on
+                                    any pod that does not tolerate the Taint.
+                                  properties:
+                                    effect:
+                                      description: |-
+                                        Required. The effect of the taint on pods
+                                        that do not tolerate the taint.
+                                        Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
+                                      type: string
+                                    key:
+                                      description: Required. The taint key to be applied
+                                        to a node.
+                                      type: string
+                                    timeAdded:
+                                      description: |-
+                                        TimeAdded represents the time at which the taint was added.
+                                        It is only written for NoExecute taints.
+                                      format: date-time
+                                      type: string
+                                    value:
+                                      description: The taint value corresponding to
+                                        the taint key.
+                                      type: string
+                                  required:
+                                    - effect
+                                    - key
+                                  type: object
+                                type: array
+                              updateStrategy:
+                                description: UpdateStrategy specifies the machine update
+                                  strategy for the worker pool.
+                                type: string
+                              volume:
+                                description: Volume contains information about the volume
+                                  type and size.
+                                properties:
+                                  encrypted:
+                                    description: Encrypted determines if the volume
+                                      should be encrypted.
+                                    type: boolean
+                                  name:
+                                    description: Name of the volume to make it referenceable.
+                                    type: string
+                                  size:
+                                    description: VolumeSize is the size of the volume.
+                                    type: string
+                                  type:
+                                    description: Type is the type of the volume.
+                                    type: string
+                                required:
+                                  - size
+                                type: object
+                              zones:
+                                description: |-
+                                  Zones is a list of availability zones that are used to evenly distribute this worker pool. Optional
+                                  as not every provider may support availability zones.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                              - machine
+                              - maximum
+                              - minimum
+                              - name
+                            type: object
+                          type: array
+                      required:
+                        - type
+                        - workers
+                      type: object
+                    purpose:
+                      description: ShootPurpose is a type alias for string.
+                      type: string
+                    region:
+                      type: string
+                    secretBindingName:
+                      type: string
+                  required:
+                    - name
+                    - networking
+                    - platformRegion
+                    - provider
+                    - purpose
+                    - region
+                    - secretBindingName
+                  type: object
+              required:
+                - security
+                - shoot
+              type: object
+            status:
+              description: RuntimeStatus defines the observed state of Runtime
+              properties:
+                conditions:
+                  description: List of status conditions to indicate the status of a
+                    ServiceInstance.
+                  items:
+                    description: Condition contains details for one aspect of the current
+                      state of this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: |-
+                          lastTransitionTime is the last time the condition transitioned from one status to another.
+                          This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                        format: date-time
+                        type: string
+                      message:
+                        description: |-
+                          message is a human readable message indicating details about the transition.
+                          This may be an empty string.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: |-
+                          observedGeneration represents the .metadata.generation that the condition was set based upon.
+                          For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                          with respect to the current state of the instance.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: |-
+                          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                          Producers of specific condition types may define expected values and meanings for this field,
+                          and whether the values are considered a guaranteed API.
+                          The value should be a CamelCase string.
+                          This field may not be empty.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                provisioningCompleted:
+                  description: ProvisioningCompleted indicates if the initial provisioning
+                    of the cluster is completed
+                  type: boolean
+                state:
+                  description: State signifies current state of Runtime
+                  enum:
+                    - Pending
+                    - Ready
+                    - Terminating
+                    - Failed
+                  type: string
+              required:
+                - state
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

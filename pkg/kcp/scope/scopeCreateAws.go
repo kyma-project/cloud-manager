@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
+	gardenerawsapi "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsgardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/gardener"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/ptr"
 )
@@ -38,7 +38,7 @@ func scopeCreateAws(ctx context.Context, st composed.State) (error, context.Cont
 			ctx)
 	}
 
-	infra := &awsgardener.InfrastructureConfig{}
+	infra := &gardenerawsapi.InfrastructureConfig{}
 	err = json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error unmarshalling AWS InfrastructureConfig", composed.StopAndForget, ctx)
@@ -58,7 +58,7 @@ func scopeCreateAws(ctx context.Context, st composed.State) (error, context.Cont
 							Id:   ptr.Deref(infra.Networks.VPC.ID, ""),
 							CIDR: ptr.Deref(infra.Networks.VPC.CIDR, ""),
 						},
-						Zones: pie.Map(infra.Networks.Zones, func(z awsgardener.Zone) cloudcontrolv1beta1.AwsZone {
+						Zones: pie.Map(infra.Networks.Zones, func(z gardenerawsapi.Zone) cloudcontrolv1beta1.AwsZone {
 							return cloudcontrolv1beta1.AwsZone{
 								Name:     z.Name,
 								Internal: z.Internal,
