@@ -1,0 +1,4 @@
+includedPermissions:
+  - compute.networks.addPeering
+  - compute.networks.get
+  - compute.networks.removePeering
