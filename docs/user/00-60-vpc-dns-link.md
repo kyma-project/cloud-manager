@@ -3,7 +3,7 @@
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
 
-VPC DNS Link in the Cloud Manager module enables linking the Kyma Virtual Private Cloud (VPC) network to a remote DNS private zone or DNS private resolver.
+VPC DNS Link in the Cloud Manager module enables linking the Kyma Virtual Private Cloud (VPC) network to either a remote DNS private zone or a DNS private resolver.
 
 VPC DNS Link is possible only between networks and the remote private DNS zones or DNS private resolvers of the same cloud providers. VPC DNS Link in SAP BTP, Kyma runtime is fully automated. It means that Cloud Manager configures the link in the specified remote private DNS zone or DNS private resolver.
 

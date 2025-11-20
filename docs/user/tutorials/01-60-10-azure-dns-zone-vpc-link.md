@@ -1,4 +1,4 @@
-# Creating VPC DNS Link in Microsoft Azure
+# Linking Your Kyma Network to Microsoft Azure Private DNS Zone
 
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
@@ -59,7 +59,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    az group create --name $RESOURCE_GROUP_NAME --location $REGION
    ```
 
-3. Create a DNS private zone:
+3. Create a private DNS zone:
 
    ```shell
    export ZONE_NAME="example.com"
@@ -76,7 +76,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
 
 ### Allow SAP BTP, Kyma Runtime to Link to Your Private DNS Zone
 
-Tag the DNS private zone with the Kyma shoot name:
+Tag the private DNS zone with the Kyma shoot name:
 
    ```shell
    export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 

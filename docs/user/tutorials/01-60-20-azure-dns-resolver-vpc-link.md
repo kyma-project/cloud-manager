@@ -1,4 +1,4 @@
-# Creating VPC DNS Link in Microsoft Azure
+# Linking Your Kyma Network to Microsoft Azure DNS Private Resolver
 
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
@@ -14,7 +14,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
 
 ### Authorize Cloud Manager in the Remote Subscription
 
-1. Log in to your Microsoft Azure account and set the active subscription:
+1. Log in to your Microsoft Azure account and set the active subscription.
 
    ```shell
    export SUBSCRIPTION={SUBSCRIPTION}
@@ -52,14 +52,14 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    export REGION={REGION}
    ```
 
-2. Create a resource group as a container for related resources:
+2. Create a resource group as a container for related resources.
 
    ```shell
    export RESOURCE_GROUP_NAME="MyResourceGroup"
    az group create --name $RESOURCE_GROUP_NAME --location $REGION
    ```
 
-3. Create a network and subnets:
+3. Create a network and subnets.
 
    ```shell
    export VNET_NAME="MyVnet"
@@ -78,13 +78,13 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    export OUTBOUND_SUBNET_ID=$(az network vnet subnet create -g $RESOURCE_GROUP_NAME --vnet-name $VNET_NAME -n $OUTBOUND_SUBNET_NAME --address-prefix $OUTBOUND_SUBNET_ADDRESS_PREFIX --query id --output tsv)
    ```
 
-4. Create a DNS private resolver:
+4. Create a DNS private resolver.
 
    ```shell
    export DNS_RESOLVER_NAME="MyDnsResolver"
    az dns-resolver create --name $DNS_RESOLVER_NAME --location $REGION --id $VNET_ID --resource-group $RESOURCE_GROUP_NAME
    ```
-5. Create an inbound endpoint for a DNS resolver:
+5. Create an inbound endpoint for the DNS resolver.
 
    ```shell
    export INBOUND_ENDPOINT_NAME="MyInboundEndpoint"
@@ -92,7 +92,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    export INBOUND_ENDPOINT_IP=$(az dns-resolver inbound-endpoint show --dns-resolver-name $DNS_RESOLVER_NAME -n $INBOUND_ENDPOINT_NAME -g $RESOURCE_GROUP_NAME --query "ipConfigurations[0].privateIpAddress" --output tsv)
    ```
 
-6. Create an outbound endpoint for a DNS resolver:
+6. Create an outbound endpoint for the DNS resolver.
 
    ```shell
    export OUTBOUND_ENDPOINT_NAME="MyOutboundEndpoint"
@@ -100,34 +100,34 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    export OUTBOUND_ENDPOINT_ID=$(az dns-resolver outbound-endpoint create --name $OUTBOUND_ENDPOINT_NAME --resource-group $RESOURCE_GROUP_NAME --dns-resolver-name $DNS_RESOLVER_NAME --location $REGION --id $OUTBOUND_SUBNET_ID --query "id" --output tsv)
    ```
 
-7. Create a DNS forwarding ruleset:
+7. Create a DNS forwarding ruleset.
 
    ```shell
    export RULESET_NAME="MyRuleset"
    az dns-resolver forwarding-ruleset create --name $RULESET_NAME --location $REGION --outbound-endpoints "[{id:$OUTBOUND_ENDPOINT_ID}]" --resource-group $RESOURCE_GROUP_NAME
    ```
    
-8. Create a forwarding rule in a DNS forwarding ruleset:
+8. Create a forwarding rule in the DNS forwarding ruleset.
    ```shell
    export RULE_NAME="MyRule"
    az dns-resolver forwarding-rule create --ruleset-name $RULESET_NAME --name $RULE_NAME --domain-name "test.example.com." --forwarding-rule-state "Enabled" --target-dns-servers "[{ip-address:$INBOUND_ENDPOINT_IP,port:53}]" --resource-group $RESOURCE_GROUP_NAME
    ```
    
-9. Create a DNS private zone:
+9. Create a private DNS zone.
 
    ```shell
    export ZONE_NAME="example.com"
    az network private-dns zone create --resource-group $RESOURCE_GROUP_NAME --name $ZONE_NAME
    ```
 
-10. Add an A record:
+10. Add an A record.
 
     ```shell
     export RECORD_SET_NAME=test
     export IP_ADDRESS=10.0.0.1
     az network private-dns record-set a add-record --resource-group $RESOURCE_GROUP_NAME --zone-name $ZONE_NAME --record-set-name $RECORD_SET_NAME --ipv4-address $IP_ADDRESS
     ```
-11. Link your network with private DNS zone:
+11. Link your network with the private DNS zone.
 
     ```shell
     export DNS_ZONE_LINK_NAME="MyLink"
@@ -136,7 +136,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
 
 ### Allow SAP BTP, Kyma Runtime to Link to Your DNS Private Resolver
 
-1. Tag the DNS forwarding ruleset with the Kyma shoot name:
+Tag the DNS forwarding ruleset with the Kyma shoot name.
 
    ```shell
    export SHOOT_NAME=$(kubectl get cm -n kube-system shoot-info -o jsonpath='{.data.shootName}') 
@@ -146,7 +146,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
 
 ### Create VPC DNS Link
 
-1. Create an AzureVpcDnsLink resource:
+1. Create an AzureVpcDnsLink resource.
 
    ```shell
    kubectl apply -f - <<EOF
@@ -172,7 +172,7 @@ This tutorial explains how to link the SAP, BTP Kuma runtime network to a remote
    azurevpcdnslink.cloud-resources.kyma-project.io/kyma-vpc-dns-link condition met
    ```
 
-3. Create a namespace and export its value as an environment variable:
+3. Create a namespace and export its value as an environment variable.
 
    ```shell
    export NAMESPACE={NAMESPACE_NAME}
