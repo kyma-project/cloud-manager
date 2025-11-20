@@ -1,0 +1,18 @@
+[
+  {
+    "keyAlgorithm": "KEY_ALG_RSA_2048",
+    "keyOrigin": "GOOGLE_PROVIDED",
+    "keyType": "USER_MANAGED",
+    "name": "projects/sap-sc-learn/serviceAccounts/cloud-manager-e2e@sap-sc-learn.iam.gserviceaccount.com/keys/248a6297bf8b9d62d7c1b701c2b29aa041d13d33",
+    "validAfterTime": "2025-11-20T08:09:35Z",
+    "validBeforeTime": "9999-12-31T23:59:59Z"
+  },
+  {
+    "keyAlgorithm": "KEY_ALG_RSA_2048",
+    "keyOrigin": "GOOGLE_PROVIDED",
+    "keyType": "USER_MANAGED",
+    "name": "projects/sap-sc-learn/serviceAccounts/cloud-manager-e2e@sap-sc-learn.iam.gserviceaccount.com/keys/2c028440f798d940d62993e33720ab48bdb7feb3",
+    "validAfterTime": "2025-11-20T08:20:56Z",
+    "validBeforeTime": "9999-12-31T23:59:59Z"
+  }
+]
