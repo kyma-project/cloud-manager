@@ -55,67 +55,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: SapNfsVolume
 metadata:
   name: my-sap-nfs-vol
+  namespace: default
 spec:
-  capacityGb: 100
-  ipRange:
-    name: my-ip-range
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: workload
-spec:
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: my-sap-nfs-vol
-  containers:
-    - name: workload
-      image: nginx
-      volumeMounts:
-        - mountPath: "/mnt/data1"
-          name: data
-```
-
-## Usage Example with Custom PV and PVC Configuration
-
-You can also customize the PersistentVolume and PersistentVolumeClaim names, labels, and annotations:
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: SapNfsVolume
-metadata:
-  name: my-sap-nfs-vol
-spec:
-  capacityGb: 500
-  volume:
-    name: custom-pv-name
-    labels:
-      environment: production
-      team: backend
-    annotations:
-      description: "Production NFS volume for backend services"
-  volumeClaim:
-    name: custom-pvc-name
-    labels:
-      environment: production
-      team: backend
-    annotations:
-      description: "Production NFS claim for backend services"
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: production-workload
-spec:
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: custom-pvc-name
-  containers:
-    - name: app
-      image: my-app:latest
-      volumeMounts:
-        - mountPath: "/app/shared-data"
-          name: data
+  capacityGb: 1000
 ```
