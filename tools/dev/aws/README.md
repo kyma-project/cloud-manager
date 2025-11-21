@@ -16,7 +16,7 @@ Ensure you are using AWS Azure SSO
 https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=3398468150
 https://github.com/aws-azure-login/aws-azure-login
 
-### The aws-azure-login installation details
+### The aws-azure-login Installation
 
 The aws-azure-login asks in the *Option B: Install Only for Current User* to set the npm prefix to your home directory.
 Note that using npm prefix is not compatible with nvm. It's recommended not to use nvm and set the npm prefix as aws-azure-login suggests. Using nvm will probably get you the error:
