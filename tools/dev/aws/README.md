@@ -31,7 +31,7 @@ related to `cheerio.default` not defined. If you find a way to use aws-azure-log
 Go to the https://myapps.microsoft.com/ and find the AWS app URL that is in the format 
 like `https://launcher.myapps.microsoft.com/api/signin/<app_id_uri>?tenantId=<tenant_id>`.
 
-Baws on that app URL make the AWS config (usuallt at `~/.aws/config`) profile like this:
+Based on that app URL make the AWS config (usuallt at `~/.aws/config`) profile like this:
 ```
 [profile <name_of_profile>]
 azure_tenant_id=<tenant_id>
