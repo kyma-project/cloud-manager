@@ -18,6 +18,9 @@ createRole() {
 
 
   TEMP_PERMISSION_FILE="/tmp/$ROLE_NAME.json"
+  TEMP_PERMISSION_FILE=$(mktemp)
+
+  log "Crating temp permission file $TEMP_PERMISSION_FILE"
 
   jq -n \
   --arg name "$ROLE_NAME" \
@@ -29,6 +32,7 @@ createRole() {
   "actions": $permissions[0].actions,
   "dataActions": $permissions[0].dataActions
 }' > $TEMP_PERMISSION_FILE
+
 
   if [[ -z "$ROLE_EXISTS" ]]; then
     log "Role $ROLE_NAME does not exist, creating it now from $ROLE_FILE ..."
