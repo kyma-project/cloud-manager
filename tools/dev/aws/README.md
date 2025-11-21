@@ -53,7 +53,7 @@ Run
 aws-azure-login --mode gui --no-sandbox
 ```
 
-A Chromium window will open, login with your SAP credentials, do the SFA, and window should close and aws-azure-login process terminate w/out errors. 
+A Chromium window opens; log in with your SAP credentials, complete the SFA, and the window should close. The aws-azure-login process should terminate without errors. 
 
 Test the access:
 ```shell
