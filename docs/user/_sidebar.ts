@@ -15,6 +15,7 @@ export default [
     { text: 'GcpNfsVolumeBackup Custom Resource', link: './resources/04-20-21-gcp-nfs-volume-backup' },
     { text: 'GcpNfsBackupSchedule Custom Resource', link: './resources/04-20-22-gcp-nfs-backup-schedule' },
     { text: 'GcpNfsVolumeRestore Custom Resource', link: './resources/04-20-23-gcp-nfs-volume-restore' },
+    { text: 'GcpNfsBackupDiscovery Custom Resource', link: './resources/04-20-24-gcp-nfs-volume-backup-discovery' },
     { text: 'AwsVpcPeering Custom Resource', link: './resources/04-30-10-aws-vpc-peering' },
     { text: 'GcpVpcPeering Custom Resource', link: './resources/04-30-20-gcp-vpc-peering' },
     { text: 'AzureVpcPeering Custom Resource', link: './resources/04-30-30-azure-vpc-peering.md' },
