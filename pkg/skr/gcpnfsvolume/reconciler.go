@@ -3,6 +3,9 @@ package gcpnfsvolume
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
@@ -22,10 +25,14 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := composed.LoggerFromCtx(ctx)
 	if Ignore.ShouldIgnoreKey(req) {
 		return ctrl.Result{}, nil
 	}
-	state := r.newState(req.NamespacedName)
+	state, err := r.newState(ctx, req.NamespacedName)
+	if err != nil {
+		logger.Error(err, "Error getting the GcpNfsVolumeRestore state object")
+	}
 	action := r.newAction()
 
 	return composed.Handling().
@@ -34,8 +41,9 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 		Handle(action(ctx, state))
 }
 
-func (r *Reconciler) newState(name types.NamespacedName) *State {
+func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*State, error) {
 	return r.stateFactory.NewState(
+		ctx,
 		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.GcpNfsVolume{}),
 	)
 }
@@ -60,6 +68,8 @@ func (r *Reconciler) newAction() composed.Action {
 			composed.ComposeActions(
 				"restoreFromSourceBackup",
 				loadScope,
+				loadBackup,
+				checkRestorePermissions,
 				populateBackupUrl),
 			nil,
 		),
@@ -83,11 +93,17 @@ func (r *Reconciler) newAction() composed.Action {
 	)
 }
 
-func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster) Reconciler {
+func NewReconciler(
+	kymaRef klog.ObjectRef,
+	kcpCluster cluster.Cluster,
+	skrCluster cluster.Cluster,
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	env abstractions.Environment,
+) Reconciler {
 	compSkrCluster := composed.NewStateCluster(skrCluster.GetClient(), skrCluster.GetAPIReader(), skrCluster.GetEventRecorderFor("cloud-resources"), skrCluster.GetScheme())
 	compKcpCluster := composed.NewStateCluster(kcpCluster.GetClient(), kcpCluster.GetAPIReader(), kcpCluster.GetEventRecorderFor("cloud-control"), kcpCluster.GetScheme())
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
-	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster)
+	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, fileBackupClientProvider, env)
 	return Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,

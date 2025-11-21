@@ -25,6 +25,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -221,7 +222,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
 	}
@@ -236,7 +237,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(skrRegistry, gcpnfsrestoreclient.NewFileRestoreClientProvider(), env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(
+		skrRegistry,
+		gcpnfsrestoreclient.NewFileRestoreClientProvider(),
+		gcpnfsbackupclient.NewFileBackupClientProvider(),
+		env,
+		setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
 		os.Exit(1)
 	}
