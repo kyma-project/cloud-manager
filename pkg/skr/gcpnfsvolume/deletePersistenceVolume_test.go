@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -26,7 +28,11 @@ func (s *deletePersistenceVolumeSuite) SetupTest() {
 }
 
 func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -38,7 +44,8 @@ func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 	state.PV = pv
 
 	//Call deletePersistenceVolume.
@@ -57,7 +64,11 @@ func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeNotDeleting() {
 }
 
 func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -69,7 +80,8 @@ func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	s.Nil(err)
 	state.PV = &pvDeletingGcpNfsVolume
 
 	//Call deletePersistenceVolume method.
@@ -88,14 +100,19 @@ func (s *deletePersistenceVolumeSuite) TestWhenNfsVolumeIsDeleting() {
 }
 
 func (s *deletePersistenceVolumeSuite) TestWhenPVDoNotExist() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Call deletePersistenceVolume method.
 	err, _ctx := deletePersistenceVolume(ctx, state)
@@ -106,7 +123,11 @@ func (s *deletePersistenceVolumeSuite) TestWhenPVDoNotExist() {
 }
 
 func (s *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -119,7 +140,8 @@ func (s *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	s.Nil(err)
 	state.PV = pv
 
 	//Call deletePersistenceVolume method.
@@ -139,7 +161,11 @@ func (s *deletePersistenceVolumeSuite) TestWhenPVHasWrongPhase() {
 }
 
 func (s *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -170,7 +196,8 @@ func (s *deletePersistenceVolumeSuite) TestWhenPVBecomesReadyToDelete() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&nfsVolume)
+	state, err := factory.newStateWith(&nfsVolume)
+	s.Nil(err)
 	state.PV = pv
 
 	//Call deletePersistenceVolume method.

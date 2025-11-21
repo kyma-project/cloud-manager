@@ -18,10 +18,12 @@ package cloudresources
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumerestore"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -57,6 +59,7 @@ func (r *GcpNfsVolumeRestoreReconciler) Reconcile(ctx context.Context, req ctrl.
 
 type GcpNfsVolumeRestoreReconcilerFactory struct {
 	fileRestoreClientProvider gcpclient.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
+	fileBackupClientProvider  gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
 	env                       abstractions.Environment
 }
 
@@ -66,14 +69,21 @@ func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArg
 			args.KymaRef,
 			args.KcpCluster,
 			args.SkrCluster,
-			f.fileRestoreClientProvider, f.env),
+			f.fileRestoreClientProvider,
+			f.fileBackupClientProvider,
+			f.env),
 	}
 }
 
-func SetupGcpNfsVolumeRestoreReconciler(reg skrruntime.SkrRegistry, fileRestoreClientProvider gcpclient.ClientProvider[gcpnfsrestoreclient.FileRestoreClient],
+func SetupGcpNfsVolumeRestoreReconciler(reg skrruntime.SkrRegistry,
+	fileRestoreClientProvider gcpclient.ClientProvider[gcpnfsrestoreclient.FileRestoreClient],
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
 	env abstractions.Environment, logger logr.Logger) error {
 	return reg.Register().
-		WithFactory(&GcpNfsVolumeRestoreReconcilerFactory{fileRestoreClientProvider: fileRestoreClientProvider, env: env}).
+		WithFactory(&GcpNfsVolumeRestoreReconcilerFactory{
+			fileRestoreClientProvider: fileRestoreClientProvider,
+			fileBackupClientProvider:  fileBackupClientProvider,
+			env:                       env}).
 		For(&cloudresourcesv1beta1.GcpNfsVolumeRestore{}).
 		Complete()
 }

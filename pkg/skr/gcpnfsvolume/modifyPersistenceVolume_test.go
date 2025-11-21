@@ -3,6 +3,8 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -28,7 +30,11 @@ func (s *modifyPersistenceVolumeSuite) SetupTest() {
 }
 
 func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -39,7 +45,8 @@ func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolume.Name, Namespace: gcpNfsVolume.Namespace}, &nfsVol)
 	assert.Nil(s.T(), err)
-	state := factory.newStateWith(&nfsVol)
+	state, err := factory.newStateWith(&nfsVol)
+	s.Nil(err)
 
 	//Create a PV.
 	pv := pvGcpNfsVolume.DeepCopy()
@@ -83,14 +90,19 @@ func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeReady() {
 }
 
 func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	s.Nil(err)
 
 	err, _ctx := modifyPersistenceVolume(ctx, state)
 
@@ -100,7 +112,11 @@ func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeDeleting() {
 }
 
 func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeNotReady() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -113,7 +129,8 @@ func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeNotReady() {
 			Namespace: "test",
 		},
 	}
-	state := factory.newStateWith(&nfsVolume)
+	state, err := factory.newStateWith(&nfsVolume)
+	s.Nil(err)
 
 	err, _ctx := modifyPersistenceVolume(ctx, state)
 
@@ -123,14 +140,19 @@ func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeNotReady() {
 }
 
 func (s *modifyPersistenceVolumeSuite) TestWhenPVNotPresent() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	err, _ctx := modifyPersistenceVolume(ctx, state)
 
@@ -140,14 +162,19 @@ func (s *modifyPersistenceVolumeSuite) TestWhenPVNotPresent() {
 }
 
 func (s *modifyPersistenceVolumeSuite) TestWhenNfsVolumeNotChanged() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	err, _ctx := modifyPersistenceVolume(ctx, state)
 

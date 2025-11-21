@@ -132,3 +132,27 @@ func convertBackupUrlToFullPath(project, backupUrl string) (string, error) {
 
 	return fmt.Sprintf("projects/%s/locations/%s/backups/%s", project, locationId, backupId), nil
 }
+
+// extractBackupLocation extracts just the location_id from the full backup name
+// in format: projects/{project_number}/locations/{location_id}/backups/{backup_id}
+// Returns the location_id or empty string if format is invalid
+func extractBackupLocation(backupUrl string) string {
+	parts := strings.Split(backupUrl, "/")
+	if len(parts) != 2 {
+		return ""
+	}
+
+	return parts[0]
+}
+
+// extractBackupLocation extracts just the location_id from the full backup name
+// in format: projects/{project_number}/locations/{location_id}/backups/{backup_id}
+// Returns the location_id or empty string if format is invalid
+func extractBackupName(backupUrl string) string {
+	parts := strings.Split(backupUrl, "/")
+	if len(parts) != 2 {
+		return ""
+	}
+
+	return parts[1]
+}

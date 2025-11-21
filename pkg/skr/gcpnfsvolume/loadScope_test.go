@@ -25,7 +25,11 @@ func (s *loadScopeSuite) SetupTest() {
 }
 
 func (s *loadScopeSuite) TestScopeNotFound() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	//remove scope
@@ -36,7 +40,7 @@ func (s *loadScopeSuite) TestScopeNotFound() {
 	defer cancel()
 	//Get state object with GcpNfsVolume
 	obj := gcpNfsVolume.DeepCopy()
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
 	s.Nil(err)
 	err, _ = loadScope(ctx, state)
 
@@ -60,13 +64,14 @@ func (s *loadScopeSuite) TestScopeExists() {
 	}))
 	defer fakeHttpServer.Close()
 
-	factory, err := newTestStateFactory()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 	s.Nil(err)
 	err, _ = loadScope(ctx, state)
 	assert.Nil(s.T(), err)

@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -26,14 +28,19 @@ func (s *deleteKcpNfsInstanceSuite) SetupTest() {
 }
 
 func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Call deleteKcpNfsInstance method.
 	err, _ctx := deleteKcpNfsInstance(ctx, state)
@@ -53,14 +60,19 @@ func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeNotDeleting() {
 }
 
 func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	s.Nil(err)
 	state.KcpNfsInstance = &gcpNfsInstanceToDelete
 
 	//Call deleteKcpNfsInstance method.
@@ -81,7 +93,11 @@ func (s *deleteKcpNfsInstanceSuite) TestWhenNfsVolumeIsDeleting() {
 }
 
 func (s *deleteKcpNfsInstanceSuite) TestWhenKcpNfsInstanceDoNotExist() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -100,7 +116,8 @@ func (s *deleteKcpNfsInstanceSuite) TestWhenKcpNfsInstanceDoNotExist() {
 			Id: "not-matching-gcp-nfs-instance",
 		},
 	}
-	state := factory.newStateWith(&nfsVol)
+	state, err := factory.newStateWith(&nfsVol)
+	s.Nil(err)
 
 	//Call deleteKcpNfsInstance method.
 	err, _ctx := deleteKcpNfsInstance(ctx, state)
