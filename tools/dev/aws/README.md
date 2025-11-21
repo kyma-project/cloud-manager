@@ -55,7 +55,7 @@ aws-azure-login --mode gui --no-sandbox
 
 A Chromium window will open, login with your SAP credentials, do the SFA, and window should close and aws-azure-login process terminate w/out errors. 
 
-Test you got the access:
+Test the access:
 ```shell
 aws sts get-caller-identity 
 ```
