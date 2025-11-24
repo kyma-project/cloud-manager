@@ -53,8 +53,8 @@ gcpInit() {
 
   gcpValidateProject
 
-  initRoleFileDefault '../../docs/contributor/permissions/gcp_default.yaml'
-  initRoleFilePeering '../../docs/contributor/permissions/gcp_peering.yaml'
+  initRoleFileDefault '../../docs/contributor/permissions/gcp/gcp_default.yaml'
+  initRoleFilePeering '../../docs/contributor/permissions/gcp/gcp_peering.yaml'
 
   initSANameDefault 'cloud-manager-e2e'
   initSANamePeering 'cloud-manager-peering-e2e'
@@ -70,12 +70,5 @@ gcpInit() {
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
   echo ""
-
 }
 
-
-# AWS Specific
-
-awsInit() {
-  checkRequiredCommands 'aws'
-}

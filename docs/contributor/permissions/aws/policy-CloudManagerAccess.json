@@ -4,26 +4,22 @@
     {
       "Effect": "Allow",
       "Action": [
-        "backup-storage:MountCapsule",
-        "backup:CopyFromBackupVault",
-        "backup:CopyIntoBackupVault",
-        "backup:CreateBackupVault",
-        "backup:DeleteBackupVault",
-        "backup:DeleteRecoveryPoint",
-        "backup:DescribeBackupJob",
-        "backup:DescribeBackupVault",
-        "backup:DescribeCopyJob",
-        "backup:DescribeRecoveryPoint",
-        "backup:DescribeRestoreJob",
-        "backup:GetRecoveryPointRestoreMetadata",
-        "backup:ListBackupVaults",
-        "backup:ListRecoveryPointsByBackupVault",
-        "backup:ListRecoveryPointsByResource",
-        "backup:StartBackupJob",
-        "backup:StartCopyJob",
-        "backup:StartRestoreJob",
         "backup:TagResource",
         "backup:UntagResource",
+        "backup:DescribeBackupJob",
+        "backup:StartBackupJob",
+        "backup:ListBackupVaults",
+        "backup:DescribeBackupVault",
+        "backup:CreateBackupVault",
+        "backup:DeleteBackupVault",
+        "backup:DescribeRecoveryPoint",
+        "backup:ListRecoveryPointsByBackupVault",
+        "backup:ListRecoveryPointsByResource",
+        "backup:DeleteRecoveryPoint",
+        "backup:StartRestoreJob",
+        "backup:GetRecoveryPointRestoreMetadata",
+        "backup:DescribeRestoreJob",
+        "backup-storage:MountCapsule",
         "ec2:AssociateVpcCidrBlock",
         "ec2:AuthorizeSecurityGroupIngress",
         "ec2:CreateNetworkInterface",
@@ -75,15 +71,15 @@
         "elasticfilesystem:DeleteMountTarget",
         "elasticfilesystem:DeleteTags",
         "elasticfilesystem:DescribeFileSystems",
-        "elasticfilesystem:DescribeMountTargetSecurityGroups",
         "elasticfilesystem:DescribeMountTargets",
+        "elasticfilesystem:DescribeMountTargetSecurityGroups",
         "elasticfilesystem:TagResource",
         "elasticfilesystem:UntagResource",
-        "kms:CreateGrant",
         "kms:Decrypt",
         "kms:DescribeKey",
-        "kms:GenerateDataKey",
+        "kms:CreateGrant",
         "kms:RetireGrant",
+        "kms:GenerateDataKey",
         "secretsmanager:CreateSecret",
         "secretsmanager:DeleteSecret",
         "secretsmanager:DescribeSecret",
@@ -106,6 +102,23 @@
       "Condition": {
         "StringLike": {
           "iam:AWSServiceName": "elasticache.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "BackupServiceRolePermissions",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/CloudManagerBackupServiceRole"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "backup.amazonaws.com"
+          ]
         }
       }
     }
