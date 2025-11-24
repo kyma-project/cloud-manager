@@ -3,6 +3,8 @@
 set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+rm -f $SCRIPT_DIR/crd/bases/_.yaml
+
 echo "Patching CRDs..."
 
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.1.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml

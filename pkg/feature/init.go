@@ -2,7 +2,6 @@ package feature
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -42,6 +41,11 @@ func WithUrl(url string) ProviderOption {
 	}
 }
 
+func WithStaticConfig() ProviderOption {
+	return func(o *ProviderOptions) {
+	}
+}
+
 func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption) (err error) {
 	o := &ProviderOptions{}
 	for _, x := range opts {
@@ -53,18 +57,19 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 		if len(o.url) == 0 {
 			o.filename = os.Getenv("FEATURE_FLAG_CONFIG_FILE")
 		}
-		if len(o.filename) == 0 {
-			return errors.New("unable to locate feature flag config file. Use env vars FEATURE_FLAG_CONFIG_URL or FEATURE_FLAG_CONFIG_FILE to specify its url/path")
-		}
 	}
 	var rtvr retriever.Retriever
 	if o.url != "" {
 		logger.WithValues("ffRetrieverUrl", o.url).Info("Using http retriever")
 		rtvr = &httpretriever.Retriever{URL: o.url}
-	} else {
+	} else if o.filename != "" {
 		logger.WithValues("ffRetrieverFile", o.filename).Info("Using file retriever")
 		rtvr = &fileretriever.Retriever{Path: o.filename}
+	} else {
+		logger.WithValues("ffRetrieverStatic", "default.yaml").Info("Using static retriever")
+		rtvr = &EmbeddedRetriever{}
 	}
+
 	ff, errLoading := ffclient.New(ffclient.Config{
 		PollingInterval:         30 * time.Second,
 		Context:                 ctx,

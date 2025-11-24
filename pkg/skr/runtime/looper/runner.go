@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
-	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
@@ -119,7 +119,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			//logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", ptr.Deref(options.provider, "")))
 			instlr := &installer{
 				skrStatus:        skrStatus,
-				skrProvidersPath: config.SkrRuntimeConfig.ProvidersDir,
+				skrProvidersPath: skrruntimeconfig.SkrRuntimeConfig.ProvidersDir,
 				logger:           logger,
 			}
 			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), ToCluster(skrManager))

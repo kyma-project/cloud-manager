@@ -44,6 +44,10 @@ The `gcpnfsbackupschedule.cloud-resources.kyma-project.io` CRD describes the bac
 
 The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the Google Cloud Filestore restore operation. For more information, see [GcpNfsVolumeRestore Custom Resource](./04-20-23-gcp-nfs-volume-restore.md).
 
+### GcpNfsVolumeBackupDiscovery CR [**Beta feature**]
+
+The `gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io` CRD describes the Google Cloud Filestore backup discovery operation. For more information, see [GcpNfsVolumeBackupDiscovery Custom Resource](./04-20-24-gcp-nfs-volume-backup-discovery.md).
+
 ## VPC Peering Resources
 
 ### AwsVpcPeering CR

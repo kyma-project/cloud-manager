@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -20,16 +20,15 @@ func init() {
 }
 
 func TestCloudResourcesObjectsImplementFeatureAwareObject(t *testing.T) {
-	skrScheme := bootstrap.SkrScheme
 
-	for gvk := range skrScheme.AllKnownTypes() {
+	for gvk := range commonscheme.SkrScheme.AllKnownTypes() {
 		if gvk.Group == cloudresourcesv1beta1.GroupVersion.Group {
 			if schemeIgnoreRegex.Match([]byte(gvk.Kind)) {
 				continue
 			}
 
 			t.Run(gvk.Kind, func(t *testing.T) {
-				obj, err := skrScheme.New(gvk)
+				obj, err := commonscheme.SkrScheme.New(gvk)
 				assert.NoError(t, err)
 				assert.Implements(t, (*types.FeatureAwareObject)(nil), obj, "does not implement FeatureAwareObject")
 			})
@@ -38,16 +37,14 @@ func TestCloudResourcesObjectsImplementFeatureAwareObject(t *testing.T) {
 }
 
 func TestCloudResourcesObjectsImplementProviderAwareObject(t *testing.T) {
-	skrScheme := bootstrap.SkrScheme
-
-	for gvk := range skrScheme.AllKnownTypes() {
+	for gvk := range commonscheme.SkrScheme.AllKnownTypes() {
 		if gvk.Group == cloudresourcesv1beta1.GroupVersion.Group {
 			if schemeIgnoreRegex.Match([]byte(gvk.Kind)) {
 				continue
 			}
 
 			t.Run(gvk.Kind, func(t *testing.T) {
-				obj, err := skrScheme.New(gvk)
+				obj, err := commonscheme.SkrScheme.New(gvk)
 				assert.NoError(t, err)
 				assert.Implements(t, (*types.ProviderAwareObject)(nil), obj, "does not implement ProviderAwareObject")
 			})
@@ -56,7 +53,7 @@ func TestCloudResourcesObjectsImplementProviderAwareObject(t *testing.T) {
 }
 
 func TestObjectGroupVersionInfo(t *testing.T) {
-	skrScheme := bootstrap.SkrScheme
+	skrScheme := commonscheme.SkrScheme
 
 	gCrd := "apiextensions.k8s.io"
 	kCrd := "CustomResourceDefinition"

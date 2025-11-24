@@ -3,12 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"sync"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"path/filepath"
-	"sync"
 )
 
 func NewConfig(env abstractions.Environment) Config {
@@ -32,6 +33,10 @@ type config struct {
 
 func (c *config) BaseDir(baseDir string) {
 	c.baseDir = baseDir
+}
+
+func (c *config) GetBaseDir() string {
+	return c.baseDir
 }
 
 func (c *config) GetEnv(key string) string {

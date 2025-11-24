@@ -9,7 +9,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
@@ -155,25 +155,20 @@ func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.Cli
 }
 
 func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup) (*testStateFactory, error) {
-
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&scope).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	skrClient := fake.NewClientBuilder().
-		WithScheme(skrScheme).
+		WithScheme(commonscheme.SkrScheme).
 		WithObjects(&gcpNfsVolume).
 		WithStatusSubresource(&gcpNfsVolume).
 		WithObjects(gcpNfsVolumeBackup).
 		WithStatusSubresource(gcpNfsVolumeBackup).
 		Build()
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 	nfsBackupClient := NewFakeFileBackupClientProvider(fakeHttpServer)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsBackupClient, env)

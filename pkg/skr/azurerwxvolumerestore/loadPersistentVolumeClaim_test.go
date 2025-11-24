@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -29,8 +29,6 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 		var state *State
 		var k8sClient client.WithWatch
 
-		kcpScheme := bootstrap.KcpScheme
-
 		scope := &cloudcontrolv1beta1.Scope{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-scope",
@@ -46,10 +44,10 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 		}
 
 		kcpClient := fake.NewClientBuilder().
-			WithScheme(kcpScheme).
+			WithScheme(commonscheme.KcpScheme).
 			WithObjects(scope).
 			Build()
-		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
@@ -81,7 +79,6 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.SkrScheme
 			var fakeClient client.WithWatch
 			if withPvc {
 				pvc = &corev1.PersistentVolumeClaim{
@@ -97,7 +94,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 					},
 				}
 				fakeClient = fake.NewClientBuilder().
-					WithScheme(scheme).
+					WithScheme(commonscheme.SkrScheme).
 					WithObjects(azureRwxVolumeRestore).
 					WithStatusSubresource(azureRwxVolumeRestore).
 					WithObjects(pvc).
@@ -105,7 +102,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 					Build()
 			} else {
 				fakeClient = fake.NewClientBuilder().
-					WithScheme(scheme).
+					WithScheme(commonscheme.SkrScheme).
 					WithObjects(azureRwxVolumeRestore).
 					WithStatusSubresource(azureRwxVolumeRestore).
 					Build()

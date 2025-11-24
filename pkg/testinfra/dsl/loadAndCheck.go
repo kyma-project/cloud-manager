@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,6 +29,10 @@ func LoadAndCheck(ctx context.Context, clnt client.Client, obj client.Object, lo
 	}
 
 	actions.ApplyOnObject(obj)
+
+	if obj.GetName() == "" {
+		return errors.New("the LoadAndCheck object must have a name")
+	}
 
 	if err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), obj); err != nil {
 		return err
@@ -74,5 +78,9 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 			return fmt.Sprintf("%s/%s/{%s}", c.Type, c.Reason, c.Message)
 		})
 	}
-	return fmt.Errorf("object is not deleted, found in state %s with conditions %v", state, conditions)
+	txtDT := "w/out deletion timestamp"
+	if obj.GetDeletionTimestamp() != nil {
+		txtDT = "with deletion timestamp"
+	}
+	return fmt.Errorf("object is not deleted, found %s in state %s with conditions %v", txtDT, state, conditions)
 }
