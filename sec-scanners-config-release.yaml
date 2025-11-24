@@ -1,8 +1,8 @@
 module-name: cloud-manager
 kind: kyma
-rc-tag: 1.5.0
+rc-tag: 1.6.0
 bdba:
-  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.5.0
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:1.6.0
 mend:
   language: golang-mod
   exclude:

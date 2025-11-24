@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -25,13 +27,18 @@ func (s *validateSpecSuite) SetupTest() {
 }
 
 func (s *validateSpecSuite) TestIpRangeWhenNotExist() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Invoke validateIpRange
 	err, _ = validateIpRange(ctx, state)
@@ -53,7 +60,11 @@ func (s *validateSpecSuite) TestIpRangeWhenNotExist() {
 }
 
 func (s *validateSpecSuite) TestIpRangeWhenNotReady() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -71,7 +82,8 @@ func (s *validateSpecSuite) TestIpRangeWhenNotReady() {
 	err = factory.skrCluster.K8sClient().Create(ctx, &ipRange)
 	assert.Nil(s.T(), err)
 
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Invoke validateIpRange
 	err, _ctx := validateIpRange(ctx, state)
@@ -95,7 +107,11 @@ func (s *validateSpecSuite) TestIpRangeWhenNotReady() {
 }
 
 func (s *validateSpecSuite) TestIpRangeWhenReady() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -126,7 +142,8 @@ func (s *validateSpecSuite) TestIpRangeWhenReady() {
 	err = factory.skrCluster.K8sClient().Create(ctx, &ipRange)
 	assert.Nil(s.T(), err)
 
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Invoke validateIpRange
 	err, _ctx := validateIpRange(ctx, state)

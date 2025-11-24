@@ -2,12 +2,15 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,14 +30,20 @@ func (s *setProcessingSuite) SetupTest() {
 func (s *setProcessingSuite) TestSetProcessingWhenDeleting() {
 
 	obj := deletedGcpNfsVolume.DeepCopy()
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	assert.Nil(s.T(), err)
+
 	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
@@ -45,7 +54,11 @@ func (s *setProcessingSuite) TestSetProcessingWhenDeleting() {
 func (s *setProcessingSuite) TestSetProcessingWhenStateDone() {
 
 	obj := gcpNfsVolume.DeepCopy()
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -59,7 +72,8 @@ func (s *setProcessingSuite) TestSetProcessingWhenStateDone() {
 		Reason:  "test",
 		Message: "test",
 	})
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	assert.Nil(s.T(), err)
 	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
@@ -70,7 +84,11 @@ func (s *setProcessingSuite) TestSetProcessingWhenStateDone() {
 func (s *setProcessingSuite) TestSetProcessingWhenStateError() {
 
 	obj := gcpNfsVolume.DeepCopy()
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -84,7 +102,8 @@ func (s *setProcessingSuite) TestSetProcessingWhenStateError() {
 		Reason:  "test",
 		Message: "test",
 	})
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	assert.Nil(s.T(), err)
 	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
@@ -95,7 +114,11 @@ func (s *setProcessingSuite) TestSetProcessingWhenStateError() {
 func (s *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
 
 	obj := gcpNfsVolume.DeepCopy()
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -105,7 +128,8 @@ func (s *setProcessingSuite) TestSetProcessingWhenStateEmpty() {
 	obj.Status.State = ""
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	assert.Nil(s.T(), err)
 	s.Nil(err)
 
 	err, ctx = setProcessing(ctx, state)
