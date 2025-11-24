@@ -5,8 +5,9 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/.env
 source $SCRIPT_DIR/_common.sh
+source $SCRIPT_DIR/_common-azure.sh
 
-gcpInit
+azureInit
 
 # Functions
 
@@ -24,7 +25,7 @@ listKeys() {
 
 create() {
   log "Creating new key for APP_ID $APP_ID"
-  az ad app credential reset --id "$APP_ID" --append --query password  -o tsv
+  az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv
 }
 
 
