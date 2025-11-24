@@ -30,7 +30,7 @@ The reconciler-facing API, like `Reconcile()` and `.SetupWithManager()` function
 
 ![SKR Controller Manager](./assets/skr-controller-manager.drawio.svg)
 
-## CloudControl Scope resource
+## CloudControl Scope Resource
 
 Different cloud providers' APIs require different connection options to define the scope of the operations:
 * GCP - project
