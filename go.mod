@@ -37,10 +37,10 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gardener/gardener v1.132.1
-	github.com/gardener/gardener-extension-provider-aws v1.64.0
-	github.com/gardener/gardener-extension-provider-azure v1.55.0
+	github.com/gardener/gardener-extension-provider-aws v1.66.0
+	github.com/gardener/gardener-extension-provider-azure v1.56.2
 	github.com/gardener/gardener-extension-provider-gcp v1.47.0
-	github.com/gardener/gardener-extension-provider-openstack v1.49.0
+	github.com/gardener/gardener-extension-provider-openstack v1.51.0
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/google/uuid v1.6.0
