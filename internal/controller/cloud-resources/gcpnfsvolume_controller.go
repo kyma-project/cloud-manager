@@ -18,6 +18,10 @@ package cloudresources
 
 import (
 	"context"
+
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -32,14 +36,17 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
-type GcpNfsVolumeReconcilerFactory struct{}
+type GcpNfsVolumeReconcilerFactory struct {
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
+	env                      abstractions.Environment
+}
 
 func (f *GcpNfsVolumeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeReconciler{
 		kymaRef:    args.KymaRef,
 		kcpCluster: args.KcpCluster,
 		skrCluster: args.SkrCluster,
-		Reconciler: gcpnfsvolume.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster),
+		Reconciler: gcpnfsvolume.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider, f.env),
 	}
 }
 
@@ -70,9 +77,16 @@ func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return r.Reconciler.Run(ctx, req)
 }
 
-func SetupGcpNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
+func SetupGcpNfsVolumeReconciler(
+	reg skrruntime.SkrRegistry,
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	env abstractions.Environment,
+) error {
 	return reg.Register().
-		WithFactory(&GcpNfsVolumeReconcilerFactory{}).
+		WithFactory(&GcpNfsVolumeReconcilerFactory{
+			fileBackupClientProvider: fileBackupClientProvider,
+			env:                      env,
+		}).
 		For(&cloudresourcesv1beta1.GcpNfsVolume{}).
 		Watches(&corev1.PersistentVolume{}, gcpnfsvolume.PVEventHandler).
 		Complete()

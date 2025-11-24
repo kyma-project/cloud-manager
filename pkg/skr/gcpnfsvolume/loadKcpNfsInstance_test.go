@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -23,14 +25,19 @@ func (s *loadKcpNfsInstanceSuite) SetupTest() {
 }
 
 func (s *loadKcpNfsInstanceSuite) TestWithMatchingNfsInstance() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 
@@ -44,7 +51,11 @@ func (s *loadKcpNfsInstanceSuite) TestWithMatchingNfsInstance() {
 }
 
 func (s *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -57,7 +68,8 @@ func (s *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
 			Namespace: "test",
 		},
 	}
-	state := factory.newStateWith(&nfsVol)
+	state, err := factory.newStateWith(&nfsVol)
+	s.Nil(err)
 
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 
@@ -70,7 +82,11 @@ func (s *loadKcpNfsInstanceSuite) TestWithNotMatchingNfsInstance() {
 }
 
 func (s *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -92,7 +108,8 @@ func (s *loadKcpNfsInstanceSuite) TestWithMultipleMatchingNfsInstances() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	err, _ctx := loadKcpNfsInstance(ctx, state)
 

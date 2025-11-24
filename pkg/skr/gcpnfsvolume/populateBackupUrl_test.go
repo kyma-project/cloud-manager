@@ -35,13 +35,14 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotFound() {
 	objDiffName.Spec.SourceBackup.Name = "diffName"
 	objDiffName.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
 
-	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, objDiffName)
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, &gcpNfsVolumeBackup, objDiffName)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
-	state := factory.newStateWith(objDiffName)
+	state, err := factory.newStateWith(objDiffName)
+	assert.Nil(s.T(), err)
 	err, _ctx := populateBackupUrl(ctx, state)
 
 	//validate expected return values
@@ -54,13 +55,18 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupNotReady() {
 	obj.Spec.SourceBackup.Name = gcpNfsVolumeBackup.Name
 	obj.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
 	backup := gcpNfsVolumeBackup.DeepCopy()
-	factory, err := newTestStateFactoryWithObject(backup, obj)
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, backup, obj)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolumeBackup
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	// Remove the conditions from backup
 	backup.Status.Conditions = []metav1.Condition{}
 	err = factory.skrCluster.K8sClient().Status().Update(ctx, backup)
@@ -84,13 +90,18 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackup.Name = gcpNfsVolumeBackup.Name
 	obj.Spec.SourceBackup.Namespace = gcpNfsVolumeBackup.Namespace
-	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj)
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, &gcpNfsVolumeBackup, obj)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.Scope = kcpScope.DeepCopy()
 	err, ctx = populateBackupUrl(ctx, state)
 	assert.Nil(s.T(), err)
@@ -100,13 +111,18 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupReady() {
 func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupUrl() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackupUrl = fmt.Sprintf("%s/%s", gcpNfsVolumeBackup.Status.Location, fmt.Sprintf("cm-%.60s", gcpNfsVolumeBackup.Status.Id))
-	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj)
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, &gcpNfsVolumeBackup, obj)
 	s.Nil(err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.Scope = kcpScope.DeepCopy()
 	err, ctx = populateBackupUrl(ctx, state)
 	assert.Nil(s.T(), err)
