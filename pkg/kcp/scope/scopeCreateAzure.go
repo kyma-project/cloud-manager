@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
+	gardenerazureapi "github.com/gardener/gardener-extension-provider-azure/pkg/apis/azure/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	azuregardener "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/gardener"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/utils/ptr"
 )
@@ -31,7 +31,7 @@ func scopeCreateAzure(ctx context.Context, st composed.State) (error, context.Co
 		return composed.StopAndForget, nil // no requeue
 	}
 
-	infra := &azuregardener.InfrastructureConfig{}
+	infra := &gardenerazureapi.InfrastructureConfig{}
 	err := json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error unmarshalling Azure InfrastructureConfig", composed.StopAndForget, ctx)
@@ -47,7 +47,7 @@ func scopeCreateAzure(ctx context.Context, st composed.State) (error, context.Co
 					VpcNetwork:     common.GardenerVpcName(state.shootNamespace, state.shootName),
 					Network: cloudcontrolv1beta1.AzureNetwork{
 						Cidr: ptr.Deref(infra.Networks.VNet.CIDR, ""),
-						Zones: pie.Map(infra.Networks.Zones, func(z azuregardener.Zone) cloudcontrolv1beta1.AzureNetworkZone {
+						Zones: pie.Map(infra.Networks.Zones, func(z gardenerazureapi.Zone) cloudcontrolv1beta1.AzureNetworkZone {
 							return cloudcontrolv1beta1.AzureNetworkZone{
 								Name: fmt.Sprintf("%d", z.Name),
 								Cidr: z.CIDR,

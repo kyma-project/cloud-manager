@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	corev1 "k8s.io/api/core/v1"
@@ -17,8 +17,6 @@ import (
 func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	skrScheme := bootstrap.SkrScheme
-
 	skrManagerFactory := skrmanager.NewFactory(state.Cluster().ApiReader(), state.gardenerClusterSummary.Namespace)
 
 	restConfig, err := skrManagerFactory.LoadRestConfig(ctx, state.gardenerClusterSummary.Name, state.gardenerClusterSummary.Key)
@@ -26,7 +24,7 @@ func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error creating rest config", composed.StopWithRequeue, ctx)
 	}
 
-	skrClient, err := ctrlclient.New(restConfig, ctrlclient.Options{Scheme: skrScheme})
+	skrClient, err := ctrlclient.New(restConfig, ctrlclient.Options{Scheme: commonscheme.SkrScheme})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating k8s skr client", composed.StopWithRequeue, ctx)
 	}

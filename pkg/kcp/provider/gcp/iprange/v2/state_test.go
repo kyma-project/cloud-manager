@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/api"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 
 	"net/http/httptest"
 
@@ -63,15 +63,12 @@ type testStateFactory struct {
 }
 
 func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
-
-	kcpScheme := bootstrap.KcpScheme
-
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&gcpIpRange).
 		WithStatusSubresource(&gcpIpRange).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	computeClientProvider := newFakeComputeClientProvider(fakeHttpServer)
 	svcNwClientProvider := newFakeServiceNetworkingProvider(fakeHttpServer)

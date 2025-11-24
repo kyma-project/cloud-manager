@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -187,9 +187,8 @@ func TestLoadAddress(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.KcpScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.KcpScheme).
 				Build()
 
 			k8sClient = spy.NewClientSpy(fakeClient)
