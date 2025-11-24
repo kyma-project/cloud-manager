@@ -10,7 +10,7 @@ Cloud Manager defines two API groups:
 
 Cloud Manager has a central active component running in KCP that runs two sets of reconciliation loops - one for each API group.
 
-Cloud Resources reconcilers remotely reconcile the `cloud-resources.kyma-project.io` API group from SAP BTP, Kyma runtime, into the low-level `cloud-control.kyma-project.io` API group in KCP. Internally, the reconciliation process is referred to as the **SKR Loop**.
+Cloud Resources reconcilers remotely reconcile the `cloud-resources.kyma-project.io` API group from SAP BTP, Kyma runtime into the low-level `cloud-control.kyma-project.io` API group in KCP. Internally, the reconciliation process is referred to as the **SKR Loop**.
 
 Cloud Control reconcilers locally reconcile the `cloud-control.kyma-project.io` API group into the resources of a cloud provider - hyperscaler. Internally, the reconciliation process is referred to as the **KCP Loop**.
 
