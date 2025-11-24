@@ -3,6 +3,8 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -24,14 +26,19 @@ func (s *removePersistenceVolumeFinalizerSuite) SetupTest() {
 }
 
 func (s *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	assert.Nil(s.T(), err)
 	state.PV = &pvDeletingGcpNfsVolume
 
 	//Create PV.
@@ -50,28 +57,38 @@ func (s *removePersistenceVolumeFinalizerSuite) TestRemoveFinalizer() {
 }
 
 func (s *removePersistenceVolumeFinalizerSuite) TestContinueIfPVNotExists() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	assert.Nil(s.T(), err)
 
 	err, _ = removePersistenceVolumeFinalizer(ctx, state)
 	assert.Nil(s.T(), err)
 }
 
 func (s *removePersistenceVolumeFinalizerSuite) TestDoNotRemoveFinalizerIfObjectIsNotDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with Deleted GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 	assert.Nil(s.T(), err)
 
 	//Call removePersistenceVolumeFinalizer

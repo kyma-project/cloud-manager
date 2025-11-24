@@ -2,6 +2,8 @@ package gcpnfsvolume
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -22,14 +24,19 @@ func (s *loadPersistenceVolumeSuite) SetupTest() {
 }
 
 func (s *loadPersistenceVolumeSuite) TestWithMatchingPV() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	//Add an PV to SKR.
 	pv := pvGcpNfsVolume.DeepCopy()
@@ -47,7 +54,11 @@ func (s *loadPersistenceVolumeSuite) TestWithMatchingPV() {
 }
 
 func (s *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -65,7 +76,8 @@ func (s *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
 			Namespace: "test",
 		},
 	}
-	state := factory.newStateWith(&nfsVol)
+	state, err := factory.newStateWith(&nfsVol)
+	s.Nil(err)
 
 	err, _ctx := loadPersistenceVolume(ctx, state)
 
@@ -78,7 +90,11 @@ func (s *loadPersistenceVolumeSuite) TestWithNotMatchingPV() {
 }
 
 func (s *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -96,7 +112,8 @@ func (s *loadPersistenceVolumeSuite) TestWithMultipleMatchingIpRanges() {
 	assert.Nil(s.T(), err)
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 
 	err, _ctx := loadPersistenceVolume(ctx, state)
 
