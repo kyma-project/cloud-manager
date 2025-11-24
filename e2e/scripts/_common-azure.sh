@@ -19,16 +19,6 @@ initRoleFilePeering() {
   fi
 }
 
-initSANameDefault() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-$DEFAULT_VALUE}"
-}
-
-initSANamePeering() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_PEERING="${SA_NAME_PEERING:-$DEFAULT_VALUE}"
-}
-
 initRoleNameDefault() {
   local DEFAULT_VALUE=$1
   ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-$DEFAULT_VALUE}"
@@ -39,36 +29,55 @@ initRoleNamePeering() {
   ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-$DEFAULT_VALUE}"
 }
 
-# GCP Specific
-
-gcpValidateProject() {
-  if [ -z "${GCP_PROJECT+x}" ]; then
-    echo "GCP_PROJECT is not set"
-    exit 1
-  fi
+# Azure specific
+azureValidateSubscription(){
+    if [ -z "${AZURE_SUBSCRIPTION_ID+x}" ]; then
+      echo "AZURE_SUBSCRIPTION_ID is not set"
+      exit 1
+    fi
 }
 
-gcpInit() {
-  checkRequiredCommands 'gcloud jq'
+azureValidateDefaultAppId(){
+    if [ -z "${AZURE_DEFAULT_APP_ID+x}" ]; then
+      echo "AZURE_DEFAULT_APP_ID is not set"
+      exit 1
+    fi
+}
 
-  gcpValidateProject
+azureValidatePeeringAppId(){
+    if [ -z "${AZURE_PEERING_APP_ID+x}" ]; then
+      echo "AZURE_PEERING_APP_ID is not set"
+      exit 1
+    fi
+}
 
-  initRoleFileDefault '../../docs/contributor/permissions/gcp/gcp_default.yaml'
-  initRoleFilePeering '../../docs/contributor/permissions/gcp/gcp_peering.yaml'
 
-  initSANameDefault 'cloud-manager-e2e'
-  initSANamePeering 'cloud-manager-peering-e2e'
+
+azureInit() {
+  checkRequiredCommands 'az jq'
+
+  azureValidateSubscription
+  azureValidateDefaultAppId
+  azureValidatePeeringAppId
+
+  initRoleFileDefault '../../docs/contributor/permissions/azure_default.json'
+  initRoleFilePeering '../../docs/contributor/permissions/azure_peering.json'
 
   initRoleNameDefault 'cloud_manager_e2e'
   initRoleNamePeering 'cloud_manager_peering_e2e'
 
-  echo "GCP_PROJECT=$GCP_PROJECT"
-  echo "SA_NAME_DEFAULT=$SA_NAME_DEFAULT"
+
   echo "ROLE_NAME_DEFAULT=$ROLE_NAME_DEFAULT"
   echo "ROLE_FILE_DEFAULT=$ROLE_FILE_DEFAULT"
-  echo "SA_NAME_PEERING=$SA_NAME_PEERING"
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
   echo ""
+
+  echo "=== Azure ==="
+  echo "AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID"
+  echo "AZURE_DEFAULT_APP_ID=$AZURE_DEFAULT_APP_ID"
+  echo "AZURE_PEERING_APP_ID=$AZURE_PEERING_APP_ID"
+  echo ""
+
 }
 
