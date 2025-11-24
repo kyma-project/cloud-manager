@@ -5,8 +5,8 @@
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Resource": [
-        "arn:aws-us-gov:iam::*:role/CloudManagerRole",
-        "arn:aws-us-gov:iam::*:role/CloudManagerPeeringRole"
+        "arn:aws:iam::*:role/CloudManagerRole",
+        "arn:aws:iam::*:role/CloudManagerPeeringRole"
       ]
     }
   ]

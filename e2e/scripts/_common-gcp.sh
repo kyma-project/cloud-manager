@@ -70,6 +70,5 @@ gcpInit() {
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
   echo ""
-
 }
 

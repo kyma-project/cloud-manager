@@ -11,48 +11,40 @@ validateAwsAccount() {
   fi
 }
 
-initSANameDefault() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-$DEFAULT_VALUE}"
-}
 
-initSANamePeering() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_PEERING="${SA_NAME_PEERING:-$DEFAULT_VALUE}"
-}
-
-initRoleNameDefault() {
-  local DEFAULT_VALUE=$1
-  ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-$DEFAULT_VALUE}"
-}
-
-initRoleNamePeering() {
-  local DEFAULT_VALUE=$1
-  ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-$DEFAULT_VALUE}"
-}
-
-initSAPolicyName() {
-  :
-}
 
 awsInit() {
   checkRequiredCommands 'aws'
 
   validateAwsAccount
 
-  initSANameDefault 'cloud-manager-e2e'
-  initSANamePeering 'cloud-manager-peering-e2e'
+  initFileVar "POLICY_FILE_DEFAULT" "../../docs/contributor/permissions/aws/policy-CloudManagerAccess.json"
+  initFileVar "POLICY_FILE_PEERING" "../../docs/contributor/permissions/aws/policy-CloudManagerPeeringAccess.json"
+  initFileVar "POLICY_FILE_CM_ASSUME_ROLE" "../../docs/contributor/permissions/aws/policy-CloudManagerAssumeRole.json"
+  initFileVar "TRUST_FILE_ALLOW_CLOUD_MANAGER_ASSUME_ROLE" "../../docs/contributor/permissions/aws/trust-AllowCloudManagerAssumeRole.json"
+  initFileVar "TRUST_FILE_BACKUP_SERVICE" "../../docs/contributor/permissions/aws/trust-CloudManagerBackupServiceRole.json"
 
-  initRoleNameDefault 'CloudManagerRole'
-  initRoleNamePeering 'CloudManagerRole'
+  SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-cloud-manager-e2e}"
+  SA_NAME_PEERING="${SA_NAME_PEERING:-cloud-manager-peering-e2e}"
+  ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-CloudManagerRole}"
+  ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-CloudManagerPeeringRole}"
+  ROLE_NAME_BACKUP_SERVICE="${ROLE_NAME_BACKUP_SERVICE:-CloudManagerBackupServiceRole}"
+
+  POLICY_NAME_DEFAULT="${POLICY_NAME_DEFAULT:-CloudManagerAccess}"
+  POLICY_NAME_PEERING="${POLICY_NAME_PEERING:-CloudManagerPeeringAccess}"
+
+  POLICY_NAME_CM_ASSUME_ROLE="${POLICY_NAME_CM_ASSUME_ROLE:-CloudManagerAssumeRole}"
 
   echo "AWS_ACCOUNT=$AWS_ACCOUNT"
   echo "SA_NAME_DEFAULT=$SA_NAME_DEFAULT"
-  echo "ROLE_NAME_DEFAULT=$ROLE_NAME_DEFAULT"
-#  echo "ROLE_FILE_DEFAULT=$ROLE_FILE_DEFAULT"
   echo "SA_NAME_PEERING=$SA_NAME_PEERING"
+  echo "ROLE_NAME_DEFAULT=$ROLE_NAME_DEFAULT"
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
-#  echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
+  echo "ROLE_NAME_BACKUP_SERVICE=$ROLE_NAME_BACKUP_SERVICE"
+  echo "POLICY_NAME_CM_ASSUME_ROLE=$POLICY_NAME_CM_ASSUME_ROLE"
+  echo "POLICY_FILE_CM_ASSUME_ROLE=$POLICY_FILE_CM_ASSUME_ROLE"
+  echo "TRUST_FILE_ALLOW_CLOUD_MANAGER_ASSUME_ROLE=$TRUST_FILE_ALLOW_CLOUD_MANAGER_ASSUME_ROLE"
+  echo "TRUST_FILE_BACKUP_SERVICE=$TRUST_FILE_BACKUP_SERVICE"
   echo ""
 
   log "Running on AWS account $AWS_ACCOUNT"
