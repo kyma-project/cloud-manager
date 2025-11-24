@@ -41,7 +41,7 @@ The SKR loop, when projecting into the KCP resources, sets the `kymaName` field 
 
 The Cloud Control KCP resource Scope was introduced to:
 
-* improve performance by not reading so many different resources and reaching out to Gardener
+* Improve performance by not reading so many different resources and reaching out to Gardener
 * simplify the development landscape by not avoiding the necessity to be beside the local KCP cluster, and also have the Gardener cluster with all the relevant resources
 
 Upon the appearance of the first resource from a certain SKR, the cloud provider scope is determined, saved in the Scope KCP resource, and the original Cloud Control KCP resource is updated with the `scopeRef`. In dev, scope determination can be avoided by creating a resource that already refers to an existing Scope resource. 
