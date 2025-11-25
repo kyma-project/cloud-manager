@@ -26,7 +26,7 @@ export default [
     { text: 'GcpRedisCluster Custom Resource', link: './resources/04-50-20-gcp-redis-cluster' },
     { text: 'GcpSubnet Custom Resource', link: './resources/04-50-21-gcp-subnet' },
     { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' },
-    { text: 'SapNfsVolume Custom Resource', link: './resources/04-20-50-sap-nfs-volume' }
+    { text: 'SapNfsVolume Custom Resource', link: './resources/04-20-50-sap-nfs-volume' },
     { text: 'AzureVpcDnsLink Custom Resource', link: './resources/04-40-40-azure-vpc-dns-link' }
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
