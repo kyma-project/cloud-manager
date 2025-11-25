@@ -39,7 +39,7 @@ type ConfigType struct {
 
 	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
 
-	ConfigDir             string                       `yaml:"configDir" json:"configDir" json:"configDir"`
+	ConfigDir             string                       `yaml:"configDir" json:"configDir"`
 	CredentialsDir        string                       `yaml:"credentialsDir" json:"credentialsDir"`
 
 	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
