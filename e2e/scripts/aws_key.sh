@@ -5,11 +5,9 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/.env
 source $SCRIPT_DIR/_common.sh
-source $SCRIPT_DIR/_common-gcp.sh
+source $SCRIPT_DIR/_common-aws.sh
 
-gcpInit
-
-# Functions
+awsInit
 
 usage() {
   echo "Usage: ${BASH_SOURCE[0]} [default|peering] [create|delete|list]"
@@ -22,26 +20,26 @@ usage() {
 listKeys() {
   KEYS_FILE=$(mktemp)
   trap "rm -f \"$KEYS_FILE\"" EXIT
-  gcloud iam service-accounts keys list --iam-account="$SA" --project "$GCP_PROJECT" --format=json --filter='keyType: USER_MANAGED' \
-    | jq -r "sort_by(.validAfterTime)" > $KEYS_FILE
+  aws iam list-access-keys --user-name "$SA" \
+    | jq -r ".AccessKeyMetadata | sort_by(.CreateDate)" > $KEYS_FILE
 }
 
 create() {
   log "Creating new key for SA $SA"
-  local FN=$(mktemp)
-  trap "rm -f \"$FN\"" EXIT
-  gcloud iam service-accounts keys create "$FN" --iam-account="$SA" --project $GCP_PROJECT
-  cat $FN
+  aws iam create-access-key --user-name "$SA"
 }
 
 
 delete() {
   log "Deleting oldest key of SA $SA"
   listKeys
-  local ID=$(cat $KEYS_FILE | jq -r "sort_by(.validAfterTime) | .[0] | .name")
-  ID=$(basename "$ID")
+  local ID=$(cat $KEYS_FILE | jq -r "sort_by(.CreateDate) | .[0] | .AccessKeyId")
   log "Oldest key id is $ID"
-  gcloud iam service-accounts keys delete $ID --iam-account="$SA" --project "$GCP_PROJECT"
+  if [ "$ID" == "null" ]; then
+    log "The SA $SA has no keys that can be deleted"
+    exit 1
+  fi
+  aws iam delete-access-key --user-name "$SA" --access-key-id "$ID"
   log "The key with id $ID is deleted"
 }
 
@@ -56,12 +54,10 @@ CMD=$2
 
 case "$1" in
 default)
-  SA_NAME="$SA_NAME_DEFAULT"
-  SA="${SA_NAME_DEFAULT}@${GCP_PROJECT}.iam.gserviceaccount.com"
+  SA="$SA_NAME_DEFAULT"
   ;;
 peering)
-  SA_NAME="$SA_NAME_PEERING"
-  SA="${SA_NAME_PEERING}@${GCP_PROJECT}.iam.gserviceaccount.com"
+  SA="$SA_NAME_PEERING"
   ;;
 *)
   echo "Unknown SA type '$SA_TYPE'"
@@ -83,4 +79,3 @@ list)
   echo "Unknown command '$CMD'"
   usage 1
 esac
-
