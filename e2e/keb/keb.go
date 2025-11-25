@@ -40,6 +40,7 @@ type Keb interface {
 	SkrManagerFactory
 
 	KcpClient() client.Client
+	GardenClient() client.Client
 
 	CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error)
 	WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error
@@ -491,6 +492,10 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 
 func (k *defaultKeb) KcpClient() client.Client {
 	return k.kcpClient
+}
+
+func (k *defaultKeb) GardenClient() client.Client {
+	return k.gardenClient
 }
 
 func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error {
