@@ -14,7 +14,7 @@ validateAwsAccount() {
 
 
 awsInit() {
-  checkRequiredCommands 'aws'
+  checkRequiredCommands 'aws jq tee'
 
   validateAwsAccount
 

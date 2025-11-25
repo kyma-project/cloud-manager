@@ -44,21 +44,12 @@ azureValidateDefaultAppId(){
     fi
 }
 
-azureValidatePeeringAppId(){
-    if [ -z "${AZURE_PEERING_APP_ID+x}" ]; then
-      echo "AZURE_PEERING_APP_ID is not set"
-      exit 1
-    fi
-}
-
-
 
 azureInit() {
-  checkRequiredCommands 'az jq'
+  checkRequiredCommands 'az jq tee'
 
   azureValidateSubscription
   azureValidateDefaultAppId
-  azureValidatePeeringAppId
 
   initRoleFileDefault '../../docs/contributor/permissions/azure_default.json'
   initRoleFilePeering '../../docs/contributor/permissions/azure_peering.json'
@@ -76,7 +67,6 @@ azureInit() {
   echo "=== Azure ==="
   echo "AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID"
   echo "AZURE_DEFAULT_APP_ID=$AZURE_DEFAULT_APP_ID"
-  echo "AZURE_PEERING_APP_ID=$AZURE_PEERING_APP_ID"
   echo ""
 
 }

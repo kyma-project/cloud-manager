@@ -26,7 +26,20 @@ listKeys() {
 
 create() {
   log "Creating new key for SA $SA"
-  aws iam create-access-key --user-name "$SA"
+  local FN=$(mktemp)
+  trap "rm -f \"$FN\"" EXIT
+
+  aws iam create-access-key --user-name "$SA" | tee "$FN"
+
+  local KEY=$(jq -r '.AccessKey.AccessKeyId' "$FN")
+  local SECRET=$(jq -r '.AccessKey.SecretAccessKey' "$FN")
+  putCredentialKeyVal "accessKeyID" "$KEY"
+  putCredentialKeyVal "secretAccessKey" "$SECRET"
+  if [ "$SA_TYPE" = "default" ]; then
+    saveCredentialsToGarden "$AWS_GARDEN_DEFAULT_SECRET"
+  else
+    saveCredentialsToGarden "$AWS_GARDEN_PEERING_SECRET"
+  fi
 }
 
 
