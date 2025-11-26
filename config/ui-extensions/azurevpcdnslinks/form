@@ -7,7 +7,12 @@
   name: spec.remotePrivateDnsZone
   widget: Text
   disableOnEdit: true
-  required: true
+  visibility: '$not($exists(spec.remoteDnsResolverRuleset) and spec.remoteDnsResolverRuleset)'
+- path: spec.remoteDnsResolverRuleset
+  name: spec.remoteDnsResolverRuleset
+  widget: Text
+  disableOnEdit: true
+  visibility: '$not($exists(spec.remotePrivateDnsZone) and spec.remotePrivateDnsZone)'
 - path: spec.remoteTenant
   name: spec.remoteTenant
   widget: Text
