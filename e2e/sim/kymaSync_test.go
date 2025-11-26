@@ -19,6 +19,7 @@ func Test_KymaSync(t *testing.T) {
 		changedSkrStatus bool
 		changedKcpSpec   bool
 		changedKcpStatus bool
+		removedModules   []string
 	}{
 		{
 			title:            "no sync when empty",
@@ -59,6 +60,7 @@ func Test_KymaSync(t *testing.T) {
 			changedSkrStatus: true,
 			changedKcpSpec:   true,
 			changedKcpStatus: true,
+			removedModules:   []string{"bbb"},
 		},
 		{
 			title:            "last module removed",
@@ -69,6 +71,7 @@ func Test_KymaSync(t *testing.T) {
 			changedSkrStatus: true,
 			changedKcpSpec:   true,
 			changedKcpStatus: true,
+			removedModules:   []string{"aaa"},
 		},
 	}
 
@@ -128,6 +131,13 @@ func Test_KymaSync(t *testing.T) {
 			assert.Equal(t, data.changedSkrStatus, outcome.SKR.StatusChanged, "SKR status changed")
 			assert.Equal(t, data.changedKcpSpec, outcome.KCP.SpecChanged, "KCP spec changed")
 			assert.Equal(t, data.changedKcpStatus, outcome.KCP.StatusChanged, "KCP status changed")
+
+			for _, moduleName := range data.removedModules {
+				assert.True(t, outcome.IsRemoved(moduleName))
+			}
+			for _, moduleName := range data.skrSpec {
+				assert.True(t, outcome.IsActive(moduleName))
+			}
 		})
 	}
 }

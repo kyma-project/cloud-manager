@@ -3,7 +3,7 @@ Feature: GcpNfsVolume feature
   @skr @gcp @nfs
   Scenario: GcpNfsVolume/Backup/Restore scenario
 
-    Given there is SKR with "GCP" provider and default IpRange
+    Given there is shared SKR with "GCP" provider
 
     And resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |

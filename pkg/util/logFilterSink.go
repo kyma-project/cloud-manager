@@ -1,21 +1,24 @@
 package util
 
 import (
-	"github.com/go-logr/logr"
 	"regexp"
+
+	"github.com/go-logr/logr"
 )
 
 type LogFilterSink struct {
 	inner                          logr.LogSink
 	unhandledErrorDeadlineExceeded *regexp.Regexp
 	contextCanceledReflected       *regexp.Regexp
+	failedWaitingForInformerToSync *regexp.Regexp
 }
 
 func NewLogFilterSink(inner logr.LogSink) *LogFilterSink {
 	return &LogFilterSink{
 		inner:                          inner,
-		unhandledErrorDeadlineExceeded: regexp.MustCompile(`"Unhandled Error" err="pkg/mod/k8s\.io/client-go@v0\.\d+\.\d+/tools/cache/reflector\.go:\d+: Failed to watch \*v1beta1\.[a-zA-Z]+: context deadline exceeded" logger="UnhandledError"`),
-		contextCanceledReflected:       regexp.MustCompile(`reflector.go:\d+] pkg/mod/k8s\.io/client-go@v0\.\d+\.\d+/tools/cache/reflector.go:\d+: watch of \*v1beta1\.[a-zA-Z0..9]+ ended with: an error on the server \("unable to decode an event from the watch stream: context canceled"\) has prevented the request from succeeding`),
+		unhandledErrorDeadlineExceeded: regexp.MustCompile(`context deadline exceeded`),
+		contextCanceledReflected:       regexp.MustCompile(`context canceled`),
+		failedWaitingForInformerToSync: regexp.MustCompile(`Timeout: failed waiting for .* Informer to sync`),
 	}
 }
 
@@ -26,6 +29,9 @@ func (l *LogFilterSink) isMsgOk(msg string) bool {
 		"Starting Controller",
 		"Shutdown signal received, waiting for all workers to finish",
 		"All workers finished":
+		return false
+	}
+	if l.failedWaitingForInformerToSync.MatchString(msg) {
 		return false
 	}
 	// "Unhandled Error" err="pkg/mod/k8s.io/client-go@v0.32.0/tools/cache/reflector.go:251: Failed to watch *v1beta1.AzureVpcPeering: context deadline exceeded" logger="UnhandledError"
@@ -54,7 +60,7 @@ func (l *LogFilterSink) Info(level int, msg string, keysAndValues ...any) {
 }
 
 func (l *LogFilterSink) Error(err error, msg string, keysAndValues ...any) {
-	if l.isMsgOk(msg) {
+	if l.isMsgOk(msg) && l.isMsgOk(err.Error()) {
 		l.inner.Error(err, msg, keysAndValues...)
 	}
 }
