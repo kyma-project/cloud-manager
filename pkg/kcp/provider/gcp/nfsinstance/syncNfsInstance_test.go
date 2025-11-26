@@ -412,8 +412,6 @@ func (s *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Zonal_With_FF() {
 }
 
 func (s *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Regional_Without_FF() {
-	s.T().Skip("I'm flaky, fix me please!!!")
-
 	gcpNfsInstance := getGcpNfsInstance()
 	gcpNfsInstance.Spec.Instance.Gcp.Tier = v1beta1.REGIONAL
 	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -457,6 +455,7 @@ func (s *syncNfsInstanceSuite) TestGetInstanceWithProtocol_Regional_With_FF() {
 	assert.Equal(s.T(), string(gcpclient.FilestoreProtocolNFSv41), instance.Protocol)
 	instance.Protocol = ""
 	assert.Equal(s.T(), testState.toInstance(), instance)
+	_ = feature.Initialize(ctx, logr.Discard())
 }
 
 func TestSyncNfsInstance(t *testing.T) {
