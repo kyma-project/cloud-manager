@@ -25,7 +25,10 @@ listKeys() {
 
 create() {
   log "Creating new key for APP_ID $APP_ID"
-  az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv
+  $SECRET=$(az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv)
+  putCredentialKeyVal "clientId" "$APP_ID"
+  putCredentialKeyVal "clientSecret" "$SECRET"
+  saveCredentialsToGarden "$AZURE_GARDEN_SECRET"
 }
 
 
