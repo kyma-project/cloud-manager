@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -35,6 +38,11 @@ type ConfigType struct {
 	CloudProfiles map[string]string `yaml:"cloudProfiles" json:"cloudProfiles"`
 
 	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
+
+	ConfigDir      string `yaml:"configDir" json:"configDir"`
+	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
+
+	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
 }
 
 func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {
@@ -152,6 +160,14 @@ func LoadConfig() *ConfigType {
 		configDir = "../../../../"
 	}
 	result := &ConfigType{}
+	result.ConfigDir = configDir
+	if !strings.HasPrefix(configDir, "/") {
+		wd, err := os.Getwd()
+		if err == nil {
+			result.ConfigDir = path.Join(wd, configDir)
+		}
+	}
+	result.CredentialsDir = path.Join(result.ConfigDir, "tmp")
 	cfg.BaseDir(configDir)
 	initConfig(cfg, result)
 	cfg.Read()

@@ -38,3 +38,12 @@ cloudProfiles:
 # in CI unit/controller tests when testinfra/controller-runtime/testenv is used it should be false
 # in local dev writing/debugging e2e test using local kind it can be true to avoid manual secret deletion before each run
 overwriteGardenerCredentials: false
+
+# optional path to the dir where credentials will be downloaded from Garden
+# if omitted, then $CONFIG_DIR/tmp is used - ie dir where this config file is loaded from and it's tmp subdir
+credentialsDir: /some/path/to/dir
+
+# list of Garden secrets to download and its mapping to the local filenames in the credentialsDir
+downloadGardenSecrets:
+  gardenSecretName:
+    localFileName: secretKey
