@@ -113,7 +113,7 @@ func (s *updateCapacitySuite) TestWhenUpdateIsNotDue() {
 }
 
 func (s *updateCapacitySuite) TestWhenLastCapacityUpdateNotExists() {
-
+	testStartTime := time.Now().Add(-1 * time.Second)
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateCreating
 	factory, err := newStateFactoryWithObj(obj)
@@ -147,12 +147,12 @@ func (s *updateCapacitySuite) TestWhenLastCapacityUpdateNotExists() {
 
 	s.Equal(v1beta1.StateCreating, fromK8s.Status.State)
 	s.Equal(backupSize, fromK8s.Status.Capacity.Value())
-	// TODO: this is flaky, happens to be >1s quite often, please fix me!!!
-	//s.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
+	s.True(fromK8s.Status.LastCapacityUpdate.Time.After(testStartTime),
+		"LastCapacityUpdate time should be updated")
 }
 
 func (s *updateCapacitySuite) TestWhenLastCapacityUpdateIsZero() {
-
+	testStartTime := time.Now().Add(-1 * time.Second)
 	obj := awsNfsVolumeBackup.DeepCopy()
 	obj.Status.State = v1beta1.StateCreating
 	obj.Status.LastCapacityUpdate = &metav1.Time{}
@@ -187,7 +187,8 @@ func (s *updateCapacitySuite) TestWhenLastCapacityUpdateIsZero() {
 
 	s.Equal(v1beta1.StateCreating, fromK8s.Status.State)
 	s.Equal(backupSize, fromK8s.Status.Capacity.Value())
-	s.GreaterOrEqual(1*time.Second, time.Since(fromK8s.Status.LastCapacityUpdate.Time))
+	s.True(fromK8s.Status.LastCapacityUpdate.Time.After(testStartTime),
+		"LastCapacityUpdate time should be updated")
 }
 
 func TestUpdateCapacity(t *testing.T) {

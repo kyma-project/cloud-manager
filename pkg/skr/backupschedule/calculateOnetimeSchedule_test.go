@@ -119,7 +119,7 @@ func (s *calculateOnetimeScheduleSuite) TestScheduleWithStartTime() {
 }
 
 func (s *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
-
+	testStartTime := time.Now().Add(-1 * time.Second)
 	obj := gcpNfsBackupSchedule.DeepCopy()
 	factory, err := newTestStateFactoryWithObj(obj)
 	s.Nil(err)
@@ -143,10 +143,9 @@ func (s *calculateOnetimeScheduleSuite) TestScheduleWithNoStartTime() {
 		fromK8s)
 	s.Nil(err)
 	s.Equal(1, len(fromK8s.Status.NextRunTimes))
-	_, err = time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[0])
+	runTime, err := time.Parse(time.RFC3339, fromK8s.Status.NextRunTimes[0])
 	s.Nil(err)
-	// TODO: this is flaky, it happens to be >1s quite frequently, fix me please!!!
-	//s.GreaterOrEqual(time.Second*1, time.Since(runTime))
+	s.True(runTime.After(testStartTime), "Status.NextRunTimes[0] was not set recently")
 }
 
 func (s *calculateOnetimeScheduleSuite) TestScheduleWithLastCreateRun() {
