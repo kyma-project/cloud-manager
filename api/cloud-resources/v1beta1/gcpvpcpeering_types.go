@@ -76,3 +76,7 @@ func (in *GcpVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *GcpVpcPeering) SpecificToProviders() []string { return []string{"gcp"} }
+
+func (in *GcpVpcPeering) State() string { return in.Status.State }
+
+func (in *GcpVpcPeering) SetState(v string) { in.Status.State = v }
