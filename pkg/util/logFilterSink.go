@@ -60,7 +60,7 @@ func (l *LogFilterSink) Info(level int, msg string, keysAndValues ...any) {
 }
 
 func (l *LogFilterSink) Error(err error, msg string, keysAndValues ...any) {
-	if l.isMsgOk(msg) && l.isMsgOk(err.Error()) {
+	if l.isMsgOk(msg) && (err == nil || l.isMsgOk(err.Error())) {
 		l.inner.Error(err, msg, keysAndValues...)
 	}
 }
