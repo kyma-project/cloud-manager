@@ -131,15 +131,9 @@ var _ = Describe("Feature: KCP SIM", func() {
 			Expect(skrKyma.Status.State).To(Equal(operatorshared.StateReady))
 		})
 
-		cr := &cloudresourcesv1beta1.CloudResources{}
-
-		By("And Then CloudResources CR is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), cr, NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
-				Should(Succeed())
-		})
-
-		By("When cloud-manager module is added to SKR Kyma spec", func() {
+		By("When module cloud-manager is enabled", func() {
+			Expect(LoadAndCheck(infra.Ctx(), infra.SKR().Client(), skrKyma, NewObjActions())).
+				To(Succeed())
 			skrKyma.Spec.Modules = []operatorv1beta2.Module{
 				{
 					Name: "cloud-manager",
@@ -173,6 +167,14 @@ var _ = Describe("Feature: KCP SIM", func() {
 					}
 					return nil
 				}).
+				Should(Succeed())
+		})
+
+		cr := &cloudresourcesv1beta1.CloudResources{}
+
+		By("And Then CloudResources CR is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), cr, NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
 				Should(Succeed())
 		})
 
