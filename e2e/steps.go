@@ -13,13 +13,76 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
+func debugLog(ctx context.Context, onOff string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	v, err := strconv.ParseBool(onOff)
+	if err != nil {
+		return ctx, err
+	}
+
+	session.DebugLog(v)
+
+	return ctx, nil
+}
+
+func debugWait(ctx context.Context, suffix string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	name := fmt.Sprintf("e2e-lock-%s-%s", suffix, util.RandomString(6))
+	alias := strings.ReplaceAll(name, "-", "_")
+
+	err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
+		Alias:      alias,
+		Kind:       "ConfigMap",
+		ApiVersion: "v1",
+		Name:       name,
+		Namespace:  world.Config().SkrNamespace,
+	})
+	if err != nil {
+		return ctx, err
+	}
+
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: world.Config().SkrNamespace,
+			Name:      name,
+		},
+	}
+	err = session.CurrentCluster().GetClient().Create(ctx, cm)
+	if err != nil {
+		return ctx, fmt.Errorf("error creating debug wait configmap: %w", err)
+	}
+
+	err = session.EventuallyResourceDoesNotExist(ctx, alias)
+
+	return ctx, err
+}
+
 func errEvalContextBuilding(err error) error {
 	return fmt.Errorf("error building evaluation context: %w", err)
+}
+
+func eventuallyTimeoutIs(ctx context.Context, d time.Duration) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+	session.Timing().EventuallyTimeout = d
+	return ctx, nil
 }
 
 func thereIsSharedSKRWithProvider(ctx context.Context, provider string) (context.Context, error) {
@@ -318,18 +381,21 @@ func valueIsOk(ctx context.Context, expression string) (context.Context, error) 
 /*
 PVC x file operations succeed:
 
-	| Operation | Path    | Content      |
-	| Create    | foo.txt | some content |
-	| Append    | foo.txt | some more    |
-	| Delete    | foo.txt |              |
-	| Contains  | foo.txt | content      |
-	| Exists    | foo.txt |              |
+		| Operation            | Path    | Content      |
+		| Create               | foo.txt | some content |
+		| Append               | foo.txt | some more    |
+		| Delete               | foo.txt |              |
+		| Contains             | foo.txt | content      |
+		| Exists               | foo.txt |              |
+	    | SleepOnPodStart      |         | 8888         |
+	    | SleepBeforePodDelete |         | 1m           |
 */
 func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Table) (context.Context, error) {
 	arr, err := ad.ParseSlice(ops)
 	if err != nil {
 		return ctx, fmt.Errorf("failed to parse operations, the table must have first header row with colums Operation, Path, Content: %w", err)
 	}
+	var sleepBeforePodDelete time.Duration
 	var fileOps []FileOperationFunc
 	for i, row := range arr {
 		opType, ok := row["Operation"]
@@ -352,6 +418,16 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 			fileOps = append(fileOps, FileContainsOperation(path, content))
 		case "Exists":
 			fileOps = append(fileOps, FileExistsOperation(path))
+		case "SleepOnPodStart":
+			fileOps = pie.Insert(fileOps, 0, func(_ string) []string {
+				return []string{fmt.Sprintf("sleep %s", content)}
+			})
+		case "SleepBeforePodDelete":
+			d, err := time.ParseDuration(content)
+			if err != nil {
+				return ctx, fmt.Errorf("failed to parse 'SleepBeforePodDelete' value: %w", err)
+			}
+			sleepBeforePodDelete = d
 		default:
 			return ctx, fmt.Errorf("unknown operation '%s' in row %d, valid operations are: Create, Append, Delete, Contains, Exists", opType, i+1)
 		}
@@ -384,7 +460,7 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 
 	allDone := "All done!"
 
-	rootDir := "/tmp/" + ri.Name
+	rootDir := "/mnt/" + ri.Name
 	name := "e2epvcop" + util.RandomString(6)
 	fileOps = append(fileOps, EchoOperation(allDone))
 	scriptLines := CombineFileOperations(fileOps...)(rootDir)
@@ -405,10 +481,16 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 		return ctx, fmt.Errorf("failed to declare pvc pod resource: %w", err)
 	}
 
+	session.Logger(ctx).
+		WithValues("yaml", b.DumpYamlText(session.CurrentCluster().GetScheme())).
+		Info("pvcFileOp creating resources")
+
 	err = b.Create(ctx, session.CurrentCluster())
+
+	dumpYamlText := b.DumpYamlText(session.CurrentCluster().GetScheme())
+
 	if err != nil {
-		txt, err2 := b.DumpYaml(session.CurrentCluster().GetScheme())
-		return ctx, fmt.Errorf("error creating pvc operation resources:\n%w\n\n%s\n%s", err, string(txt), err2)
+		return ctx, fmt.Errorf("error creating pvc operation resources:\n%w\n\n---\n%s", err, dumpYamlText)
 	}
 
 	failed := false
@@ -424,7 +506,15 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 
 	logs, err := session.CurrentCluster().PodLogs(ctx, ri.Namespace, name, name)
 	if err != nil {
-		return ctx, err
+		return ctx, fmt.Errorf("failed to get pvc operation pod logs: %w", err)
+	}
+
+	session.Logger(ctx).
+		WithValues("log", logs).
+		Info("pvcFileOp log")
+
+	if sleepBeforePodDelete > 0 {
+		time.Sleep(sleepBeforePodDelete)
 	}
 
 	err = b.Delete(ctx, session.CurrentCluster().GetClient())
@@ -433,14 +523,14 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	}
 
 	if failed {
-		return ctx, fmt.Errorf("pvc operation failed:\n%s", logs)
+		return ctx, fmt.Errorf("pvc operation failed:\n%s\n\n---\n%s", logs, dumpYamlText)
 	}
 
 	if strings.Contains(logs, allDone) {
 		return ctx, nil
 	}
 
-	return ctx, fmt.Errorf("pvc operation did not succeeded:\n%s", logs)
+	return ctx, fmt.Errorf("pvc operation did not succeeded:\n%s\n\n---\n%s", logs, dumpYamlText)
 }
 
 func eventuallyResourceDoesNotExist(ctx context.Context, alias string) (context.Context, error) {
@@ -622,13 +712,13 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 	makeEnv := func(envVarName string, row *messages.PickleTableRow) error {
 		switch row.Cells[1].Value {
 		case "Secret":
-			b.WithPodDetails(PodWithEnvFromSecret(envVarName, row.Cells[1].Value, row.Cells[2].Value))
+			b.WithPodDetails(PodWithEnvFromSecret(envVarName, row.Cells[2].Value, row.Cells[3].Value))
 		case "ConfigMap":
-			b.WithPodDetails(PodWithEnvFromConfigMap(envVarName, row.Cells[1].Value, row.Cells[2].Value))
+			b.WithPodDetails(PodWithEnvFromConfigMap(envVarName, row.Cells[2].Value, row.Cells[3].Value))
 		case "Fixed":
-			b.WithPodDetails(PodWithFixedEnvVar(envVarName, row.Cells[1].Value))
+			b.WithPodDetails(PodWithFixedEnvVar(envVarName, row.Cells[2].Value))
 		default:
-			return fmt.Errorf("invalid value indicator %q", row.Cells[1].Value)
+			return fmt.Errorf("invalid value indicator %q", row.Cells[2].Value)
 		}
 		return nil
 	}
@@ -673,7 +763,7 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 			if err := makeVol("cacert", row); err != nil {
 				return ctx, err
 			}
-			b.WithPodDetails(PodWithFixedEnvVar("CA", row.Cells[2].Value))
+			b.WithPodDetails(PodWithFixedEnvVar("CA", row.Cells[3].Value))
 			opts.CA = true
 		case "Version":
 			opts.Version = row.Cells[1].Value
@@ -693,6 +783,7 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 	}
 
 	var scriptLines []string
+	//scriptLines = append(scriptLines, "sleep 88888")
 	if opts.TLS && !opts.CA {
 		scriptLines = append(
 			scriptLines,
@@ -738,8 +829,16 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		return ctx, fmt.Errorf("failed to declare redis operation pod: %w", err)
 	}
 
-	if err := b.Create(ctx, session.CurrentCluster()); err != nil {
-		return ctx, fmt.Errorf("failed to create redis operation pod: %w", err)
+	session.Logger(ctx).
+		WithValues("yaml", b.DumpYamlText(session.CurrentCluster().GetScheme())).
+		Info("redis op creating resources")
+
+	err = b.Create(ctx, session.CurrentCluster())
+
+	dumpYamlText := b.DumpYamlText(session.CurrentCluster().GetScheme())
+
+	if err != nil {
+		return ctx, fmt.Errorf("failed to create redis operation pod: \n%w\n\n---\n%s", err, dumpYamlText)
 	}
 
 	failed := false
@@ -757,16 +856,20 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		return ctx, fmt.Errorf("failed to retrieve redis operation pod logs: %w", err)
 	}
 
+	session.Logger(ctx).
+		WithValues("log", logs).
+		Info("redis op logs")
+
 	if err := b.Delete(ctx, session.CurrentCluster().GetClient()); err != nil {
 		return ctx, fmt.Errorf("failed to delete redis operation pod: %w", err)
 	}
 
 	if failed {
-		return ctx, fmt.Errorf("redis operation failed:\n%s", logs)
+		return ctx, fmt.Errorf("redis operation failed:\n%s\n\n---\n%s", logs, dumpYamlText)
 	}
 
 	if !strings.Contains(logs, out) {
-		return ctx, fmt.Errorf("redis operation did not return expected %q:\n%s", out, logs)
+		return ctx, fmt.Errorf("redis operation did not return expected %q:\n%s\n\n---\n%s", out, logs, dumpYamlText)
 	}
 
 	return ctx, nil

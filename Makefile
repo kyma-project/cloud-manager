@@ -81,7 +81,8 @@ vet: ## Run go vet against code.
 
 .PHONY: test-ff
 test-ff: jv download-flag-schema
-	$(LOCALBIN)/jv -assertcontent -assertformat "$(GO_FF_SCHEMA_FILE)" ./pkg/feature/default.yaml
+	$(LOCALBIN)/jv -assertcontent -assertformat "$(GO_FF_SCHEMA_FILE)" ./pkg/feature/ff_ga.yaml
+	$(LOCALBIN)/jv -assertcontent -assertformat "$(GO_FF_SCHEMA_FILE)" ./pkg/feature/ff_edge.yaml
 
 .PHONY: test
 test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.

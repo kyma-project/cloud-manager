@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -14,12 +17,11 @@ import (
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"sync"
-	"time"
 )
 
 type RunOptions struct {
@@ -125,9 +127,11 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), ToCluster(skrManager))
 			if err != nil {
 				err = fmt.Errorf("installer error: %w", err)
-				logger.
-					WithValues("optionsProvider", ptr.Deref(options.provider, "")).
-					Error(err, "Error installing dependencies")
+				if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
+					logger.
+						WithValues("optionsProvider", ptr.Deref(options.provider, "")).
+						Error(err, "Error installing dependencies")
+				}
 				return
 			}
 		}
@@ -137,6 +141,8 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			KcpCluster: r.kcpCluster,
 			SkrCluster: skrManager,
 			Provider:   options.provider,
+
+			IgnoreWatchErrors: skrManager.IgnoreWatchErrors,
 		}
 
 		for _, indexer := range r.registry.Indexers() {
@@ -238,7 +244,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			migLogger := logger.WithName("skrFinalizerMigration")
 			mig := migrateFinalizers.NewMigrationForSkr(r.kymaName, r.kcpCluster.GetAPIReader(), r.kcpCluster.GetClient(), skrManager.GetAPIReader(), skrManager.GetClient(), migLogger)
 			_, err := mig.Run(timeoutCtx)
-			if err != nil {
+			if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
 				migLogger.Error(err, "Migration failed")
 			}
 		}()
@@ -258,8 +264,12 @@ func (r *skrRunner) saveSkrStatus(ctx context.Context, skrStatus *SkrStatus, log
 	}
 
 	err := r.skrStatusSaver.Save(ctx, skrStatus)
-	if err != nil {
-		logger.Error(err, "error saving SKR status")
+	if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
+		if !apierrors.IsTimeout(err) {
+			logger.Error(err, "error saving SKR status")
+		}
 	}
-	skrStatus.IsSaved = true
+	if err == nil {
+		skrStatus.IsSaved = true
+	}
 }

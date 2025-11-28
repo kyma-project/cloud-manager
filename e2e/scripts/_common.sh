@@ -35,10 +35,11 @@ trap "rm -f \"$TMP_CREDS\"" EXIT
 putCredentialKeyVal() {
   local key=$1
   local value=$2
-  local FN=$(mktemp)
+  local FN
+  FN=$(mktemp)
   trap "rm -f \"$FN\"" EXIT
-  echo "$value" > "$FN"
-  value=$(cat "$FN" | base64)
+  echo -n "$value" > "$FN"
+  value=$(base64 < "$FN")
   echo "  ${key}: ${value}" >> "$TMP_CREDS"
   rm -f "$FN"
 }
@@ -54,7 +55,8 @@ saveCredentialsToGarden() {
     exit 1
   fi
 
-  local TXT=$(cat "$TMP_CREDS")
+  local TXT
+  TXT=$(cat "$TMP_CREDS")
 
   if [ "${#TXT}" -eq 0 ]; then
     return 0
@@ -65,7 +67,8 @@ saveCredentialsToGarden() {
     exit 1
   fi
 
-  local FN=$(mktemp)
+  local FN
+  FN=$(mktemp)
   trap "rm -f \"$FN\"" EXIT
 
   cat << EOF > $FN

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/onsi/ginkgo/v2"
@@ -53,7 +54,7 @@ func (i *infra) Stop() error {
 	var lastErr error
 	for name, cluster := range i.clusters {
 		ginkgo.By(fmt.Sprintf("Stopping cluster %s", name))
-		if err := cluster.env.Stop(); err != nil {
+		if err := cluster.env.Stop(); err != nil && !strings.Contains(err.Error(), "timeout waiting for process") {
 			err = fmt.Errorf("error stopping env %s: %w", name, err)
 			if lastErr == nil {
 				lastErr = err

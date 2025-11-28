@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -24,6 +25,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			args.KymaRef,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 			args.Provider,
+			args.IgnoreWatchErrors,
 		),
 	}
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/registry"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -277,7 +278,9 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	}
 
 	err = runner.Run(ctx, skrManager, WithTimeout(to), WithProvider(scope.Spec.Provider))
-	if err != nil {
-		logger.Error(err, "Error running SKR Runner")
+	if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
+		if !apierrors.IsTimeout(err) {
+			logger.Error(err, "Error running SKR Runner")
+		}
 	}
 }

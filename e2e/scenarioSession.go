@@ -8,8 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -38,10 +40,14 @@ type ScenarioSession interface {
 
 	Eval(ctx context.Context) (Evaluator, error)
 
-	Timing() Timing
+	Timing() *Timing
 
 	EventuallyValueIsOK(ctx context.Context, expression string, arrUnless ...string) error
 	EventuallyResourceDoesNotExist(ctx context.Context, alias string) error
+
+	SetStepName(string)
+	DebugLog(bool)
+	Logger(context.Context) logr.Logger
 
 	Terminate(ctx context.Context) error
 }
@@ -157,14 +163,19 @@ type scenarioSessionKeyType struct{}
 
 var scenarioSessionKey = &scenarioSessionKeyType{}
 
-func NewScenarioSession(world WorldIntf) ScenarioSession {
+func NewScenarioSession(world WorldIntf, scenarioName string) ScenarioSession {
 	return &scenarioSession{
-		world: world,
+		world:        world,
+		scenarioName: scenarioName,
+		timing: &Timing{
+			EventuallyTimeout:  1 * time.Hour,
+			EventuallyInterval: 2 * time.Second,
+		},
 	}
 }
 
-func StartNewScenarioSession(ctx context.Context) context.Context {
-	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession(GetWorld()))
+func StartNewScenarioSession(ctx context.Context, scenarioName string) context.Context {
+	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession(GetWorld(), scenarioName))
 }
 
 func GetCurrentScenarioSession(ctx context.Context) ScenarioSession {
@@ -189,10 +200,35 @@ type scenarioSession struct {
 	cancel context.CancelFunc
 	runErr error
 
-	world    WorldIntf
-	clusters []*defaultClusterInSession
+	world          WorldIntf
+	scenarioName   string
+	stepName       string
+	clusters       []*defaultClusterInSession
+	loggingEnabled bool
 
 	terminated bool
+
+	timing *Timing
+}
+
+func (s *scenarioSession) SetStepName(v string) {
+	s.stepName = v
+}
+
+func (s *scenarioSession) DebugLog(v bool) {
+	s.loggingEnabled = v
+}
+
+func (s *scenarioSession) Logger(ctx context.Context) logr.Logger {
+	if s.loggingEnabled {
+		return composed.LoggerFromCtx(ctx).
+			WithValues(
+				"scenario", s.scenarioName,
+				"step", s.stepName,
+			)
+	} else {
+		return logr.Discard()
+	}
 }
 
 func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, alias string) error {
@@ -400,11 +436,8 @@ func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
 	return b.Build(ctx)
 }
 
-func (s *scenarioSession) Timing() Timing {
-	return Timing{
-		EventuallyTimeout:  1 * time.Hour,
-		EventuallyInterval: 2 * time.Second,
-	}
+func (s *scenarioSession) Timing() *Timing {
+	return s.timing
 }
 
 func (s *scenarioSession) Terminate(ctx context.Context) error {

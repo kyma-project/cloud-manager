@@ -3,7 +3,7 @@ Feature: AzureVpcPeering feature
   @skr @azure @peering
   Scenario: AzureVpcPeering with dynamically allocated target scenario
 
-    Given there is SKR with "Azure" provider and default IpRange
+    Given there is shared SKR with "Azure" provider
 
     And resource declaration:
       | Alias   | Kind            | ApiVersion                              | Name                           | Namespace |

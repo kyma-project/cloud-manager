@@ -3,10 +3,11 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"strings"
 )
 
 func deleteCrds(ctx context.Context, st composed.State) (error, context.Context) {
@@ -22,6 +23,8 @@ func deleteCrds(ctx context.Context, st composed.State) (error, context.Context)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing CRDs", composed.StopWithRequeue, ctx)
 	}
+
+	state.IgnoreWatchErrors(true)
 
 	logger.Info("Checking CRDs to uninstall")
 
@@ -47,5 +50,5 @@ func deleteCrds(ctx context.Context, st composed.State) (error, context.Context)
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

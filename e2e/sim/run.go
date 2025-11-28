@@ -47,6 +47,10 @@ func Run(ctx context.Context, config *e2econfig.ConfigType) error {
 
 	// kcp cluster is initialized
 
+	if !kcpManager.GetCache().WaitForCacheSync(ctx) {
+		return fmt.Errorf("failed to sync kcp manager cache after initialization")
+	}
+
 	gardenClientFactory := e2elib.NewGardenClientFactory(kcpManager.GetClient(), config.GardenNamespace)
 	gardenClient, err := gardenClientFactory.CreateClient(ctx)
 	if err != nil {

@@ -3,7 +3,7 @@ Feature: GcpNfsVolume feature
   @skr @gcp @nfs
   Scenario: GcpNfsVolume/Backup/Restore scenario
 
-    Given there is SKR with "GCP" provider and default IpRange
+    Given there is shared SKR with "GCP" provider
 
     And resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
@@ -35,6 +35,7 @@ Feature: GcpNfsVolume feature
     And PVC "pvc" file operations succeed:
       | Operation | Path     | Content     |
       | Create    | test.txt | first value |
+      | Contains  | test.txt | first value |
 
     When resource "backup" is created:
       """
@@ -52,6 +53,7 @@ Feature: GcpNfsVolume feature
     When PVC "pvc" file operations succeed:
       | Operation | Path     | Content      |
       | Create    | test.txt | second value |
+      | Contains  | test.txt | second value |
 
     When resource "restore" is created:
       """
@@ -71,8 +73,8 @@ Feature: GcpNfsVolume feature
 
     # check file content matches the original restored value
     And PVC "pvc" file operations succeed:
-      | Operation | Path     | Content     |
-      | Contains  | test.txt | first value |
+      | Operation | Path       | Content     |
+      | Contains  | test.txt   | first value |
 
     When resource "restore" is deleted
     Then eventually resource "restore" does not exist

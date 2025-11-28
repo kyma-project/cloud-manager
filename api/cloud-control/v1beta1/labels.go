@@ -6,3 +6,7 @@ const (
 	LabelRemoteName      = "cloud-manager.kyma-project.io/remoteName"
 	LabelRemoteNamespace = "cloud-manager.kyma-project.io/remoteNamespace"
 )
+
+const (
+	LabelIgnore = "cloud-manager.kyma-project.io/ignore"
+)

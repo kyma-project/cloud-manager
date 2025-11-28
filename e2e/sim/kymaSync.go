@@ -14,11 +14,26 @@ type KymaSync struct {
 type SyncOutcome struct {
 	KCP KymaOutcome
 	SKR KymaOutcome
+
+	modulesToRemove []string
+	activeModules   []string
 }
 
 type KymaOutcome struct {
 	SpecChanged   bool
 	StatusChanged bool
+}
+
+func (o *SyncOutcome) AllRemovedModules() []string {
+	return append([]string{}, o.modulesToRemove...)
+}
+
+func (o *SyncOutcome) IsRemoved(moduleName string) bool {
+	return pie.Contains(o.modulesToRemove, moduleName)
+}
+
+func (o *SyncOutcome) IsActive(moduleName string) bool {
+	return pie.Contains(o.activeModules, moduleName) && !o.IsRemoved(moduleName)
 }
 
 func mapModuleNameToString(m operatorv1beta2.Module) string {
@@ -47,6 +62,8 @@ func (s KymaSync) Sync() SyncOutcome {
 	skrAddToStatus, skrRemoveFromStatus := pie.Diff(skrStatus, skrSpec)
 	s.addRemoveStatus(s.SKR, skrAddToStatus, skrRemoveFromStatus)
 	result.SKR.StatusChanged = len(skrAddToStatus) > 0 || len(skrRemoveFromStatus) > 0
+	result.modulesToRemove = skrRemoveFromStatus
+	result.activeModules = skrSpec
 
 	kcpAddToSpec, kcpRemoveFromSpec := pie.Diff(kcpSpec, skrSpec)
 	s.addRemoveSpec(s.KCP, kcpAddToSpec, kcpRemoveFromSpec)

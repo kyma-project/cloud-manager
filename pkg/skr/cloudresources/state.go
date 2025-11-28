@@ -14,6 +14,8 @@ type State struct {
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
 	Provider   *cloudcontrolv1beta1.ProviderType
+
+	IgnoreWatchErrors func(bool)
 }
 
 func newStateFactory(
@@ -21,12 +23,15 @@ func newStateFactory(
 	kymaRef klog.ObjectRef,
 	kcpCluster composed.StateCluster,
 	provider *cloudcontrolv1beta1.ProviderType,
+	ignoreWatchErrors func(bool),
 ) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,
 		kymaRef:          kymaRef,
 		kcpCluster:       kcpCluster,
 		provider:         provider,
+
+		ignoreWatchErrors: ignoreWatchErrors,
 	}
 }
 
@@ -35,6 +40,8 @@ type stateFactory struct {
 	kymaRef          klog.ObjectRef
 	kcpCluster       composed.StateCluster
 	provider         *cloudcontrolv1beta1.ProviderType
+
+	ignoreWatchErrors func(bool)
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -43,6 +50,8 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 		KymaRef:    f.kymaRef,
 		KcpCluster: f.kcpCluster,
 		Provider:   f.provider,
+
+		IgnoreWatchErrors: f.ignoreWatchErrors,
 	}
 }
 

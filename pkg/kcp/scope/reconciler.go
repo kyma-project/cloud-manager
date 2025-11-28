@@ -104,6 +104,7 @@ func (r *scopeReconciler) newState(req ctrl.Request) *State {
 func (r *scopeReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		composed.LoadObjNoStopIfNotFound, // loads Scope
+		composed.ForgetIfIgnored,
 		providerFromScopeToState,
 		gardenerClusterLoad,
 		networkReferenceKymaLoad,
