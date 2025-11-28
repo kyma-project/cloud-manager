@@ -7,4 +7,3 @@ func ToAnySlice[T any](s []T) []any {
 	}
 	return result
 }
-
