@@ -134,8 +134,9 @@ var _ = Describe("Feature: KCP SIM", func() {
 		cr := &cloudresourcesv1beta1.CloudResources{}
 
 		By("And Then CloudResources CR is created", func() {
-			Expect(LoadAndCheck(infra.Ctx(), infra.SKR().Client(), cr, NewObjActions(WithName("default"), WithNamespace("kyma-system")))).
-				To(Succeed())
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), cr, NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
 		})
 
 		By("When cloud-manager module is added to SKR Kyma spec", func() {
