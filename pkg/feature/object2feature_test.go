@@ -2,8 +2,8 @@ package feature
 
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
 	"github.com/kyma-project/cloud-manager/pkg/common/objkind"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -45,8 +45,6 @@ func TestManifestResourceToFeature(t *testing.T) {
 	})
 
 	t.Run("ObjectToFeature from Unstructured", func(t *testing.T) {
-		skrScheme := bootstrap.SkrScheme
-
 		g := cloudresourcesv1beta1.GroupVersion.Group
 		v := cloudresourcesv1beta1.GroupVersion.Version
 
@@ -71,15 +69,13 @@ func TestManifestResourceToFeature(t *testing.T) {
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ObjectToFeature(info.obj, skrScheme)
+				actual := ObjectToFeature(info.obj, commonscheme.SkrScheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}
 	})
 
 	t.Run("ObjectToFeature from CRD Unstructured", func(t *testing.T) {
-		skrScheme := bootstrap.SkrScheme
-
 		g := cloudresourcesv1beta1.GroupVersion.Group
 
 		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
@@ -107,15 +103,13 @@ func TestManifestResourceToFeature(t *testing.T) {
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ObjectToFeature(info.obj, skrScheme)
+				actual := ObjectToFeature(info.obj, commonscheme.SkrScheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}
 	})
 
 	t.Run("ObjectToFeature from Busola CM Unstructured", func(t *testing.T) {
-		skrScheme := bootstrap.SkrScheme
-
 		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
 		baseCrdUnstructured.SetAPIVersion("apiextensions.k8s.io/v1")
 		baseCrdUnstructured.SetKind("CustomResourceDefinition")
@@ -141,7 +135,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 
 		for _, info := range objList {
 			t.Run(info.title, func(t *testing.T) {
-				actual := ObjectToFeature(info.obj, skrScheme)
+				actual := ObjectToFeature(info.obj, commonscheme.SkrScheme)
 				assert.Equal(t, info.expected, actual)
 			})
 		}

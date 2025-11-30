@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	corev1 "k8s.io/api/core/v1"
@@ -17,8 +17,6 @@ import (
 func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	skrScheme := bootstrap.SkrScheme
-
 	skrManagerFactory := skrmanager.NewFactory(state.Cluster().ApiReader(), state.gardenerClusterSummary.Namespace)
 
 	restConfig, err := skrManagerFactory.LoadRestConfig(ctx, state.gardenerClusterSummary.Name, state.gardenerClusterSummary.Key)
@@ -26,9 +24,29 @@ func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error creating rest config", composed.StopWithRequeue, ctx)
 	}
 
-	skrClient, err := ctrlclient.New(restConfig, ctrlclient.Options{Scheme: skrScheme})
+	skrClient, err := ctrlclient.New(restConfig, ctrlclient.Options{Scheme: commonscheme.SkrScheme})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating k8s skr client", composed.StopWithRequeue, ctx)
+	}
+
+	// create the kyma-system namespace if it doesn't exist
+	ns := &corev1.Namespace{}
+	err = skrClient.Get(ctx, types.NamespacedName{
+		Name: "kyma-system",
+	}, ns)
+	if ctrlclient.IgnoreNotFound(err) != nil {
+		return composed.LogErrorAndReturn(err, "Error getting kyma-system namespace", composed.StopWithRequeue, ctx)
+	}
+	if err != nil {
+		ns = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "kyma-system",
+			},
+		}
+		err = skrClient.Create(ctx, ns)
+		if ctrlclient.IgnoreAlreadyExists(err) != nil {
+			return composed.LogErrorAndReturn(err, "Error creating kyma-system namespace", composed.StopWithRequeue, ctx)
+		}
 	}
 
 	cmName := types.NamespacedName{

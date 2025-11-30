@@ -5,7 +5,7 @@ import (
 
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	scopeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
 )
 
 func gardenerClientCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -13,7 +13,7 @@ func gardenerClientCreate(ctx context.Context, st composed.State) (error, contex
 
 	out, err := commongardener.CreateGardenerClient(ctx, commongardener.CreateGardenerClientInput{
 		KcpClient:                 state.Cluster().ApiReader(),
-		GardenerFallbackNamespace: scope.ScopeConfig.GardenerNamespace,
+		GardenerFallbackNamespace: scopeconfig.ScopeConfig.GardenerNamespace,
 	})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating Gardener client for Subscription", composed.StopWithRequeue, ctx)

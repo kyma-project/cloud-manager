@@ -78,6 +78,19 @@ func (ie *infraEnv) Config() config.Config {
 	return ie.config
 }
 
+func (ie *infraEnv) KcpWaitForCacheSync(ctx context.Context) error {
+	toCtx, toCancel := context.WithTimeout(ctx, time.Second*10)
+	defer toCancel()
+	ok := ie.kcpManager.GetCache().WaitForCacheSync(toCtx)
+	if toCtx.Err() != nil {
+		return toCtx.Err()
+	}
+	if !ok {
+		return fmt.Errorf("kcp manager is not synced")
+	}
+	return nil
+}
+
 func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 	ginkgo.By("Starting controllers")
 	if ctx == nil {

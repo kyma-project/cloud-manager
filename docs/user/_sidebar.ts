@@ -15,6 +15,7 @@ export default [
     { text: 'GcpNfsVolumeBackup Custom Resource', link: './resources/04-20-21-gcp-nfs-volume-backup' },
     { text: 'GcpNfsBackupSchedule Custom Resource', link: './resources/04-20-22-gcp-nfs-backup-schedule' },
     { text: 'GcpNfsVolumeRestore Custom Resource', link: './resources/04-20-23-gcp-nfs-volume-restore' },
+    { text: 'GcpNfsBackupDiscovery Custom Resource', link: './resources/04-20-24-gcp-nfs-volume-backup-discovery' },
     { text: 'AwsVpcPeering Custom Resource', link: './resources/04-30-10-aws-vpc-peering' },
     { text: 'GcpVpcPeering Custom Resource', link: './resources/04-30-20-gcp-vpc-peering' },
     { text: 'AzureVpcPeering Custom Resource', link: './resources/04-30-30-azure-vpc-peering.md' },
@@ -24,7 +25,9 @@ export default [
     { text: 'AwsRedisCluster Custom Resource', link: './resources/04-50-10-aws-redis-cluster' },   
     { text: 'GcpRedisCluster Custom Resource', link: './resources/04-50-20-gcp-redis-cluster' },
     { text: 'GcpSubnet Custom Resource', link: './resources/04-50-21-gcp-subnet' },
-    { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' }
+    { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' },
+    { text: 'SapNfsVolume Custom Resource', link: './resources/04-20-50-sap-nfs-volume' },
+    { text: 'AzureVpcDnsLink Custom Resource', link: './resources/04-40-40-azure-vpc-dns-link' }
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Using NFS in Amazon Web Services', link: './tutorials/01-20-10-aws-nfs-volume' },
@@ -37,7 +40,9 @@ export default [
     { text: 'Using AzureRedisInstance Custom Resources', link: './tutorials/01-40-30-azure-redis-instance' },
     { text: 'Using AwsRedisCluster Custom Resources', link: './tutorials/01-50-10-aws-redis-cluster' },
     { text: 'Using GcpRedisCluster Custom Resources', link: './tutorials/01-50-20-gcp-redis-cluster' },
-    { text: 'Using AzureRedisCluster Custom Resources', link: './tutorials/01-50-30-azure-redis-cluster' }
+    { text: 'Using AzureRedisCluster Custom Resources', link: './tutorials/01-50-30-azure-redis-cluster' },
+    { text: 'Linking Your Kyma Network to Microsoft Azure Private DNS Zone', link: './tutorials/01-60-10-azure-dns-zone-vpc-link'},
+    { text: 'Linking Your Kyma Network to Microsoft Azure DNS Private Resolver', link: './tutorials/01-60-20-azure-dns-resolver-vpc-link'}
     ] },
   { text: 'Glossary', link: './00-10-glossary' }
 ];

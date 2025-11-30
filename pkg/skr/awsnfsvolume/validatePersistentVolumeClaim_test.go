@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"k8s.io/apimachinery/pkg/api/meta"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -51,9 +51,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 				},
 			}
 
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				WithObjects(pvc).
 				WithStatusSubresource(pvc).
 				Build()
@@ -82,9 +81,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				Build()
 			k8sClient.(spy.ClientSpy).SetClient(fakeClient)
 
@@ -110,9 +108,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName] = "another-owner-name"
-			scheme := bootstrap.SkrScheme
 			fakeClient := fake.NewClientBuilder().
-				WithScheme(scheme).
+				WithScheme(commonscheme.SkrScheme).
 				WithObjects(pvc).
 				WithStatusSubresource(pvc).
 				Build()

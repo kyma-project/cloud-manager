@@ -3,6 +3,8 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -25,13 +27,18 @@ func (s *modifyKcpNfsInstanceSuite) SetupTest() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstance() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 	state.KcpIpRange = &kcpIpRange
 
 	//Invoke modifyKcpNfsInstance
@@ -84,12 +91,17 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
 		Name:      gcpNfsVolumeBackup.Name,
 		Namespace: gcpNfsVolumeBackup.Namespace,
 	}
-	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj, &deletedGcpNfsVolume)
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, &gcpNfsVolumeBackup, obj, &deletedGcpNfsVolume)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	srcBackupFullPath := gcpNfsVolumeBackupToUrl(&gcpNfsVolumeBackup)
 	state.SrcBackupFullPath = srcBackupFullPath
@@ -143,12 +155,17 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestore() {
 func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestoreBackupUrl() {
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.SourceBackupUrl = fmt.Sprintf("projects/%s/locations/%s/backups/%s", kcpScope.Spec.Scope.Gcp.Project, gcpNfsVolumeBackup.Status.Location, fmt.Sprintf("cm-%.60s", gcpNfsVolumeBackup.Status.Id))
-	factory, err := newTestStateFactoryWithObject(&gcpNfsVolumeBackup, obj, &deletedGcpNfsVolume)
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactoryWithObject(fakeHttpServer, &gcpNfsVolumeBackup, obj, &deletedGcpNfsVolume)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	srcBackupFullPath := gcpNfsVolumeBackupToUrl(&gcpNfsVolumeBackup)
 	state.SrcBackupFullPath = srcBackupFullPath
@@ -200,7 +217,11 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceWithRestoreBackupUrl() 
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -208,7 +229,8 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
 
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.Location = ""
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	state.Scope = &kcpScope
 	//Invoke modifyKcpNfsInstance
@@ -256,7 +278,11 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocation() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -264,7 +290,8 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones() {
 
 	obj := gcpNfsVolume.DeepCopy()
 	obj.Spec.Location = ""
-	state := factory.newStateWith(obj)
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	state.Scope = &kcpScope
 	state.Scope.Spec.Scope.Gcp.Workers = nil
@@ -287,7 +314,11 @@ func (s *modifyKcpNfsInstanceSuite) TestCreateNfsInstanceNoLocationNoZones() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -295,7 +326,8 @@ func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 
 	//Get state object with GcpNfsVolume
 	nfsVol := gcpNfsVolume.DeepCopy()
-	state := factory.newStateWith(nfsVol)
+	state, err := factory.newStateWith(nfsVol)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	state.KcpNfsInstance = &gcpNfsInstance
 
@@ -324,7 +356,11 @@ func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstance() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -333,7 +369,8 @@ func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
 	//Get state object with GcpNfsVolume
 	nfsVol := gcpNfsVolume.DeepCopy()
 	nfsVol.Spec.Location = ""
-	state := factory.newStateWith(nfsVol)
+	state, err := factory.newStateWith(nfsVol)
+	s.Nil(err)
 	state.KcpIpRange = &kcpIpRange
 	state.KcpNfsInstance = &gcpNfsInstance
 	state.Scope = &kcpScope
@@ -363,14 +400,19 @@ func (s *modifyKcpNfsInstanceSuite) TestModifyNfsInstanceNoLocation() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newStateWith(&deletedGcpNfsVolume)
+	state, err := factory.newStateWith(&deletedGcpNfsVolume)
+	s.Nil(err)
 
 	err, _ctx := modifyKcpNfsInstance(ctx, state)
 
@@ -380,14 +422,19 @@ func (s *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeDeleting() {
 }
 
 func (s *modifyKcpNfsInstanceSuite) TestWhenNfsVolumeNotChanged() {
-	factory, err := newTestStateFactory()
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+	}))
+	defer fakeHttpServer.Close()
+	factory, err := newTestStateFactory(fakeHttpServer)
 	assert.Nil(s.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//Get state object with GcpNfsVolume
-	state := factory.newState()
+	state, err := factory.newState()
+	assert.Nil(s.T(), err)
 	state.KcpNfsInstance = &gcpNfsInstance
 
 	err, _ctx := modifyKcpNfsInstance(ctx, state)
