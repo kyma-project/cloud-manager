@@ -12,7 +12,7 @@ azureInit
 # Functions
 
 usage() {
-  echo "Usage: ${BASH_SOURCE[0]} [default|peering] [create|delete|list]"
+  echo "Usage: ${BASH_SOURCE[0]} [create|delete|list]"
   echo "  list - list SA keys"
   echo "  create - create new key"
   echo "  delete - delete oldest key"
@@ -25,7 +25,10 @@ listKeys() {
 
 create() {
   log "Creating new key for APP_ID $APP_ID"
-  az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv
+  $SECRET=$(az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv)
+  putCredentialKeyVal "clientId" "$APP_ID"
+  putCredentialKeyVal "clientSecret" "$SECRET"
+  saveCredentialsToGarden "$AZURE_GARDEN_SECRET"
 }
 
 
@@ -46,21 +49,8 @@ list() {
   listKeys
 }
 
-SA_TYPE=$1
-CMD=$2
-
-case "$1" in
-default)
-  APP_ID=$AZURE_DEFAULT_APP_ID
-  ;;
-peering)
-  APP_ID=$AZURE_PEERING_APP_ID
-  ;;
-*)
-  echo "Unknown SA type '$SA_TYPE'"
-  usage 1
-esac
-
+APP_ID=$AZURE_DEFAULT_APP_ID
+CMD=$1
 
 case "$CMD" in
 create)

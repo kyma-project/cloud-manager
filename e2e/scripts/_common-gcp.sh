@@ -49,7 +49,7 @@ gcpValidateProject() {
 }
 
 gcpInit() {
-  checkRequiredCommands 'gcloud jq'
+  checkRequiredCommands 'gcloud jq tee'
 
   gcpValidateProject
 

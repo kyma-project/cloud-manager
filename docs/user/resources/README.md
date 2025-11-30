@@ -48,6 +48,10 @@ The `gcpnfsvolumerestore.cloud-resources.kyma-project.io` CRD describes the Goog
 
 The `gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io` CRD describes the Google Cloud Filestore backup discovery operation. For more information, see [GcpNfsVolumeBackupDiscovery Custom Resource](./04-20-24-gcp-nfs-volume-backup-discovery.md).
 
+### SapNfsVolume [**Beta feature**]
+
+The `sapnfsvolume.cloud-resources.kyma-project.io` custom resource (CR) describes an NFS volume that can be provisioned and used as a ReadWriteMany (RWX) volume in OpenStack environments. see [SapNfsVolume Custom Resource](./04-20-50-sap-nfs-volume.md).
+
 ## VPC Peering Resources
 
 ### AwsVpcPeering CR
