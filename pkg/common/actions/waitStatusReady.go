@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-func WaitStatusReadyAndState(statusState string) composed.Action {
+func WaitStatusReady() composed.Action {
 	return func(ctx context.Context, state composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
@@ -23,12 +23,11 @@ func WaitStatusReadyAndState(statusState string) composed.Action {
 				ctx)
 		}
 
-		if meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) &&
-			obj.State() == statusState {
+		if meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 			return nil, ctx
 		}
 
-		logger.Info(fmt.Sprintf("Waiting status condition Ready and status state %s", statusState))
+		logger.Info("Waiting status condition Ready")
 
 		return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 	}

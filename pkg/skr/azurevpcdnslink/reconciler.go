@@ -56,7 +56,7 @@ func (r *reconciler) newAction() composed.Action {
 				actions.AddCommonFinalizer(),
 				createKcpAzureVNetLink,
 				updateStatus,
-				actions.WaitStatusReadyAndState(cloudcontrolv1beta1.VirtualNetworkLinkStateCompleted),
+				actions.WaitStatusReady(),
 			),
 			composed.ComposeActions(
 				"skrAzureVNetLink-delete",

@@ -233,4 +233,77 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		})
 	})
 
+	Describe("Scenario: SKR Recurring GcpNfsBackupSchedule - Create", func() {
+
+		backupschedule.ToleranceInterval = 120 * time.Second
+		nfsBackupSchedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
+		nfsBackupScheduleName := "6244fd17-3f18-4775-8857-88c103b8c358"
+		nfsBackupMinutelySchedule := "* * * * *"
+		nfsBackupLocation := "us-west1"
+
+		accessibleFrom := []string{
+			"shoot-1",
+			"shoot-2",
+			"shoot-3",
+		}
+
+		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
+
+		start := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC()
+
+		It("When GcpNfsBackupSchedule Create is called", func() {
+			Eventually(CreateBackupSchedule).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
+					WithName(nfsBackupScheduleName),
+					WithSchedule(nfsBackupMinutelySchedule),
+					WithStartTime(start),
+					WithGcpLocation(nfsBackupLocation),
+					WithNfsVolumeRef(skrNfsVolumeName),
+					WithRetentionDays(0),
+					WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom),
+				).
+				Should(Succeed())
+			By("Then GcpNfsBackupSchedule is created in SKR", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
+						NewObjActions(),
+					).
+					Should(Succeed())
+			})
+			By("And Then GcpNfsBackupSchedule will get NextRun time(s)", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule,
+						NewObjActions(),
+						HavingStatusActive(),
+					).
+					Should(Succeed())
+			})
+
+			By("And Then the NfsVolumeBackup is created with AccessibleFrom defined", func() {
+				expected, err := time.Parse(time.RFC3339, nfsBackupSchedule.Status.NextRunTimes[0])
+				Expect(err).ShouldNot(HaveOccurred())
+				nfsBackupName := fmt.Sprintf("%s-%d-%s", nfsBackupScheduleName, 1, expected.Format("20060102-150405"))
+				//Load and check whether the NfsVolumeBackup object got created.
+				Eventually(LoadAndCheck, timeout*6, interval).
+					WithArguments(
+						infra.Ctx(), infra.SKR().Client(), nfsBackup,
+						NewObjActions(WithName(nfsBackupName)),
+					).
+					Should(Succeed())
+
+				Expect(nfsBackup.Spec.AccessibleFrom).To(ContainElements(accessibleFrom))
+
+			})
+
+			// CleanUp
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), nfsBackupSchedule).
+				Should(Succeed())
+
+		})
+	})
+
 })

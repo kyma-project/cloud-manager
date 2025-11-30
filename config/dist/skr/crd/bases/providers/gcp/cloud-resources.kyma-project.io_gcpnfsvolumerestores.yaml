@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.3
+    cloud-resources.kyma-project.io/version: v0.0.6
   name: gcpnfsvolumerestores.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -78,6 +78,9 @@ spec:
                     - message: Destination is immutable.
                       rule: (self == oldSelf)
                 source:
+                  description: Ensure that exactly one of BackupUrl or Backup is set.
+                  maxProperties: 1
+                  minProperties: 1
                   properties:
                     backup:
                       description: GcpNfsVolumeBackupRef specifies the GcpNfsVolumeBackup resource that would be restored
@@ -92,8 +95,10 @@ spec:
                         - name
                         - namespace
                       type: object
-                  required:
-                    - backup
+                    backupUrl:
+                      description: BackupUrl is the backup identifier in the format "{location_id}/{backup_id}".
+                      pattern: ^(.+)/(.+)$
+                      type: string
                   type: object
                   x-kubernetes-validations:
                     - message: Source is immutable.

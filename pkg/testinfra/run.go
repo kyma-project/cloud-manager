@@ -1,38 +1,39 @@
 package testinfra
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	goruntime "runtime"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	peeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
-	"github.com/kyma-project/cloud-manager/pkg/quota"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
-	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 const (
@@ -41,7 +42,31 @@ const (
 	DefaultGardenNamespace = "garden-kyma"
 )
 
+type StartOptions struct {
+	CallerId string
+}
+
 func Start() (Infra, error) {
+	pc, _, _, ok := goruntime.Caller(1)
+	if !ok {
+		return nil, errors.New("could not determine caller")
+	}
+	details := goruntime.FuncForPC(pc)
+	if details == nil {
+		return nil, errors.New("could not determine runtime caller Func")
+	}
+	callerName := details.Name()
+	callerName = strings.TrimPrefix(callerName, "github.com/kyma-project/cloud-manager/")
+	callerName = strings.TrimSuffix(callerName, ".init.func3")
+
+	opts := StartOptions{
+		CallerId: callerName,
+	}
+
+	return StartEx(opts)
+}
+
+func StartEx(opts StartOptions) (Infra, error) {
 	projectRoot := os.Getenv("PROJECTROOT")
 	if len(projectRoot) == 0 {
 		return nil, errors.New("the env var PROJECTROOT must be specified and point to the dir where Makefile is")
@@ -49,6 +74,11 @@ func Start() (Infra, error) {
 	envtestK8sVersion := os.Getenv("ENVTEST_K8S_VERSION")
 	if len(envtestK8sVersion) == 0 {
 		panic(errors.New("unable to resolve envtest version. Use env var ENVTEST_K8S_VERSION to specify it"))
+	}
+
+	if opts.CallerId == "" {
+		opts.CallerId = fmt.Sprintf("%.8s", strings.ReplaceAll(uuid.NewString(), "-", ""))
+		fmt.Printf("No caller id specified, generated id: %s\n", opts.CallerId)
 	}
 
 	ginkgo.By("Preparing CRDs")
@@ -64,14 +94,15 @@ func Start() (Infra, error) {
 	}
 
 	infra := &infra{
+		projectRootDir: projectRoot,
 		clusters: map[infraTypes.ClusterType]*clusterInfo{
-			infraTypes.ClusterTypeKcp: &clusterInfo{
+			infraTypes.ClusterTypeKcp: {
 				crdDirs: []string{dirKcp},
 			},
-			infraTypes.ClusterTypeSkr: &clusterInfo{
+			infraTypes.ClusterTypeSkr: {
 				crdDirs: []string{dirSkr},
 			},
-			infraTypes.ClusterTypeGarden: &clusterInfo{
+			infraTypes.ClusterTypeGarden: {
 				crdDirs: []string{dirGarden},
 			},
 		},
@@ -89,7 +120,8 @@ func Start() (Infra, error) {
 			return nil, fmt.Errorf("error starting cluster %s: %w", name, err)
 		}
 
-		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s", name))
+		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s-%s", strings.ReplaceAll(opts.CallerId, "/", "-"), name))
+		fmt.Printf("%s kubeconfigFilePath: %s\n", name, kubeconfigFilePath)
 		b, err := kubeconfigToBytes(restConfigToKubeconfig(cfg))
 		if err != nil {
 			return nil, fmt.Errorf("error getting %s kubeconfig bytes: %w", name, err)
@@ -106,6 +138,8 @@ func Start() (Infra, error) {
 
 		cluster.env = env
 		cluster.cfg = cfg
+		cluster.kubeconfig = b
+		cluster.kubeconfigFilePath = kubeconfigFilePath
 		cluster.scheme = sch
 		cluster.client = k8sClient
 
@@ -119,6 +153,20 @@ func Start() (Infra, error) {
 			ce.namespace = DefaultGardenNamespace
 		}
 		cluster.ClusterEnv = ce
+
+		err = cluster.client.Create(context.Background(), &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "cm-info",
+			},
+			Data: map[string]string{
+				"caller":      opts.CallerId,
+				"clusterType": string(name),
+			},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error creating cm-info configmap in testinfra cluster %q: %w", name, err)
+		}
 	}
 
 	ginkgo.By("All started")
@@ -131,6 +179,11 @@ func Start() (Infra, error) {
 				Unstructured: true,
 			},
 		},
+		LeaderElection: false,
+		Metrics: metricsserver.Options{
+			BindAddress: "0", // disabled
+		},
+		HealthProbeBindAddress: "0", // disable
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating KCP manager: %w", err)
@@ -197,13 +250,7 @@ func Start() (Infra, error) {
 	_ = os.Setenv("GCP_CAPACITY_CHECK_INTERVAL", "1s")
 
 	// init config
-	awsconfig.InitConfig(infra.Config())
-	quota.InitConfig(infra.Config())
-	skrruntimeconfig.InitConfig(infra.Config())
-	scope.InitConfig(infra.Config())
-	gcpclient.InitConfig(infra.Config())
-	peeringconfig.InitConfig(infra.Config())
-	infra.Config().Read()
+	commonconfig.LoadConfigInstance(infra.Config())
 	fmt.Printf("Starting with config:\n%s\n", infra.Config().PrintJson())
 
 	util.SetSpeedyTimingForTests()
@@ -219,6 +266,7 @@ func startCluster(crdsDirs []string, projectRoot, envtestK8sVersion string) (*en
 		ErrorIfCRDPathMissing: true,
 		BinaryAssetsDirectory: filepath.Join(projectRoot, "bin", "k8s",
 			fmt.Sprintf("%s-%s-%s", envtestK8sVersion, goruntime.GOOS, goruntime.GOARCH)),
+		ControlPlaneStartTimeout: 30 * time.Second,
 	}
 
 	cfg, err := env.Start()

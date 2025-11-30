@@ -22,8 +22,8 @@ func shortCircuitCompleted(ctx context.Context, st composed.State) (error, conte
 		return composed.StopAndForget, nil
 	}
 
-	if backupState == v1beta1.GcpNfsBackupReady && !state.isTimeForCapacityUpdate() {
-		composed.LoggerFromCtx(ctx).Info("NfsVolumeBackup is ready, short-circuiting into requeueForCapacity")
+	if state.ShouldShortCircuit() {
+		composed.LoggerFromCtx(ctx).Info("NfsVolumeBackup is ready and accessibleFrom hasn't changed, short-circuiting into requeueForCapacity")
 		return stopAndRequeueForCapacity(), nil
 	}
 

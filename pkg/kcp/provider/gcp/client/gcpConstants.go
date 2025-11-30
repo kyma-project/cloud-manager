@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/kyma-project/cloud-manager/pkg/util"
+
 	"github.com/kyma-project/cloud-manager/pkg/config"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -19,13 +21,18 @@ const filestoreInstancePattern = "projects/%s/locations/%s/instances/%s"
 const filestoreParentPattern = "projects/%s/locations/%s"
 const fileBackupPattern = "projects/%s/locations/%s/backups/%s"
 const fileBackupRegex = `projects/(?P<Project>[^/]+)/locations/(?P<Location>[^/]+)/backups/(?P<BackupName>[^/]+)`
+const fileBackupUrlRegex = `locations/(?P<Location>[^/]+)/backups/(?P<BackupName>[^/]+)`
 
 const GcpRetryWaitTime = time.Second * 3
 const GcpOperationWaitTime = time.Second * 5
-const GcpApiTimeout = time.Second * 8
 const GcpCapacityCheckInterval = time.Hour * 1
 
 const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
+
+const sharedBackupsFilter = "labels.managed-by=\"%s\" AND " +
+	"( labels.cm-allow-%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
+	" OR labels.cm-allow-%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
+	" OR labels.ALL=\"" + util.GcpLabelBackupAccessibleFrom + "\")"
 
 const GcpNfsStateDataProtocol = "gcpNfsProtocol"
 
@@ -82,6 +89,10 @@ func GetNetworkFilter(projectId, vpcId string) string {
 
 func GetSkrBackupsFilter(scopeName string) string {
 	return fmt.Sprintf(skrBackupsFilter, ManagedByValue, scopeName)
+}
+
+func GetSharedBackupsFilter(shootName, subaccountId string) string {
+	return fmt.Sprintf(sharedBackupsFilter, ManagedByValue, shootName, subaccountId)
 }
 
 func GetFilestoreInstancePath(projectId, location, instanceId string) string {
@@ -164,4 +175,9 @@ func GetProjectLocationNameFromFileBackupPath(fullPath string) (string, string, 
 	re := regexp.MustCompile(fileBackupRegex)
 	matches := re.FindStringSubmatch(fullPath)
 	return matches[re.SubexpIndex("Project")], matches[re.SubexpIndex("Location")], matches[re.SubexpIndex("BackupName")]
+}
+func GetLocationNameFromFileBackupUrl(backupUrl string) (string, string) {
+	re := regexp.MustCompile(fileBackupUrlRegex)
+	matches := re.FindStringSubmatch(backupUrl)
+	return matches[re.SubexpIndex("Location")], matches[re.SubexpIndex("BackupName")]
 }

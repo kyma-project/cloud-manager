@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -22,12 +22,10 @@ func TestInstaller(t *testing.T) {
 			logger:           logr.Discard(),
 		}
 
-		scheme := bootstrap.SkrScheme
-
 		clnt := fake.NewFakeClient()
-		clstr := NewCluster(scheme, clnt, clnt)
+		clstr := NewCluster(commonscheme.SkrScheme, clnt, clnt)
 
-		return skrStatus, instlr, scheme, clstr
+		return skrStatus, instlr, commonscheme.SkrScheme, clstr
 	}
 
 	run := func(ctx context.Context, t *testing.T, provider cloudcontrolv1beta1.ProviderType, testCases []SkrStatusTestCase) {
@@ -91,6 +89,7 @@ func TestInstaller(t *testing.T) {
 		run(context.Background(), t, cloudcontrolv1beta1.ProviderGCP, []SkrStatusTestCase{
 			{"gcpnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"gcpnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"gcpnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"gcpnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"gcprediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
@@ -101,6 +100,7 @@ func TestInstaller(t *testing.T) {
 
 			{"gcpnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			// {"gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcpnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"gcprediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},

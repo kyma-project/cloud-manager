@@ -57,7 +57,7 @@ See an exemplary GcpNfsVolumeRestore custom resource:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: GcpNfsVolumeBackup
+kind: GcpNfsVolumeRestore
 metadata:
   name: my-restore
 spec:

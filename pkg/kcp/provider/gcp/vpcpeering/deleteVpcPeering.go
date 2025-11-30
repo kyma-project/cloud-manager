@@ -24,8 +24,8 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	err := state.client.DeleteVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
-		state.localNetwork.Status.Network.Gcp.GcpProject,
-		state.localNetwork.Status.Network.Gcp.NetworkName,
+		state.LocalNetwork().Status.Network.Gcp.GcpProject,
+		state.LocalNetwork().Status.Network.Gcp.NetworkName,
 	)
 
 	if err != nil {

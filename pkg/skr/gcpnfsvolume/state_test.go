@@ -3,13 +3,20 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+	"net/http/httptest"
 	"time"
+
+	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/api/file/v1"
+	"google.golang.org/api/option"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -297,6 +304,13 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	},
 }
 
+func gcpNfsVolumeBackupToUrl(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup) string {
+	if backup.Status.Id == "" || backup.Status.Location == "" {
+		return ""
+	}
+	return fmt.Sprintf("projects/%s/locations/%s/backups/%s", kcpScope.Spec.Scope.Gcp.Project, backup.Status.Location, fmt.Sprintf("cm-%.60s", backup.Status.Id))
+}
+
 type testStateFactory struct {
 	factory             StateFactory
 	skrCluster          composed.StateCluster
@@ -305,11 +319,10 @@ type testStateFactory struct {
 	deletedGcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 }
 
-func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup, volumes ...*cloudresourcesv1beta1.GcpNfsVolume) (*testStateFactory, error) {
-	kcpScheme := bootstrap.KcpScheme
+func newTestStateFactoryWithObject(fakeHttpServer *httptest.Server, backup *cloudresourcesv1beta1.GcpNfsVolumeBackup, volumes ...*cloudresourcesv1beta1.GcpNfsVolume) (*testStateFactory, error) {
 
 	kcpClient := fake.NewClientBuilder().
-		WithScheme(kcpScheme).
+		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&gcpNfsInstance).
 		WithStatusSubresource(&gcpNfsInstance).
 		WithObjects(&gcpNfsInstanceToDelete).
@@ -317,12 +330,10 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 		WithObjects(&kcpScope).
 		WithStatusSubresource(&kcpScope).
 		Build()
-	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, kcpScheme)
-
-	skrScheme := bootstrap.SkrScheme
+	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	clientBuilder := fake.NewClientBuilder().
-		WithScheme(skrScheme)
+		WithScheme(commonscheme.SkrScheme)
 	for _, volume := range volumes {
 		clientBuilder = clientBuilder.WithObjects(volume).
 			WithStatusSubresource(volume)
@@ -334,9 +345,12 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 	}
 	skrClient := clientBuilder.Build()
 
-	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, skrScheme)
+	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 
-	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster)
+	nfsRestoreClientBackup := NewFakeFileBackupClientProvider(fakeHttpServer)
+	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
+
+	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsRestoreClientBackup, env)
 
 	return &testStateFactory{
 		factory:             factory,
@@ -348,17 +362,17 @@ func newTestStateFactoryWithObject(backup *cloudresourcesv1beta1.GcpNfsVolumeBac
 
 }
 
-func newTestStateFactory() (*testStateFactory, error) {
+func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, error) {
 	var backup cloudresourcesv1beta1.GcpNfsVolumeBackup
-	return newTestStateFactoryWithObject(&backup, &gcpNfsVolume, &deletedGcpNfsVolume)
+	return newTestStateFactoryWithObject(fakeHttpServer, &backup, &gcpNfsVolume, &deletedGcpNfsVolume)
 }
 
-func (f *testStateFactory) newState() *State {
+func (f *testStateFactory) newState() (*State, error) {
 	return f.newStateWith(&gcpNfsVolume)
 }
 
-func (f *testStateFactory) newStateWith(nfsVolume *cloudresourcesv1beta1.GcpNfsVolume) *State {
-	return f.factory.NewState(composed.NewStateFactory(f.skrCluster).NewState(
+func (f *testStateFactory) newStateWith(nfsVolume *cloudresourcesv1beta1.GcpNfsVolume) (*State, error) {
+	return f.factory.NewState(context.Background(), composed.NewStateFactory(f.skrCluster).NewState(
 		types.NamespacedName{
 			Name:      nfsVolume.Name,
 			Namespace: nfsVolume.Namespace,
@@ -368,4 +382,16 @@ func (f *testStateFactory) newStateWith(nfsVolume *cloudresourcesv1beta1.GcpNfsV
 // Fake client doesn't support type "apply" for patching so falling back on update for unit tests.
 func (s *State) PatchObjStatus(ctx context.Context) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
+}
+
+func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
+	return client.NewCachedClientProvider(
+		func(ctx context.Context, saJsonKeyPath string) (gcpnfsbackupclient.FileBackupClient, error) {
+			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
+			if err != nil {
+				return nil, err
+			}
+			return gcpnfsbackupclient.NewFileBackupClient(fsClient), nil
+		},
+	)
 }

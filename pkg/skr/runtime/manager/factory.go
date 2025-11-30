@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/bootstrap"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -100,7 +100,7 @@ func (f *skrManagerFactory) CreateManager(ctx context.Context, kymaName string, 
 		return nil, nil, fmt.Errorf("error loading Scope for kyma %s: %w", nn, err)
 	}
 
-	mngr, err := New(restConfig, bootstrap.SkrScheme, klog.ObjectRef{
+	mngr, err := New(restConfig, commonscheme.SkrScheme, klog.ObjectRef{
 		Name:      kymaName,
 		Namespace: f.namespace,
 	}, logger)

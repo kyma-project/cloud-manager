@@ -52,7 +52,7 @@ func (r *reconciler) newAction() composed.Action {
 				"gcpVpcPeering-create",
 				actions.AddCommonFinalizer(),
 				createKcpRemoteNetwork,
-				waitRemoteNetworkCreation,
+				waitNetworkReady,
 				createKcpVpcPeering,
 				waitKcpStatusUpdate,
 				updateStatus,

@@ -36,4 +36,5 @@ resources:
 - cloud-resources_v1beta1_azurevnetlink.yaml
 - cloud-control_v1beta1_vpcnetwork.yaml
 - cloud-control_v1beta1_subscription.yaml
+- cloud-resources_v1beta1_gcpnfsvolumebackupdiscovery.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

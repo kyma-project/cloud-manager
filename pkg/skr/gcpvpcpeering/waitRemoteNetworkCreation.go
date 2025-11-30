@@ -2,16 +2,17 @@ package gcpvpcpeering
 
 import (
 	"context"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-func waitRemoteNetworkCreation(ctx context.Context, st composed.State) (error, context.Context) {
+func waitNetworkReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if len(state.KcpRemoteNetwork.Status.Conditions) == 0 {
-		return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), nil
+	if state.KcpRemoteNetwork != nil && meta.IsStatusConditionTrue(*state.KcpRemoteNetwork.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+		return nil, ctx
 	}
 
-	return nil, nil
+	return composed.StopWithRequeue, ctx
 }

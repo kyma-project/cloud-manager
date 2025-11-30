@@ -60,6 +60,7 @@ garden-manifests: mod-download
 	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/core/v1beta1/..." output:crd:artifacts:config=config/crd/gardener-core-tmp
 	cp config/crd/gardener-core-tmp/core.gardener.cloud_shoots.yaml config/crd/gardener/core.gardener.cloud_shoots.yaml
 	cp config/crd/gardener-core-tmp/core.gardener.cloud_secretbindings.yaml config/crd/gardener/core.gardener.cloud_secretbindings.yaml
+	cp config/crd/gardener-core-tmp/core.gardener.cloud_cloudprofiles.yaml config/crd/gardener/core.gardener.cloud_cloudprofiles.yaml
 	rm -r config/crd/gardener-core-tmp
 	rm -r config/crd/gardener-security-tmp || true
 	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="$(shell go list -m -f '{{.Dir}}'  github.com/gardener/gardener)/pkg/apis/security/v1alpha1/..." output:crd:artifacts:config=config/crd/gardener-security-tmp
@@ -79,12 +80,12 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test-ff
-test-ff: jv
-	$(LOCALBIN)/jv -assertcontent -assertformat ./config/featureToggles/flag-schema.json ./config/featureToggles/featureToggles.yaml
+test-ff: jv download-flag-schema
+	$(LOCALBIN)/jv -assertcontent -assertformat "$(GO_FF_SCHEMA_FILE)" ./pkg/feature/default.yaml
 
 .PHONY: test
 test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
-	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -v -coverprofile cover.out
+	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -test.v -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 GOLANGCI_LINT_VERSION ?= v1.54.2
@@ -153,31 +154,31 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 .PHONY: build_ui
 build_ui: manifests kustomize # Build CRDS test
 	# kustomize build all the ConfigMaps and output to their own file
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumerestores > config/ui-extensions/gcpnfsvolumerestores/cloud-resources.kyma-project.io_gcpnfsvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpredisclusters > config/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/gcpsubnets > config/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumes > config/ui-extensions/gcpnfsvolumes/cloud-resources.kyma-project.io_gcpnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumebackups > config/ui-extensions/gcpnfsvolumebackups/cloud-resources.kyma-project.io_gcpnfsvolumebackups_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsvolumerestores > config/ui-extensions/gcpnfsvolumerestores/cloud-resources.kyma-project.io_gcpnfsvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/ipranges > config/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpvpcpeerings > config/ui-extensions/gcpvpcpeerings/cloud-resources.kyma-project.io_gcpvpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpredisinstances > config/ui-extensions/gcpredisinstances/cloud-resources.kyma-project.io_gcpredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpnfsbackupschedules > config/ui-extensions/gcpnfsbackupschedules/cloud-resources.kyma-project.io_gcpnfsbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpredisclusters > config/ui-extensions/gcpredisclusters/cloud-resources.kyma-project.io_gcpredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/gcpsubnets > config/ui-extensions/gcpsubnets/cloud-resources.kyma-project.io_gcpsubnets_ui.yaml
 
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumes > config/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsredisinstances > config/ui-extensions/awsredisinstances/cloud-resources.kyma-project.io_awsredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsvpcpeerings > config/ui-extensions/awsvpcpeerings/cloud-resources.kyma-project.io_awsvpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumebackups > config/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io_awsnfsvolumebackups_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
 
-	$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
-	$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurerwxbackupschedules > config/ui-extensions/azurerwxbackupschedules/cloud-resources.kyma-project.io_azurerwxbackupschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurerwxvolumerestores > config/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project.io_azurerwxvolumerestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
 
 
 
@@ -202,6 +203,10 @@ PROJECTROOT = $(shell pwd)
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
+
+GO_FF_VERSION := $(shell grep "github.com/thomaspoignant/go-feature-flag " ./go.mod | awk '{print $$2}')
+GO_FF_SCHEMA_URL := https://raw.githubusercontent.com/thomaspoignant/go-feature-flag/$(GO_FF_VERSION)/.schema/flag-schema.json
+GO_FF_SCHEMA_FILE := $(LOCALBIN)/flag-schema-$(GO_FF_VERSION).json
 
 ## Tool Binaries
 KUBECTL ?= kubectl
@@ -239,3 +244,9 @@ jv:$(JV)
 $(JV): $(LOCALBIN)
 	test -s $(LOCALBIN)/jv  || \
 	GOBIN=$(LOCALBIN) go install github.com/santhosh-tekuri/jsonschema/cmd/jv@$(JV_VERSION)
+
+.PHONY: download-flag-schema
+download-flag-schema: $(GO_FF_SCHEMA_FILE)
+
+$(GO_FF_SCHEMA_FILE):
+	curl -sSL -o  $(GO_FF_SCHEMA_FILE) "$(GO_FF_SCHEMA_URL)"

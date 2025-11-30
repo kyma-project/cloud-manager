@@ -16,7 +16,7 @@ func checkIfRemoteVpcIsTagged(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	tags, err := state.client.GetRemoteNetworkTags(ctx, state.remoteNetwork.Status.Network.Gcp.NetworkName, state.remoteNetwork.Status.Network.Gcp.GcpProject)
+	tags, err := state.client.GetRemoteNetworkTags(ctx, state.RemoteNetwork().Status.Network.Gcp.NetworkName, state.RemoteNetwork().Status.Network.Gcp.GcpProject)
 	if err != nil {
 		if gcpmeta.IsNotAuthorized(err) {
 			logger.Error(err, "[KCP GCP VPCPeering checkIfRemoteNetworkIsTagged] Error fetching GCP remote network tags, due to insufficient permissions")
@@ -25,7 +25,7 @@ func checkIfRemoteVpcIsTagged(ctx context.Context, st composed.State) (error, co
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  "True",
 					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-					Message: fmt.Sprintf("Error fetching GCP remote network tags for network %s/%s, due to insufficient permissions", state.remoteNetwork.Status.Network.Gcp.GcpProject, state.remoteNetwork.Status.Network.Gcp.NetworkName),
+					Message: fmt.Sprintf("Error fetching GCP remote network tags for network %s/%s, due to insufficient permissions", state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName),
 				}).
 				ErrorLogMessage("Error updating VPC Peering while fetching remote network tags due to insufficient permissions").
 				FailedError(composed.StopWithRequeue).

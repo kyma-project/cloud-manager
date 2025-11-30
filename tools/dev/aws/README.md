@@ -16,6 +16,50 @@ Ensure you are using AWS Azure SSO
 https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=3398468150
 https://github.com/aws-azure-login/aws-azure-login
 
+### The aws-azure-login Installation
+
+The aws-azure-login prompt in *Option B: Install Only for Current User* asks you to set the npm prefix to your home directory.
+Note that using npm prefix is not compatible with nvm. It's recommended not to use nvm and set the npm prefix as aws-azure-login suggests. Using nvm will probably get you the error:
+```
+TypeError: Cannot read properties of undefined (reading 'load')
+    at Object._parseRolesFromSamlResponse (..../node_modules/aws-azure-login/lib/login.js:663:40)
+```
+related to `cheerio.default` not defined. If you find a way to use aws-azure-login with nvm, please update this doc. Thanks!
+
+### How to create the AWS profile
+
+Go to the https://myapps.microsoft.com/ and find the AWS app URL that is in the format 
+like `https://launcher.myapps.microsoft.com/api/signin/<app_id_uri>?tenantId=<tenant_id>`.
+
+Based on that app URL make the AWS config (usuallt at `~/.aws/config`) profile like this:
+```
+[profile <name_of_profile>]
+azure_tenant_id=<tenant_id>
+azure_app_id_uri=<app_id_uri>
+azure_default_username=<sap_email_id>
+azure_default_role_arn=
+azure_default_duration_hours=8 # Range between 4-8 hours
+azure_default_remember_me=true
+region=eu-central-1
+```
+
+Choose that profile
+```shell
+export AWS_PROFILE=<name_of_profile>
+```
+
+Run 
+```shell
+aws-azure-login --mode gui --no-sandbox
+```
+
+A Chromium window opens; log in with your SAP credentials, complete the SFA, and the window should close. The aws-azure-login process should terminate without errors. 
+
+Test the access:
+```shell
+aws sts get-caller-identity 
+```
+
 ## AWS CLI Profiles
 
 Create separate AWS CLI profiles, one for CloudResources, other for SKR account. Name them by the MC subscription name (do not use CloudResources and SKR since those will be profile names for the technical principal used by the operator).

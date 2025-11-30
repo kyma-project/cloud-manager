@@ -27,12 +27,13 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -102,13 +103,16 @@ var _ = BeforeSuite(func() {
 	Expect(SetupSapNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// GcpNfsVolume
-	Expect(SetupGcpNfsVolumeReconciler(infra.Registry())).
+	Expect(SetupGcpNfsVolumeReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env)).
 		NotTo(HaveOccurred())
 	// GcpNfsVolumeRestore
-	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), env, testSetupLog)).
+	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
 		NotTo(HaveOccurred())
 	// GcpNfsVolumeBackup
 	Expect(SetupGcpNfsVolumeBackupReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
+		NotTo(HaveOccurred())
+	// GcpNfsVolumeBackupDiscovery
+	Expect(SetupGcpNfsVolumeBackupDiscoveryReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
 		NotTo(HaveOccurred())
 	// GcpRedisInstance
 	Expect(SetupGcpRedisInstanceReconciler(infra.Registry())).
