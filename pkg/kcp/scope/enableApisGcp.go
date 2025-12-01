@@ -12,15 +12,17 @@ import (
 func enableApisGcp(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-	saJsonKeyPath := gcpclient.GcpConfig.CredentialsFile
-	if saJsonKeyPath == "" {
+
+	if gcpclient.GcpConfig.CredentialsFile == "" {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("gcpConfig.credentialsFile not set"),
 			"Error enabling GCP APIs",
 			composed.StopAndForget, // Without this env var, we can't call any APIs anyway, so we can't recover from this error
 			ctx)
 	}
-	client, err := state.gcpServiceUsageClientProvider(ctx, saJsonKeyPath)
+
+	client, err := state.gcpServiceUsageClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
+
 	if err != nil {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("error getting ServiceUsageClient: %w", err),

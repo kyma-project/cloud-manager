@@ -20,18 +20,18 @@ import (
 	"time"
 )
 
-type ClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, error)
+type ClientProvider[T any] func(ctx context.Context, credentialsFile string) (T, error)
 
 func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T] {
 	var result T
 	var nilT T
 	var m sync.Mutex
-	return func(ctx context.Context, saJsonKeyPath string) (T, error) {
+	return func(ctx context.Context, credentialsFile string) (T, error) {
 		m.Lock()
 		defer m.Unlock()
 		var err error
 		if result == nilT {
-			result, err = p(ctx, saJsonKeyPath)
+			result, err = p(ctx, credentialsFile)
 		}
 		return result, err
 	}
@@ -40,23 +40,23 @@ func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T
 var gcpClient *http.Client
 var clientMutex sync.Mutex
 
-func newCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
+func newCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
 	clientMutex.Lock()
 	defer clientMutex.Unlock()
 	if gcpClient == nil {
-		client, err := newHttpClient(ctx, saJsonKeyPath)
+		client, err := newHttpClient(ctx, credentialsFile)
 		if err != nil {
 			return nil, err
 		}
 		gcpClient = client
-		go renewCachedHttpClientPeriodically(context.Background(), saJsonKeyPath, os.Getenv("GCP_CLIENT_RENEW_DURATION"))
+		go renewCachedHttpClientPeriodically(context.Background(), credentialsFile, os.Getenv("GCP_CLIENT_RENEW_DURATION"))
 	}
 	return gcpClient, nil
 }
 
-func GetCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
+func GetCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
 	if gcpClient == nil {
-		return newCachedGcpClient(ctx, saJsonKeyPath)
+		return newCachedGcpClient(ctx, credentialsFile)
 	}
 	return gcpClient, nil
 }
@@ -80,7 +80,7 @@ func GetCachedProjectNumber(projectId string, crmService *cloudresourcemanager.S
 	return projectNumber, nil
 }
 
-func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, duration string) {
+func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile, duration string) {
 	logger := log.FromContext(ctx)
 	if duration == "" {
 		logger.Info("GCP_CLIENT_RENEW_DURATION not set, defaulting to 5m")
@@ -102,7 +102,7 @@ func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, durat
 		case <-signalChannel:
 			return
 		case <-ticker.C:
-			client, err := newHttpClient(ctx, saJsonKeyPath)
+			client, err := newHttpClient(ctx, credentialsFile)
 			if err != nil {
 				logger.Error(err, "error renewing GCP HTTP client")
 			} else {
@@ -115,20 +115,20 @@ func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, durat
 	}
 }
 
-func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
-	client, _, err := transport.NewHTTPClient(ctx, option.WithCredentialsFile(saJsonKeyPath), option.WithScopes("https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform"))
+func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
+	client, _, err := transport.NewHTTPClient(ctx, option.WithCredentialsFile(credentialsFile), option.WithScopes("https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform"))
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
-	CheckGcpAuthentication(ctx, saJsonKeyPath)
+	CheckGcpAuthentication(ctx, credentialsFile)
 	client.Timeout = GcpConfig.GcpApiTimeout
 	return client, nil
 }
 
-func CheckGcpAuthentication(ctx context.Context, saJsonKeyPath string) {
+func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	svc, err := oauth2.NewService(ctx, option.WithCredentialsFile(saJsonKeyPath))
+	svc, err := oauth2.NewService(ctx, option.WithCredentialsFile(credentialsFile))
 	if err != nil {
 		IncrementCallCounter("Authentication", "Check", "", err)
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")

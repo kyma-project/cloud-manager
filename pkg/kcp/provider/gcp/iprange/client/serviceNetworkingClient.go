@@ -25,8 +25,8 @@ type ServiceNetworkingClient interface {
 
 func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (ServiceNetworkingClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}

@@ -115,7 +115,7 @@ func (s *server) SetSuIsEnabledError(err *googleapi.Error) {
 }
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ServiceNetworkingClient, error) {
+	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ServiceNetworkingClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ServiceNetworkingClientProvider mock...")
 		return s, nil
@@ -123,7 +123,7 @@ func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpipra
 }
 
 func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ComputeClient, error) {
+	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ComputeClientProvider mock...")
 		return s, nil
@@ -149,7 +149,7 @@ func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gc
 }
 
 func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstanceclient.FilestoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpnfsinstanceclient.FilestoreClient, error) {
+	return func(ctx context.Context, credentialsFile string) (gcpnfsinstanceclient.FilestoreClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
@@ -157,7 +157,7 @@ func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancec
 }
 
 func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (client.ServiceUsageClient, error) {
+	return func(ctx context.Context, credentialsFile string) (client.ServiceUsageClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
@@ -165,7 +165,7 @@ func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.Servi
 }
 
 func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpnfsrestoreclient.FileRestoreClient, error) {
+	return func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclient.FileRestoreClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
 		return s, nil
@@ -173,7 +173,7 @@ func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestore
 }
 
 func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
-	return func(ctx context.Context, saJsonKeyPath string) (gcpnfsbackupclient.FileBackupClient, error) {
+	return func(ctx context.Context, credentialsFile string) (gcpnfsbackupclient.FileBackupClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FileBackupClientProvider mock...")
 		return s, nil

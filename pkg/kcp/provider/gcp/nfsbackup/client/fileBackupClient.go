@@ -20,8 +20,8 @@ type FileBackupClient interface {
 
 func NewFileBackupClientProvider() client.ClientProvider[FileBackupClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (FileBackupClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (FileBackupClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}
