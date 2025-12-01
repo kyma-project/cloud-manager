@@ -9,6 +9,9 @@ import (
 )
 
 func IsShootReady(shoot *gardenerapicore.Shoot) bool {
+	if shoot.Status.IsHibernated {
+		return false
+	}
 	if len(shoot.Status.Conditions) == 0 {
 		return false
 	}

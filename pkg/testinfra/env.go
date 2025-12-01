@@ -38,6 +38,7 @@ type infraEnv struct {
 
 	ctx    context.Context
 	cancel context.CancelFunc
+	stopCh chan struct{}
 }
 
 func (ie *infraEnv) KcpManager() manager.Manager {
@@ -97,9 +98,11 @@ func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 		ctx = context.Background()
 	}
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
+	ie.stopCh = make(chan struct{})
 	go func() {
 		defer ginkgo.GinkgoRecover()
 		err := ie.kcpManager.Start(ie.ctx)
+		close(ie.stopCh)
 		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run kcp manager")
 	}()
 	time.Sleep(time.Second)
@@ -115,12 +118,14 @@ func (ie *infraEnv) StartSkrControllers(ctx context.Context) {
 
 	ie.runner = skrruntime.NewSkrRunnerWithNoopStatusSaver(ie.registry, newKcpClusterWrap(ie.kcpManager), ie.skrKymaRef.Name)
 	ie.ctx, ie.cancel = context.WithCancel(ctx)
+	ie.stopCh = make(chan struct{})
 	go func() {
 		defer ginkgo.GinkgoRecover()
 		err = ie.runner.Run(ie.ctx, ie.skrManager, looper.WithTimeout(10*time.Minute), looper.WithoutProvider())
 		if err != nil {
 			ie.skrManager.GetLogger().Error(err, "Error running SKR Runner")
 		}
+		close(ie.stopCh)
 	}()
 	time.Sleep(time.Second)
 }
@@ -136,6 +141,10 @@ func (ie *infraEnv) stopControllers() {
 	if ie.cancel != nil {
 		ginkgo.By("Stopping controllers")
 		ie.cancel()
+
+		if ie.stopCh != nil {
+			<-ie.stopCh
+		}
 	}
 }
 

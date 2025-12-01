@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/config"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/config"
 )
 
 type ConfigStruct struct {
@@ -37,6 +38,7 @@ func InitConfig(cfg config.Config) {
 		config.Path(
 			"concurrency",
 			config.DefaultScalar(1),
+			config.SourceEnv("SKR_RUNTIME_CONCURRENCY"),
 		),
 		config.Path(
 			"lockingLeaseDuration",

@@ -26,13 +26,16 @@ listKeys() {
 
 create() {
   log "Creating new key for SA $SA"
-  local FN=$(mktemp)
+  local FN
+  FN=$(mktemp)
   trap "rm -f \"$FN\"" EXIT
 
   aws iam create-access-key --user-name "$SA" | tee "$FN"
 
-  local KEY=$(jq -r '.AccessKey.AccessKeyId' "$FN")
-  local SECRET=$(jq -r '.AccessKey.SecretAccessKey' "$FN")
+  local KEY
+  KEY=$(jq -r '.AccessKey.AccessKeyId' "$FN" | tr -d '\n')
+  local SECRET
+  SECRET=$(jq -r '.AccessKey.SecretAccessKey' "$FN" | tr -d '\n')
   putCredentialKeyVal "accessKeyID" "$KEY"
   putCredentialKeyVal "secretAccessKey" "$SECRET"
   if [ "$SA_TYPE" = "default" ]; then
@@ -46,7 +49,8 @@ create() {
 delete() {
   log "Deleting oldest key of SA $SA"
   listKeys
-  local ID=$(cat $KEYS_FILE | jq -r "sort_by(.CreateDate) | .[0] | .AccessKeyId")
+  local ID
+  ID=$(cat $KEYS_FILE | jq -r "sort_by(.CreateDate) | .[0] | .AccessKeyId")
   log "Oldest key id is $ID"
   if [ "$ID" == "null" ]; then
     log "The SA $SA has no keys that can be deleted"

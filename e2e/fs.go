@@ -40,7 +40,7 @@ func FileContainsOperation(path, content string) FileOperationFunc {
 			fmt.Sprintf(`FILE=%s/%s`, rootDir, path),
 			fmt.Sprintf(`DIR=%s`, rootDir),
 			fmt.Sprintf(`CONTENT="%s"`, content),
-			`if ! grep $CONTENT $FILE; then`,
+			`if ! grep "$CONTENT" "$FILE"; then`,
 			`  echo "content '$CONTENT' not found"`,
 			`  echo "directory '$DIR' content:"`,
 			`  ls -la $DIR || true`,

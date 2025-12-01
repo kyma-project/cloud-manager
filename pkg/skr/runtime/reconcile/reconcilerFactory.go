@@ -14,6 +14,8 @@ type ReconcilerArguments struct {
 	// Provider indicates specific provider resources are available for,
 	// if nil all resources for all providers are available
 	Provider *cloudcontrolv1beta1.ProviderType
+
+	IgnoreWatchErrors func(bool)
 }
 
 type ReconcilerFactory interface {
