@@ -1,13 +1,8 @@
 name: Cloud-Manager Build Image PR
 
 on:
-  pull_request:
-    types: [labeled]
-    paths-ignore:
-      - .github/workflows/stale.yaml
-      - docs/**
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths-ignore:
       - .github/workflows/stale.yaml
       - docs/**
