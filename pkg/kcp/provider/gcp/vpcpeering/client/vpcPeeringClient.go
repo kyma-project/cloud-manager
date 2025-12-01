@@ -54,7 +54,7 @@ type VpcPeeringClient interface {
 	CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error)
 	CreateLocalVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error)
 	GetRemoteNetworkTags(context context.Context, remoteVpc string, remoteProject string) ([]string, error)
-	GetOperation(context context.Context, project string, operationId string) (*pb.Operation, error)
+	GetPeeringOperation(context context.Context, project string, operationId string) (*pb.Operation, error)
 }
 
 func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sourceVpc string, sourceProject string, importCustomRoutes bool, exportCustomRoutes bool, destinationProject string, destinationVpc string, networksClient *compute.NetworksClient) (*pb.Operation, error) {
@@ -157,7 +157,7 @@ func (c *gcpVpcPeeringClient) GetRemoteNetworkTags(ctx context.Context, remoteVp
 	return tagsArray, nil
 }
 
-func (c *gcpVpcPeeringClient) GetOperation(ctx context.Context, project string, operationId string) (*pb.Operation, error) {
+func (c *gcpVpcPeeringClient) GetPeeringOperation(ctx context.Context, project string, operationId string) (*pb.Operation, error) {
 	op, err := c.operationsClient.Get(ctx, &pb.GetGlobalOperationRequest{
 		Operation: operationId,
 		Project:   project,

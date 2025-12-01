@@ -3,18 +3,21 @@ package vpcpeering
 import (
 	"context"
 
+	pb "cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func loadLocalVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.localVpcPeering != nil {
+	if state.localVpcPeering != nil ||
+		(state.remotePeeringOperation != nil && state.remotePeeringOperation.Status == ptr.To(pb.Operation_DONE) && state.remotePeeringOperation.GetError().String() != "") {
 		return nil, nil
 	}
 
@@ -41,7 +44,7 @@ func loadLocalVpcPeering(ctx context.Context, st composed.State) (error, context
 
 	if kymaVpcPeering != nil {
 		state.localVpcPeering = kymaVpcPeering
-		logger.Info("[KCP GCP VpcPeering loadLocalVpcPeering] Local VPC Peering loaded", "localVpcPeering", state.getKymaVpcPeeringName())
+		logger.Info("Local VPC Peering loaded", "localVpcPeering", state.getKymaVpcPeeringName())
 	}
 
 	return nil, nil

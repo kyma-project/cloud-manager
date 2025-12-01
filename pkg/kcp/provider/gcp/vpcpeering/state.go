@@ -21,8 +21,8 @@ type State struct {
 	localVpcPeering  *pb.NetworkPeering
 
 	//Operations
-	remoteOperation *pb.Operation
-	localOperation  *pb.Operation
+	remotePeeringOperation *pb.Operation
+	localPeeringOperation  *pb.Operation
 }
 
 type StateFactory interface {

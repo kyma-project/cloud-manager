@@ -149,12 +149,12 @@ type VpcPeeringStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	//GCP creates operations when creating peerings, since we are creating two peerings (one in each direction), we store the operation names here to track them if needed
-	//One example is the quota exceeded error that can happen on either side if one of the vpcs is close to the quota limit
+	// GCP creates operations when creating peerings, since we are creating two peerings (one in each direction), we store the operation names here to track them if needed
+	// One example is the quota exceeded error that can happen on either side if one of the vpcs is close to the quota limit
 	// +optional
-	Operation string `json:"operation,omitempty"`
+	LocalPeeringOperation string `json:"localPeeringOperation,omitempty"`
 	// +optional
-	RemoteOperation string `json:"remoteOperation,omitempty"`
+	RemotePeeringOperation string `json:"remotePeeringOperation,omitempty"`
 }
 
 //+kubebuilder:object:root=true

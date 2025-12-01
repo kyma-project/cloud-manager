@@ -28,7 +28,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) || state.remoteVpcPeering != nil || (state.remoteOperation != nil) {
+	if state.remoteVpcPeering != nil || state.remotePeeringOperation != nil {
 		return nil, nil
 	}
 
@@ -72,7 +72,7 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			Run(ctx, state)
 	}
 
-	state.ObjAsVpcPeering().Status.RemoteOperation = ptr.Deref(op.Name, "RemoteOperationUnknown")
+	state.ObjAsVpcPeering().Status.RemotePeeringOperation = ptr.Deref(op.Name, "RemoteOperationUnknown")
 	err = state.PatchObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
@@ -81,6 +81,6 @@ func createRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 			ctx,
 		)
 	}
-	logger.Info("[KCP GCP VpcPeering createRemoteVpcPeering] Remote VPC Peering Connection requested", "operation id", state.ObjAsVpcPeering().Status.RemoteOperation)
+	logger.Info("Remote VPC Peering Connection requested", "operation id", state.ObjAsVpcPeering().Status.RemotePeeringOperation)
 	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), ctx
 }

@@ -11,7 +11,8 @@ import (
 func waitSkrStatusReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if state.ObjAsGcpVpcPeering().Status.Conditions == nil || state.ObjAsGcpVpcPeering().Status.Conditions[0].Status != cloudresourcesv1beta1.StateReady {
+	if state.ObjAsGcpVpcPeering().Status.Conditions == nil ||
+		(len(state.ObjAsGcpVpcPeering().Status.Conditions) > 0 && state.ObjAsGcpVpcPeering().Status.Conditions[0].Status != cloudresourcesv1beta1.StateReady) {
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 

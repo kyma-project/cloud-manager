@@ -12,13 +12,13 @@ func waitRemoteVpcPeeringAvailable(ctx context.Context, st composed.State) (erro
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.remoteOperation != nil && state.remoteOperation.GetError() != nil {
+	if state.remotePeeringOperation != nil && state.remotePeeringOperation.GetError() != nil {
 		return nil, ctx
 	}
 
 	if state.remoteVpcPeering.GetState() != pb.NetworkPeering_INACTIVE.String() &&
 		state.remoteVpcPeering.GetState() != pb.NetworkPeering_ACTIVE.String() {
-		logger.Info("[KCP GCP VpcPeering waitRemoteVpcPeeringActive] GCP Remote VPC Peering is not ready yet, re-queueing with delay", "currentState", state.remoteVpcPeering.GetState())
+		logger.Info("GCP Remote VPC Peering is not ready yet, re-queueing with delay", "currentState", state.remoteVpcPeering.GetState())
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
 

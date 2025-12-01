@@ -24,11 +24,11 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	remoteVpcPeering, err := state.client.GetVpcPeering(ctx, state.remotePeeringName, state.RemoteNetwork().Status.Network.Gcp.GcpProject, state.RemoteNetwork().Status.Network.Gcp.NetworkName)
 	if err != nil {
 		if composed.IsMarkedForDeletion(state.ObjAsVpcPeering()) {
-			logger.Info("[KCP GCP VPCPeering loadRemoteVPCPeering] GCP KCP VpcPeering Error fetching Remote Network, proceeding with deletion")
+			logger.Info("GCP KCP VpcPeering Error fetching Remote Network, proceeding with deletion")
 			return nil, nil
 		}
 		if gcpmeta.IsNotFound(err) { // Returns not found when network is not found (not the peering) Since it is only possible to fetch the peerings directly from the network
-			logger.Error(err, "[KCP GCP VpcPeering loadRemoteVpcPeering] Remote VPC Network not found")
+			logger.Error(err, "Remote VPC Network not found")
 			state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
 			meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -46,7 +46,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 			}
 		}
 		if gcpmeta.IsNotAuthorized(err) {
-			logger.Error(err, "[KCP GCP VpcPeering loadRemoteVpcPeering] Could not fetch Remote VPC Network, required permissions are missing")
+			logger.Error(err, "Could not fetch Remote VPC Network, required permissions are missing")
 			state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
 			meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -65,7 +65,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 		}
 
 		state.ObjAsVpcPeering().Status.State = v1beta1.VirtualNetworkPeeringStateDisconnected
-		logger.Error(err, "[KCP GCP VpcPeering loadRemoteVpcPeering] Error loading Remote VpcPeering")
+		logger.Error(err, "Error loading Remote VpcPeering")
 		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
 			Type:    v1beta1.ConditionTypeError,
 			Status:  "True",
@@ -84,7 +84,7 @@ func loadRemoteVpcPeering(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if remoteVpcPeering != nil {
-		logger.Info("[KCP GCP VpcPeering loadRemoteVpcPeering] Remote VPC Peering loaded", "remoteVpcPeering", ptr.Deref(remoteVpcPeering.Name, "remoteVpcPeering.Name"))
+		logger.Info("Remote VPC Peering loaded", "remoteVpcPeering", ptr.Deref(remoteVpcPeering.Name, "remoteVpcPeering.Name"))
 		state.remoteVpcPeering = remoteVpcPeering
 	}
 
