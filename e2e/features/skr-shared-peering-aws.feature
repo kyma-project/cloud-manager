@@ -3,7 +3,7 @@ Feature: AwsVpcPeering feature
   @skr @aws @peering
   Scenario: AwsVpcPeering scenario
 
-    Given there is SKR with "AWS" provider and default IpRange
+    Given there is shared SKR with "AWS" provider
 
     And resource declaration:
       | Alias   | Kind          | ApiVersion                              | Name                           | Namespace |

@@ -14,6 +14,12 @@ import (
 )
 
 func Create(ctx context.Context, config *e2econfig.ConfigType) (Keb, error) {
+	if config.ShootPrefix == "" {
+		return nil, fmt.Errorf("required config shootPrefix not set")
+	}
+	if len(config.ShootPrefix) > 2 {
+		return nil, fmt.Errorf("config shootPrefix can not be longer than 2 characters")
+	}
 	kcpClient, err := client.New(ctrl.GetConfigOrDie(), client.Options{
 		Scheme: commonscheme.KcpScheme,
 	})

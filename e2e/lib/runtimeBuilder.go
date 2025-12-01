@@ -17,11 +17,14 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-func NewRandomShootName() string {
+func NewRandomShootName(prefix string) string {
 	length := 9
 	id := uuid.New()
 	result := strings.ReplaceAll(id.String(), "-", "")
-	result = "p-" + result
+	if prefix == "" {
+		prefix = "xx"
+	}
+	result = fmt.Sprintf("%s-%s", prefix, result)
 	f := fmt.Sprintf("%%.%ds", length)
 	result = fmt.Sprintf(f, result)
 	return result
@@ -40,7 +43,7 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *
 	globalAccountId := uuid.NewString()
 	subAccountId := uuid.NewString()
 	name := uuid.NewString()
-	shootName := NewRandomShootName()
+	shootName := NewRandomShootName(config.ShootPrefix)
 	return &RuntimeBuilder{
 		cpr:    cpr,
 		config: config,
