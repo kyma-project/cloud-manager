@@ -65,7 +65,6 @@ data:
       spec.remotePrivateDnsZone: Remote Private DNS Zone
       spec.remoteDnsResolverRuleset: Remote DNS Resolver Ruleset
       spec.remoteTenant: Remote Tenant
-      showZone: Use DNS private zone
 kind: ConfigMap
 metadata:
   annotations:
