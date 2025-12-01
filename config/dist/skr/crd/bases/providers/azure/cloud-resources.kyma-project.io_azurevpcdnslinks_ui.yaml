@@ -4,9 +4,10 @@ data:
     \   children:\n      - widget: Labels\n        source: remoteLinkName\n        name:
     spec.remoteLinkName\n      - widget: Labels\n        source: remotePrivateDnsZone\n
     \       name: spec.remotePrivateDnsZone\n      - widget: Labels\n        source:
-    remoteTenant\n        name: spec.remoteTenant\n  \n  - name: status\n    widget:
-    Panel\n    source: status\n    children:\n      - widget: Labels\n        source:
-    state\n        name: status.state\n"
+    remoteDnsResolverRuleset\n        name: spec.remoteDnsResolverRuleset\n      -
+    widget: Labels\n        source: remoteTenant\n        name: spec.remoteTenant\n
+    \ \n  - name: status\n    widget: Panel\n    source: status\n    children:\n      -
+    widget: Labels\n        source: state\n        name: status.state\n"
   form: |
     - path: spec.remoteLinkName
       name: spec.remoteLinkName
@@ -17,7 +18,12 @@ data:
       name: spec.remotePrivateDnsZone
       widget: Text
       disableOnEdit: true
-      required: true
+      visibility: '$not($exists(spec.remoteDnsResolverRuleset) and spec.remoteDnsResolverRuleset)'
+    - path: spec.remoteDnsResolverRuleset
+      name: spec.remoteDnsResolverRuleset
+      widget: Text
+      disableOnEdit: true
+      visibility: '$not($exists(spec.remotePrivateDnsZone) and spec.remotePrivateDnsZone)'
     - path: spec.remoteTenant
       name: spec.remoteTenant
       widget: Text
@@ -41,6 +47,9 @@ data:
     - source: spec.remotePrivateDnsZone
       name: spec.remotePrivateDnsZone
       sort: true
+    - source: spec.remoteDnsResolverRuleset
+      name: spec.remoteDnsResolverRuleset
+      sort: true
     - source: spec.remoteTenant
       name: spec.remoteTenant
       sort: true
@@ -53,7 +62,8 @@ data:
       status: Status
       status.state: State
       spec.remoteLinkName: Remote Link Name
-      spec.remotePrivateDnsZone: Remote Private Dns Zone
+      spec.remotePrivateDnsZone: Remote Private DNS Zone
+      spec.remoteDnsResolverRuleset: Remote DNS Resolver Ruleset
       spec.remoteTenant: Remote Tenant
 kind: ConfigMap
 metadata:
