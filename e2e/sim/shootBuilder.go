@@ -39,7 +39,8 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 				Kind:       "Shoot",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: config.GardenNamespace,
+				Namespace:   config.GardenNamespace,
+				Annotations: config.ShootAnnotations,
 			},
 		},
 	}
@@ -283,6 +284,18 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	// nolint:staticcheck
 	b.obj.Spec.SecretBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
 
+	return b
+}
+
+func (b *ShootBuilder) WithAnnotations(annotations map[string]string) *ShootBuilder {
+	if len(annotations) > 0 {
+		if b.obj.Annotations == nil {
+			b.obj.Annotations = make(map[string]string)
+		}
+		for k, v := range annotations {
+			b.obj.Annotations[k] = v
+		}
+	}
 	return b
 }
 
