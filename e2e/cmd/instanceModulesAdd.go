@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/elliotchance/pie/v2"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/spf13/cobra"
@@ -15,6 +16,22 @@ var cmdInstanceModulesAdd = &cobra.Command{
 		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
 			return fmt.Errorf("failed to create keb: %w", err)
+		}
+
+		if runtimeID == "" {
+			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+			if err != nil {
+				return fmt.Errorf("failed to list runtimes: %w", err)
+			}
+			if len(idArr) == 0 {
+				return fmt.Errorf("runtime with alias %q not found", alias)
+			}
+			if len(idArr) > 1 {
+				return fmt.Errorf("multiple runtimes with alias %q found: %v", alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
+					return x.RuntimeID
+				}))
+			}
+			runtimeID = idArr[0].RuntimeID
 		}
 
 		clnt, err := keb.CreateInstanceClient(rootCtx, runtimeID)
@@ -62,7 +79,9 @@ var cmdInstanceModulesAdd = &cobra.Command{
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesAdd)
 	cmdInstanceModulesAdd.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceModulesAdd.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
 	cmdInstanceModulesAdd.Flags().StringVarP(&moduleName, "module", "m", "", "The module name")
-	_ = cmdInstanceModulesAdd.MarkFlagRequired("runtime-id")
 	_ = cmdInstanceModulesAdd.MarkFlagRequired("module")
+	cmdInstanceModulesAdd.MarkFlagsMutuallyExclusive("runtime-id", "alias")
+	cmdInstanceModulesAdd.MarkFlagsOneRequired("runtime-id", "alias")
 }

@@ -2,12 +2,15 @@
 # used to create kcp secret kcp-system/gardener-credentials
 gardenKubeconfig: /path/to/garden/kubeconfig
 
-# if ommitted, defaults to kcp-system
+shootPrefix: your-two-letter-name-initials
+shootAnnotations: {}
+
+# if omitted, defaults to kcp-system
 kcpNamespace: kcp-system
-# if ommitted, defaults to garden
+# if omitted, defaults to garden, but overwritten by gardenKubeconfig context namespace if any
 gardenNamespace: garden
-# if ommitted, defaults to skr
-skrNamespace: skr
+# if omitted, defaults to default
+skrNamespace: default
 
 subscriptions:
     # name is SecretBinding name in garden
@@ -15,7 +18,7 @@ subscriptions:
     provider: aws
     isDefault: true
 
-# gardener or kyma (once implemented
+# gardener or kyma (once implemented)
 networkOwner: gardener
 
 # shoot oidc client id
