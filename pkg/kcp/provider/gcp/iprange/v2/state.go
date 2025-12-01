@@ -53,14 +53,14 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 
 	snc, err := f.serviceNetworkingClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		gcpclient.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err
 	}
 	cc, err := f.computeClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		gcpclient.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err

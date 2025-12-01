@@ -47,6 +47,8 @@ type GcpConfigStruct struct {
 	GcpOperationWaitTime     time.Duration `mapstructure:"operationWaitTime,omitempty"`
 	GcpApiTimeout            time.Duration `mapstructure:"apiTimeout,omitempty"`
 	GcpCapacityCheckInterval time.Duration `mapstructure:"capacityCheckInterval,omitempty"`
+	CredentialsFile          string        `mapstructure:"credentialsFile,omitempty"`
+	PeeringCredentialsFile   string        `mapstructure:"peeringCredentialsFile,omitempty"`
 }
 
 func InitConfig(cfg config.Config) {
@@ -71,6 +73,14 @@ func InitConfig(cfg config.Config) {
 			"capacityCheckInterval",
 			config.DefaultScalar("1h"),
 			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
+		),
+		config.Path("credentialsFile",
+			config.SourceEnv("GCP_SA_JSON_KEY_PATH"),
+			config.SourceFile("GCP_SA_JSON_KEY_PATH"),
+		),
+		config.Path("peeringCredentialsFile",
+			config.SourceEnv("GCP_VPC_PEERING_KEY_PATH"),
+			config.SourceFile("GCP_VPC_PEERING_KEY_PATH"),
 		),
 		config.SourceFile("gcpclient.GcpConfig.yaml"),
 		config.Bind(GcpConfig),

@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/googleapi"
-	"os"
-
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func checkGcpOperations(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,10 +15,11 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	scope := state.ObjAsScope()
-	saJsonKeyPath := os.Getenv("GCP_SA_JSON_KEY_PATH")
+
+	saJsonKeyPath := gcpclient.GcpConfig.CredentialsFile
 	if saJsonKeyPath == "" {
 		return composed.LogErrorAndReturn(
-			fmt.Errorf("GCP_SA_JSON_KEY_PATH not set"),
+			fmt.Errorf("gcpConfig.credentialsFile not set"),
 			"Error enabling GCP APIs",
 			composed.StopAndForget, // Without this env var, we can't call any APIs anyway, so we can't recover from this error
 			ctx)

@@ -41,7 +41,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 
 	fc, err := f.filestoreClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		gcpclient.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err

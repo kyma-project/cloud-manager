@@ -62,13 +62,12 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
-	saPath := f.env.Get("GCP_SA_JSON_KEY_PATH")
-	frc, err := f.fileRestoreClientProvider(ctx, saPath)
+	frc, err := f.fileRestoreClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	fbc, err := f.fileBackupClientProvider(ctx, saPath)
+	fbc, err := f.fileBackupClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
 	if err != nil {
 		return nil, err
 	}

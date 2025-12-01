@@ -32,7 +32,7 @@ type stateFactory struct {
 func (f stateFactory) NewState(ctx context.Context, nukeState nuketypes.State) (focal.State, error) {
 	fbc, err := f.fileBackupClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		gcpclient.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err
