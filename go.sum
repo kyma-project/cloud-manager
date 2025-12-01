@@ -364,8 +364,8 @@ github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/googleapis/gax-go/v2 v2.15.0 h1:SyjDc1mGgZU5LncH8gimWo9lW1DtIfPibOG81vgd/bo=
 github.com/googleapis/gax-go/v2 v2.15.0/go.mod h1:zVVkkxAQHa1RQpg9z2AUCMnKhi0Qld9rcmyfL1OZhoc=
-github.com/gophercloud/gophercloud/v2 v2.8.0 h1:of2+8tT6+FbEYHfYC8GBu8TXJNsXYSNm9KuvpX7Neqo=
-github.com/gophercloud/gophercloud/v2 v2.8.0/go.mod h1:Ki/ILhYZr/5EPebrPL9Ej+tUg4lqx71/YH2JWVeU+Qk=
+github.com/gophercloud/gophercloud/v2 v2.9.0 h1:Y9OMrwKF9EDERcHFSOTpf/6XGoAI0yOxmsLmQki4LPM=
+github.com/gophercloud/gophercloud/v2 v2.9.0/go.mod h1:Ki/ILhYZr/5EPebrPL9Ej+tUg4lqx71/YH2JWVeU+Qk=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75 h1:f0n1xnMSmBLzVfsMMvriDyA75NB/oBgILX2GcHXIQzY=
 github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75/go.mod h1:g2644b03hfBX9Ov0ZBDgXXens4rxSxmqFBbhvKv2yVA=
