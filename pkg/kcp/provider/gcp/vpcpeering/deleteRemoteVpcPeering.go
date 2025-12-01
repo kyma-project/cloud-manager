@@ -51,10 +51,7 @@ func deleteRemoteVpcPeering(ctx context.Context, st composed.State) (error, cont
 		}
 		if gcpmeta.IsOperationInProgressError(err) {
 			logger.Info("There is a peering operation in progress on the local or peer network.")
-			if state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
-				logger.Info("DeleteRemotePeering is set to true. Re-queueing deletion of remote VPC Peering")
-				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
-			}
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 		}
 		logger.Error(err, "Error deleting remote VPC Peering")
 	}

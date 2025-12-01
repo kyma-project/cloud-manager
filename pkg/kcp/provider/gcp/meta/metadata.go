@@ -85,7 +85,7 @@ func IsOperationInProgressError(err error) bool {
 	if ok := errors.As(err, &googleapierror); ok {
 		if googleapierror.Code == 400 {
 			for _, e := range googleapierror.Errors {
-				if strings.Contains(e.Message, "peering operation in progress") {
+				if strings.Contains(e.Message, "operation in progress") {
 					return true
 				}
 			}

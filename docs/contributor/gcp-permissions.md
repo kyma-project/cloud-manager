@@ -70,6 +70,7 @@
 ## Peering Principal
 ```json
 [
+  "compute.globalOperations.get",
   "compute.networks.addPeering",
   "compute.networks.get",
   "compute.networks.removePeering"

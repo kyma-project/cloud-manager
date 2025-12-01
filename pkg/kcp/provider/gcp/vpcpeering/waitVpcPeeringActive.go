@@ -12,7 +12,7 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if (state.localOperation != nil && state.localOperation.GetError() != nil) || (state.remoteOperation != nil && state.remoteOperation.GetError() != nil) {
+	if (state.localPeeringOperation != nil && state.localPeeringOperation.GetError() != nil) || (state.remotePeeringOperation != nil && state.remotePeeringOperation.GetError() != nil) {
 		return nil, ctx
 	}
 

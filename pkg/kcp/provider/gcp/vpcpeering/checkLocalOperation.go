@@ -19,63 +19,64 @@ func checkLocalOperation(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) || (state.localOperation != nil && state.localOperation.GetStatus() != pb.Operation_PENDING) {
+	if composed.MarkedForDeletionPredicate(ctx, state) ||
+		state.ObjAsVpcPeering().Status.Id != "" ||
+		state.localPeeringOperation != nil ||
+		state.ObjAsVpcPeering().Status.LocalPeeringOperation == "" {
 		return nil, ctx
 	}
 
-	if state.ObjAsVpcPeering().Status.Operation != "" {
-		op, err := state.client.GetOperation(ctx, state.LocalNetwork().Spec.Network.Reference.Gcp.GcpProject, state.ObjAsVpcPeering().Status.Operation)
+	op, err := state.client.GetOperation(ctx, state.LocalNetwork().Spec.Network.Reference.Gcp.GcpProject, state.ObjAsVpcPeering().Status.LocalPeeringOperation)
+	if err != nil {
+		logger.Error(err, "[KCP GCP VpcPeering checkLocalOperation] Error getting local operation")
+		meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
+			Type:    v1beta1.ConditionTypeError,
+			Status:  "True",
+			Reason:  v1beta1.ConditionReasonError,
+			Message: "Error loading Local Vpc Peering LocalOperation: " + state.ObjAsVpcPeering().Status.LocalPeeringOperation,
+		})
+		err = state.PatchObjStatus(ctx)
 		if err != nil {
-			logger.Error(err, "[KCP GCP VpcPeering checkLocalOperation] Error getting local operation")
-			meta.SetStatusCondition(state.ObjAsVpcPeering().Conditions(), metav1.Condition{
-				Type:    v1beta1.ConditionTypeError,
-				Status:  "True",
-				Reason:  v1beta1.ConditionReasonError,
-				Message: "Error loading Local Vpc Peering Operation: " + state.ObjAsVpcPeering().Status.Operation,
-			})
-			err = state.PatchObjStatus(ctx)
-			if err != nil {
-				return composed.LogErrorAndReturn(err,
-					"Error updating status since it was not possible to load the local Vpc Peering operation.",
-					composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-					ctx,
-				)
-			}
+			return composed.LogErrorAndReturn(err,
+				"Error updating status since it was not possible to load the local Vpc Peering operation.",
+				composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+				ctx,
+			)
+		}
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+	}
+	state.localPeeringOperation = op
+	if op != nil {
+		if op.GetStatus() != pb.Operation_DONE {
+			logger.Info("Local operation still in progress", "localPeeringOperation", ptr.Deref(op.Name, "OperationUnknown"))
 			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 		}
-		state.localOperation = op
-		if op != nil {
-			if op.GetStatus() != pb.Operation_DONE {
-				logger.Info("[KCP GCP VpcPeering checkLocalOperation] Local operation still in progress", "localOperation", ptr.Deref(op.Name, "OperationUnknown"))
-				return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
-			}
-			if op.GetError() != nil {
-				logger.Error(err, "[KCP GCP VpcPeering checkRemoteOperation] Local operation error "+op.GetName())
-				state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
-				if strings.Contains(op.GetError().String(), "QUOTA_EXCEEDED") {
-					return composed.UpdateStatus(state.ObjAsVpcPeering()).SetExclusiveConditions(metav1.Condition{
-						Type:    v1beta1.ConditionTypeQuotaExceeded,
-						Status:  "True",
-						Reason:  v1beta1.ConditionTypeQuotaExceeded,
-						Message: "Error creating Local Vpc Peering due to quota limits, please check if your vpc quota limits are not exceeded.",
-					}).
-						ErrorLogMessage("Error creating Local VpcPeering due to quota exceeded").
-						FailedError(composed.StopWithRequeue).
-						SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
-						Run(ctx, state)
-				}
-
+		if op.GetError() != nil {
+			logger.Error(err, "Local operation error ", "localPeeringOperation", op.GetName())
+			state.ObjAsVpcPeering().Status.State = cloudcontrolv1beta1.VirtualNetworkPeeringStateDisconnected
+			if strings.Contains(op.GetError().String(), "QUOTA_EXCEEDED") {
 				return composed.UpdateStatus(state.ObjAsVpcPeering()).SetExclusiveConditions(metav1.Condition{
-					Type:    v1beta1.ConditionTypeError,
+					Type:    v1beta1.ConditionTypeQuotaExceeded,
 					Status:  "True",
-					Reason:  v1beta1.ConditionTypeError,
-					Message: "The cloud provider had an error while creating Local Vpc Peering",
+					Reason:  v1beta1.ConditionTypeQuotaExceeded,
+					Message: "Error creating Local Vpc Peering due to quota limits, please check if your vpc quota limits are not exceeded.",
 				}).
-					ErrorLogMessage("The cloud provider had an error while creating Local Vpc Peering").
+					ErrorLogMessage("Error creating Local VpcPeering due to quota exceeded").
 					FailedError(composed.StopWithRequeue).
 					SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 					Run(ctx, state)
 			}
+
+			return composed.UpdateStatus(state.ObjAsVpcPeering()).SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  "True",
+				Reason:  v1beta1.ConditionTypeError,
+				Message: "The cloud provider had an error while creating Local Vpc Peering",
+			}).
+				ErrorLogMessage("The cloud provider had an error while creating Local Vpc Peering").
+				FailedError(composed.StopWithRequeue).
+				SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
+				Run(ctx, state)
 		}
 	}
 

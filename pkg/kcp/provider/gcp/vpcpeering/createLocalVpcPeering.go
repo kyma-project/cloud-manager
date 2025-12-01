@@ -15,6 +15,7 @@ package vpcpeering
 import (
 	"context"
 
+	pb "cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -26,7 +27,9 @@ func createLocalVpcPeering(ctx context.Context, st composed.State) (error, conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if composed.MarkedForDeletionPredicate(ctx, state) || (state.localVpcPeering != nil || (state.localOperation != nil)) {
+	if state.localVpcPeering != nil ||
+		state.localPeeringOperation != nil ||
+		(state.remotePeeringOperation != nil && state.remotePeeringOperation.Status == ptr.To(pb.Operation_DONE) && state.remotePeeringOperation.GetError().String() != "") {
 		return nil, nil
 	}
 
@@ -54,7 +57,7 @@ func createLocalVpcPeering(ctx context.Context, st composed.State) (error, conte
 			Run(ctx, state)
 	}
 
-	state.ObjAsVpcPeering().Status.Operation = ptr.Deref(op.Name, "OperationUnknown")
+	state.ObjAsVpcPeering().Status.LocalPeeringOperation = ptr.Deref(op.Name, "OperationUnknown")
 	err = state.PatchObjStatus(ctx)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
@@ -63,6 +66,6 @@ func createLocalVpcPeering(ctx context.Context, st composed.State) (error, conte
 			ctx,
 		)
 	}
-	logger.Info("[KCP GCP VPCPeering createLocalVpcPeering] Local VPC Peering Connection created ", "localVpcPeering", state.getKymaVpcPeeringName())
+	logger.Info("Local VPC Peering Connection created ", "localVpcPeering", state.getKymaVpcPeeringName())
 	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), ctx
 }

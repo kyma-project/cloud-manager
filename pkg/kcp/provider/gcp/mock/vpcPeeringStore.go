@@ -47,17 +47,16 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 		s.operations = make(map[string]*pb.Operation)
 	}
 
+	if s.items == nil {
+		s.items = make(map[string]*vpcPeeringEntry)
+	}
+
 	if s.operations[remoteVpc] == nil {
 		operationpb := &pb.Operation{
 			Status: ptr.To(pb.Operation_DONE),
 			Name:   ptr.To(remoteVpc),
 		}
 		s.operations[remoteVpc] = operationpb
-	}
-
-	_, peeringExists := s.items[remoteNetwork]
-	if peeringExists {
-		return s.operations[remoteVpc], nil
 	}
 
 	item := &vpcPeeringEntry{
@@ -89,17 +88,16 @@ func (s *vpcPeeringStore) CreateLocalVpcPeering(ctx context.Context, remotePeeri
 		s.operations = make(map[string]*pb.Operation)
 	}
 
+	if s.items == nil {
+		s.items = make(map[string]*vpcPeeringEntry)
+	}
+
 	if s.operations[kymaVpc] == nil {
 		operationpb := &pb.Operation{
 			Status: ptr.To(pb.Operation_DONE),
 			Name:   ptr.To(kymaVpc),
 		}
 		s.operations[kymaVpc] = operationpb
-	}
-
-	_, peeringExists := s.items[kymaNetwork]
-	if peeringExists {
-		return s.operations[kymaVpc], nil
 	}
 
 	item := &vpcPeeringEntry{
@@ -178,7 +176,7 @@ func (s *vpcPeeringStore) GetOperation(ctx context.Context, project string, oper
 
 	_, operationExists := s.operations[operationId]
 	if !operationExists {
-		return nil, fmt.Errorf("operation %s not found", operationId)
+		return nil, fmt.Errorf("\"The resource 'projects/%s/global/operations/%s' was not found\",", project, operationId)
 	}
 	return s.operations[operationId], nil
 }

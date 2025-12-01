@@ -23,12 +23,12 @@ func loadKcpRemoteNetwork(ctx context.Context, st composed.State) (error, contex
 
 	if apierrors.IsNotFound(err) {
 		state.KcpRemoteNetwork = nil
-		logger.Info("[SKR GCP VPCPeering loadKcpRemoteNetwork] GCP KCP Network does not exist", "kcpNetwork", obj.Status.Id)
+		logger.Info("GCP KCP Network does not exist", "kcpNetwork", obj.Status.Id)
 		return nil, nil
 	}
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering loadKcpRemoteNetwork] Error loading GCP KCP RemoteNetwork "+obj.Status.Id, composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error loading GCP KCP RemoteNetwork "+obj.Status.Id, composed.StopWithRequeue, ctx)
 	}
 
 	state.KcpRemoteNetwork = remoteNetwork

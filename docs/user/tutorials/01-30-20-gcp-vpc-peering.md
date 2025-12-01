@@ -27,7 +27,7 @@ The recommended approach is creating a role and assigning it to the Cloud Manage
 2. Create a custom role with the required permissions.
 
    ```shell
-   gcloud iam roles create $ROLE_NAME --permissions="compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID --quiet
+   gcloud iam roles create $ROLE_NAME --permissions="compute.globalOperations.get,compute.networks.addPeering,compute.networks.get,compute.networks.listEffectiveTags" --project=$YOUR_REMOTE_PROJECT_ID --quiet
    ```
 
 3. See [Authorizing Cloud Manager in the Remote Cloud Provider](../00-31-vpc-peering-authorization.md#service-account) and assign the custom role created on the previous step to the correct Cloud Manager service account for your environment. The following example shows how to assign the role in a production environment.
