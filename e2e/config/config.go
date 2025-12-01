@@ -22,6 +22,9 @@ const (
 type ConfigType struct {
 	GardenKubeconfig string `yaml:"gardenKubeconfig" json:"gardenKubeconfig"`
 
+	ShootPrefix      string            `yaml:"shootPrefix" json:"shootPrefix"`
+	ShootAnnotations map[string]string `yaml:"shootAnnotations" json:"shootAnnotations"`
+
 	KcpNamespace    string `yaml:"kcpNamespace" json:"kcpNamespace"`
 	GardenNamespace string `yaml:"gardenNamespace" json:"gardenNamespace"`
 	SkrNamespace    string `yaml:"skrNamespace" json:"skrNamespace"`
@@ -43,6 +46,13 @@ type ConfigType struct {
 	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
 
 	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
+}
+
+func (c *ConfigType) AfterConfigLoaded() {
+	// strip all whitespaces
+	c.ShootPrefix = strings.Join(strings.Fields(c.ShootPrefix), "")
+	c.ShootPrefix = strings.ReplaceAll(c.ShootPrefix, "-", "")
+	c.ShootPrefix = strings.ReplaceAll(c.ShootPrefix, "_", "")
 }
 
 func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {
@@ -177,6 +187,7 @@ func LoadConfig() *ConfigType {
 
 func Stub() *ConfigType {
 	result := DefaultConfig()
+	result.ShootPrefix = "e"
 	result.OidcClientId = "79221501-5dcc-4285-9af6-d023f313918e"
 	result.OidcIssuerUrl = "https://oidc.e2e.cloud-manager.kyma.local"
 	result.Administrators = []string{"admin@e2e.cloud-manager.kyma.local"}
