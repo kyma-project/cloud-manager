@@ -48,6 +48,7 @@ type GcpVpcPeeringStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 type GcpVpcPeering struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -75,3 +76,7 @@ func (in *GcpVpcPeering) SpecificToFeature() featuretypes.FeatureName {
 }
 
 func (in *GcpVpcPeering) SpecificToProviders() []string { return []string{"gcp"} }
+
+func (in *GcpVpcPeering) State() string { return in.Status.State }
+
+func (in *GcpVpcPeering) SetState(v string) { in.Status.State = v }
