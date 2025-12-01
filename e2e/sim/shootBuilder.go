@@ -30,7 +30,7 @@ type ShootBuilder struct {
 }
 
 func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigType) *ShootBuilder {
-	return &ShootBuilder{
+	b := &ShootBuilder{
 		cpr:    cpr,
 		config: config,
 		obj: gardenertypes.Shoot{
@@ -41,9 +41,22 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: config.GardenNamespace,
 			},
-			Spec: gardenertypes.ShootSpec{},
 		},
 	}
+	loc, err := time.LoadLocation("Europe/Belgrade")
+	if err == nil {
+		if time.Now().In(loc).Hour() < 18 {
+			b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
+				Schedules: []gardenertypes.HibernationSchedule{
+					{
+						Start:    ptr.To("00 20 * * 1,2,3,4,5,6,0"),
+						Location: ptr.To("Europe/Belgrade"),
+					},
+				},
+			}
+		}
+	}
+	return b
 }
 
 func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBuilder {
