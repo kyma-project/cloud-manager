@@ -82,7 +82,7 @@ func InitConfig(cfg config.Config) {
 			config.SourceEnv("GCP_VPC_PEERING_KEY_PATH"),
 			config.SourceFile("GCP_VPC_PEERING_KEY_PATH"),
 		),
-		config.SourceFile("gcpclient.GcpConfig.yaml"),
+		config.SourceFile("gcpConfig.yaml"),
 		config.Bind(GcpConfig),
 	)
 }
