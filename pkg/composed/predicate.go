@@ -51,22 +51,9 @@ func BreakIf(predicate Predicate) Action {
 func BuildBranchingAction(name string, predicate Predicate, trueAction Action, falseAction Action) Action {
 	return func(ctx context.Context, state State) (error, context.Context) {
 		value := predicate(ctx, state)
-		logger := LoggerFromCtx(ctx).
-			WithValues(
-				"action", name,
-				"predicate", value,
-			)
 		if value && trueAction != nil {
-			actionName := findActionName(trueAction)
-			logger.
-				WithValues("targetAction", actionName).
-				Info("Running action")
 			return trueAction(ctx, state)
 		} else if falseAction != nil {
-			actionName := findActionName(falseAction)
-			logger.
-				WithValues("targetAction", actionName).
-				Info("Running action")
 			return falseAction(ctx, state)
 		}
 

@@ -57,7 +57,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("And Given Scenario Session is created", func() {
-			session = e2e.NewScenarioSession(world)
+			session = e2e.NewScenarioSession(world, "")
 		})
 
 		By("When Scenario session AddExistingCluster is called for existing SKR instance", func() {
@@ -113,7 +113,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
 
-		session := e2e.NewScenarioSession(world)
+		session := e2e.NewScenarioSession(world, "")
 		var clusterInSession e2e.ClusterInSession
 
 		By("When Scenario session CreateNewSkrCluster() is called", func() {
