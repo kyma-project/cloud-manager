@@ -22,7 +22,6 @@ type WorldIntf interface {
 
 	Kcp() Cluster
 	Garden() Cluster
-	Sim() sim.Sim
 	Keb() e2ekeb.Keb
 }
 
@@ -77,10 +76,6 @@ func (w *defaultWorld) Kcp() Cluster {
 
 func (w *defaultWorld) Garden() Cluster {
 	return w.garden
-}
-
-func (w *defaultWorld) Sim() sim.Sim {
-	return w.simu
 }
 
 func (w *defaultWorld) Keb() e2ekeb.Keb {

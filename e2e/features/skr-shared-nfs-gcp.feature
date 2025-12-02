@@ -1,7 +1,7 @@
 Feature: GcpNfsVolume feature
 
   @skr @gcp @nfs
-  Scenario: GcpNfsVolume/Backup/Restore scenario
+  Scenario: GcpNfsVolume Backup and Restore scenario
 
     Given there is shared SKR with "GCP" provider
 
@@ -77,9 +77,9 @@ Feature: GcpNfsVolume feature
       | Contains  | test.txt   | first value |
 
     When resource "restore" is deleted
-    Then eventually resource "restore" does not exist
-
     When resource "vol" is deleted
+
+    Then eventually resource "restore" does not exist
     Then eventually resource "pvc" does not exist
     And eventually resource "pv" does not exist
     And eventually resource "vol" does not exist
@@ -125,13 +125,14 @@ Feature: GcpNfsVolume feature
     And eventually "schBackup.status.state == 'Ready'" is ok
 
     When resource "schedule" is deleted
+    When resource "vol2" is deleted
+    When resource "backup" is deleted
+
     Then eventually resource "schBackup" does not exist
     And eventually resource "schedule" does not exist
 
-    When resource "vol2" is deleted
     Then eventually resource "pvc2" does not exist
     And eventually resource "pv2" does not exist
     And eventually resource "vol2" does not exist
 
-    When resource "backup" is deleted
     Then eventually resource "backup" does not exist

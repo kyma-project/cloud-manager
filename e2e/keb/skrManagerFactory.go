@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -24,7 +25,7 @@ import (
 // SkrManagerFactory creates manager SKR runtime. It uses the KCP client to fetch the GardenerCluster
 // resource and the kubeconfig secret referenced in it to create the client/cluster.
 type SkrManagerFactory interface {
-	CreateSkrManager(ctx context.Context, runtimeID string) (manager.Manager, error)
+	CreateSkrManager(ctx context.Context, runtimeID string, opts ...SkrManagerFactoryOption) (manager.Manager, error)
 }
 
 func NewSkrManagerFactory(kcpClient client.Client, c clock.Clock, kcpNamespace string) SkrManagerFactory {
@@ -43,7 +44,31 @@ type defaultSkrManagerFactory struct {
 	kcpNamespace string
 }
 
-func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtimeID string) (manager.Manager, error) {
+type SkrManagerFactoryOption interface {
+	ApplyOnCreate(*skrManagerFactoryCreateOptions)
+}
+
+type skrManagerFactoryCreateOptions struct {
+	logger *logr.Logger
+}
+
+type WithLogger logr.Logger
+
+func (o WithLogger) ApplyOnCreate(opts *skrManagerFactoryCreateOptions) {
+	l := logr.Logger(o)
+	opts.logger = &l
+}
+
+func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtimeID string, opts ...SkrManagerFactoryOption) (manager.Manager, error) {
+	options := &skrManagerFactoryCreateOptions{}
+	for _, o := range opts {
+		o.ApplyOnCreate(options)
+	}
+	if options.logger == nil {
+		l := ctrl.Log
+		options.logger = &l
+	}
+
 	var restConfig *rest.Config
 	err := wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, false, func(ctx context.Context) (done bool, err error) {
 		rc, err := f.getRestConfig(ctx, runtimeID)
@@ -71,7 +96,7 @@ func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtime
 				Unstructured: true,
 			},
 		},
-		Logger: ctrl.Log.WithName(fmt.Sprintf("skr-%s", runtimeID)),
+		Logger: options.logger.WithName(fmt.Sprintf("skr-%s", runtimeID)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating SKR manager: %w", err)

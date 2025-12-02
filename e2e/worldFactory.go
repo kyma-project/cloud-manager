@@ -10,12 +10,10 @@ import (
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
@@ -127,22 +125,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 
 	kebi := e2ekeb.NewKeb(kcpManager.GetClient(), gardenManager.GetClient(), opts.SkrManagerFactory, opts.CloudProfileLoader, opts.SkrKubeconfigProvider, opts.Config)
 
-	// SIM -----------------------------------
-
-	simInstance, err := sim.New(sim.CreateOptions{
-		Config:                opts.Config,
-		StartCtx:              ctx,
-		KcpManager:            kcpManager,
-		GardenClient:          gardenManager.GetClient(),
-		CloudProfileLoader:    opts.CloudProfileLoader,
-		Logger:                ctrl.Log,
-		SkrKubeconfigProvider: opts.SkrKubeconfigProvider,
-	})
-	if err != nil {
-		cancel()
-		return nil, fmt.Errorf("error creating sim instance: %w", err)
-	}
-
 	// give time to sim reconciler kinds to get added to cache and start syncing
 	time.Sleep(time.Second)
 
@@ -154,7 +136,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.config = opts.Config
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
-	result.simu = simInstance
 	result.kebi = kebi
 	result.kcp = NewCluster(ctx, "kcp", kcpManager)
 	result.garden = NewCluster(ctx, "garden", gardenManager)
