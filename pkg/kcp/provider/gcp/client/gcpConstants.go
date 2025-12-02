@@ -54,6 +54,8 @@ type GcpConfigStruct struct {
 func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"gcpConfig",
+		config.Bind(GcpConfig),
+		config.SourceFile("gcpConfig.yaml"),
 		config.Path(
 			"retryWaitTime",
 			config.DefaultScalar("5s"),
@@ -82,8 +84,6 @@ func InitConfig(cfg config.Config) {
 			config.SourceEnv("GCP_VPC_PEERING_KEY_PATH"),
 			config.SourceFile("GCP_VPC_PEERING_KEY_PATH"),
 		),
-		config.SourceFile("gcpConfig.yaml"),
-		config.Bind(GcpConfig),
 	)
 }
 
