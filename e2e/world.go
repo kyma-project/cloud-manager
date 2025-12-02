@@ -6,7 +6,6 @@ import (
 
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -39,7 +38,6 @@ type defaultWorld struct {
 	garden Cluster
 
 	kebi e2ekeb.Keb
-	simu sim.Sim
 }
 
 func (w *defaultWorld) Config() *e2econfig.ConfigType {
