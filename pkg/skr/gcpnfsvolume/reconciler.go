@@ -53,7 +53,7 @@ func (r *Reconciler) newAction() composed.Action {
 		"crGcpNfsVolumeMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
-		composed.IfElse(EmptyLocationPredicate(), loadScope, nil),
+		loadScope,
 		composed.ComposeActions(
 			"crGcpNfsVolumeValidateSpec",
 			validateIpRange, validatePV, validatePVC),
@@ -67,7 +67,6 @@ func (r *Reconciler) newAction() composed.Action {
 			composed.All(composed.Not(composed.MarkedForDeletionPredicate), SourceBackupPredicate(), NoKcpNfsInstancePredicate()),
 			composed.ComposeActions(
 				"restoreFromSourceBackup",
-				loadScope,
 				loadBackup,
 				checkRestorePermissions,
 				populateBackupUrl),
@@ -107,12 +106,6 @@ func NewReconciler(
 	return Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,
-	}
-}
-
-func EmptyLocationPredicate() composed.Predicate {
-	return func(ctx context.Context, state composed.State) bool {
-		return len(state.Obj().(*cloudresourcesv1beta1.GcpNfsVolume).Spec.Location) == 0
 	}
 }
 

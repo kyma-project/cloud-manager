@@ -124,11 +124,7 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 }
 
 func getLocation(state *State, logger logr.Logger) (string, error) {
-	location := state.ObjAsGcpNfsVolume().Spec.Location
-	// location is optional. So if empty, using region from scope.
-	if len(location) != 0 {
-		return location, nil
-	}
+	// Location is automatically determined from the scope region and tier
 	switch state.ObjAsGcpNfsVolume().Spec.Tier {
 	case cloudresourcesv1beta1.REGIONAL:
 		return state.Scope.Spec.Region, nil
