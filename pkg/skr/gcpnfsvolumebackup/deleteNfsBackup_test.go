@@ -232,6 +232,86 @@ func (s *deleteNfsBackupSuite) TestWhenDeleteBackupSuccessfulWithStatusLocation(
 	s.Equal(0, len(fromK8s.Status.Conditions))
 }
 
+func (s *deleteNfsBackupSuite) TestWhenDeleteBackupReturns403() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+
+		case http.MethodDelete:
+			fmt.Println(r.URL.Path)
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/cm-cffd6896-0127-48a1-8a64-e07f6ad5c912") {
+				//Return 403 (invalid location)
+				http.Error(w, "Location us-west15-a is not found or access is unauthorized.", http.StatusForbidden)
+			} else {
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+			}
+		default:
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+		}
+	}))
+	obj := deletingGpNfsVolumeBackup.DeepCopy()
+	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
+	s.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
+
+	//Set the scope and gcpNfsVolume objects in state
+	state.Scope = scope.DeepCopy()
+	state.GcpNfsVolume = nil
+	state.fileBackup = &file.Backup{}
+
+	//Invoke deleteNfsBackup API
+	err, _ctx := deleteNfsBackup(ctx, state)
+
+	//validate expected return values - 403 should be treated as success (resource not found)
+	s.Nil(err)
+	s.Nil(_ctx)
+}
+
+func (s *deleteNfsBackupSuite) TestWhenDeleteBackupReturns404() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+
+		case http.MethodDelete:
+			fmt.Println(r.URL.Path)
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/backups/cm-cffd6896-0127-48a1-8a64-e07f6ad5c912") {
+				//Return 404 (not found)
+				http.Error(w, "Not Found", http.StatusNotFound)
+			} else {
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+			}
+		default:
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+		}
+	}))
+	obj := deletingGpNfsVolumeBackup.DeepCopy()
+	factory, err := newTestStateFactoryWithObj(fakeHttpServer, obj)
+	s.Nil(err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+	state, err := factory.newStateWith(obj)
+	s.Nil(err)
+
+	//Set the scope and gcpNfsVolume objects in state
+	state.Scope = scope.DeepCopy()
+	state.GcpNfsVolume = nil
+	state.fileBackup = &file.Backup{}
+
+	//Invoke deleteNfsBackup API
+	err, _ctx := deleteNfsBackup(ctx, state)
+
+	//validate expected return values - 404 should be treated as success (resource not found)
+	s.Nil(err)
+	s.Nil(_ctx)
+}
+
 func TestDeleteNfsBackup(t *testing.T) {
 	suite.Run(t, new(deleteNfsBackupSuite))
 }

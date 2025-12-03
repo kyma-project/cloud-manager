@@ -121,6 +121,41 @@ func (s *loadNfsInstanceSuite) TestLoadNfsInstanceSuccess() {
 	assert.Nil(s.T(), resCtx)
 	assert.NotNil(s.T(), testState.fsInstance)
 }
+
+func (s *loadNfsInstanceSuite) TestLoadNfsInstanceNotFoundWith403() {
+	fakeHttpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+
+		case http.MethodGet:
+			if strings.HasSuffix(r.URL.Path, "/projects/test-project/locations/us-west1/instances/cm-test-gcp-nfs-instance") {
+				//Return 403 (invalid location)
+				http.Error(w, "Location us-west15-a is not found or access is unauthorized.", http.StatusForbidden)
+			} else {
+				assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+			}
+		default:
+			assert.Fail(s.T(), "unexpected request: "+r.URL.String())
+		}
+	}))
+	gcpNfsInstance := getGcpNfsInstance()
+	factory, err := newTestStateFactory(fakeHttpServer, gcpNfsInstance)
+	assert.Nil(s.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//Get state object with GcpNfsVolume
+	testState, err := factory.newStateWith(ctx, gcpNfsInstance, "")
+	assert.Nil(s.T(), err)
+	defer testState.FakeHttpServer.Close()
+	err, resCtx := loadNfsInstance(ctx, testState.State)
+	// 403 should be treated as not found - no error returned
+	assert.Nil(s.T(), err)
+	assert.Nil(s.T(), resCtx)
+	// fsInstance should be nil since resource not found
+	assert.Nil(s.T(), testState.fsInstance)
+}
+
 func TestLoadNfsInstance(t *testing.T) {
 	suite.Run(t, new(loadNfsInstanceSuite))
 }

@@ -2,6 +2,8 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -15,7 +17,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolume", func() {
@@ -725,7 +726,6 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
 					WithName(gcpNfsVolumeName),
 					WithGcpNfsVolumeIpRange(skrIpRange.Name),
-					WithGcpNfsVolumeSpecLocation(""),
 					WithPvSpec(pvSpec),
 					WithPvcSpec(pvcSpec),
 				).
@@ -1506,6 +1506,172 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 
 				By("And it has defined cloud-manager finalizer")
 				Expect(pv.Finalizers).To(ContainElement(api.CommonFinalizerDeletionHook))
+			})
+		})
+	})
+
+	Describe("Scenario: SKR GcpNfsVolume Create with REGIONAL tier and empty location", func() {
+		//Define variables.
+		gcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		pv := &corev1.PersistentVolume{}
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		gcpNfsVolumeName := "gcp-nfs-volume-8"
+		nfsIpAddress := "10.11.12.18"
+		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
+			Name: "gcp-nfs-pv-8",
+			Labels: map[string]string{
+				"app": "gcp-nfs-regional",
+			},
+			Annotations: map[string]string{
+				"volume": "gcp-nfs-volume-8",
+			},
+		}
+
+		pvc := &corev1.PersistentVolumeClaim{}
+		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
+			Name: "gcp-nfs-pvc-8",
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+			Annotations: map[string]string{
+				"baz": "qux",
+			},
+		}
+
+		BeforeEach(func() {
+			By("Given KCP Scope exists", func() {
+				// Given Scope exists
+				Expect(
+					infra.GivenScopeGcpExists(infra.SkrKymaRef().Name),
+				).NotTo(HaveOccurred())
+				// Load created scope
+				Eventually(func() (exists bool, err error) {
+					err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+					exists = err == nil
+					return exists, client.IgnoreNotFound(err)
+				}, timeout, interval).
+					Should(BeTrue(), "expected Scope to get created")
+			})
+		})
+
+		It("When GcpNfsVolume with REGIONAL tier is created without location", func() {
+			Eventually(CreateGcpNfsVolume).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpNfsVolume,
+					WithName(gcpNfsVolumeName),
+					WithGcpNfsVolumeIpRange(skrIpRange.Name),
+					WithGcpNfsVolumeSpecTier(cloudresourcesv1beta1.REGIONAL),
+					WithPvSpec(pvSpec),
+					WithPvcSpec(pvcSpec),
+				).
+				Should(Succeed())
+
+			By("Then GcpNfsVolume is created in SKR", func() {
+				// load GcpNfsVolume to get ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+						AssertGcpNfsVolumeHasId(),
+					).
+					Should(Succeed())
+			})
+
+			By("Then NfsInstance is created in KCP with region as location", func() {
+				// check KCP NfsInstance is created with name=gcpNfsVolume.ID
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+
+				By("And has location set to Scope region")
+				Expect(kcpNfsInstance.Spec.Instance.Gcp.Location).To(Equal(scope.Spec.Region),
+					"Expected REGIONAL tier to use Scope region as location")
+
+				By("And has REGIONAL tier")
+				Expect(kcpNfsInstance.Spec.Instance.Gcp.Tier).To(Equal(cloudcontrolv1beta1.REGIONAL))
+			})
+
+			By("And Status.Location is set in SKR GcpNfsVolume", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+					).
+					Should(Succeed())
+
+				By("And Status.Location matches the Scope region")
+				Expect(gcpNfsVolume.Status.Location).To(Equal(scope.Spec.Region),
+					"Expected Status.Location to be set to Scope region")
+			})
+
+			By("When KCP NfsInstance is switched to Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.KCP().Client(),
+						kcpNfsInstance,
+						NewObjActions(WithName(gcpNfsVolume.Status.Id)),
+					).
+					Should(Succeed())
+				Eventually(UpdateStatus).
+					WithArguments(
+						infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+						WithConditions(KcpReadyCondition()),
+						WithKcpNfsStatusState(cloudcontrolv1beta1.StateReady),
+						WithKcpNfsStatusHost(nfsIpAddress),
+						WithKcpNfsStatusCapacity(gcpNfsVolume.Spec.CapacityGb),
+					).
+					Should(Succeed())
+			})
+
+			By("Then SKR GcpNfsVolume will get to Ready condition", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						gcpNfsVolume,
+						NewObjActions(),
+						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					).
+					Should(Succeed())
+			})
+
+			By("Then PersistentVolume is created", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pv,
+						NewObjActions(
+							WithName(pvSpec.Name),
+						),
+					).
+					Should(Succeed())
+			})
+
+			By("Then PersistentVolumeClaim is created", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(
+						infra.Ctx(),
+						infra.SKR().Client(),
+						pvc,
+						NewObjActions(
+							WithName(pvcSpec.Name),
+							WithNamespace(gcpNfsVolume.Namespace),
+						),
+					).
+					Should(Succeed())
 			})
 		})
 	})

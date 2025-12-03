@@ -39,7 +39,6 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
 		},
-		Location:      "us-west1",
 		Tier:          "BASIC_HDD",
 		FileShareName: "vol1",
 		CapacityGb:    1024,
@@ -216,7 +215,7 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 		},
 		Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 			Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
-				Location:      gcpNfsVolume.Spec.Location,
+				Location:      gcpNfsVolume.Status.Location,
 				Tier:          cloudcontrolv1beta1.GcpFileTier(gcpNfsVolume.Spec.Tier),
 				FileShareName: gcpNfsVolume.Spec.FileShareName,
 				CapacityGb:    gcpNfsVolume.Spec.CapacityGb,
@@ -266,7 +265,7 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 		},
 		Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 			Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{
-				Location:      gcpNfsVolume.Spec.Location,
+				Location:      gcpNfsVolume.Status.Location,
 				Tier:          cloudcontrolv1beta1.GcpFileTier(gcpNfsVolume.Spec.Tier),
 				FileShareName: gcpNfsVolume.Spec.FileShareName,
 				CapacityGb:    gcpNfsVolume.Spec.CapacityGb,
