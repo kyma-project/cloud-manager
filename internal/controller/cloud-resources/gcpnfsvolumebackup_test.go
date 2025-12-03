@@ -101,6 +101,10 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 			By("And Then GcpNfsVolumeBackup has Ready state", func() {
 				Expect(gcpNfsVolumeBackup.Status.State).To(Equal(cloudresourcesv1beta1.GcpNfsBackupReady))
 			})
+			By("And Then GcpNfsVolumeBackup has .status location set from spec", func() {
+				Expect(gcpNfsVolumeBackup.Status.Location).To(Equal(gcpNfsVolumeBackup.Spec.Location))
+				Expect(len(gcpNfsVolumeBackup.Status.Location)).To(BeNumerically(">", 0))
+			})
 		})
 	})
 
@@ -193,6 +197,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 			})
 			By("And Then GcpNfsVolumeBackup has Ready state", func() {
 				Expect(gcpNfsVolumeBackup.Status.State).To(Equal(cloudresourcesv1beta1.GcpNfsBackupReady))
+			})
+			By("And Then GcpNfsVolumeBackup has .status location set from Scope", func() {
+				Expect(gcpNfsVolumeBackup.Status.Location).To(Equal(scope.Spec.Region))
 			})
 		})
 	})

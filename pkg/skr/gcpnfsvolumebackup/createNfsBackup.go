@@ -3,9 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -44,19 +42,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	// Setting the uuid as id to prevent duplicate backups if updateStatus fails.
 	if backup.Status.Id == "" {
-		location, err := getLocation(state, logger)
-		if err != nil {
-			logger.Error(err, "Error in automatically populating the location for the backup.")
-			return composed.PatchStatus(backup).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudresourcesv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudresourcesv1beta1.ConditionReasonLocationInvalid,
-					Message: fmt.Sprintf("Could not automatically populate the location for the backup: %s", err),
-				}).
-				SuccessError(composed.StopAndForget).
-				Run(ctx, state)
-		}
+		location := getLocation(state)
 		backup.Status.Location = location
 		backup.Status.Id = uuid.NewString()
 		return composed.PatchStatus(backup).
@@ -99,25 +85,10 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		Run(ctx, state)
 }
 
-func getLocation(state *State, logger logr.Logger) (string, error) {
+func getLocation(state *State) string {
 	location := state.ObjAsGcpNfsVolumeBackup().Spec.Location
-	// location is optional. So if empty, using region from source volume.
 	if len(location) != 0 {
-		return location, nil
+		return location
 	}
-	if (state.GcpNfsVolume == nil) || (state.GcpNfsVolume.Status.Location == "") {
-		logger.Error(nil, "Source GcpNfsVolume location is empty")
-		return "", fmt.Errorf("source GcpNfsVolume location is empty")
-	}
-	switch state.GcpNfsVolume.Spec.Tier {
-	case cloudresourcesv1beta1.REGIONAL:
-		return state.GcpNfsVolume.Status.Location, nil
-	default:
-		return getRegion(state.GcpNfsVolume.Status.Location), nil
-	}
-}
-
-func getRegion(zone string) string {
-	//slit zone by the last '-'
-	return zone[:strings.LastIndex(zone, "-")]
+	return state.Scope.Spec.Region
 }
