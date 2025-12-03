@@ -56,6 +56,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		state.ObjAsGcpNfsVolume().Status.Capacity = state.KcpNfsInstance.Status.Capacity
 		state.ObjAsGcpNfsVolume().Status.Hosts = state.KcpNfsInstance.Status.Hosts
 		state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeReady
+		state.ObjAsGcpNfsVolume().Status.Location = state.KcpNfsInstance.Spec.Instance.Gcp.Location
 		protocol, ok := state.KcpNfsInstance.GetStateData(client.GcpNfsStateDataProtocol)
 		if ok {
 			state.ObjAsGcpNfsVolume().Status.Protocol = protocol
