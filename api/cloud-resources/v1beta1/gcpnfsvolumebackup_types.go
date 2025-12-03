@@ -86,6 +86,7 @@ type GcpNfsVolumeBackupSpec struct {
 	// If not specified, region of the GcpNfsVolume is used for the backup.
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
+	// +kubebuilder:validation:Pattern=`^$|^(asia-east1|asia-northeast1|asia-northeast2|asia-northeast3|asia-south1|asia-southeast1|asia-southeast2|australia-southeast1|europe-north1|europe-west1|europe-west2|europe-west3|europe-west4|europe-west6|northamerica-northeast1|southamerica-east1|us-central1|us-east1|us-east4|us-west1|us-west2|us-west3|us-west4)$`
 	Location string `json:"location"`
 
 	// AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backup for restore.

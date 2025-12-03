@@ -77,9 +77,6 @@ type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	IpRange IpRangeRef `json:"ipRange"`
-	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
-	Location string `json:"location"`
 
 	// +kubebuilder:default=BASIC_HDD
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Tier is immutable."
