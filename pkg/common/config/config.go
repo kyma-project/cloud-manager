@@ -5,7 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	config2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	gcpconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	scopeconfig "github.com/kyma-project/cloud-manager/pkg/kcp/scope/config"
 	vpcpeeringconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/config"
@@ -34,7 +34,7 @@ func LoadConfigInstance(cfg config.Config) {
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)
 	scopeconfig.InitConfig(cfg)
-	config2.InitConfig(cfg)
+	gcpconfig.InitConfig(cfg)
 	vpcpeeringconfig.InitConfig(cfg)
 
 	cfg.Read()
