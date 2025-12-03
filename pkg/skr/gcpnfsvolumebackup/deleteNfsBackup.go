@@ -2,11 +2,14 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,6 +45,17 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	op, err := state.fileBackupClient.DeleteFileBackup(ctx, project, location, name)
 
 	if err != nil {
+		// Handle 404 (not found) and 403 (invalid location or unauthorized) as successful deletion
+		// This allows users to delete CRs with invalid locations
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			if e.Code == 404 || e.Code == 403 {
+				logger.WithValues("code", e.Code, "message", e.Message).
+					Info("Backup not found or location is invalid, treating as successfully deleted")
+				return nil, nil
+			}
+		}
+
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
 		return composed.PatchStatus(backup).
 			SetExclusiveConditions(metav1.Condition{
