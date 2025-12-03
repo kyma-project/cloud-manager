@@ -2,11 +2,14 @@ package nfsinstance
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"strings"
 
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -39,6 +42,17 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 		operation, err = state.filestoreClient.PatchFilestoreInstance(ctx, project, location, name, mask, state.toInstance())
 	case gcpclient.DELETE:
 		operation, err = state.filestoreClient.DeleteFilestoreInstance(ctx, project, location, name)
+		// Handle 404 and 403 errors as successful deletion
+		if err != nil {
+			var e *googleapi.Error
+			if ok := errors.As(err, &e); ok {
+				if e.Code == 404 || e.Code == 403 {
+					logger.WithValues("code", e.Code, "message", e.Message).
+						Info("Filestore instance not found or location is invalid, treating as successfully deleted")
+					return nil, nil
+				}
+			}
+		}
 	case gcpclient.NONE:
 		//If the operation is not ADD, MODIFY or DELETE, continue.
 		return nil, nil
@@ -69,7 +83,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 	return nil, nil
 }
 
-// addProtocol sets the protocol 4.1 for the NFS instance if tier is ZONAL or REGIONAL.
+// getInstanceWithProtocol returns an instance with protocol 4.1 set if tier is ZONAL or REGIONAL.
 func getInstanceWithProtocol(ctx context.Context, state *State) *file.Instance {
 	instance := state.toInstance()
 	gcpOptions := state.ObjAsNfsInstance().Spec.Instance.Gcp

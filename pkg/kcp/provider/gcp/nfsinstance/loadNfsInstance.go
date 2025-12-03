@@ -31,7 +31,8 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			if e.Code == 404 {
+			// Handle 404 (not found) and 403 (invalid location or unauthorized) as resource doesn't exist
+			if e.Code == 404 || e.Code == 403 {
 				state.fsInstance = nil
 				return nil, nil
 			}
