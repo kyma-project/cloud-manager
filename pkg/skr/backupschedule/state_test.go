@@ -48,7 +48,6 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
 		},
-		Location:      "us-west1",
 		Tier:          "BASIC_HDD",
 		FileShareName: "vol1",
 		CapacityGb:    1024,

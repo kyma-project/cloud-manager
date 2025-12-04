@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/zap/zapcore"
+	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -23,6 +24,7 @@ var infra testinfra.Infra
 
 var world e2e.WorldIntf
 var config *e2econfig.ConfigType
+var simInstance sim.Sim
 
 func TestSimControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -68,12 +70,15 @@ var _ = BeforeSuite(func() {
 
 	By("starting world")
 
+	cpl := e2elib.NewFileCloudProfileLoader(e2elib.CloudProfilesFS, "cloudprofiles.yaml", config)
+	skrKubeConfigProvider := e2elib.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig())
+
 	wf := e2e.NewWorldFactory()
 	w, err := wf.Create(infra.Ctx(), e2e.WorldCreateOptions{
 		Config:                config,
 		KcpRestConfig:         infra.KCP().Cfg(),
-		CloudProfileLoader:    e2elib.NewFileCloudProfileLoader(e2elib.CloudProfilesFS, "cloudprofiles.yaml", config),
-		SkrKubeconfigProvider: e2elib.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()),
+		CloudProfileLoader:    cpl,
+		SkrKubeconfigProvider: skrKubeConfigProvider,
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
 
@@ -81,6 +86,20 @@ var _ = BeforeSuite(func() {
 	Expect(sim.SetupShootReadyController(w.GardenManager())).To(Succeed())
 
 	world = w
+
+	By("starting simu")
+
+	simu, err := sim.New(sim.CreateOptions{
+		Config:                config,
+		StartCtx:              world.Ctx(),
+		KcpManager:            world.KcpManager(),
+		GardenClient:          world.Garden().GetClient(),
+		CloudProfileLoader:    cpl,
+		Logger:                ctrl.Log,
+		SkrKubeconfigProvider: skrKubeConfigProvider,
+	})
+	Expect(err).NotTo(HaveOccurred())
+	simInstance = simu
 
 	// Start infra
 	infra.StartKcpControllers(infra.Ctx())

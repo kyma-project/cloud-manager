@@ -376,7 +376,7 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2eke
 }
 
 func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
-	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID)
+	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID, e2ekeb.WithLogger(logr.Discard()))
 	if err != nil {
 		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
 	}

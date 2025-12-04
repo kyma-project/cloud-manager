@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.13
+    cloud-resources.kyma-project.io/version: v0.0.14
   name: gcpnfsvolumes.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -76,6 +76,7 @@ spec:
                     - message: IpRange is immutable.
                       rule: (self == oldSelf)
                 location:
+                  description: 'Deprecated: Location field is deprecated and will be removed in a future version.'
                   type: string
                   x-kubernetes-validations:
                     - message: Location is immutable.
