@@ -42,7 +42,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 			newTestGcpNfsVolumeBackupBuilder().WithLocation(""),
 		)
 
-		// Test all valid GCP Filestore regions (43 regions)
 		validRegions := []string{
 			// Africa
 			"africa-south1",
@@ -98,7 +97,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 		}
 
 		for _, region := range validRegions {
-			region := region // capture loop variable
 			canCreateSkr(
 				"GcpNfsVolumeBackup with location "+region,
 				newTestGcpNfsVolumeBackupBuilder().WithLocation(region),
@@ -123,7 +121,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 		}
 
 		for _, region := range invalidRegions {
-			region := region // capture loop variable
 			canNotCreateSkr(
 				"GcpNfsVolumeBackup with invalid location "+region,
 				newTestGcpNfsVolumeBackupBuilder().WithLocation(region),
@@ -158,30 +155,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 			"Location is immutable",
 		)
 
-		// Test sample of newly added regions specifically
 		canCreateSkr(
-			"GcpNfsVolumeBackup with africa-south1",
-			newTestGcpNfsVolumeBackupBuilder().WithLocation("africa-south1"),
-		)
-
-		canCreateSkr(
-			"GcpNfsVolumeBackup with asia-east2",
-			newTestGcpNfsVolumeBackupBuilder().WithLocation("asia-east2"),
-		)
-
-		canCreateSkr(
-			"GcpNfsVolumeBackup with europe-central2",
-			newTestGcpNfsVolumeBackupBuilder().WithLocation("europe-central2"),
-		)
-
-		canCreateSkr(
-			"GcpNfsVolumeBackup with me-central1",
-			newTestGcpNfsVolumeBackupBuilder().WithLocation("me-central1"),
-		)
-
-		canCreateSkr(
-			"GcpNfsVolumeBackup with us-south1",
-			newTestGcpNfsVolumeBackupBuilder().WithLocation("us-south1"),
+			"GcpNfsVolumeBackup with explicitly empty location",
+			newTestGcpNfsVolumeBackupBuilder().WithLocation(""),
 		)
 	})
 })
