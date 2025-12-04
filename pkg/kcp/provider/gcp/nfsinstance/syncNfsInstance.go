@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"strings"
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -52,7 +53,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error updating Filestore object in GCP :%s", err)).
 			Run(ctx, state)
 	}
@@ -63,7 +64,7 @@ func syncNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 		}
 		nfsInstance.Status.OpIdentifier = operation.Name
 		return composed.UpdateStatus(nfsInstance).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
 	return nil, nil

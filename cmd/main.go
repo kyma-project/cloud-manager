@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"os"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
@@ -201,10 +202,10 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
-	gcpClients, err := gcpclient.NewGcpClients(ctx, gcpclient.GcpConfig.CredentialsFile, gcpclient.GcpConfig.PeeringCredentialsFile, rootLogger.WithName("gcp-clients"))
+	gcpClients, err := gcpclient.NewGcpClients(ctx, config.GcpConfig.CredentialsFile, config.GcpConfig.PeeringCredentialsFile, rootLogger.WithName("gcp-clients"))
 	if err != nil {
 		setupLog.Error(err, fmt.Sprintf("Failed to create gcp clients with sa json key path: %s and vpc peering key path: %s",
-			gcpclient.GcpConfig.CredentialsFile, gcpclient.GcpConfig.CredentialsFile))
+			config.GcpConfig.CredentialsFile, config.GcpConfig.CredentialsFile))
 		os.Exit(1)
 	}
 	defer func() {

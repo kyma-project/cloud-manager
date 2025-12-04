@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/googleapi"
 )
@@ -16,14 +17,14 @@ func checkGcpOperations(ctx context.Context, st composed.State) (error, context.
 
 	scope := state.ObjAsScope()
 
-	if gcpclient.GcpConfig.CredentialsFile == "" {
+	if config.GcpConfig.CredentialsFile == "" {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("gcpConfig.credentialsFile not set"),
 			"Error enabling GCP APIs",
 			composed.StopAndForget, // Without this env var, we can't call any APIs anyway, so we can't recover from this error
 			ctx)
 	}
-	client, err := state.gcpServiceUsageClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
+	client, err := state.gcpServiceUsageClientProvider(ctx, config.GcpConfig.CredentialsFile)
 	if err != nil {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("error getting ServiceUsageClient: %w", err),

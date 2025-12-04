@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	"google.golang.org/api/file/v1"
 )
@@ -32,7 +33,7 @@ type stateFactory struct {
 func (f stateFactory) NewState(ctx context.Context, nukeState nuketypes.State) (focal.State, error) {
 	fbc, err := f.fileBackupClientProvider(
 		ctx,
-		gcpclient.GcpConfig.CredentialsFile,
+		config.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err

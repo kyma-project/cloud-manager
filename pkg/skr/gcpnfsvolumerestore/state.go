@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -62,12 +63,12 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
-	frc, err := f.fileRestoreClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
+	frc, err := f.fileRestoreClientProvider(ctx, config.GcpConfig.CredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	fbc, err := f.fileBackupClientProvider(ctx, gcpclient.GcpConfig.CredentialsFile)
+	fbc, err := f.fileBackupClientProvider(ctx, config.GcpConfig.CredentialsFile)
 	if err != nil {
 		return nil, err
 	}

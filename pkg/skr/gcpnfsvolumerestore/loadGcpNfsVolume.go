@@ -2,10 +2,10 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,7 +41,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudresourcesv1beta1.ConditionReasonMissingNfsVolume,
 				Message: "Error loading GcpNfsVolume",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			Run(ctx, state)
 	}
 	//If deleting, we still need the gcpNfsVolume object for finding the restore operation if it exists.
@@ -61,7 +61,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 					Reason:  cloudresourcesv1beta1.ConditionReasonNfsVolumeNotReady,
 					Message: "Error loading GcpNfsVolume",
 				}).
-				SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 				SuccessLogMsg("Error getting GcpNfsVolume").
 				Run(ctx, state)
 		}

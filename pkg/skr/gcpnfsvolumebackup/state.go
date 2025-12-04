@@ -3,6 +3,7 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"slices"
 	"sort"
 	"strings"
@@ -60,7 +61,7 @@ type stateFactory struct {
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
 	fbc, err := f.fileBackupClientProvider(
 		ctx,
-		gcpclient.GcpConfig.CredentialsFile,
+		config.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err
@@ -82,7 +83,7 @@ func (s *State) isTimeForCapacityUpdate() bool {
 	backup := s.ObjAsGcpNfsVolumeBackup()
 
 	lastUpdate := backup.Status.LastCapacityUpdate
-	configInterval := gcpclient.GcpConfig.GcpCapacityCheckInterval
+	configInterval := config.GcpConfig.GcpCapacityCheckInterval
 	capacityUpdateDue := lastUpdate == nil || lastUpdate.Time.IsZero() || time.Since(lastUpdate.Time) > configInterval
 
 	return capacityUpdateDue

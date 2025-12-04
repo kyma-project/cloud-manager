@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -41,7 +42,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 
 	fc, err := f.filestoreClientProvider(
 		ctx,
-		gcpclient.GcpConfig.CredentialsFile,
+		config.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err
