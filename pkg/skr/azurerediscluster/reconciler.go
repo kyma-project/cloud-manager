@@ -2,6 +2,7 @@ package azurerediscluster
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -63,6 +64,7 @@ func (r *reconciler) newAction() composed.Action {
 				updateStatus,
 				waitSkrStatusReady,
 				createAuthSecret,
+				modifyAuthSecret,
 			),
 			composed.ComposeActions(
 				"azureRedisCluster-delete",
