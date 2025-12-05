@@ -1,7 +1,7 @@
 package config
 
 import (
-	config2 "github.com/kyma-project/cloud-manager/pkg/config"
+	"github.com/kyma-project/cloud-manager/pkg/config"
 	"time"
 )
 
@@ -10,42 +10,48 @@ type GcpConfigStruct struct {
 	GcpOperationWaitTime     time.Duration `mapstructure:"operationWaitTime,omitempty"`
 	GcpApiTimeout            time.Duration `mapstructure:"apiTimeout,omitempty"`
 	GcpCapacityCheckInterval time.Duration `mapstructure:"capacityCheckInterval,omitempty"`
+	ClientRenewDuration      time.Duration `mapstructure:"clientRenewDuration,omitempty"`
 	CredentialsFile          string        `mapstructure:"credentialsFile,omitempty"`
 	PeeringCredentialsFile   string        `mapstructure:"peeringCredentialsFile,omitempty"`
 }
 
-func InitConfig(cfg config2.Config) {
+func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"gcpConfig",
-		config2.Bind(GcpConfig),
-		config2.SourceFile("gcpConfig.yaml"),
-		config2.Path(
+		config.Bind(GcpConfig),
+		config.SourceFile("gcpConfig.yaml"),
+		config.Path(
 			"retryWaitTime",
-			config2.DefaultScalar("5s"),
-			config2.SourceEnv("GCP_RETRY_WAIT_DURATION"),
+			config.DefaultScalar("5s"),
+			config.SourceEnv("GCP_RETRY_WAIT_DURATION"),
 		),
-		config2.Path(
+		config.Path(
 			"operationWaitTime",
-			config2.DefaultScalar("5s"),
-			config2.SourceEnv("GCP_OPERATION_WAIT_DURATION"),
+			config.DefaultScalar("5s"),
+			config.SourceEnv("GCP_OPERATION_WAIT_DURATION"),
 		),
-		config2.Path(
+		config.Path(
 			"apiTimeout",
-			config2.DefaultScalar("8s"),
-			config2.SourceEnv("GCP_API_TIMEOUT_DURATION"),
+			config.DefaultScalar("8s"),
+			config.SourceEnv("GCP_API_TIMEOUT_DURATION"),
 		),
-		config2.Path(
+		config.Path(
 			"capacityCheckInterval",
-			config2.DefaultScalar("1h"),
-			config2.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
+			config.DefaultScalar("1h"),
+			config.SourceEnv("GCP_CAPACITY_CHECK_INTERVAL"),
 		),
-		config2.Path("credentialsFile",
-			config2.SourceEnv("GCP_SA_JSON_KEY_PATH"),
-			config2.SourceFile("GCP_SA_JSON_KEY_PATH"),
+		config.Path(
+			"clientRenewDuration",
+			config.DefaultScalar("5m"),
+			config.SourceEnv("GCP_CLIENT_RENEW_DURATION"),
 		),
-		config2.Path("peeringCredentialsFile",
-			config2.SourceEnv("GCP_VPC_PEERING_KEY_PATH"),
-			config2.SourceFile("GCP_VPC_PEERING_KEY_PATH"),
+		config.Path("credentialsFile",
+			config.SourceEnv("GCP_SA_JSON_KEY_PATH"),
+			config.SourceFile("GCP_SA_JSON_KEY_PATH"),
+		),
+		config.Path("peeringCredentialsFile",
+			config.SourceEnv("GCP_VPC_PEERING_KEY_PATH"),
+			config.SourceFile("GCP_VPC_PEERING_KEY_PATH"),
 		),
 	)
 }

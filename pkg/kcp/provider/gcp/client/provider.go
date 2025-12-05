@@ -50,7 +50,7 @@ func newCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Clie
 			return nil, err
 		}
 		gcpClient = client
-		go renewCachedHttpClientPeriodically(context.Background(), credentialsFile, os.Getenv("GCP_CLIENT_RENEW_DURATION"))
+		go renewCachedHttpClientPeriodically(context.Background(), credentialsFile, config.GcpConfig.ClientRenewDuration)
 	}
 	return gcpClient, nil
 }
@@ -81,18 +81,9 @@ func GetCachedProjectNumber(projectId string, crmService *cloudresourcemanager.S
 	return projectNumber, nil
 }
 
-func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile, duration string) {
+func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile string, d time.Duration) {
 	logger := log.FromContext(ctx)
-	if duration == "" {
-		logger.Info("GCP_CLIENT_RENEW_DURATION not set, defaulting to 5m")
-		duration = "5m"
-	}
-	period, err := time.ParseDuration(duration)
-	if err != nil {
-		logger.Error(err, "error parsing GCP_CLIENT_RENEW_DURATION, defaulting to 5m")
-		period = 5 * time.Minute
-	}
-	ticker := time.NewTicker(period)
+	ticker := time.NewTicker(d)
 	defer ticker.Stop()
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGTERM, syscall.SIGINT)
