@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -13,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR AzureRedisCluster", func() {
@@ -539,6 +541,201 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisCluster).
 				Should(Succeed(), "expected AzureRedisCluster not to exist")
 		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR AzureRedisCluster authSecret is modified", func() {
+
+		azureRedisClusterName := "auth-secret-modified-cluster"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7ac"
+		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
+		redisVersion := "6.0"
+		tier := cloudresourcesv1beta1.AzureRedisTierC3
+		var shardCount int32 = 1
+		var replicaCount int32 = 2
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		const (
+			authSecretName = "azure-cluster-auth-secret-test"
+		)
+		authSecretLabels := map[string]string{
+			"env": "test",
+		}
+		authSecretAnnotations := map[string]string{
+			"purpose": "testing",
+		}
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("Given AzureRedisCluster is created with initial authSecret config", func() {
+			Eventually(CreateAzureRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisCluster,
+					WithName(azureRedisClusterName),
+					WithAzureRedisClusterRedisVersion(redisVersion),
+					WithAzureRedisClusterRedisTier(tier),
+					WithAzureRedisClusterShardCount(shardCount),
+					WithAzureRedisClusterReplicaCount(replicaCount),
+					WithAzureRedisClusterAuthSecretName(authSecretName),
+					WithAzureRedisClusterAuthSecretLabels(authSecretLabels),
+					WithAzureRedisClusterAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("And KCP RedisCluster is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisCluster,
+					NewObjActions(),
+					HavingAzureRedisClusterStatusId(),
+					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					NewObjActions(
+						WithName(azureRedisCluster.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisClusterPrimaryEndpoint := "10.0.0.2:6379"
+		kcpRedisClusterAuthString := "initial-cluster-auth-string-67890"
+
+		By("When KCP RedisCluster has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					WithRedisInstanceDiscoveryEndpoint(kcpRedisClusterPrimaryEndpoint),
+					WithRedisInstanceAuthString(kcpRedisClusterAuthString),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR AzureRedisCluster has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		authSecret := &corev1.Secret{}
+		By("And SKR auth Secret is created with initial values", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(azureRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			By("And it has initial labels")
+			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
+
+			By("And it has initial annotations")
+			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
+		})
+
+		newExtraData := map[string]string{
+			"custom-key": "custom-value",
+			"endpoint":   "{{.host}}:{{.port}}",
+		}
+
+		By("When AzureRedisCluster authSecret config is modified", func() {
+			Eventually(UpdateAzureRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisCluster,
+					WithAzureRedisClusterAuthSecretExtraData(newExtraData),
+				).
+				Should(Succeed())
+		})
+
+		By("Then SKR auth Secret is updated with new labels", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(azureRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+		})
+
+		By("And auth Secret data includes extraData fields", func() {
+			Eventually(func() map[string][]byte {
+				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisCluster.Namespace}
+				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
+				if err != nil {
+					return nil
+				}
+				return authSecret.Data
+			}).Should(And(
+				HaveKeyWithValue("custom-key", []byte("custom-value")),
+				HaveKeyWithValue("endpoint", []byte(kcpRedisClusterPrimaryEndpoint)),
+			), "expected auth Secret to have extraData fields")
+		})
+
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisCluster).
+			Should(Succeed())
 
 		By("// cleanup: delete default SKR IpRange", func() {
 			Eventually(Delete).
