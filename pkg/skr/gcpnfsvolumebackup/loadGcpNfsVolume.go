@@ -2,11 +2,11 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -42,7 +42,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: "Error loading GcpNfsVolume",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			Run(ctx, state)
 	}
 
@@ -60,7 +60,7 @@ func loadGcpNfsVolume(ctx context.Context, st composed.State) (error, context.Co
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: "Error loading GcpNfsVolume",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg("Error getting GcpNfsVolume").
 			Run(ctx, state)
 	}

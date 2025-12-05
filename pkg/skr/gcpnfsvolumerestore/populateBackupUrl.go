@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -48,7 +49,7 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 					Reason:  cloudresourcesv1beta1.ConditionReasonMissingNfsVolumeBackup,
 					Message: "Error loading GcpNfsVolumeBackup",
 				}).
-				SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 				Run(ctx, state)
 		}
 
@@ -66,7 +67,7 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 					Reason:  cloudresourcesv1beta1.ConditionReasonNfsVolumeBackupNotReady,
 					Message: "GcpNfsVolumeBackup is not ready",
 				}).
-				SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 				SuccessLogMsg("Error loading GcpNfsVolumeBackup").
 				Run(ctx, state)
 		}

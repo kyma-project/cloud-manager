@@ -144,7 +144,7 @@ type testStateFactory struct {
 
 func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (gcpnfsbackupclient.FileBackupClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclient.FileBackupClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err

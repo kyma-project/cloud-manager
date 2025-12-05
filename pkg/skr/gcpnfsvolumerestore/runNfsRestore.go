@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -54,7 +55,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 				Reason:  cloudcontrolv1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error submitting Filestore restore request in GCP :%s. Retrying", err)).
 			Run(ctx, state)
 	}
@@ -62,7 +63,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 		restore.Status.OpIdentifier = operation.Name
 		restore.Status.State = cloudresourcesv1beta1.JobStateInProgress
 		return composed.PatchStatus(restore).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
 	return nil, nil

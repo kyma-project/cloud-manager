@@ -24,13 +24,13 @@ func (s *providerSuite) SetupTest() {
 
 func (s *providerSuite) TestGetCachedGcpClient() {
 	ctx := context.Background()
-	saJsonKeyPath := os.Getenv("GCP_SA_JSON_KEY_PATH")
+	credentialsFile := os.Getenv("GCP_SA_JSON_KEY_PATH")
 	err := os.Setenv("GCP_CLIENT_RENEW_DURATION", "500ms")
 	assert.Nil(s.T(), err)
 	prevClient := &http.Client{}
 	renewed := 0
 	for i := 0; i < 33; i++ {
-		client, err := GetCachedGcpClient(ctx, saJsonKeyPath)
+		client, err := GetCachedGcpClient(ctx, credentialsFile)
 		assert.Nil(s.T(), err)
 		if prevClient != client {
 			renewed++

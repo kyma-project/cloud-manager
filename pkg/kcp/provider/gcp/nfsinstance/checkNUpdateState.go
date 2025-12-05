@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/elliotchance/pie/v2"
@@ -48,7 +49,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 			state.curState = v1beta1.StateReady
 		} else {
 			//If the filestore exists but is not READY or in ERROR, it is in a transient state.
-			return composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), ctx
+			return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), ctx
 		}
 	}
 
@@ -85,7 +86,7 @@ func checkNUpdateState(ctx context.Context, st composed.State) (error, context.C
 					Reason:  v1beta1.ReasonGcpError,
 					Message: state.fsInstance.StatusMessage,
 				}).
-				SuccessError(composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime)).
+				SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 				Run(ctx, state)
 		}
 		return composed.UpdateStatus(nfsInstance).

@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,7 +67,7 @@ func (s *shortCircuitSuite) TestWhenBackupIsReadyAndCapacityUpdate() {
 	state, err := factory.newStateWith(obj)
 	s.Nil(err)
 
-	client.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
+	config.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 	err, _ctx := shortCircuitCompleted(ctx, state)
 
 	//validate expected return values
@@ -110,7 +111,7 @@ func (s *shortCircuitSuite) TestWhenBackupIsReadyAndNotCapacityUpdate() {
 	state.Scope = &scope
 	s.Nil(err)
 
-	client.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
+	config.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 	err, _ctx := shortCircuitCompleted(ctx, state)
 
 	//validate expected return values

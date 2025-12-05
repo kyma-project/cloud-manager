@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -92,7 +92,7 @@ func (s *loadGcpNfsVolumeSuite) TestVolumeNotFound() {
 	err, _ctx := loadGcpNfsVolume(ctx, state)
 
 	//validate expected return values
-	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	s.Equal(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	s.Equal(ctx, _ctx)
 }
 
@@ -120,7 +120,7 @@ func (s *loadGcpNfsVolumeSuite) TestVolumeNotReady() {
 	err, _ = loadGcpNfsVolume(ctx, state)
 
 	//validate expected return values
-	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	s.Equal(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	fromK8s := &v1beta1.GcpNfsVolumeBackup{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: gcpNfsVolumeBackup.Name,

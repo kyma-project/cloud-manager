@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
@@ -47,15 +48,15 @@ func syncAddress(ctx context.Context, st composed.State) (error, context.Context
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			SuccessLogMsg(fmt.Sprintf("Error creating/deleting Address object in GCP :%s", err)).
 			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
 		return composed.PatchStatus(ipRange).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
-	return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), nil
+	return composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), nil
 }

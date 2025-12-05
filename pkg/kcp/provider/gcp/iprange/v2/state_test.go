@@ -28,7 +28,7 @@ import (
 
 func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ComputeClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
 			computeClient, err := compute.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
@@ -40,7 +40,7 @@ func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.Client
 
 func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.ServiceNetworkingClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ServiceNetworkingClient, error) {
 			svcNwClient, err := servicenetworking.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err

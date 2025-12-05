@@ -2,10 +2,10 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -23,7 +23,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		if state.fileBackup == nil {
 			return composed.StopAndForget, nil
 		} else {
-			return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 		}
 	}
 
@@ -32,7 +32,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Requeue to check the status of the backup
 	if state.fileBackup == nil || state.fileBackup.State != "READY" {
-		return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If file backup is ready, update the status of the backup

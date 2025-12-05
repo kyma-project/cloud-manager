@@ -2,6 +2,7 @@ package gcpnfsvolumebackup
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"net/http/httptest"
 
 	"github.com/go-logr/logr"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -124,7 +124,7 @@ func (s *updateCapacitySuite) TestLastCapacityUpdateGreater() {
 	}
 	s.NotNil(state.fileBackup)
 
-	gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Second * 5
+	config.GcpConfig.GcpCapacityCheckInterval = time.Second * 5
 	// gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 
 	err, _ctx := updateCapacity(ctx, state)
@@ -154,7 +154,7 @@ func (s *updateCapacitySuite) TestLastCapacityUpdateLesser() {
 	}
 	s.NotNil(state.fileBackup)
 
-	gcpclient.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
+	config.GcpConfig.GcpCapacityCheckInterval = time.Hour * 1
 
 	err, _ctx := updateCapacity(ctx, state)
 	s.Nil(err)

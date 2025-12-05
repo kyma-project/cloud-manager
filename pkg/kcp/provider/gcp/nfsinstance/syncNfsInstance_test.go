@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"encoding/json"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -68,7 +69,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstanceAddSuccess() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = gcpclient.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), err)
 	assert.NotNil(s.T(), testState.ObjAsNfsInstance().Status.Id)
 	assert.Equal(s.T(), "create-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
@@ -115,7 +116,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstanceAddError() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = gcpclient.ADD
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(s.T(), "", testState.ObjAsNfsInstance().Status.Id)
 	// check conditions
 	assert.Len(s.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
@@ -171,7 +172,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstancePatchSuccess() {
 	testState.operation = gcpclient.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), err)
 	assert.NotNil(s.T(), testState.ObjAsNfsInstance().Status.Id)
 	assert.Equal(s.T(), "patch-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
@@ -219,7 +220,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstancePatchError() {
 	testState.operation = gcpclient.MODIFY
 	testState.updateMask = []string{"description"}
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(s.T(), "", testState.ObjAsNfsInstance().Status.Id)
 	// check conditions
 	assert.Len(s.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
@@ -266,7 +267,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteSuccess() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = gcpclient.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), err)
 	assert.Equal(s.T(), "delete-instance-operation", testState.ObjAsNfsInstance().Status.OpIdentifier)
 
 	updatedObject := &v1beta1.NfsInstance{}
@@ -305,7 +306,7 @@ func (s *syncNfsInstanceSuite) TestSyncNfsInstanceDeleteError() {
 	defer testState.FakeHttpServer.Close()
 	testState.operation = gcpclient.DELETE
 	err, _ = syncNfsInstance(ctx, testState.State)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	// check conditions
 	assert.Len(s.T(), testState.ObjAsNfsInstance().Status.Conditions, 1)
 	assert.Equal(s.T(), v1beta1.ConditionTypeError, testState.ObjAsNfsInstance().Status.Conditions[0].Type)

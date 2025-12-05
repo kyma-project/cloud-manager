@@ -65,6 +65,7 @@ func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
 		"AWS_SECRET_ACCESS_KEY": "secret",
 		"AWS_ROLE_NAME":         "role",
 	})
+	AwsConfig = &AwsConfigStruct{}
 	cfg := config.NewConfig(env)
 	cfg.BaseDir(dir)
 	InitConfig(cfg)
@@ -97,6 +98,7 @@ func TestAllFromFile(t *testing.T) {
 		"AWS_SECRET_ACCESS_KEY": "secret",
 		"AWS_ROLE_NAME":         "role",
 	})
+	AwsConfig = &AwsConfigStruct{}
 	cfg := config.NewConfig(env)
 	cfg.BaseDir(dir)
 	InitConfig(cfg)

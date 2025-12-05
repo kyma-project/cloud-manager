@@ -19,8 +19,8 @@ type ComputeClient interface {
 
 func NewComputeClient() client.ClientProvider[ComputeClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (ComputeClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (ComputeClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}

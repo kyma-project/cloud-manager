@@ -3,10 +3,10 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, context.Context) {
@@ -58,6 +58,6 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 
 	return composed.PatchStatus(backup).
 		SuccessLogMsg("Updated accessibleFrom in status of GcpNfsVolumeBackup").
-		SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+		SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 		Run(ctx, state)
 }

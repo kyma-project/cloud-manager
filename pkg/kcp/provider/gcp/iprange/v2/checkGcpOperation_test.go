@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"encoding/json"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -96,7 +97,7 @@ func (s *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(s.T(), resCtx)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 }
 
 func (s *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
@@ -194,7 +195,7 @@ func (s *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(s.T(), resCtx)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 }
 
 func (s *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {

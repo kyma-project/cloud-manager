@@ -3,26 +3,27 @@ package scope
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"google.golang.org/api/serviceusage/v1"
 )
 
 func enableApisGcp(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
-	saJsonKeyPath := os.Getenv("GCP_SA_JSON_KEY_PATH")
-	if saJsonKeyPath == "" {
+
+	if config.GcpConfig.CredentialsFile == "" {
 		return composed.LogErrorAndReturn(
-			fmt.Errorf("GCP_SA_JSON_KEY_PATH not set"),
+			fmt.Errorf("gcpConfig.credentialsFile not set"),
 			"Error enabling GCP APIs",
 			composed.StopAndForget, // Without this env var, we can't call any APIs anyway, so we can't recover from this error
 			ctx)
 	}
-	client, err := state.gcpServiceUsageClientProvider(ctx, saJsonKeyPath)
+
+	client, err := state.gcpServiceUsageClientProvider(ctx, config.GcpConfig.CredentialsFile)
+
 	if err != nil {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("error getting ServiceUsageClient: %w", err),

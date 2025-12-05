@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,7 +11,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -144,7 +144,7 @@ func (s *checkRestoreOperationSuite) TestCheckRestoreOperationNotCompleted() {
 	assert.Nil(s.T(), err)
 	state.Scope = &scope
 	err, ctx = checkRestoreOperation(ctx, state)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	fromK8s := &v1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
 		types.NamespacedName{Name: obj.Name,
