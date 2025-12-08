@@ -576,7 +576,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				ShouldNot(Succeed())
 		})
 
-		By("Given AzureRedisInstance is created with initial authSecret config", func() {
+		By("And Given AzureRedisInstance is created with initial authSecret config", func() {
 			Eventually(CreateAzureRedisInstance).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
@@ -590,14 +590,14 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("Then default SKR IpRange is created", func() {
+		By("And Given default SKR IpRange is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
 				Should(Succeed())
 		})
 
-		By("When default SKR IpRange has Ready condition", func() {
+		By("And Given default SKR IpRange has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -609,7 +609,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 
 		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
 
-		By("And KCP RedisInstance is created", func() {
+		By("And Given KCP RedisInstance is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -636,7 +636,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		kcpRedisInstancePrimaryEndpoint := "10.0.0.1:6379"
 		kcpRedisInstanceAuthString := "initial-auth-string-12345"
 
-		By("When KCP RedisInstance has Ready condition", func() {
+		By("And Given KCP RedisInstance has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(),
@@ -649,7 +649,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR AzureRedisInstance has Ready condition", func() {
+		By("And Given SKR AzureRedisInstance has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -663,7 +663,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		})
 
 		authSecret := &corev1.Secret{}
-		By("And SKR auth Secret is created with initial values", func() {
+		By("And Given SKR auth Secret is created with initial values", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -717,7 +717,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR auth Secret is updated with new labels", func() {
+		By("Then SKR auth Secret is updated with new labels (REPLACEMENT semantics)", func() {
 			Eventually(func() map[string]string {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
@@ -741,7 +741,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
 		})
 
-		By("And SKR auth Secret has new annotations (REPLACEMENT semantics)", func() {
+		By("And Then SKR auth Secret has new annotations (REPLACEMENT semantics)", func() {
 			Eventually(func() map[string]string {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
@@ -756,7 +756,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			), "expected auth Secret to have updated annotations with replacement semantics")
 		})
 
-		By("And auth Secret data includes extraData fields with proper templating", func() {
+		By("And Then auth Secret data includes extraData fields with proper templating", func() {
 			Eventually(func() map[string][]byte {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)

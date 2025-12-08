@@ -582,7 +582,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 				ShouldNot(Succeed())
 		})
 
-		By("Given AzureRedisCluster is created with initial authSecret config", func() {
+		By("And Given AzureRedisCluster is created with initial authSecret config", func() {
 			Eventually(CreateAzureRedisCluster).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisCluster,
@@ -598,14 +598,14 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 				Should(Succeed())
 		})
 
-		By("Then default SKR IpRange is created", func() {
+		By("And Given default SKR IpRange is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
 				Should(Succeed())
 		})
 
-		By("When default SKR IpRange has Ready condition", func() {
+		By("And Given default SKR IpRange has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
@@ -617,7 +617,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 
 		kcpRedisCluster := &cloudcontrolv1beta1.RedisCluster{}
 
-		By("And KCP RedisCluster is created", func() {
+		By("And Given KCP RedisCluster is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -644,7 +644,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		kcpRedisClusterPrimaryEndpoint := "10.0.0.2:6379"
 		kcpRedisClusterAuthString := "initial-cluster-auth-string-67890"
 
-		By("When KCP RedisCluster has Ready condition", func() {
+		By("And Given KCP RedisCluster has Ready condition", func() {
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(),
@@ -657,7 +657,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR AzureRedisCluster has Ready condition", func() {
+		By("And Given SKR AzureRedisCluster has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -671,7 +671,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		})
 
 		authSecret := &corev1.Secret{}
-		By("And SKR auth Secret is created with initial values", func() {
+		By("And Given SKR auth Secret is created with initial values", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -749,7 +749,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
 		})
 
-		By("And SKR auth Secret has new annotations", func() {
+		By("And Then SKR auth Secret has new annotations", func() {
 			Eventually(func() map[string]string {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisCluster.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
@@ -764,7 +764,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			))
 		})
 
-		By("And auth Secret data includes extraData fields", func() {
+		By("And Then auth Secret data includes extraData fields", func() {
 			Eventually(func() map[string][]byte {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisCluster.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
