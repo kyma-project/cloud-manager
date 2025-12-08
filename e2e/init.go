@@ -24,7 +24,8 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 
 		f := NewWorldFactory()
 		w, err := f.Create(ctx, WorldCreateOptions{
-			Config: config,
+			Config:      config,
+			CreateCloud: true,
 		})
 		if err != nil {
 			panic(err)

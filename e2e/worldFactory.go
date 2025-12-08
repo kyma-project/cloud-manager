@@ -31,6 +31,7 @@ type WorldCreateOptions struct {
 	CloudProfileLoader    e2elib.CloudProfileLoader
 	SkrKubeconfigProvider e2elib.SkrKubeconfigProvider
 	SkrManagerFactory     e2ekeb.SkrManagerFactory
+	CreateCloud           bool
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
@@ -134,20 +135,22 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("kcp cache did not sync after sim creation")
 	}
 
-	// Cloud -------------------------------
-
-	cl, err := cloud.Create(ctx, gardenManager.GetClient(), opts.Config)
-	if err != nil {
-		return nil, fmt.Errorf("error creating cloud: %w", err)
-	}
-
 	result.config = opts.Config
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
 	result.kebi = kebi
-	result.cloud = cl
 	result.kcp = NewCluster(ctx, "kcp", kcpManager)
 	result.garden = NewCluster(ctx, "garden", gardenManager)
+
+	// Cloud -------------------------------
+
+	if opts.CreateCloud {
+		cl, err := cloud.Create(ctx, gardenManager.GetClient(), opts.Config)
+		if err != nil {
+			return nil, fmt.Errorf("error creating cloud: %w", err)
+		}
+		result.cloud = cl
+	}
 
 	return result, nil
 }
