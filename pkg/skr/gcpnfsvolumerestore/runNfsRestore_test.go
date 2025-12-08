@@ -2,6 +2,7 @@ package gcpnfsvolumerestore
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,6 @@ import (
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -114,7 +114,7 @@ func (s *runNfsRestoreSuite) TestRunNfsRestoreSubmitFailed() {
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	assert.Nil(s.T(), err)
 	err, _ctx := runNfsRestore(ctx, state)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(s.T(), ctx, _ctx)
 }
 
@@ -155,7 +155,7 @@ func (s *runNfsRestoreSuite) TestRunNfsRestoreSubmitted() {
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	assert.Nil(s.T(), err)
 	err, _ctx := runNfsRestore(ctx, state)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), err)
 	assert.Equal(s.T(), ctx, _ctx)
 	fromK8s := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx,
