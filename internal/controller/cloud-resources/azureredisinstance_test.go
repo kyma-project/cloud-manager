@@ -683,13 +683,32 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
 		})
 
-		// MODIFY authSecret configuration
+		newLabels := map[string]string{
+			"env":  "production",
+			"team": "platform",
+		}
+		newAnnotations := map[string]string{
+			"purpose":     "production-testing",
+			"cost-center": "12345",
+		}
 		newExtraData := map[string]string{
 			"custom-key": "custom-value",
 			"endpoint":   "{{.host}}:{{.port}}",
 		}
 
-		By("When AzureRedisInstance authSecret config is modified", func() {
+		By("When AzureRedisInstance authSecret config is modified with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisInstance,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			azureRedisInstance.Spec.AuthSecret.Labels = newLabels
+			azureRedisInstance.Spec.AuthSecret.Annotations = newAnnotations
+
 			Eventually(UpdateAzureRedisInstance).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
@@ -699,20 +718,45 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		})
 
 		By("Then SKR auth Secret is updated with new labels", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					authSecret,
-					NewObjActions(
-						WithName(authSecretName),
-						WithNamespace(azureRedisInstance.Namespace),
-					),
-				).
-				Should(Succeed())
+			Eventually(func() map[string]string {
+				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
+				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
+				if err != nil {
+					return nil
+				}
+				userLabels := map[string]string{}
+				for k, v := range authSecret.Labels {
+					if k == "env" || k == "team" {
+						userLabels[k] = v
+					}
+				}
+				return userLabels
+			}).Should(And(
+				HaveKeyWithValue("env", "production"),
+				HaveKeyWithValue("team", "platform"),
+				HaveLen(2),
+			), "expected auth Secret to have updated labels with replacement semantics")
+
+			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelRedisInstanceStatusId))
+			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
 		})
 
-		By("And auth Secret data includes extraData fields", func() {
+		By("And SKR auth Secret has new annotations (REPLACEMENT semantics)", func() {
+			Eventually(func() map[string]string {
+				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
+				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
+				if err != nil {
+					return nil
+				}
+				return authSecret.Annotations
+			}).Should(And(
+				HaveKeyWithValue("purpose", "production-testing"),
+				HaveKeyWithValue("cost-center", "12345"),
+				HaveLen(2),
+			), "expected auth Secret to have updated annotations with replacement semantics")
+		})
+
+		By("And auth Secret data includes extraData fields with proper templating", func() {
 			Eventually(func() map[string][]byte {
 				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
 				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
@@ -723,7 +767,10 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 			}).Should(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("endpoint", []byte(kcpRedisInstancePrimaryEndpoint)),
-			), "expected auth Secret to have extraData fields")
+				HaveKey("host"),
+				HaveKey("port"),
+				HaveKey("authString"),
+			), "expected auth Secret to have extraData fields with proper Go templating")
 		})
 
 		// CleanUp
