@@ -25,6 +25,9 @@ func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      gcpSubnet.Status.Id,
 			Namespace: state.KymaRef.Namespace,
+			Labels: map[string]string{
+				common.LabelKymaModule: "cloud-manager",
+			},
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName: gcpSubnet.Name,
