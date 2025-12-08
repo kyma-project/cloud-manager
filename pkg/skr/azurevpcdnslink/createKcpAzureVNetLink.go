@@ -2,7 +2,9 @@ package azurevpcdnslink
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -17,6 +19,9 @@ func createKcpAzureVNetLink(ctx context.Context, st composed.State) (error, cont
 	state.KcpAzureVNetLink = (&cloudcontrolv1beta1.AzureVNetLinkBuilder{}).
 		WithName(state.ObjAsVNetLink().Status.Id).
 		WithNamespace(state.KymaRef.Namespace).
+		WithLabels(map[string]string{
+			common.LabelKymaModule: "cloud-manager",
+		}).
 		WithAnnotations(map[string]string{
 			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 			cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsVNetLink().Name,
