@@ -8,8 +8,10 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type NetworkOwner string
@@ -44,6 +46,8 @@ type ConfigType struct {
 
 	ConfigDir      string `yaml:"configDir" json:"configDir"`
 	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
+	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
+	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
 
 	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
 }
@@ -76,6 +80,31 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 	}
 
 	return nil
+}
+
+func (c *ConfigType) CreateGardenClient() (client.Client, error) {
+	kubeBytes, err := os.ReadFile(c.GardenKubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("error reading gardener kubeconfig: %w", err)
+	}
+
+	if err := c.SetGardenNamespaceFromKubeconfigBytes(kubeBytes); err != nil {
+		return nil, fmt.Errorf("error setting gardener namespace from kubeconfig: %w", err)
+	}
+
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener rest config: %w", err)
+	}
+
+	clnt, err := client.New(restConfig, client.Options{
+		Scheme: commonscheme.GardenScheme,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener client: %w", err)
+	}
+
+	return clnt, nil
 }
 
 type Subscriptions []SubscriptionInfo
@@ -146,6 +175,11 @@ func initConfig(cfg config.Config, obj *ConfigType) {
 				"openstack": "converged-cloud-kyma",
 			}),
 		),
+
+		config.Path(
+			"tfCmd",
+			config.DefaultScalar("tofu"),
+		),
 	)
 }
 
@@ -178,6 +212,7 @@ func LoadConfig() *ConfigType {
 		}
 	}
 	result.CredentialsDir = path.Join(result.ConfigDir, "tmp")
+	result.TfWorkspaceDir = path.Join(result.CredentialsDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
 	initConfig(cfg, result)
 	cfg.Read()

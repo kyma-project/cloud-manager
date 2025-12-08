@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
@@ -133,10 +134,18 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("kcp cache did not sync after sim creation")
 	}
 
+	// Cloud -------------------------------
+
+	cl, err := cloud.Create(ctx, gardenManager.GetClient(), opts.Config)
+	if err != nil {
+		return nil, fmt.Errorf("error creating cloud: %w", err)
+	}
+
 	result.config = opts.Config
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
 	result.kebi = kebi
+	result.cloud = cl
 	result.kcp = NewCluster(ctx, "kcp", kcpManager)
 	result.garden = NewCluster(ctx, "garden", gardenManager)
 
