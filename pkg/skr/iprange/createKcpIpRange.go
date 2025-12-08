@@ -2,13 +2,14 @@ package iprange
 
 import (
 	"context"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
-	"time"
 )
 
 func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Context) {
@@ -34,6 +35,7 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Labels: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName: state.Name().Name,
+				common.LabelKymaModule:              "cloud-manager",
 			},
 		},
 		Spec: cloudcontrolv1beta1.IpRangeSpec{

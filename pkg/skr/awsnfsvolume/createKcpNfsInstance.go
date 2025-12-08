@@ -2,8 +2,10 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,6 +32,7 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsAwsNfsVolume().Name,
 				cloudcontrolv1beta1.LabelRemoteNamespace: state.ObjAsAwsNfsVolume().Namespace,
+				common.LabelKymaModule:                   "cloud-manager",
 			},
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
