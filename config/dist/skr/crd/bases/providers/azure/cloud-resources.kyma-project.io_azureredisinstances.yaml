@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.56
+    cloud-resources.kyma-project.io/version: v0.0.57
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -46,6 +46,23 @@ spec:
             spec:
               description: AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
               properties:
+                authSecret:
+                  properties:
+                    annotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraData:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    labels:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                  type: object
                 ipRange:
                   properties:
                     name:
@@ -90,23 +107,6 @@ spec:
                   x-kubernetes-validations:
                     - message: RedisVersion is immutable.
                       rule: (self == oldSelf)
-                volume:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    extraData:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
-                      type: string
-                  type: object
               required:
                 - redisTier
               type: object
