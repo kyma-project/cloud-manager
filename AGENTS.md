@@ -1838,6 +1838,150 @@ infra.GcpMock().MemorystoreClientProvider()
 - Use Ginkgo BDD style
 - Mock cloud providers with testinfra mocks
 
+### API Validation Tests
+- **Location**: `internal/api-tests/`
+- Test CRD validation rules (webhooks, OpenAPI validation)
+- Verify field constraints, immutability, and business rules
+- Use Ginkgo BDD style with declarative test helpers
+
+**Good Example**: `skr_gcpnfsvolume_test.go`
+
+#### Structure of API Validation Tests
+
+**Test File Pattern**: `<skr|kcp>_<resource>_test.go`
+
+Each test file should:
+1. Define a builder for the resource
+2. Test creation validation (valid and invalid cases)
+3. Test update validation (allowed and disallowed changes)
+4. Test field constraints specific to the resource
+
+**Builder Pattern**:
+```go
+type testGcpNfsVolumeBuilder struct {
+    instance cloudresourcesv1beta1.GcpNfsVolume
+}
+
+func newTestGcpNfsVolumeBuilder() *testGcpNfsVolumeBuilder {
+    return &testGcpNfsVolumeBuilder{
+        instance: cloudresourcesv1beta1.GcpNfsVolume{
+            Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{},
+        },
+    }
+}
+
+func (b *testGcpNfsVolumeBuilder) Build() *cloudresourcesv1beta1.GcpNfsVolume {
+    return &b.instance
+}
+
+func (b *testGcpNfsVolumeBuilder) WithTier(tier cloudresourcesv1beta1.GcpFileTier) *testGcpNfsVolumeBuilder {
+    b.instance.Spec.Tier = tier
+    return b
+}
+
+func (b *testGcpNfsVolumeBuilder) WithCapacityGb(capacityGb int) *testGcpNfsVolumeBuilder {
+    b.instance.Spec.CapacityGb = capacityGb
+    return b
+}
+```
+
+#### Test Helper Functions
+
+**Location**: `internal/api-tests/builder_test.go`
+
+These declarative helpers test resource creation and modification:
+
+**For SKR Resources**:
+- `canCreateSkr(title, builder)` - Assert resource can be created successfully
+- `canNotCreateSkr(title, builder, expectedErrorMsg)` - Assert creation fails with expected error
+- `canChangeSkr(title, builder, modifyFunc)` - Assert field can be updated
+- `canNotChangeSkr(title, builder, modifyFunc, expectedErrorMsg)` - Assert update fails (immutable fields)
+
+**For KCP Resources**:
+- `canCreateKcp(title, builder)` - Assert KCP resource can be created
+- `canNotCreateKcp(title, builder, expectedErrorMsg)` - Assert KCP creation fails
+- `canNotChangeKcp(title, builder, modifyFunc, expectedErrorMsg)` - Assert KCP field is immutable
+
+#### Example Test Cases
+
+```go
+var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
+
+    // Test valid creation
+    canCreateSkr(
+        "GcpNfsVolume REGIONAL tier instance can be created with valid capacity: 1024",
+        newTestGcpNfsVolumeBuilder().
+            WithTier(cloudresourcesv1beta1.REGIONAL).
+            WithCapacityGb(1024).
+            WithValidFileShareName(),
+    )
+    
+    // Test invalid creation
+    canNotCreateSkr(
+        "GcpNfsVolume REGIONAL tier instance can not be created with invalid capacity: 1023",
+        newTestGcpNfsVolumeBuilder().
+            WithTier(cloudresourcesv1beta1.REGIONAL).
+            WithCapacityGb(1023).
+            WithValidFileShareName(),
+        "REGIONAL tier capacityGb must be between 1024 and 9984, and it must be divisble by 256",
+    )
+    
+    // Test allowed update
+    canChangeSkr(
+        "GcpNfsVolume REGIONAL tier instance capacity can be increased",
+        newTestGcpNfsVolumeBuilder().
+            WithTier(cloudresourcesv1beta1.REGIONAL).
+            WithCapacityGb(1024).
+            WithValidFileShareName(),
+        func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+            b.(*testGcpNfsVolumeBuilder).WithCapacityGb(1280)
+        },
+    )
+    
+    // Test disallowed update
+    canNotChangeSkr(
+        "GcpNfsVolume BASIC_SSD tier instance capacity can not be reduced",
+        newTestGcpNfsVolumeBuilder().
+            WithTier(cloudresourcesv1beta1.BASIC_SSD).
+            WithCapacityGb(2561).
+            WithValidFileShareName(),
+        func(b Builder[*cloudresourcesv1beta1.GcpNfsVolume]) {
+            b.(*testGcpNfsVolumeBuilder).WithCapacityGb(2560)
+        },
+        "BASIC_SSD tier capacityGb cannot be reduced",
+    )
+})
+```
+
+#### When to Write API Validation Tests
+
+Write API validation tests when:
+- Adding new CRD fields with validation rules
+- Implementing field constraints (min/max values, patterns, enums)
+- Adding immutability rules (fields that can't be changed after creation)
+- Implementing cross-field validation (one field depends on another)
+- Adding business logic in webhooks
+
+**What to Test**:
+1. **Valid values**: Ensure all valid combinations are accepted
+2. **Invalid values**: Ensure invalid values are rejected with clear error messages
+3. **Boundary conditions**: Test min/max values, edge cases
+4. **Immutability**: Ensure immutable fields can't be changed
+5. **Conditional logic**: Test validation that depends on other fields
+
+#### Running API Validation Tests
+
+```bash
+# Run all API validation tests
+go test ./internal/api-tests -v
+
+# Run specific test file
+go test ./internal/api-tests -run TestAPIs -ginkgo.focus="GcpNfsVolume"
+
+# Run with verbose output
+go test ./internal/api-tests -v -ginkgo.v
+```
+
 ### E2E Tests
 - Located in `e2e/` directory
 - Use Cucumber/Gherkin syntax
