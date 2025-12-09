@@ -584,6 +584,380 @@ spec:
 
 **When creating new reconcilers**: Use provider-specific CRD names (e.g., `AzureRedisEnterprise`, `GcpCloudSQL`, `AwsRDS`) rather than adding to multi-provider CRDs.
 
+## GCP Client Architecture
+
+Cloud Manager has two patterns for GCP API client management: the **OLD pattern** and the **NEW pattern**. Understanding the difference is critical when working with GCP reconcilers.
+
+### Pattern Overview
+
+| Aspect | OLD Pattern | NEW Pattern |
+|--------|------------|-------------|
+| **Location** | `pkg/kcp/provider/gcp/client/provider.go` | `pkg/kcp/provider/gcp/client/gcpClients.go` |
+| **Used By** | IpRange, NfsInstance, NfsBackup, NfsRestore | Subnet, RedisCluster, RedisInstance, VpcPeering |
+| **Client Creation** | Per-request via `ClientProvider[T]` | Singleton via `NewGcpClients()` |
+| **HTTP Client** | Cached `*http.Client` with periodic renewal | Token-based auth per service |
+| **API Style** | Google API Discovery (REST) | Google Cloud Client Libraries (gRPC) |
+| **Use For** | **Legacy resources only** | **All new resources** |
+
+### NEW Pattern (Recommended) - GcpClients
+
+**Philosophy**: Create all GCP API clients once at startup in `cmd/main.go`, then provide lightweight accessor functions to reconcilers.
+
+#### Architecture
+
+**Centralized Client Initialization** (`pkg/kcp/provider/gcp/client/gcpClients.go`):
+
+```go
+type GcpClients struct {
+    ComputeNetworks                           *compute.NetworksClient
+    ComputeAddresses                          *compute.AddressesClient
+    ComputeRouters                            *compute.RoutersClient
+    ComputeSubnetworks                        *compute.SubnetworksClient
+    RegionOperations                          *compute.RegionOperationsClient
+    NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
+    RedisCluster                              *rediscluster.CloudRedisClusterClient
+    RedisInstance                             *redisinstance.CloudRedisClient
+    VpcPeeringClients                         *VpcPeeringClients
+}
+
+func NewGcpClients(ctx context.Context, credentialsFile, peeringCredentialsFile string, logger logr.Logger) (*GcpClients, error) {
+    // Creates token providers with appropriate scopes for each service
+    // Returns all clients initialized and ready to use
+}
+```
+
+**Key Features**:
+- Uses **Cloud Client Libraries** (modern gRPC-based SDKs from `cloud.google.com/go`)
+- Token-based authentication with `oauth2adapt.TokenSourceFromTokenProvider`
+- Each service has its own token provider with appropriate scopes
+- All clients created once at startup
+- Implements `Close()` method for cleanup via reflection
+
+#### Adding a New Client (NEW Pattern)
+
+**Step 1: Add Client to GcpClients struct** (`gcpClients.go`):
+
+```go
+type GcpClients struct {
+    // ... existing clients
+    MyNewService *mynewservice.MyServiceClient  // Add your client here
+}
+```
+
+**Step 2: Initialize in NewGcpClients()** (`gcpClients.go`):
+
+```go
+func NewGcpClients(ctx context.Context, credentialsFile, peeringCredentialsFile, logger) (*GcpClients, error) {
+    // ... existing initialization
+    
+    // Add your service initialization
+    myServiceTokenProvider, err := b.WithScopes(mynewservice.DefaultAuthScopes()).BuildTokenProvider()
+    if err != nil {
+        return nil, fmt.Errorf("failed to build myservice token provider: %w", err)
+    }
+    myServiceTokenSource := oauth2adapt.TokenSourceFromTokenProvider(myServiceTokenProvider)
+    
+    myServiceClient, err := mynewservice.NewMyServiceClient(ctx, option.WithTokenSource(myServiceTokenSource))
+    if err != nil {
+        return nil, fmt.Errorf("create myservice client: %w", err)
+    }
+    
+    return &GcpClients{
+        // ... existing clients
+        MyNewService: myServiceClient,
+    }, nil
+}
+```
+
+**Step 3: Create Typed Client Interface** (`pkg/kcp/provider/gcp/<resource>/client/<service>Client.go`):
+
+```go
+package client
+
+import (
+    "context"
+    mynewservice "cloud.google.com/go/mynewservice/apiv1"
+    "cloud.google.com/go/mynewservice/apiv1/mynewservicepb"
+    gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+)
+
+// Define your interface with business operations
+type MyServiceClient interface {
+    CreateResource(ctx context.Context, projectId, locationId, resourceId string, opts CreateOptions) error
+    GetResource(ctx context.Context, projectId, locationId, resourceId string) (*mynewservicepb.Resource, error)
+    UpdateResource(ctx context.Context, resource *mynewservicepb.Resource, updateMask []string) error
+    DeleteResource(ctx context.Context, projectId, locationId, resourceId string) error
+}
+
+// Create provider function that returns accessor
+func NewMyServiceClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MyServiceClient] {
+    return func() MyServiceClient {
+        return NewMyServiceClient(gcpClients)
+    }
+}
+
+// Implement the client wrapping the real GCP client
+func NewMyServiceClient(gcpClients *gcpclient.GcpClients) MyServiceClient {
+    return &myServiceClient{client: gcpClients.MyNewService}
+}
+
+type myServiceClient struct {
+    client *mynewservice.MyServiceClient
+}
+
+func (c *myServiceClient) CreateResource(ctx context.Context, projectId, locationId, resourceId string, opts CreateOptions) error {
+    req := &mynewservicepb.CreateResourceRequest{
+        Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, locationId),
+        ResourceId: resourceId,
+        Resource: &mynewservicepb.Resource{
+            // ... build request from opts
+        },
+    }
+    
+    _, err := c.client.CreateResource(ctx, req)
+    return err
+}
+
+// ... implement other methods
+```
+
+**Step 4: Wire Up in main.go**:
+
+```go
+// In cmd/main.go
+gcpClients, err := gcpclient.NewGcpClients(ctx, config.GcpConfig.CredentialsFile, config.GcpConfig.PeeringCredentialsFile, rootLogger)
+// ... error handling
+
+// Create state factory with client provider
+myResourceStateFactory := gcpmyresource.NewStateFactory(
+    gcpmyresourceclient.NewMyServiceClientProvider(gcpClients),  // Pass client provider
+    env,
+)
+```
+
+**Step 5: Use in State Factory**:
+
+```go
+// In pkg/kcp/provider/gcp/myresource/state.go
+type State struct {
+    focal.State
+    
+    myServiceClient client.MyServiceClient
+    remoteResource  *mynewservicepb.Resource
+}
+
+type StateFactory interface {
+    NewState(ctx context.Context, focalState focal.State) (*State, error)
+}
+
+type stateFactory struct {
+    myServiceClientProvider gcpclient.GcpClientProvider[client.MyServiceClient]
+    env                     abstractions.Environment
+}
+
+func NewStateFactory(
+    myServiceClientProvider gcpclient.GcpClientProvider[client.MyServiceClient],
+    env abstractions.Environment,
+) StateFactory {
+    return &stateFactory{
+        myServiceClientProvider: myServiceClientProvider,
+        env:                     env,
+    }
+}
+
+func (f *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
+    myServiceClient := f.myServiceClientProvider()  // Get client instance
+    
+    return &State{
+        State:           focalState,
+        myServiceClient: myServiceClient,
+    }, nil
+}
+```
+
+#### NEW Pattern Examples
+
+**RedisCluster** (`pkg/kcp/provider/gcp/rediscluster/client/memorystoreClusterClient.go`):
+```go
+func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClusterClient] {
+    return func() MemorystoreClusterClient {
+        return NewMemorystoreClient(gcpClients)
+    }
+}
+
+func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClusterClient {
+    return &memorystoreClient{redisClusterClient: gcpClients.RedisCluster}
+}
+```
+
+**Subnet** (`pkg/kcp/provider/gcp/subnet/client/computeClient.go`):
+```go
+func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+    return func() ComputeClient {
+        return NewComputeClient(gcpClients)
+    }
+}
+
+func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
+    return &computeClient{subnetworksClient: gcpClients.ComputeSubnetworks}
+}
+```
+
+### OLD Pattern (Legacy) - ClientProvider
+
+**Philosophy**: Create HTTP client once, reuse it for multiple service clients created on-demand.
+
+#### Architecture
+
+**Cached HTTP Client** (`pkg/kcp/provider/gcp/client/provider.go`):
+
+```go
+type ClientProvider[T any] func(ctx context.Context, credentialsFile string) (T, error)
+
+func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T] {
+    // Caches the result of first call
+    // Subsequent calls return cached client
+}
+
+func GetCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
+    // Returns cached *http.Client
+    // Periodically renewed in background
+}
+```
+
+**Key Features**:
+- Uses **Google API Discovery Libraries** (older REST-based SDKs from `google.golang.org/api`)
+- Single shared `*http.Client` with periodic renewal (every 6 hours by default)
+- Generic `ClientProvider[T]` pattern
+- Clients created on-demand, then cached
+
+#### OLD Pattern Example
+
+**FilestoreClient** (`pkg/kcp/provider/gcp/nfsinstance/client/filestoreClient.go`):
+
+```go
+func NewFilestoreClientProvider() client.ClientProvider[FilestoreClient] {
+    return client.NewCachedClientProvider(
+        func(ctx context.Context, credentialsFile string) (FilestoreClient, error) {
+            httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)  // OLD: Get HTTP client
+            if err != nil {
+                return nil, err
+            }
+
+            fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))  // OLD: Discovery API
+            if err != nil {
+                return nil, fmt.Errorf("error obtaining GCP File Client: [%w]", err)
+            }
+            return NewFilestoreClient(fsClient), nil
+        },
+    )
+}
+```
+
+### Pattern Comparison: Code Walkthrough
+
+**NEW Pattern** (Subnet):
+```go
+// 1. GcpClients struct holds all clients (gcpClients.go)
+type GcpClients struct {
+    ComputeSubnetworks *compute.SubnetworksClient  // Created at startup
+}
+
+// 2. Provider function returns accessor (subnet/client/computeClient.go)
+func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+    return func() ComputeClient {
+        return NewComputeClient(gcpClients)  // Just wraps existing client
+    }
+}
+
+// 3. State factory accepts provider (subnet/state.go)
+type stateFactory struct {
+    computeClientProvider gcpclient.GcpClientProvider[client.ComputeClient]
+}
+
+// 4. Get client in NewState
+func (f *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
+    computeClient := f.computeClientProvider()  // Lightweight call, returns wrapper
+    return &State{
+        State:         focalState,
+        computeClient: computeClient,
+    }, nil
+}
+```
+
+**OLD Pattern** (NfsInstance):
+```go
+// 1. Provider creates client on-demand (nfsinstance/client/filestoreClient.go)
+func NewFilestoreClientProvider() client.ClientProvider[FilestoreClient] {
+    return client.NewCachedClientProvider(
+        func(ctx context.Context, credentialsFile string) (FilestoreClient, error) {
+            httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)  // Get shared HTTP client
+            fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))  // Create service
+            return NewFilestoreClient(fsClient), nil
+        },
+    )
+}
+
+// 2. State factory calls provider with credentials
+func NewStateFactory(filestoreClientProvider gcpclient.ClientProvider[client.FilestoreClient]) StateFactory {
+    return &stateFactory{filestoreClientProvider: filestoreClientProvider}
+}
+
+// 3. Get client in NewState (heavier call, may create service)
+func (f *stateFactory) NewState(ctx context.Context, nfsState types.State) (*State, error) {
+    credentialsFile := getCredentialsFile(nfsState)
+    filestoreClient, err := f.filestoreClientProvider(ctx, credentialsFile)  // May create client
+    // ...
+}
+```
+
+### Migration Guide (OLD → NEW)
+
+If you need to modernize an OLD pattern client to NEW pattern:
+
+1. **Find modern Cloud Client Library**:
+   - OLD: `google.golang.org/api/file/v1`
+   - NEW: `cloud.google.com/go/filestore/apiv1`
+
+2. **Add to GcpClients**:
+   ```go
+   type GcpClients struct {
+       // ...
+       Filestore *filestore.Client
+   }
+   ```
+
+3. **Initialize in NewGcpClients()**:
+   ```go
+   filestoreTokenProvider, err := b.WithScopes(filestore.DefaultAuthScopes()).BuildTokenProvider()
+   filestoreTokenSource := oauth2adapt.TokenSourceFromTokenProvider(filestoreTokenProvider)
+   filestoreClient, err := filestore.NewClient(ctx, option.WithTokenSource(filestoreTokenSource))
+   ```
+
+4. **Update client provider**:
+   ```go
+   func NewFilestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FilestoreClient] {
+       return func() FilestoreClient {
+           return NewFilestoreClient(gcpClients)
+       }
+   }
+   ```
+
+5. **Update state factory signature** (remove `ctx` and `credentialsFile` parameters from NewState).
+
+### Why NEW Pattern is Better
+
+| Aspect | NEW Pattern | OLD Pattern |
+|--------|-------------|-------------|
+| **Performance** | Clients created once at startup | Clients may be created multiple times |
+| **Dependencies** | Modern gRPC libraries | Legacy REST libraries |
+| **Error Handling** | Fail fast at startup | Fail during reconciliation |
+| **Testing** | Easy to mock GcpClients | Must mock ClientProvider function |
+| **Maintenance** | All clients visible in one place | Scattered across packages |
+| **Token Refresh** | Automatic per service | Manual HTTP client renewal |
+
+**Use NEW pattern for all new GCP resources.**
+
 ## Common Development Tasks
 
 ### Important Note: Kubebuilder Usage
