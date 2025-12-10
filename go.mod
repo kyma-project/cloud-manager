@@ -58,7 +58,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/rdumont/assistdog v0.0.0-20240711132531-b5b791dd7452
 	github.com/rodaine/table v1.3.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/thomaspoignant/go-feature-flag v1.48.0
 	github.com/tidwall/gjson v1.18.0
