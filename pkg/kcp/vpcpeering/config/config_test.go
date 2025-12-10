@@ -36,4 +36,6 @@ networkTag: e2e
 	cfg.BaseDir(dir)
 	InitConfig(cfg)
 	cfg.Read()
+
+	assert.Equal(t, "e2e", VpcPeeringConfig.NetworkTag)
 }

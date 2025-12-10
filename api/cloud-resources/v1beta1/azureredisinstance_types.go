@@ -64,7 +64,8 @@ type AzureRedisInstanceSpec struct {
 	// +kubebuilder:default="6.0"
 	RedisVersion string `json:"redisVersion,omitempty"`
 
-	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
+	// +optional
+	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -52,7 +53,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && !op.Done {
-			return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.
@@ -91,7 +92,7 @@ func checkGcpOperation(ctx context.Context, st composed.State) (error, context.C
 
 		//Operation not completed yet.. requeue again.
 		if op != nil && op.Status != "DONE" {
-			return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
+			return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 		}
 
 		//If not able to find the operation or it is completed, reset OpIdentifier.

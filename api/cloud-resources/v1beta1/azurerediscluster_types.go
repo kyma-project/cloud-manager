@@ -67,7 +67,8 @@ type AzureRedisClusterSpec struct {
 	// +optional
 	RedisVersion string `json:"redisVersion,omitempty"`
 
-	AuthSecret *RedisAuthSecretSpec `json:"volume,omitempty"`
+	// +optional
+	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`

@@ -40,5 +40,5 @@ gardenerNamespace: ns-file
 	InitConfig(cfg)
 	cfg.Read()
 
-	assert.Equal(t, "ns-file", ScopeConfig.GardenerNamespace)
+	assert.Equal(t, "ns-env", ScopeConfig.GardenerNamespace)
 }

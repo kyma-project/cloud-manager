@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -56,22 +57,9 @@ func WithGcpNfsValues() ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.Location = "us-west1"
 				x.Spec.Tier = "BASIC_HDD"
 				x.Spec.CapacityGb = 1024
 				x.Spec.FileShareName = "test01"
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
-		},
-	}
-}
-
-func WithGcpNfsVolumeSpecLocation(location string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.Location = location
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: azureredisclusters.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -46,6 +46,23 @@ spec:
             spec:
               description: AzureRedisClusterSpec defines the desired state of AzureRedisCluster
               properties:
+                authSecret:
+                  properties:
+                    annotations:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    extraData:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    labels:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                  type: object
                 ipRange:
                   properties:
                     name:
@@ -94,23 +111,6 @@ spec:
                   maximum: 10
                   minimum: 0
                   type: integer
-                volume:
-                  properties:
-                    annotations:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    extraData:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    labels:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    name:
-                      type: string
-                  type: object
               required:
                 - redisTier
               type: object

@@ -86,7 +86,7 @@ test-ff: jv download-flag-schema
 
 .PHONY: test
 test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
-	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -test.v -v -coverprofile cover.out
+	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" GOFIPS140=v1.0.0 go test ./... -test.v -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 GOLANGCI_LINT_VERSION ?= v1.54.2
@@ -108,11 +108,11 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 
 .PHONY: build
 build: manifests generate fmt vet build_ui ## Build manager binary.
-	go build -o bin/manager cmd/main.go
+	GOFIPS140=v1.0.0 go build -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./cmd/main.go
+	GODEBUG=fips140=only,tlsmlkem=0 go run ./cmd/main.go
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.

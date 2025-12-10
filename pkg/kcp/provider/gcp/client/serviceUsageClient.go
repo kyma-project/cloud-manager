@@ -17,8 +17,8 @@ type ServiceUsageClient interface {
 
 func NewServiceUsageClientProvider() ClientProvider[ServiceUsageClient] {
 	return NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (ServiceUsageClient, error) {
-			httpClient, err := GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (ServiceUsageClient, error) {
+			httpClient, err := GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}

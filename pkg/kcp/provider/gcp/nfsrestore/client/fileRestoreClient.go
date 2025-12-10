@@ -17,8 +17,8 @@ type FileRestoreClient interface {
 
 func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (FileRestoreClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (FileRestoreClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}

@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"encoding/json"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -138,7 +138,7 @@ func (s *checkGcpOperationSuite) TestCheckGcpOperationNotDoneOperation() {
 	defer testState.FakeHttpServer.Close()
 	err, resCtx := checkGcpOperation(ctx, testState.State)
 	assert.Nil(s.T(), resCtx)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 }
 
 func (s *checkGcpOperationSuite) TestCheckGcpOperationSuccessfulOperation() {

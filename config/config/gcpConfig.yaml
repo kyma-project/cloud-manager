@@ -1,3 +1,4 @@
 retryWaitTime: 5s
 operationWaitTime: 5s
 apiTimeout: 8s
+gcpClientRenewDuration: 5m

@@ -4,6 +4,11 @@ type AzureVNetLinkBuilder struct {
 	Obj AzureVNetLink
 }
 
+func (b *AzureVNetLinkBuilder) WithLabels(labels map[string]string) *AzureVNetLinkBuilder {
+	b.Obj.Labels = labels
+	return b
+}
+
 func (b *AzureVNetLinkBuilder) WithScope(s string) *AzureVNetLinkBuilder {
 	b.Obj.Spec.Scope.Name = s
 	return b

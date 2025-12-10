@@ -77,8 +77,11 @@ type GcpNfsVolumeSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	IpRange IpRangeRef `json:"ipRange"`
+
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."
+	// +kubebuilder:validation:Deprecated
+	// Deprecated: Location field is deprecated and will be removed in a future version.
 	Location string `json:"location"`
 
 	// +kubebuilder:default=BASIC_HDD

@@ -20,8 +20,8 @@ type FilestoreClient interface {
 
 func NewFilestoreClientProvider() client.ClientProvider[FilestoreClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (FilestoreClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
+		func(ctx context.Context, credentialsFile string) (FilestoreClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}
