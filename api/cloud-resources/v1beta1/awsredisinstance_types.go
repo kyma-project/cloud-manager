@@ -49,7 +49,6 @@ type AwsRedisInstanceSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
 	// Defines Service Tier and Capacity Tier. RedisTiers starting with 'S' are Standard service tier. RedisTiers starting with 'P' are premium servicetier. Number next to service tier represents capacity tier.
