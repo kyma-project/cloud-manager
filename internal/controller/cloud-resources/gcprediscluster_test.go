@@ -685,7 +685,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 
 	It("Scenario: SKR GcpRedisCluster authSecret is modified", func() {
 		gcpRedisClusterName := "auth-secret-modified-cluster"
-		skrGcpSubnetId := "5c70629f-a13f-4b04-af47-1ab274c1c7ac"
+		skrGcpSubnetId := "89ef2464-afa9-457a-a09e-8aac592cb7ff"
 		gcpRedisCluster := &cloudresourcesv1beta1.GcpRedisCluster{}
 		tier := cloudresourcesv1beta1.GcpRedisClusterTierC1
 		skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
