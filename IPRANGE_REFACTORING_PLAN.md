@@ -80,125 +80,199 @@ pkg/kcp/provider/gcp/iprange/
 ## Refactoring Plan
 
 ### Phase 0: Client Capability Investigation (CRITICAL - DO FIRST!)
-**Status**: ⬜ TODO
+**Status**: ✅ DONE
 
 #### Task 0.1: Investigate Service Networking API Support
-- [ ] Check if modern Cloud Client Library exists for Service Networking
-  - Look for `cloud.google.com/go/servicenetworking`
-  - Check Google Cloud Go SDK documentation
-  - Review release notes for recent additions
-- [ ] Compare OLD vs NEW client capabilities:
-  - OLD: `google.golang.org/api/servicenetworking/v1`
-  - NEW: Potential `cloud.google.com/go` equivalent
-- [ ] **Critical Methods Needed**:
+- [x] Check if modern Cloud Client Library exists for Service Networking
+  - Looked for `cloud.google.com/go/servicenetworking`
+  - Checked Google Cloud Go SDK documentation
+  - Reviewed release notes for recent additions
+- [x] Compare OLD vs NEW client capabilities:
+  - OLD: `google.golang.org/api/servicenetworking/v1` ✅ Available
+  - NEW: `cloud.google.com/go/servicenetworking` ❌ **Does NOT exist**
+- [x] **Critical Methods Needed**:
   - `ListServiceConnections(ctx, projectId, vpcId) ([]*Connection, error)`
   - `CreateServiceConnection(ctx, projectId, vpcId, reservedIpRanges) (*Operation, error)`
   - `PatchServiceConnection(ctx, projectId, vpcId, reservedIpRanges) (*Operation, error)` (force update)
   - `DeleteServiceConnection(ctx, projectId, vpcId) (*Operation, error)`
   - `GetOperation(ctx, operationName) (*Operation, error)`
-- [ ] **Document findings**:
-  - If NEW client exists with all methods → Proceed with refactoring
-  - If NEW client missing methods → Document gap and consider hybrid approach
-  - If no NEW client exists → Keep OLD pattern for Service Networking only
+- [x] **Findings Documented**:
+  - ❌ NO NEW client exists for Service Networking API
+  - ✅ Must keep OLD pattern for Service Networking (only option available)
+  - ✅ Hybrid approach required (NEW for Compute, OLD for Service Networking)
 
 #### Task 0.2: Verify Compute API Coverage in GcpClients
-- [ ] Check if `GcpClients.ComputeAddresses` supports all needed operations:
-  - `Get(projectId, region, addressName)` - Load global address
-  - `Insert(projectId, region, address)` - Create global address  
-  - `Delete(projectId, region, addressName)` - Delete global address
-- [ ] Check if `GcpClients` has global operations client:
-  - Current: `RegionOperations` exists
-  - Need: `GlobalOperations` for global address operations
-  - Add if missing
-- [ ] Verify operation polling capabilities
+- [x] Check if `GcpClients` supports all needed operations:
+  - Current: `ComputeAddresses` exists but for **regional** addresses
+  - Need: **Global** addresses client (IpRange uses global addresses)
+  - Need: `GlobalOperations` client for operation tracking
+- [x] Verified Cloud Client Library support:
+  - ✅ `cloud.google.com/go/compute/apiv1` has `GlobalAddressesClient`
+  - ✅ `cloud.google.com/go/compute/apiv1` has `GlobalOperationsClient`
+  - ✅ All needed methods available: Get, Insert, Delete, List, Wait
+- [x] **Action Required**: Add to GcpClients:
+  - `ComputeGlobalAddresses *compute.GlobalAddressesClient`
+  - `ComputeGlobalOperations *compute.GlobalOperationsClient`
 
 #### Task 0.3: Create Decision Matrix
-- [ ] Document which clients can use NEW pattern:
+- [x] Document which clients can use NEW pattern:
   ```
-  | Client              | NEW Pattern Available? | Action                    |
-  |---------------------|------------------------|---------------------------|
-  | Compute Addresses   | ✅ Yes (existing)      | Use GcpClients            |
-  | Service Networking  | ❓ TBD                 | Investigate               |
-  | Global Operations   | ❓ Check if exists     | Add if missing            |
+  | Client              | NEW Pattern Available? | Action                           |
+  |---------------------|------------------------|----------------------------------|
+  | Global Addresses    | ✅ Yes                 | Add GlobalAddressesClient        |
+  | Global Operations   | ✅ Yes                 | Add GlobalOperationsClient       |
+  | Service Networking  | ❌ No                  | Keep OLD pattern (no alternative)|
   ```
-- [ ] **Decision Point**: If Service Networking has no NEW client:
-  - **Option A**: Keep OLD pattern for Service Networking, use NEW for Compute (hybrid)
-  - **Option B**: Wait for Google to release NEW client
-  - **Option C**: Wrapper approach - use OLD client inside NEW-style interface
+- [x] **Decision Made**: Hybrid Approach (Option A)
+  - **Compute APIs**: Use NEW pattern with `cloud.google.com/go/compute/apiv1`
+  - **Service Networking**: Keep OLD pattern with `google.golang.org/api/servicenetworking/v1`
+  - **Rationale**: Google does not provide modern Cloud Client Library for Service Networking
+  - **Benefits**: 
+    - Modernize what we can (Compute)
+    - Keep working implementation for Service Networking
+    - Interface remains clean and testable regardless of underlying client
 
 #### Task 0.4: Update Plan Based on Findings
-- [ ] If gaps found, update Phase 1 and Phase 2 tasks accordingly
-- [ ] Add notes about which parts use NEW vs OLD pattern
-- [ ] Adjust timeline estimates if hybrid approach needed
+- [x] Updated Phase 1 with specific clients to add
+- [x] Updated Phase 2 with hybrid approach (NEW for Compute, OLD for Service Networking)
+- [x] Added documentation notes about why OLD pattern is kept
+- [x] Timeline remains similar (hybrid doesn't add complexity)
 
-**Expected Outcome**: Clear understanding of what's possible with current GCP client libraries. **DO NOT PROCEED** with Phase 1 until this investigation is complete.
+**Investigation Results**:
+
+✅ **Compute API (NEW Pattern)**:
+- Package: `cloud.google.com/go/compute/apiv1`
+- Client: `GlobalAddressesClient` with methods:
+  - `Delete(ctx, req)` - Delete global address
+  - `Get(ctx, req)` - Get global address
+  - `Insert(ctx, req)` - Create global address
+  - `List(ctx, req)` - List global addresses
+- Client: `GlobalOperationsClient` with methods:
+  - `Get(ctx, req)` - Get operation status
+  - `Wait(ctx, req)` - Wait for operation completion
+  - `Delete(ctx, req)` - Delete operation
+- **Status**: Ready to use NEW pattern
+
+❌ **Service Networking API (OLD Pattern Only)**:
+- Package: `google.golang.org/api/servicenetworking/v1` (Discovery API)
+- No equivalent in `cloud.google.com/go/servicenetworking` (does not exist)
+- Current implementation: `ClientProvider[ServiceNetworkingClient]` with cached HTTP client
+- **Status**: Must keep OLD pattern
+- **Impact**: Not a blocker - interface remains clean for testing
+
+**Expected Outcome**: ✅ ACHIEVED - Clear understanding that hybrid approach is required and acceptable.
 
 **Notes**:
-- This investigation was last done ~1 year ago
-- Google regularly adds new services to Cloud Client Libraries
-- Check `cloud.google.com/go` repository releases for recent updates
-- Service Networking might now be available or under different package name
+- Investigation completed: December 2025
+- Google has NOT added Service Networking to Cloud Client Libraries
+- Checked `cloud.google.com/go` - servicenetworking package does not exist
+- Hybrid approach is common and acceptable when cloud provider doesn't offer modern SDK
 
 ---
 
 ### Phase 1: Add New GCP Client Libraries to GcpClients
 **Status**: ⬜ TODO
 
-#### Task 1.1: Add ServiceNetworking Client to GcpClients (Based on Phase 0 Findings)
-- [ ] **IF NEW client exists**: Add to `GcpClients` struct
+#### Task 1.1: Add Global Compute Clients to GcpClients
+- [ ] Add to `GcpClients` struct in `pkg/kcp/provider/gcp/client/gcpClients.go`:
   ```go
-  ServiceNetworking *servicenetworking.Client  // NEW pattern
+  ComputeGlobalAddresses   *compute.GlobalAddressesClient   // For global address operations
+  ComputeGlobalOperations  *compute.GlobalOperationsClient  // For global operation tracking
   ```
-- [ ] **IF NO NEW client**: Keep OLD pattern with note
+- [ ] Note: IpRange uses **global** addresses (not regional like other resources)
+- [ ] Existing `ComputeAddresses` is for regional addresses (used by other resources)
+
+#### Task 1.2: Initialize Global Compute Clients in NewGcpClients()
+- [ ] Add token provider for compute in `gcpClients.go`:
   ```go
-  // ServiceNetworking uses OLD pattern (no Cloud Client Library available yet)
-  // Accessed via ClientProvider in iprange-specific code
+  // Global Addresses Client (if not already sharing compute token provider)
+  computeTokenProvider, err := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
+  if err != nil {
+      return nil, fmt.Errorf("failed to build compute token provider: %w", err)
+  }
+  computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
+  
+  globalAddressesClient, err := compute.NewGlobalAddressesRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+  if err != nil {
+      return nil, fmt.Errorf("create global addresses client: %w", err)
+  }
+  
+  globalOperationsClient, err := compute.NewGlobalOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+  if err != nil {
+      return nil, fmt.Errorf("create global operations client: %w", err)
+  }
   ```
-- [ ] Initialize based on Phase 0 decision
-- [ ] Document why OLD pattern is kept if necessary
+- [ ] Add to return statement:
+  ```go
+  return &GcpClients{
+      // ... existing clients
+      ComputeGlobalAddresses:  globalAddressesClient,
+      ComputeGlobalOperations: globalOperationsClient,
+  }, nil
+  ```
 
-#### Task 1.2: Ensure Compute Client is Available in GcpClients
-- [ ] Verify `ComputeAddresses` is already in `GcpClients` ✅ (confirmed in current code)
-- [ ] Check for `GlobalOperations` client for global address operations
-- [ ] Add if missing: `ComputeGlobalOperations *compute.GlobalOperationsClient`
-- [ ] Note: IpRange uses **global** addresses, not regional
+#### Task 1.3: Service Networking - Keep OLD Pattern
+- [x] **Decision**: Service Networking will NOT be added to GcpClients
+- [x] **Reason**: No modern Cloud Client Library exists (`cloud.google.com/go/servicenetworking` does not exist)
+- [x] **Implementation**: Continue using `ClientProvider[ServiceNetworkingClient]` in iprange-specific code
+- [ ] Add comment in `serviceNetworkingClient.go` documenting why OLD pattern is kept:
+  ```go
+  // NOTE: This client uses the OLD pattern (ClientProvider with Discovery API)
+  // because Google does not provide a modern Cloud Client Library for Service Networking API.
+  // See: google.golang.org/api/servicenetworking/v1 (Discovery API)
+  // If cloud.google.com/go/servicenetworking becomes available, migrate to NEW pattern.
+  ```
 
-#### Task 1.3: Update cmd/main.go GcpClients Initialization
-- [ ] Verify `NewGcpClients()` call includes all needed credentials
-- [ ] Add any missing initialization for IpRange-specific clients
+#### Task 1.4: Update cmd/main.go GcpClients Initialization
+- [ ] Verify `NewGcpClients()` call works with new clients (no changes needed)
+- [ ] NewGcpClients() automatically includes the new clients
 
-**Expected Outcome**: GcpClients struct contains all necessary clients for IpRange operations using NEW pattern.
+**Expected Outcome**: GcpClients struct contains GlobalAddresses and GlobalOperations clients (NEW pattern). Service Networking remains with OLD pattern.
 
 ---
 
-### Phase 2: Create NEW Pattern Client Interfaces
+### Phase 2: Create Client Interfaces (Hybrid Approach)
 **Status**: ⬜ TODO
 
-#### Task 2.1: Refactor pkg/kcp/provider/gcp/iprange/client/computeClient.go
+#### Task 2.1: Refactor pkg/kcp/provider/gcp/iprange/client/computeClient.go (NEW Pattern)
 - [ ] Create typed `ComputeClient` interface for IpRange operations
   ```go
   type ComputeClient interface {
-      GetAddress(ctx context.Context, projectId, addressName string) (*computepb.Address, error)
-      CreateAddress(ctx context.Context, projectId string, address *computepb.Address) (*computepb.Operation, error)
-      DeleteAddress(ctx context.Context, projectId, addressName string) (*computepb.Operation, error)
+      GetGlobalAddress(ctx context.Context, projectId, addressName string) (*computepb.Address, error)
+      CreateGlobalAddress(ctx context.Context, projectId string, address *computepb.Address) (string, error) // returns operation name
+      DeleteGlobalAddress(ctx context.Context, projectId, addressName string) (string, error) // returns operation name
       GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error)
+      WaitGlobalOperation(ctx context.Context, projectId, operationName string) error
   }
   ```
-- [ ] Create `NewComputeClientProvider(gcpClients *gcpclient.GcpClients)` function
-- [ ] Implement wrapper client using `gcpClients.ComputeAddresses`
+- [ ] Create `NewComputeClientProvider(gcpClients *gcpclient.GcpClients)` function:
+  ```go
+  func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+      return func() ComputeClient {
+          return NewComputeClient(gcpClients)
+      }
+  }
+  ```
+- [ ] Implement wrapper client using `gcpClients.ComputeGlobalAddresses` and `gcpClients.ComputeGlobalOperations`:
+  ```go
+  type computeClient struct {
+      globalAddressesClient  *compute.GlobalAddressesClient
+      globalOperationsClient *compute.GlobalOperationsClient
+  }
+  
+  func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
+      return &computeClient{
+          globalAddressesClient:  gcpClients.ComputeGlobalAddresses,
+          globalOperationsClient: gcpClients.ComputeGlobalOperations,
+      }
+  }
+  ```
+- [ ] Implement all interface methods wrapping Cloud Client Library calls
 - [ ] Remove OLD pattern `ClientProvider[T]` usage
 
-#### Task 2.2: Refactor pkg/kcp/provider/gcp/iprange/client/serviceNetworkingClient.go (Conditional)
-- [ ] **IF NEW client available (from Phase 0)**:
-  - Create `NewServiceNetworkingClientProvider(gcpClients *gcpclient.GcpClients)`
-  - Implement wrapper using `gcpClients.ServiceNetworking`
-  - Remove OLD pattern implementation
-- [ ] **IF NO NEW client available**:
-  - Keep interface but document OLD pattern usage
-  - Consider creating wrapper that accepts OLD-style client
-  - Update provider to use `ClientProvider[ServiceNetworkingClient]` with cached HTTP client
-  - Add TODO comment linking to tracking issue for NEW client migration
-- [ ] **Interface remains the same** (business operations):
+#### Task 2.2: Keep pkg/kcp/provider/gcp/iprange/client/serviceNetworkingClient.go (OLD Pattern)
+- [x] **Decision**: Keep OLD pattern for Service Networking (no NEW client available)
+- [ ] **Keep existing interface** (business operations):
   ```go
   type ServiceNetworkingClient interface {
       ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
@@ -208,8 +282,28 @@ pkg/kcp/provider/gcp/iprange/
       GetOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
   }
   ```
+- [ ] **Keep OLD pattern implementation** with `ClientProvider[ServiceNetworkingClient]`
+- [ ] **Add documentation comment** at top of file:
+  ```go
+  // Package client provides GCP API clients for IpRange operations.
+  //
+  // HYBRID APPROACH NOTE:
+  // - ComputeClient: Uses NEW pattern (cloud.google.com/go/compute/apiv1)
+  // - ServiceNetworkingClient: Uses OLD pattern (google.golang.org/api/servicenetworking/v1)
+  //
+  // ServiceNetworkingClient uses the OLD pattern because Google does not provide
+  // a modern Cloud Client Library for Service Networking API as of December 2024.
+  // The interface remains clean and testable regardless of underlying implementation.
+  //
+  // If cloud.google.com/go/servicenetworking becomes available, migrate to NEW pattern.
+  ```
+- [ ] Keep existing `NewServiceNetworkingClientProvider()` implementation
+- [ ] No changes needed to provider pattern
 
-**Expected Outcome**: Clean client interfaces following NEW pattern, wrapping GcpClients.
+**Expected Outcome**: 
+- ComputeClient uses NEW pattern with GcpClients (GlobalAddresses/GlobalOperations)
+- ServiceNetworkingClient keeps OLD pattern with clear documentation why
+- Both interfaces remain clean and testable
 
 ---
 
