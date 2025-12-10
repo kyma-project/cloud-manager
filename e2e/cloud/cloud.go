@@ -10,7 +10,7 @@ import (
 
 type Cloud interface {
 	CredentialsEnv() map[string]string
-	WorkspaceBuilder() *TFWorkspaceBuilder
+	WorkspaceBuilder(alias string) *TFWorkspaceBuilder
 }
 
 func Create(ctx context.Context, gardenClient client.Client, config *e2econfig.ConfigType) (Cloud, error) {
@@ -37,8 +37,9 @@ func (c *cloudImpl) CredentialsEnv() map[string]string {
 	return c.ch.Env()
 }
 
-func (c *cloudImpl) WorkspaceBuilder() *TFWorkspaceBuilder {
+func (c *cloudImpl) WorkspaceBuilder(alias string) *TFWorkspaceBuilder {
 	return NewTFWorkspaceBuilder(
+		alias,
 		c.CredentialsEnv(),
 		c.config,
 	)

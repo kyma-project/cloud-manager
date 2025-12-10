@@ -31,7 +31,7 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 			panic(err)
 		}
 		world = w
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 	})
 
 	gdCtx.AfterSuite(func() {
@@ -102,4 +102,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
 	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
 	ctx.Step(`^Redis "([^"]*)" gives "([^"]*)" with:$`, redisGivesWith)
+	ctx.Step(`^tf module "([^"]*)" is applied:$`, tfModuleIsApplied)
+	ctx.Step(`^tf module "([^"]*)" is destroyed$`, tfModuleIsDestroyed)
 }

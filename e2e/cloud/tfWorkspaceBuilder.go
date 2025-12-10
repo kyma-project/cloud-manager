@@ -15,9 +15,10 @@ type TFWorkspaceBuilder struct {
 	ws *tfWorkspace
 }
 
-func NewTFWorkspaceBuilder(env map[string]string, config *e2econfig.ConfigType) *TFWorkspaceBuilder {
+func NewTFWorkspaceBuilder(alias string, env map[string]string, config *e2econfig.ConfigType) *TFWorkspaceBuilder {
 	b := &TFWorkspaceBuilder{
 		ws: &tfWorkspace{
+			alias:   alias,
 			rootDir: config.TfWorkspaceDir,
 			tfCmd:   config.TfCmd,
 			name:    util.RandomString(8),

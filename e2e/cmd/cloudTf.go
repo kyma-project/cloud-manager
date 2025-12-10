@@ -32,7 +32,8 @@ var cmdCloudTf = &cobra.Command{
 			return fmt.Errorf("failed to create cloud: %w", err)
 		}
 
-		b := cld.WorkspaceBuilder()
+		// alias is not important here since used w/out cluster and resource declaration
+		b := cld.WorkspaceBuilder(util.RandomString(8))
 		for _, p := range tfProviders {
 			b.WithProvider(p)
 		}

@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -60,6 +62,11 @@ func debugWait(ctx context.Context, suffix string) (context.Context, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: world.Config().SkrNamespace,
 			Name:      name,
+			Annotations: map[string]string{
+				e2elib.AliasLabel:             alias,
+				e2elib.ScenarioNameAnnotation: session.GetScenarioName(),
+				e2elib.StepNameAnnotation:     session.GetStepName(),
+			},
 		},
 	}
 	err = session.CurrentCluster().GetClient().Create(ctx, cm)
@@ -286,6 +293,9 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 	if err != nil {
 		return ctx, err
 	}
+	if txt == "" {
+		return ctx, fmt.Errorf("resource manifest with alias %q is empty", alias)
+	}
 	arr, err := util.YamlMultiDecodeToUnstructured([]byte(txt))
 	if err != nil {
 		return ctx, fmt.Errorf("failed to parse resource yaml: %w", err)
@@ -295,11 +305,26 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 	}
 	obj := arr[0]
 
+	annotations := obj.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[e2elib.AliasLabel] = alias
+	annotations[e2elib.ScenarioNameAnnotation] = session.GetScenarioName()
+	annotations[e2elib.StepNameAnnotation] = session.GetStepName()
+	obj.SetAnnotations(annotations)
+
 	if obj.GetNamespace() == "" {
 		obj.SetNamespace(ri.Namespace)
 	}
 	if obj.GetName() == "" {
 		obj.SetName(ri.Name)
+	}
+	if obj.GetKind() == "" {
+		obj.SetKind(ri.Kind)
+	}
+	if obj.GetAPIVersion() == "" {
+		obj.SetAPIVersion(ri.ApiVersion)
 	}
 
 	err = session.CurrentCluster().GetClient().Create(ctx, obj)
@@ -461,17 +486,24 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 	allDone := "All done!"
 
 	rootDir := "/mnt/" + ri.Name
+	// name must be valid k8s uri name
+	// alias must be valid js variable name
+	// to simplify let's use same value for both but respect the constraints
 	name := "e2epvcop" + util.RandomString(6)
+	podAlias := name
 	fileOps = append(fileOps, EchoOperation(allDone))
 	scriptLines := CombineFileOperations(fileOps...)(rootDir)
 	b := NewPodBuilder(name, ri.Namespace, "ubuntu").
 		WithPodDetails(
 			PodWithScript(scriptLines),
 			PodWithMountFromPVC(ri.Name, "", ""),
-		)
+		).
+		WithAnnotation(e2elib.AliasLabel, alias).
+		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
 
 	err = session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
-		Alias:      name,
+		Alias:      podAlias,
 		Kind:       "Pod",
 		ApiVersion: "v1",
 		Name:       name,
@@ -497,8 +529,8 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 
 	err = session.EventuallyValueIsOK(
 		ctx,
-		fmt.Sprintf(`%s.status.phase == "Succeeded"`, name),
-		fmt.Sprintf(`%s.status.phase == "Failed"`, name),
+		fmt.Sprintf(`%s.status.phase == "Succeeded"`, podAlias),
+		fmt.Sprintf(`%s.status.phase == "Failed"`, podAlias),
 	)
 	if err != nil {
 		failed = true
@@ -629,7 +661,10 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 	b := NewPodBuilder(name, world.Config().SkrNamespace, "curlimages/curl").
 		WithPodDetails(
 			PodWithArguments(op.Args()...),
-		)
+		).
+		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
+
 	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
 		Kind:       "Pod",
@@ -814,10 +849,13 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 		opts.Version = "latest"
 	}
 
-	b.WithPodDetails(
-		PodWithScript(scriptLines),
-		PodWithImage("redis:"+opts.Version),
-	)
+	b.
+		WithPodDetails(
+			PodWithScript(scriptLines),
+			PodWithImage("redis:"+opts.Version),
+		).
+		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
 
 	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
@@ -873,4 +911,91 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 	}
 
 	return ctx, nil
+}
+
+/*
+Given tf module "peeringTarget" is applied:
+
+	| source             | terraform-aws-modules/vpc/aws ~> 6.5.1  |
+	| provider           | hashicorp/aws ~> 6.0                    |
+	| provider           | random 3.7.2                            |
+	| input_var_string   | "some value"             |
+	| input_var_int      | 123                      |
+*/
+func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	data, err := ad.ParseMap(tbl)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to parse table: %w", err)
+	}
+
+	eval, err := session.Eval(ctx)
+	if err != nil {
+		return ctx, errEvalContextBuilding(err)
+	}
+
+	b := world.Cloud().WorkspaceBuilder(alias)
+	for k, v := range data {
+		switch k {
+		case "source":
+			vv := v
+			if strings.HasPrefix(vv, "./") || strings.HasPrefix(vv, "../") {
+				vv = path.Join(world.Config().ConfigDir, "e2e/tf", v)
+			}
+			b.WithSource(vv)
+		case "provider":
+			b.WithProvider(v)
+		default:
+			vv, err := eval.EvalTemplate(v)
+			if err != nil {
+				return ctx, fmt.Errorf("failed to evaluate tf variable %q: %w", v, err)
+			}
+			b.WithVariable(k, vv)
+		}
+	}
+	if err := b.Validate(); err != nil {
+		return ctx, fmt.Errorf("invalid tf module configuration: %w", err)
+	}
+
+	ws := b.Build()
+	if err := session.AddTfWorkspace(ws); err != nil {
+		return ctx, fmt.Errorf("failed to add tf workspace to session: %w", err)
+	}
+
+	if err := ws.Create(); err != nil {
+		return ctx, fmt.Errorf("failed to create tf workspace: %w", err)
+	}
+	if err := ws.Init(); err != nil {
+		return ctx, fmt.Errorf("failed to init tf workspace: %w", err)
+	}
+	if err := ws.Apply(); err != nil {
+		return ctx, fmt.Errorf("failed to apply tf workspace: %w", err)
+	}
+
+	return ctx, nil
+}
+
+/*
+Then tf module "peeringTarget" is destroyed
+*/
+func tfModuleIsDestroyed(ctx context.Context, alias string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	ws := session.GetWorkspace(alias)
+	if ws == nil {
+		return ctx, fmt.Errorf("tf %q is not defined", alias)
+	}
+
+	if err := ws.Destroy(); err != nil {
+		return ctx, fmt.Errorf("failed to destroy tf workspace: %w", err)
+	}
+
+	return ctx, godog.ErrPending
 }
