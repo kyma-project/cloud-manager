@@ -7,6 +7,10 @@ const (
 	TagShoot                  = "cloud-manager.kyma-project.io/shoot"
 )
 
+const (
+	LabelKymaModule = "kyma-project.io/module"
+)
+
 const FieldOwner = "cloud-manager"
 
 const (

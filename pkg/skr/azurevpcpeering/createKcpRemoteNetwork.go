@@ -2,7 +2,9 @@ package azurevpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,6 +34,9 @@ func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      state.ObjAsAzureVpcPeering().Status.Id,
 			Namespace: state.KymaRef.Namespace,
+			Labels: map[string]string{
+				common.LabelKymaModule: common.FieldOwner,
+			},
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
