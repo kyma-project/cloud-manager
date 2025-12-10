@@ -151,7 +151,7 @@ func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId s
 	panic("unimplemented")
 }
 
-func newComputeClientStub() gcpiprangeclient.LegacyComputeClient {
+func newComputeClientStub() gcpiprangeclient.OldComputeClient {
 	return &computeClientStub{
 		callCount: 0,
 		mutex:     &sync.Mutex{},
@@ -168,7 +168,7 @@ func TestLoadAddress(t *testing.T) {
 		var scope *cloudcontrolv1beta1.Scope
 		var k8sClient client.WithWatch
 		var address *compute.Address
-		var computeClient gcpiprangeclient.LegacyComputeClient
+		var computeClient gcpiprangeclient.OldComputeClient
 
 		createEmptyGcpIpRangeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudcontrolv1beta1.IpRange) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())

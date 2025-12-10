@@ -30,7 +30,7 @@ type State struct {
 	serviceConnection *servicenetworking.Connection
 
 	serviceNetworkingClient gcpiprangeclient.ServiceNetworkingClient
-	computeClient           gcpiprangeclient.LegacyComputeClient // Use legacy adapter for backward compatibility
+	computeClient           gcpiprangeclient.OldComputeClient // Use original OLD Google Discovery API client
 }
 
 type StateFactory interface {
@@ -39,14 +39,14 @@ type StateFactory interface {
 
 type stateFactory struct {
 	serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
-	computeClientProvider           gcpclient.ClientProvider[gcpiprangeclient.ComputeClient]
+	oldComputeClientProvider        gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient]
 	env                             abstractions.Environment
 }
 
-func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient], oldComputeClientProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
-		computeClientProvider:           computeClientProvider,
+		oldComputeClientProvider:        oldComputeClientProvider,
 		env:                             env,
 	}
 }
@@ -60,7 +60,7 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 	if err != nil {
 		return nil, err
 	}
-	cc, err := f.computeClientProvider(
+	oldCC, err := f.oldComputeClientProvider(
 		ctx,
 		config.GcpConfig.CredentialsFile,
 	)
@@ -68,13 +68,10 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 		return nil, err
 	}
 
-	// Wrap the NEW pattern client with legacy adapter for v2 compatibility
-	legacyCC := gcpiprangeclient.NewLegacyComputeClient(cc)
-
-	return newState(ipRangeState, snc, legacyCC), nil
+	return newState(ipRangeState, snc, oldCC), nil
 }
 
-func newState(ipRangeState iprangetypes.State, snc gcpiprangeclient.ServiceNetworkingClient, cc gcpiprangeclient.LegacyComputeClient) *State {
+func newState(ipRangeState iprangetypes.State, snc gcpiprangeclient.ServiceNetworkingClient, cc gcpiprangeclient.OldComputeClient) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,

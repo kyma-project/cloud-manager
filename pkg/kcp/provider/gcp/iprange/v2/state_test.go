@@ -18,6 +18,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,6 +55,48 @@ func (t *testComputeClientStub) WaitGlobalOperation(ctx context.Context, project
 	return nil
 }
 
+func newFakeOldComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.OldComputeClient] {
+	return func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.OldComputeClient, error) {
+		httpClient := fakeHttpServer.Client()
+		computeService, _ := compute.NewService(ctx, option.WithHTTPClient(httpClient), option.WithEndpoint(fakeHttpServer.URL))
+		return &oldComputeClientForTest{computeService: computeService}, nil
+	}
+}
+
+type oldComputeClientForTest struct {
+	computeService *compute.Service
+}
+
+func (c *oldComputeClientForTest) GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error) {
+	return c.computeService.GlobalAddresses.Get(projectId, name).Context(ctx).Do()
+}
+
+func (c *oldComputeClientForTest) DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error) {
+	return c.computeService.GlobalAddresses.Delete(projectId, name).Context(ctx).Do()
+}
+
+func (c *oldComputeClientForTest) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (*compute.Operation, error) {
+	addr := &compute.Address{
+		Name:         name,
+		Description:  description,
+		Address:      address,
+		PrefixLength: prefixLength,
+		AddressType:  "INTERNAL",
+		Purpose:      "VPC_PEERING",
+		Network:      fmt.Sprintf("projects/%s/global/networks/%s", projectId, vpcName),
+	}
+	return c.computeService.GlobalAddresses.Insert(projectId, addr).Context(ctx).Do()
+}
+
+func (c *oldComputeClientForTest) ListGlobalAddresses(ctx context.Context, projectId, vpc string) (*compute.AddressList, error) {
+	filter := fmt.Sprintf("network=\"https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s\"", projectId, vpc)
+	return c.computeService.GlobalAddresses.List(projectId).Filter(filter).Context(ctx).Do()
+}
+
+func (c *oldComputeClientForTest) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
+	return c.computeService.GlobalOperations.Get(projectId, operationName).Context(ctx).Do()
+}
+
 func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
@@ -83,7 +126,7 @@ func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.Cl
 type testStateFactory struct {
 	factory                         StateFactory
 	kcpCluster                      composed.StateCluster
-	computeClientProvider           client.ClientProvider[gcpiprangeclient.ComputeClient]
+	oldComputeClientProvider        client.ClientProvider[gcpiprangeclient.OldComputeClient]
 	serviceNetworkingClientProvider client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	fakeHttpServer                  *httptest.Server
 }
@@ -96,7 +139,7 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
-	computeClientProvider := newFakeComputeClientProvider(fakeHttpServer)
+	oldComputeClientProvider := newFakeOldComputeClientProvider(fakeHttpServer)
 	svcNwClientProvider := newFakeServiceNetworkingProvider(fakeHttpServer)
 	env := abstractions.NewMockedEnvironment(map[string]string{
 		"GCP_SA_JSON_KEY_PATH":        "test",
@@ -104,12 +147,12 @@ func newTestStateFactory(fakeHttpServer *httptest.Server) (*testStateFactory, er
 		"GCP_OPERATION_WAIT_DURATION": "100ms",
 		"GCP_API_TIMEOUT_DURATION":    "100ms"})
 
-	factory := NewStateFactory(svcNwClientProvider, computeClientProvider, env)
+	factory := NewStateFactory(svcNwClientProvider, oldComputeClientProvider, env)
 
 	return &testStateFactory{
 		factory:                         factory,
 		kcpCluster:                      kcpCluster,
-		computeClientProvider:           computeClientProvider,
+		oldComputeClientProvider:        oldComputeClientProvider,
 		serviceNetworkingClientProvider: svcNwClientProvider,
 		fakeHttpServer:                  fakeHttpServer,
 	}, nil
@@ -122,7 +165,7 @@ func (f *testStateFactory) newStateWith(ctx context.Context, ipRange *cloudcontr
 
 func (f *testStateFactory) newStateWithScope(ctx context.Context, ipRange *cloudcontrolv1beta1.IpRange, scope *cloudcontrolv1beta1.Scope) (*State, error) {
 	snc, _ := f.serviceNetworkingClientProvider(ctx, "test")
-	cc, _ := f.computeClientProvider(ctx, "test")
+	oldCC, _ := f.oldComputeClientProvider(ctx, "test")
 
 	focalState := focal.NewStateFactory().NewState(
 		composed.NewStateFactory(f.kcpCluster).NewState(
@@ -134,10 +177,7 @@ func (f *testStateFactory) newStateWithScope(ctx context.Context, ipRange *cloud
 
 	focalState.SetScope(scope)
 
-	// Wrap NEW pattern client with legacy adapter for v2 compatibility
-	legacyCC := gcpiprangeclient.NewLegacyComputeClient(cc)
-
-	return newState(newTypesState(focalState), snc, legacyCC), nil
+	return newState(newTypesState(focalState), snc, oldCC), nil
 
 }
 

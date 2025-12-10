@@ -256,14 +256,22 @@ pkg/kcp/provider/gcp/iprange/
 - [x] Keep existing `NewServiceNetworkingClientProvider()` implementation
 - [x] No changes needed to provider pattern
 
-#### Task 2.3: Create Legacy Adapter for v2 Compatibility
-- [x] Created `computeClientLegacyAdapter.go` to bridge NEW and OLD types
-- [x] Implements `LegacyComputeClient` interface (OLD types) wrapping `ComputeClient` (NEW types)
-- [x] Converts between `computepb.*` (NEW) and `compute.v1.*` (OLD) types
-- [x] Updated v2 State to use `LegacyComputeClient` instead of `ComputeClient`
-- [x] Updated v2 state factory to wrap NEW client with legacy adapter
-- [x] Updated v2 tests to use `LegacyComputeClient` type
-- [x] **Note**: Legacy adapter is temporary and will be removed in Phase 4
+#### Task 2.3: Create OLD Client for v2 Legacy Behavior
+- [x] Created `oldComputeClient.go` - Pure OLD pattern using Google Discovery API
+  - Uses `google.golang.org/api/compute/v1` (REST, not gRPC)
+  - Provides original legacy behavior for v2 reconcilers
+  - No adapter layer - direct Discovery API implementation
+- [x] Created `computeClientLegacyAdapter.go` (TEMPORARY during transition)
+  - Bridges NEW client to OLD types for testing
+  - Will be removed after v2 directory is deleted
+- [x] Updated v2 State to use `OldComputeClient` (pure OLD pattern)
+  - Changed from `LegacyComputeClient` (adapter) to `OldComputeClient` (original)
+  - v2 now has exact original API behavior via Discovery API
+- [x] Updated v2 state factory to accept `OldComputeClient` provider
+- [x] Updated v2 tests to use `OldComputeClient` type
+  - Created `oldComputeClientForTest` test implementation
+  - Added `compute/v1` import to test file
+- [x] **Key Difference**: v2 uses true legacy REST API, not gRPC wrapped in adapter
 - [x] **Test Cleanup**: Removed/disabled v2 tests marked for Phase 7:
   - Removed `checkGcpOperation_test.go` (marked for deletion in Phase 7)
   - Temporarily disabled `identifyPeeringIpRanges_test.go` (marked for migration in Phase 7)
@@ -430,8 +438,15 @@ All of this work was **necessary** to properly implement the three-layer state h
 
 ---
 
-### Phase 4: Flatten and Refactor Actions (Remove v2/ Directory)
+### Phase 4: Flatten and Refactor Actions (Feature Flag Protected)
 **Status**: ✅ DONE
+
+**Feature Flag Implementation**: Both old (v2) and new implementations coexist, controlled by `ipRangeRefactored` feature flag:
+- **Default**: Disabled (uses v2 legacy implementation with original OLD client)
+- **Manual Overrides**: Can be enabled via feature flag overwrites per landscape/customer
+- **Benefit**: Safe rollout and testing strategy - controlled rollout with instant rollback capability
+
+**Important Note**: Even though both implementations use the same underlying GCP API client (via the adapter), the **reconciliation logic, action flows, and business rules are completely different**. We need both implementations for safe testing and rollout.
 
 #### Task 4.1: Move and Refactor Core Actions
 Move all actions from `v2/` to main `iprange/` directory and refactor:
@@ -507,9 +522,10 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 
 #### Task 4.6: Update new.go with Clean Action Composition
 - [x] Completely rewrite `new.go` following GcpSubnet pattern
-- [x] Remove v2 wrapper and state machine approach
-- [x] Implement direct action composition with clear create-update vs delete flows
-- [x] Remove `v2StateFactoryAdapter` (no longer needed)
+- [x] Implement feature flag routing to support both implementations
+- [x] Create `newRefactored()` for new implementation with direct action composition
+- [x] Create `newLegacy()` for v2 wrapper (backward compatibility)
+- [x] Keep `v2StateFactoryAdapter` for legacy route when feature flag is disabled
 
 #### Task 4.7: Fix Compilation Issues
 - [x] Add `PsaPeeringName` constant to avoid undefined reference
@@ -519,14 +535,28 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 - [x] Add missing `computepb` import to `waitOperationDone.go`
 - [x] Fix duplicate package declaration in `deletePsaConnection.go`
 
+#### Task 4.8: Add Feature Flag for Safe Rollout
+- [x] Create `ffIpRangeRefactored.go` feature flag
+- [x] Add `ipRangeRefactored` flag to `ff_ga.yaml`:
+  - Disabled by default (uses v2 legacy with original OLD Google Discovery API client)
+  - No automatic targeting rules (manual override only)
+  - Can be enabled per landscape/customer via overwrites for gradual rollout
+- [x] Update `New()` to route based on feature flag:
+  - `feature.IpRangeRefactored.Value(ctx) == true` → new refactored implementation
+  - `feature.IpRangeRefactored.Value(ctx) == false` → v2 legacy implementation
+- [x] Update `NewAllocateIpRangeAction()` to respect feature flag
+- [x] Keep v2/ directory and adapter for legacy route
+
 **Expected Outcome**: ✅ ACHIEVED
 - All actions are flat in `pkg/kcp/provider/gcp/iprange/`
 - One-action-per-file pattern like GcpSubnet
 - 18+ action files created/moved
-- Clean action composition in `new.go`
+- Clean action composition in `newRefactored()`
+- Feature flag routing in `New()` and `NewAllocateIpRangeAction()`
+- Both implementations coexist safely
 - All files compile successfully
 - `make build` passes ✅
-- v2/ directory is now obsolete (can be removed in cleanup phase)
+- v2/ directory remains for legacy route (will be removed after full rollout)
 
 ---
 
@@ -602,9 +632,10 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 - [x] Removed v2 indirection completely
 
 #### Task 5.3: v2/ Directory Status
-- [x] v2/ directory is now obsolete (new code doesn't use it)
-- [ ] **TODO in Phase 8**: Delete entire `pkg/kcp/provider/gcp/iprange/v2/` directory during cleanup
-- [x] Updated imports in `new.go` to remove v2 references
+- [x] v2/ directory is ACTIVELY USED when feature flag is disabled (default)
+- [x] v2/ directory provides legacy route for backward compatibility
+- [ ] **TODO in Phase 8 (after full rollout)**: Delete entire `pkg/kcp/provider/gcp/iprange/v2/` directory
+- [x] `new.go` uses v2 when `ipRangeRefactored` feature flag is false
 - [x] Multi-provider reconciler in `pkg/kcp/iprange/reconciler.go` remains unchanged (with provider switch)
 
 **Expected Outcome**: ✅ ACHIEVED - Clean provider action composition following GcpSubnet pattern, no v2 wrapper dependencies.
@@ -776,19 +807,74 @@ If refactoring causes issues:
 
 ---
 
+## Rollout Strategy (Feature Flag Based)
+
+### Phase A: Development Testing (Current State)
+- ✅ **Status**: IMPLEMENTED
+- **Feature Flag**: `ipRangeRefactored = false` (default everywhere)
+- **Implementation**: v2 legacy code with original OLD Google Discovery API client
+- **Action**: Enable manually via overwrites for specific testing
+  ```yaml
+  # In ff_ga.yaml (no automatic targeting)
+  ipRangeRefactored:
+    variations:
+      enabled: true
+      disabled: false
+    defaultRule:
+      variation: disabled
+  # Enable via manual overwrites per landscape/customer when ready
+  ```
+
+### Phase B: Canary Rollout
+- **Feature Flag**: Enable for specific Kyma instances via manual overwrites
+- **Implementation**: New refactored code with NEW gRPC client
+- **Action**: Monitor metrics, logs, error rates
+- **Rollback**: Remove overwrite to revert to v2 legacy (instant rollback)
+  ```yaml
+  # Enable via feature flag overwrites for specific instances
+  # (not in ff_ga.yaml, via runtime configuration)
+  ```
+
+### Phase C: Staged Rollout
+- **Feature Flag**: Enable per landscape (stage → prod)
+- **Implementation**: New refactored code
+- **Action**: Gradual rollout with monitoring
+  ```yaml
+  targeting:
+    - name: Enable on stage landscape
+      query: landscape in ["dev", "stage"]
+      variation: enabled
+  ```
+
+### Phase D: Full Production
+- **Feature Flag**: Enable everywhere
+- **Implementation**: New refactored code becomes default
+- **Action**: Update default variation to `enabled`
+  ```yaml
+  defaultRule:
+    variation: enabled
+  ```
+
+### Phase E: Cleanup (Phase 8)
+- **Feature Flag**: Remove flag entirely
+- **Implementation**: Only new code exists
+- **Action**: Delete v2/ directory, remove feature flag, simplify new.go
+
 ## Timeline Estimate
 
-- **Phase 0**: 2-4 hours (Investigation - CRITICAL, do first!)
-- **Phase 1**: 2-3 hours (GcpClients integration) - depends on Phase 0 findings
-- **Phase 2**: 2-4 hours (Client interfaces) - may need hybrid approach
-- **Phase 3**: 2-3 hours (State refactoring)
-- **Phase 4**: 6-8 hours (Action refactoring - most complex)
-- **Phase 5**: 3-4 hours (Reconciler)
-- **Phase 6**: 1-2 hours (main.go wiring) - depends on Phase 0 findings
+- **Phase 0**: 2-4 hours (Investigation - CRITICAL, do first!) ✅ DONE
+- **Phase 1**: 2-3 hours (GcpClients integration) ✅ DONE
+- **Phase 2**: 2-4 hours (Client interfaces) ✅ DONE
+- **Phase 3**: 2-3 hours (State refactoring) ✅ DONE
+- **Phase 4**: 6-8 hours (Action refactoring) ✅ DONE
+- **Phase 5**: 3-4 hours (Reconciler) ✅ DONE (merged into Phase 4)
+- **Phase 6**: 1-2 hours (main.go wiring)
 - **Phase 7**: 4-6 hours (Tests)
-- **Phase 8**: 2-3 hours (Cleanup/docs)
+- **Phase 8**: 2-3 hours (Cleanup/docs - after full rollout)
+- **Rollout**: 2-4 weeks (gradual with monitoring)
 
-**Total Estimate**: 24-37 hours (increased due to potential hybrid approach)
+**Total Development**: ~20 hours completed
+**Total Rollout**: 2-4 weeks monitoring + 2-3 hours cleanup
 
 ---
 
@@ -810,7 +896,7 @@ If refactoring causes issues:
 - Phase 5: ✅ DONE (merged into Phase 4 - new.go rewritten with clean composition)
 - Phase 6: ⬜ TODO (main.go wiring - likely already correct)
 - Phase 7: ⬜ TODO (tests migration and updates)
-- Phase 8: ⬜ TODO (cleanup - remove v2/ directory, update docs)
+- Phase 8: ⬜ TODO (cleanup - remove v2/ directory after successful rollout, update docs)
 
 ---
 
@@ -818,11 +904,13 @@ If refactoring causes issues:
 
 ### Key Differences from Current Implementation
 1. **No v2 wrapper**: Direct implementation in main package
-2. **NEW clients**: Use GcpClients singleton instead of ClientProvider
+2. **NEW clients**: Use GcpClients singleton (gRPC) instead of ClientProvider (REST)
 3. **Simpler state machine**: Replace complex StatePredicate switching with clear IfElse composition
 4. **One action per file**: Better organization and maintainability
 5. **Three-layer state**: composed → focal → shared iprange → GCP-specific (multi-provider pattern)
 6. **Shared reconciler**: Keeps provider switching in `pkg/kcp/iprange/reconciler.go`
+7. **v2 legacy behavior**: Uses original OLD Google Discovery API (REST) for exact legacy behavior
+8. **True API separation**: v2 uses REST Discovery API, new uses gRPC Cloud Client Libraries
 
 ### Alignment with AGENTS.md Guidance
 - ✅ Follows OLD/Legacy Pattern (RedisInstance) - multi-provider CRD
