@@ -171,21 +171,21 @@ pkg/kcp/provider/gcp/iprange/
 ---
 
 ### Phase 1: Add New GCP Client Libraries to GcpClients
-**Status**: ⬜ TODO
+**Status**: ✅ DONE
 
 #### Task 1.1: Add Global Compute Clients to GcpClients
-- [ ] Add to `GcpClients` struct in `pkg/kcp/provider/gcp/client/gcpClients.go`:
+- [x] Add to `GcpClients` struct in `pkg/kcp/provider/gcp/client/gcpClients.go`:
   ```go
   ComputeGlobalAddresses   *compute.GlobalAddressesClient   // For global address operations
   ComputeGlobalOperations  *compute.GlobalOperationsClient  // For global operation tracking
   ```
-- [ ] Note: IpRange uses **global** addresses (not regional like other resources)
-- [ ] Existing `ComputeAddresses` is for regional addresses (used by other resources)
+- [x] Note: IpRange uses **global** addresses (not regional like other resources)
+- [x] Existing `ComputeAddresses` is for regional addresses (used by other resources)
 
 #### Task 1.2: Initialize Global Compute Clients in NewGcpClients()
-- [ ] Add token provider for compute in `gcpClients.go`:
+- [x] Add token provider for compute in `gcpClients.go`:
   ```go
-  // Global Addresses Client (if not already sharing compute token provider)
+  // Global Addresses Client (reuses existing compute token provider)
   computeTokenProvider, err := b.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
   if err != nil {
       return nil, fmt.Errorf("failed to build compute token provider: %w", err)
@@ -202,7 +202,7 @@ pkg/kcp/provider/gcp/iprange/
       return nil, fmt.Errorf("create global operations client: %w", err)
   }
   ```
-- [ ] Add to return statement:
+- [x] Add to return statement:
   ```go
   return &GcpClients{
       // ... existing clients
@@ -215,19 +215,26 @@ pkg/kcp/provider/gcp/iprange/
 - [x] **Decision**: Service Networking will NOT be added to GcpClients
 - [x] **Reason**: No modern Cloud Client Library exists (`cloud.google.com/go/servicenetworking` does not exist)
 - [x] **Implementation**: Continue using `ClientProvider[ServiceNetworkingClient]` in iprange-specific code
-- [ ] Add comment in `serviceNetworkingClient.go` documenting why OLD pattern is kept:
+- [x] Add comment in `serviceNetworkingClient.go` documenting why OLD pattern is kept:
   ```go
-  // NOTE: This client uses the OLD pattern (ClientProvider with Discovery API)
-  // because Google does not provide a modern Cloud Client Library for Service Networking API.
-  // See: google.golang.org/api/servicenetworking/v1 (Discovery API)
+  // Package client provides GCP API clients for IpRange operations.
+  //
+  // HYBRID APPROACH NOTE:
+  // - ComputeClient: Uses NEW pattern (cloud.google.com/go/compute/apiv1)
+  // - ServiceNetworkingClient: Uses OLD pattern (google.golang.org/api/servicenetworking/v1)
+  //
+  // ServiceNetworkingClient uses the OLD pattern because Google does not provide
+  // a modern Cloud Client Library for Service Networking API as of December 2024.
+  // The interface remains clean and testable regardless of underlying implementation.
+  //
   // If cloud.google.com/go/servicenetworking becomes available, migrate to NEW pattern.
   ```
 
 #### Task 1.4: Update cmd/main.go GcpClients Initialization
-- [ ] Verify `NewGcpClients()` call works with new clients (no changes needed)
-- [ ] NewGcpClients() automatically includes the new clients
+- [x] Verify `NewGcpClients()` call works with new clients (no changes needed)
+- [x] NewGcpClients() automatically includes the new clients
 
-**Expected Outcome**: GcpClients struct contains GlobalAddresses and GlobalOperations clients (NEW pattern). Service Networking remains with OLD pattern.
+**Expected Outcome**: ✅ ACHIEVED - GcpClients struct contains GlobalAddresses and GlobalOperations clients (NEW pattern). Service Networking remains with OLD pattern.
 
 ---
 
@@ -559,10 +566,19 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 **Status**: ⬜ TODO
 
 #### Task 7.1: Update Unit Tests
-- [ ] Update tests in `pkg/kcp/provider/gcp/iprange/v2/*_test.go`
-- [ ] Move to main `pkg/kcp/provider/gcp/iprange/` directory
-- [ ] Update mocks to use NEW pattern clients
-- [ ] Ensure all tests pass with new structure
+- [ ] **Migrate valuable tests** from `pkg/kcp/provider/gcp/iprange/v2/*_test.go`:
+  - ✅ **Keep & Migrate**: `loadAddress_test.go` - Tests fallback address logic and VPC validation
+  - ✅ **Keep & Migrate**: `identifyPeeringIpRanges_test.go` - Tests IP range identification for PSA
+  - ✅ **Keep & Migrate**: `validateCidr_test.go` - Tests CIDR parsing and validation
+  - ✅ **Keep & Migrate**: `preventCidrEdit_test.go` - Tests CIDR immutability after Ready
+  - ✅ **Keep & Migrate**: `loadPsaConnection_test.go` - Tests PSA connection loading
+  - ❌ **Remove**: `compareStates_test.go` - Tests OLD state machine pattern we're removing
+  - ❌ **Remove**: `syncAddress_test.go` - Trivial test with no business value
+  - ❌ **Remove**: `checkGcpOperation_test.go` - Tests operation polling we're replacing
+  - ❌ **Remove**: `state_test.go` - Only test setup helpers, will be refactored
+- [ ] Move kept tests to main `pkg/kcp/provider/gcp/iprange/` directory
+- [ ] Update test mocks to use NEW pattern clients
+- [ ] Ensure all migrated tests pass with new structure
 
 #### Task 7.2: Update Controller Tests
 - [ ] Find IpRange controller tests in `internal/controller/cloud-control/`
@@ -705,13 +721,13 @@ If refactoring causes issues:
 - ❌ SKIPPED - Decided not to implement
 
 ### Overall Progress
-- **Phase 0: ⬜ TODO** ⚠️ **MUST COMPLETE FIRST - BLOCKS ALL OTHER PHASES**
-- Phase 1: ⬜ TODO (blocked by Phase 0)
-- Phase 2: ⬜ TODO (blocked by Phase 0)
+- **Phase 0: ✅ DONE** 
+- **Phase 1: ✅ DONE**
+- Phase 2: ⬜ TODO
 - Phase 3: ⬜ TODO
 - Phase 4: ⬜ TODO
 - Phase 5: ⬜ TODO
-- Phase 6: ⬜ TODO (may need adjustment based on Phase 0)
+- Phase 6: ⬜ TODO
 - Phase 7: ⬜ TODO
 - Phase 8: ⬜ TODO
 

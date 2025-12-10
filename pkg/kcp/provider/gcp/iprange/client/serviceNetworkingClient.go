@@ -3,15 +3,28 @@ package client
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/cloudresourcemanager/v1"
-	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"
 )
+
+// Package client provides GCP API clients for IpRange operations.
+//
+// HYBRID APPROACH NOTE:
+// - ComputeClient: Uses NEW pattern (cloud.google.com/go/compute/apiv1)
+// - ServiceNetworkingClient: Uses OLD pattern (google.golang.org/api/servicenetworking/v1)
+//
+// ServiceNetworkingClient uses the OLD pattern because Google does not provide
+// a modern Cloud Client Library for Service Networking API as of December 2024.
+// The interface remains clean and testable regardless of underlying implementation.
+//
+// If cloud.google.com/go/servicenetworking becomes available, migrate to NEW pattern.
 
 type ServiceNetworkingClient interface {
 	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)

@@ -21,9 +21,11 @@ import (
 type GcpClients struct {
 	ComputeNetworks                           *compute.NetworksClient
 	ComputeAddresses                          *compute.AddressesClient
+	ComputeGlobalAddresses                    *compute.GlobalAddressesClient // For IpRange global address operations
 	ComputeRouters                            *compute.RoutersClient
 	ComputeSubnetworks                        *compute.SubnetworksClient
 	RegionOperations                          *compute.RegionOperationsClient
+	ComputeGlobalOperations                   *compute.GlobalOperationsClient // For IpRange global operation tracking
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
 	RedisInstance                             *redisinstance.CloudRedisClient
@@ -77,6 +79,14 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
 	if err != nil {
 		return nil, fmt.Errorf("create compute region operations client: %w", err)
+	}
+	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create compute global addresses client: %w", err)
+	}
+	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create compute global operations client: %w", err)
 	}
 
 	// network connectivity ----------------
@@ -139,14 +149,16 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 
 	return &GcpClients{
-		ComputeNetworks:    computeNetworks,
-		ComputeAddresses:   computeAddress,
-		ComputeRouters:     computeRouters,
-		ComputeSubnetworks: computeSubnetworks,
-		RegionOperations:   computeRegionOperations,
+		ComputeNetworks:                           computeNetworks,
+		ComputeAddresses:                          computeAddress,
+		ComputeGlobalAddresses:                    computeGlobalAddresses,
+		ComputeRouters:                            computeRouters,
+		ComputeSubnetworks:                        computeSubnetworks,
+		RegionOperations:                          computeRegionOperations,
+		ComputeGlobalOperations:                   computeGlobalOperations,
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
-		RedisCluster:  redisCluster,
-		RedisInstance: redisInstance,
+		RedisCluster:                              redisCluster,
+		RedisInstance:                             redisInstance,
 		VpcPeeringClients: &VpcPeeringClients{
 			ComputeNetworks:            vpcPeeringComputeNetworks,
 			ResourceManagerTagBindings: vpcPeeringresourceManagerTagBindings,
