@@ -44,6 +44,38 @@ func (b *testAwsRedisInstanceBuilder) WithEngineVersion(engineVersion string) *t
 	return b
 }
 
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretName(name string) *testAwsRedisInstanceBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Name = name
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretLabels(labels map[string]string) *testAwsRedisInstanceBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Labels = labels
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testAwsRedisInstanceBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Annotations = annotations
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[string]string) *testAwsRedisInstanceBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.ExtraData = extraData
+	return b
+}
+
 var _ = Describe("Feature: SKR AwsRedisInstance", Ordered, func() {
 
 	canChangeSkr(
@@ -118,4 +150,47 @@ var _ = Describe("Feature: SKR AwsRedisInstance", Ordered, func() {
 			"engineVersion cannot be downgraded",
 		)
 	}
+
+	Context("Scenario: authSecret mutability", func() {
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.name can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretName("original-name"),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretName("new-name")
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.labels can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretLabels(map[string]string{"env": "dev"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretLabels(map[string]string{"env": "prod", "team": "platform"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.annotations can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretAnnotations(map[string]string{"owner": "team-a"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretAnnotations(map[string]string{"owner": "team-b", "cost-center": "1234"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.extraData can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretExtraData(map[string]string{"key1": "value1"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretExtraData(map[string]string{"key1": "new-value", "key2": "value2"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret can be added",
+			newTestAwsRedisInstanceBuilder(),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretName("added-secret")
+			},
+		)
+	})
 })

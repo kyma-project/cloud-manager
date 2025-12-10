@@ -48,6 +48,38 @@ func (b *testGcpRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32
 	return b
 }
 
+func (b *testGcpRedisClusterBuilder) WithAuthSecretName(name string) *testGcpRedisClusterBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Name = name
+	return b
+}
+
+func (b *testGcpRedisClusterBuilder) WithAuthSecretLabels(labels map[string]string) *testGcpRedisClusterBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Labels = labels
+	return b
+}
+
+func (b *testGcpRedisClusterBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testGcpRedisClusterBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.Annotations = annotations
+	return b
+}
+
+func (b *testGcpRedisClusterBuilder) WithAuthSecretExtraData(extraData map[string]string) *testGcpRedisClusterBuilder {
+	if b.instance.Spec.AuthSecret == nil {
+		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
+	}
+	b.instance.Spec.AuthSecret.ExtraData = extraData
+	return b
+}
+
 var _ = Describe("Feature: SKR GcpRedisCluster", Ordered, func() {
 
 	canChangeSkr(
@@ -114,4 +146,47 @@ var _ = Describe("Feature: SKR GcpRedisCluster", Ordered, func() {
 			fmt.Sprintf("shardCount must be %d or less when replicasPerShard is %d", shards, replicasPerShard),
 		)
 	}
+
+	Context("Scenario: authSecret mutability", func() {
+
+		canChangeSkr(
+			"GcpRedisCluster authSecret.name can be changed",
+			newTestGcpRedisClusterBuilder().WithAuthSecretName("original-name"),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisCluster]) {
+				b.(*testGcpRedisClusterBuilder).WithAuthSecretName("new-name")
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisCluster authSecret.labels can be changed",
+			newTestGcpRedisClusterBuilder().WithAuthSecretLabels(map[string]string{"env": "dev"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisCluster]) {
+				b.(*testGcpRedisClusterBuilder).WithAuthSecretLabels(map[string]string{"env": "prod", "team": "platform"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisCluster authSecret.annotations can be changed",
+			newTestGcpRedisClusterBuilder().WithAuthSecretAnnotations(map[string]string{"owner": "team-a"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisCluster]) {
+				b.(*testGcpRedisClusterBuilder).WithAuthSecretAnnotations(map[string]string{"owner": "team-b", "cost-center": "1234"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisCluster authSecret.extraData can be changed",
+			newTestGcpRedisClusterBuilder().WithAuthSecretExtraData(map[string]string{"key1": "value1"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisCluster]) {
+				b.(*testGcpRedisClusterBuilder).WithAuthSecretExtraData(map[string]string{"key1": "new-value", "key2": "value2"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisCluster authSecret can be added",
+			newTestGcpRedisClusterBuilder(),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisCluster]) {
+				b.(*testGcpRedisClusterBuilder).WithAuthSecretName("added-secret")
+			},
+		)
+	})
 })
