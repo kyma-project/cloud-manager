@@ -40,7 +40,7 @@ func UpdateIdAndInitState(statusState string) composed.Action {
 		}
 
 		state.Obj().GetLabels()[cloudresourcesv1beta1.LabelId] = id
-		state.Obj().GetLabels()[common.LabelKymaModule] = "cloud-manager"
+		state.Obj().GetLabels()[common.LabelKymaModule] = common.FieldOwner
 
 		err := state.UpdateObj(ctx)
 

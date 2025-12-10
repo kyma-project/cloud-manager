@@ -35,7 +35,7 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 			Labels: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName: state.Name().Name,
-				common.LabelKymaModule:              "cloud-manager",
+				common.LabelKymaModule:              common.FieldOwner,
 			},
 		},
 		Spec: cloudcontrolv1beta1.IpRangeSpec{

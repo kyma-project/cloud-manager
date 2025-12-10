@@ -32,7 +32,7 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsAwsNfsVolume().Name,
 				cloudcontrolv1beta1.LabelRemoteNamespace: state.ObjAsAwsNfsVolume().Namespace,
-				common.LabelKymaModule:                   "cloud-manager",
+				common.LabelKymaModule:                   common.FieldOwner,
 			},
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{

@@ -49,7 +49,7 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 			Name:      awsRedisInstance.Status.Id,
 			Namespace: state.KymaRef.Namespace,
 			Labels: map[string]string{
-				common.LabelKymaModule: "cloud-manager",
+				common.LabelKymaModule: common.FieldOwner,
 			},
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,

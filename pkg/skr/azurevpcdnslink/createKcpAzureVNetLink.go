@@ -20,7 +20,7 @@ func createKcpAzureVNetLink(ctx context.Context, st composed.State) (error, cont
 		WithName(state.ObjAsVNetLink().Status.Id).
 		WithNamespace(state.KymaRef.Namespace).
 		WithLabels(map[string]string{
-			common.LabelKymaModule: "cloud-manager",
+			common.LabelKymaModule: common.FieldOwner,
 		}).
 		WithAnnotations(map[string]string{
 			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
