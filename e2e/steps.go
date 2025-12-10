@@ -427,22 +427,22 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 		if !ok {
 			return ctx, fmt.Errorf("missing 'Operation' column in row %d", i+1)
 		}
-		path, ok := row["Path"]
+		pathValue, ok := row["Path"]
 		if !ok {
 			return ctx, fmt.Errorf("missing 'Path' column in row %d", i+1)
 		}
 		content := row["Content"]
 		switch opType {
 		case "Create":
-			fileOps = append(fileOps, CreateFileOperation(path, content))
+			fileOps = append(fileOps, CreateFileOperation(pathValue, content))
 		case "Append":
-			fileOps = append(fileOps, AppendFileOperation(path, content))
+			fileOps = append(fileOps, AppendFileOperation(pathValue, content))
 		case "Delete":
-			fileOps = append(fileOps, DeleteFileOperation(path))
+			fileOps = append(fileOps, DeleteFileOperation(pathValue))
 		case "Contains":
-			fileOps = append(fileOps, FileContainsOperation(path, content))
+			fileOps = append(fileOps, FileContainsOperation(pathValue, content))
 		case "Exists":
-			fileOps = append(fileOps, FileExistsOperation(path))
+			fileOps = append(fileOps, FileExistsOperation(pathValue))
 		case "SleepOnPodStart":
 			fileOps = pie.Insert(fileOps, 0, func(_ string) []string {
 				return []string{fmt.Sprintf("sleep %s", content)}

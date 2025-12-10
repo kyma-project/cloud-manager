@@ -54,7 +54,7 @@ type ResourceInfo struct {
 }
 
 func (ri *ResourceInfo) GetAlias() string {
-	return ri.ResourceDeclaration.Alias
+	return ri.Alias
 }
 
 type AliasInfo interface {
