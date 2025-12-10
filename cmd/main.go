@@ -20,8 +20,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"os"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
@@ -395,7 +396,7 @@ func main() {
 		awsiprangeclient.NewClientProvider(),
 		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClient(),
-		gcpiprangeclient.NewComputeClient(),
+		gcpiprangeclient.NewComputeClientProviderForGcpClients(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		env,
 	); err != nil {

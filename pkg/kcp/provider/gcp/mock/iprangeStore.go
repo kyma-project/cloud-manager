@@ -3,16 +3,18 @@ package mock
 import (
 	"context"
 	"fmt"
+
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 type iprangeStore struct {
 	connections []*servicenetworking.Connection
-	addresses   []*compute.Address
+	addresses   []*computepb.Address
 }
 
 func (s *iprangeStore) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
@@ -88,7 +90,7 @@ func (s *iprangeStore) GetServiceNetworkingOperation(ctx context.Context, operat
 	return nil, nil
 }
 
-func (s *iprangeStore) ListGlobalAddresses(ctx context.Context, projectId, vpc string) (*compute.AddressList, error) {
+func (s *iprangeStore) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -96,12 +98,12 @@ func (s *iprangeStore) ListGlobalAddresses(ctx context.Context, projectId, vpc s
 	logger := composed.LoggerFromCtx(ctx)
 	logger.WithName("ListGlobalAddresses - mock").Info(fmt.Sprintf("Length :: %d", len(s.addresses)))
 
-	return &compute.AddressList{Items: s.addresses}, nil
+	return s.addresses, nil
 }
 
-func (s *iprangeStore) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (*compute.Operation, error) {
+func (s *iprangeStore) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) {
 	if isContextCanceled(ctx) {
-		return nil, context.Canceled
+		return "", context.Canceled
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -110,25 +112,25 @@ func (s *iprangeStore) CreatePscIpRange(ctx context.Context, projectId, vpcName,
 	lbls := map[string]string{
 		"id": id,
 	}
-	addr := compute.Address{
-		Name:         name,
-		Description:  description,
-		Address:      address,
-		PrefixLength: prefixLength,
-		Network:      client.GetVPCPath(projectId, vpcName),
-		AddressType:  string(client.AddressTypeInternal),
-		Purpose:      string(client.IpRangePurposeVPCPeering),
+	addr := &computepb.Address{
+		Name:         proto.String(name),
+		Description:  proto.String(description),
+		Address:      proto.String(address),
+		PrefixLength: proto.Int32(int32(prefixLength)),
+		Network:      proto.String(client.GetVPCPath(projectId, vpcName)),
+		AddressType:  proto.String(computepb.Address_INTERNAL.String()),
+		Purpose:      proto.String(computepb.Address_VPC_PEERING.String()),
 		Labels:       lbls,
 	}
-	s.addresses = append(s.addresses, &addr)
+	s.addresses = append(s.addresses, addr)
 	logger.WithName("CreatePscIpRange - mock").Info(fmt.Sprintf("Length :: %d", len(s.addresses)))
 
-	return nil, nil
+	return "", nil
 }
 
-func (s *iprangeStore) DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error) {
+func (s *iprangeStore) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
 	if isContextCanceled(ctx) {
-		return nil, context.Canceled
+		return "", context.Canceled
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -142,17 +144,17 @@ func (s *iprangeStore) DeleteIpRange(ctx context.Context, projectId, name string
 	}
 
 	logger.WithName("DeleteIpRange - mock").Info(fmt.Sprintf("Length :: %d", len(s.addresses)))
-	return nil, nil
+	return "", nil
 }
 
-func (s *iprangeStore) GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error) {
+func (s *iprangeStore) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	var result *compute.Address
+	var result *computepb.Address
 	id := fmt.Sprintf("projects/%s/address/%s", projectId, name)
 
 	for _, addr := range s.addresses {
@@ -170,10 +172,23 @@ func (s *iprangeStore) GetIpRange(ctx context.Context, projectId, name string) (
 	}
 }
 
-func (s *iprangeStore) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
+func (s *iprangeStore) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 
-	return nil, nil
+	// Mock returns a DONE operation
+	status := computepb.Operation_DONE
+	return &computepb.Operation{
+		Name:   proto.String(operationName),
+		Status: &status,
+	}, nil
+}
+
+func (s *iprangeStore) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	// Mock operations complete immediately
+	return nil
 }

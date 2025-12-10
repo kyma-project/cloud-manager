@@ -2,6 +2,8 @@ package v2
 
 import (
 	"context"
+	"strings"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
@@ -10,7 +12,6 @@ import (
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
-	"strings"
 )
 
 type State struct {
@@ -29,7 +30,7 @@ type State struct {
 	serviceConnection *servicenetworking.Connection
 
 	serviceNetworkingClient gcpiprangeclient.ServiceNetworkingClient
-	computeClient           gcpiprangeclient.ComputeClient
+	computeClient           gcpiprangeclient.LegacyComputeClient // Use legacy adapter for backward compatibility
 }
 
 type StateFactory interface {
@@ -67,10 +68,13 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 		return nil, err
 	}
 
-	return newState(ipRangeState, snc, cc), nil
+	// Wrap the NEW pattern client with legacy adapter for v2 compatibility
+	legacyCC := gcpiprangeclient.NewLegacyComputeClient(cc)
+
+	return newState(ipRangeState, snc, legacyCC), nil
 }
 
-func newState(ipRangeState iprangetypes.State, snc gcpiprangeclient.ServiceNetworkingClient, cc gcpiprangeclient.ComputeClient) *State {
+func newState(ipRangeState iprangetypes.State, snc gcpiprangeclient.ServiceNetworkingClient, cc gcpiprangeclient.LegacyComputeClient) *State {
 	return &State{
 		State:                   ipRangeState,
 		serviceNetworkingClient: snc,
