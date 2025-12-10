@@ -29,7 +29,7 @@ const (
 )
 
 // must not reference e2e.AliasInfo
-var _ interface{
+var _ interface {
 	GetAlias() string
 } = (TFWorkspace)(nil)
 
