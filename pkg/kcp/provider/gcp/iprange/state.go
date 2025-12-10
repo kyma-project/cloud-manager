@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
 )
 
@@ -28,7 +28,7 @@ type State struct {
 	env                     abstractions.Environment
 
 	// GCP-specific remote resources
-	address           *compute.Address              // Global address resource
+	address           *computepb.Address            // Global address resource
 	serviceConnection *servicenetworking.Connection // PSA connection
 	operation         interface{}                   // Can be compute or servicenetworking operation
 
@@ -96,9 +96,9 @@ func (s *State) ObjAsGcpIpRange() *cloudcontrolv1beta1.IpRange {
 func (s *State) DoesAddressMatch() bool {
 	vpc := s.Scope().Spec.Scope.Gcp.VpcNetwork
 	return s.address != nil &&
-		s.address.Address == s.ipAddress &&
-		s.address.PrefixLength == int64(s.prefix) &&
-		strings.HasSuffix(s.address.Network, vpc)
+		s.address.Address != nil && *s.address.Address == s.ipAddress &&
+		s.address.PrefixLength != nil && *s.address.PrefixLength == int32(s.prefix) &&
+		s.address.Network != nil && strings.HasSuffix(*s.address.Network, vpc)
 }
 
 // DoesConnectionIncludeRange checks if the PSA connection includes the address range.
@@ -112,7 +112,7 @@ func (s *State) DoesConnectionIncludeRange() int {
 	}
 
 	for i, name := range s.serviceConnection.ReservedPeeringRanges {
-		if s.address.Name == name {
+		if s.address.Name != nil && *s.address.Name == name {
 			return i
 		}
 	}
@@ -153,11 +153,11 @@ func (s *State) SetPeeringIpRanges(v []string) {
 	s.peeringIpRanges = v
 }
 
-func (s *State) Address() *compute.Address {
+func (s *State) Address() *computepb.Address {
 	return s.address
 }
 
-func (s *State) SetAddress(v *compute.Address) {
+func (s *State) SetAddress(v *computepb.Address) {
 	s.address = v
 }
 
