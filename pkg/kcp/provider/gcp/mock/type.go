@@ -33,6 +33,9 @@ type Clients interface {
 
 type Providers interface {
 	ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
+	// GcpClientProvider versions for NEW pattern
+	ServiceNetworkingClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
+	ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ComputeClient]
 	ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient]
 	SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient]
 	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]

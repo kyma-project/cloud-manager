@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -153,6 +154,38 @@ func (s *typesState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 func (s *typesState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
+
+func (s *typesState) SetNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *typesState) NetworkKey() ctrlclient.ObjectKey {
+	return ctrlclient.ObjectKey{}
+}
+
+func (s *typesState) SetNetworkKey(key ctrlclient.ObjectKey) {}
+
+func (s *typesState) IsCloudManagerNetwork() bool {
+	return false
+}
+
+func (s *typesState) SetIsCloudManagerNetwork(v bool) {}
+
+func (s *typesState) IsKymaNetwork() bool {
+	return false
+}
+
+func (s *typesState) SetIsKymaNetwork(v bool) {}
+
+func (s *typesState) KymaNetwork() *cloudcontrolv1beta1.Network {
+	return nil
+}
+
+func (s *typesState) SetKymaNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *typesState) KymaPeering() *cloudcontrolv1beta1.VpcPeering {
+	return nil
+}
+
+func (s *typesState) SetKymaPeering(peering *cloudcontrolv1beta1.VpcPeering) {}
 
 func (s *typesState) ExistingCidrRanges() []string {
 	return nil

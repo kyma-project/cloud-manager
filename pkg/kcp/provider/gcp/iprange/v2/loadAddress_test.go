@@ -39,6 +39,38 @@ func (s *testState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
 
+func (s *testState) SetNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *testState) NetworkKey() client.ObjectKey {
+	return client.ObjectKey{}
+}
+
+func (s *testState) SetNetworkKey(key client.ObjectKey) {}
+
+func (s *testState) IsCloudManagerNetwork() bool {
+	return false
+}
+
+func (s *testState) SetIsCloudManagerNetwork(v bool) {}
+
+func (s *testState) IsKymaNetwork() bool {
+	return false
+}
+
+func (s *testState) SetIsKymaNetwork(v bool) {}
+
+func (s *testState) KymaNetwork() *cloudcontrolv1beta1.Network {
+	return nil
+}
+
+func (s *testState) SetKymaNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *testState) KymaPeering() *cloudcontrolv1beta1.VpcPeering {
+	return nil
+}
+
+func (s *testState) SetKymaPeering(peering *cloudcontrolv1beta1.VpcPeering) {}
+
 func (s *testState) ExistingCidrRanges() []string {
 	return nil
 }

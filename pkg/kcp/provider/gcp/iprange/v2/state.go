@@ -105,3 +105,25 @@ func (s State) doesConnectionIncludeRange() int {
 	}
 	return -1
 }
+
+// NewStateFromGcpState creates a v2.State from the new GCP iprange.State
+// This is a temporary adapter for backward compatibility during refactoring.
+// Will be removed in Phase 4 when v2 directory is eliminated.
+func NewStateFromGcpState(gcpState interface{}) *State {
+	// Type assert to access the underlying state
+	// Since both embed iprangetypes.State, we can safely extract it
+	type stateWithTypes interface {
+		iprangetypes.State
+	}
+
+	if st, ok := gcpState.(stateWithTypes); ok {
+		// Create a new v2.State with the shared state
+		// The clients will be set when needed via the existing v2 factory
+		return &State{
+			State: st,
+		}
+	}
+
+	// This should never happen in practice
+	panic("invalid state type passed to NewStateFromGcpState")
+}

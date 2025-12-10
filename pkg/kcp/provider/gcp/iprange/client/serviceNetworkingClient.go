@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"google.golang.org/api/cloudresourcemanager/v1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -36,6 +37,45 @@ type ServiceNetworkingClient interface {
 	GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
 }
 
+// NewServiceNetworkingClientProvider creates a GcpClientProvider for ServiceNetworkingClient.
+// ServiceNetworking uses OLD pattern (ClientProvider) because Google does not provide
+// a modern Cloud Client Library for Service Networking API.
+// This wrapper converts OLD pattern to GcpClientProvider interface for consistency.
+func NewServiceNetworkingClientProvider() client.GcpClientProvider[ServiceNetworkingClient] {
+	// Create the OLD pattern provider
+	oldProvider := client.NewCachedClientProvider(
+		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
+			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
+			if err != nil {
+				return nil, err
+			}
+			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, fmt.Errorf("error obtaining GCP ServiceNetworking Client: [%w]", err)
+			}
+			crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, fmt.Errorf("error obtaining GCP CloudResourceManager Service: [%w]", err)
+			}
+			return NewServiceNetworkingClientForService(svcNetClient, crmService), nil
+		},
+	)
+
+	// Wrap as GcpClientProvider (just calls oldProvider with hardcoded credentials path)
+	return func() ServiceNetworkingClient {
+		// Get credentials from GCP config
+		credentialsFile := config.GcpConfig.CredentialsFile
+		client, err := oldProvider(context.Background(), credentialsFile)
+		if err != nil {
+			// This should rarely happen since we cache the client
+			// If it does, return a nil client (caller will handle error)
+			panic(fmt.Sprintf("failed to create ServiceNetworking client: %v", err))
+		}
+		return client
+	}
+}
+
+// Deprecated: Use NewServiceNetworkingClientProvider instead.
 func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {

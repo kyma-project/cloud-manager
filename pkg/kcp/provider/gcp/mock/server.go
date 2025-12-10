@@ -122,11 +122,25 @@ func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpipra
 	}
 }
 
+// ServiceNetworkingClientProviderGcp returns a GcpClientProvider (NEW pattern)
+func (s *server) ServiceNetworkingClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
+	return func() gcpiprangeclient.ServiceNetworkingClient {
+		return s
+	}
+}
+
 func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ComputeClientProvider mock...")
 		return s, nil
+	}
+}
+
+// ComputeClientProviderGcp returns a GcpClientProvider (NEW pattern)
+func (s *server) ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ComputeClient] {
+	return func() gcpiprangeclient.ComputeClient {
+		return s
 	}
 }
 

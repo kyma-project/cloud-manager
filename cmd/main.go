@@ -395,7 +395,7 @@ func main() {
 		mgr,
 		awsiprangeclient.NewClientProvider(),
 		azureiprangeclient.NewClientProvider(),
-		gcpiprangeclient.NewServiceNetworkingClient(),
+		gcpiprangeclient.NewServiceNetworkingClientProvider(),
 		gcpiprangeclient.NewComputeClientProviderForGcpClients(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		env,

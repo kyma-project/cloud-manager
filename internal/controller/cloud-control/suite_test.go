@@ -100,8 +100,8 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.AzureMock().IpRangeProvider(),
-		infra.GcpMock().ServiceNetworkingClientProvider(),
-		infra.GcpMock().ComputeClientProvider(),
+		infra.GcpMock().ServiceNetworkingClientProviderGcp(),
+		infra.GcpMock().ComputeClientProviderGcp(),
 		infra.SapMock().IpRangeProvider(),
 		env,
 	)).NotTo(HaveOccurred())

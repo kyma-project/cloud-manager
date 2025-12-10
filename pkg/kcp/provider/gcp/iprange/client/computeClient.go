@@ -171,14 +171,10 @@ func (c *computeClient) WaitGlobalOperation(ctx context.Context, projectId, oper
 	return nil
 }
 
-// NewComputeClientProviderForGcpClients creates an OLD pattern ClientProvider that uses NEW pattern internally.
-// This is a transitional function to bridge OLD controller setup code with NEW client pattern.
-// TEMPORARY: Will be removed when controller setup is updated to use GcpClientProvider directly.
-func NewComputeClientProviderForGcpClients(gcpClients *gcpclient.GcpClients) gcpclient.ClientProvider[ComputeClient] {
-	return gcpclient.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (ComputeClient, error) {
-			// Ignore credentials parameter - use GcpClients singleton instead
-			return NewComputeClient(gcpClients), nil
-		},
-	)
+// NewComputeClientProviderForGcpClients creates a GcpClientProvider from GcpClients.
+// This follows the NEW pattern where clients are accessed via simple provider functions.
+func NewComputeClientProviderForGcpClients(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+	return func() ComputeClient {
+		return NewComputeClient(gcpClients)
+	}
 }

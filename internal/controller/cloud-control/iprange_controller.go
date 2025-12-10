@@ -48,8 +48,8 @@ func SetupIpRangeReconciler(
 	kcpManager manager.Manager,
 	awsProvider awsclient.SkrClientProvider[awsiprangeclient.Client],
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
-	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
-	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	gcpSvcNetProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	env abstractions.Environment,
 ) error {
