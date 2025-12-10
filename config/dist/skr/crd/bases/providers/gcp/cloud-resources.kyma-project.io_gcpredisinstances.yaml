@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.20
+    cloud-resources.kyma-project.io/version: v0.0.21
   name: gcpredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -67,9 +67,6 @@ spec:
                     name:
                       type: string
                   type: object
-                  x-kubernetes-validations:
-                    - message: AuthSecret is immutable.
-                      rule: (self == oldSelf)
                 ipRange:
                   properties:
                     name:
