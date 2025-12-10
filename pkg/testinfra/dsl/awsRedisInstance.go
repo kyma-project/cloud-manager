@@ -214,3 +214,8 @@ func HavingAwsRedisInstanceStatusState(state string) ObjAssertion {
 		return nil
 	}
 }
+
+func UpdateAwsRedisInstance(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AwsRedisInstance, opts ...ObjAction) error {
+	NewObjActions(opts...).ApplyOnObject(obj)
+	return clnt.Update(ctx, obj)
+}
