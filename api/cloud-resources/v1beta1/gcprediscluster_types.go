@@ -61,7 +61,6 @@ type GcpRedisClusterSpec struct {
 	RedisConfigs map[string]string `json:"redisConfigs"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 }
 
