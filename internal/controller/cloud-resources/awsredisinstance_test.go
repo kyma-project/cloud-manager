@@ -903,6 +903,57 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			))
 		})
 
+		oldAuthSecret := authSecret.DeepCopy()
+		newAuthSecretName := "aws-instance-auth-secret-renamed"
+
+		By("When AwsRedisInstance authSecret name is changed", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsRedisInstance,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			awsRedisInstance.Spec.AuthSecret.Name = newAuthSecretName
+
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+				Should(Succeed())
+		})
+
+		newAuthSecret := &corev1.Secret{}
+		By("Then new SKR auth Secret is created with the new name", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					newAuthSecret,
+					NewObjActions(
+						WithName(newAuthSecretName),
+						WithNamespace(awsRedisInstance.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			Expect(newAuthSecret.Data).To(And(
+				HaveKey("host"),
+				HaveKey("port"),
+				HaveKey("authString"),
+			))
+		})
+
+		By("And Then old SKR auth Secret is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					oldAuthSecret,
+				).
+				Should(Succeed())
+		})
+
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
 			Should(Succeed())
